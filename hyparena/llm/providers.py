@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import os
 import re
+import threading
 import time
 from pathlib import Path
 from typing import Callable, Literal, Optional
@@ -24,6 +25,34 @@ DEFAULT_CONFIG = Path(__file__).resolve().parents[2] / "configs" / "models.yaml"
 _NON_RETRYABLE = re.compile(r"Error code: (400|401|403|404)\b")
 
 
+class DeadlineExceeded(TimeoutError):
+    pass
+
+
+def call_with_deadline(fn: Callable[[], object], deadline: Optional[float]):
+    """Run `fn` and give up after `deadline` seconds of wall-clock time. The HTTP client's own timeout
+    measures silence between bytes, and a gateway that keeps the connection alive can defeat it. The
+    abandoned call keeps running in a daemon thread; its result is ignored."""
+    if not deadline:
+        return fn()
+    box: dict = {}
+
+    def target():
+        try:
+            box["value"] = fn()
+        except BaseException as e:  # noqa: BLE001 - re-raised in the caller
+            box["error"] = e
+
+    thread = threading.Thread(target=target, daemon=True)
+    thread.start()
+    thread.join(deadline)
+    if thread.is_alive():
+        raise DeadlineExceeded(f"no answer within {deadline:.0f} s")
+    if "error" in box:
+        raise box["error"]
+    return box["value"]
+
+
 class PaidModelBlocked(RuntimeError):
     pass
 
@@ -39,11 +68,14 @@ class ModelSpec(BaseModel):
     tier: Literal["free", "paid"]
     enabled: bool = True
     api_key_env: Optional[str] = None
+    generation: Optional[dict] = None     # overrides the global generation settings; a null value removes a key
 
 
 class ProvidersConfig(BaseModel):
     rpm: float = 15
     timeout: float = 120
+    max_retries: int = 1          # retries inside the OpenAI client, per request
+    deadline: float = 150         # wall-clock seconds allowed per attempt
     generation: dict = {"temperature": 0.7, "max_tokens": 2048}
     models: list[ModelSpec]
 
@@ -88,9 +120,10 @@ class GuardedClient:
 
     def __init__(self, inner: LLMClient, *, rpm: float = 15, max_calls: Optional[int] = None,
                  retries: int = 2, backoff: float = 5.0, fallback_families: Optional[list[str]] = None,
-                 sleep: Callable[[float], None] = time.sleep, clock: Callable[[], float] = time.monotonic):
+                 deadline: Optional[float] = None, sleep: Callable[[float], None] = time.sleep, clock: Callable[[], float] = time.monotonic):
         self.inner, self.max_calls, self.retries, self.backoff = inner, max_calls, retries, backoff
         self.fallback_families = list(fallback_families or [])
+        self.deadline = deadline
         self._interval = 60.0 / rpm if rpm else 0.0
         self._sleep, self._clock = sleep, clock
         self._last = -1e18
@@ -113,7 +146,8 @@ class GuardedClient:
             self.calls += 1
             self.by_family[family] = self.by_family.get(family, 0) + 1
             try:
-                reply = self.inner.call(role=role, family=family, prompt=prompt)
+                reply = call_with_deadline(
+                    lambda: self.inner.call(role=role, family=family, prompt=prompt), self.deadline)
             except Exception as e:  # noqa: BLE001 - any provider failure is retried, then reported
                 error = f"{type(e).__name__}: {e}"
                 self.failures += 1
@@ -147,8 +181,9 @@ def build_runners(specs: list[ModelSpec], cfg: ProvidersConfig) -> dict[str, tup
     classes = {"openrouter": OpenRouterRunner, "cometapi": CometApiRunner}
     runners = {}
     for s in specs:
-        runner = classes[s.provider](models=[s.model], generation_kwargs=dict(cfg.generation),
-                                     max_retries=1, timeout=cfg.timeout, api_key_env=s.api_key_env)
+        gen = {k: v for k, v in {**cfg.generation, **(s.generation or {})}.items() if v is not None}
+        runner = classes[s.provider](models=[s.model], generation_kwargs=gen,
+                                     max_retries=cfg.max_retries, timeout=cfg.timeout, api_key_env=s.api_key_env)
         runners[s.family] = (s.model, runner)
     return runners
 
@@ -162,6 +197,6 @@ def build_client(config_path: str | Path = DEFAULT_CONFIG, *, max_calls: Optiona
     if families:
         specs = [s for s in specs if s.family in families]
     inner = RunnerLLMClient(build_runners(specs, cfg))
-    client = GuardedClient(inner, rpm=cfg.rpm, max_calls=max_calls,
+    client = GuardedClient(inner, rpm=cfg.rpm, max_calls=max_calls, deadline=cfg.deadline,
                            fallback_families=[s.family for s in specs])
     return client, [JudgeSpec(s.family, s.model) for s in specs], cfg
