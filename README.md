@@ -1,7 +1,8 @@
 # hyp-arena
 
-Подход к ранжированию тысяч научных гипотез (биология, старение) по перспективности и реализуемости на основе идей Co-Scientist.
+An approach to ranking thousands of scientific hypotheses (biology, ageing) by promise and feasibility, based on ideas from Google's Co-Scientist.
 
-- Описание подхода: [`docs/approach.md`](docs/approach.md)
-- Нейминг (рабочее название и рассмотренные варианты): [`docs/naming.md`](docs/naming.md)
-- Прототип симуляции турнира: `pip install -r requirements.txt && python -m hyparena.sim` (около нескольких минут)
+- Approach: [`docs/approach.md`](docs/approach.md)
+- How Co-Scientist works (hypothesis format, judges, criteria): [`docs/co-scientist-reference.md`](docs/co-scientist-reference.md)
+- Example data: [`data/chatgpt_hypotheses.json`](data/chatgpt_hypotheses.json), 27 hypotheses in Russian parsed from a ChatGPT dialogue with `scripts/parse_chatgpt_hypotheses.py`
+- Tournament simulation prototype: `pip install -r requirements.txt && python -m hyparena.sim` (takes a few minutes)
