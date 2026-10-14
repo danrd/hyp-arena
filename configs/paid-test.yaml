@@ -4,6 +4,7 @@
 # Reasoning models spend the output budget on hidden reasoning and can return an EMPTY answer on an
 # open-ended prompt, so each entry limits reasoning in the way that was checked on a generation prompt.
 rpm: 30
+concurrency: 4     # requests in flight at once, across all providers
 generation:
   temperature: 0.7
   max_tokens: 3000

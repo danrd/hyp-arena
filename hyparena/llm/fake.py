@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import random
+import threading
 import zlib
 
 from hyparena.llm.client import Reply, estimate_tokens
@@ -25,28 +26,31 @@ class FakeLLMClient:
     def __init__(self, seed: int = 0):
         self.seed = seed
         self.n = 0
+        self._lock = threading.Lock()
 
-    def call(self, *, role: str, family: str, prompt: str) -> Reply:
-        self.n += 1
-        rng = random.Random(self.seed * 1_000_003 + zlib.crc32(prompt.encode()) + self.n)
-        text = getattr(self, f"_{role}")(rng, prompt)
+    def call(self, *, role: str, family: str, prompt: str, avoid: frozenset[str] = frozenset()) -> Reply:
+        with self._lock:
+            self.n += 1
+            n = self.n
+        rng = random.Random(self.seed * 1_000_003 + zlib.crc32(prompt.encode()) + n)
+        text = getattr(self, f"_{role}")(rng, prompt, n)
         return Reply(text=text, family=family, model_id=f"fake-{family}-1",
                      tokens_in=estimate_tokens(prompt), tokens_out=estimate_tokens(text))
 
-    def _parse_goal(self, rng, prompt):
+    def _parse_goal(self, rng, prompt, n):
         return json.dumps({"preferences": "novel, testable mechanisms of ageing",
                            "attributes": ["novelty", "feasibility"],
                            "constraints": ["must be testable in vitro"]})
 
-    def _generate(self, rng, prompt):
-        i = self.n
+    def _generate(self, rng, prompt, n):
+        i = n
         return (f"Hypothesis {i}: {TOPICS[i % len(TOPICS)]}, variant {i // len(TOPICS)}. "
                 f"Prediction: perturbing it changes the readout. Test: a controlled experiment. "
                 f"It would be refuted if the readout does not change.")
 
     _evolve = _generate
 
-    def _normalize(self, rng, prompt):
+    def _normalize(self, rng, prompt, n):
         record = {"claim": "A claim.", "mechanism": "A mechanism.", "prediction": "A prediction.",
                   "experiment": "An experiment.", "falsification": "A refutation condition.",
                   "known": "What is known.", "assumptions": ["assumption one", "assumption two"]}
@@ -54,28 +58,31 @@ class FakeLLMClient:
             record["falsification"] = ""          # exercises the refine loop
         return json.dumps(record)
 
-    def _review_initial(self, rng, prompt):
+    def _review_initial(self, rng, prompt, n):
         return json.dumps({"correctness": rng.randint(3, 9), "novelty": rng.randint(2, 9),
                            "quality": rng.randint(3, 9), "safety_ok": True,
                            "notes": ["plausible but unverified"]})
 
-    def _review_full(self, rng, prompt):
+    def _review_full(self, rng, prompt, n):
         return json.dumps({"correctness": rng.randint(3, 9), "novelty": rng.randint(2, 9),
                            "quality": rng.randint(3, 9), "known_aspects": "some prior work",
                            "citations": [], "notes": ["checked against retrieved passages"]})
 
-    def _review_deep(self, rng, prompt):
+    def _review_deep(self, rng, prompt, n):
         return json.dumps({"assumptions": [{"text": "assumption", "correct": True}],
                            "fundamental_flaw": rng.random() < 0.1, "notes": ["no fatal flaw found"]})
 
-    def _compare(self, rng, prompt):
+    def _compare(self, rng, prompt, n):
         return json.dumps({"promise": rng.choice([1, 2]), "feasibility": rng.choice([1, 2]),
                            "rationale": "fake rationale"})
 
-    def _debate(self, rng, prompt):
+    def _debate(self, rng, prompt, n):
         return ("Turn 1: summary. Turn 2: objections. Turn 3: conclusion.\n"
-                + self._compare(rng, prompt))
+                + self._compare(rng, prompt, n))
 
-    def _meta_review(self, rng, prompt):
+    def _research_overview(self, rng, prompt, n):
+        return "## Research overview (fake)\n\n- Area 1: example direction.\n- Area 2: another direction."
+
+    def _meta_review(self, rng, prompt, n):
         return json.dumps({"generate": "State a refutation condition.", "review": "Check citations.",
                            "compare": "Do not prefer longer text.", "evolve": "Keep claims testable."})

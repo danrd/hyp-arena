@@ -1,4 +1,7 @@
-"""review: initial -> full (with search) -> deep verification. Survivors become `active`."""
+"""review: initial -> full (with search) -> deep verification. Survivors become `active`.
+
+Reviewers never come from the writer's family, also when the client falls back to another family:
+the reviews are read by the judges."""
 from __future__ import annotations
 
 from hyparena.llm.structured import ask_json
@@ -19,12 +22,14 @@ def _deep_validate(value: dict) -> list[str]:
 def make_review(ctx):
     cfg = ctx.cfg
 
-    def reviewer(h: Hypothesis) -> str:
-        """Next reviewer family, never the writer's (reviews are read by the judges)."""
-        others = [f for f in ctx.generator_families if f != h.provenance.family]
-        return ctx.rotate("reviewer", others or ctx.generator_families)
+    def reviewers(h: Hypothesis) -> list[str]:
+        """The three reviewer families for `h`, assigned in order before the parallel work starts."""
+        others = [f for f in ctx.generator_families if f != h.provenance.family] or ctx.generator_families
+        return [ctx.rotate("reviewer", others) for _ in range(3)]
 
-    def review_one(h: Hypothesis, state: GraphState) -> Hypothesis:
+    def review_one(task) -> Hypothesis:
+        h, state, (fam_initial, fam_full, fam_deep) = task
+        avoid = (h.provenance.family,)
         common = {"goal": state["goal"], "plan": state["plan"], "text": h.text,
                   "feedback": state.get("feedback", {})}
         reviews: list[Review] = []
@@ -32,8 +37,8 @@ def make_review(ctx):
         def reject():
             return h.model_copy(update={"reviews": reviews, "status": "rejected"})
 
-        init = ask_json(ctx, role="review_initial", family=reviewer(h), template="review_initial",
-                        version="v1", variables=common, phase="review", validate=_numbers)
+        init = ask_json(ctx, role="review_initial", family=fam_initial, template="review_initial",
+                        version="v1", variables=common, phase="review", validate=_numbers, avoid=avoid)
         if init.value is None:
             return reject()
         s = init.value
@@ -45,9 +50,9 @@ def make_review(ctx):
             return reject()
 
         query = (h.record.claim if h.record and h.record.claim else h.text)[:300]
-        full = ask_json(ctx, role="review_full", family=reviewer(h), template="review_full",
-                        version="v1", variables={**common, "passages": ctx.search.search(query)},
-                        phase="review", validate=_numbers)
+        full = ask_json(ctx, role="review_full", family=fam_full, template="review_full", version="v1",
+                        variables={**common, "passages": ctx.search.search(query)}, phase="review",
+                        validate=_numbers, avoid=avoid)
         if full.value is None:
             return reject()
         s = full.value
@@ -59,9 +64,8 @@ def make_review(ctx):
         if not passed:
             return reject()
 
-        deep = ask_json(ctx, role="review_deep", family=reviewer(h), template="review_deep",
-                        version="v1", variables={"text": h.text}, phase="review",
-                        validate=_deep_validate)
+        deep = ask_json(ctx, role="review_deep", family=fam_deep, template="review_deep", version="v1",
+                        variables={"text": h.text}, phase="review", validate=_deep_validate, avoid=avoid)
         flawed = bool(deep.value and deep.value.get("fundamental_flaw"))
         if deep.value is not None:
             reviews.append(Review(kind="deep", provenance=deep.provenance, passed=not flawed,
@@ -69,6 +73,7 @@ def make_review(ctx):
         return h.model_copy(update={"reviews": reviews, "status": "rejected" if flawed else "active"})
 
     def review(state: GraphState) -> dict:
-        todo = [h for h in state.get("hypotheses", {}).values() if h.status == "normalized"]
-        return {"hypotheses": {h.id: review_one(h, state) for h in todo}}   # sequential for now
+        todo = [(h, state, reviewers(h)) for h in state.get("hypotheses", {}).values()
+                if h.status == "normalized"]
+        return {"hypotheses": {h.id: h for h in ctx.map(review_one, todo)}}
     return review

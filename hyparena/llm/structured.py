@@ -40,7 +40,7 @@ class Structured:
 
 def ask_json(ctx, *, role: str, family: str, template: str, version: str, variables: dict[str, Any],
              phase: str, validate: Callable[[dict], list[str]], rounds: int = 2,
-             strategy: str = "") -> Structured:
+             strategy: str = "", avoid: tuple[str, ...] = ()) -> Structured:
     """Call, parse as JSON, validate; on complaints ask again with them. Returns the best attempt
     (a value that reads, then the fewest complaints) together with the provenance of that call."""
     calls: list[Provenance] = []
@@ -48,7 +48,7 @@ def ask_json(ctx, *, role: str, family: str, template: str, version: str, variab
     def ask(call: dict[str, Any]) -> str:
         reply, prov = ctx.call(role=role, family=family, template=template, version=version,
                                variables={**variables, "history_text": call.get("history_text", "")},
-                               phase=phase, strategy=strategy)
+                               phase=phase, strategy=strategy, avoid=avoid)
         calls.append(prov)
         return reply.text
 

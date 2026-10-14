@@ -19,6 +19,7 @@ from hyparena.data import load_imported
 from hyparena.graph import build_graph
 from hyparena.llm.providers import DEFAULT_CONFIG, CallCapExceeded, build_client
 from hyparena.llm.structured import parse_json
+from hyparena.persist import has_checkpoint, run_config, sqlite_checkpointer
 from hyparena.provenance import ProvenanceLog
 from hyparena.rating import combined
 from hyparena.state import AXES, PlanConfig, initial_state
@@ -29,10 +30,10 @@ RUNS = Path(__file__).resolve().parents[1] / "runs"
 
 TOY = ({"text": "Senescent fibroblasts spread senescence to neighbours through extracellular cGAMP; "
                 "a cGAMP-binding trap in a 3D skin model should reduce new senescent cells.",
-        "review_notes": "plausible; mechanism partly shown in tumour immunity"},
+        "review_notes": "plausible; mechanism partly shown in tumour immunity", "record": {}, "gaps": []},
        {"text": "Ageing is caused by an unspecified accumulation of damage that a general "
                 "rejuvenation treatment could reverse.",
-        "review_notes": "vague; hard to test"})
+        "review_notes": "vague; hard to test", "record": {}, "gaps": ["experiment", "falsification"]})
 
 
 def _context(args, **cfg_overrides) -> tuple[Context, object]:
@@ -53,7 +54,7 @@ def smoke(args) -> None:
     for j in ctx.judge_pool:
         started = time.perf_counter()
         try:
-            reply, _ = ctx.call(role="compare", family=j.family, template="compare", version="v1",
+            reply, _ = ctx.call(role="compare", family=j.family, template="compare", version="v2",
                                 phase="rank", variables={"goal": GOAL, "plan": PlanConfig(), "feedback": {},
                                                          "first": TOY[0], "second": TOY[1],
                                                          "history_text": ""})
@@ -77,11 +78,23 @@ def run(args) -> None:
         print(f"imported: {len(imported)} hypotheses written by {p.family} / {p.model_version}")
     ctx, client = _context(args, max_cycles=1, gen_per_cycle=gen, evolve_per_cycle=1,
                            judges_per_match=1, extra_judges=0, matches_per_item=args.matches)
-    graph = build_graph(ctx)
+    checkpointer = sqlite_checkpointer(args.checkpoint) if args.checkpoint else None
+    graph = build_graph(ctx, checkpointer=checkpointer)
+    thread = args.thread or f"run-{datetime.now():%Y%m%d-%H%M%S}"
+    config = run_config(thread) if checkpointer else {"recursion_limit": 200}
+    start = initial_state(goal, imported)
+    if args.resume:
+        if not (checkpointer and args.thread and has_checkpoint(graph, args.thread)):
+            raise SystemExit("--resume needs --checkpoint and the --thread of an existing run")
+        start = None
+        print(f"resuming thread {thread}")
+    elif checkpointer:
+        print(f"checkpoints: {args.checkpoint}, thread {thread} (continue later with --resume --thread {thread})")
     try:
-        final = graph.invoke(initial_state(goal, imported), config={"recursion_limit": 100})
+        final = graph.invoke(start, config=config)
     except CallCapExceeded as e:
-        print(f"stopped: {e}; see the log for what was done")
+        print(f"stopped: {e}; see the log for what was done"
+              + (f"; continue with --resume --thread {thread}" if checkpointer else ""))
         return
     h = final["hypotheses"]
     from collections import Counter
@@ -91,6 +104,8 @@ def run(args) -> None:
     viol = sum(1 for m in final["matches"] for v in m.judges
                if v.provenance.family in (h[m.a].provenance.family, h[m.b].provenance.family))
     print("judge independence violations:", viol)
+    if final["report"].get("pending"):
+        print("not evaluated (created after the last review or tournament):", final["report"]["pending"])
     print(f"calls: {client.calls}, failures: {client.failures}, by family: {client.by_family}")
     print(render(final["report"]["tokens"]))
     ratings, plan = final["ratings"], final["plan"]
@@ -103,6 +118,8 @@ def run(args) -> None:
             title = h[hid].text.split("\n", 1)[0][:70]
             print(f"  {hid:<8}{score[i]:>6.2f}  {ratings['promise'][hid].score:>6.2f} / {ratings['feasibility'][hid].score:>6.2f}"
                   f"  {ratings['promise'][hid].games:>2}  [{h[hid].provenance.family}] {title}")
+    if final["report"].get("overview"):
+        print("\nresearch overview:\n" + final["report"]["overview"][:1500])
     for s in final["report"]["shown"][:3]:
         print(f"\n[{s['id']}] by {s['provenance']['family']} - promise {s['ratings']['promise']['score']:.2f}, "
               f"feasibility {s['ratings']['feasibility']['score']:.2f}\n{s['text'][:300]}")
@@ -118,6 +135,9 @@ def main() -> None:
     parser.add_argument("--import-file", default=None, help="dataset JSON of externally written hypotheses, e.g. data/chatgpt_hypotheses.json")
     parser.add_argument("--limit", type=int, default=None, help="with --import-file: use an evenly spaced sample of this size")
     parser.add_argument("--matches", type=float, default=1.0, help="tournament matches per active hypothesis")
+    parser.add_argument("--checkpoint", default=None, help="SQLite file for the graph state, e.g. runs/state.sqlite")
+    parser.add_argument("--thread", default=None, help="run id inside the checkpoint file")
+    parser.add_argument("--resume", action="store_true", help="continue the --thread run from its last checkpoint")
     args = parser.parse_args()
     {"smoke": smoke, "run": run}[args.command](args)
 

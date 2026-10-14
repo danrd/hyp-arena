@@ -12,19 +12,22 @@ def next_id(state: GraphState, offset: int = 0) -> str:
 
 def make_generate(ctx):
     def generate(state: GraphState) -> dict:
-        new: dict[str, Hypothesis] = {}
         plan, goal = state["plan"], state["goal"]
-        known_titles = [h.text[:80] for h in state.get("hypotheses", {}).values()][:20]
-        for _ in range(ctx.cfg.gen_per_cycle):
-            family = ctx.rotate("generate_family", ctx.generator_families)
-            strategy = ctx.rotate("generate_strategy", list(STRATEGIES))
+        known_titles = [h.text.split("\n", 1)[0][:100] for h in state.get("hypotheses", {}).values()][:30]
+        # Assignments are fixed here, in order, so the parallel calls below do not change them.
+        tasks = [(next_id(state, i), ctx.rotate("generate_family", ctx.generator_families),
+                  ctx.rotate("generate_strategy", list(STRATEGIES))) for i in range(ctx.cfg.gen_per_cycle)]
+
+        def one(task) -> Hypothesis:
+            hid, family, strategy = task
             passages = ctx.search.search(goal) if strategy == "literature" else []
             reply, prov = ctx.call(
-                role="generate", family=family, template="generate", version="v1", phase="generate",
+                role="generate", family=family, template="generate", version="v2", phase="generate",
                 strategy=strategy,
                 variables={"goal": goal, "plan": plan, "strategy": strategy, "passages": passages,
                            "known_titles": known_titles, "feedback": state.get("feedback", {})})
-            hid = next_id(state, len(new))
-            new[hid] = Hypothesis(id=hid, text=reply.text.strip(), provenance=prov)
-        return {"hypotheses": new}
+            return Hypothesis(id=hid, text=reply.text.strip(), provenance=prov)
+
+        made = [h for h in ctx.map(one, tasks) if h.text]
+        return {"hypotheses": {h.id: h for h in made}}
     return generate

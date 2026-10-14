@@ -3,8 +3,10 @@ from __future__ import annotations
 
 import hashlib
 import random
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any, Callable, Iterable, Optional, TypeVar
 
 from agent_kit import trace
 from agent_kit.trace import Tracer
@@ -17,6 +19,9 @@ from hyparena.state import Provenance
 from hyparena.tools.embed import Embedder, HashingEmbedder
 from hyparena.tools.search import NullSearch, SearchTool
 
+T = TypeVar("T")
+R = TypeVar("R")
+
 #: Phases of this project's trace table (agent_kit.trace.PHASES is replaced with these).
 PHASES = ("generate", "normalize", "review", "proximity", "rank", "debate", "evolve", "meta", "other")
 
@@ -25,6 +30,7 @@ PHASES = ("generate", "normalize", "review", "proximity", "rank", "debate", "evo
 class RunConfig:
     lineage_mode: LineageMode = "writer"
     seed: int = 0
+    workers: int = 8                     # parallel LLM tasks inside a node (the client caps requests in flight)
     # budget
     max_cycles: int = 3
     max_tokens: int = 2_000_000          # estimated tokens
@@ -62,17 +68,32 @@ class Context:
     log: ProvenanceLog = field(default_factory=ProvenanceLog)
     rng: random.Random = field(init=False)
     _rotation: dict[str, int] = field(default_factory=dict, init=False)
+    _lock: threading.Lock = field(default_factory=threading.Lock, init=False)
 
     def __post_init__(self) -> None:
         self.rng = random.Random(self.cfg.seed)
         trace.PHASES = PHASES
 
+    def rng_for(self, *key: Any) -> random.Random:
+        """A generator that depends only on the seed and `key`, so parallel tasks stay reproducible."""
+        return random.Random(":".join(str(k) for k in (self.cfg.seed, *key)))
+
+    def map(self, fn: Callable[[T], R], items: Iterable[T]) -> list[R]:
+        """`fn` over `items` on a thread pool, results in input order. The first exception is raised."""
+        items = list(items)
+        if self.cfg.workers <= 1 or len(items) <= 1:
+            return [fn(x) for x in items]
+        with ThreadPoolExecutor(max_workers=min(self.cfg.workers, len(items))) as pool:
+            return list(pool.map(fn, items))
+
     def call(self, *, role: str, family: str, template: str, version: str,
-             variables: dict[str, Any], phase: str, strategy: str = "") -> tuple[Reply, Provenance]:
-        """Render a prompt, call the family's model inside a trace span, log and return the reply."""
+             variables: dict[str, Any], phase: str, strategy: str = "",
+             avoid: Iterable[str] = ()) -> tuple[Reply, Provenance]:
+        """Render a prompt, call the family's model inside a trace span, log and return the reply.
+        `avoid`: families that must not answer, even if the client falls back to another family."""
         prompt = render(template, version, **variables)
         with self.tracer.span(phase, role, tokens_in=estimate_tokens(prompt)) as span:
-            reply = self.client.call(role=role, family=family, prompt=prompt)
+            reply = self.client.call(role=role, family=family, prompt=prompt, avoid=frozenset(avoid))
             span.tokens_out = reply.tokens_out
         if reply.error:
             self.log.write({"event": "call_failed", "role": role, "family": family, "error": reply.error[:300]})
@@ -89,8 +110,9 @@ class Context:
 
     def rotate(self, kind: str, options: list) -> Any:
         """Round-robin over `options`, independently per `kind`."""
-        i = self._rotation.get(kind, 0)
-        self._rotation[kind] = i + 1
+        with self._lock:
+            i = self._rotation.get(kind, 0)
+            self._rotation[kind] = i + 1
         return options[i % len(options)]
 
     def utility_family(self) -> str:

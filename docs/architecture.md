@@ -8,7 +8,7 @@ This document turns the approach in [`approach.md`](approach.md) into a concrete
 
 1. **Reproduce the Co-Scientist template first**: the same agents and the same generate, review, rank, evolve loop. Deviate only where `approach.md` already argues for it.
 2. **Our deviations are few and explicit** (section 3): two rating axes, a Bradley–Terry tournament with adaptive pair selection, a judge ensemble that is independent of the generator, a normalization layer, and full provenance.
-3. **Agents are plain functions** over a shared state. LangGraph provides routing, fan-out and checkpointing. Nodes call our LLM layer directly and do not depend on LangChain model classes.
+3. **Agents are plain functions** over a shared state. LangGraph provides routing and checkpointing; independent LLM calls inside a node run on a thread pool. Nodes call our LLM layer directly and do not depend on LangChain model classes.
 4. **Every LLM output is attributable.** Each text, review and verdict records which model (family, exact version), prompt version and rubric version produced it.
 5. **Hypotheses are append-only.** Nothing edits a hypothesis; evolution creates new ones (as in Co-Scientist).
 
@@ -16,7 +16,7 @@ This document turns the approach in [`approach.md`](approach.md) into a concrete
 
 | Co-Scientist agent | Node(s) here | Main difference |
 |---|---|---|
-| Supervisor | `supervisor` (router) | Cycle-based and synchronous per step instead of an asynchronous worker queue; parallelism comes from fan-out inside a step |
+| Supervisor | `supervisor` (router) | Cycle-based instead of an asynchronous worker queue; parallelism comes from a thread pool inside a step |
 | Goal parsing | `parse_goal` | Same output: preferences, attributes, constraints. Attributes are fixed to two axes, promise and feasibility, plus any goal-specific ones |
 | Generation | `generate` | Free-form text, as in the paper. Search-grounded strategy uses a pluggable search tool (stubbed at first) |
 | (none) | `normalize` | **New.** Extracts a structured record from the free text, flags missing fields, keeps the original text |
@@ -61,9 +61,9 @@ This document turns the approach in [`approach.md`](approach.md) into a concrete
 ```
 
 - **Routing.** After `parse_goal`, the `supervisor` chooses the next node through conditional edges from the current statistics (hypotheses awaiting review, tournament progress, share of new hypotheses that win matches, budget left). In the common case it runs one full cycle: generate, normalize, review, proximity, tournament, evolve, meta-review.
-- **Fan-out.** Reviewing many hypotheses and running many matches happen as dynamic fan-out inside a step (LangGraph's `Send`), with results merged by reducers on the state. This replaces the paper's asynchronous workers.
+- **Parallelism.** Independent calls inside a node (generations, normalizations, reviews per hypothesis, matches per pair, evolutions) run on a thread pool (`Context.map`, `RunConfig.workers`). The client caps requests in flight (`concurrency`) and the request rate (`rpm`), so the pool size does not raise the load on providers. Assignments that rotate (generator, reviewer families, strategies) are fixed in order before the parallel work starts, and each match has its own random generator derived from the seed and the pair, so parallel execution does not change who judges what. A thread pool was chosen over LangGraph's `Send` fan-out because it keeps each agent a plain function and needs no extra graph nodes; `Send` remains possible later. This replaces the paper's asynchronous workers.
 - **Stop test.** Token or call budget exhausted, a maximum number of cycles, or top-k stability (the top-k set barely changes over the last cycles).
-- **Memory.** A LangGraph checkpointer persists the state after every step, so a run can resume. Provenance is additionally written to an append-only JSONL log.
+- **Memory.** A LangGraph SQLite checkpointer (`hyparena/persist.py`) stores the state after every node under a thread id; a stopped run (crash, call cap, daily limit) continues from its last checkpoint (`python -m hyparena.live run --checkpoint runs/state.sqlite --resume --thread <id>`). The state models are registered with the serializer, as LangGraph's strict mode requires. What is outside the graph state (trace, call counters, rotation positions) starts afresh on resume. Provenance is additionally written to an append-only JSONL log.
 
 ## 5. State
 
@@ -110,10 +110,10 @@ Rating
 One LLM call turning the free-text goal into `PlanConfig`: preferences, attributes, constraints. The two axes are always present. Output is parsed with a refine loop (section 8) so a malformed reply is retried with the reason.
 
 ### 6.2 `generate`
-Strategies from the paper, each a prompt template: literature exploration (search tool), simulated scientific debate (multi-turn, one model role-playing a panel), iterative assumptions identification, research expansion (uses the meta-review overview). Output is free-form text for domain experts. Generator model rotates over the family pool so the provenance has variety; this is configurable.
+Strategies from the paper, each with its own instructions in the prompt (`generate/v2`): literature exploration (search tool; without passages, unattributed statements must be labelled as assumptions), simulated scientific debate (one call in which the model privately runs the panel and outputs only the refined hypothesis), iterative assumptions identification (a chain of testable conditional assumptions), research expansion (directions not covered by existing hypotheses). The plan's desired attributes are part of the prompt. Output is free-form text for domain experts. Generator model rotates over the family pool so the provenance has variety; this is configurable.
 
 ### 6.3 `normalize` (new)
-Extracts the structured record from the free text (claim, mechanism, prediction, experiment, falsification, known versus assumed). Missing fields are listed in `gaps`. Implemented with `agent_kit.refine.loop`: `parse` reads JSON into the record; `review` checks completeness (for example, no falsification condition) and sends the reasons back. The original text is kept and is the primary input for judges; the record is the structured aid. The ChatGPT dataset (`data/chatgpt_hypotheses.json`) already has this shape.
+Extracts the structured record from the free text (claim, mechanism, prediction, experiment, falsification, known versus assumed). Missing fields are listed in `gaps`. Implemented with `agent_kit.refine.loop`: `parse` reads JSON into the record; `review` checks completeness (for example, no falsification condition) and sends the reasons back. The original text is kept and is the primary input for judges; the record and the list of missing fields are shown to judges next to it (`compare/v2`, `debate/v2`). The ChatGPT dataset (`data/chatgpt_hypotheses.json`) already has this shape.
 
 ### 6.4 `review`
 Pipeline per hypothesis, as in the paper:
@@ -121,14 +121,14 @@ Pipeline per hypothesis, as in the paper:
 2. **Full review** (with search): the same criteria with retrieved literature. Novelty is judged **only** with retrieval (the paper's ablation: 6.14/10 without, 2.38/10 with).
 3. **Deep verification**: decompose into assumptions and sub-assumptions, check each independently. Failures are marked fundamental or not.
 
-Observation, simulation and recurrent reviews are later additions. Every claim in a review carries a citation or the label "assumption". A grounding check (citation exists and supports the claim) can run as the `review` function of a refine loop.
+**Reviewers never come from the writer's family**, also when the client falls back to another family after a failure (`avoid`), because the judges read the reviews. Observation, simulation and recurrent reviews are later additions. Every claim in a review carries a citation or the label "assumption". A grounding check (citation exists and supports the claim) can run as the `review` function of a refine loop.
 
 ### 6.5 `proximity`
 Embeds hypotheses (an `Embedder` interface, stubbed), builds a neighbour graph and clusters, and merges near-duplicates above a threshold (merged ones stay in the log with `status = merged` and a pointer). Clusters are used by pair selection and by final diversification.
 
 ### 6.6 `tournament`
 The core node. One round:
-1. **Select pairs** from the active hypotheses: eliminate those whose upper bound is below the k-th best lower bound; pair neighbours in rating among candidates; reserve a share for a Swiss exploration round; bias towards pairs in the same cluster; prioritize new hypotheses.
+1. **Select pairs** from the active hypotheses: eliminate those whose upper bound is below the k-th best lower bound; pair neighbours in rating among candidates; reserve a share for a Swiss exploration round. (Planned, not implemented: a bias towards pairs in the same cluster and priority for new hypotheses.)
 2. **Pick judges** for each pair with the independence rule (section 7).
 3. **Judge** each pair in single-turn mode; escalate to a multi-turn debate for top-ranked pairs and for contested pairs (judges disagree, or the verdict flips when positions are swapped).
 4. **Update** Bradley–Terry ratings per axis and their standard errors from the full match log.
@@ -136,16 +136,16 @@ The core node. One round:
 The pair-selection logic is the one prototyped in `hyparena/sim.py`; the node reuses it behind a function interface.
 
 ### 6.7 `evolve`
-Creates new hypotheses from the top of the ranking: grounding in literature, feasibility and coherence improvement, inspiration from top hypotheses, combination, simplification, out-of-the-box. A new hypothesis never replaces its parents; it has `parents` set and must win its own matches. Evolved hypotheses go through `normalize` and `review` like any other.
+Creates new hypotheses from the top of the ranking: grounding in literature, feasibility and coherence improvement, inspiration from top hypotheses, combination, simplification, out-of-the-box. A new hypothesis never replaces its parents; it has `parents` set and must win its own matches. Evolved hypotheses go through `normalize` and `review` like any other in the next cycle. Evolution is skipped in the last cycle, since its output could not be evaluated; when a run stops early (budget or a stable top), hypotheses created in the last cycle are listed in the report as `pending` instead of being dropped silently.
 
 ### 6.8 `meta_review`
-Summarizes recurring problems in reviews and debate rationales into feedback strings per agent, stored in `state.feedback` and injected into the next prompts through a `feedback` block (no fine-tuning). At the end, it writes the research overview and the final report.
+Summarizes recurring problems in reviews and debate rationales into feedback strings per agent, stored in `state.feedback` and injected into the next prompts through a `feedback` block (no fine-tuning). The final research overview is written by the `report` node.
 
 ### 6.9 `supervisor`
-Computes statistics each step (counts by status, tournament progress, share of evolved hypotheses that reach the top, budget) and decides the next step or stops.
+Decides after each cycle whether to run another one or stop: maximum number of cycles, estimated token budget, or an unchanged top-k over the last two cycles. Not implemented yet: the paper's allocation of work between agents by their measured effectiveness (for example, how often evolved hypotheses reach the top).
 
 ### 6.10 `report`
-Pareto front over the two axes, selection by team-set weights, near-duplicates removed using clusters, and for each shown hypothesis: the original text, the record, reviews with citations, the match history, and the full provenance.
+Pareto front over the two axes, selection by team-set weights, near-duplicates removed using clusters, and for each shown hypothesis: the original text, the record, reviews with citations, the match history, and the full provenance. A **research overview** (the Meta-review agent's final output in Co-Scientist) is written from the shown hypotheses: research areas, first experiments, conflicts and overlaps, open risks (`research_overview/v1`). Hypotheses that were never evaluated are listed as `pending`.
 
 ## 7. Judge ensemble and independence
 
@@ -206,7 +206,6 @@ Dependencies in `pyproject.toml`: `toolkit[llm-kit,llm-kit-openrouter]` (include
 
 - Real LLM calls, real search, real embeddings, tests and runs (a fake `LLMClient` is enough to exercise the graph shape).
 - Observation, simulation and recurrent reviews.
-- Parallel fan-out: the skeleton runs reviews and matches sequentially inside a step (the graph shape allows adding fan-out later).
 - Cluster bias in pair selection (clusters are computed and stored, but pairing uses ratings only).
 - Multi-turn debate as separate calls: the skeleton asks for the whole panel discussion in one call and a final JSON verdict.
 - `llm_kit.PromptBuilder`: prompts are rendered with Jinja2 directly from the same `<name>/<version>.j2` layout, so `PromptBuilder` can be swapped in later.
