@@ -12,8 +12,8 @@ from pathlib import Path
 
 #: State models the checkpoint may rebuild; LangGraph refuses unlisted types in strict mode.
 STATE_TYPES = [("hyparena.state", name) for name in
-               ("PlanConfig", "Hypothesis", "Provenance", "NormalizedRecord", "Review", "JudgeVerdict",
-                "Match", "Rating")]
+               ("PlanConfig", "Criterion", "Hypothesis", "Provenance", "Card", "Evidence", "Review",
+                "JudgeVerdict", "Match", "Rating")]
 
 
 def sqlite_checkpointer(path: str | Path):

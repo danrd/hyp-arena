@@ -19,7 +19,7 @@ def make_evolve(ctx):
         ids = [h.id for h in hyps.values() if h.status == "active"]
         if len(ids) < 2 or not state.get("ratings"):
             return {}
-        score, _ = combined(state["ratings"], plan.axis_weights, ids)
+        score, _ = combined(state["ratings"], plan.weights, ids)
         top = [ids[i] for i in sorted(range(len(ids)), key=lambda i: -score[i])[:6]]
         tasks = []
         for i in range(ctx.cfg.evolve_per_cycle):

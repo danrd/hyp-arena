@@ -1,0 +1,17 @@
+# Hypothesis card: the fields the normalizer extracts from free text. A draft, not an agreed format:
+# change fields here, the normalizer prompt and the judges' view follow from this file.
+# type: text | list.  required: listed in `gaps` when the text does not state it (it is not invented).
+# Everything in the card is DECLARED by the hypothesis; verification against sources is separate
+# (the hypothesis's `evidence`).
+version: card-draft-1
+fields:
+  - {name: claim, type: text, required: true, description: "one sentence: what is proposed and what it should lead to"}
+  - {name: mechanism, type: text, required: true, description: "the proposed mechanism: targets, pathways, causal chain"}
+  - {name: intervention, type: text, required: false, description: "intervention type and entity (compound, gene, diet, cell, device), regimen if stated"}
+  - {name: hallmarks, type: list, required: false, description: "hallmarks of ageing involved, with direction"}
+  - {name: outcome_claimed, type: text, required: false, description: "endpoint (lifespan, healthspan, biomarker, disease, mechanism) and species"}
+  - {name: known, type: list, required: false, description: "what the text presents as already known or published"}
+  - {name: assumptions, type: list, required: false, description: "what the text assumes without support"}
+  - {name: decisive_experiment, type: text, required: true, description: "the experiment that would decide it: system, endpoint, duration class"}
+  - {name: falsifiable_implications, type: list, required: true, description: "results that would refute the hypothesis"}
+  - {name: unknowns, type: list, required: false, description: "open questions the text names"}

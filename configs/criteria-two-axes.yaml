@@ -1,0 +1,9 @@
+# The earlier two-axis setup, kept as a preset (--criteria configs/criteria-two-axes.yaml).
+version: two-axes-v1
+criteria:
+  - name: promise
+    weight: 0.5
+    description: novelty, strength of the evidence base, explanatory power, potential impact.
+  - name: feasibility
+    weight: 0.5
+    description: can it be tested with available methods and model systems, cost and time, ethics and risk.

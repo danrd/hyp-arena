@@ -22,7 +22,10 @@ from hyparena.llm.structured import parse_json
 from hyparena.persist import has_checkpoint, run_config, sqlite_checkpointer
 from hyparena.provenance import ProvenanceLog
 from hyparena.rating import combined
-from hyparena.state import AXES, PlanConfig, initial_state
+from hyparena.schema import CONFIGS, load_card_schema, load_criteria, verdict_example
+from hyparena.state import PlanConfig, initial_state
+from hyparena.tools.europepmc import EuropePMCSearch
+from hyparena.tools.search import NullSearch
 
 GOAL = "Find mechanisms of cellular ageing that can be tested in vitro."
 IMPORT_GOAL = "Identify the most promising and feasible hypotheses on the biology of ageing."
@@ -30,19 +33,23 @@ RUNS = Path(__file__).resolve().parents[1] / "runs"
 
 TOY = ({"text": "Senescent fibroblasts spread senescence to neighbours through extracellular cGAMP; "
                 "a cGAMP-binding trap in a 3D skin model should reduce new senescent cells.",
-        "review_notes": "plausible; mechanism partly shown in tumour immunity", "record": {}, "gaps": []},
+        "review_notes": "plausible; mechanism partly shown in tumour immunity", "card": {}, "gaps": [], "evidence": []},
        {"text": "Ageing is caused by an unspecified accumulation of damage that a general "
                 "rejuvenation treatment could reverse.",
-        "review_notes": "vague; hard to test", "record": {}, "gaps": ["experiment", "falsification"]})
+        "review_notes": "vague; hard to test", "card": {}, "gaps": ["decisive_experiment", "falsifiable_implications"],
+        "evidence": []})
 
 
 def _context(args, **cfg_overrides) -> tuple[Context, object]:
     client, pool, _ = build_client(args.config, max_calls=args.max_calls)
     RUNS.mkdir(exist_ok=True)
     log = ProvenanceLog(RUNS / f"live-{datetime.now():%Y%m%d-%H%M%S}.jsonl")
-    cfg = RunConfig(**cfg_overrides)
+    cfg = RunConfig(as_of=args.as_of, **cfg_overrides)
     ctx = Context(client=client, judge_pool=pool, generator_families=[j.family for j in pool],
-                  cfg=cfg, log=log)
+                  cfg=cfg, log=log, criteria=load_criteria(args.criteria), card_schema=load_card_schema(args.card),
+                  search=EuropePMCSearch() if args.search == "europepmc" else NullSearch())
+    print(f"criteria: {[c.name for c in ctx.criteria.criteria]} ({ctx.criteria.version}); card: {ctx.card_schema.version}; "
+          f"search: {args.search}{f', as of {args.as_of}' if args.as_of else ''}")
     print(f"families: {[j.family for j in pool]}  models: {[j.model_version for j in pool]}")
     print(f"log: {log.path}")
     return ctx, client
@@ -54,16 +61,19 @@ def smoke(args) -> None:
     for j in ctx.judge_pool:
         started = time.perf_counter()
         try:
-            reply, _ = ctx.call(role="compare", family=j.family, template="compare", version="v2",
-                                phase="rank", variables={"goal": GOAL, "plan": PlanConfig(), "feedback": {},
+            plan = PlanConfig(criteria=ctx.criteria.criteria)
+            reply, _ = ctx.call(role="compare", family=j.family, template="compare", version="v3",
+                                phase="rank", variables={"goal": GOAL, "plan": plan, "feedback": {},
                                                          "first": TOY[0], "second": TOY[1],
+                                                         "example": verdict_example(plan.criteria),
                                                          "history_text": ""})
         except CallCapExceeded as e:
             print(f"stopped: {e}")
             break
         value = parse_json(reply.text)
-        valid = bool(value) and all(value.get(ax) in (1, 2) for ax in AXES)
-        note = reply.error or (f"picked {value.get('promise')}/{value.get('feasibility')}" if valid else reply.text[:50].replace("\n", " "))
+        valid = bool(value) and all(value.get(c) in (1, 2) for c in plan.names)
+        note = reply.error or (("picked " + "/".join(str(value.get(c)) for c in plan.names)) if valid
+                               else reply.text[:50].replace("\n", " "))
         print(f"{j.family:<18}{j.model_version:<44}{time.perf_counter() - started:>8.1f}"
               f"{'yes' if value else 'no':>6}{'yes' if valid else 'no':>7}  {note}")
     print(f"\ncalls used: {client.calls} (failures: {client.failures}); by family: {client.by_family}")
@@ -111,18 +121,19 @@ def run(args) -> None:
     ratings, plan = final["ratings"], final["plan"]
     active = [i for i, x in h.items() if x.status == "active"]
     if ratings.get("promise") and active:
-        score, _ = combined(ratings, plan.axis_weights, active)
-        print("\nranking (combined score; promise / feasibility; games):")
+        score, _ = combined(ratings, plan.weights, active)
+        print(f"\nranking (combined; {' / '.join(plan.names)}; games; evidence):")
         for i in sorted(range(len(active)), key=lambda k: -score[k]):
             hid = active[i]
-            title = h[hid].text.split("\n", 1)[0][:70]
-            print(f"  {hid:<8}{score[i]:>6.2f}  {ratings['promise'][hid].score:>6.2f} / {ratings['feasibility'][hid].score:>6.2f}"
-                  f"  {ratings['promise'][hid].games:>2}  [{h[hid].provenance.family}] {title}")
+            title = h[hid].text.split("\n", 1)[0][:60]
+            per = " / ".join(f"{ratings[c][hid].score:5.2f}" for c in plan.names)
+            print(f"  {hid:<8}{score[i]:>6.2f}  {per}  {ratings[plan.names[0]][hid].games:>2}  {len(h[hid].evidence):>2}"
+                  f"  [{h[hid].provenance.family}] {title}")
     if final["report"].get("overview"):
         print("\nresearch overview:\n" + final["report"]["overview"][:1500])
     for s in final["report"]["shown"][:3]:
-        print(f"\n[{s['id']}] by {s['provenance']['family']} - promise {s['ratings']['promise']['score']:.2f}, "
-              f"feasibility {s['ratings']['feasibility']['score']:.2f}\n{s['text'][:300]}")
+        scores = ", ".join(f"{c} {r['score']:.2f}" for c, r in s["ratings"].items())
+        print(f"\n[{s['id']}] by {s['provenance']['family']} - {scores}\n{s['text'][:300]}")
 
 
 def main() -> None:
@@ -135,6 +146,10 @@ def main() -> None:
     parser.add_argument("--import-file", default=None, help="dataset JSON of externally written hypotheses, e.g. data/chatgpt_hypotheses.json")
     parser.add_argument("--limit", type=int, default=None, help="with --import-file: use an evenly spaced sample of this size")
     parser.add_argument("--matches", type=float, default=1.0, help="tournament matches per active hypothesis")
+    parser.add_argument("--criteria", default=str(CONFIGS / "criteria.yaml"), help="criteria file")
+    parser.add_argument("--card", default=str(CONFIGS / "card.yaml"), help="hypothesis card schema")
+    parser.add_argument("--search", choices=["europepmc", "none"], default="europepmc", help="literature search")
+    parser.add_argument("--as-of", default=None, help="ISO date: evidence published on or before it only")
     parser.add_argument("--checkpoint", default=None, help="SQLite file for the graph state, e.g. runs/state.sqlite")
     parser.add_argument("--thread", default=None, help="run id inside the checkpoint file")
     parser.add_argument("--resume", action="store_true", help="continue the --thread run from its last checkpoint")

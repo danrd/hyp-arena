@@ -1,4 +1,4 @@
-"""review: initial -> full (with search) -> deep verification. Survivors become `active`.
+"""review: initial -> full (against the retrieved evidence) -> deep verification. Survivors become `active`.
 
 Reviewers never come from the writer's family, also when the client falls back to another family:
 the reviews are read by the judges."""
@@ -49,9 +49,8 @@ def make_review(ctx):
         if not passed:
             return reject()
 
-        query = (h.record.claim if h.record and h.record.claim else h.text)[:300]
-        full = ask_json(ctx, role="review_full", family=fam_full, template="review_full", version="v1",
-                        variables={**common, "passages": ctx.search.search(query)}, phase="review",
+        full = ask_json(ctx, role="review_full", family=fam_full, template="review_full", version="v2",
+                        variables={**common, "evidence": h.evidence, "as_of": cfg.as_of}, phase="review",
                         validate=_numbers, avoid=avoid)
         if full.value is None:
             return reject()

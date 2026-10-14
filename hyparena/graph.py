@@ -10,19 +10,20 @@ from hyparena.agents.normalize import make_normalize
 from hyparena.agents.parse_goal import make_parse_goal
 from hyparena.agents.proximity import make_proximity
 from hyparena.agents.report import make_report
+from hyparena.agents.retrieve import make_retrieve
 from hyparena.agents.review import make_review
 from hyparena.agents.supervisor import make_supervisor
 from hyparena.agents.tournament import make_tournament
 from hyparena.context import Context
 from hyparena.state import GraphState
 
-CYCLE = ("generate", "normalize", "review", "proximity", "tournament", "evolve", "meta_review")
+CYCLE = ("generate", "normalize", "retrieve", "review", "proximity", "tournament", "evolve", "meta_review")
 
 
 def build_graph(ctx: Context, checkpointer=None):
     g = StateGraph(GraphState)
     nodes = {"parse_goal": make_parse_goal, "supervisor": make_supervisor, "generate": make_generate,
-             "normalize": make_normalize, "review": make_review, "proximity": make_proximity,
+             "normalize": make_normalize, "retrieve": make_retrieve, "review": make_review, "proximity": make_proximity,
              "tournament": make_tournament, "evolve": make_evolve, "meta_review": make_meta_review,
              "report": make_report}
     for name, factory in nodes.items():
