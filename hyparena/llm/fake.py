@@ -1,0 +1,81 @@
+"""A deterministic stand-in LLM, enough to exercise the graph shape (no real model behind it)."""
+from __future__ import annotations
+
+import json
+import random
+import zlib
+
+from hyparena.llm.client import Reply, estimate_tokens
+
+TOPICS = [
+    "senescent fibroblasts secrete inflammatory cytokines that propagate damage to neighbours",
+    "mitochondrial heteroplasmy drifts upward after repeated rounds of selective mitophagy",
+    "nucleolar condensate permeability declines with replicative age in budding yeast",
+    "thymic medulla architecture loses antigen presenting niches during involution",
+    "chromatin remodelling reactivates silent transposons in ageing hepatocytes",
+    "lysosomal repair kinetics limit nuclear delivery of damage response proteins",
+    "microglial lipid droplets trap cholesterol until export capacity recovers",
+    "muscle stem cell niche stress relaxation slows regeneration in old tissue",
+]
+
+
+class FakeLLMClient:
+    """Returns canned, parsable replies per role. Quality signals are random, not real."""
+
+    def __init__(self, seed: int = 0):
+        self.seed = seed
+        self.n = 0
+
+    def call(self, *, role: str, family: str, prompt: str) -> Reply:
+        self.n += 1
+        rng = random.Random(self.seed * 1_000_003 + zlib.crc32(prompt.encode()) + self.n)
+        text = getattr(self, f"_{role}")(rng, prompt)
+        return Reply(text=text, family=family, model_id=f"fake-{family}-1",
+                     tokens_in=estimate_tokens(prompt), tokens_out=estimate_tokens(text))
+
+    def _parse_goal(self, rng, prompt):
+        return json.dumps({"preferences": "novel, testable mechanisms of ageing",
+                           "attributes": ["novelty", "feasibility"],
+                           "constraints": ["must be testable in vitro"]})
+
+    def _generate(self, rng, prompt):
+        i = self.n
+        return (f"Hypothesis {i}: {TOPICS[i % len(TOPICS)]}, variant {i // len(TOPICS)}. "
+                f"Prediction: perturbing it changes the readout. Test: a controlled experiment. "
+                f"It would be refuted if the readout does not change.")
+
+    _evolve = _generate
+
+    def _normalize(self, rng, prompt):
+        record = {"claim": "A claim.", "mechanism": "A mechanism.", "prediction": "A prediction.",
+                  "experiment": "An experiment.", "falsification": "A refutation condition.",
+                  "known": "What is known.", "assumptions": ["assumption one", "assumption two"]}
+        if "was not accepted" not in prompt and rng.random() < 0.3:
+            record["falsification"] = ""          # exercises the refine loop
+        return json.dumps(record)
+
+    def _review_initial(self, rng, prompt):
+        return json.dumps({"correctness": rng.randint(3, 9), "novelty": rng.randint(2, 9),
+                           "quality": rng.randint(3, 9), "safety_ok": True,
+                           "notes": ["plausible but unverified"]})
+
+    def _review_full(self, rng, prompt):
+        return json.dumps({"correctness": rng.randint(3, 9), "novelty": rng.randint(2, 9),
+                           "quality": rng.randint(3, 9), "known_aspects": "some prior work",
+                           "citations": [], "notes": ["checked against retrieved passages"]})
+
+    def _review_deep(self, rng, prompt):
+        return json.dumps({"assumptions": [{"text": "assumption", "correct": True}],
+                           "fundamental_flaw": rng.random() < 0.1, "notes": ["no fatal flaw found"]})
+
+    def _compare(self, rng, prompt):
+        return json.dumps({"promise": rng.choice([1, 2]), "feasibility": rng.choice([1, 2]),
+                           "rationale": "fake rationale"})
+
+    def _debate(self, rng, prompt):
+        return ("Turn 1: summary. Turn 2: objections. Turn 3: conclusion.\n"
+                + self._compare(rng, prompt))
+
+    def _meta_review(self, rng, prompt):
+        return json.dumps({"generate": "State a refutation condition.", "review": "Check citations.",
+                           "compare": "Do not prefer longer text.", "evolve": "Keep claims testable."})

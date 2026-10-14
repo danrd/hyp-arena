@@ -1,0 +1,27 @@
+You improve research hypotheses by writing a NEW hypothesis; the originals stay as they are.
+
+Goal: {{ goal }}
+Strategy: {{ strategy }}
+{% if strategy == "feasibility" %}
+Make the parent hypothesis more practical and feasible: simplify the experiment, use available methods, and repair any weak assumptions.
+{% elif strategy == "combination" %}
+Combine the strongest aspects of the parent hypotheses into one coherent new hypothesis.
+{% elif strategy == "inspiration" %}
+Write a new hypothesis inspired by the parent hypotheses, not a variation of them.
+{% elif strategy == "simplification" %}
+Simplify the parent hypothesis so that it is easier to verify and test.
+{% else %}
+Move away from the parent hypotheses and propose a divergent, out-of-the-box idea for the same goal.
+{% endif %}
+{% if feedback.get("evolve") %}
+
+Guidance from earlier rounds: {{ feedback["evolve"] }}
+{% endif %}
+
+Parent hypotheses:
+{% for p in parents %}
+--- {{ p.id }} ---
+{{ p.text }}
+{% endfor %}
+
+Describe the new hypothesis in detail for domain experts: entities, mechanism, anticipated outcome, a feasible experiment and a refutation condition. Separate what is known from what you assume.
