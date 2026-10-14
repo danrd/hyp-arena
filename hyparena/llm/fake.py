@@ -20,6 +20,20 @@ TOPICS = [
 ]
 
 
+def _example_keys(prompt: str) -> dict:
+    """The JSON skeleton the prompt asks for (its last line that parses as a JSON object)."""
+    for line in reversed(prompt.splitlines()):
+        line = line.strip()
+        if line.startswith("{"):
+            try:
+                value = json.loads(line)
+            except ValueError:
+                continue
+            if isinstance(value, dict):
+                return value
+    return {}
+
+
 class FakeLLMClient:
     """Returns canned, parsable replies per role. Quality signals are random, not real."""
 
@@ -51,12 +65,12 @@ class FakeLLMClient:
     _evolve = _generate
 
     def _normalize(self, rng, prompt, n):
-        record = {"claim": "A claim.", "mechanism": "A mechanism.", "prediction": "A prediction.",
-                  "experiment": "An experiment.", "falsification": "A refutation condition.",
-                  "known": "What is known.", "assumptions": ["assumption one", "assumption two"]}
-        if "was not accepted" not in prompt and rng.random() < 0.3:
-            record["falsification"] = ""          # exercises the refine loop
-        return json.dumps(record)
+        skeleton = _example_keys(prompt)
+        card = {k: ([f"{k} item"] if isinstance(v, list) else f"A {k}.") for k, v in skeleton.items()}
+        card["search_queries"] = ["ageing mechanism", "senescence"]
+        if "was not accepted" not in prompt and rng.random() < 0.3 and skeleton:
+            card[next(iter(skeleton))] = ""          # exercises the refine loop
+        return json.dumps(card)
 
     def _review_initial(self, rng, prompt, n):
         return json.dumps({"correctness": rng.randint(3, 9), "novelty": rng.randint(2, 9),
@@ -73,8 +87,8 @@ class FakeLLMClient:
                            "fundamental_flaw": rng.random() < 0.1, "notes": ["no fatal flaw found"]})
 
     def _compare(self, rng, prompt, n):
-        return json.dumps({"promise": rng.choice([1, 2]), "feasibility": rng.choice([1, 2]),
-                           "rationale": "fake rationale"})
+        keys = [k for k in _example_keys(prompt) if k != "rationale"] or ["promise", "feasibility"]
+        return json.dumps({**{k: rng.choice([1, 2]) for k in keys}, "rationale": "fake rationale"})
 
     def _debate(self, rng, prompt, n):
         return ("Turn 1: summary. Turn 2: objections. Turn 3: conclusion.\n"

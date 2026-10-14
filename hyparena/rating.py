@@ -7,11 +7,11 @@ import random
 
 import numpy as np
 
-from hyparena.state import AXES, Match, Rating
+from hyparena.state import Match, Rating
 
 
 def fit_bt(ids: list[str], matches: list[Match], axis: str, iters: int = 100) -> dict[str, Rating]:
-    """Fit log-strengths and Fisher-information standard errors from decided matches on one axis."""
+    """Fit log-strengths and Fisher-information standard errors from decided matches on one criterion."""
     n = len(ids)
     if n == 0:
         return {}
@@ -40,9 +40,9 @@ def fit_bt(ids: list[str], matches: list[Match], axis: str, iters: int = 100) ->
 
 def combined(ratings: dict[str, dict[str, Rating]], weights: dict[str, float],
              ids: list[str]) -> tuple[np.ndarray, np.ndarray]:
-    """Weighted score and its standard error per id."""
-    score = np.array([sum(weights[ax] * ratings[ax][h].score for ax in AXES) for h in ids])
-    se = np.sqrt(np.array([sum((weights[ax] * ratings[ax][h].se) ** 2 for ax in AXES) for h in ids]))
+    """Weighted score and its standard error per id, over the criteria in `weights`."""
+    score = np.array([sum(w * ratings[c][h].score for c, w in weights.items()) for h in ids])
+    se = np.sqrt(np.array([sum((w * ratings[c][h].se) ** 2 for c, w in weights.items()) for h in ids]))
     return score, se
 
 

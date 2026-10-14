@@ -9,7 +9,7 @@ def make_proximity(ctx):
         active = [h for h in state.get("hypotheses", {}).values() if h.status == "active"]
         if not active:
             return {}
-        texts = [(h.record.claim + " " if h.record and h.record.claim else "") + h.text for h in active]
+        texts = [((h.card.get("claim") + " ") if h.card else "") + h.text for h in active]
         emb = ctx.embedder.embed(texts)
         sim = emb @ emb.T
         updated, merged = {}, set()

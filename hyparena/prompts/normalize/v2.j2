@@ -1,0 +1,17 @@
+Extract a hypothesis card from the text below. Use only what the text says: if a field is not stated, leave it empty ("" or []) instead of inventing it. Keep the language of the text.
+
+Fields:
+{% for f in schema.fields %}
+- {{ f.name }} ({{ f.type }}{% if f.required %}, required{% endif %}): {{ f.description }}
+{% endfor %}
+- search_queries (list): 2 to 4 short keyword queries in English for a biomedical literature search that would find prior work on this hypothesis (main entities and mechanism, no full sentences)
+
+Hypothesis text:
+{{ text }}
+
+Reply with a single JSON object and nothing else, with exactly these keys:
+{{ example }}
+{% if history_text %}
+
+{{ history_text }}
+{% endif %}

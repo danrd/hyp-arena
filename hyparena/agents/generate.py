@@ -20,9 +20,9 @@ def make_generate(ctx):
 
         def one(task) -> Hypothesis:
             hid, family, strategy = task
-            passages = ctx.search.search(goal) if strategy == "literature" else []
+            passages = ctx.search.search(goal, limit=ctx.cfg.evidence_per_query, as_of=ctx.cfg.as_of) if strategy == "literature" else []
             reply, prov = ctx.call(
-                role="generate", family=family, template="generate", version="v2", phase="generate",
+                role="generate", family=family, template="generate", version="v3", phase="generate",
                 strategy=strategy,
                 variables={"goal": goal, "plan": plan, "strategy": strategy, "passages": passages,
                            "known_titles": known_titles, "feedback": state.get("feedback", {})})

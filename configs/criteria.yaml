@@ -1,0 +1,27 @@
+# Criteria the judges compare on, one verdict per criterion per comparison.
+# Each criterion gets its own Bradley-Terry rating; `weight` is used only to combine them
+# (pair selection, the final order); the report also shows the Pareto front over all criteria.
+# Default set: the separated criteria of the working notes. Cost and time of the decisive
+# experiment are meant to be estimated from registries later, not judged.
+version: criteria-v1
+criteria:
+  - name: novelty
+    weight: 0.25
+    description: >-
+      How far the hypothesis goes beyond the retrieved evidence. Judge only against the evidence
+      shown: an idea already stated there is not novel, and absence of evidence shown is not proof of novelty.
+  - name: evidence_support
+    weight: 0.25
+    description: >-
+      Independent lines of supporting evidence (species, study type, effect size, replication).
+      Contradicting evidence counts against. Claims without a source count as assumptions.
+  - name: testability
+    weight: 0.25
+    description: >-
+      A decisive test, or a test of a necessary condition, is possible with available model systems,
+      methods or public data, and the hypothesis states results that would refute it.
+  - name: value
+    weight: 0.25
+    description: >-
+      What would be learned or gained if it holds: progress against ageing, and how well a test
+      discriminates between competing explanations.

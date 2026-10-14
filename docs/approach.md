@@ -1,6 +1,8 @@
 # Ranking thousands of hypotheses: a Co-Scientist-based approach
 
-Task: from N ≈ 10³–10⁵ generated biological hypotheses (domain: ageing), select the most **promising** ones that are also **feasible**, with an explanation that can be verified.
+Task: from N ≈ 10³–10⁵ biological hypotheses (domain: ageing) that **arrive from outside** (LLMs generate them in volume), select the most **promising** ones, with an explanation that can be verified against sources. **Ranking is the focus.** Generation and evolution stay in the graph as optional modules (off when hypotheses are imported), because the stages interact: what is retrieved and reviewed is what the judges rank.
+
+The honest claim is "our selector picks better from a given pool", measured against an independent signal at equal LLM-call budget, not "a better system than Co-Scientist overall".
 
 Details of how Co-Scientist itself works (hypothesis format, judges, criteria) are in [`co-scientist-reference.md`](co-scientist-reference.md).
 
@@ -13,7 +15,7 @@ Co-Scientist (Google, 2025) ranks hypotheses with an Elo tournament of pairwise 
 | Elo tournament of pairwise LLM comparisons | Pairwise comparisons plus a **Bradley–Terry** model instead of online Elo. It gives an uncertainty estimate, which we need to choose the next pairs |
 | Proximity graph | Embeddings and clusters. Duplicates are merged, and comparisons mostly happen between topically close hypotheses |
 | Reflection (reviews), debate for top pairs | Structured, search-grounded review before the tournament. Debate only for top and contested pairs |
-| Single Elo over configurable criteria (feasibility can be one attribute) | **Two separate ratings**, promise and feasibility, combined on a Pareto front |
+| Single Elo over configurable criteria (feasibility can be one attribute) | **One rating per criterion** (criteria in `configs/criteria.yaml`; default: novelty, evidence support, testability, value), combined by weights, with the Pareto front shown |
 | One model family for generator and judges | **Judges come from other model families than the generator.** An ensemble of several families, because errors within a family are correlated |
 
 We also add **verifiable output**: every verdict carries citations and a "fact / assumption" label.
@@ -104,23 +106,29 @@ What the table shows:
 
 - **Judge ≠ truth.** An LLM judge prefers long, smooth, familiar wording (risk of "beautiful but trite" hypotheses) and may invent sources. Mitigations: citation check via RAG, "fact / assumption" labels, length and style normalization before comparison. Co-Scientist's own validation is modest: review scores predict correctness with AUC of only about 0.64–0.65 on GPQA, and its Elo is not tied to ground truth.
 - **Synthetic data does not prove real-world quality.** The simulated judge is independent and homogeneous; real LLM errors are correlated. The simulation tests only the pair-selection mechanics.
-- **Promise and feasibility conflict.** Hence a front, not a single score, with weights visible to the user.
+- **Criteria conflict.** Hence per-criterion ratings, not a single score, with weights visible to the user. With four or more criteria the Pareto front stops discriminating (in a small test, all 12 active hypotheses were on it), so the combined score and the per-criterion intervals carry the ranking; the front is context.
+- **Judge novelty can mislead.** HindSight (2603.15164, from the working notes) reports a negative correlation between an LLM judge's novelty rating and later impact (ρ = −0.29, ML ideas). Novelty is therefore judged only against the retrieved evidence, and its weight should be set by the backtest, not assumed.
 - **Novelty.** It is assessed against retrieved literature, and RAG is incomplete. Low novelty caused by poor retrieval will unfairly lower a rating.
 
-## 7. Validation with domain experts
+## 7. Validation without expert labels
 
-1. **Gold set.** 50–100 hypotheses labelled on both axes by 2–3 experts. Metrics: judge–expert agreement (Spearman, share of matching pairs), with inter-expert agreement as the ceiling.
-2. **Baselines:** direct 1–10 scoring with one prompt; a tournament without the similarity graph; a tournament without debate; a single-model judge vs. an ensemble. Same metrics plus token cost.
-3. **Robustness.** Swap A/B order, change rubric wording, change the judge model, rerun with another seed. Report the share of pairs whose verdict changes.
-4. **Retrospective.** Take hypotheses whose test is already published and see where the system ranks them.
-5. **Practical metric.** The share of top-k hypotheses that domain experts agree to take into an experiment.
+Decision (working notes): expert labels are **not assumed**; they are an optional top tier. Ground truth comes from non-human sources, and agreement between LLM judges is not validity.
+
+1. **Time-split backtest.** Hypotheses or claims stated before a date T, ranked with evidence restricted to T (`RunConfig.as_of`, applied in retrieval), against what the literature showed after T. Labels are later support or refutation, not a judge's opinion.
+2. **Replication and outcome labels.** Interventions with known fate: NIA ITP results, DrugAge records (dates derived from PubMed ids, since DrugAge has no entry-date column), trial registry outcomes and statuses.
+3. **Hidden holdout.** A labelled set that the selector and the judges never see; metrics are computed outside the pipeline (AIRA²'s hidden consistent evaluation).
+4. **Judge checks without labels:** position-swap consistency; sensitivity to style (same content, different phrasing or format); cross-family agreement as a sanity check only; accuracy on the backtest labels.
+5. **Baselines at equal budget:** direct 1–10 scoring; a Co-Scientist-like tournament (one Elo, one model family, holistic verdict); our tournament without evidence; single judge vs. ensemble. Report cost per run.
+6. **Leakage.** A judge or generator whose training cutoff is after T can know the outcome; use models with an earlier cutoff for backtests or test for leakage.
+7. **Experts, when available:** a small set of pairwise preferences as the top validation tier, with inter-expert agreement as the ceiling.
 
 ## 8. Next steps
 
-1. Replace the `Judge` stub with a real LLM judge using a rubric and JSON output (verdict per axis, citations, "fact / assumption" labels).
-2. Connect RAG over PubMed and patents, compute embeddings, build the similarity graph.
-3. Build the gold set with domain experts and measure judge agreement.
-4. Add debate for contested pairs and a judge ensemble. Measure recall gained per token.
+1. More connectors behind the same `SearchTool` interface: PubTator3 (entity normalization), Open Genes, ClinicalTrials.gov, Crossref + Retraction Watch (retraction flag on every cited source); see the working notes' data-source survey.
+2. Verified layer of the card: each declared sub-claim linked to evidence records with a status (established, supported, contested, speculative, refuted), once the card format is agreed.
+3. Backtest harness: DrugAge and ITP labels, date filtering, hidden split; then fit criterion weights against it.
+4. Cost and time of the decisive experiment from registries (reference classes), reported as intervals, instead of being judged.
+5. A Co-Scientist-faithful baseline mode for the comparison at equal budget.
 
 ## 9. Example input data: a ChatGPT dialogue
 

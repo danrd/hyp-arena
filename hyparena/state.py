@@ -2,12 +2,10 @@
 from __future__ import annotations
 
 import operator
-from typing import Annotated, Literal, Optional
+from typing import Annotated, Any, Literal, Optional
 
 from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
-
-AXES = ("promise", "feasibility")
 
 Status = Literal["new", "normalized", "active", "rejected", "merged"]
 
@@ -23,15 +21,39 @@ class Provenance(BaseModel):
     call_id: str = ""
 
 
-class NormalizedRecord(BaseModel):
-    claim: str = ""
-    mechanism: str = ""
-    prediction: str = ""
-    experiment: str = ""
-    falsification: str = ""
-    known: str = ""
-    assumptions: list[str] = Field(default_factory=list)
-    gaps: list[str] = Field(default_factory=list)   # required fields still missing
+class Card(BaseModel):
+    """What the hypothesis DECLARES, extracted by the normalizer. The field set comes from the card
+    schema (configs/card.yaml, a draft); nothing here is verified."""
+    schema_version: str = ""
+    fields: dict[str, Any] = Field(default_factory=dict)
+    gaps: list[str] = Field(default_factory=list)          # required fields the text does not state
+    search_queries: list[str] = Field(default_factory=list)  # suggested literature queries
+
+    def get(self, name: str, default: Any = "") -> Any:
+        value = self.fields.get(name)
+        return value if value not in (None, "", []) else default
+
+    def filled(self) -> dict[str, Any]:
+        return {k: v for k, v in self.fields.items() if v not in (None, "", [])}
+
+
+class Evidence(BaseModel):
+    """One piece of retrieved evidence, uniform across sources. Only `source` and `record_id` are
+    required; the rest is filled when the source provides it."""
+    source: str                                  # connector, e.g. "europepmc"
+    record_id: str                               # stable id inside the source (e.g. MED:12345)
+    title: str = ""
+    text: str = ""                               # excerpt shown to reviewers and judges
+    url: str = ""
+    publication_date: Optional[str] = None       # ISO date; the basis for "as of date T" filtering
+    retrieved_at: str = ""
+    query: str = ""
+    tier: Optional[int] = None                   # 1 curated ... 4 preprint (see docs/architecture.md)
+    study_type: str = ""
+    species: str = ""
+    license: str = ""
+    entity_ids: list[str] = Field(default_factory=list)
+    extra: dict[str, Any] = Field(default_factory=dict)
 
 
 class Review(BaseModel):
@@ -49,7 +71,8 @@ class Hypothesis(BaseModel):
     provenance: Provenance
     parents: list[str] = Field(default_factory=list)
     status: Status = "new"
-    record: Optional[NormalizedRecord] = None
+    card: Optional[Card] = None
+    evidence: list[Evidence] = Field(default_factory=list)
     reviews: list[Review] = Field(default_factory=list)
     cluster: Optional[int] = None
     merged_into: Optional[str] = None
@@ -58,7 +81,7 @@ class Hypothesis(BaseModel):
 class JudgeVerdict(BaseModel):
     provenance: Provenance
     order: list[str] = Field(default_factory=list)          # ids as shown: first, second
-    winner: dict[str, str] = Field(default_factory=dict)    # axis -> winning hypothesis id
+    winner: dict[str, str] = Field(default_factory=dict)    # criterion -> winning hypothesis id
     rationale: str = ""
     parse_ok: bool = True
 
@@ -69,7 +92,7 @@ class Match(BaseModel):
     mode: Literal["single", "debate"] = "single"
     judges: list[JudgeVerdict] = Field(default_factory=list)
     contested: bool = False
-    winners: dict[str, Optional[str]] = Field(default_factory=dict)   # axis -> id, None on a tie
+    winners: dict[str, Optional[str]] = Field(default_factory=dict)   # criterion -> id, None on a tie
 
 
 class Rating(BaseModel):
@@ -78,11 +101,27 @@ class Rating(BaseModel):
     games: int = 0
 
 
+class Criterion(BaseModel):
+    name: str
+    description: str = ""
+    weight: float = 1.0
+
+
 class PlanConfig(BaseModel):
     preferences: str = ""
     attributes: list[str] = Field(default_factory=list)
     constraints: list[str] = Field(default_factory=list)
-    axis_weights: dict[str, float] = Field(default_factory=lambda: {"promise": 0.5, "feasibility": 0.5})
+    criteria: list[Criterion] = Field(default_factory=list)    # from configs/criteria.yaml, not from the LLM
+    criteria_version: str = ""
+
+    @property
+    def names(self) -> list[str]:
+        return [c.name for c in self.criteria]
+
+    @property
+    def weights(self) -> dict[str, float]:
+        total = sum(c.weight for c in self.criteria) or 1.0
+        return {c.name: c.weight / total for c in self.criteria}
 
 
 def merge_dicts(old: Optional[dict], new: Optional[dict]) -> dict:
@@ -93,7 +132,7 @@ class GraphState(TypedDict, total=False):
     goal: str
     plan: PlanConfig
     hypotheses: Annotated[dict[str, Hypothesis], merge_dicts]
-    ratings: dict[str, dict[str, Rating]]            # axis -> id -> Rating, replaced each tournament
+    ratings: dict[str, dict[str, Rating]]            # criterion -> id -> Rating, replaced each tournament
     matches: Annotated[list[Match], operator.add]
     feedback: dict[str, str]                         # meta-review text per agent
     cycle: int

@@ -15,6 +15,7 @@ from hyparena.llm.client import LLMClient, Reply, estimate_tokens
 from hyparena.llm.judges import JudgeSpec, LineageMode
 from hyparena.llm.prompts import render
 from hyparena.provenance import ProvenanceLog
+from hyparena.schema import CardSchema, CriteriaSet, load_card_schema, load_criteria
 from hyparena.state import Provenance
 from hyparena.tools.embed import Embedder, HashingEmbedder
 from hyparena.tools.search import NullSearch, SearchTool
@@ -23,7 +24,7 @@ T = TypeVar("T")
 R = TypeVar("R")
 
 #: Phases of this project's trace table (agent_kit.trace.PHASES is replaced with these).
-PHASES = ("generate", "normalize", "review", "proximity", "rank", "debate", "evolve", "meta", "other")
+PHASES = ("generate", "normalize", "retrieve", "review", "proximity", "rank", "debate", "evolve", "meta", "other")
 
 
 @dataclass
@@ -38,6 +39,11 @@ class RunConfig:
     gen_per_cycle: int = 6
     evolve_per_cycle: int = 3
     normalize_rounds: int = 2
+    # evidence
+    as_of: Optional[str] = None          # ISO date: only evidence published on or before it (backtests)
+    evidence_per_query: int = 5
+    evidence_max: int = 10               # kept per hypothesis
+    evidence_to_judges: int = 5          # shown to judges per hypothesis
     # review thresholds
     min_correctness: float = 4.0
     min_novelty: float = 3.0
@@ -66,6 +72,8 @@ class Context:
     embedder: Embedder = field(default_factory=HashingEmbedder)
     tracer: Tracer = field(default_factory=Tracer)
     log: ProvenanceLog = field(default_factory=ProvenanceLog)
+    criteria: CriteriaSet = field(default_factory=load_criteria)
+    card_schema: CardSchema = field(default_factory=load_card_schema)
     rng: random.Random = field(init=False)
     _rotation: dict[str, int] = field(default_factory=dict, init=False)
     _lock: threading.Lock = field(default_factory=threading.Lock, init=False)

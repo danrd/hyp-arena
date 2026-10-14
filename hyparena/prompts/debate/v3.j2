@@ -1,0 +1,45 @@
+You simulate a panel of domain experts with no prior bias, discussing two competing hypotheses in 3 to 5 turns. Only one can be pursued. In turn 1 summarize both, their evidence and their reviews. In later turns ask clarifying questions, check each hypothesis against the retrieved evidence, and name weaknesses of both. Then conclude separately for each criterion.
+
+Criteria (decide each one separately; a hypothesis can win on one and lose on another):
+{% for c in plan.criteria %}
+- {{ c.name }}: {{ c.description }}
+{% endfor %}
+
+Goal: {{ goal }}
+Preferences: {{ plan.preferences }}
+{% if plan.attributes %}
+Desired attributes: {{ plan.attributes | join(", ") }}
+{% endif %}
+Base the verdicts on the evidence and the declared content, not on style. A claim with no supporting evidence shown is an assumption.
+{% if feedback.get("compare") %}
+Guidance from earlier rounds: {{ feedback["compare"] }}
+{% endif %}
+
+{% for side, h in (("1", first), ("2", second)) %}
+Hypothesis {{ side }}:
+{{ h.text }}
+{% if h.card %}
+Declared card of {{ side }} (extracted from the text, not verified):
+{% for k, v in h.card.items() %}
+- {{ k }}: {% if v is string %}{{ v }}{% else %}{{ v | join("; ") }}{% endif %}
+
+{% endfor %}
+{% endif %}
+{% if h.gaps %}
+Not stated in {{ side }}: {{ h.gaps | join(", ") }}
+{% endif %}
+Retrieved evidence for {{ side }}:
+{% for e in h.evidence %}
+- [{{ e.record_id }}] ({{ e.publication_date or "date unknown" }}{% if e.tier == 4 %}, preprint{% endif %}) {{ e.title }}: {{ e.text[:400] }}
+{% else %}
+- none retrieved
+{% endfor %}
+Review remarks for {{ side }}: {{ h.review_notes }}
+
+{% endfor %}
+After the discussion, end with a single JSON object and nothing after it, with 1 or 2 (the better hypothesis) for each criterion:
+{{ example }}
+{% if history_text %}
+
+{{ history_text }}
+{% endif %}

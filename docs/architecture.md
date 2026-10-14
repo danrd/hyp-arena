@@ -19,7 +19,8 @@ This document turns the approach in [`approach.md`](approach.md) into a concrete
 | Supervisor | `supervisor` (router) | Cycle-based instead of an asynchronous worker queue; parallelism comes from a thread pool inside a step |
 | Goal parsing | `parse_goal` | Same output: preferences, attributes, constraints. Attributes are fixed to two axes, promise and feasibility, plus any goal-specific ones |
 | Generation | `generate` | Free-form text, as in the paper. Search-grounded strategy uses a pluggable search tool (stubbed at first) |
-| (none) | `normalize` | **New.** Extracts a structured record from the free text, flags missing fields, keeps the original text |
+| (none) | `normalize` | **New.** Extracts a hypothesis card (schema in `configs/card.yaml`) from the free text, flags missing required fields, suggests search queries, keeps the original text |
+| (none) | `retrieve` | **New.** Literature evidence per hypothesis (`SearchTool`; Europe PMC first), restricted to `as_of` for backtests; read by reviewers and judges |
 | Reflection | `review` | Initial, full (with search), and deep-verification reviews. Observation, simulation and recurrent reviews are later additions |
 | Proximity | `proximity` | Embedding graph, clusters, deduplication |
 | Ranking | `tournament` | Bradley–Terry per axis, adaptive pair selection, judge ensemble, debate for top and contested pairs |
@@ -37,30 +38,34 @@ This document turns the approach in [`approach.md`](approach.md) into a concrete
 | Verdict | One holistic "better idea" | Verdict **per axis** plus rationale, from one call | Needed for two ratings |
 | Provenance | Not described | Mandatory on every artifact | Reproducibility, independence checks |
 
+## 3a. Configurable criteria, card and evidence
+
+The comparison format is not fixed yet, so three things are data, not code:
+
+- **Criteria** (`configs/criteria.yaml`): name, description, weight. Judges return 1 or 2 per criterion in one call; each criterion has its own Bradley–Terry rating; weights combine them for pair selection and the final order. Default: novelty, evidence support, testability, value. `configs/criteria-two-axes.yaml` keeps the earlier promise/feasibility setup. The criteria and their version are stored in the plan, so a checkpoint keeps them.
+- **Card schema** (`configs/card.yaml`, a draft): field name, type (text or list), required, description. The normalizer prompt and the judges' view are built from it. Everything in the card is **declared** by the hypothesis; required fields the text does not state are listed in `gaps`, never invented.
+- **Evidence** (`hyparena.state.Evidence`): a uniform record for any source: `source`, `record_id`, title, excerpt, URL, `publication_date`, retrieval time, query, `tier`, study type, species, licence, entity ids. Only `source` and `record_id` are required. Tiers: 1 curated with explicit criteria, 2 peer-reviewed text, 3 text-mined relations, 4 preprints; LLM output is never evidence. The `as_of` date restricts retrieval to publications on or before it.
+
+The verified layer (each declared sub-claim linked to evidence with a status) is the next step and waits for the card format.
+
 ## 4. Graph
 
 ```
-                         ┌────────────────────────────────────────────────────┐
-                         │                    supervisor                      │
-                         │  (stats, budget, stop test, picks the next step)   │
-                         └───▲───────────────┬───────────────────────────▲────┘
-                             │               │ conditional edges         │
-   goal ─► parse_goal ───────┘               ▼                           │
-                                 ┌────────── step ──────────┐            │
-                                 │ generate ─► normalize     │            │
-                                 │      ▼                    │            │
-                                 │   review ─► proximity     │            │
-                                 │      ▼                    │            │
-                                 │  tournament ─► evolve     │────────────┘
-                                 │      ▼                    │
-                                 │  meta_review              │
-                                 └───────────────────────────┘
-                                             │ stop
-                                             ▼
-                                   report (research overview, Pareto front)
+   goal ─► parse_goal ─► supervisor ◄──────────────────────────────────────┐
+                             │ continue                                    │
+                             ▼                                             │
+   generate ─► normalize ─► retrieve ─► review ─► proximity ─► tournament  │
+                                                                  │        │
+                                                   evolve ◄───────┘        │
+                                                     │                     │
+                                                     ▼                     │
+                                                 meta_review ──────────────┘
+                             │ stop
+                             ▼
+   report (ranking per criterion, Pareto front, research overview, pending)
 ```
 
-- **Routing.** After `parse_goal`, the `supervisor` chooses the next node through conditional edges from the current statistics (hypotheses awaiting review, tournament progress, share of new hypotheses that win matches, budget left). In the common case it runs one full cycle: generate, normalize, review, proximity, tournament, evolve, meta-review.
+- **Routing.** After `parse_goal`, the `supervisor` decides through a conditional edge whether to run another cycle or stop (section 6.9); it does not yet choose between agents by statistics. A cycle is: generate, normalize, retrieve, review, proximity, tournament, evolve, meta-review.
 - **Parallelism.** Independent calls inside a node (generations, normalizations, reviews per hypothesis, matches per pair, evolutions) run on a thread pool (`Context.map`, `RunConfig.workers`). The client caps requests in flight (`concurrency`) and the request rate (`rpm`), so the pool size does not raise the load on providers. Assignments that rotate (generator, reviewer families, strategies) are fixed in order before the parallel work starts, and each match has its own random generator derived from the seed and the pair, so parallel execution does not change who judges what. A thread pool was chosen over LangGraph's `Send` fan-out because it keeps each agent a plain function and needs no extra graph nodes; `Send` remains possible later. This replaces the paper's asynchronous workers.
 - **Stop test.** Token or call budget exhausted, a maximum number of cycles, or top-k stability (the top-k set barely changes over the last cycles).
 - **Memory.** A LangGraph SQLite checkpointer (`hyparena/persist.py`) stores the state after every node under a thread id; a stopped run (crash, call cap, daily limit) continues from its last checkpoint (`python -m hyparena.live run --checkpoint runs/state.sqlite --resume --thread <id>`). The state models are registered with the serializer, as LangGraph's strict mode requires. What is outside the graph state (trace, call counters, rotation positions) starts afresh on resume. Provenance is additionally written to an append-only JSONL log.
@@ -176,7 +181,7 @@ Reply: text, model_id (what actually answered), tokens_in, tokens_out, seconds
 - **Prompts.** `llm_kit.PromptBuilder` blocks, versioned as `<name>/<version>.j2`, adapted (not copied) from the structure of the paper's prompts. Prompt and rubric versions go into the provenance.
 - **Tracing.** `agent_kit.trace.Tracer` wraps every call in a span; the phase list is replaced with this project's phases (`generate`, `normalize`, `review`, `proximity`, `rank`, `debate`, `evolve`, `meta`, `other`).
 - **Refine loop.** `agent_kit.refine.loop` is used for: normalization (completeness checks), judge-verdict parsing (retry on unparsable replies), and optional citation grounding. `RefineResult.attempts` are stored, because whether retries help is a measurement, not an assumption (as the module's own documentation says). `RefiningModule` is not used: it expects a module interface that `toolkit` does not define.
-- **Tools.** A `SearchTool` interface (`search(query) -> list[Passage]`), stubbed first, with Europe PMC and OpenAlex implementations later.
+- **Tools.** `SearchTool.search(query, limit, as_of) -> list[Evidence]`. Implemented: Europe PMC (`hyparena/tools/europepmc.py`, no key; abstracts, first publication date, licence; `as_of` becomes a `FIRST_PDATE` range); `MultiSearch` merges connectors. Retrieval quality (recall, relevance) has not been evaluated yet: unfiltered queries tend to return recent reviews.
 - **Embeddings.** An `Embedder` interface, stubbed first.
 
 ## 9. Package layout
@@ -186,8 +191,9 @@ hyparena/
   sim.py                 # existing simulation (kept as is)
   state.py               # state, hypothesis, provenance, match, rating
   graph.py               # LangGraph assembly: nodes, edges, checkpointer
+  schema.py              # criteria and card schema loaded from configs/
   agents/
-    supervisor.py  parse_goal.py  generate.py  normalize.py  review.py
+    supervisor.py  parse_goal.py  generate.py  normalize.py  retrieve.py  review.py
     proximity.py   tournament.py  evolve.py    meta_review.py  report.py
   llm/
     client.py            # LLMClient, Reply, runner wiring, token estimation

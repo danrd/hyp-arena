@@ -16,6 +16,7 @@ dependencies = [
     "langgraph",
     "langgraph-checkpoint-sqlite",
     "pyyaml",
+    "httpx",
     "toolkit[llm-kit,llm-kit-openrouter] @ git+https://github.com/danrd/toolkit.git",
 ]
 
