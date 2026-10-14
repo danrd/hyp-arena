@@ -20,6 +20,7 @@ class Reply:
     tokens_in: int = 0
     tokens_out: int = 0
     seconds: float = 0.0
+    error: str = ""              # set when the call failed and `text` is empty
     call_id: str = field(default_factory=lambda: uuid.uuid4().hex[:12])
 
 
@@ -40,7 +41,7 @@ class RunnerLLMClient:
     def call(self, *, role: str, family: str, prompt: str) -> Reply:
         model_version, runner = self.runners[family]
         started = time.perf_counter()
-        text = runner.generate(prompt)
+        text = runner.generate(prompt) or ""      # reasoning models can return no content
         return Reply(text=text, family=family, model_id=model_version,
                      tokens_in=estimate_tokens(prompt), tokens_out=estimate_tokens(text),
                      seconds=time.perf_counter() - started)

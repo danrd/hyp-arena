@@ -1,0 +1,31 @@
+# One model per family. `family` is the vendor-level key the independence rule works on:
+# Gemma and Gemini are both "google", because they share a lineage.
+#
+# tier: free  - OpenRouter free models, safe for tests (small daily limits; the endpoints may
+#               keep prompts, so never send unpublished hypotheses through them)
+# tier: paid  - CometAPI; only used when the environment variable ALLOW_PAID=1 is set
+#
+# Model identifiers change; check the provider's list before relying on them.
+rpm: 15            # requests per minute across all providers (free tier allows about 20)
+generation:
+  temperature: 0.7
+  max_tokens: 2048
+timeout: 120
+
+models:
+  - {family: google,           provider: openrouter, model: "google/gemma-4-31b-it:free",                tier: free}
+  - {family: nvidia,           provider: openrouter, model: "nvidia/nemotron-3-super-120b-a12b:free",    tier: free}
+  - {family: poolside,         provider: openrouter, model: "poolside/laguna-s-2.1:free",                tier: free}
+  # Off: OpenRouter answers 403 ("only available on agentic harnesses") for plain API calls.
+  - {family: thinkingmachines, provider: openrouter, model: "thinkingmachines/inkling:free",             tier: free, enabled: false}
+
+  # Paid families through CometAPI (key variable COMET_API_KEY). Off until used; one model per family.
+  # Ids and prices are from CometAPI's public catalog (https://api.cometapi.com/api/models) and change.
+  - {family: openai,    provider: cometapi, model: "gpt-5-nano",                   tier: paid, enabled: false, api_key_env: COMET_API_KEY}   # $0.05 in / $0.40 out per M tokens
+  - {family: anthropic, provider: cometapi, model: "claude-haiku-4-5-20251001",     tier: paid, enabled: false, api_key_env: COMET_API_KEY}   # $1 / $5
+  - {family: qwen,      provider: cometapi, model: "qwen3.8-flash",                tier: paid, enabled: false, api_key_env: COMET_API_KEY}   # $0.15 / $0.47
+  - {family: zhipu,     provider: cometapi, model: "glm-5.3-flash",                tier: paid, enabled: false, api_key_env: COMET_API_KEY}   # GLM, $0.15 / $0.50
+  - {family: xiaomi,    provider: cometapi, model: "mimo-v2.5",                    tier: paid, enabled: false, api_key_env: COMET_API_KEY}   # MiMo, $0.14 / $0.28
+  - {family: xai,       provider: cometapi, model: "grok-4.3",                     tier: paid, enabled: false, api_key_env: COMET_API_KEY}   # Grok, $1.25 / $2.50
+  - {family: google,    provider: cometapi, model: "gemini-3.1-flash-lite-preview", tier: paid, enabled: false, api_key_env: COMET_API_KEY}   # alternative to the free Gemma entry, $0.25 / $1.50
+  # Not found in the catalog by the filter used (text, OpenAI-compatible chat): deepseek, meta (Muse). Check by hand.

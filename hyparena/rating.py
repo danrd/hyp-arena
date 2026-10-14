@@ -47,7 +47,7 @@ def combined(ratings: dict[str, dict[str, Rating]], weights: dict[str, float],
 
 
 def _neighbour_pairs(order: list[str], rng: random.Random, limit: int) -> list[tuple[str, str]]:
-    if rng.random() < 0.5:
+    if len(order) > 2 and rng.random() < 0.5:     # shift the pairing, but never drop the only pair
         order = order[1:]
     pairs = [(order[i], order[i + 1]) for i in range(0, len(order) - 1, 2)]
     if len(pairs) > limit:
