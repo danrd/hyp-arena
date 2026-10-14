@@ -31,6 +31,32 @@ We also add **verifiable output**: every verdict carries citations and a "fact /
 - If the generator is unknown (for example, imported or human-written text), we cannot exclude any family, so we still use **several different families** as judges and compare their agreement.
 - This is cheap to implement, needs no extra data, and removes the most direct source of self-preference and correlated errors. It does not remove bias shared across all LLMs, so expert labels are still needed (section 7).
 
+### Judge ensemble (design)
+
+**Candidate families** (the starting pool; one model per family):
+
+| Family | Vendor | Weights | Notes |
+|---|---|---|---|
+| GPT | OpenAI | closed | |
+| Claude | Anthropic | closed | |
+| Gemini | Google | closed | Generator family of Co-Scientist, so it needs the independence rule when Co-Scientist-like generators are used |
+| Qwen | Alibaba | open | Can be self-hosted |
+| DeepSeek | DeepSeek | open | Can be self-hosted |
+| GLM | Zhipu | open | Can be self-hosted |
+| MiMo | Xiaomi | open | Used as an independent judge in the HypoEval benchmark |
+| Grok | xAI | closed | |
+| Muse | Meta (Muse Spark) | closed | API availability reported as limited and staged; availability must be checked against Meta's own documentation |
+
+Other candidates to consider later: Kimi (Moonshot), MiniMax, Mistral, ByteDance Seed (used as the main judge in HypoEval). Biomedical specialist models (for example MedGemma) are likely weak as judges and are at most an extra signal.
+
+**Rules:**
+1. **Independence.** The judge rule above applies. Exactly one model per family: different sizes or reasoning modes of one family are not independent.
+2. **Different vendor is not the same as independent.** Models are often trained on each other's outputs, so errors can still correlate. Independence is measured, not assumed: on the calibration set (see section 7), compute each judge's agreement with experts per axis and the correlation of errors between judges, and choose the ensemble by marginal contribution, not by individual accuracy.
+3. **Tiers.** Cheap or open models run the early rounds. Stronger and different models judge the top and contested pairs, which matches the debate logic of Co-Scientist.
+4. **Provenance.** For every verdict record the exact model identifier and version, the prompt version and the rubric version. API model versions change and get retired, so rankings are reproducible only if this is recorded.
+5. **Privacy.** Unpublished hypotheses should go only to approved providers. Open-weight families can be self-hosted, which removes the question. Which hosted APIs are acceptable has to be decided up front.
+6. **Selection of the pool is provisional.** General capability leaderboards do not measure judging of novelty and feasibility in biomedicine. The pool is a starting point, to be pruned using the calibration set.
+
 ## 3. Pipeline
 
 ```
