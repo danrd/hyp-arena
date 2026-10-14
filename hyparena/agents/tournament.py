@@ -73,6 +73,9 @@ def make_tournament(ctx):
     def judge_pair(task) -> Optional[Match]:
         state, ha, hb, debate = task
         names = state["plan"].names
+        if ctx.tokens_used() >= cfg.max_tokens:          # budget spent: no new matches (finer than per cycle)
+            ctx.log.write({"event": "budget_skip", "a": ha.id, "b": hb.id})
+            return None
         hyps, pool = state["hypotheses"], ctx.judge_pool
         rng = ctx.rng_for("match", state.get("cycle", 0), ha.id, hb.id)   # reproducible per pair
         judges = pick_judges(pool, ha, hb, hyps, cfg.lineage_mode, 1 if debate else cfg.judges_per_match, rng)
@@ -113,7 +116,7 @@ def make_tournament(ctx):
         top_k = max(2, int(len(ids) * cfg.top_frac))
         n_matches = max(4, int(cfg.matches_per_item * len(ids)))
         rng = ctx.rng_for("pairs", state.get("cycle", 0))
-        if cfg.rating == "elo":
+        if cfg.pairing == "coscientist":
             pairs = select_pairs_coscientist(ids, ratings, plan.weights, {h: hyps[h].cluster for h in ids}, rng,
                                              n_matches)
         else:

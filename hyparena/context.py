@@ -31,9 +31,11 @@ PHASES = ("generate", "normalize", "retrieve", "review", "proximity", "rank", "d
 @dataclass
 class RunConfig:
     lineage_mode: LineageMode = "writer"
+    step: str = ""                       # ablation ladder step (hyparena/ladder.py), recorded in results
     # "full": our method. "coscientist": baseline as in the paper (one Elo, holistic verdict, judges see
     # only text and reviews, pairing by newness/top/similarity); combine with lineage_mode="none".
     rating: str = "bt"                   # "bt" (Bradley-Terry with intervals) or "elo" (Co-Scientist)
+    pairing: str = "bt"                  # "bt" (elimination + Swiss) or "coscientist" (new/top/similar first)
     judge_view: str = "full"             # "full" (card + evidence + criteria) or "coscientist"
     seed: int = 0
     workers: int = 8                     # parallel LLM tasks inside a node (the client caps requests in flight)
