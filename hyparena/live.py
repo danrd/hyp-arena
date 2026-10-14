@@ -15,13 +15,16 @@ from pathlib import Path
 from agent_kit.trace import render
 
 from hyparena.context import Context, RunConfig
+from hyparena.data import load_imported
 from hyparena.graph import build_graph
 from hyparena.llm.providers import DEFAULT_CONFIG, CallCapExceeded, build_client
 from hyparena.llm.structured import parse_json
 from hyparena.provenance import ProvenanceLog
+from hyparena.rating import combined
 from hyparena.state import AXES, PlanConfig, initial_state
 
 GOAL = "Find mechanisms of cellular ageing that can be tested in vitro."
+IMPORT_GOAL = "Identify the most promising and feasible hypotheses on the biology of ageing."
 RUNS = Path(__file__).resolve().parents[1] / "runs"
 
 TOY = ({"text": "Senescent fibroblasts spread senescence to neighbours through extracellular cGAMP; "
@@ -66,11 +69,17 @@ def smoke(args) -> None:
 
 
 def run(args) -> None:
-    ctx, client = _context(args, max_cycles=1, gen_per_cycle=args.gen, evolve_per_cycle=1,
-                           judges_per_match=1, extra_judges=0, matches_per_item=1.0)
+    imported = load_imported(args.import_file, args.limit) if args.import_file else []
+    gen = args.gen if args.gen is not None else (0 if imported else 4)
+    goal = args.goal or (IMPORT_GOAL if imported else GOAL)
+    if imported:
+        p = imported[0].provenance
+        print(f"imported: {len(imported)} hypotheses written by {p.family} / {p.model_version}")
+    ctx, client = _context(args, max_cycles=1, gen_per_cycle=gen, evolve_per_cycle=1,
+                           judges_per_match=1, extra_judges=0, matches_per_item=args.matches)
     graph = build_graph(ctx)
     try:
-        final = graph.invoke(initial_state(args.goal), config={"recursion_limit": 100})
+        final = graph.invoke(initial_state(goal, imported), config={"recursion_limit": 100})
     except CallCapExceeded as e:
         print(f"stopped: {e}; see the log for what was done")
         return
@@ -84,6 +93,16 @@ def run(args) -> None:
     print("judge independence violations:", viol)
     print(f"calls: {client.calls}, failures: {client.failures}, by family: {client.by_family}")
     print(render(final["report"]["tokens"]))
+    ratings, plan = final["ratings"], final["plan"]
+    active = [i for i, x in h.items() if x.status == "active"]
+    if ratings.get("promise") and active:
+        score, _ = combined(ratings, plan.axis_weights, active)
+        print("\nranking (combined score; promise / feasibility; games):")
+        for i in sorted(range(len(active)), key=lambda k: -score[k]):
+            hid = active[i]
+            title = h[hid].text.split("\n", 1)[0][:70]
+            print(f"  {hid:<8}{score[i]:>6.2f}  {ratings['promise'][hid].score:>6.2f} / {ratings['feasibility'][hid].score:>6.2f}"
+                  f"  {ratings['promise'][hid].games:>2}  [{h[hid].provenance.family}] {title}")
     for s in final["report"]["shown"][:3]:
         print(f"\n[{s['id']}] by {s['provenance']['family']} - promise {s['ratings']['promise']['score']:.2f}, "
               f"feasibility {s['ratings']['feasibility']['score']:.2f}\n{s['text'][:300]}")
@@ -94,8 +113,11 @@ def main() -> None:
     parser.add_argument("command", choices=["smoke", "run"])
     parser.add_argument("--config", default=str(DEFAULT_CONFIG))
     parser.add_argument("--max-calls", type=int, default=40)
-    parser.add_argument("--goal", default=GOAL)
-    parser.add_argument("--gen", type=int, default=4, help="hypotheses generated in the run")
+    parser.add_argument("--goal", default=None)
+    parser.add_argument("--gen", type=int, default=None, help="hypotheses generated in the run (default 4, or 0 with --import-file)")
+    parser.add_argument("--import-file", default=None, help="dataset JSON of externally written hypotheses, e.g. data/chatgpt_hypotheses.json")
+    parser.add_argument("--limit", type=int, default=None, help="with --import-file: use an evenly spaced sample of this size")
+    parser.add_argument("--matches", type=float, default=1.0, help="tournament matches per active hypothesis")
     args = parser.parse_args()
     {"smoke": smoke, "run": run}[args.command](args)
 
