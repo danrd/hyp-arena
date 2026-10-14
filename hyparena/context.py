@@ -74,6 +74,8 @@ class Context:
         with self.tracer.span(phase, role, tokens_in=estimate_tokens(prompt)) as span:
             reply = self.client.call(role=role, family=family, prompt=prompt)
             span.tokens_out = reply.tokens_out
+        if reply.error:
+            self.log.write({"event": "call_failed", "role": role, "family": family, "error": reply.error[:300]})
         prov = Provenance(family=reply.family, model_version=reply.model_id, role=role,
                           template=template, prompt_version=version, strategy=strategy,
                           call_id=reply.call_id)
@@ -92,5 +94,6 @@ class Context:
         return options[i % len(options)]
 
     def utility_family(self) -> str:
-        """Family used for bookkeeping calls (goal parsing, normalization, meta-review)."""
-        return self.generator_families[0]
+        """Family for bookkeeping calls (goal parsing, normalization, meta-review); rotates so that
+        no single provider carries them all."""
+        return self.rotate("utility", self.generator_families)
