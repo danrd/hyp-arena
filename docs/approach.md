@@ -1,124 +1,127 @@
-# Ранжирование тысяч гипотез: подход на основе Co-Scientist
+# Ranking thousands of hypotheses: a Co-Scientist-based approach
 
-Задача: из N ≈ 10³–10⁵ сгенерированных биологических гипотез (область: старение) выбрать самые **перспективные** и при этом **реализуемые**, с объяснением выбора, которое можно проверить.
+Task: from N ≈ 10³–10⁵ generated biological hypotheses (domain: ageing), select the most **promising** ones that are also **feasible**, with an explanation that can be verified.
 
-## 1. Что берём у Co-Scientist
+Details of how Co-Scientist itself works (hypothesis format, judges, criteria) are in [`co-scientist-reference.md`](co-scientist-reference.md).
 
-В Co-Scientist (Google, 2025) ранжирование держится на трёх идеях. Мы переносим их в таком виде:
+## 1. What we take from Co-Scientist
 
-| Идея Co-Scientist | Что делаем у себя |
+Co-Scientist (Google, 2025) ranks hypotheses with an Elo tournament of pairwise LLM comparisons. We reuse the ideas below and change what the paper does not cover.
+
+| Co-Scientist idea | What we do |
 |---|---|
-| Турнир Эло по попарным сравнениям LLM-судьёй | Попарные сравнения + модель **Брэдли–Терри** вместо онлайн-Эло. Она даёт оценку неопределённости, а она нужна для выбора следующих пар |
-| Agent Proximity: граф сходства | Эмбеддинги → кластеры. Дубликаты схлопываются, сравнения идут в основном между близкими по теме гипотезами. Сравнивать вирусологию с эпигенетикой по шкале «лучше/хуже» малоосмысленно |
-| Reflection (рецензия) и многоходовой дебат для лучших пар | Структурированная рецензия с источниками до турнира. Дебат только для топа и спорных пар |
+| Elo tournament of pairwise LLM comparisons | Pairwise comparisons plus a **Bradley–Terry** model instead of online Elo. It gives an uncertainty estimate, which we need to choose the next pairs |
+| Proximity graph | Embeddings and clusters. Duplicates are merged, and comparisons mostly happen between topically close hypotheses |
+| Reflection (reviews), debate for top pairs | Structured, search-grounded review before the tournament. Debate only for top and contested pairs |
+| Single Elo over configurable criteria (feasibility can be one attribute) | **Two separate ratings**, promise and feasibility, combined on a Pareto front |
+| One model family as judge | An **ensemble of different models**, because errors of a single family are correlated |
 
-От себя добавляем две вещи, которых Co-Scientist не разделяет явно:
-- **две оси** (перспективность и реализуемость) с отдельными рейтингами;
-- **проверяемость результата**: у каждого вердикта есть цитаты и пометка «факт / предположение».
+We also add **verifiable output**: every verdict carries citations and a "fact / assumption" label.
 
-## 2. Почему не «просто спросить LLM оценку 1–10»
+## 2. Why not "score each hypothesis 1–10"
 
-- Абсолютные оценки LLM плохо откалиброваны и «слипаются» в узком диапазоне (7–8 из 10).
-- Попарное сравнение устойчивее: относительное суждение даётся модели легче, чем абсолютное.
-- Минус попарного подхода в числе сравнений. Полный перебор для N = 2000 даёт ~2 млн вызовов (1000 на гипотезу). Нужен адаптивный выбор пар.
+- Absolute LLM scores are poorly calibrated and cluster in a narrow range.
+- Pairwise comparison is more stable: relative judgments are easier for a model than absolute ones.
+- The cost of pairwise comparison is the number of comparisons. Full round-robin for N = 2000 is about 2 million calls (1000 per hypothesis). We need adaptive pair selection.
 
-## 3. Конвейер
+## 3. Pipeline
 
 ```
-гипотезы → [1] нормализация → [2] обогащение/RAG → [3] рецензия по рубрике
-        → [4] дедупликация/кластеры → [5] турнир (2 оси) → [6] дебат топа
-        → [7] Парето-фронт + диверсификация → отчёт для учёных
+hypotheses → [1] normalization → [2] enrichment/RAG → [3] rubric review
+           → [4] dedup/clusters → [5] tournament (2 axes) → [6] debate on top
+           → [7] Pareto front + diversification → report for scientists
 ```
 
-1. **Нормализация.** Каждая гипотеза приводится к схеме: утверждение, механизм, предсказание, как проверить, организм/модель.
-2. **Обогащение (RAG).** Поиск по PubMed/патентам. На выходе: что уже известно, что противоречит, ближайшие работы. Это основа для оценки новизны и доказательной базы.
-3. **Рецензия по рубрике** (одиночная оценка, дешёвый отсев и стартовые значения):
-   - перспективность: новизна, доказательная база, объяснительная сила, потенциальный эффект;
-   - реализуемость: экспериментальная проверяемость, доступные методы и модельные системы, стоимость и сроки, этика и риски;
-   - для каждого утверждения помечается источник или «предположение».
-4. **Дедупликация.** Гипотезы ближе порога по косинусной близости объединяются. Кластеры нужны и для диверсификации финального списка.
-5. **Турнир.** Описан в разделе 4.
-6. **Дебат.** Для пар в топе, где судья неуверен или даёт противоречивые вердикты при смене порядка A/B, запускается многоходовой дебат (как в Co-Scientist). Это дорого, поэтому применяется только там.
-7. **Итог.** Парето-фронт по двум осям. Выбор из фронта по весам, которые задаёт команда (например, «ранний скрининг» — больше вес реализуемости, «grant-ready» — перспективности). Из топа убираются почти-дубликаты по кластерам.
+1. **Normalization.** Each hypothesis is converted to a schema: claim, mechanism, prediction, how to test, organism/model.
+2. **Enrichment (RAG).** Search PubMed and patents. Output: what is already known, what contradicts, nearest prior work. This grounds novelty and evidence-base assessment. Co-Scientist's own ablation shows why: without search, known ideas were scored 6.14/10 for novelty, with search 2.38/10.
+3. **Rubric review** (single scoring for cheap filtering and initial ratings):
+   - promise: novelty, evidence base, explanatory power, potential impact;
+   - feasibility: experimental testability, available methods and model systems, cost and time, ethics and risk;
+   - each statement is labelled with a source or "assumption".
+4. **Deduplication.** Hypotheses closer than a cosine-similarity threshold are merged. Clusters are also used to diversify the final list.
+5. **Tournament.** Section 4.
+6. **Debate.** For top pairs where the judge is uncertain, or where the verdict flips when A/B order is swapped, run a multi-turn debate as in Co-Scientist. It is expensive, so it is applied only there.
+7. **Result.** A Pareto front over the two axes. Selection from the front uses weights set by the person ranking (for example, "early screening" weights feasibility more, "grant-ready" weights promise more). Near-duplicates are removed from the top using clusters.
 
-## 4. Турнир: как не делать N² сравнений
+## 4. Tournament: avoiding N² comparisons
 
-- **Модель.** Брэдли–Терри на каждую ось отдельно. Один вызов судьи возвращает вердикты по обеим осям.
-- **Выбор пар.** Нам нужен не идеальный порядок всех N, а надёжный **топ-k**. Поэтому применяем отсев: гипотезе, чья верхняя оценка (рейтинг + z·SE) ниже k-го лучшего по нижней оценке, дальнейшие сравнения не нужны. Остальные («кандидаты в топ») сравниваются с соседями по рейтингу. 20% бюджета идёт на равномерный Swiss-раунд, чтобы не потерять гипотезу, которую случайно недооценили.
-- **Порядок A/B.** Порядок случайный, у судьи есть позиционное смещение. Спорные пары запускаются дважды с обменом позиций.
-- **Бюджет.** Порядка 10–20 сравнений на гипотезу вместо N/2. Для N = 2000 это 2·10⁴–4·10⁴ вызовов вместо 2·10⁶, то есть на 2 порядка меньше. Для N = 10⁵ полный перебор (5·10⁹) невозможен в принципе.
+- **Model.** Bradley–Terry per axis. One judge call returns verdicts on both axes.
+- **Pair selection.** We need a reliable **top-k**, not a perfect order of all N. We use elimination: a hypothesis whose upper bound (rating + z·SE) is below the k-th best lower bound needs no further comparisons. The remaining candidates are compared with neighbours in rating. 20% of the budget goes to a uniform Swiss round, so that a wrongly underrated hypothesis is not lost.
+- **A/B order.** Order is randomized, and contested pairs are run twice with positions swapped. Co-Scientist reports a "second player advantage" for a simple comparison prompt and that a debate prompt almost removes it, so this must be checked on any real judge.
+- **Budget.** About 10–20 comparisons per hypothesis instead of N/2. For N = 2000 that is 2·10⁴–4·10⁴ calls instead of 2·10⁶. For N = 10⁵, round-robin (5·10⁹) is impossible.
 
-## 5. Прототип и результаты симуляции
+## 5. Prototype and simulation results
 
-`hyparena/sim.py` (numpy, `python -m hyparena.sim`). Синтетическая популяция: N = 2000, скрытые «истинные» оценки по двум осям с корреляцией −0,3 (перспективные идеи чаще нереализуемы). Судья — сигмоида от разницы оценок с температурой 1,0 (то есть очень шумный) и позиционным смещением 0,3. Метрики: **recall** — доля истинного топ-5% (k = 100) среди найденных; **ρ** — ранговая корреляция Спирмена по всем гипотезам. Среднее по 3 сид-ам, итоговый скор — 0,5·перспективность + 0,5·реализуемость.
+`hyparena/sim.py` (numpy, `python -m hyparena.sim`). Synthetic population: N = 2000, latent "true" scores on two axes with correlation −0.3 (promising ideas are often less feasible). The judge is a sigmoid of the score difference with temperature 1.0 (very noisy) and a position bias of 0.3. Metrics: **recall**, the share of the true top 5% (k = 100) that is found; **ρ**, Spearman rank correlation over all hypotheses. Mean of 3 seeds; the final score is 0.5·promise + 0.5·feasibility.
 
-| сравнений на гипотезу | random | swiss | active (отсев) |
+| comparisons per hypothesis | random | swiss | active (elimination) |
 |---|---|---|---|
-| 2 | recall 0,23 / ρ 0,50 | recall 0,27 / ρ 0,55 | recall 0,28 / ρ 0,52 |
-| 4 | recall 0,34 / ρ 0,65 | recall 0,37 / ρ 0,66 | recall 0,43 / ρ 0,66 |
-| 8 | recall 0,46 / ρ 0,78 | recall 0,47 / ρ 0,77 | recall 0,58 / ρ 0,75 |
-| 16 | recall 0,58 / ρ 0,88 | recall 0,60 / ρ 0,86 | **recall 0,73** / ρ 0,82 |
+| 2 | recall 0.23 / ρ 0.50 | recall 0.27 / ρ 0.55 | recall 0.28 / ρ 0.52 |
+| 4 | recall 0.34 / ρ 0.65 | recall 0.37 / ρ 0.66 | recall 0.43 / ρ 0.66 |
+| 8 | recall 0.46 / ρ 0.78 | recall 0.47 / ρ 0.77 | recall 0.58 / ρ 0.75 |
+| 16 | recall 0.58 / ρ 0.88 | recall 0.60 / ρ 0.86 | **recall 0.73** / ρ 0.82 |
 
-Что видно:
-- Адаптивный выбор пар на бюджете 16 на гипотезу даёт recall топа 0,73 против 0,58 у случайных пар (+15 п.п.). Swiss почти не отличается от случайных.
-- Платой за это служит **хвост**: общий Спирмен у active ниже (0,82 против 0,88), потому что плохие гипотезы почти не сравниваются. Для задачи «найти лучшие» это нормально, но нельзя интерпретировать рейтинг хвоста.
-- Абсолютный recall при таком шуме судьи остаётся умеренным (0,73 при 16 сравнениях). Это честная оценка: снижение шума судьи (дебат, ансамбль судей, рубрика) важно не меньше, чем выбор пар.
-- Рандомизация порядка A/B в этой симуляции дала небольшой эффект (до ~5 п.п. recall, на уровне разброса между сид-ами). Из 3 сид-ов делать вывод о значимости нельзя, поэтому защиту от смещения нужно проверять на реальном судье.
+What the table shows:
+- With 16 comparisons per hypothesis, adaptive pair selection gives top recall 0.73 against 0.58 for random pairs (+15 pp). Swiss is close to random.
+- The price is the **tail**: overall Spearman is lower for active selection (0.82 vs 0.88) because poor hypotheses are barely compared. That is fine for "find the best", but the tail ranking must not be interpreted.
+- Absolute recall at this judge noise stays moderate (0.73 at 16 comparisons). Reducing judge noise (debate, judge ensemble, rubric) matters as much as pair selection.
+- Randomizing A/B order had a small effect in this simulation (up to about 5 pp recall, within seed-to-seed spread). Three seeds do not support a significance claim, so bias protection must be tested on a real judge.
 
-## 6. Ограничения и риски
+## 6. Limitations and risks
 
-- **Судья ≠ истина.** LLM-судья предпочитает длинные, гладкие, знакомые формулировки (риск «красивых, но избитых» гипотез) и может выдумывать источники. Меры: проверка цитат по RAG, отметка «факт / предположение», нормализация длины и стиля до сравнения.
-- **Синтетика не доказывает качество на реальных данных.** Модель судьи в симуляции независима и однородна, у реального LLM ошибки коррелированы. Симуляция проверяет только механику выбора пар.
-- **Перспективность и реализуемость противоречат друг другу.** Поэтому фронт, а не один скор, а веса видны пользователю.
-- **Новизна.** Оценивается относительно найденной литературы, а RAG неполон. Низкая «новизна» из-за плохого поиска ложно занижает рейтинг.
+- **Judge ≠ truth.** An LLM judge prefers long, smooth, familiar wording (risk of "beautiful but trite" hypotheses) and may invent sources. Mitigations: citation check via RAG, "fact / assumption" labels, length and style normalization before comparison. Co-Scientist's own validation is modest: review scores predict correctness with AUC of only about 0.64–0.65 on GPQA, and its Elo is not tied to ground truth.
+- **Synthetic data does not prove real-world quality.** The simulated judge is independent and homogeneous; real LLM errors are correlated. The simulation tests only the pair-selection mechanics.
+- **Promise and feasibility conflict.** Hence a front, not a single score, with weights visible to the user.
+- **Novelty.** It is assessed against retrieved literature, and RAG is incomplete. Low novelty caused by poor retrieval will unfairly lower a rating.
 
-## 7. Как проверять качество (вместе с учёными)
+## 7. Validation with domain experts
 
-1. **Золотой набор.** 50–100 гипотез, размеченных 2–3 экспертами по обеим осям. Метрики: согласие судьи с экспертами (Спирмен, доля совпавших пар), согласие между самими экспертами как потолок.
-2. **Сравнение с базовыми подходами**: прямая оценка 1–10 одним промптом; турнир без графа сходства; турнир без дебата. Метрики те же, плюс стоимость в токенах.
-3. **Устойчивость.** Смена порядка A/B, смена формулировки рубрики, смена модели-судьи, повтор с другим сидом. Доля пар, у которых вердикт меняется.
-4. **Ретроспектива.** Взять гипотезы, чья проверка уже опубликована, и посмотреть, где их ставит система.
-5. **Бизнес-метрика.** Доля гипотез из топ-k, которые учёные согласились взять в эксперимент.
+1. **Gold set.** 50–100 hypotheses labelled on both axes by 2–3 experts. Metrics: judge–expert agreement (Spearman, share of matching pairs), with inter-expert agreement as the ceiling.
+2. **Baselines:** direct 1–10 scoring with one prompt; a tournament without the similarity graph; a tournament without debate; a single-model judge vs. an ensemble. Same metrics plus token cost.
+3. **Robustness.** Swap A/B order, change rubric wording, change the judge model, rerun with another seed. Report the share of pairs whose verdict changes.
+4. **Retrospective.** Take hypotheses whose test is already published and see where the system ranks them.
+5. **Practical metric.** The share of top-k hypotheses that domain experts agree to take into an experiment.
 
-## 8. Следующие шаги
+## 8. Next steps
 
-1. Заменить заглушку `Judge` на реальный LLM-судья с рубрикой и ответом в JSON (вердикт по каждой оси + цитаты + пометки «факт / предположение»).
-2. Подключить RAG по PubMed и патентам, посчитать эмбеддинги, построить граф сходства.
-3. Собрать золотой набор вместе с учёными и измерить согласие судьи.
-4. Добавить дебат для спорных пар и ансамбль судей. Измерить, сколько recall он даёт на токен.
+1. Replace the `Judge` stub with a real LLM judge using a rubric and JSON output (verdict per axis, citations, "fact / assumption" labels).
+2. Connect RAG over PubMed and patents, compute embeddings, build the similarity graph.
+3. Build the gold set with domain experts and measure judge agreement.
+4. Add debate for contested pairs and a judge ensemble. Measure recall gained per token.
 
-## 9. Пример входных данных: диалог с ChatGPT
+## 9. Example input data: a ChatGPT dialogue
 
-В `data/chatgpt_hypotheses.json` лежат 27 гипотез по биологии старения, полученные из [общего диалога ChatGPT](https://chatgpt.com/share/6ace78ee-56bc-83e8-9134-845f5d47a778) (пользователь шесть раз просил «продолжай», в последний раз — «повысь степень удивления»). Скрипт разбора: `scripts/parse_chatgpt_hypotheses.py`.
+`data/chatgpt_hypotheses.json` holds 27 hypotheses on the biology of ageing, taken from a [shared ChatGPT dialogue](https://chatgpt.com/share/6ace78ee-56bc-83e8-9134-845f5d47a778) (the dialogue asks six times to "continue", the last time to "raise the level of surprise"). The text is in Russian, as in the source. The parser is `scripts/parse_chatgpt_hypotheses.py`.
 
-**Схема записи** (она же претендент на схему нормализации из раздела 3):
+**Record schema** (a candidate for the normalization schema in section 3):
 
-| Поле | Содержание |
+| Field | Content |
 |---|---|
-| `title`, `claim` | заголовок и утверждение с механизмом |
-| `known` | что уже известно, с отделением опубликованного от предположений |
-| `experiment` | решающий эксперимент (модель, группы, контроли, сроки) |
-| `prediction` | специфическое предсказание |
-| `falsification` | что опровергнет гипотезу |
-| `intervention` | потенциальное вмешательство (есть у всех 27) |
-| `message` | номер ответа в диалоге, то есть порядок генерации |
+| `title`, `claim` | title and the claim with its mechanism |
+| `known` | what is already known, separating published findings from assumptions |
+| `experiment` | the deciding experiment (model, groups, controls, timing) |
+| `prediction` | the specific prediction |
+| `falsification` | what would refute the hypothesis |
+| `intervention` | potential intervention (present in all 27) |
+| `message` | index of the reply in the dialogue, that is, generation order |
 
-Кроме гипотез, в `assistant_notes` сохранены заключительные комментарии ассистента к каждой партии (какие гипотезы он сам советует проверять первыми). Это готовая **самооценка модели**, с которой можно сравнить результат турнира.
+`assistant_notes` stores the assistant's closing remarks for each batch (which hypotheses it recommends testing first). This is a ready-made **model self-assessment** to compare with the tournament result.
 
-**Что из этого следует для системы:**
-- Все гипотезы написаны одинаково гладко и содержат эксперимент с условием опровержения, поэтому оценка «по тексту» почти ничего не различит. Рубрика должна смотреть на содержание: есть ли прямой причинный тест, насколько сильна база в `known`, есть ли противоречащие данные (в №27 само поле `known` указывает на такие).
-- Серия «продолжай» с просьбой об удивлении смещает поток к экзотическим идеям. Позднее по `message` можно проверить, разошлись ли перспективность и реализуемость.
-- Есть почти-дубликаты по теме (митохондрии и лизосомы, транскрипция длинных генов, тимус). Они подходят для проверки дедупликации.
+**What this means for the system:**
+- All hypotheses are written equally smoothly and contain an experiment and a refutation condition, so scoring "by text" will barely separate them. The rubric must look at content: is there a direct causal test, how strong is the evidence in `known`, is there contradicting evidence (in hypothesis 27, `known` itself points to such evidence).
+- A series of "continue" requests with a request for surprise pushes the stream towards exotic ideas. `message` makes it possible to check whether promise and feasibility diverge later in the series.
+- Some hypotheses are near-duplicates by topic (mitochondria and lysosomes, transcription of long genes, thymus), which suits a test of deduplication.
 
-**Ограничения набора.** Ссылки на источники из выгрузки не восстанавливаются (остались только внутренние метки, они удалены), поэтому поле `known` нельзя проверить по литературе без отдельного поиска. Научную корректность утверждений я не проверял. Оценок в диалоге нет. 27 гипотез — это много для разбора вручную, но мало для проверки турнира: масштаб проверяется симуляцией из раздела 5.
+**Dataset limitations.** Source references from the export cannot be recovered (only internal markers remained, and they were removed), so `known` cannot be checked against literature without a separate search. I did not check the scientific correctness of the claims. The dialogue contains no scores. 27 hypotheses is a lot to read manually but too few to test a tournament: scale is tested by the simulation in section 5.
 
-## 10. Существующие реализации Co-Scientist
+## 10. Existing Co-Scientist implementations
 
-По результатам поиска Google исходный код Co-Scientist не публиковал (README одной из реализаций прямо называет оригинал закрытым). Есть сторонние реконструкции по статье. Я смотрел только страницы репозиториев и не проверял качество кода, лицензии и активность, поэтому перед использованием проверьте их сами:
-- [jataware/open-coscientist](https://github.com/jataware/open-coscientist) — LangGraph, генерация, рецензия, ранжирование и эволюция гипотез, есть конфигурации для биомедицины.
-- [Kaimen-Inc/Co-Scientist](https://github.com/Kaimen-Inc/Co-Scientist) — несколько LLM-бэкендов (в том числе Anthropic), опирается на псевдокод из приложения к статье.
-- [llnl/open-ai-co-scientist](https://github.com/llnl/open-ai-co-scientist) — реализация Lawrence Livermore National Laboratory с Gradio-интерфейсом, MIT.
-- [The-Swarm-Corporation/AI-CoScientist](https://github.com/The-Swarm-Corporation/AI-CoScientist) — минимальная реализация на Swarms, MIT.
-- [conradry/open-coscientist-agents](https://github.com/conradry/open-coscientist-agents) — LangGraph и GPT Researcher, репозиторий в архиве.
+Google has not published Co-Scientist code (the README of one reimplementation says the original is closed-source). There are third-party reconstructions based on the paper. I only looked at the repository pages and did not check code quality, licences or activity, so check them before use:
+- [jataware/open-coscientist](https://github.com/jataware/open-coscientist): LangGraph, generation, review, ranking and evolution of hypotheses, with biomedical configurations.
+- [Kaimen-Inc/Co-Scientist](https://github.com/Kaimen-Inc/Co-Scientist): several LLM backends (including Anthropic), based on the pseudocode in the paper's supplement.
+- [DawnyWu/Co-Scientist](https://github.com/DawnyWu/Co-Scientist): same description as Kaimen-Inc, with a mode that compares models through a shared Elo tournament.
+- [llnl/open-ai-co-scientist](https://github.com/llnl/open-ai-co-scientist): Lawrence Livermore National Laboratory, Gradio interface, MIT.
+- [The-Swarm-Corporation/AI-CoScientist](https://github.com/The-Swarm-Corporation/AI-CoScientist): minimal implementation on the Swarms framework, MIT.
+- [conradry/open-coscientist-agents](https://github.com/conradry/open-coscientist-agents): LangGraph and GPT Researcher, archived.
 
-Эти проекты реализуют общую схему «агенты + турнир Эло». Прототип в `hyparena/` решает более узкую задачу: показывает, как при тысячах гипотез экономить сравнения и вести две оси.
+These projects implement the general "agents + Elo tournament" design. The prototype in `hyparena/` addresses a narrower question: how to save comparisons with thousands of hypotheses and keep two axes.
