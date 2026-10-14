@@ -94,6 +94,10 @@ class FakeLLMClient:
         return ("Turn 1: summary. Turn 2: objections. Turn 3: conclusion.\n"
                 + self._compare(rng, prompt, n))
 
+    def _leakage(self, rng, prompt, n):
+        return json.dumps({"result": rng.choice(["supported", "refuted", "unknown"]),
+                           "confidence": round(rng.random(), 2), "what_you_remember": "fake"})
+
     def _research_overview(self, rng, prompt, n):
         return "## Research overview (fake)\n\n- Area 1: example direction.\n- Area 2: another direction."
 

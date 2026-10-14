@@ -202,6 +202,10 @@ Reply: text, model_id (what actually answered), tokens_in, tokens_out, seconds
 
 `python -m hyparena.live run --mode coscientist`: one model family for every role, judges' independence rule off, a single holistic criterion (`configs/criteria-coscientist.yaml`, following the paper's default criteria), online Elo from 1200 (K = 32; the paper does not give K), pairing that favours new and top-ranked hypotheses and similar ones (same proximity cluster), judges that see only the text and the reviews (`cs_compare`, `cs_debate`, adapted from the paper's prompts; JSON output instead of the paper's "better idea: 1 or 2"). Reviews still use retrieval, as the paper's full review searches the literature. Compare with our mode at an **equal token budget** (`--max-tokens`): our mode spends more judge calls per match.
 
+## 8c. Comparison tooling
+
+The protocol is in [`comparison.md`](comparison.md): ablation ladder L0–L4 (`hyparena/ladder.py`, `live run --ladder`), dev/test splits in the labels, the leakage probe (`hyparena/leakage.py`), the run grid (`hyparena/experiment.py`), paired comparison with bootstrap (`backtest compare`), and `--fake` for running all of it without model calls. The tournament stops scheduling matches when the token budget is spent.
+
 ## 9. Package layout
 
 ```

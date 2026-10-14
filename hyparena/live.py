@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 from datetime import datetime
@@ -19,7 +20,10 @@ from agent_kit.trace import render
 from hyparena.context import Context, RunConfig
 from hyparena.data import dataset_options, load_imported
 from hyparena.graph import build_graph
-from hyparena.llm.providers import DEFAULT_CONFIG, CallCapExceeded, build_client
+from hyparena.ladder import LADDER, MODES
+from hyparena.llm.fake import FakeLLMClient
+from hyparena.llm.judges import JudgeSpec
+from hyparena.llm.providers import DEFAULT_CONFIG, CallCapExceeded, GuardedClient, build_client, load_config
 from hyparena.llm.structured import parse_json
 from hyparena.persist import has_checkpoint, run_config, sqlite_checkpointer
 from hyparena.provenance import ProvenanceLog
@@ -43,26 +47,31 @@ TOY = ({"text": "Senescent fibroblasts spread senescence to neighbours through e
 
 
 def _context(args, **cfg_overrides) -> tuple[Context, object]:
-    client, pool, _ = build_client(args.config, max_calls=args.max_calls)
-    criteria_path = args.criteria
-    if args.mode == "coscientist":
-        # Baseline as in the paper: one model family for every role, one Elo, holistic verdicts that
-        # see only the text and the reviews. Reviews still use retrieval (the paper's full review searches).
+    step = LADDER[args.ladder or MODES[args.mode]]
+    if args.fake:
+        # No model calls: the fake LLM with the configured families (for testing the experiment machinery).
+        specs = [s for s in load_config(args.config).models if s.enabled]
+        pool = [JudgeSpec(s.family, f"fake-{s.model}") for s in specs]
+        client = GuardedClient(FakeLLMClient(args.seed), rpm=0, max_calls=args.max_calls)
+    else:
+        client, pool, _ = build_client(args.config, max_calls=args.max_calls)
+    if step.single_family:
         pool = pool[:1]
-        criteria_path = args.criteria if args.criteria_given else str(CONFIGS / "criteria-coscientist.yaml")
-        cfg_overrides.update(rating="elo", judge_view="coscientist", lineage_mode="none", judges_per_match=1,
-                             extra_judges=0)
+    criteria_path = args.criteria if args.criteria_given else str(CONFIGS / step.criteria)
+    cfg_overrides.update(step.cfg)
+    cfg_overrides["seed"] = args.seed
+    cfg_overrides["step"] = step.name
     if args.max_tokens:
         cfg_overrides["max_tokens"] = args.max_tokens
     RUNS.mkdir(exist_ok=True)
-    log = ProvenanceLog(RUNS / f"live-{datetime.now():%Y%m%d-%H%M%S}.jsonl")
+    log = ProvenanceLog(RUNS / f"live-{datetime.now():%Y%m%d-%H%M%S}-{os.getpid()}.jsonl")
     cfg = RunConfig(as_of=args.as_of, **cfg_overrides)
     sources = [s.strip() for s in args.search.split(",") if s.strip()]
     retractions = RetractionIndex.load(RW_DEFAULT) if RW_DEFAULT.exists() else None
     ctx = Context(client=client, judge_pool=pool, generator_families=[j.family for j in pool],
                   cfg=cfg, log=log, criteria=load_criteria(criteria_path), card_schema=load_card_schema(args.card),
                   search=build_search(sources), retractions=retractions)
-    print(f"mode: {args.mode}; criteria: {[c.name for c in ctx.criteria.criteria]} ({ctx.criteria.version}); "
+    print(f"step: {step.name} ({step.description}){' [FAKE LLM]' if args.fake else ''}; criteria: {[c.name for c in ctx.criteria.criteria]} ({ctx.criteria.version}); "
           f"card: {ctx.card_schema.version}; search: {sources}{f', as of {args.as_of}' if args.as_of else ''}; "
           f"retraction check: {'on' if retractions else 'off (run: python -m hyparena.tools.retractions download)'}")
     print(f"families: {[j.family for j in pool]}  models: {[j.model_version for j in pool]}")
@@ -106,7 +115,7 @@ def run(args) -> None:
         extra["dedup_threshold"] = 1.01          # off: templated items differ only in a name
         print("deduplication: off (requested by the dataset)")
     ctx, client = _context(args, **extra, max_cycles=args.cycles, gen_per_cycle=gen, evolve_per_cycle=1 if not imported else 0,
-                           judges_per_match=1, extra_judges=0, matches_per_item=args.matches)
+                           matches_per_item=args.matches)
     checkpointer = sqlite_checkpointer(args.checkpoint) if args.checkpoint else None
     graph = build_graph(ctx, checkpointer=checkpointer)
     thread = args.thread or f"run-{datetime.now():%Y%m%d-%H%M%S}"
@@ -163,7 +172,10 @@ def _dump(final, ctx, client, path) -> None:
     rated = [i for i, x in hyps.items() if x.status == "active" and plan.names and i in ratings.get(plan.names[0], {})]
     score, _ = combined(ratings, plan.weights, rated) if rated else ([], [])
     comb = dict(zip(rated, [float(s) for s in score]))
-    out = {"criteria": plan.names, "weights": plan.weights, "mode": ctx.cfg.judge_view, "rating": ctx.cfg.rating,
+    out = {"criteria": plan.names, "weights": plan.weights, "step": ctx.cfg.step,
+           "seed": ctx.cfg.seed, "families": [j.family for j in ctx.judge_pool],
+           "config": {k: getattr(ctx.cfg, k) for k in ("rating", "pairing", "judge_view", "lineage_mode",
+                                                        "judges_per_match", "extra_judges", "max_tokens", "max_cycles")},
            "as_of": ctx.cfg.as_of, "matches": len(final.get("matches", [])), "calls": client.calls,
            "failures": client.failures, "tokens": ctx.tracer.summary(),
            "hypotheses": {i: {"status": x.status, "family": x.provenance.family, "combined": comb.get(i),
@@ -186,7 +198,11 @@ def main() -> None:
     parser.add_argument("--matches", type=float, default=1.0, help="tournament matches per active hypothesis")
     parser.add_argument("--mode", choices=["full", "coscientist"], default="full",
                         help="full: our method; coscientist: baseline (one family, one Elo, holistic verdict)")
-    parser.add_argument("--criteria", default=str(CONFIGS / "criteria.yaml"), help="criteria file")
+    parser.add_argument("--ladder", choices=sorted(LADDER), default=None,
+                        help="ablation step L0 (baseline) .. L4 (full); overrides --mode (docs/comparison.md)")
+    parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--fake", action="store_true", help="fake LLM, no model calls (tests the machinery)")
+    parser.add_argument("--criteria", default=str(CONFIGS / "criteria.yaml"), help="criteria file (default: by step)")
     parser.add_argument("--card", default=str(CONFIGS / "card.yaml"), help="hypothesis card schema")
     parser.add_argument("--search", default="europepmc,pubtator,opengenes,clinicaltrials",
                         help=f"comma-separated sources from {', '.join(SOURCES)}, or none")
