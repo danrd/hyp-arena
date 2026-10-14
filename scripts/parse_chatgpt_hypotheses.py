@@ -54,6 +54,9 @@ def parse(text: str):
 
 
 if __name__ == "__main__":
+    # Optional: python parse_chatgpt_hypotheses.py conv.md out.json <url> <vendor family> <model>
     data = parse(open(sys.argv[1], encoding="utf-8").read())
+    if len(sys.argv) >= 6:
+        data = {"source": {"url": sys.argv[3], "family": sys.argv[4], "model": sys.argv[5]}, **data}
     json.dump(data, open(sys.argv[2], "w", encoding="utf-8"), ensure_ascii=False, indent=2)
     print(len(data["hypotheses"]), "hypotheses,", len(data["assistant_notes"]), "closing notes")

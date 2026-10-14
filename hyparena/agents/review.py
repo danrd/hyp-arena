@@ -19,8 +19,10 @@ def _deep_validate(value: dict) -> list[str]:
 def make_review(ctx):
     cfg = ctx.cfg
 
-    def reviewer() -> str:
-        return ctx.rotate("reviewer", ctx.generator_families)
+    def reviewer(h: Hypothesis) -> str:
+        """Next reviewer family, never the writer's (reviews are read by the judges)."""
+        others = [f for f in ctx.generator_families if f != h.provenance.family]
+        return ctx.rotate("reviewer", others or ctx.generator_families)
 
     def review_one(h: Hypothesis, state: GraphState) -> Hypothesis:
         common = {"goal": state["goal"], "plan": state["plan"], "text": h.text,
@@ -30,7 +32,7 @@ def make_review(ctx):
         def reject():
             return h.model_copy(update={"reviews": reviews, "status": "rejected"})
 
-        init = ask_json(ctx, role="review_initial", family=reviewer(), template="review_initial",
+        init = ask_json(ctx, role="review_initial", family=reviewer(h), template="review_initial",
                         version="v1", variables=common, phase="review", validate=_numbers)
         if init.value is None:
             return reject()
@@ -43,7 +45,7 @@ def make_review(ctx):
             return reject()
 
         query = (h.record.claim if h.record and h.record.claim else h.text)[:300]
-        full = ask_json(ctx, role="review_full", family=reviewer(), template="review_full",
+        full = ask_json(ctx, role="review_full", family=reviewer(h), template="review_full",
                         version="v1", variables={**common, "passages": ctx.search.search(query)},
                         phase="review", validate=_numbers)
         if full.value is None:
@@ -57,7 +59,7 @@ def make_review(ctx):
         if not passed:
             return reject()
 
-        deep = ask_json(ctx, role="review_deep", family=reviewer(), template="review_deep",
+        deep = ask_json(ctx, role="review_deep", family=reviewer(h), template="review_deep",
                         version="v1", variables={"text": h.text}, phase="review",
                         validate=_deep_validate)
         flawed = bool(deep.value and deep.value.get("fundamental_flaw"))

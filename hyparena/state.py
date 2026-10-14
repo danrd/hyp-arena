@@ -102,6 +102,8 @@ class GraphState(TypedDict, total=False):
     report: dict
 
 
-def initial_state(goal: str) -> GraphState:
-    return GraphState(goal=goal, hypotheses={}, ratings={}, matches=[], feedback={}, cycle=0,
-                      top_history=[])
+def initial_state(goal: str, hypotheses: Optional[list[Hypothesis]] = None) -> GraphState:
+    """Start state; `hypotheses` preloads imported ones (status `new`), which then go through
+    normalization, review and the tournament like generated ones."""
+    return GraphState(goal=goal, hypotheses={h.id: h for h in hypotheses or []}, ratings={}, matches=[],
+                      feedback={}, cycle=0, top_history=[])

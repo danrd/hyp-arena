@@ -1,4 +1,9 @@
 {
+  "source": {
+    "url": "https://chatgpt.com/share/6ace78ee-56bc-83e8-9134-845f5d47a778",
+    "family": "openai",
+    "model": "gpt-6-astra-wm"
+  },
   "hypotheses": [
     {
       "id": 1,

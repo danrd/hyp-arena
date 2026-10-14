@@ -124,7 +124,7 @@ What the table shows:
 
 ## 9. Example input data: a ChatGPT dialogue
 
-`data/chatgpt_hypotheses.json` holds 27 hypotheses on the biology of ageing, taken from a [shared ChatGPT dialogue](https://chatgpt.com/share/6ace78ee-56bc-83e8-9134-845f5d47a778) (the dialogue asks six times to "continue", the last time to "raise the level of surprise"). The text is in Russian, as in the source. The parser is `scripts/parse_chatgpt_hypotheses.py`.
+`data/chatgpt_hypotheses.json` holds 27 hypotheses on the biology of ageing, taken from a [shared ChatGPT dialogue](https://chatgpt.com/share/6ace78ee-56bc-83e8-9134-845f5d47a778) (the dialogue asks six times to "continue", the last time to "raise the level of surprise"). The text is in Russian, as in the source. The parser is `scripts/parse_chatgpt_hypotheses.py`. The dataset's `source` field records the writer (`family: openai`, `model: gpt-6-astra-wm`, read from the dialogue's own metadata), which the judge independence rule needs. `hyparena/data.py` loads the dataset into the graph as imported hypotheses, and `python -m hyparena.live run --import-file data/chatgpt_hypotheses.json --limit 8` runs them through normalization, review and the tournament.
 
 **Record schema** (a candidate for the normalization schema in section 3):
 
