@@ -9,6 +9,7 @@ import sys
 
 FIELDS = {
     "Гипотеза": "claim",
+    "Готеза": "claim",  # typo present in the source dialogue (hypotheses 8 and 23)
     "Что уже известно": "known",
     "Решающий эксперимент": "experiment",
     "Специфическое предсказание": "prediction",
