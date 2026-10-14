@@ -1,0 +1,384 @@
+{
+  "imp001": {
+    "label": 1,
+    "compound": "(R/S)-1,3-butanediol",
+    "first_itp_publication": "2022-12-01",
+    "pmids": [
+      "36179270"
+    ]
+  },
+  "imp002": {
+    "label": 1,
+    "compound": "16-alpha-hydroxyestradiol",
+    "first_itp_publication": "2024-10-01",
+    "pmids": [
+      "38753230"
+    ]
+  },
+  "imp003": {
+    "label": 0,
+    "compound": "17-dimethylaminoethylamino-17-demethoxygeldanamycin hydrochloride",
+    "first_itp_publication": "2020-11-01",
+    "pmids": [
+      "33145977"
+    ]
+  },
+  "imp004": {
+    "label": 1,
+    "compound": "17‐alpha‐estradiol",
+    "first_itp_publication": "2014-04-01",
+    "pmids": [
+      "24245565",
+      "27312235",
+      "33788371"
+    ]
+  },
+  "imp005": {
+    "label": 0,
+    "compound": "2,4-dinitrophenol",
+    "first_itp_publication": "2024-10-01",
+    "pmids": [
+      "38753230"
+    ]
+  },
+  "imp006": {
+    "label": 0,
+    "compound": "2-(2-hydroxyphenyl)benzothiazole",
+    "first_itp_publication": "2019-04-01",
+    "pmids": [
+      "30688027"
+    ]
+  },
+  "imp007": {
+    "label": 0,
+    "compound": "4-phenylbutyrate",
+    "first_itp_publication": "2024-02-01",
+    "pmids": [
+      "38041783"
+    ]
+  },
+  "imp008": {
+    "label": 1,
+    "compound": "Acarbose",
+    "first_itp_publication": "2014-04-01",
+    "pmids": [
+      "24245565",
+      "27312235",
+      "30688027"
+    ]
+  },
+  "imp009": {
+    "label": 0,
+    "compound": "Alpha-ketoglutarate",
+    "first_itp_publication": "2024-10-01",
+    "pmids": [
+      "38753230"
+    ]
+  },
+  "imp010": {
+    "label": 1,
+    "compound": "Astaxanthin",
+    "first_itp_publication": "2024-02-01",
+    "pmids": [
+      "38041783"
+    ]
+  },
+  "imp011": {
+    "label": 0,
+    "compound": "Beta-guanidinopropionic acid",
+    "first_itp_publication": "2020-11-01",
+    "pmids": [
+      "33145977"
+    ]
+  },
+  "imp012": {
+    "label": 1,
+    "compound": "Canagliflozin",
+    "first_itp_publication": "2020-11-05",
+    "pmids": [
+      "32990681",
+      "38753230"
+    ]
+  },
+  "imp013": {
+    "label": 0,
+    "compound": "Candesartan cilexetil",
+    "first_itp_publication": "2021-05-01",
+    "pmids": [
+      "33788371"
+    ]
+  },
+  "imp014": {
+    "label": 1,
+    "compound": "Captopril",
+    "first_itp_publication": "2022-12-01",
+    "pmids": [
+      "36179270"
+    ]
+  },
+  "imp015": {
+    "label": 0,
+    "compound": "Curcumin",
+    "first_itp_publication": "2013-01-01",
+    "pmids": [
+      "22451473"
+    ]
+  },
+  "imp016": {
+    "label": 0,
+    "compound": "Dimethyl fumarate",
+    "first_itp_publication": "2024-02-01",
+    "pmids": [
+      "38041783"
+    ]
+  },
+  "imp017": {
+    "label": 0,
+    "compound": "Fisetin",
+    "first_itp_publication": "2024-02-01",
+    "pmids": [
+      "38041783"
+    ]
+  },
+  "imp018": {
+    "label": 0,
+    "compound": "Fish oil",
+    "first_itp_publication": "2016-10-01",
+    "pmids": [
+      "27312235"
+    ]
+  },
+  "imp019": {
+    "label": 0,
+    "compound": "Geranylgeranylacetone",
+    "first_itp_publication": "2021-05-01",
+    "pmids": [
+      "33788371"
+    ]
+  },
+  "imp020": {
+    "label": 1,
+    "compound": "Glycine",
+    "first_itp_publication": "2019-06-01",
+    "pmids": [
+      "30916479"
+    ]
+  },
+  "imp021": {
+    "label": 0,
+    "compound": "Green tea extract",
+    "first_itp_publication": "2013-01-01",
+    "pmids": [
+      "22451473"
+    ]
+  },
+  "imp022": {
+    "label": 0,
+    "compound": "Hydralazine",
+    "first_itp_publication": "2024-10-01",
+    "pmids": [
+      "38753230"
+    ]
+  },
+  "imp023": {
+    "label": 0,
+    "compound": "INT-767d (FXR/TGR5 agonist)",
+    "first_itp_publication": "2019-04-01",
+    "pmids": [
+      "30688027"
+    ]
+  },
+  "imp024": {
+    "label": 0,
+    "compound": "Inulin",
+    "first_itp_publication": "2019-06-01",
+    "pmids": [
+      "30916479"
+    ]
+  },
+  "imp025": {
+    "label": 0,
+    "compound": "Leucine",
+    "first_itp_publication": "2022-12-01",
+    "pmids": [
+      "36179270"
+    ]
+  },
+  "imp026": {
+    "label": 0,
+    "compound": "MIF098 (CD74 antagonist)",
+    "first_itp_publication": "2021-05-01",
+    "pmids": [
+      "33788371"
+    ]
+  },
+  "imp027": {
+    "label": 1,
+    "compound": "Meclizine",
+    "first_itp_publication": "2024-02-01",
+    "pmids": [
+      "38041783"
+    ]
+  },
+  "imp028": {
+    "label": 0,
+    "compound": "Medium-chain triglyceride oil",
+    "first_itp_publication": "2013-01-01",
+    "pmids": [
+      "22451473"
+    ]
+  },
+  "imp029": {
+    "label": 0,
+    "compound": "Metformin",
+    "first_itp_publication": "2016-10-01",
+    "pmids": [
+      "27312235"
+    ]
+  },
+  "imp030": {
+    "label": 0,
+    "compound": "Methylene blue",
+    "first_itp_publication": "2014-04-01",
+    "pmids": [
+      "24245565"
+    ]
+  },
+  "imp031": {
+    "label": 0,
+    "compound": "Minocycline",
+    "first_itp_publication": "2020-11-01",
+    "pmids": [
+      "33145977"
+    ]
+  },
+  "imp032": {
+    "label": 0,
+    "compound": "MitoQ",
+    "first_itp_publication": "2020-11-01",
+    "pmids": [
+      "33145977"
+    ]
+  },
+  "imp033": {
+    "label": 0,
+    "compound": "Mycophenolic acid",
+    "first_itp_publication": "2024-02-01",
+    "pmids": [
+      "38041783"
+    ]
+  },
+  "imp034": {
+    "label": 0,
+    "compound": "Nebivolol",
+    "first_itp_publication": "2024-10-01",
+    "pmids": [
+      "38753230"
+    ]
+  },
+  "imp035": {
+    "label": 0,
+    "compound": "Nicotinamide riboside",
+    "first_itp_publication": "2021-05-01",
+    "pmids": [
+      "33788371"
+    ]
+  },
+  "imp036": {
+    "label": 0,
+    "compound": "Oxaloacetate",
+    "first_itp_publication": "2013-01-01",
+    "pmids": [
+      "22451473"
+    ]
+  },
+  "imp037": {
+    "label": 0,
+    "compound": "PB125 (carnosol, withaferin A and luteolin)",
+    "first_itp_publication": "2022-12-01",
+    "pmids": [
+      "36179270"
+    ]
+  },
+  "imp038": {
+    "label": 1,
+    "compound": "Protandim",
+    "first_itp_publication": "2016-10-01",
+    "pmids": [
+      "27312235"
+    ]
+  },
+  "imp039": {
+    "label": 0,
+    "compound": "Resveratrol",
+    "first_itp_publication": "2011-02-01",
+    "pmids": [
+      "20974732",
+      "22451473"
+    ]
+  },
+  "imp040": {
+    "label": 0,
+    "compound": "SG1002 (hydrogen sulfide donor)",
+    "first_itp_publication": "2024-02-01",
+    "pmids": [
+      "38041783"
+    ]
+  },
+  "imp041": {
+    "label": 0,
+    "compound": "Simvastatin",
+    "first_itp_publication": "2011-02-01",
+    "pmids": [
+      "20974732"
+    ]
+  },
+  "imp042": {
+    "label": 0,
+    "compound": "Sodium thiosulfate",
+    "first_itp_publication": "2024-10-01",
+    "pmids": [
+      "38753230"
+    ]
+  },
+  "imp043": {
+    "label": 0,
+    "compound": "Sulindac",
+    "first_itp_publication": "2022-12-01",
+    "pmids": [
+      "36179270"
+    ]
+  },
+  "imp044": {
+    "label": 0,
+    "compound": "Syringaresinol",
+    "first_itp_publication": "2022-12-01",
+    "pmids": [
+      "36179270"
+    ]
+  },
+  "imp045": {
+    "label": 0,
+    "compound": "TM5441 (PAI-1 inhibitor)",
+    "first_itp_publication": "2019-06-01",
+    "pmids": [
+      "30916479"
+    ]
+  },
+  "imp046": {
+    "label": 0,
+    "compound": "Ursodeoxycholic acid",
+    "first_itp_publication": "2016-10-01",
+    "pmids": [
+      "27312235"
+    ]
+  },
+  "imp047": {
+    "label": 0,
+    "compound": "Ursolic  acid",
+    "first_itp_publication": "2019-04-01",
+    "pmids": [
+      "30688027"
+    ]
+  }
+}

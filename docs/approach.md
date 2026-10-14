@@ -124,11 +124,11 @@ Decision (working notes): expert labels are **not assumed**; they are an optiona
 
 ## 8. Next steps
 
-1. More connectors behind the same `SearchTool` interface: PubTator3 (entity normalization), Open Genes, ClinicalTrials.gov, Crossref + Retraction Watch (retraction flag on every cited source); see the working notes' data-source survey.
+1. Done: Europe PMC, PubTator3, Open Genes, ClinicalTrials.gov connectors and the Retraction Watch check (architecture, section 8). Next: evaluate retrieval quality; PubTator3 entity normalization of the card; date-aware sources for curated databases.
 2. Verified layer of the card: each declared sub-claim linked to evidence records with a status (established, supported, contested, speculative, refuted), once the card format is agreed.
-3. Backtest harness: DrugAge and ITP labels, date filtering, hidden split; then fit criterion weights against it.
+3. Done: the ITP backtest harness (architecture, section 8a). Next: run it with judges whose training cutoff precedes T, add more label sources (trial outcomes, other DrugAge species), and fit criterion weights against the labels on a held-out split.
 4. Cost and time of the decisive experiment from registries (reference classes), reported as intervals, instead of being judged.
-5. A Co-Scientist-faithful baseline mode for the comparison at equal budget.
+5. Done: the Co-Scientist baseline mode (architecture, section 8b). Next: the comparison itself, at equal token budget, on the backtest.
 
 ## 9. Example input data: a ChatGPT dialogue
 

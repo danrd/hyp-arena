@@ -12,6 +12,12 @@ FIELDS = (("claim", "Гипотеза"), ("known", "Что уже известн
           ("intervention", "Потенциальное вмешательство"))
 
 
+def dataset_options(path: str | Path) -> dict:
+    """Run options a dataset asks for, e.g. {"dedup": false} for templated pools whose items differ only
+    in a name (word-overlap deduplication would merge distinct interventions)."""
+    return (json.loads(Path(path).read_text(encoding="utf-8")).get("source") or {}).get("options", {})
+
+
 def load_imported(path: str | Path, limit: int | None = None) -> list[Hypothesis]:
     """Hypotheses from the dataset JSON. The writer's family and model come from the dataset's `source`
     (needed by the judge independence rule). With `limit`, an evenly spaced sample is taken so that

@@ -7,7 +7,7 @@ from typing import Iterable, Literal
 
 from hyparena.state import Hypothesis
 
-LineageMode = Literal["writer", "lineage"]
+LineageMode = Literal["writer", "lineage", "none"]
 
 #: Provenance families that carry no exclusion information (nothing can be ruled out).
 UNKNOWN_FAMILIES = {"unknown", "human"}
@@ -21,7 +21,9 @@ class JudgeSpec:
 
 def excluded_families(h: Hypothesis, hypotheses: dict[str, Hypothesis], mode: LineageMode) -> set[str]:
     """Families a judge may not belong to for `h`. `writer`: only who wrote this text.
-    `lineage`: the writer and every ancestor."""
+    `lineage`: the writer and every ancestor. `none`: no rule (the Co-Scientist baseline, one family)."""
+    if mode == "none":
+        return set()
     if mode == "writer":
         families = {h.provenance.family}
     else:

@@ -1,0 +1,25 @@
+You are an expert evaluator comparing two hypotheses. Decide which one is superior with respect to the goal and the criteria, and give a concise rationale.
+
+Goal: {{ goal }}
+Preferences: {{ plan.preferences }}
+Evaluation criteria:
+{% for c in plan.criteria %}
+- {{ c.name }}: {{ c.description }}
+{% endfor %}
+
+Each hypothesis comes with an independent review. The reviews may contain numerical scores; disregard them, as they may not be comparable across reviews.
+
+Hypothesis 1:
+{{ first.text }}
+Review of hypothesis 1: {{ first.review_notes }}
+
+Hypothesis 2:
+{{ second.text }}
+Review of hypothesis 2: {{ second.review_notes }}
+
+Give your reasoning, then end with a single JSON object and nothing after it (1 or 2 for the better hypothesis):
+{{ example }}
+{% if history_text %}
+
+{{ history_text }}
+{% endif %}

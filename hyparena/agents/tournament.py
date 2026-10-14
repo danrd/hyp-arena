@@ -6,9 +6,9 @@ from typing import Optional
 
 from hyparena.llm.judges import JudgeSpec, pick_judges
 from hyparena.llm.structured import ask_json
-from hyparena.rating import combined, fit_bt, select_pairs
+from hyparena.rating import combined, elo_ratings, fit_bt, select_pairs, select_pairs_coscientist
 from hyparena.schema import verdict_example
-from hyparena.state import GraphState, Hypothesis, JudgeVerdict, Match, Provenance
+from hyparena.state import GraphState, Hypothesis, JudgeVerdict, Match, Provenance, usable
 
 
 def _validator(names: list[str]):
@@ -27,7 +27,7 @@ def _shown(h: Hypothesis, n_evidence: int) -> dict:
     evidence (excerpts with dates), and the reviewers' remarks."""
     return {"text": h.text, "review_notes": _review_notes(h),
             "card": h.card.filled() if h.card else {}, "gaps": h.card.gaps if h.card else [],
-            "evidence": h.evidence[:n_evidence]}
+            "evidence": usable(h.evidence)[:n_evidence]}
 
 
 def _disagree(verdicts: list[JudgeVerdict], names: list[str]) -> bool:
@@ -55,8 +55,9 @@ def make_tournament(ctx):
         first, second = (hb, ha) if rng.random() < 0.5 else (ha, hb)     # random A/B order
         plan = state["plan"]
         n = cfg.evidence_to_judges
+        template, version = (f"cs_{mode}", "v1") if cfg.judge_view == "coscientist" else (mode, "v3")
         out = ask_json(
-            ctx, role=mode, family=judge.family, template=mode, version="v3",
+            ctx, role=mode, family=judge.family, template=template, version=version,
             phase="debate" if mode == "debate" else "rank", validate=_validator(plan.names),
             variables={"goal": state["goal"], "plan": plan, "feedback": state.get("feedback", {}),
                        "first": _shown(first, n), "second": _shown(second, n),
@@ -98,22 +99,30 @@ def make_tournament(ctx):
                      winners=_aggregate(decided, tiebreak if tiebreak is not None and tiebreak.parse_ok else None,
                                         names))
 
+    def fit(ids, matches, names):
+        rate = elo_ratings if cfg.rating == "elo" else fit_bt
+        return {c: rate(ids, matches, c) for c in names}
+
     def tournament(state: GraphState) -> dict:
         hyps, plan = state["hypotheses"], state["plan"]
         ids = [h.id for h in hyps.values() if h.status == "active"]
         old = state.get("matches", [])
-        ratings = {c: fit_bt(ids, old, c) for c in plan.names}
+        ratings = fit(ids, old, plan.names)
         if len(ids) < 2:
             return {"ratings": ratings}
         top_k = max(2, int(len(ids) * cfg.top_frac))
         n_matches = max(4, int(cfg.matches_per_item * len(ids)))
-        pairs = select_pairs(ids, ratings, plan.weights, ctx.rng_for("pairs", state.get("cycle", 0)),
-                             n_matches, top_k, cfg.swiss_share, cfg.z)
+        rng = ctx.rng_for("pairs", state.get("cycle", 0))
+        if cfg.rating == "elo":
+            pairs = select_pairs_coscientist(ids, ratings, plan.weights, {h: hyps[h].cluster for h in ids}, rng,
+                                             n_matches)
+        else:
+            pairs = select_pairs(ids, ratings, plan.weights, rng, n_matches, top_k, cfg.swiss_share, cfg.z)
         score, _ = combined(ratings, plan.weights, ids)
         top = {ids[i] for i in sorted(range(len(ids)), key=lambda i: -score[i])[: cfg.debate_top]}
         tasks = [(state, hyps[a], hyps[b], a in top and b in top) for a, b in pairs]
         new = [m for m in ctx.map(judge_pair, tasks) if m is not None]
-        ratings = {c: fit_bt(ids, old + new, c) for c in plan.names}
+        ratings = fit(ids, old + new, plan.names)
         score, _ = combined(ratings, plan.weights, ids)
         ranked = [ids[i] for i in sorted(range(len(ids)), key=lambda i: -score[i])]
         return {"matches": new, "ratings": ratings,
