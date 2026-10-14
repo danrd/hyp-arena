@@ -1,0 +1,17 @@
+You write a research overview for scientists from the top-ranked hypotheses of a hypothesis tournament.
+
+Goal: {{ goal }}
+Preferences: {{ plan.preferences }}
+
+Top hypotheses (ratings are relative log-strengths from pairwise comparisons; higher is better):
+{% for it in items %}
+--- {{ it.id }} (promise {{ it.promise }}, feasibility {{ it.feasibility }}) ---
+{{ it.text }}
+{% endfor %}
+
+Write the overview in Markdown:
+1. Group the hypotheses into a few research areas. For each area explain why it matters for the goal and which hypotheses (by id) belong to it.
+2. For each area propose the specific experiments that would test it first, and what result would change the plan.
+3. Point out where hypotheses conflict, overlap or depend on each other.
+4. State the main open risks and what is assumed rather than established.
+Refer to hypotheses by id. Do not invent findings or citations.

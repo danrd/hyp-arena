@@ -7,6 +7,8 @@
 #
 # Model identifiers change; check the provider's list before relying on them.
 rpm: 15            # requests per minute across all providers (free tier allows about 20)
+concurrency: 4     # requests in flight at once, across all providers
+deadline: 150      # wall-clock seconds per attempt
 generation:
   temperature: 0.7
   max_tokens: 2048

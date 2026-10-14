@@ -25,7 +25,9 @@ class Reply:
 
 
 class LLMClient(Protocol):
-    def call(self, *, role: str, family: str, prompt: str) -> Reply: ...
+    def call(self, *, role: str, family: str, prompt: str, avoid: frozenset[str] = frozenset()) -> Reply:
+        """`avoid`: families that must not answer this call, even as a fallback."""
+        ...
 
 
 class RunnerLLMClient:
@@ -38,7 +40,7 @@ class RunnerLLMClient:
     def __init__(self, runners: Mapping[str, tuple[str, Any]]):
         self.runners = dict(runners)
 
-    def call(self, *, role: str, family: str, prompt: str) -> Reply:
+    def call(self, *, role: str, family: str, prompt: str, avoid: frozenset[str] = frozenset()) -> Reply:
         model_version, runner = self.runners[family]
         started = time.perf_counter()
         text = runner.generate(prompt) or ""      # reasoning models can return no content

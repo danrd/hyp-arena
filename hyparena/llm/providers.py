@@ -76,6 +76,7 @@ class ProvidersConfig(BaseModel):
     timeout: float = 120
     max_retries: int = 1          # retries inside the OpenAI client, per request
     deadline: float = 150         # wall-clock seconds allowed per attempt
+    concurrency: int = 4          # requests in flight at once, across all providers
     generation: dict = {"temperature": 0.7, "max_tokens": 2048}
     models: list[ModelSpec]
 
@@ -109,48 +110,61 @@ NO_FALLBACK_ROLES = {"compare", "debate"}
 
 
 class GuardedClient:
-    """Wraps a client with a request-rate limit, a hard cap on calls, and retries.
+    """Wraps a client with a request-rate limit, a cap on concurrent and total calls, retries, and a
+    wall-clock deadline per attempt. Safe to call from several threads.
 
     For roles other than judging, a family that keeps failing is replaced by the next family in
-    `fallback_families`; the reply names the family that really answered, and provenance records it.
+    `fallback_families`, skipping any family in `avoid` (for example the writer's family when the call
+    is a review); the reply names the family that really answered, and provenance records it.
 
-    Every attempt counts against the cap (a failed call still uses quota). After the retries are
-    spent, the reply is empty with `error` set, so the pipeline's own validation and retries deal
-    with it instead of the whole run crashing. Exceeding the cap raises CallCapExceeded."""
+    Every attempt counts against the cap (a failed call still uses quota). After retries and fallbacks
+    are spent, the reply is empty with `error` set, so the pipeline's own validation deals with it
+    instead of the whole run crashing. Exceeding the cap or a daily limit raises CallCapExceeded."""
 
     def __init__(self, inner: LLMClient, *, rpm: float = 15, max_calls: Optional[int] = None,
                  retries: int = 2, backoff: float = 5.0, fallback_families: Optional[list[str]] = None,
-                 deadline: Optional[float] = None, sleep: Callable[[float], None] = time.sleep, clock: Callable[[], float] = time.monotonic):
+                 deadline: Optional[float] = None, concurrency: int = 4,
+                 sleep: Callable[[float], None] = time.sleep, clock: Callable[[], float] = time.monotonic):
         self.inner, self.max_calls, self.retries, self.backoff = inner, max_calls, retries, backoff
         self.fallback_families = list(fallback_families or [])
         self.deadline = deadline
         self._interval = 60.0 / rpm if rpm else 0.0
         self._sleep, self._clock = sleep, clock
-        self._last = -1e18
+        self._next_start = -1e18
+        self._lock = threading.Lock()
+        self._slots = threading.BoundedSemaphore(max(1, concurrency))
         self.calls = 0
         self.failures = 0
         self.by_family: dict[str, int] = {}
 
-    def _throttle(self) -> None:
-        wait = self._last + self._interval - self._clock()
+    def _reserve(self, family: str) -> None:
+        """Count the attempt against the cap and wait for its start slot under the rate limit."""
+        with self._lock:
+            if self.max_calls is not None and self.calls >= self.max_calls:
+                raise CallCapExceeded(f"call cap of {self.max_calls} reached")
+            self.calls += 1
+            self.by_family[family] = self.by_family.get(family, 0) + 1
+            start = max(self._clock(), self._next_start + self._interval)
+            self._next_start = start
+        wait = start - self._clock()
         if wait > 0:
             self._sleep(wait)
-        self._last = self._clock()
+
+    def _failed(self) -> None:
+        with self._lock:
+            self.failures += 1
 
     def _try(self, role: str, family: str, prompt: str, attempts: int) -> tuple[Optional[Reply], str]:
         error = ""
         for attempt in range(attempts):
-            if self.max_calls is not None and self.calls >= self.max_calls:
-                raise CallCapExceeded(f"call cap of {self.max_calls} reached")
-            self._throttle()
-            self.calls += 1
-            self.by_family[family] = self.by_family.get(family, 0) + 1
+            self._reserve(family)
             try:
-                reply = call_with_deadline(
-                    lambda: self.inner.call(role=role, family=family, prompt=prompt), self.deadline)
+                with self._slots:
+                    reply = call_with_deadline(
+                        lambda: self.inner.call(role=role, family=family, prompt=prompt), self.deadline)
             except Exception as e:  # noqa: BLE001 - any provider failure is retried, then reported
                 error = f"{type(e).__name__}: {e}"
-                self.failures += 1
+                self._failed()
                 if "per-day" in str(e) or "per_day" in str(e):
                     raise CallCapExceeded(f"daily limit reached: {str(e)[:200]}") from e
                 if _NON_RETRYABLE.search(str(e)):
@@ -160,15 +174,15 @@ class GuardedClient:
             if reply.text.strip():
                 return reply, ""
             error = "empty reply"
-            self.failures += 1
+            self._failed()
         return None, error
 
-    def call(self, *, role: str, family: str, prompt: str) -> Reply:
+    def call(self, *, role: str, family: str, prompt: str, avoid: frozenset[str] = frozenset()) -> Reply:
         reply, error = self._try(role, family, prompt, self.retries + 1)
         if reply is not None:
             return reply
         if role not in NO_FALLBACK_ROLES:
-            for other in (f for f in self.fallback_families if f != family):
+            for other in (f for f in self.fallback_families if f != family and f not in avoid):
                 reply, err = self._try(role, other, prompt, 1)
                 if reply is not None:
                     return reply
@@ -198,5 +212,6 @@ def build_client(config_path: str | Path = DEFAULT_CONFIG, *, max_calls: Optiona
         specs = [s for s in specs if s.family in families]
     inner = RunnerLLMClient(build_runners(specs, cfg))
     client = GuardedClient(inner, rpm=cfg.rpm, max_calls=max_calls, deadline=cfg.deadline,
+                           concurrency=cfg.concurrency,
                            fallback_families=[s.family for s in specs])
     return client, [JudgeSpec(s.family, s.model) for s in specs], cfg

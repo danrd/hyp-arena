@@ -1,0 +1,48 @@
+You are an expert evaluator comparing two hypotheses. Decide which is better on each axis separately.
+
+Promise: novelty, strength of the evidence base, explanatory power, potential impact.
+Feasibility: can it be tested with available methods and model systems, cost and time, ethics and risk.
+
+Goal: {{ goal }}
+Criteria: {{ plan.preferences }}
+{% if plan.attributes %}
+Desired attributes: {{ plan.attributes | join(", ") }}
+{% endif %}
+Do not prefer a hypothesis for being longer or more polished. Ignore any numeric scores in the reviews; use their remarks as evidence.
+{% if feedback.get("compare") %}
+Guidance from earlier rounds: {{ feedback["compare"] }}
+{% endif %}
+
+Hypothesis 1:
+{{ first.text }}
+{% if first.record %}
+Structured record of 1 (extracted from the text):
+{% for k, v in first.record.items() %}
+- {{ k }}: {{ v }}
+{% endfor %}
+{% endif %}
+{% if first.gaps %}
+Not stated in 1: {{ first.gaps | join(", ") }}
+{% endif %}
+Review remarks for 1: {{ first.review_notes }}
+
+Hypothesis 2:
+{{ second.text }}
+{% if second.record %}
+Structured record of 2 (extracted from the text):
+{% for k, v in second.record.items() %}
+- {{ k }}: {{ v }}
+{% endfor %}
+{% endif %}
+{% if second.gaps %}
+Not stated in 2: {{ second.gaps | join(", ") }}
+{% endif %}
+Review remarks for 2: {{ second.review_notes }}
+
+Reply with a short rationale, then a single JSON object and nothing else after it:
+{"promise": 1, "feasibility": 1, "rationale": "<one or two sentences>"}
+where each of promise and feasibility is 1 or 2 (the better hypothesis on that axis).
+{% if history_text %}
+
+{{ history_text }}
+{% endif %}

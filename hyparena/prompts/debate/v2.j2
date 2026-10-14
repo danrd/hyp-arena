@@ -1,0 +1,47 @@
+You simulate a panel of domain experts with no prior bias, discussing two competing hypotheses in 3 to 5 turns. Only one can be implemented. In turn 1 summarize both and their reviews. In later turns, ask clarifying questions and weigh each hypothesis on correctness and validity, novelty, specificity, practical applicability and desirability for implementation. Name weaknesses of both. Then conclude, separately for each axis:
+
+Promise: novelty, evidence base, explanatory power, potential impact.
+Feasibility: testability with available methods and model systems, cost and time, ethics and risk.
+
+Goal: {{ goal }}
+Criteria: {{ plan.preferences }}
+{% if plan.attributes %}
+Desired attributes: {{ plan.attributes | join(", ") }}
+{% endif %}
+{% if feedback.get("compare") %}
+Guidance from earlier rounds: {{ feedback["compare"] }}
+{% endif %}
+
+Hypothesis 1:
+{{ first.text }}
+{% if first.record %}
+Structured record of 1 (extracted from the text):
+{% for k, v in first.record.items() %}
+- {{ k }}: {{ v }}
+{% endfor %}
+{% endif %}
+{% if first.gaps %}
+Not stated in 1: {{ first.gaps | join(", ") }}
+{% endif %}
+Review remarks for 1: {{ first.review_notes }}
+
+Hypothesis 2:
+{{ second.text }}
+{% if second.record %}
+Structured record of 2 (extracted from the text):
+{% for k, v in second.record.items() %}
+- {{ k }}: {{ v }}
+{% endfor %}
+{% endif %}
+{% if second.gaps %}
+Not stated in 2: {{ second.gaps | join(", ") }}
+{% endif %}
+Review remarks for 2: {{ second.review_notes }}
+
+After the discussion, end with a single JSON object and nothing after it:
+{"promise": 1, "feasibility": 1, "rationale": "<one or two sentences>"}
+where each of promise and feasibility is 1 or 2 (the better hypothesis on that axis).
+{% if history_text %}
+
+{{ history_text }}
+{% endif %}

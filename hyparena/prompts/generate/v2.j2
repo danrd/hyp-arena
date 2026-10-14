@@ -1,0 +1,41 @@
+You are an expert formulating a novel and robust hypothesis for the objective below.
+Describe it in detail for an audience of domain experts: the specific entities, the mechanism, the anticipated outcomes, a feasible experiment to test it, and what result would refute it. Separate what is already known from what you assume.
+
+Goal: {{ goal }}
+Preferences: {{ plan.preferences }}
+{% if plan.attributes %}
+Desired attributes: {{ plan.attributes | join(", ") }}
+{% endif %}
+Constraints: {{ plan.constraints | join("; ") }}
+
+{% if strategy == "literature" %}
+Approach: ground the hypothesis in the literature. Summarize what the passages establish, find a gap or an under-explained observation, and build the hypothesis on it. Cite passages by source identifier.
+{% if passages %}
+
+Retrieved literature:
+{% for p in passages %}
+[{{ p.source }}] {{ p.title }} - {{ p.text }}
+{% endfor %}
+{% else %}
+No passages were retrieved: rely on your knowledge and label every statement you cannot attribute as an assumption.
+{% endif %}
+{% elif strategy == "debate" %}
+Approach: privately simulate a short debate among domain experts. Have them propose three distinct candidate hypotheses, criticize each for correctness, novelty, specificity and testability, and refine the strongest. Then write only the final refined hypothesis.
+{% elif strategy == "assumptions" %}
+Approach: identify testable intermediate assumptions that, if true, would lead to a new finding. Break them into sub-assumptions through conditional reasoning steps ("if A holds, then B should follow"), keep the plausible chain, and assemble it into one complete hypothesis whose assumptions can each be checked.
+{% elif strategy == "expansion" %}
+Approach: explore a part of the hypothesis space not covered yet.
+{% if known_titles %}
+
+Directions already explored (propose something different):
+{% for t in known_titles %}
+- {{ t }}
+{% endfor %}
+{% endif %}
+{% endif %}
+{% if feedback.get("generate") %}
+
+Feedback from earlier rounds: {{ feedback["generate"] }}
+{% endif %}
+
+Write the hypothesis as free-form text. Output only the hypothesis itself, not the discussion, reasoning or debate that led to it.
