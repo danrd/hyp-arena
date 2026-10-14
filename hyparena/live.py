@@ -8,6 +8,8 @@ Paid models in configs/models.yaml are refused unless ALLOW_PAID=1."""
 from __future__ import annotations
 
 import argparse
+import json
+import sys
 import time
 from datetime import datetime
 from pathlib import Path
@@ -15,7 +17,7 @@ from pathlib import Path
 from agent_kit.trace import render
 
 from hyparena.context import Context, RunConfig
-from hyparena.data import load_imported
+from hyparena.data import dataset_options, load_imported
 from hyparena.graph import build_graph
 from hyparena.llm.providers import DEFAULT_CONFIG, CallCapExceeded, build_client
 from hyparena.llm.structured import parse_json
@@ -24,8 +26,8 @@ from hyparena.provenance import ProvenanceLog
 from hyparena.rating import combined
 from hyparena.schema import CONFIGS, load_card_schema, load_criteria, verdict_example
 from hyparena.state import PlanConfig, initial_state
-from hyparena.tools.europepmc import EuropePMCSearch
-from hyparena.tools.search import NullSearch
+from hyparena.tools.registry import SOURCES, build_search
+from hyparena.tools.retractions import DEFAULT as RW_DEFAULT, RetractionIndex
 
 GOAL = "Find mechanisms of cellular ageing that can be tested in vitro."
 IMPORT_GOAL = "Identify the most promising and feasible hypotheses on the biology of ageing."
@@ -42,14 +44,27 @@ TOY = ({"text": "Senescent fibroblasts spread senescence to neighbours through e
 
 def _context(args, **cfg_overrides) -> tuple[Context, object]:
     client, pool, _ = build_client(args.config, max_calls=args.max_calls)
+    criteria_path = args.criteria
+    if args.mode == "coscientist":
+        # Baseline as in the paper: one model family for every role, one Elo, holistic verdicts that
+        # see only the text and the reviews. Reviews still use retrieval (the paper's full review searches).
+        pool = pool[:1]
+        criteria_path = args.criteria if args.criteria_given else str(CONFIGS / "criteria-coscientist.yaml")
+        cfg_overrides.update(rating="elo", judge_view="coscientist", lineage_mode="none", judges_per_match=1,
+                             extra_judges=0)
+    if args.max_tokens:
+        cfg_overrides["max_tokens"] = args.max_tokens
     RUNS.mkdir(exist_ok=True)
     log = ProvenanceLog(RUNS / f"live-{datetime.now():%Y%m%d-%H%M%S}.jsonl")
     cfg = RunConfig(as_of=args.as_of, **cfg_overrides)
+    sources = [s.strip() for s in args.search.split(",") if s.strip()]
+    retractions = RetractionIndex.load(RW_DEFAULT) if RW_DEFAULT.exists() else None
     ctx = Context(client=client, judge_pool=pool, generator_families=[j.family for j in pool],
-                  cfg=cfg, log=log, criteria=load_criteria(args.criteria), card_schema=load_card_schema(args.card),
-                  search=EuropePMCSearch() if args.search == "europepmc" else NullSearch())
-    print(f"criteria: {[c.name for c in ctx.criteria.criteria]} ({ctx.criteria.version}); card: {ctx.card_schema.version}; "
-          f"search: {args.search}{f', as of {args.as_of}' if args.as_of else ''}")
+                  cfg=cfg, log=log, criteria=load_criteria(criteria_path), card_schema=load_card_schema(args.card),
+                  search=build_search(sources), retractions=retractions)
+    print(f"mode: {args.mode}; criteria: {[c.name for c in ctx.criteria.criteria]} ({ctx.criteria.version}); "
+          f"card: {ctx.card_schema.version}; search: {sources}{f', as of {args.as_of}' if args.as_of else ''}; "
+          f"retraction check: {'on' if retractions else 'off (run: python -m hyparena.tools.retractions download)'}")
     print(f"families: {[j.family for j in pool]}  models: {[j.model_version for j in pool]}")
     print(f"log: {log.path}")
     return ctx, client
@@ -86,7 +101,11 @@ def run(args) -> None:
     if imported:
         p = imported[0].provenance
         print(f"imported: {len(imported)} hypotheses written by {p.family} / {p.model_version}")
-    ctx, client = _context(args, max_cycles=1, gen_per_cycle=gen, evolve_per_cycle=1,
+    extra = {}
+    if imported and dataset_options(args.import_file).get("dedup") is False:
+        extra["dedup_threshold"] = 1.01          # off: templated items differ only in a name
+        print("deduplication: off (requested by the dataset)")
+    ctx, client = _context(args, **extra, max_cycles=args.cycles, gen_per_cycle=gen, evolve_per_cycle=1 if not imported else 0,
                            judges_per_match=1, extra_judges=0, matches_per_item=args.matches)
     checkpointer = sqlite_checkpointer(args.checkpoint) if args.checkpoint else None
     graph = build_graph(ctx, checkpointer=checkpointer)
@@ -107,6 +126,8 @@ def run(args) -> None:
               + (f"; continue with --resume --thread {thread}" if checkpointer else ""))
         return
     h = final["hypotheses"]
+    if args.out:
+        _dump(final, ctx, client, args.out)
     from collections import Counter
     print("\nstatus:", dict(Counter(x.status for x in h.values())))
     print("matches:", len(final["matches"]), " unparsable verdicts:",
@@ -136,6 +157,23 @@ def run(args) -> None:
         print(f"\n[{s['id']}] by {s['provenance']['family']} - {scores}\n{s['text'][:300]}")
 
 
+def _dump(final, ctx, client, path) -> None:
+    """Run result for evaluation outside the pipeline (hyparena.backtest evaluate)."""
+    plan, ratings, hyps = final["plan"], final.get("ratings", {}), final["hypotheses"]
+    rated = [i for i, x in hyps.items() if x.status == "active" and plan.names and i in ratings.get(plan.names[0], {})]
+    score, _ = combined(ratings, plan.weights, rated) if rated else ([], [])
+    comb = dict(zip(rated, [float(s) for s in score]))
+    out = {"criteria": plan.names, "weights": plan.weights, "mode": ctx.cfg.judge_view, "rating": ctx.cfg.rating,
+           "as_of": ctx.cfg.as_of, "matches": len(final.get("matches", [])), "calls": client.calls,
+           "failures": client.failures, "tokens": ctx.tracer.summary(),
+           "hypotheses": {i: {"status": x.status, "family": x.provenance.family, "combined": comb.get(i),
+                              "scores": {c: ratings[c][i].model_dump() for c in plan.names if i in ratings.get(c, {})},
+                              "evidence": len(x.evidence)} for i, x in hyps.items()}}
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    Path(path).write_text(json.dumps(out, indent=2))
+    print(f"result written to {path}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("command", choices=["smoke", "run"])
@@ -146,14 +184,21 @@ def main() -> None:
     parser.add_argument("--import-file", default=None, help="dataset JSON of externally written hypotheses, e.g. data/chatgpt_hypotheses.json")
     parser.add_argument("--limit", type=int, default=None, help="with --import-file: use an evenly spaced sample of this size")
     parser.add_argument("--matches", type=float, default=1.0, help="tournament matches per active hypothesis")
+    parser.add_argument("--mode", choices=["full", "coscientist"], default="full",
+                        help="full: our method; coscientist: baseline (one family, one Elo, holistic verdict)")
     parser.add_argument("--criteria", default=str(CONFIGS / "criteria.yaml"), help="criteria file")
     parser.add_argument("--card", default=str(CONFIGS / "card.yaml"), help="hypothesis card schema")
-    parser.add_argument("--search", choices=["europepmc", "none"], default="europepmc", help="literature search")
+    parser.add_argument("--search", default="europepmc,pubtator,opengenes,clinicaltrials",
+                        help=f"comma-separated sources from {', '.join(SOURCES)}, or none")
     parser.add_argument("--as-of", default=None, help="ISO date: evidence published on or before it only")
+    parser.add_argument("--cycles", type=int, default=1, help="tournament cycles")
+    parser.add_argument("--max-tokens", type=int, default=None, help="estimated token budget (stops at a cycle boundary)")
+    parser.add_argument("--out", default=None, help="write the run result as JSON (for hyparena.backtest evaluate)")
     parser.add_argument("--checkpoint", default=None, help="SQLite file for the graph state, e.g. runs/state.sqlite")
     parser.add_argument("--thread", default=None, help="run id inside the checkpoint file")
     parser.add_argument("--resume", action="store_true", help="continue the --thread run from its last checkpoint")
     args = parser.parse_args()
+    args.criteria_given = "--criteria" in sys.argv
     {"smoke": smoke, "run": run}[args.command](args)
 
 

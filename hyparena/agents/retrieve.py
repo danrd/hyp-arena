@@ -1,7 +1,8 @@
 """retrieve: literature evidence per hypothesis, before review and ranking.
 
 Queries come from the card (the normalizer's suggestions; the claim as a fallback). Results respect
-RunConfig.as_of. Evidence is attached to the hypothesis and read by reviewers and judges."""
+RunConfig.as_of. Retracted records (Retraction Watch, as known at as_of) are kept for audit but flagged,
+and reviewers and judges see only usable evidence."""
 from __future__ import annotations
 
 from hyparena.state import GraphState, Hypothesis
@@ -25,9 +26,14 @@ def make_retrieve(ctx):
                     if key not in seen:
                         seen.add(key)
                         found.append(ev)
+        if ctx.retractions is not None:
+            found = ctx.retractions.mark(found, cfg.as_of)
+        found = [e for e in found if e.usable][: cfg.evidence_max] + [e for e in found if not e.usable]
         ctx.log.write({"event": "retrieved", "id": h.id, "n": len(found), "as_of": cfg.as_of,
+                       "retracted": [e.record_id for e in found if not e.usable],
+                       "by_source": {s: sum(1 for e in found if e.source == s) for s in {e.source for e in found}},
                        "queries": queries(h)})
-        return h.model_copy(update={"evidence": found[: cfg.evidence_max]})
+        return h.model_copy(update={"evidence": found})
 
     def retrieve(state: GraphState) -> dict:
         todo = [h for h in state.get("hypotheses", {}).values() if h.status == "normalized" and not h.evidence]

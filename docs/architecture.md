@@ -181,8 +181,26 @@ Reply: text, model_id (what actually answered), tokens_in, tokens_out, seconds
 - **Prompts.** `llm_kit.PromptBuilder` blocks, versioned as `<name>/<version>.j2`, adapted (not copied) from the structure of the paper's prompts. Prompt and rubric versions go into the provenance.
 - **Tracing.** `agent_kit.trace.Tracer` wraps every call in a span; the phase list is replaced with this project's phases (`generate`, `normalize`, `review`, `proximity`, `rank`, `debate`, `evolve`, `meta`, `other`).
 - **Refine loop.** `agent_kit.refine.loop` is used for: normalization (completeness checks), judge-verdict parsing (retry on unparsable replies), and optional citation grounding. `RefineResult.attempts` are stored, because whether retries help is a measurement, not an assumption (as the module's own documentation says). `RefiningModule` is not used: it expects a module interface that `toolkit` does not define.
-- **Tools.** `SearchTool.search(query, limit, as_of) -> list[Evidence]`. Implemented: Europe PMC (`hyparena/tools/europepmc.py`, no key; abstracts, first publication date, licence; `as_of` becomes a `FIRST_PDATE` range); `MultiSearch` merges connectors. Retrieval quality (recall, relevance) has not been evaluated yet: unfiltered queries tend to return recent reviews.
+- **Tools.** `SearchTool.search(query, limit, as_of) -> list[Evidence]`; `--search` picks sources (`hyparena/tools/registry.py`), `MultiSearch` merges them. Connectors, all without keys:
+  - **Europe PMC**: abstracts, first publication date, licence; `as_of` becomes a `FIRST_PDATE` range. The main source for dated retrieval.
+  - **PubTator3**: articles with normalized entities (`entity_ids`, e.g. `CHEMICAL:MESH:D020123`). **Not usable under `as_of`**: its search favours recent papers and has no server-side date filter that I found (the first 50 results for "rapamycin lifespan mice" were all after 2015), so it returns nothing in backtests.
+  - **Open Genes** (a curated database of ageing-related genes): gene symbols found in the query; tier 1. No per-entry dates, so it returns nothing under `as_of`.
+  - **ClinicalTrials.gov v2**: registry records; `as_of` filters by first submission date, but the status and completion shown are today's, which can leak later developments (flagged in the record).
+  - **Retraction check** (`hyparena/tools/retractions.py`): the Retraction Watch CSV (download with `python -m hyparena.tools.retractions download`); evidence whose DOI or PMID was retracted is flagged and hidden from reviewers and judges, counting only retractions dated on or before `as_of`.
+  Retrieval quality (recall, relevance) has not been evaluated: unfiltered queries tend to return recent reviews.
 - **Embeddings.** An `Embedder` interface, stubbed first.
+
+## 8a. Backtest harness
+
+`hyparena/backtest.py` builds a labelled pool as of a date T and evaluates a run against labels the pipeline never sees.
+
+- **ITP pool** (`build-itp --as-of T`): interventions tested by the NIA Interventions Testing Program, from DrugAge rows flagged ITP. A compound enters if its first ITP publication is after T (dates from PubMed via E-utilities, since DrugAge has no date column). Label 1 if any ITP row reports a significant increase of average lifespan. The hypothesis text states the intervention and the claimed effect, not the outcome. For T = 2010-12-31: 47 compounds, 10 positive. Templated items differ only in a name, so the dataset turns deduplication off.
+- **Evaluation** (`evaluate --labels --result`): AUC of the combined score and of each criterion with a bootstrap 95% interval, precision in the top quarter against the base rate, and the status of positives and negatives (a rejected positive is a miss).
+- **Leakage**: judges trained after T may know ITP outcomes, so with current models the numbers are an upper bound. Use models with an earlier training cutoff, or add a leakage probe.
+
+## 8b. Co-Scientist baseline mode
+
+`python -m hyparena.live run --mode coscientist`: one model family for every role, judges' independence rule off, a single holistic criterion (`configs/criteria-coscientist.yaml`, following the paper's default criteria), online Elo from 1200 (K = 32; the paper does not give K), pairing that favours new and top-ranked hypotheses and similar ones (same proximity cluster), judges that see only the text and the reviews (`cs_compare`, `cs_debate`, adapted from the paper's prompts; JSON output instead of the paper's "better idea: 1 or 2"). Reviews still use retrieval, as the paper's full review searches the literature. Compare with our mode at an **equal token budget** (`--max-tokens`): our mode spends more judge calls per match.
 
 ## 9. Package layout
 
@@ -199,9 +217,10 @@ hyparena/
     client.py            # LLMClient, Reply, runner wiring, token estimation
     judges.py            # family pool, eligibility, sampling
   rating.py              # Bradley–Terry, pair selection (from sim.py)
+  backtest.py            # ITP pool as of a date, evaluation against hidden labels
   tools/
-    search.py            # SearchTool interface + stub
-    embed.py             # Embedder interface + stub
+    search.py  registry.py  europepmc.py  pubtator.py  opengenes.py  clinicaltrials.py  retractions.py  http.py
+    embed.py             # Embedder interface + hashing stub
   prompts/               # Jinja blocks, versioned
   provenance.py          # append-only JSONL log
 ```

@@ -18,6 +18,7 @@ from hyparena.provenance import ProvenanceLog
 from hyparena.schema import CardSchema, CriteriaSet, load_card_schema, load_criteria
 from hyparena.state import Provenance
 from hyparena.tools.embed import Embedder, HashingEmbedder
+from hyparena.tools.retractions import RetractionIndex
 from hyparena.tools.search import NullSearch, SearchTool
 
 T = TypeVar("T")
@@ -30,6 +31,10 @@ PHASES = ("generate", "normalize", "retrieve", "review", "proximity", "rank", "d
 @dataclass
 class RunConfig:
     lineage_mode: LineageMode = "writer"
+    # "full": our method. "coscientist": baseline as in the paper (one Elo, holistic verdict, judges see
+    # only text and reviews, pairing by newness/top/similarity); combine with lineage_mode="none".
+    rating: str = "bt"                   # "bt" (Bradley-Terry with intervals) or "elo" (Co-Scientist)
+    judge_view: str = "full"             # "full" (card + evidence + criteria) or "coscientist"
     seed: int = 0
     workers: int = 8                     # parallel LLM tasks inside a node (the client caps requests in flight)
     # budget
@@ -72,6 +77,7 @@ class Context:
     embedder: Embedder = field(default_factory=HashingEmbedder)
     tracer: Tracer = field(default_factory=Tracer)
     log: ProvenanceLog = field(default_factory=ProvenanceLog)
+    retractions: Optional[RetractionIndex] = None     # marks retracted evidence (see tools/retractions.py)
     criteria: CriteriaSet = field(default_factory=load_criteria)
     card_schema: CardSchema = field(default_factory=load_card_schema)
     rng: random.Random = field(init=False)

@@ -1,0 +1,10 @@
+# Baseline: Co-Scientist's single holistic verdict. The description follows the paper's default criteria
+# (alignment with the goal, plausibility, novelty, testability, safety). Use with --mode coscientist.
+version: coscientist-v1
+criteria:
+  - name: overall
+    weight: 1.0
+    description: >-
+      Which hypothesis is better overall for the research goal: aligned with the goal and its constraints,
+      plausible (free of apparent flaws; contradictions with prior knowledge stated and justified), novel,
+      testable within the stated constraints, and safe.

@@ -1,7 +1,7 @@
 """generate: new hypotheses as free-form text, one strategy and one generator family per hypothesis."""
 from __future__ import annotations
 
-from hyparena.state import GraphState, Hypothesis
+from hyparena.state import GraphState, Hypothesis, usable
 
 STRATEGIES = ("literature", "debate", "assumptions", "expansion")
 
@@ -20,7 +20,7 @@ def make_generate(ctx):
 
         def one(task) -> Hypothesis:
             hid, family, strategy = task
-            passages = ctx.search.search(goal, limit=ctx.cfg.evidence_per_query, as_of=ctx.cfg.as_of) if strategy == "literature" else []
+            passages = usable(ctx.search.search(goal, limit=ctx.cfg.evidence_per_query, as_of=ctx.cfg.as_of)) if strategy == "literature" else []
             reply, prov = ctx.call(
                 role="generate", family=family, template="generate", version="v3", phase="generate",
                 strategy=strategy,

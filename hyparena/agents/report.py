@@ -3,7 +3,7 @@ overview written from them (the Meta-review agent's final output in Co-Scientist
 from __future__ import annotations
 
 from hyparena.rating import combined
-from hyparena.state import GraphState
+from hyparena.state import GraphState, usable
 
 
 def pareto_front(points: dict[str, tuple[float, ...]]) -> list[str]:
@@ -38,7 +38,8 @@ def make_report(ctx):
             shown.append({"id": i, "text": h.text, "card": h.card.model_dump() if h.card else None,
                           "combined": float(by_id[i]),
                           "ratings": {c: ratings[c][i].model_dump() for c in names},
-                          "evidence": [e.model_dump() for e in h.evidence],
+                          "evidence": [e.model_dump() for e in usable(h.evidence)],
+                          "retracted_evidence": [e.record_id for e in h.evidence if not e.usable],
                           "provenance": h.provenance.model_dump(), "parents": h.parents,
                           "reviews": [r.model_dump() for r in h.reviews],
                           "matches": sum(1 for m in state.get("matches", []) if i in (m.a, m.b))})

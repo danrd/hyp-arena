@@ -53,7 +53,17 @@ class Evidence(BaseModel):
     species: str = ""
     license: str = ""
     entity_ids: list[str] = Field(default_factory=list)
+    flags: list[str] = Field(default_factory=list)   # e.g. "retracted"; flagged records are not used
     extra: dict[str, Any] = Field(default_factory=dict)
+
+    @property
+    def usable(self) -> bool:
+        return "retracted" not in self.flags
+
+
+def usable(evidence: list["Evidence"]) -> list["Evidence"]:
+    """Evidence that reviewers and judges may see (retracted records are kept for audit, not shown)."""
+    return [e for e in evidence if e.usable]
 
 
 class Review(BaseModel):

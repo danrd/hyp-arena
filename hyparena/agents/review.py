@@ -5,7 +5,7 @@ the reviews are read by the judges."""
 from __future__ import annotations
 
 from hyparena.llm.structured import ask_json
-from hyparena.state import GraphState, Hypothesis, Review
+from hyparena.state import GraphState, Hypothesis, Review, usable
 
 SCORE_KEYS = ("correctness", "novelty", "quality")
 
@@ -50,7 +50,7 @@ def make_review(ctx):
             return reject()
 
         full = ask_json(ctx, role="review_full", family=fam_full, template="review_full", version="v2",
-                        variables={**common, "evidence": h.evidence, "as_of": cfg.as_of}, phase="review",
+                        variables={**common, "evidence": usable(h.evidence), "as_of": cfg.as_of}, phase="review",
                         validate=_numbers, avoid=avoid)
         if full.value is None:
             return reject()
