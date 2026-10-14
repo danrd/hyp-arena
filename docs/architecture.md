@@ -151,12 +151,12 @@ Pareto front over the two axes, selection by team-set weights, near-duplicates r
 
 Rule (from `approach.md`): judges must not come from the generator's lineage.
 
-- **Lineage families.** For a hypothesis, `lineage_families` is the family of the model that wrote the text, plus the families of all ancestors in `parents`. The conservative default excludes all of them. A looser mode (only the writing family) can be configured.
-- **Eligible judges for a pair** = pool minus `lineage_families(a)` minus `lineage_families(b)`.
+- **Lineage mode.** Two modes, set in the run configuration. **`writer` (default, the looser one):** only the family of the model that wrote the text is excluded. **`lineage` (strict):** the writer's family plus the families of all ancestors in `parents` are excluded. The default is `writer` because evolution mixes many generators, and the strict mode can leave too few judges.
+- **Eligible judges for a pair** = pool minus the excluded families of `a` minus the excluded families of `b`, under the chosen mode.
 - **Unknown generator** (imported or human-written): nothing can be excluded, so use several different families and report their agreement.
 - **One judge per family**; sampled with a seed recorded in the match.
 - **Number of judges.** Early rounds: 1 to 2. Escalation for contested pairs: 3 or more from different families, then debate.
-- **If fewer than the minimum eligible judges remain**, the node does not silently relax the rule: it records the shortfall and either skips the match or marks the verdict as lower-confidence.
+- **If fewer judges than requested are eligible**, the node does not silently relax the rule. With at least one eligible judge it proceeds with fewer (the match records how many judged); with none it skips the match and writes a shortfall event to the provenance log.
 - **Position swap.** Order is randomized; contested pairs are rerun with swapped positions.
 - **Aggregation.** Majority per axis; the disagreement itself is stored and is a signal for escalation.
 
@@ -202,13 +202,20 @@ Dependencies in `pyproject.toml`: `toolkit[llm-kit,llm-kit-openrouter]` (include
 
 - Real LLM calls, real search, real embeddings, tests and runs (a fake `LLMClient` is enough to exercise the graph shape).
 - Observation, simulation and recurrent reviews.
+- Parallel fan-out: the skeleton runs reviews and matches sequentially inside a step (the graph shape allows adding fan-out later).
+- Cluster bias in pair selection (clusters are computed and stored, but pairing uses ratings only).
+- Multi-turn debate as separate calls: the skeleton asks for the whole panel discussion in one call and a final JSON verdict.
+- `llm_kit.PromptBuilder`: prompts are rendered with Jinja2 directly from the same `<name>/<version>.j2` layout, so `PromptBuilder` can be swapped in later.
 - Calibration of judges against expert labels (designed in `approach.md`, sections 7 and the judge ensemble).
-- A user interface for expert-in-the-loop feedback (the paper has one; here only the state fields to accept expert reviews and own hypotheses are planned).
+- Expert-in-the-loop input (expert hypotheses and reviews, as in the paper's interface). Decision: not in the first version, and no state fields are reserved for it yet.
 
-## 11. Open questions
+## 11. Decisions and open questions
 
-1. **Expert in the loop.** Experts can add hypotheses and reviews in Co-Scientist. Here, expert input would enter as `Hypothesis` with a `human` provenance and as reviews with a `human` source. How much of this belongs in the first version?
-2. **Lineage strictness.** Excluding all ancestor families may leave too few judges once evolution mixes many generators. The pool size and the minimum number of eligible judges need to be set together.
-3. **Per-axis debate.** Whether a debate should be run per axis or once for both axes.
-4. **Rating when axes disagree.** The Pareto front is shown, but the tournament uses a combined score for pair selection; the weights belong in the plan configuration.
-5. **Cost caps.** The budget unit (calls, tokens or money) and its default values.
+Decided:
+1. **Lineage strictness:** the looser `writer` mode is the default; `lineage` is available.
+2. **Expert in the loop:** not in the first version.
+
+Open:
+1. **Per-axis debate.** Whether a debate should be run per axis or once for both axes (the skeleton runs once for both).
+2. **Rating when axes disagree.** The Pareto front is shown, but pair selection uses a combined score; the weights live in the plan configuration.
+3. **Cost caps.** The skeleton caps tokens (estimated) and cycles; the budget unit and defaults are placeholders.

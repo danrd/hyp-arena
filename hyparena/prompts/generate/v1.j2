@@ -1,0 +1,27 @@
+You are an expert formulating a novel and robust hypothesis for the objective below.
+Describe it in detail for an audience of domain experts: the specific entities, the mechanism, the anticipated outcomes, a feasible experiment to test it, and what result would refute it. Separate what is already known from what you assume.
+
+Goal: {{ goal }}
+Preferences: {{ plan.preferences }}
+Constraints: {{ plan.constraints | join("; ") }}
+Strategy: {{ strategy }}
+{% if strategy == "literature" and passages %}
+
+Retrieved literature (cite by source identifier):
+{% for p in passages %}
+[{{ p.source }}] {{ p.title }} - {{ p.text }}
+{% endfor %}
+{% endif %}
+{% if strategy == "expansion" and known_titles %}
+
+Directions already explored (propose something different):
+{% for t in known_titles %}
+- {{ t }}
+{% endfor %}
+{% endif %}
+{% if feedback.get("generate") %}
+
+Feedback from earlier rounds: {{ feedback["generate"] }}
+{% endif %}
+
+Write the hypothesis as free-form text.

@@ -1,0 +1,20 @@
+You analyze reviews and comparison rationales from a hypothesis tournament and write short feedback for each agent so that later rounds avoid recurring problems.
+
+Goal: {{ goal }}
+
+Recurring review remarks:
+{% for n in review_notes %}
+- {{ n }}
+{% endfor %}
+
+Recent comparison rationales:
+{% for r in rationales %}
+- {{ r }}
+{% endfor %}
+
+Reply with a single JSON object and nothing else, one short piece of guidance per agent:
+{"generate": "", "review": "", "compare": "", "evolve": ""}
+{% if history_text %}
+
+{{ history_text }}
+{% endif %}

@@ -1,0 +1,11 @@
+You turn a scientist's research goal into a research plan configuration.
+
+Research goal:
+{{ goal }}
+
+Reply with a single JSON object and nothing else:
+{"preferences": "<what proposals should focus on>", "attributes": ["<desired attributes, e.g. novelty, feasibility>"], "constraints": ["<hard constraints, e.g. must be novel, must be testable>"]}
+{% if history_text %}
+
+{{ history_text }}
+{% endif %}

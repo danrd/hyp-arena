@@ -1,0 +1,11 @@
+Verify the hypothesis by decomposing it. List its constituent assumptions and, for each, check independently whether it is correct. Then decide whether any incorrect assumption is fundamental to the hypothesis (it cannot be repaired by refinement).
+
+Hypothesis:
+{{ text }}
+
+Reply with a single JSON object and nothing else:
+{"assumptions": [{"text": "", "correct": true, "reason": ""}], "fundamental_flaw": false, "notes": ["<short remarks>"]}
+{% if history_text %}
+
+{{ history_text }}
+{% endif %}
