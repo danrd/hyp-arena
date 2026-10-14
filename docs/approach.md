@@ -14,7 +14,7 @@ Co-Scientist (Google, 2025) ranks hypotheses with an Elo tournament of pairwise 
 | Proximity graph | Embeddings and clusters. Duplicates are merged, and comparisons mostly happen between topically close hypotheses |
 | Reflection (reviews), debate for top pairs | Structured, search-grounded review before the tournament. Debate only for top and contested pairs |
 | Single Elo over configurable criteria (feasibility can be one attribute) | **Two separate ratings**, promise and feasibility, combined on a Pareto front |
-| One model family as judge | An **ensemble of different models**, because errors of a single family are correlated |
+| One model family for generator and judges | **Judges come from other model families than the generator.** An ensemble of several families, because errors within a family are correlated |
 
 We also add **verifiable output**: every verdict carries citations and a "fact / assumption" label.
 
@@ -23,6 +23,13 @@ We also add **verifiable output**: every verdict carries citations and a "fact /
 - Absolute LLM scores are poorly calibrated and cluster in a narrow range.
 - Pairwise comparison is more stable: relative judgments are easier for a model than absolute ones.
 - The cost of pairwise comparison is the number of comparisons. Full round-robin for N = 2000 is about 2 million calls (1000 per hypothesis). We need adaptive pair selection.
+
+### Judge independence rule
+
+- Every hypothesis records the **model (family) that generated it** as provenance metadata.
+- For a given hypothesis, judges are taken only from **other families** than its generator. When a pair mixes two generators, judges must differ from both.
+- If the generator is unknown (for example, imported or human-written text), we cannot exclude any family, so we still use **several different families** as judges and compare their agreement.
+- This is cheap to implement, needs no extra data, and removes the most direct source of self-preference and correlated errors. It does not remove bias shared across all LLMs, so expert labels are still needed (section 7).
 
 ## 3. Pipeline
 
