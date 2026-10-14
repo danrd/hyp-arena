@@ -1,6 +1,8 @@
 # Comparing our ranking with a Co-Scientist-style baseline
 
-Status: protocol and tooling are ready; the comparison itself is **postponed** until a fresh, post-cutoff labelled slice exists (decision of 2026-10-14). Nothing here has been run on real models.
+Status: protocol and tooling are ready; nothing here has been run on real models.
+
+**Beta decision (2026-10-14): memorization is not handled yet.** For the beta, the existing ITP pool (T = 2010-12-31) is used as it is, without the leakage probe and without waiting for a post-cutoff slice. Consequence: the judges may remember ITP outcomes, so absolute numbers are an upper bound, and a difference between arms can partly reflect how well each arm draws on what the model remembers rather than how well it judges. The leakage probe and the fresh slice (sections 2 and 6) stay in place for the later, stricter comparison.
 
 ## 1. The claim under test
 
