@@ -196,7 +196,7 @@ Reply: text, model_id (what actually answered), tokens_in, tokens_out, seconds
 
 - **ITP pool** (`build-itp --as-of T`): interventions tested by the NIA Interventions Testing Program, from DrugAge rows flagged ITP. A compound enters if its first ITP publication is after T (dates from PubMed via E-utilities, since DrugAge has no date column). Label 1 if any ITP row reports a significant increase of average lifespan. The hypothesis text states the intervention and the claimed effect, not the outcome. For T = 2010-12-31: 47 compounds, 10 positive. Templated items differ only in a name, so the dataset turns deduplication off.
 - **Evaluation** (`evaluate --labels --result`): AUC of the combined score and of each criterion with a bootstrap 95% interval, precision in the top quarter against the base rate, and the status of positives and negatives (a rejected positive is a miss).
-- **Leakage**: judges trained after T may know ITP outcomes, so with current models the numbers are an upper bound. Use models with an earlier training cutoff, or add a leakage probe.
+- **Leakage**: judges trained after T may know ITP outcomes, so with current models the numbers are an upper bound. Use models with an earlier training cutoff, or add a leakage probe. Chosen approach: accumulate a **fresh slice** (outcomes published after the judges' training cutoff) and use it for the comparison with the baseline when it is large enough; until then the comparison is not run.
 
 ## 8b. Co-Scientist baseline mode
 

@@ -128,7 +128,8 @@ Decision (working notes): expert labels are **not assumed**; they are an optiona
 2. Verified layer of the card: each declared sub-claim linked to evidence records with a status (established, supported, contested, speculative, refuted), once the card format is agreed.
 3. Done: the ITP backtest harness (architecture, section 8a). Next: run it with judges whose training cutoff precedes T, add more label sources (trial outcomes, other DrugAge species), and fit criterion weights against the labels on a held-out split.
 4. Cost and time of the decisive experiment from registries (reference classes), reported as intervals, instead of being judged.
-5. Done: the Co-Scientist baseline mode (architecture, section 8b). Next: the comparison itself, at equal token budget, on the backtest.
+5. Done: the Co-Scientist baseline mode (architecture, section 8b). The comparison itself is **postponed** (decision 2026-10-14): the project is still in development, and on the current ITP pool any result would be contaminated by what the models already know.
+6. **Fresh slice, accumulated over time.** Keep collecting labelled outcomes published after the training cutoff of the judge models (new ITP and DrugAge results, trial outcomes), and rebuild the pool with T set after the latest cutoff (`build-itp --as-of <cutoff>`). Run the comparison once that slice is large enough to give useful intervals.
 
 ## 9. Example input data: a ChatGPT dialogue
 
