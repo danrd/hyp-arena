@@ -28,7 +28,7 @@ Source: DrugAge (HAGR, CC BY 3.0), the same database as the ITP pool. Each group
 
 **Why the decoy.** Without it, the finding would be the only compound named three times in the group, and "pick the centre of the cluster" would find it without any biology. With the decoy there are two clusters of the same size; the finding is in one of them.
 
-**Style.** All ten statements are rewritten by the writer model in one call, in random order, in one fixed format (title, claim, prediction, experiment), without being told which is true and with an instruction not to mention prior results. All hypotheses in a group therefore have the same author and the same shape.
+**Style.** All ten statements are rewritten by the writer model in one call, in random order, in one fixed format (title, claim, rationale, prediction, experiment), without being told which is true and with an instruction not to mention prior results. All hypotheses in a group therefore have the same author and the same shape.
 
 **Time.** Each group carries `as_of` = the day before the finding was first published; retrieval only returns evidence published by then. The judges' own memory is not cut (beta decision: memorization is not handled, so the numbers are an upper bound, more so here than for ITP because well-known findings such as spermidine in mice are likely memorised).
 
@@ -68,19 +68,32 @@ python -m hyparena.negatives compare --a runs/neg/L4_s0 --b runs/neg/L0_s0
 
 ## 5. First run (2026-10-15)
 
-Six groups (worms 2, flies 2, mice 2), writer GLM-5.3-flash, verifier Gemini-3.1-flash-lite, judges gpt-5-nano (L0, the only family) and gpt-5-nano + Gemini (L4), one seed, Europe PMC as of the day before the finding. Estimated spend for everything below, including two discarded runs: about $0.35 (estimated tokens, without hidden reasoning).
+Six groups (worms 2, flies 2, mice 2), writer GLM-5.3-flash, verifier Gemini-3.1-flash-lite. Judges: gpt-5-nano in L0 (its only family); gpt-5-nano and Gemini in L4. One seed, Europe PMC as of the day before the finding, reviews advisory (nothing rejected), 4 cycles with 3 matches per hypothesis. Estimated spend: about $0.47 for this run (L0 about 100k and L4 about 220k estimated tokens per group) and about $0.35 for the earlier attempts (estimated tokens, without hidden reasoning).
 
-| Arm | hit@1 | MRR | mean rank | AUC | finding survived review |
-|---|---|---|---|---|---|
-| chance | 0.10 | 0.29 | 5.5 | 0.50 | |
-| one call, gpt-5-nano | 0.17 | 0.42 | 3.5 | 0.72 [0.56, 0.89] | |
-| one call, Gemini flash-lite | 0.50 | 0.62 | 3.2 | 0.76 [0.48, 0.96] | |
-| L0 (Co-Scientist-style) | 0.00 | 0.18 | 5.6 | 0.49 | 0 of 6 |
-| L4 (full method) | 0.33 | 0.44 | 4.5 | 0.61 [0.41, 0.81] | 2 of 6 |
+| Arm | hit@1 | MRR | mean rank | AUC [95% CI] |
+|---|---|---|---|---|
+| chance | 0.10 | 0.29 | 5.5 | 0.50 |
+| one call, gpt-5-nano | 0.17 | 0.42 | 3.5 | 0.72 [0.56, 0.89] |
+| one call, Gemini flash-lite | 0.50 | 0.62 | 3.2 | 0.76 [0.48, 0.96] |
+| L0 (Co-Scientist-style tournament) | 0.33 | 0.45 | 4.8 | 0.57 [0.28, 0.85] |
+| L4 (full method) | 0.67 | 0.70 | 3.7 | 0.70 [0.37, 1.00] |
 
-L4 − L0: MRR +0.26 [−0.02, 0.54], AUC +0.12 [−0.07, 0.32] (paired bootstrap over 6 groups; 90% of samples above zero). With six groups none of this is conclusive.
+L4 − L0, paired over the six groups: hit@1 +0.33 [0, 0.67], MRR +0.25 [−0.01, 0.56], AUC +0.13 [−0.13, 0.44]; 78–92% of bootstrap samples above zero. Suggestive, not conclusive, with six groups and one seed.
 
-**The tournament was hardly tested.** The review gate rejected almost everything: in L0, 1 of 60 items survived; in L4, 8. Only two groups had a match at all. The ranking was therefore made by the gate, and items ranked by the gate tie at the bottom. In a diagnostic run of the spermidine group, L4 kept the finding (initial review 6, full review 9) and rejected all nine negatives. That is the right answer there, but it shows that the tournament has nothing left to rank. Reading per kind: the one-call baselines catch reversed effects and wrong conditions almost always. They are fooled by mechanism variants (the finding is ranked above them in 25–75% of cases), which add a plausible detail to a true effect.
+**Rank of the finding per group** (L0 / L4): vitamin D3 in worms 7 / 10, black tea extract in flies 8 / 8, 17-α-estradiol in mice 3 / 1, ethosuximide in worms 9 / 1, carnosine in flies 1 / 1, spermidine in mice 1 / 1. L4 is bimodal: first in four groups, near the bottom in the two with weak, little-known findings. Those two findings are the kind a model is least likely to remember, which fits the warning that the numbers are an upper bound.
+
+**Per criterion (L4, AUC):** testability 0.70, value 0.70, evidence support 0.63, novelty 0.52. Novelty carries no signal here, as expected for a test of true against false.
+
+**Per kind of negative (L4, share ranked below the finding):** wrong condition 1.0, reversed 0.83, mechanism variant 0.75, decoy variants 0.67, real negatives 0.67. Real negatives (compounds that really were tested and failed) are as hard as the decoys. Mechanism variants are harder for the one-call baselines (0.25–0.75) and for L0 (0.25).
+
+**The one-call baselines score higher AUC than either tournament** (0.72–0.76), at about 1% of the tokens. Possible reasons, not separated yet:
+- a list of ten shows the clusters and the contrasts at once;
+- pairwise judges see retrieved evidence as of the cut-off, which for obscure findings is little or off-topic;
+- with six groups the difference is within noise.
+
+This needs more groups before it means anything. If it holds, a cheap listwise pre-ranking ahead of the tournament is worth considering.
+
+**Earlier attempt with the review gate on** (reviews rejected below the thresholds, as in the paper). The gate rejected almost everything: 1 of 60 items survived in L0 and 8 in L4, and only two groups had a match. The ranking was made by the gate. This led to the decision to make reviews advisory by default (`docs/architecture.md`, 6.4).
 
 **What the test found in the pipeline (fixed before the reported run):**
 1. **Cut-off leak.** The evidence cut-off used PubMed's print date. Papers appear online weeks earlier, so the retrieval "as of" the day before a finding returned the finding's own paper (spermidine in mice: online 2016-11-14, print 2016-12). The cut-off now uses the earliest of the online, print and PubMed-entry dates. This also affects the ITP backtest.
@@ -88,7 +101,7 @@ L4 − L0: MRR +0.26 [−0.02, 0.54], AUC +0.12 [−0.07, 0.32] (paired bootstra
 3. **Zeros copied from the example.** gpt-5-nano copied the zeros of the JSON example in the review prompt. The example now has placeholders, and the scales are defined.
 4. **Bare claims are rejected, embellished ones pass.** A one-line claim without rationale got correctness 2, while a variant with an invented mechanism got 4. Every item now carries a rationale written the same way.
 
-**Possible next steps:** run the same groups with the review gate advisory only (reviews shown to the judges, nothing rejected) to test the tournament itself; more groups and seeds for usable intervals.
+**Possible next steps:** more groups (the current DrugAge release gives 76 with the current rules: 56 worm, 14 fly, 6 mouse) and three seeds for usable intervals; the same groups with the listwise baseline as a pre-ranking step.
 
 ## 6. Known limits
 
