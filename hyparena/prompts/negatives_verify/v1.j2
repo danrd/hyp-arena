@@ -1,0 +1,10 @@
+For each statement about lifespan below, say whether it is false according to published evidence. Answer from what you know about the published literature; do not judge how interesting the statement is.
+
+{% for s in statements %}
+{{ loop.index }}. {{ s }}
+{% endfor %}
+
+For each statement give a verdict: "false" (contradicted by published results, or at odds with established knowledge), "true" (supported by published results), or "uncertain" (not tested, or you do not know), with your confidence between 0 and 1.
+
+Reply with a single JSON object and nothing else, one entry per statement in the same order:
+{"verdicts": [{"n": 1, "verdict": "uncertain", "confidence": 0.0, "reason": ""}]}

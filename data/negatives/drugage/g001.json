@@ -1,0 +1,96 @@
+{
+  "source": {
+    "family": "zhipu",
+    "model": "glm-5.3-flash",
+    "strategy": "negative-sampling",
+    "as_of": "2013-11-30",
+    "note": "labels are in labels.json",
+    "options": {
+      "dedup": false,
+      "lang": "en"
+    }
+  },
+  "hypotheses": [
+    {
+      "id": 1,
+      "title": "Vitamin D3 Shortens Lifespan in C. elegans",
+      "claim": "Vitamin D3 administration shortens lifespan in Caenorhabditis elegans. The compound acts as a stressor that accelerates age-related decline in this organism.",
+      "rationale": "Supraphysiological doses of lipophilic vitamins can overwhelm detoxification pathways and generate oxidative stress. Chronic exposure may thereby accelerate cellular damage and shorten lifespan.",
+      "prediction": "Vitamin D3-treated worms will show a significantly reduced mean and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, treat one group with vitamin D3 and one with vehicle, and perform full lifespan assays with daily scoring under identical conditions."
+    },
+    {
+      "id": 2,
+      "title": "Milnacipran Hydrochloride Extends Lifespan in C. elegans",
+      "claim": "Milnacipran Hydrochloride administration extends lifespan in Caenorhabditis elegans. The compound acts to delay age-related decline in this organism.",
+      "rationale": "Serotonin-norepinephrine reuptake inhibition can modulate neural signaling that governs feeding, stress responses, and endocrine pathways. Such modulation is a recognized route to slower aging in short-lived models.",
+      "prediction": "Milnacipran Hydrochloride-treated worms will show a significantly increased mean and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, treat one group with Milnacipran Hydrochloride and one with vehicle, and perform full lifespan assays with daily scoring under identical conditions."
+    },
+    {
+      "id": 3,
+      "title": "3-Morpholinosydnonimine Hydrochloride Extends Lifespan in C. elegans",
+      "claim": "3-Morpholinosydnonimine hydrochloride administration extends lifespan in Caenorhabditis elegans. The compound acts to delay age-related decline in this organism.",
+      "rationale": "Controlled nitric oxide donor exposure can activate adaptive stress-response pathways and improve cellular resilience. Mild hormetic signaling is a plausible mechanism for lifespan extension.",
+      "prediction": "3-Morpholinosydnonimine hydrochloride-treated worms will show a significantly increased mean and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, treat one group with 3-morpholinosydnonimine hydrochloride and one with vehicle, and perform full lifespan assays with daily scoring under identical conditions."
+    },
+    {
+      "id": 4,
+      "title": "Vitamin D3 Extends Lifespan in C. elegans",
+      "claim": "Vitamin D3 administration extends lifespan in Caenorhabditis elegans. The compound acts to delay age-related decline in this organism.",
+      "rationale": "Vitamin D3 regulates calcium homeostasis, proteostasis, and stress-response gene expression. These conserved functions can improve cellular maintenance and support longer lifespan.",
+      "prediction": "Vitamin D3-treated worms will show a significantly increased mean and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, treat one group with vitamin D3 and one with vehicle, and perform full lifespan assays with daily scoring under identical conditions."
+    },
+    {
+      "id": 5,
+      "title": "Vitamin D3 Extends Lifespan via daf-28-Dependent Signaling",
+      "claim": "Vitamin D3 administration extends lifespan in Caenorhabditis elegans by inducing the insulin-like peptide daf-28-dependent pathway. The effect requires intact daf-28 signaling.",
+      "rationale": "Insulin-like peptides are central regulators of aging, with daf-28 influencing endocrine signaling that controls stress resistance. Vitamin D3-induced modulation of this pathway could reprogram longevity networks.",
+      "prediction": "Vitamin D3 will extend lifespan in wild-type worms but fail to extend lifespan in daf-28 loss-of-function mutants.",
+      "experiment": "Perform lifespan assays on wild-type and daf-28 mutant worms treated with vitamin D3 or vehicle, and compare the magnitude of lifespan extension across genotypes."
+    },
+    {
+      "id": 6,
+      "title": "N6-benzyladenine Extends Lifespan in C. elegans",
+      "claim": "N6-benzyladenine administration extends lifespan in Caenorhabditis elegans. The compound acts to delay age-related decline in this organism.",
+      "rationale": "Cytokinin-like purine analogs can interfere with cellular proliferation signaling and modulate stress-response pathways. Such metabolic perturbation can activate longevity programs in simple animal models.",
+      "prediction": "N6-benzyladenine-treated worms will show a significantly increased mean and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, treat one group with N6-benzyladenine and one with vehicle, and perform full lifespan assays with daily scoring under identical conditions."
+    },
+    {
+      "id": 7,
+      "title": "O6-benzylguanine Extends Lifespan via DAF-16 Activation",
+      "claim": "O6-benzylguanine administration extends lifespan in Caenorhabditis elegans by inhibiting the insulin/IGF-1 signaling pathway through DAF-16 activation. The effect requires DAF-16 activity.",
+      "rationale": "Reduced insulin/IGF-1 signaling promotes nuclear localization of the FOXO transcription factor DAF-16, which upregulates stress-resistance and longevity genes. A compound that engages this pathway should prolong lifespan.",
+      "prediction": "O6-benzylguanine will extend lifespan in wild-type worms but fail to extend lifespan in daf-16 loss-of-function mutants.",
+      "experiment": "Perform lifespan assays on wild-type and daf-16 mutant worms treated with O6-benzylguanine or vehicle, and quantify DAF-16 nuclear localization in a reporter strain."
+    },
+    {
+      "id": 8,
+      "title": "Citrate Extends Lifespan in C. elegans",
+      "claim": "Citrate administration extends lifespan in Caenorhabditis elegans. The compound acts to delay age-related decline in this organism.",
+      "rationale": "Citrate is a central metabolic intermediate that chelates metals and modulates mitochondrial metabolism. Altered metabolic flux and reduced metal-catalyzed oxidative damage can support increased longevity.",
+      "prediction": "Citrate-treated worms will show a significantly increased mean and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, treat one group with citrate and one with vehicle, and perform full lifespan assays with daily scoring under identical conditions."
+    },
+    {
+      "id": 9,
+      "title": "O6-benzylguanine Extends Lifespan in C. elegans",
+      "claim": "O6-benzylguanine administration extends lifespan in Caenorhabditis elegans. The compound acts to delay age-related decline in this organism.",
+      "rationale": "Purine analogs can perturb nucleotide metabolism and DNA repair signaling in ways that engage stress-response programs. Activation of such programs is a recognized route to lifespan extension.",
+      "prediction": "O6-benzylguanine-treated worms will show a significantly increased mean and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, treat one group with O6-benzylguanine and one with vehicle, and perform full lifespan assays with daily scoring under identical conditions."
+    },
+    {
+      "id": 10,
+      "title": "O6-benzylguanine Shortens Lifespan in C. elegans",
+      "claim": "O6-benzylguanine administration shortens lifespan in Caenorhabditis elegans. The compound acts as a stressor that accelerates age-related decline in this organism.",
+      "rationale": "Purine analogs can disrupt nucleotide pools and DNA integrity, imposing metabolic and genotoxic burden. Chronic exposure to such damage can accelerate decline and shorten lifespan.",
+      "prediction": "O6-benzylguanine-treated worms will show a significantly reduced mean and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, treat one group with O6-benzylguanine and one with vehicle, and perform full lifespan assays with daily scoring under identical conditions."
+    }
+  ],
+  "assistant_notes": {}
+}

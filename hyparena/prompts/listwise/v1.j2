@@ -1,0 +1,10 @@
+You are an expert evaluator. Goal: {{ goal }}
+
+Rank the hypotheses below from best to worst for this goal: most likely to hold when tested, with the most value if it holds and a feasible decisive test. Judge the content, not the length or polish of the text.
+
+{% for h in hypotheses %}
+[{{ h.id }}] {{ h.text }}
+
+{% endfor %}
+Reply with a single JSON object and nothing else, listing every id once, best first:
+{"ranking": [{{ example_ids }}]}

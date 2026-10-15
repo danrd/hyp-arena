@@ -15,8 +15,9 @@ deadline: 120      # wall-clock seconds per attempt
 models:
   # GPT-5 family: sampling temperature and max_tokens are not accepted; reasoning_effort minimal gave 13 s, a full answer.
   - {family: openai, provider: cometapi, model: "gpt-5-nano", tier: paid, api_key_env: COMET_API_KEY, generation: {temperature: null, max_tokens: null, max_completion_tokens: 4000, reasoning_effort: minimal}}   # $0.05 / $0.40
-  # GLM: thinking disabled gave 21 s and a full answer (with thinking on, 3000 tokens of reasoning and no answer).
-  - {family: zhipu,  provider: cometapi, model: "glm-5.3-flash", tier: paid, api_key_env: COMET_API_KEY, generation: {extra_body: {thinking: {type: disabled}}}}   # $0.15 / $0.50
+  # GLM: reasoning_effort low gave ~10 s, ~15 reasoning tokens and a full answer (2026-10-15). Since then
+  # `thinking: {type: disabled}` is rejected with 400, and without a limit it can reason past 8000 tokens with no answer.
+  - {family: zhipu,  provider: cometapi, model: "glm-5.3-flash", tier: paid, api_key_env: COMET_API_KEY, generation: {reasoning_effort: low, max_tokens: 6000}}   # $0.15 / $0.50
   - {family: google, provider: cometapi, model: "gemini-3.1-flash-lite-preview", tier: paid, api_key_env: COMET_API_KEY}   # 7 s; $0.25 / $1.50
   # Left out: mimo-v2.5 did not answer a generation-sized prompt within 90-100 s (even with thinking disabled);
   # qwen3.8-flash reasons for ~3600 tokens and 35+ s on a 250-word answer.

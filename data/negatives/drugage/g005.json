@@ -1,0 +1,96 @@
+{
+  "source": {
+    "family": "zhipu",
+    "model": "glm-5.3-flash",
+    "strategy": "negative-sampling",
+    "as_of": "2002-05-31",
+    "note": "labels are in labels.json",
+    "options": {
+      "dedup": false,
+      "lang": "en"
+    }
+  },
+  "hypotheses": [
+    {
+      "id": 1,
+      "title": "Pinaverium bromide extends lifespan in Drosophila",
+      "claim": "Pinaverium bromide extends lifespan in Drosophila melanogaster. Supplementation with this compound will increase both median and maximum survival relative to untreated controls.",
+      "rationale": "Modulation of calcium signalling and gut function can influence systemic ageing processes. A compound acting on these pathways may reduce age-related physiological decline and prolong survival.",
+      "prediction": "Flies fed pinaverium bromide will show significantly longer median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Raise matched cohorts on food with and without pinaverium bromide under identical conditions, maintain them throughout life, and compare survival curves by log-rank analysis."
+    },
+    {
+      "id": 2,
+      "title": "SKF95282 extends lifespan in Drosophila",
+      "claim": "SKF95282 extends lifespan in Drosophila melanogaster. Supplementation with this compound will increase both median and maximum survival relative to untreated controls.",
+      "rationale": "Pharmacological modulation of dopamine signalling can alter metabolism, activity and stress responses. Adjusting these systems may slow the accumulation of age-related damage and extend survival.",
+      "prediction": "Flies fed SKF95282 will show significantly longer median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Raise matched cohorts on food with and without SKF95282 under identical conditions, maintain them throughout life, and compare survival curves by log-rank analysis."
+    },
+    {
+      "id": 3,
+      "title": "Carnosine accelerates ageing in Drosophila",
+      "claim": "Carnosine accelerates ageing in Drosophila melanogaster. Supplementation with this compound will shorten both median and maximum survival relative to untreated controls.",
+      "rationale": "Histidine-containing dipeptides can perturb metal ion homeostasis and oxidative metabolism. Disruption of these balances may accelerate physiological decline and reduce survival.",
+      "prediction": "Flies fed carnosine will show significantly shorter median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Raise matched cohorts on food with and without carnosine under identical conditions, maintain them throughout life, and compare survival curves by log-rank analysis."
+    },
+    {
+      "id": 4,
+      "title": "SKF95282 extends lifespan via insulin/IGF signalling",
+      "claim": "SKF95282 extends lifespan in Drosophila melanogaster by activating the insulin/IGF signalling pathway. Supplementation will increase survival in parallel with measurable elevation of pathway activity.",
+      "rationale": "The insulin/IGF signalling pathway regulates growth, metabolism and stress resistance, and its modulation can alter longevity. Activation of this pathway by SKF95282 may produce systemic changes that extend survival.",
+      "prediction": "Flies fed SKF95282 will live significantly longer than controls and will show elevated markers of insulin/IGF pathway activity.",
+      "experiment": "Maintain matched cohorts with and without SKF95282, measure lifespan, and quantify pathway activity through phosphorylated AKT levels and expression of insulin/IGF target genes."
+    },
+    {
+      "id": 5,
+      "title": "D-xylitol extends lifespan in Drosophila",
+      "claim": "D-xylitol extends lifespan in Drosophila melanogaster. Supplementation with this compound will increase both median and maximum survival relative to untreated controls.",
+      "rationale": "Sugar alcohols provide low-glycaemic energy and can alter metabolic and antioxidant status. Improved metabolic handling of nutrients may reduce age-related damage and prolong survival.",
+      "prediction": "Flies fed D-xylitol will show significantly longer median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Raise matched cohorts on food with and without D-xylitol under identical conditions, maintain them throughout life, and compare survival curves by log-rank analysis."
+    },
+    {
+      "id": 6,
+      "title": "Carnosine shortens lifespan in Drosophila",
+      "claim": "Carnosine shortens lifespan in Drosophila melanogaster. Supplementation with this compound will decrease both median and maximum survival relative to untreated controls.",
+      "rationale": "Dietary dipeptides can interfere with nutrient sensing, metal ion balance and protein homeostasis. Such interference may impose physiological stress that accelerates decline and reduces survival.",
+      "prediction": "Flies fed carnosine will show significantly shorter median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Raise matched cohorts on food with and without carnosine under identical conditions, maintain them throughout life, and compare survival curves by log-rank analysis."
+    },
+    {
+      "id": 7,
+      "title": "SKF95282 shortens lifespan in Drosophila",
+      "claim": "SKF95282 shortens lifespan in Drosophila melanogaster. Supplementation with this compound will decrease both median and maximum survival relative to untreated controls.",
+      "rationale": "Prolonged alteration of dopamine signalling can disturb feeding, locomotion and energy balance. Sustained disruption of these systems may accelerate physiological decline and reduce survival.",
+      "prediction": "Flies fed SKF95282 will show significantly shorter median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Raise matched cohorts on food with and without SKF95282 under identical conditions, maintain them throughout life, and compare survival curves by log-rank analysis."
+    },
+    {
+      "id": 8,
+      "title": "Levosulpiride extends lifespan in Drosophila",
+      "claim": "Levosulpiride extends lifespan in Drosophila melanogaster. Supplementation with this compound will increase both median and maximum survival relative to untreated controls.",
+      "rationale": "Dopaminergic signalling influences appetite, gut motility and neuroendocrine regulation of metabolism. Stabilising these functions may reduce age-related deterioration and extend survival.",
+      "prediction": "Flies fed levosulpiride will show significantly longer median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Raise matched cohorts on food with and without levosulpiride under identical conditions, maintain them throughout life, and compare survival curves by log-rank analysis."
+    },
+    {
+      "id": 9,
+      "title": "Carnosine extends lifespan in Drosophila",
+      "claim": "Carnosine extends lifespan in Drosophila melanogaster. Supplementation with this compound will increase both median and maximum survival relative to untreated controls.",
+      "rationale": "Carnosine exhibits antioxidant and anti-glycating properties that can protect proteins and membranes from damage. Reduced accumulation of molecular damage may slow ageing and prolong survival.",
+      "prediction": "Flies fed carnosine will show significantly longer median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Raise matched cohorts on food with and without carnosine under identical conditions, maintain them throughout life, and compare survival curves by log-rank analysis."
+    },
+    {
+      "id": 10,
+      "title": "Carbinoxamine maleate extends lifespan in Drosophila",
+      "claim": "Carbinoxamine maleate extends lifespan in Drosophila melanogaster. Supplementation with this compound will increase both median and maximum survival relative to untreated controls.",
+      "rationale": "Histaminergic signalling interacts with sleep, feeding and metabolic regulation, processes that shape ageing. Modulating these pathways may improve physiological maintenance and extend survival.",
+      "prediction": "Flies fed carbinoxamine maleate will show significantly longer median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Raise matched cohorts on food with and without carbinoxamine maleate under identical conditions, maintain them throughout life, and compare survival curves by log-rank analysis."
+    }
+  ],
+  "assistant_notes": {}
+}

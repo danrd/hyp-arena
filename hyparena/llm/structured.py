@@ -14,17 +14,20 @@ from hyparena.state import Provenance
 
 
 def parse_json(text: str) -> Optional[dict]:
-    """The last JSON object in the text (a debate transcript may precede it), or None."""
+    """The last top-level JSON object in the text (a debate transcript may precede it), or None.
+    Objects nested inside it are not returned on their own."""
     decoder = json.JSONDecoder()
-    starts = [i for i, ch in enumerate(text) if ch == "{"]
-    for start in reversed(starts):
+    last, i = None, text.find("{")
+    while i >= 0:
         try:
-            value, _ = decoder.raw_decode(text[start:])
+            value, end = decoder.raw_decode(text, i)
         except ValueError:
+            i = text.find("{", i + 1)
             continue
         if isinstance(value, dict):
-            return value
-    return None
+            last = value
+        i = text.find("{", end)
+    return last
 
 
 @dataclass

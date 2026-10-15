@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import random
+import re
 import threading
 import zlib
 
@@ -104,3 +105,28 @@ class FakeLLMClient:
     def _meta_review(self, rng, prompt, n):
         return json.dumps({"generate": "State a refutation condition.", "review": "Check citations.",
                            "compare": "Do not prefer longer text.", "evolve": "Keep claims testable."})
+
+    # negative-sampling test (hyparena/negatives.py)
+
+    @staticmethod
+    def _numbered(prompt):
+        return re.findall(r"^(\d+)\. (.+)$", prompt, flags=re.M)
+
+    def _negatives_generate(self, rng, prompt, n):
+        kinds = re.findall(r"^- (\w+): ", prompt.split("Rules:")[0], flags=re.M)
+        return json.dumps({"statements": [{"kind": k, "statement": f"Fake {k} statement {n}-{i} shortens lifespan in worms.",
+                                           "why_false": "fake"} for i, k in enumerate(kinds)]})
+
+    def _negatives_verify(self, rng, prompt, n):
+        return json.dumps({"verdicts": [{"n": int(i), "verdict": rng.choice(["false", "false", "false", "uncertain"]),
+                                         "confidence": round(rng.uniform(0.5, 1.0), 2), "reason": "fake"}
+                                        for i, _ in self._numbered(prompt)]})
+
+    def _negatives_rewrite(self, rng, prompt, n):
+        return json.dumps({"hypotheses": [{"n": int(i), "title": s[:60], "claim": s, "rationale": "A plausible pathway.", "prediction": "Lifespan changes.",
+                                           "experiment": "A lifespan assay."} for i, s in self._numbered(prompt)]})
+
+    def _listwise(self, rng, prompt, n):
+        ids = list(dict.fromkeys(re.findall(r"^\[(\w+)\]", prompt, flags=re.M)))
+        rng.shuffle(ids)
+        return json.dumps({"ranking": ids})

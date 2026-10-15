@@ -1,0 +1,16 @@
+You are building a test set for a system that ranks scientific hypotheses. Below is {{ status }}. Write {{ n }} statements that look just as plausible to a biologist but are false: contradicted by published evidence, or at odds with what is known about this compound and organism.
+
+Statement: {{ statement }}
+
+Use these kinds, in this order:
+{% for kind in kinds %}
+- {{ kind }}: {{ kind_descriptions[kind] }}
+{% endfor %}
+
+Rules:
+- Same shape and length as the statement: one sentence, "<intervention> <effect> in <organism> [<condition>]".
+- No numbers, citations or hedging words; nothing that marks a statement as invented.
+- Do not repeat the statement or state anything you believe to be true.
+
+Reply with a single JSON object and nothing else:
+{"statements": [{"kind": "", "statement": "", "why_false": ""}]}
