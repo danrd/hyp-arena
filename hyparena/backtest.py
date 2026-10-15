@@ -38,8 +38,27 @@ ESUMMARY = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
 OUT = Path(__file__).resolve().parents[1] / "data" / "backtest"
 
 
+_MONTHS = {m: i for i, m in enumerate(("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"), 1)}
+
+
+def _pubmed_date(text: str) -> str | None:
+    """ISO date from a PubMed date string ("2016 Nov 14", "2016 Dec", "2016/11/15 06:00"); a missing day or
+    month counts as the first."""
+    parts = text.replace("/", " ").replace("-", " ").split()
+    if not parts or not parts[0].isdigit() or len(parts[0]) != 4:
+        return None
+    month, day = 1, 1
+    if len(parts) > 1:
+        month = int(parts[1]) if parts[1].isdigit() else _MONTHS.get(parts[1][:3].lower(), 1)
+    if len(parts) > 2 and parts[2].isdigit():
+        day = int(parts[2])
+    return f"{parts[0]}-{month:02d}-{day:02d}"
+
+
 def _pubdates(pmids: list[str]) -> dict[str, str]:
-    """PubMed id -> ISO publication date (sortpubdate), via NCBI E-utilities (batches of 150)."""
+    """PubMed id -> ISO date of first public appearance, via NCBI E-utilities (batches of 150): the earliest
+    of the electronic, print and PubMed-entry dates. (The print date alone can come weeks after the paper
+    was online, which let a backtest's evidence cut-off include the paper itself.)"""
     dates = {}
     with httpx.Client(timeout=60) as client:
         for i in range(0, len(pmids), 150):
@@ -48,9 +67,13 @@ def _pubdates(pmids: list[str]) -> dict[str, str]:
             r.raise_for_status()
             res = r.json().get("result", {})
             for p in batch:
-                sort = (res.get(p) or {}).get("sortpubdate", "")
-                if sort:
-                    dates[p] = sort[:10].replace("/", "-")
+                rec = res.get(p) or {}
+                found = [_pubmed_date(rec.get(k) or "") for k in ("epubdate", "pubdate", "sortpubdate")]
+                found += [_pubmed_date(h.get("date", "")) for h in rec.get("history") or []
+                          if h.get("pubstatus") in ("entrez", "pubmed", "aheadofprint")]
+                found = [d for d in found if d]
+                if found:
+                    dates[p] = min(found)
     return dates
 
 

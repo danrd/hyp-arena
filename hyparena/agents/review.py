@@ -49,13 +49,15 @@ def make_review(ctx):
         if not passed:
             return reject()
 
-        full = ask_json(ctx, role="review_full", family=fam_full, template="review_full", version="v2",
-                        variables={**common, "evidence": usable(h.evidence), "as_of": cfg.as_of}, phase="review",
+        evidence = usable(h.evidence)
+        full = ask_json(ctx, role="review_full", family=fam_full, template="review_full", version="v3",
+                        variables={**common, "evidence": evidence, "as_of": cfg.as_of}, phase="review",
                         validate=_numbers, avoid=avoid)
         if full.value is None:
             return reject()
         s = full.value
-        passed = s["correctness"] >= cfg.min_correctness and s["novelty"] >= cfg.min_novelty
+        # novelty is judged against the retrieved evidence, so without evidence it cannot reject
+        passed = s["correctness"] >= cfg.min_correctness and (not evidence or s["novelty"] >= cfg.min_novelty)
         reviews.append(Review(kind="full", provenance=full.provenance, passed=passed,
                               scores={k: float(s[k]) for k in SCORE_KEYS},
                               notes=[str(n) for n in s.get("notes", [])],
