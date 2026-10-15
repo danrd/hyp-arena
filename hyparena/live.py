@@ -180,7 +180,10 @@ def _dump(final, ctx, client, path) -> None:
            "failures": client.failures, "tokens": ctx.tracer.summary(),
            "hypotheses": {i: {"status": x.status, "family": x.provenance.family, "combined": comb.get(i),
                               "scores": {c: ratings[c][i].model_dump() for c in plan.names if i in ratings.get(c, {})},
-                              "evidence": len(x.evidence)} for i, x in hyps.items()}}
+                              "evidence": len(x.evidence),
+                              "reviews": [{"kind": r.kind, "family": r.provenance.family,
+                                           "passed": r.passed, "scores": r.scores, "notes": r.notes[:3]}
+                                          for r in x.reviews]} for i, x in hyps.items()}}
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     Path(path).write_text(json.dumps(out, indent=2))
     print(f"result written to {path}")

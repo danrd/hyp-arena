@@ -1,6 +1,6 @@
 # Negative-sampling test
 
-Status: tooling ready; a first small run on cheap paid models (6 groups, one seed) is reported below.
+Status: tooling ready; a first small run on cheap paid models (6 groups, one seed) is reported in section 5.
 
 ## 1. Question
 
@@ -68,7 +68,27 @@ python -m hyparena.negatives compare --a runs/neg/L4_s0 --b runs/neg/L0_s0
 
 ## 5. First run (2026-10-15)
 
-Run in progress; results will be added here.
+Six groups (worms 2, flies 2, mice 2), writer GLM-5.3-flash, verifier Gemini-3.1-flash-lite, judges gpt-5-nano (L0, the only family) and gpt-5-nano + Gemini (L4), one seed, Europe PMC as of the day before the finding. Estimated spend for everything below, including two discarded runs: about $0.35 (estimated tokens, without hidden reasoning).
+
+| Arm | hit@1 | MRR | mean rank | AUC | finding survived review |
+|---|---|---|---|---|---|
+| chance | 0.10 | 0.29 | 5.5 | 0.50 | |
+| one call, gpt-5-nano | 0.17 | 0.42 | 3.5 | 0.72 [0.56, 0.89] | |
+| one call, Gemini flash-lite | 0.50 | 0.62 | 3.2 | 0.76 [0.48, 0.96] | |
+| L0 (Co-Scientist-style) | 0.00 | 0.18 | 5.6 | 0.49 | 0 of 6 |
+| L4 (full method) | 0.33 | 0.44 | 4.5 | 0.61 [0.41, 0.81] | 2 of 6 |
+
+L4 − L0: MRR +0.26 [−0.02, 0.54], AUC +0.12 [−0.07, 0.32] (paired bootstrap over 6 groups; 90% of samples above zero). With six groups none of this is conclusive.
+
+**The tournament was hardly tested.** The review gate rejected almost everything: in L0, 1 of 60 items survived; in L4, 8. Only two groups had a match at all. The ranking was therefore made by the gate, and items ranked by the gate tie at the bottom. In a diagnostic run of the spermidine group, L4 kept the finding (initial review 6, full review 9) and rejected all nine negatives. That is the right answer there, but it shows that the tournament has nothing left to rank. Reading per kind: the one-call baselines catch reversed effects and wrong conditions almost always. They are fooled by mechanism variants (the finding is ranked above them in 25–75% of cases), which add a plausible detail to a true effect.
+
+**What the test found in the pipeline (fixed before the reported run):**
+1. **Cut-off leak.** The evidence cut-off used PubMed's print date. Papers appear online weeks earlier, so the retrieval "as of" the day before a finding returned the finding's own paper (spermidine in mice: online 2016-11-14, print 2016-12). The cut-off now uses the earliest of the online, print and PubMed-entry dates. This also affects the ITP backtest.
+2. **Missing evidence counted against a hypothesis.** When nothing was retrieved, the full review scored correctness and novelty 0 and rejected the hypothesis. Novelty now cannot reject without evidence (`review_full` v3), and the prompt says that missing evidence is not evidence against.
+3. **Zeros copied from the example.** gpt-5-nano copied the zeros of the JSON example in the review prompt. The example now has placeholders, and the scales are defined.
+4. **Bare claims are rejected, embellished ones pass.** A one-line claim without rationale got correctness 2, while a variant with an invented mechanism got 4. Every item now carries a rationale written the same way.
+
+**Possible next steps:** run the same groups with the review gate advisory only (reviews shown to the judges, nothing rejected) to test the tournament itself; more groups and seeds for usable intervals.
 
 ## 6. Known limits
 
