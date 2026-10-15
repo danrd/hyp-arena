@@ -37,41 +37,48 @@ def make_review(ctx):
         def reject():
             return h.model_copy(update={"reviews": reviews, "status": "rejected"})
 
+        gate = cfg.review_gate == "reject"   # "advisory": reviews inform the judges, only safety rejects
+
         init = ask_json(ctx, role="review_initial", family=fam_initial, template="review_initial",
                         version="v1", variables=common, phase="review", validate=_numbers, avoid=avoid)
-        if init.value is None:
+        if init.value is None and gate:
             return reject()
-        s = init.value
-        passed = s.get("safety_ok", True) is not False and s["correctness"] >= cfg.min_correctness
-        reviews.append(Review(kind="initial", provenance=init.provenance, passed=passed,
-                              scores={k: float(s[k]) for k in SCORE_KEYS},
-                              notes=[str(n) for n in s.get("notes", [])]))
-        if not passed:
-            return reject()
+        if init.value is not None:
+            s = init.value
+            safe = s.get("safety_ok", True) is not False
+            passed = safe and s["correctness"] >= cfg.min_correctness
+            reviews.append(Review(kind="initial", provenance=init.provenance, passed=passed,
+                                  scores={k: float(s[k]) for k in SCORE_KEYS},
+                                  notes=[str(n) for n in s.get("notes", [])]))
+            if not safe or (gate and not passed):
+                return reject()
 
         evidence = usable(h.evidence)
         full = ask_json(ctx, role="review_full", family=fam_full, template="review_full", version="v3",
                         variables={**common, "evidence": evidence, "as_of": cfg.as_of}, phase="review",
                         validate=_numbers, avoid=avoid)
-        if full.value is None:
+        if full.value is None and gate:
             return reject()
-        s = full.value
-        # novelty is judged against the retrieved evidence, so without evidence it cannot reject
-        passed = s["correctness"] >= cfg.min_correctness and (not evidence or s["novelty"] >= cfg.min_novelty)
-        reviews.append(Review(kind="full", provenance=full.provenance, passed=passed,
-                              scores={k: float(s[k]) for k in SCORE_KEYS},
-                              notes=[str(n) for n in s.get("notes", [])],
-                              citations=[str(c) for c in s.get("citations", [])]))
-        if not passed:
-            return reject()
+        if full.value is not None:
+            s = full.value
+            # novelty is judged against the retrieved evidence, so without evidence it cannot reject
+            passed = s["correctness"] >= cfg.min_correctness and (not evidence or s["novelty"] >= cfg.min_novelty)
+            reviews.append(Review(kind="full", provenance=full.provenance, passed=passed,
+                                  scores={k: float(s[k]) for k in SCORE_KEYS},
+                                  notes=[str(n) for n in s.get("notes", [])],
+                                  citations=[str(c) for c in s.get("citations", [])]))
+            if gate and not passed:
+                return reject()
 
         deep = ask_json(ctx, role="review_deep", family=fam_deep, template="review_deep", version="v1",
                         variables={"text": h.text}, phase="review", validate=_deep_validate, avoid=avoid)
         flawed = bool(deep.value and deep.value.get("fundamental_flaw"))
         if deep.value is not None:
-            reviews.append(Review(kind="deep", provenance=deep.provenance, passed=not flawed,
-                                  notes=[str(n) for n in deep.value.get("notes", [])]))
-        return h.model_copy(update={"reviews": reviews, "status": "rejected" if flawed else "active"})
+            notes = [str(n) for n in deep.value.get("notes", [])]
+            if flawed:
+                notes.insert(0, "The deep review found a possible fundamental flaw.")
+            reviews.append(Review(kind="deep", provenance=deep.provenance, passed=not flawed, notes=notes))
+        return h.model_copy(update={"reviews": reviews, "status": "rejected" if gate and flawed else "active"})
 
     def review(state: GraphState) -> dict:
         todo = [(h, state, reviewers(h)) for h in state.get("hypotheses", {}).values()

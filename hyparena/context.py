@@ -51,7 +51,9 @@ class RunConfig:
     evidence_per_query: int = 5
     evidence_max: int = 10               # kept per hypothesis
     evidence_to_judges: int = 5          # shown to judges per hypothesis
-    # review thresholds
+    # reviews: "advisory" (default) shows scores and remarks to the judges and rejects only on safety; every
+    # hypothesis is ranked. "reject": the thresholds below and a fundamental flaw remove it before ranking.
+    review_gate: str = "advisory"
     min_correctness: float = 4.0
     min_novelty: float = 3.0
     # proximity

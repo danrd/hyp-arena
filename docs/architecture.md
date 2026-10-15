@@ -122,9 +122,11 @@ Extracts the structured record from the free text (claim, mechanism, prediction,
 
 ### 6.4 `review`
 Pipeline per hypothesis, as in the paper:
-1. **Initial review** (no tools): correctness, quality, novelty, preliminary safety. Cheap filter; rejects obvious failures.
+1. **Initial review** (no tools): correctness, quality, novelty, preliminary safety. In the paper a cheap filter that rejects obvious failures.
 2. **Full review** (with search): the same criteria with retrieved literature. Novelty is judged **only** with retrieval (the paper's ablation: 6.14/10 without, 2.38/10 with).
 3. **Deep verification**: decompose into assumptions and sub-assumptions, check each independently. Failures are marked fundamental or not.
+
+**Reviews do not filter by default** (`review_gate: advisory`, decision 2026-10-15): every hypothesis is ranked as an ordinary one, and the judges see the reviewers' remarks (and a note when deep verification found a possible fundamental flaw). Only a failed safety check removes a hypothesis. The paper's behaviour, where the thresholds and a fundamental flaw reject before ranking, is `review_gate: reject` (`live run --review-gate reject`). Reason: in the negative-sampling test the gate made the ranking decision for almost every item and left the tournament nothing to compare (`docs/negative-sampling.md`, section 5); the criteria already include novelty and evidence support.
 
 **Reviewers never come from the writer's family**, also when the client falls back to another family after a failure (`avoid`), because the judges read the reviews. Observation, simulation and recurrent reviews are later additions. Every claim in a review carries a citation or the label "assumption". A grounding check (citation exists and supports the claim) can run as the `review` function of a refine loop.
 

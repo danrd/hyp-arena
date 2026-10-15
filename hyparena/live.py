@@ -115,7 +115,7 @@ def run(args) -> None:
         extra["dedup_threshold"] = 1.01          # off: templated items differ only in a name
         print("deduplication: off (requested by the dataset)")
     ctx, client = _context(args, **extra, max_cycles=args.cycles, gen_per_cycle=gen, evolve_per_cycle=1 if not imported else 0,
-                           matches_per_item=args.matches)
+                           matches_per_item=args.matches, review_gate=args.review_gate)
     checkpointer = sqlite_checkpointer(args.checkpoint) if args.checkpoint else None
     graph = build_graph(ctx, checkpointer=checkpointer)
     thread = args.thread or f"run-{datetime.now():%Y%m%d-%H%M%S}"
@@ -175,7 +175,8 @@ def _dump(final, ctx, client, path) -> None:
     out = {"criteria": plan.names, "weights": plan.weights, "step": ctx.cfg.step,
            "seed": ctx.cfg.seed, "families": [j.family for j in ctx.judge_pool],
            "config": {k: getattr(ctx.cfg, k) for k in ("rating", "pairing", "judge_view", "lineage_mode",
-                                                        "judges_per_match", "extra_judges", "max_tokens", "max_cycles")},
+                                                        "judges_per_match", "extra_judges", "max_tokens", "max_cycles",
+                                                        "review_gate")},
            "as_of": ctx.cfg.as_of, "matches": len(final.get("matches", [])), "calls": client.calls,
            "failures": client.failures, "tokens": ctx.tracer.summary(),
            "hypotheses": {i: {"status": x.status, "family": x.provenance.family, "combined": comb.get(i),
@@ -211,6 +212,8 @@ def main() -> None:
                         help=f"comma-separated sources from {', '.join(SOURCES)}, or none")
     parser.add_argument("--as-of", default=None, help="ISO date: evidence published on or before it only")
     parser.add_argument("--cycles", type=int, default=1, help="tournament cycles")
+    parser.add_argument("--review-gate", choices=["advisory", "reject"], default="advisory",
+                        help="advisory: reviews inform the judges, only safety rejects; reject: review thresholds remove hypotheses")
     parser.add_argument("--max-tokens", type=int, default=None, help="estimated token budget (stops at a cycle boundary)")
     parser.add_argument("--out", default=None, help="write the run result as JSON (for hyparena.backtest evaluate)")
     parser.add_argument("--checkpoint", default=None, help="SQLite file for the graph state, e.g. runs/state.sqlite")

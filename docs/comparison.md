@@ -75,6 +75,7 @@ A confirmed finding hidden among nine plausible false statements (real DrugAge n
 
 ## 8. Known limits
 
+- Reviews do not reject in any arm (`review_gate: advisory`, the default), so that all arms rank the same pool; in the paper they filter before ranking (`--review-gate reject` restores that).
 - The baseline follows the paper's description, not its code; differences: JSON verdicts instead of "better idea: 1 or 2", K = 32 for Elo (the paper does not give K), our reviews instead of its full set of review types.
 - Token counts are estimates (4 characters per token) and exclude hidden reasoning tokens.
 - A run stopped by the call cap writes no result unless a checkpoint is used; resume it with `--checkpoint ... --resume`.
