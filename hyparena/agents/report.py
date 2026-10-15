@@ -1,8 +1,9 @@
-"""report: Pareto front over the two axes, a diversified list of the best hypotheses, and a research
-overview written from them (the Meta-review agent's final output in Co-Scientist)."""
+"""report: Pareto front over the criteria, the final order by randomized aggregation (МРСП, with spreads and
+dominance probabilities), a diversified list of the best hypotheses, and a research overview written from
+them (the Meta-review agent's final output in Co-Scientist)."""
 from __future__ import annotations
 
-from hyparena.rating import combined
+from hyparena.aggregate import mrsp
 from hyparena.state import GraphState, usable
 
 
@@ -26,17 +27,18 @@ def make_report(ctx):
             return {"report": {"front": [], "shown": [], "pending": pending, "overview": "",
                                "tokens": ctx.tracer.summary()}}
         points = {i: tuple(ratings[c][i].score for c in names) for i in ids}
-        score, _ = combined(ratings, plan.weights, ids)
-        by_id = dict(zip(ids, score))
+        agg = mrsp(ratings, names, ids, kind=ctx.cfg.rating, importance=plan.importance, weights=plan.weights,
+                   seed=ctx.cfg.seed, top=ctx.cfg.report_size)
+        by_id = {i: v["mean"] for i, v in agg["by_id"].items()}
         shown, clusters = [], set()
-        for i in sorted(ids, key=lambda i: -by_id[i]):          # best first, one per cluster
+        for i in agg["order"]:                                   # best first, one per cluster
             c = hyps[i].cluster
             if c is not None and c in clusters:
                 continue
             clusters.add(c)
             h = hyps[i]
             shown.append({"id": i, "text": h.text, "card": h.card.model_dump() if h.card else None,
-                          "combined": float(by_id[i]),
+                          "combined": float(by_id[i]), "aggregate": agg["by_id"][i],
                           "ratings": {c: ratings[c][i].model_dump() for c in names},
                           "evidence": [e.model_dump() for e in usable(h.evidence)],
                           "retracted_evidence": [e.record_id for e in h.evidence if not e.usable],
@@ -53,7 +55,7 @@ def make_report(ctx):
                                   "scores": {c: round(s["ratings"][c]["score"], 2) for c in names},
                                   "evidence": [f"{e['record_id']} ({e['publication_date']}): {e['title']}"
                                                for e in s["evidence"][:5]]} for s in shown]})
-        return {"report": {"front": pareto_front(points), "shown": shown, "pending": pending,
+        return {"report": {"front": pareto_front(points), "shown": shown, "pending": pending, "aggregate": agg,
                            "cycles": state.get("cycle", 0),
                            "overview": reply.text.strip(), "overview_provenance": prov.model_dump(),
                            "tokens": ctx.tracer.summary()}}

@@ -6,7 +6,8 @@ from typing import Optional
 
 from hyparena.llm.judges import JudgeSpec, pick_judges
 from hyparena.llm.structured import ask_json
-from hyparena.rating import combined, elo_ratings, fit_bt, select_pairs, select_pairs_coscientist
+from hyparena.rating import (combined, elo_ratings, fit_bt, select_pairs, select_pairs_coscientist,
+                             select_pairs_ucb, trueskill_ratings)
 from hyparena.schema import verdict_example
 from hyparena.state import GraphState, Hypothesis, JudgeVerdict, Match, Provenance, usable
 
@@ -55,7 +56,7 @@ def make_tournament(ctx):
         first, second = (hb, ha) if rng.random() < 0.5 else (ha, hb)     # random A/B order
         plan = state["plan"]
         n = cfg.evidence_to_judges
-        template, version = (f"cs_{mode}", "v1") if cfg.judge_view == "coscientist" else (mode, "v3")
+        template, version = (f"cs_{mode}", "v1") if cfg.judge_view == "coscientist" else (mode, "v4")
         out = ask_json(
             ctx, role=mode, family=judge.family, template=template, version=version,
             phase="debate" if mode == "debate" else "rank", validate=_validator(plan.names),
@@ -103,7 +104,7 @@ def make_tournament(ctx):
                                         names))
 
     def fit(ids, matches, names):
-        rate = elo_ratings if cfg.rating == "elo" else fit_bt
+        rate = {"elo": elo_ratings, "trueskill": trueskill_ratings}.get(cfg.rating, fit_bt)
         return {c: rate(ids, matches, c) for c in names}
 
     def tournament(state: GraphState) -> dict:
@@ -116,7 +117,9 @@ def make_tournament(ctx):
         top_k = max(2, int(len(ids) * cfg.top_frac))
         n_matches = max(4, int(cfg.matches_per_item * len(ids)))
         rng = ctx.rng_for("pairs", state.get("cycle", 0))
-        if cfg.pairing == "coscientist":
+        if cfg.pairing == "ucb":
+            pairs = select_pairs_ucb(ids, ratings, plan.weights, n_matches)
+        elif cfg.pairing == "coscientist":
             pairs = select_pairs_coscientist(ids, ratings, plan.weights, {h: hyps[h].cluster for h in ids}, rng,
                                              n_matches)
         else:

@@ -22,12 +22,13 @@ Same upstream stages (normalization, retrieval, reviews) for every arm; only the
 | Step | Change | Families | Verdict | Rating and pairing | Judge sees |
 |---|---|---|---|---|---|
 | L0 | Co-Scientist baseline | one | holistic (`criteria-coscientist.yaml`) | Elo from 1200; new, top and similar first | text and reviews |
+| L0ts | Co-Scientist 2026 baseline (2608.26701) | one | holistic | TrueSkill; contenders by UCB = μ + σ | text and reviews |
 | L1 | + verdicts per criterion | one | per criterion | as L0 | as L0 |
 | L2 | + Bradley–Terry with intervals, elimination pairing | one | per criterion | BT; elimination + Swiss | as L0 |
 | L3 | + card and retrieved evidence | one | per criterion | as L2 | text, card, evidence, reviews |
 | L4 | full method: + independent judge ensemble | all | per criterion | as L2 | as L3 |
 
-The main comparison is L4 against L0; the steps in between show which change produces a difference.
+The main comparison is L4 against both baselines, L0 (the 2025 paper) and L0ts (the 2026 version); the steps in between show which change produces a difference. All arms produce the final order by МРСП over their own ratings (Elo and TrueSkill are mapped to log-odds); with one holistic criterion this is the rating order itself.
 
 ## 4. Equalizing conditions
 

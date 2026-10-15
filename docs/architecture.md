@@ -42,11 +42,13 @@ This document turns the approach in [`approach.md`](approach.md) into a concrete
 
 The comparison format is not fixed yet, so three things are data, not code:
 
-- **Criteria** (`configs/criteria.yaml`): name, description, weight. Judges return 1 or 2 per criterion in one call; each criterion has its own Bradley–Terry rating; weights combine them for pair selection and the final order. Default: novelty, evidence support, testability, value. `configs/criteria-two-axes.yaml` keeps the earlier promise/feasibility setup. The criteria and their version are stored in the plan, so a checkpoint keeps them.
+- **Criteria** (`configs/criteria.yaml`): name, description, and either an `importance` order (default) or explicit weights. Judges return 1 or 2 per criterion in one call; each criterion has its own Bradley–Terry rating. The final order is the expected score of the randomized aggregation (МРСП, `hyparena/aggregate.py`): weights uniform over all vectors consistent with the order, ratings mapped to the probability of beating an average hypothesis and sampled within their standard errors; the report adds the spread, a 90% rank interval and dominance probabilities for the top. Pair selection uses the expected (rank-order centroid) weights. Default: novelty, evidence support, testability, value. `configs/criteria-two-axes.yaml` keeps the earlier promise/feasibility setup. The criteria and their version are stored in the plan, so a checkpoint keeps them.
 - **Card schema** (`configs/card.yaml`, a draft): field name, type (text or list), required, description. The normalizer prompt and the judges' view are built from it. Everything in the card is **declared** by the hypothesis; required fields the text does not state are listed in `gaps`, never invented.
 - **Evidence** (`hyparena.state.Evidence`): a uniform record for any source: `source`, `record_id`, title, excerpt, URL, `publication_date`, retrieval time, query, `tier`, study type, species, licence, entity ids. Only `source` and `record_id` are required. Tiers: 1 curated with explicit criteria, 2 peer-reviewed text, 3 text-mined relations, 4 preprints; LLM output is never evidence. The `as_of` date restricts retrieval to publications on or before it.
 
 The verified layer (each declared sub-claim linked to evidence with a status) is the next step and waits for the card format.
+
+- **Epistemic type of evidence** (from the data-source notes): every record says what its source can assert: `primary_text` (a paper's own text), `review_text` (background), `curated_record` (Open Genes, DrugAge: a signal, not proof), `measurement` (an executed test on data), `machine_derived` (text-mined relations: leads, never evidence), `quality_metadata`, `plans` (registry entries: plans and status, not results). Judges and reviewers see the type next to each record (`compare/v4`, `debate/v4`, `review_full/v4`).
 
 ## 4. Graph
 
@@ -152,7 +154,7 @@ Summarizes recurring problems in reviews and debate rationales into feedback str
 Decides after each cycle whether to run another one or stop: maximum number of cycles, estimated token budget, or an unchanged top-k over the last two cycles. Not implemented yet: the paper's allocation of work between agents by their measured effectiveness (for example, how often evolved hypotheses reach the top).
 
 ### 6.10 `report`
-Pareto front over the two axes, selection by team-set weights, near-duplicates removed using clusters, and for each shown hypothesis: the original text, the record, reviews with citations, the match history, and the full provenance. A **research overview** (the Meta-review agent's final output in Co-Scientist) is written from the shown hypotheses: research areas, first experiments, conflicts and overlaps, open risks (`research_overview/v1`). Hypotheses that were never evaluated are listed as `pending`.
+Pareto front over the criteria, the final order by МРСП (expected score, spread, rank interval, dominance probabilities among the shown hypotheses), near-duplicates removed using clusters, and for each shown hypothesis: the original text, the record, reviews with citations, the match history, and the full provenance. A **research overview** (the Meta-review agent's final output in Co-Scientist) is written from the shown hypotheses: research areas, first experiments, conflicts and overlaps, open risks (`research_overview/v1`). Hypotheses that were never evaluated are listed as `pending`.
 
 ## 7. Judge ensemble and independence
 
@@ -204,6 +206,8 @@ Reply: text, model_id (what actually answered), tokens_in, tokens_out, seconds
 
 `python -m hyparena.live run --mode coscientist`: one model family for every role, judges' independence rule off, a single holistic criterion (`configs/criteria-coscientist.yaml`, following the paper's default criteria), online Elo from 1200 (K = 32; the paper does not give K), pairing that favours new and top-ranked hypotheses and similar ones (same proximity cluster), judges that see only the text and the reviews (`cs_compare`, `cs_debate`, adapted from the paper's prompts; JSON output instead of the paper's "better idea: 1 or 2"). Reviews still use retrieval, as the paper's full review searches the literature. Compare with our mode at an **equal token budget** (`--max-tokens`): our mode spends more judge calls per match.
 
+**Second baseline, the 2026 version** (arXiv 2608.26701, `--ladder L0ts` or `--mode coscientist-2026`): as L0, but ratings are TrueSkill (Gaussian skill per hypothesis, updated after each comparison; the paper gives no parameters, so TrueSkill's defaults are used: μ 25, σ 25/3, β σ/2, τ σ/100, no draws), and contenders are chosen by UCB = μ + κσ with κ = 1, so new, uncertain hypotheses play first. In the paper UCB selects parents for evolution; here, with external hypotheses and no evolution, it selects who plays. The paper's plagiarism penalty and hallucination clipping concern generation and manuscripts and are not reproduced.
+
 ## 8c. Comparison tooling
 
 The protocol is in [`comparison.md`](comparison.md): ablation ladder L0–L4 (`hyparena/ladder.py`, `live run --ladder`), dev/test splits in the labels, the leakage probe (`hyparena/leakage.py`), the run grid (`hyparena/experiment.py`), paired comparison with bootstrap (`backtest compare`), and `--fake` for running all of it without model calls. The tournament stops scheduling matches when the token budget is spent.
@@ -251,5 +255,5 @@ Decided:
 
 Open:
 1. **Per-axis debate.** Whether a debate should be run per axis or once for both axes (the skeleton runs once for both).
-2. **Rating when axes disagree.** The Pareto front is shown, but pair selection uses a combined score; the weights live in the plan configuration.
+2. **Rating when axes disagree.** Resolved for now by an order of importance and МРСП aggregation (decision 2026-10-15); the order lives in the criteria file and should be set with experts. Open: how to normalize ratings of different systems (currently: logistic of the log-odds against an average hypothesis).
 3. **Cost caps.** The skeleton caps tokens (estimated) and cycles; the budget unit and defaults are placeholders.

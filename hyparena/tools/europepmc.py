@@ -71,6 +71,8 @@ class EuropePMCSearch:
             publication_date=item.get("firstPublicationDate"), retrieved_at=now, query=query,
             tier=4 if src in PREPRINT_SOURCES else 2,
             study_type="; ".join(types) if isinstance(types, list) else str(types),
+            epistemic_type="review_text" if any("review" in str(t).lower() for t in (types if isinstance(types, list) else [types]))
+            else "primary_text",
             license=item.get("license", "") or "",
             extra={k: item[k] for k in ("pmid", "pmcid", "doi", "journalTitle", "isOpenAccess", "citedByCount")
                    if k in item})

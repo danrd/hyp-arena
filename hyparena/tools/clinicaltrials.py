@@ -49,6 +49,7 @@ class ClinicalTrialsSearch:
                 text=text, url=f"https://clinicaltrials.gov/study/{ident.get('nctId')}",
                 publication_date=status.get("studyFirstSubmitDate"), retrieved_at=now, query=query, tier=1,
                 study_type=f"registered study ({design.get('studyType', 'unknown')})", species="human",
+                epistemic_type="plans",
                 extra={"status_as_of_retrieval": True} if as_of else {}))
         with self._lock:
             self._cache[key] = out

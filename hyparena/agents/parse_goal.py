@@ -20,7 +20,8 @@ def make_parse_goal(ctx):
         out = ask_json(ctx, role="parse_goal", family=ctx.utility_family(), template="parse_goal",
                        version="v1", variables={"goal": state["goal"]}, phase="other",
                        validate=_validate)
-        criteria = {"criteria": ctx.criteria.criteria, "criteria_version": ctx.criteria.version}
+        criteria = {"criteria": ctx.criteria.criteria, "criteria_version": ctx.criteria.version,
+                    "importance": ctx.criteria.importance}
         if out.value is None:
             return {"plan": PlanConfig(preferences=state["goal"], **criteria)}
         v = out.value

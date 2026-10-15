@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import operator
-from typing import Annotated, Any, Literal, Optional
+from typing import Annotated, Any, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
@@ -37,6 +37,17 @@ class Card(BaseModel):
         return {k: v for k, v in self.fields.items() if v not in (None, "", [])}
 
 
+EPISTEMIC_LABELS = {
+    "primary_text": "primary text",
+    "review_text": "review (background, not a finding)",
+    "curated_record": "curated database record (a signal, not proof)",
+    "measurement": "measurement",
+    "machine_derived": "machine-derived lead (not evidence)",
+    "quality_metadata": "quality metadata",
+    "plans": "registry entry (plans and status, not results)",
+}
+
+
 class Evidence(BaseModel):
     """One piece of retrieved evidence, uniform across sources. Only `source` and `record_id` are
     required; the rest is filled when the source provides it."""
@@ -49,12 +60,20 @@ class Evidence(BaseModel):
     retrieved_at: str = ""
     query: str = ""
     tier: Optional[int] = None                   # 1 curated ... 4 preprint (see docs/architecture.md)
+    # What the source can assert (six epistemic types, see docs/architecture.md 3a): primary_text,
+    # curated_record, measurement, machine_derived, quality_metadata, plans. Only primary text with a
+    # finding, curated records and executed measurements can support a claim; the rest are leads or inputs.
+    epistemic_type: str = ""
     study_type: str = ""
     species: str = ""
     license: str = ""
     entity_ids: list[str] = Field(default_factory=list)
     flags: list[str] = Field(default_factory=list)   # e.g. "retracted"; flagged records are not used
     extra: dict[str, Any] = Field(default_factory=dict)
+
+    @property
+    def epistemic_label(self) -> str:
+        return EPISTEMIC_LABELS.get(self.epistemic_type, "")
 
     @property
     def usable(self) -> bool:
@@ -123,6 +142,7 @@ class PlanConfig(BaseModel):
     constraints: list[str] = Field(default_factory=list)
     criteria: list[Criterion] = Field(default_factory=list)    # from configs/criteria.yaml, not from the LLM
     criteria_version: str = ""
+    importance: Optional[list[Union[str, list[str]]]] = None   # order of importance (see configs/criteria.yaml)
 
     @property
     def names(self) -> list[str]:

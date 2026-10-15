@@ -86,7 +86,7 @@ def smoke(args) -> None:
         started = time.perf_counter()
         try:
             plan = PlanConfig(criteria=ctx.criteria.criteria)
-            reply, _ = ctx.call(role="compare", family=j.family, template="compare", version="v3",
+            reply, _ = ctx.call(role="compare", family=j.family, template="compare", version="v4",
                                 phase="rank", variables={"goal": GOAL, "plan": plan, "feedback": {},
                                                          "first": TOY[0], "second": TOY[1],
                                                          "example": verdict_example(plan.criteria),
@@ -149,16 +149,15 @@ def run(args) -> None:
     print(f"calls: {client.calls}, failures: {client.failures}, by family: {client.by_family}")
     print(render(final["report"]["tokens"]))
     ratings, plan = final["ratings"], final["plan"]
-    active = [i for i, x in h.items() if x.status == "active"]
-    if ratings.get("promise") and active:
-        score, _ = combined(ratings, plan.weights, active)
-        print(f"\nranking (combined; {' / '.join(plan.names)}; games; evidence):")
-        for i in sorted(range(len(active)), key=lambda k: -score[k]):
-            hid = active[i]
-            title = h[hid].text.split("\n", 1)[0][:60]
+    agg = final["report"].get("aggregate") or {}
+    if agg.get("order"):
+        print(f"\nranking (МРСП expected score, sd, 90% rank interval; per criterion: {' / '.join(plan.names)}; games; evidence):")
+        for hid in agg["order"]:
+            a = agg["by_id"][hid]
+            title = h[hid].text.split("\n", 1)[0][:50]
             per = " / ".join(f"{ratings[c][hid].score:5.2f}" for c in plan.names)
-            print(f"  {hid:<8}{score[i]:>6.2f}  {per}  {ratings[plan.names[0]][hid].games:>2}  {len(h[hid].evidence):>2}"
-                  f"  [{h[hid].provenance.family}] {title}")
+            print(f"  {hid:<8}{a['mean']:6.3f} ±{a['sd']:.3f}  [{a['rank_lo']}-{a['rank_hi']}]  {per}  "
+                  f"{ratings[plan.names[0]][hid].games:>2}  {len(h[hid].evidence):>2}  [{h[hid].provenance.family}] {title}")
     if final["report"].get("overview"):
         print("\nresearch overview:\n" + final["report"]["overview"][:1500])
     for s in final["report"]["shown"][:3]:
@@ -170,9 +169,13 @@ def _dump(final, ctx, client, path) -> None:
     """Run result for evaluation outside the pipeline (hyparena.backtest evaluate)."""
     plan, ratings, hyps = final["plan"], final.get("ratings", {}), final["hypotheses"]
     rated = [i for i, x in hyps.items() if x.status == "active" and plan.names and i in ratings.get(plan.names[0], {})]
-    score, _ = combined(ratings, plan.weights, rated) if rated else ([], [])
-    comb = dict(zip(rated, [float(s) for s in score]))
-    out = {"criteria": plan.names, "weights": plan.weights, "step": ctx.cfg.step,
+    agg = (final.get("report") or {}).get("aggregate") or {}
+    if agg.get("by_id"):        # final order: expected score of the randomized aggregation (МРСП)
+        comb = {i: agg["by_id"][i]["mean"] for i in rated if i in agg["by_id"]}
+    else:
+        score, _ = combined(ratings, plan.weights, rated) if rated else ([], [])
+        comb = dict(zip(rated, [float(s) for s in score]))
+    out = {"criteria": plan.names, "weights": plan.weights, "importance": plan.importance, "step": ctx.cfg.step,
            "seed": ctx.cfg.seed, "families": [j.family for j in ctx.judge_pool],
            "config": {k: getattr(ctx.cfg, k) for k in ("rating", "pairing", "judge_view", "lineage_mode",
                                                         "judges_per_match", "extra_judges", "max_tokens", "max_cycles",
@@ -181,10 +184,11 @@ def _dump(final, ctx, client, path) -> None:
            "failures": client.failures, "tokens": ctx.tracer.summary(),
            "hypotheses": {i: {"status": x.status, "family": x.provenance.family, "combined": comb.get(i),
                               "scores": {c: ratings[c][i].model_dump() for c in plan.names if i in ratings.get(c, {})},
-                              "evidence": len(x.evidence),
+                              "evidence": len(x.evidence), "aggregate": (agg.get("by_id") or {}).get(i),
                               "reviews": [{"kind": r.kind, "family": r.provenance.family,
                                            "passed": r.passed, "scores": r.scores, "notes": r.notes[:3]}
-                                          for r in x.reviews]} for i, x in hyps.items()}}
+                                          for r in x.reviews]} for i, x in hyps.items()},
+           "dominance": agg.get("dominance", {})}
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     Path(path).write_text(json.dumps(out, indent=2))
     print(f"result written to {path}")
@@ -200,8 +204,9 @@ def main() -> None:
     parser.add_argument("--import-file", default=None, help="dataset JSON of externally written hypotheses, e.g. data/chatgpt_hypotheses.json")
     parser.add_argument("--limit", type=int, default=None, help="with --import-file: use an evenly spaced sample of this size")
     parser.add_argument("--matches", type=float, default=1.0, help="tournament matches per active hypothesis")
-    parser.add_argument("--mode", choices=["full", "coscientist"], default="full",
-                        help="full: our method; coscientist: baseline (one family, one Elo, holistic verdict)")
+    parser.add_argument("--mode", choices=sorted(MODES), default="full",
+                        help="full: our method; coscientist: baseline (one family, one Elo, holistic verdict); "
+                             "coscientist-2026: the same with TrueSkill and UCB")
     parser.add_argument("--ladder", choices=sorted(LADDER), default=None,
                         help="ablation step L0 (baseline) .. L4 (full); overrides --mode (docs/comparison.md)")
     parser.add_argument("--seed", type=int, default=0)

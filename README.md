@@ -5,7 +5,8 @@ An approach to ranking thousands of scientific hypotheses (biology, ageing) by p
 - Approach: [`docs/approach.md`](docs/approach.md)
 - Architecture (LangGraph multi-agent design): [`docs/architecture.md`](docs/architecture.md)
 - Criteria, card schema and models are configuration: [`configs/criteria.yaml`](configs/criteria.yaml), [`configs/card.yaml`](configs/card.yaml) (draft), [`configs/models.yaml`](configs/models.yaml)
-- Comparison protocol (our ranking vs a Co-Scientist-style baseline; ablation ladder, budgets, statistics): [`docs/comparison.md`](docs/comparison.md)
+- Comparison protocol (our ranking vs Co-Scientist-style baselines, the 2025 Elo version and the 2026 TrueSkill + UCB version; ablation ladder, budgets, statistics): [`docs/comparison.md`](docs/comparison.md)
+- Aggregation of criteria without numeric weights (order of importance, МРСП): [`hyparena/aggregate.py`](hyparena/aggregate.py); lines of work and where the code stands: [`docs/approach.md`](docs/approach.md), section 8a
 - Negative-sampling test (a confirmed DrugAge finding among nine plausible false statements; hit@1, MRR, per kind of negative): [`docs/negative-sampling.md`](docs/negative-sampling.md), `python -m hyparena.negatives`
 - How Co-Scientist works (hypothesis format, judges, criteria): [`docs/co-scientist-reference.md`](docs/co-scientist-reference.md)
 - Example data: [`data/chatgpt_hypotheses.json`](data/chatgpt_hypotheses.json), 27 hypotheses in Russian parsed from a ChatGPT dialogue (writer: openai / gpt-6-astra-wm) with `scripts/parse_chatgpt_hypotheses.py`; load them into a run with `--import-file`

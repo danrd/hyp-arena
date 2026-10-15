@@ -1,4 +1,5 @@
 """Ablation ladder from the Co-Scientist baseline (L0) to our full method (L4), one change per step.
+L0ts is the second baseline: the 2026 version of Co-Scientist (TrueSkill + UCB) instead of Elo.
 
 Every step runs the same upstream stages (normalization, retrieval, reviews); only the ranking differs.
 See docs/comparison.md."""
@@ -22,6 +23,9 @@ class Step:
 LADDER = {
     "L0": Step("L0", "Co-Scientist baseline: one family, holistic verdict on text and reviews, Elo, its pairing",
                "criteria-coscientist.yaml", True, dict(BASELINE)),
+    "L0ts": Step("L0ts", "Co-Scientist 2026 baseline (arXiv 2608.26701): as L0 with TrueSkill ratings and UCB "
+                 "selection of contenders", "criteria-coscientist.yaml", True,
+                 {**BASELINE, "rating": "trueskill", "pairing": "ucb"}),
     "L1": Step("L1", "+ verdicts per criterion", "criteria.yaml", True, dict(BASELINE)),
     "L2": Step("L2", "+ Bradley-Terry with intervals and elimination pairing", "criteria.yaml", True,
                {**BASELINE, "rating": "bt", "pairing": "bt"}),
@@ -31,4 +35,4 @@ LADDER = {
                "criteria.yaml", False, {}),
 }
 
-MODES = {"coscientist": "L0", "full": "L4"}
+MODES = {"coscientist": "L0", "coscientist-2026": "L0ts", "full": "L4"}
