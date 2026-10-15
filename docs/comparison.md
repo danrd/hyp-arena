@@ -69,7 +69,11 @@ python -m hyparena.backtest compare --labels data/backtest/itp_<T>_labels.json -
 
 `--fake` on `live`, `experiment` and `leakage` runs the whole machinery with the fake LLM at no cost; all of the above was checked that way (the numbers are then random).
 
-## 7. Known limits
+## 7. Complementary test: negative sampling
+
+A confirmed finding hidden among nine plausible false statements (real DrugAge negatives and verified synthetic ones), one tournament per group, the same ladder steps as arms: `docs/negative-sampling.md`. It measures telling true from false rather than prioritising open hypotheses, but has far more labelled items than the ITP pool.
+
+## 8. Known limits
 
 - The baseline follows the paper's description, not its code; differences: JSON verdicts instead of "better idea: 1 or 2", K = 32 for Elo (the paper does not give K), our reviews instead of its full set of review types.
 - Token counts are estimates (4 characters per token) and exclude hidden reasoning tokens.

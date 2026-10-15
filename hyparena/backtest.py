@@ -54,10 +54,15 @@ def _pubdates(pmids: list[str]) -> dict[str, str]:
     return dates
 
 
-def build_itp(as_of: str) -> tuple[Path, Path]:
+def drugage_rows() -> list[dict]:
+    """All rows of the current DrugAge release (downloaded each time; about 0.5 MB)."""
     raw = httpx.get(DRUGAGE_URL, timeout=120, follow_redirects=True).content
     z = zipfile.ZipFile(io.BytesIO(raw))
-    rows = list(csv.DictReader(io.TextIOWrapper(z.open("drugage.csv"), encoding="utf-8", errors="replace")))
+    return list(csv.DictReader(io.TextIOWrapper(z.open("drugage.csv"), encoding="utf-8", errors="replace")))
+
+
+def build_itp(as_of: str) -> tuple[Path, Path]:
+    rows = drugage_rows()
     itp = [r for r in rows if r.get("ITP", "").strip().lower() == "yes"]
     by_compound = defaultdict(list)
     for r in itp:
@@ -86,7 +91,7 @@ def build_itp(as_of: str) -> tuple[Path, Path]:
     data_path, label_path = OUT / f"itp_{as_of}.json", OUT / f"itp_{as_of}_labels.json"
     data_path.write_text(json.dumps({"source": {"url": DRUGAGE_URL, "family": "unknown", "model": "backtest-template",
                                                 "as_of": as_of, "note": "outcome labels are in a separate file",
-                                                "options": {"dedup": False}},
+                                                "options": {"dedup": False, "lang": "en"}},
                                      "hypotheses": items, "assistant_notes": {}}, ensure_ascii=False, indent=2))
     label_path.write_text(json.dumps(labels, ensure_ascii=False, indent=2))
     pos = sum(v["label"] for v in labels.values())

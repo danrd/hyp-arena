@@ -1,0 +1,26 @@
+{
+  "args": {
+    "cmd": "build",
+    "config": "configs/paid-test.yaml",
+    "max_calls": 60,
+    "seed": 0,
+    "fake": false,
+    "groups": 6,
+    "size": 10,
+    "variants": 2,
+    "min_pubs": 2,
+    "min_confidence": 0.7,
+    "writer": "zhipu",
+    "verifier": "google",
+    "out": "data/negatives/drugage"
+  },
+  "calls": 24,
+  "report": [
+    "g001 Vitamin D3 / Caenorhabditis elegans as of 2013-11-30: {'reversed': 1, 'real': 5, 'true': 1, 'mechanism': 1, 'decoy_mechanism': 1, 'decoy_reversed': 1}; variants per cluster: 2; candidates not used: 6 (rejected by the verifier or surplus)",
+    "g002 Black tea extract / Drosophila melanogaster as of 1993-03-31: {'decoy_mechanism': 1, 'true': 1, 'real': 5, 'decoy_reversed': 1, 'mechanism': 1, 'reversed': 1}; variants per cluster: 2; candidates not used: 6 (rejected by the verifier or surplus)",
+    "g003 17\u2010alpha\u2010estradiol / Mus musculus as of 2014-03-31: {'real': 5, 'reversed': 1, 'true': 1, 'decoy_reversed': 1, 'condition': 1, 'decoy_mechanism': 1}; variants per cluster: 2; candidates not used: 6 (rejected by the verifier or surplus)",
+    "g004 Ethosuximide / Caenorhabditis elegans as of 2005-01-13: {'real': 5, 'mechanism': 1, 'reversed': 1, 'decoy_reversed': 1, 'true': 1, 'decoy_mechanism': 1}; variants per cluster: 2; candidates not used: 6 (rejected by the verifier or surplus)",
+    "g005 Carnosine / Drosophila melanogaster as of 2002-05-31: {'real': 5, 'reversed': 2, 'decoy_mechanism': 1, 'decoy_reversed': 1, 'true': 1}; variants per cluster: 2; candidates not used: 6 (rejected by the verifier or surplus)",
+    "g006 Spermidine / Mus musculus as of 2016-11-30: {'real': 5, 'mechanism': 1, 'decoy_mechanism': 1, 'true': 1, 'decoy_reversed': 1, 'reversed': 1}; variants per cluster: 2; candidates not used: 6 (rejected by the verifier or surplus)"
+  ]
+}

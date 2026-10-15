@@ -1,0 +1,96 @@
+{
+  "source": {
+    "family": "zhipu",
+    "model": "glm-5.3-flash",
+    "strategy": "negative-sampling",
+    "as_of": "2014-03-31",
+    "note": "labels are in labels.json",
+    "options": {
+      "dedup": false,
+      "lang": "en"
+    }
+  },
+  "hypotheses": [
+    {
+      "id": 1,
+      "title": "Nicotinamide Extends Lifespan in Mus musculus",
+      "claim": "Administration of nicotinamide extends lifespan in Mus musculus. The effect operates through improved cellular NAD+ availability supporting maintenance and repair processes.",
+      "rationale": "Nicotinamide is a precursor of NAD+, a cofactor central to energy metabolism, DNA repair, and sirtuin activity. Sustaining NAD+ supply could slow age-related functional decline and prolong survival.",
+      "prediction": "Mice receiving nicotinamide will exhibit a statistically significant increase in median and maximum lifespan compared with untreated controls.",
+      "experiment": "Randomize a large cohort of mice to nicotinamide-supplemented or control diets and follow them until natural death. Compare survival curves using log-rank analysis."
+    },
+    {
+      "id": 2,
+      "title": "17-alpha-Estradiol Shortens Lifespan in Mus musculus",
+      "claim": "Administration of 17-alpha-estradiol shortens lifespan in Mus musculus. The effect reflects harmful disruption of endocrine or metabolic homeostasis by the compound.",
+      "rationale": "Estrogenic compounds can perturb hormone signaling, cell proliferation, and metabolic regulation. Chronic exposure to a noncanonical estrogen could impose physiological stress that accelerates aging processes.",
+      "prediction": "Mice receiving 17-alpha-estradiol will exhibit a statistically significant decrease in median and maximum lifespan compared with untreated controls.",
+      "experiment": "Randomize a large cohort of mice to 17-alpha-estradiol-treated or control diets and follow them until natural death. Compare survival curves using log-rank analysis."
+    },
+    {
+      "id": 3,
+      "title": "17-alpha-Estradiol Extends Lifespan in Mus musculus",
+      "claim": "Administration of 17-alpha-estradiol extends lifespan in Mus musculus. The effect operates through modulation of metabolic and stress-resistance pathways without classical estrogen receptor activation.",
+      "rationale": "17-alpha-estradiol is a weak estrogen isomer that can influence inflammation, lipid metabolism, and oxidative stress responses. Such shifts in systemic physiology could slow aging and prolong survival.",
+      "prediction": "Mice receiving 17-alpha-estradiol will exhibit a statistically significant increase in median and maximum lifespan compared with untreated controls.",
+      "experiment": "Randomize a large cohort of mice to 17-alpha-estradiol-treated or control diets and follow them until natural death. Compare survival curves using log-rank analysis."
+    },
+    {
+      "id": 4,
+      "title": "Sodium Thiosulfate Extends Lifespan in Mus musculus",
+      "claim": "Administration of sodium thiosulfate extends lifespan in Mus musculus. The effect operates through sulfide-based modulation of redox balance and mitochondrial function.",
+      "rationale": "Thiosulfate serves as a sulfur donor supporting hydrogen sulfide signaling, which influences vascular function, antioxidant defenses, and mitochondrial activity. Enhanced sulfide signaling could slow age-related decline.",
+      "prediction": "Mice receiving sodium thiosulfate will exhibit a statistically significant increase in median and maximum lifespan compared with untreated controls.",
+      "experiment": "Randomize a large cohort of mice to sodium thiosulfate-supplemented or control water and follow them until natural death. Compare survival curves using log-rank analysis."
+    },
+    {
+      "id": 5,
+      "title": "Lovaza Extends Lifespan in Mus musculus",
+      "claim": "Administration of Lovaza extends lifespan in Mus musculus. The effect operates through omega-3 fatty acid-driven improvements in inflammatory and metabolic health.",
+      "rationale": "Lovaza provides concentrated omega-3 fatty acids that incorporate into membranes and generate anti-inflammatory lipid mediators. Reduced chronic inflammation and improved lipid handling could decelerate aging.",
+      "prediction": "Mice receiving Lovaza will exhibit a statistically significant increase in median and maximum lifespan compared with untreated controls.",
+      "experiment": "Randomize a large cohort of mice to Lovaza-supplemented or control diets and follow them until natural death. Compare survival curves using log-rank analysis."
+    },
+    {
+      "id": 6,
+      "title": "Lovaza Shortens Lifespan in Mus musculus",
+      "claim": "Administration of Lovaza shortens lifespan in Mus musculus. The effect reflects harmful consequences of chronic high-dose omega-3 fatty acid exposure.",
+      "rationale": "Excess omega-3 fatty acids increase lipid peroxidation susceptibility and can disrupt membrane composition and immune signaling. Such cumulative oxidative and metabolic stress could accelerate aging.",
+      "prediction": "Mice receiving Lovaza will exhibit a statistically significant decrease in median and maximum lifespan compared with untreated controls.",
+      "experiment": "Randomize a large cohort of mice to Lovaza-supplemented or control diets and follow them until natural death. Compare survival curves using log-rank analysis."
+    },
+    {
+      "id": 7,
+      "title": "17-alpha-Estradiol Extends Lifespan in Female Mus musculus",
+      "claim": "Administration of 17-alpha-estradiol extends lifespan in female Mus musculus. The effect operates through metabolic and stress-response modulation in female physiology.",
+      "rationale": "In females, 17-alpha-estradiol can interact with existing estrogenic signaling to influence inflammation, lipid metabolism, and oxidative stress defenses. These adjustments could slow female aging processes.",
+      "prediction": "Female mice receiving 17-alpha-estradiol will exhibit a statistically significant increase in median and maximum lifespan compared with untreated female controls.",
+      "experiment": "Randomize a large cohort of female mice to 17-alpha-estradiol-treated or control diets and follow them until natural death. Compare survival curves using log-rank analysis."
+    },
+    {
+      "id": 8,
+      "title": "Minocycline Extends Lifespan in Mus musculus",
+      "claim": "Administration of minocycline extends lifespan in Mus musculus. The effect operates through suppression of neuroinflammation and age-related tissue inflammation.",
+      "rationale": "Minocycline inhibits microglial activation and reduces inflammatory cytokine production beyond its antimicrobial action. Lower chronic inflammation could preserve tissue function and extend survival.",
+      "prediction": "Mice receiving minocycline will exhibit a statistically significant increase in median and maximum lifespan compared with untreated controls.",
+      "experiment": "Randomize a large cohort of mice to minocycline-treated or control diets and follow them until natural death. Compare survival curves using log-rank analysis."
+    },
+    {
+      "id": 9,
+      "title": "Coenzyme Q10 Extends Lifespan in Mus musculus",
+      "claim": "Administration of coenzyme Q10 extends lifespan in Mus musculus. The effect operates through improved mitochondrial electron transport and antioxidant protection.",
+      "rationale": "Coenzyme Q10 shuttles electrons in the mitochondrial respiratory chain and quenches lipid peroxidation in membranes. Preserved mitochondrial efficiency and reduced oxidative damage could slow aging.",
+      "prediction": "Mice receiving coenzyme Q10 will exhibit a statistically significant increase in median and maximum lifespan compared with untreated controls.",
+      "experiment": "Randomize a large cohort of mice to coenzyme Q10-supplemented or control diets and follow them until natural death. Compare survival curves using log-rank analysis."
+    },
+    {
+      "id": 10,
+      "title": "Lovaza Extends Lifespan via SIRT1 Activation",
+      "claim": "Administration of Lovaza extends lifespan in Mus musculus by activating SIRT1 deacetylase pathways. The lifespan effect depends mechanistically on SIRT1-mediated regulation of metabolism and stress resistance.",
+      "rationale": "Omega-3 fatty acids can influence NAD+-dependent sirtuin signaling, and SIRT1 deacetylates targets governing inflammation, mitochondrial biogenesis, and stress responses. SIRT1 activation could therefore mediate lifespan extension.",
+      "prediction": "Lovaza-treated mice will live significantly longer than controls, and this extension will be abolished in mice with SIRT1 loss of function.",
+      "experiment": "Treat wild-type and SIRT1-knockout mice with Lovaza or control diets and follow all groups until natural death. Compare survival curves across genotype and treatment using log-rank analysis."
+    }
+  ],
+  "assistant_notes": {}
+}

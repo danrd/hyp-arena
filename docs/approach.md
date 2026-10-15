@@ -120,7 +120,8 @@ Decision (working notes): expert labels are **not assumed**; they are an optiona
 4. **Judge checks without labels:** position-swap consistency; sensitivity to style (same content, different phrasing or format); cross-family agreement as a sanity check only; accuracy on the backtest labels.
 5. **Baselines at equal budget:** direct 1–10 scoring; a Co-Scientist-like tournament (one Elo, one model family, holistic verdict); our tournament without evidence; single judge vs. ensemble. Report cost per run.
 6. **Leakage.** A judge or generator whose training cutoff is after T can know the outcome; use models with an earlier cutoff for backtests or test for leakage.
-7. **Experts, when available:** a small set of pairwise preferences as the top validation tier, with inter-expert agreement as the ceiling.
+7. **Negative sampling.** A confirmed finding hidden among nine plausible false statements (real negatives from DrugAge and model-generated variants checked by another family); hit@1, MRR and errors per kind of negative (`docs/negative-sampling.md`). Cheap and scalable, but it measures telling true from false, not prioritising open hypotheses.
+8. **Experts, when available:** a small set of pairwise preferences as the top validation tier, with inter-expert agreement as the ceiling.
 
 ## 8. Next steps
 

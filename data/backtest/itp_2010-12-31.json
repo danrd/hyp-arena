@@ -6,7 +6,8 @@
     "as_of": "2010-12-31",
     "note": "outcome labels are in a separate file",
     "options": {
-      "dedup": false
+      "dedup": false,
+      "lang": "en"
     }
   },
   "hypotheses": [

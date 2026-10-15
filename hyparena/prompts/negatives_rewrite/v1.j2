@@ -1,0 +1,16 @@
+Rewrite each statement below as a research hypothesis in one fixed format. All hypotheses must read alike: the same structure, length and tone, whatever you think of them.
+
+{% for s in statements %}
+{{ loop.index }}. {{ s }}
+{% endfor %}
+
+For each statement write:
+- title: at most 12 words;
+- claim: the hypothesis in 1-2 sentences (25-45 words), keeping the intervention, the effect and the organism of the statement exactly;
+- rationale: why the claim could hold, from general biological reasoning (1-2 sentences, 20-35 words);
+- prediction: what an experiment should show if the claim holds (1 sentence);
+- experiment: a decisive experiment (1-2 sentences).
+Write every rationale with the same care and confidence. Do not say whether the claim has been tested, do not cite or mention prior results, and do not add hedging or praise.
+
+Reply with a single JSON object and nothing else, one entry per statement in the same order:
+{"hypotheses": [{"n": 1, "title": "", "claim": "", "rationale": "", "prediction": "", "experiment": ""}]}

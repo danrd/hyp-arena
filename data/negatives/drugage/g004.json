@@ -1,0 +1,96 @@
+{
+  "source": {
+    "family": "zhipu",
+    "model": "glm-5.3-flash",
+    "strategy": "negative-sampling",
+    "as_of": "2005-01-13",
+    "note": "labels are in labels.json",
+    "options": {
+      "dedup": false,
+      "lang": "en"
+    }
+  },
+  "hypotheses": [
+    {
+      "id": 1,
+      "title": "ABC35 extends lifespan in C. elegans",
+      "claim": "Treatment with ABC35 extends lifespan in Caenorhabditis elegans. The compound increases mean and maximum lifespan relative to untreated controls.",
+      "rationale": "Small molecules can modulate conserved longevity pathways such as nutrient sensing and stress resistance. ABC35 may activate cellular maintenance mechanisms that slow aging in worms.",
+      "prediction": "Worms exposed to ABC35 will show a statistically significant increase in mean and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Perform a lifespan assay with synchronized worms on ABC35-supplemented and control plates, scored blind, with three biological replicates and log-rank analysis of survival curves."
+    },
+    {
+      "id": 2,
+      "title": "Ethosuximide extends lifespan via insulin/IGF-1 signaling inhibition",
+      "claim": "Ethosuximide extends lifespan in Caenorhabditis elegans by inhibiting the insulin/IGF-1 signaling pathway. Reduced pathway activity mediates the longevity effect of the compound.",
+      "rationale": "The insulin/IGF-1 signaling pathway is a conserved regulator of aging, and its inhibition activates FOXO-dependent stress responses. Ethosuximide may act upstream to suppress this pathway and promote longevity.",
+      "prediction": "Ethosuximide will extend lifespan in wild-type worms but will fail to further extend lifespan in long-lived insulin/IGF-1 signaling mutants.",
+      "experiment": "Compare ethosuximide effects on lifespan in wild-type worms and in daf-2 and daf-16 mutants, measuring survival and DAF-16 nuclear localization."
+    },
+    {
+      "id": 3,
+      "title": "Epicatechin extends lifespan in C. elegans",
+      "claim": "Treatment with epicatechin extends lifespan in Caenorhabditis elegans. The flavonoid increases mean and maximum lifespan relative to untreated controls.",
+      "rationale": "Plant polyphenols can activate stress-response and antioxidant pathways conserved across species. Epicatechin may reduce oxidative damage and thereby slow aging in worms.",
+      "prediction": "Worms exposed to epicatechin will show a statistically significant increase in mean and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Perform a lifespan assay with synchronized worms on epicatechin-supplemented and control plates, scored blind, with three biological replicates and log-rank analysis of survival curves."
+    },
+    {
+      "id": 4,
+      "title": "ABC101 extends lifespan in C. elegans",
+      "claim": "Treatment with ABC101 extends lifespan in Caenorhabditis elegans. The compound increases mean and maximum lifespan relative to untreated controls.",
+      "rationale": "Chemical interventions can engage conserved longevity pathways such as dietary restriction signaling and proteostasis. ABC101 may enhance cellular maintenance processes that extend worm lifespan.",
+      "prediction": "Worms exposed to ABC101 will show a statistically significant increase in mean and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Perform a lifespan assay with synchronized worms on ABC101-supplemented and control plates, scored blind, with three biological replicates and log-rank analysis of survival curves."
+    },
+    {
+      "id": 5,
+      "title": "Ethosuximide shortens lifespan in C. elegans",
+      "claim": "Treatment with ethosuximide shortens lifespan in Caenorhabditis elegans. The compound decreases mean and maximum lifespan relative to untreated controls.",
+      "rationale": "Drugs can disrupt essential signaling or metabolic processes at certain doses, imposing physiological stress. Ethosuximide may impair neuronal or metabolic function in worms in a way that accelerates aging.",
+      "prediction": "Worms exposed to ethosuximide will show a statistically significant decrease in mean and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Perform a lifespan assay with synchronized worms on ethosuximide-supplemented and control plates, scored blind, with three biological replicates and log-rank analysis of survival curves."
+    },
+    {
+      "id": 6,
+      "title": "Palmostatin B extends lifespan in C. elegans",
+      "claim": "Treatment with palmostatin B extends lifespan in Caenorhabditis elegans. The compound increases mean and maximum lifespan relative to untreated controls.",
+      "rationale": "Modulating protein lipidation can alter signaling networks that govern growth and stress resistance. Palmostatin B may rebalance palmitoylation-dependent pathways in ways that promote longevity.",
+      "prediction": "Worms exposed to palmostatin B will show a statistically significant increase in mean and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Perform a lifespan assay with synchronized worms on palmostatin B-supplemented and control plates, scored blind, with three biological replicates and log-rank analysis of survival curves."
+    },
+    {
+      "id": 7,
+      "title": "Palmostatin B shortens lifespan in C. elegans",
+      "claim": "Treatment with palmostatin B shortens lifespan in Caenorhabditis elegans. The compound decreases mean and maximum lifespan relative to untreated controls.",
+      "rationale": "Inhibiting depalmitoylation can perturb the localization and function of many signaling proteins, including those required for stress adaptation. Such broad disruption may impose stress that accelerates aging in worms.",
+      "prediction": "Worms exposed to palmostatin B will show a statistically significant decrease in mean and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Perform a lifespan assay with synchronized worms on palmostatin B-supplemented and control plates, scored blind, with three biological replicates and log-rank analysis of survival curves."
+    },
+    {
+      "id": 8,
+      "title": "Ethosuximide extends lifespan in C. elegans",
+      "claim": "Treatment with ethosuximide extends lifespan in Caenorhabditis elegans. The compound increases mean and maximum lifespan relative to untreated controls.",
+      "rationale": "Neuroactive drugs can influence systemic signaling networks that regulate aging, including endocrine pathways conserved across species. Ethosuximide may modulate neuronal signaling in ways that promote longevity.",
+      "prediction": "Worms exposed to ethosuximide will show a statistically significant increase in mean and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Perform a lifespan assay with synchronized worms on ethosuximide-supplemented and control plates, scored blind, with three biological replicates and log-rank analysis of survival curves."
+    },
+    {
+      "id": 9,
+      "title": "Palmostatin B extends lifespan by reducing insulin-like signaling",
+      "claim": "Palmostatin B extends lifespan in Caenorhabditis elegans by inhibiting protein depalmitoylation and reducing insulin-like signaling. Altered palmitoylation dynamics suppress insulin-like pathway output to promote longevity.",
+      "rationale": "Protein palmitoylation regulates the membrane localization of insulin pathway components, and its inhibition can dampen pathway activity. Reduced insulin-like signaling is a conserved trigger of longevity programs.",
+      "prediction": "Palmostatin B will extend lifespan in wild-type worms, reduce insulin-like signaling output, and fail to further extend lifespan in insulin-like signaling mutants.",
+      "experiment": "Measure lifespan and insulin-like signaling reporters in wild-type and daf-2 or age-1 mutant worms treated with palmostatin B, comparing survival curves with log-rank analysis."
+    },
+    {
+      "id": 10,
+      "title": "JJH254 extends lifespan in C. elegans",
+      "claim": "Treatment with JJH254 extends lifespan in Caenorhabditis elegans. The compound increases mean and maximum lifespan relative to untreated controls.",
+      "rationale": "Synthetic molecules can target conserved aging regulators such as metabolic enzymes and stress-response pathways. JJH254 may engage one or more of these mechanisms to extend worm lifespan.",
+      "prediction": "Worms exposed to JJH254 will show a statistically significant increase in mean and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Perform a lifespan assay with synchronized worms on JJH254-supplemented and control plates, scored blind, with three biological replicates and log-rank analysis of survival curves."
+    }
+  ],
+  "assistant_notes": {}
+}

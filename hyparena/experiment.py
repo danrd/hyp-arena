@@ -36,6 +36,32 @@ def commands(args) -> list[tuple[Path, list[str]]]:
     return out
 
 
+def execute(runs: list[tuple[Path, list[str]]], run: bool, manifest_path: Path) -> None:
+    """Print the commands, or with `run` execute them one by one: results that exist are skipped (an
+    interrupted grid continues), failures are reported, and a manifest is written."""
+    manifest = {"runs": []}
+    for path, cmd in runs:
+        line = " ".join(shlex.quote(c) for c in cmd)
+        if not run:
+            print(line)
+            continue
+        if path.exists():
+            print(f"skip (exists): {path}")
+        else:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            print(f"run: {path}", flush=True)
+            done = subprocess.run(cmd, capture_output=True, text=True)
+            if done.returncode != 0 or not path.exists():
+                print(f"  failed (exit {done.returncode}): {done.stdout[-400:]} {done.stderr[-400:]}")
+        manifest["runs"].append({"result": str(path), "exists": path.exists(), "command": line})
+    if run:
+        manifest_path.parent.mkdir(parents=True, exist_ok=True)
+        manifest_path.write_text(json.dumps(manifest, indent=2))
+        print(f"manifest: {manifest_path}")
+    else:
+        print(f"\n{len(runs)} runs (dry run; add --execute to run them)")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--pool", required=True)
@@ -51,27 +77,7 @@ def main() -> None:
     ap.add_argument("--fake", action="store_true", help="fake LLM in every run (tests the grid, no cost)")
     ap.add_argument("--execute", action="store_true", help="run the commands (default: print them)")
     args = ap.parse_args()
-    runs = commands(args)
-    manifest = {"args": vars(args), "runs": []}
-    for path, cmd in runs:
-        line = " ".join(shlex.quote(c) for c in cmd)
-        if not args.execute:
-            print(line)
-            continue
-        if path.exists():
-            print(f"skip (exists): {path}")
-        else:
-            path.parent.mkdir(parents=True, exist_ok=True)
-            print(f"run: {path}", flush=True)
-            done = subprocess.run(cmd, capture_output=True, text=True)
-            if done.returncode != 0 or not path.exists():
-                print(f"  failed (exit {done.returncode}): {done.stdout[-400:]} {done.stderr[-400:]}")
-        manifest["runs"].append({"result": str(path), "exists": path.exists(), "command": line})
-    if args.execute:
-        Path(args.out_dir, "manifest.json").write_text(json.dumps(manifest, indent=2))
-        print(f"manifest: {Path(args.out_dir, 'manifest.json')}")
-    else:
-        print(f"\n{len(runs)} runs (dry run; add --execute to run them)")
+    execute(commands(args), args.execute, Path(args.out_dir) / "manifest.json")
 
 
 if __name__ == "__main__":

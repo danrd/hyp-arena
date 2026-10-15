@@ -1,0 +1,96 @@
+{
+  "source": {
+    "family": "zhipu",
+    "model": "glm-5.3-flash",
+    "strategy": "negative-sampling",
+    "as_of": "1993-03-31",
+    "note": "labels are in labels.json",
+    "options": {
+      "dedup": false,
+      "lang": "en"
+    }
+  },
+  "hypotheses": [
+    {
+      "id": 1,
+      "title": "Procaine HCl extends Drosophila lifespan via monoamine oxidase inhibition",
+      "claim": "Procaine HCl extends lifespan in Drosophila melanogaster by inhibiting monoamine oxidase and reducing oxidative stress. The lifespan extension depends on these combined molecular actions.",
+      "rationale": "Monoamine oxidase inhibition can preserve monoamine signalling and lower reactive oxygen species generation, both linked to slower ageing. Reduced oxidative stress is a recognised route to extended longevity.",
+      "prediction": "Treated flies will live significantly longer than controls, with measurable monoamine oxidase inhibition and reduced oxidative stress markers.",
+      "experiment": "Administer procaine HCl to adult flies and compare lifespan, monoamine oxidase activity, and oxidative stress markers against untreated controls and flies receiving a structurally related inactive analogue."
+    },
+    {
+      "id": 2,
+      "title": "Black tea extract extends Drosophila melanogaster lifespan",
+      "claim": "Black tea extract extends lifespan in Drosophila melanogaster. Supplementation with the extract increases mean and maximum lifespan relative to untreated flies.",
+      "rationale": "Black tea contains polyphenols with antioxidant and anti-inflammatory properties that can counter molecular damage accumulating with age. Such compounds are plausible dietary modulators of longevity.",
+      "prediction": "Flies receiving black tea extract will show significantly longer mean and maximum lifespan than untreated controls.",
+      "experiment": "Supplement the diet of age-matched adult flies with black tea extract at several doses and compare survival curves with control flies on standard medium."
+    },
+    {
+      "id": 3,
+      "title": "O6-benzylguanine extends Drosophila melanogaster lifespan",
+      "claim": "O6-benzylguanine extends lifespan in Drosophila melanogaster. Exposure to the compound increases survival of treated flies relative to controls.",
+      "rationale": "O6-benzylguanine modulates DNA repair pathways, and improved maintenance of genomic integrity is a plausible mechanism for slowing age-related decline and extending survival.",
+      "prediction": "Treated flies will exhibit significantly longer lifespans than untreated controls across the survival experiment.",
+      "experiment": "Administer O6-benzylguanine in the diet of adult flies and compare survival curves with vehicle-treated controls under identical conditions."
+    },
+    {
+      "id": 4,
+      "title": "Procaine HCl extends Drosophila melanogaster lifespan",
+      "claim": "Procaine HCl extends lifespan in Drosophila melanogaster. Adult flies exposed to the compound live significantly longer than untreated controls.",
+      "rationale": "Procaine HCl can influence cellular membrane properties and monoamine metabolism, processes implicated in ageing. Any intervention stabilising age-related physiological decline could extend survival.",
+      "prediction": "Flies receiving procaine HCl will show significantly increased mean and maximum lifespan compared with controls.",
+      "experiment": "Treat adult flies with procaine HCl in their medium and compare lifespan with vehicle-treated controls maintained under identical conditions."
+    },
+    {
+      "id": 5,
+      "title": "Procaine HCl shortens Drosophila melanogaster lifespan",
+      "claim": "Procaine HCl shortens lifespan in Drosophila melanogaster. Adult flies exposed to the compound show reduced survival relative to untreated controls.",
+      "rationale": "Procaine HCl can perturb neuronal membrane function and monoamine balance, and such disruption may impose physiological stress that accelerates ageing and reduces survival.",
+      "prediction": "Flies receiving procaine HCl will show significantly decreased mean and maximum lifespan compared with controls.",
+      "experiment": "Treat adult flies with procaine HCl in their medium and compare survival curves with vehicle-treated controls maintained under identical conditions."
+    },
+    {
+      "id": 6,
+      "title": "Epoxy Pregnenolone extends Drosophila melanogaster lifespan",
+      "claim": "Epoxy Pregnenolone extends lifespan in Drosophila melanogaster. Adult flies exposed to the compound live significantly longer than untreated controls.",
+      "rationale": "Steroid-derived compounds can modulate hormonal signalling and cellular stress responses, both of which influence ageing rate. A neuroactive steroid derivative is a plausible longevity intervention.",
+      "prediction": "Treated flies will show significantly longer mean and maximum lifespan than untreated controls.",
+      "experiment": "Administer Epoxy Pregnenolone in the diet of adult flies and compare survival curves with vehicle-treated controls under identical conditions."
+    },
+    {
+      "id": 7,
+      "title": "Black tea extract extends Drosophila lifespan via insulin/IGF signalling",
+      "claim": "Black tea extract extends lifespan in Drosophila melanogaster by inducing the insulin/IGF signalling pathway. The lifespan extension depends on activation of this pathway.",
+      "rationale": "Insulin/IGF signalling regulates growth, metabolism and stress responses, and its modulation can alter ageing rate. Compounds in black tea may activate this pathway to influence longevity.",
+      "prediction": "Treated flies will live significantly longer than controls and show measurable induction of insulin/IGF pathway activity.",
+      "experiment": "Supplement adult flies with black tea extract and compare lifespan and insulin/IGF pathway readouts with controls, including pathway-mutant flies to test dependence."
+    },
+    {
+      "id": 8,
+      "title": "Memantine Hydrochloride extends Drosophila melanogaster lifespan",
+      "claim": "Memantine Hydrochloride extends lifespan in Drosophila melanogaster. Adult flies exposed to the compound live significantly longer than untreated controls.",
+      "rationale": "Memantine modulates glutamatergic neurotransmission and can reduce excitotoxic stress, processes that influence neural ageing. Protecting neuronal function is a plausible route to extended survival.",
+      "prediction": "Flies receiving Memantine Hydrochloride will show significantly increased mean and maximum lifespan compared with controls.",
+      "experiment": "Administer Memantine Hydrochloride in the diet of adult flies and compare survival curves with vehicle-treated controls under identical conditions."
+    },
+    {
+      "id": 9,
+      "title": "Cardamonin extends Drosophila melanogaster lifespan",
+      "claim": "Cardamonin extends lifespan in Drosophila melanogaster. Adult flies exposed to the compound live significantly longer than untreated controls.",
+      "rationale": "Cardamonin is a chalcone with anti-inflammatory and antioxidant bioactivity that can influence cellular maintenance pathways. Such bioactivity makes it a plausible dietary modifier of ageing.",
+      "prediction": "Treated flies will show significantly longer mean and maximum lifespan than untreated controls.",
+      "experiment": "Supplement the diet of adult flies with cardamonin at several doses and compare survival curves with vehicle-treated controls under identical conditions."
+    },
+    {
+      "id": 10,
+      "title": "Black tea extract shortens Drosophila melanogaster lifespan",
+      "claim": "Black tea extract shortens lifespan in Drosophila melanogaster. Adult flies exposed to the extract show reduced survival relative to untreated controls.",
+      "rationale": "Black tea extract contains bioactive compounds that at sufficient exposure may impose metabolic or toxicological stress. A net physiological burden could accelerate ageing and reduce survival.",
+      "prediction": "Flies receiving black tea extract will show significantly decreased mean and maximum lifespan compared with controls.",
+      "experiment": "Supplement the diet of adult flies with black tea extract at several doses and compare survival curves with vehicle-treated controls under identical conditions."
+    }
+  ],
+  "assistant_notes": {}
+}

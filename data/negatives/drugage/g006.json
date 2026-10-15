@@ -1,0 +1,96 @@
+{
+  "source": {
+    "family": "zhipu",
+    "model": "glm-5.3-flash",
+    "strategy": "negative-sampling",
+    "as_of": "2016-11-30",
+    "note": "labels are in labels.json",
+    "options": {
+      "dedup": false,
+      "lang": "en"
+    }
+  },
+  "hypotheses": [
+    {
+      "id": 1,
+      "title": "Oridonin Extends Lifespan in Mice",
+      "claim": "Administration of oridonin extends lifespan in Mus musculus. The compound increases median and maximum lifespan relative to untreated controls.",
+      "rationale": "Oridonin modulates inflammatory and proteostasis pathways that govern aging rate. Suppressing chronic inflammation can preserve tissue function and delay mortality.",
+      "prediction": "Oridonin-treated mice will show significantly longer median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of age-matched mice to oridonin or vehicle, maintain treatment for life, and compare survival curves with log-rank analysis."
+    },
+    {
+      "id": 2,
+      "title": "Alpha-Lipoic Acid Extends Lifespan in Mice",
+      "claim": "Administration of alpha-lipoic acid extends lifespan in Mus musculus. The compound increases median and maximum lifespan relative to untreated controls.",
+      "rationale": "Alpha-lipoic acid is a mitochondrial cofactor and antioxidant that can reduce oxidative damage. Lowering accumulated damage may slow functional decline and extend survival.",
+      "prediction": "Alpha-lipoic acid-treated mice will show significantly longer median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of age-matched mice to alpha-lipoic acid or vehicle, maintain treatment for life, and compare survival curves with log-rank analysis."
+    },
+    {
+      "id": 3,
+      "title": "Spermidine Extends Lifespan in Mice via Sirtuin Activation",
+      "claim": "Spermidine extends lifespan in Mus musculus by directly activating sirtuins. The lifespan increase depends on sirtuin activity and is abolished when sirtuins are inactive.",
+      "rationale": "Sirtuins regulate stress resistance, metabolism, and chromatin maintenance in ways that influence aging. Direct activation of these enzymes could coordinately improve tissue maintenance and extend survival.",
+      "prediction": "Spermidine will extend lifespan in control mice but not in mice with genetically or pharmacologically inactivated sirtuins.",
+      "experiment": "Treat wild-type and sirtuin-deficient mice with spermidine or vehicle for life and compare survival curves across all four groups."
+    },
+    {
+      "id": 4,
+      "title": "Oridonin Extends Lifespan in Mice via mTOR Activation",
+      "claim": "Oridonin extends lifespan in Mus musculus by activating mTOR signaling. The lifespan increase requires mTOR activation and is lost when mTOR signaling is blocked.",
+      "rationale": "mTOR signaling governs growth, autophagy, and cellular metabolism, and its activity state can shape aging trajectories. Activation under specific conditions may enhance repair and maintenance processes that extend survival.",
+      "prediction": "Oridonin will extend lifespan in control mice but not in mice treated with mTOR inhibitors or carrying reduced mTOR activity.",
+      "experiment": "Treat mice with oridonin plus vehicle, oridonin plus an mTOR inhibitor, or vehicle alone for life and compare survival curves across groups."
+    },
+    {
+      "id": 5,
+      "title": "Prednisolone Sodium Phosphate Extends Lifespan in Mice",
+      "claim": "Administration of prednisolone sodium phosphate extends lifespan in Mus musculus. The compound increases median and maximum lifespan relative to untreated controls.",
+      "rationale": "Glucocorticoids potently suppress inflammation, a driver of age-related tissue deterioration. Sustained anti-inflammatory signaling could preserve organ function and prolong survival.",
+      "prediction": "Prednisolone sodium phosphate-treated mice will show significantly longer median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of age-matched mice to prednisolone sodium phosphate or vehicle, maintain treatment for life, and compare survival curves with log-rank analysis."
+    },
+    {
+      "id": 6,
+      "title": "Putrescine Extends Lifespan in Mice",
+      "claim": "Administration of putrescine extends lifespan in Mus musculus. The compound increases median and maximum lifespan relative to untreated controls.",
+      "rationale": "Putrescine is a natural polyamine involved in growth, membrane stability, and autophagy regulation. Maintaining polyamine pools during aging can support cellular renewal and extend survival.",
+      "prediction": "Putrescine-treated mice will show significantly longer median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of age-matched mice to putrescine or vehicle, maintain treatment for life, and compare survival curves with log-rank analysis."
+    },
+    {
+      "id": 7,
+      "title": "Spermidine Extends Lifespan in Mice",
+      "claim": "Administration of spermidine extends lifespan in Mus musculus. The compound increases median and maximum lifespan relative to untreated controls.",
+      "rationale": "Spermidine induces autophagy and supports proteostasis, both of which decline with age. Restoring autophagic flux can slow cellular deterioration and extend survival.",
+      "prediction": "Spermidine-treated mice will show significantly longer median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of age-matched mice to spermidine or vehicle, maintain treatment for life, and compare survival curves with log-rank analysis."
+    },
+    {
+      "id": 8,
+      "title": "Oridonin Shortens Lifespan in Mice",
+      "claim": "Administration of oridonin shortens lifespan in Mus musculus. The compound decreases median and maximum lifespan relative to untreated controls.",
+      "rationale": "Oridonin is a bioactive diterpenoid with cytotoxic and stress-inducing properties. Chronic exposure to such stressors can damage tissues and accelerate mortality.",
+      "prediction": "Oridonin-treated mice will show significantly shorter median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of age-matched mice to oridonin or vehicle, maintain treatment for life, and compare survival curves with log-rank analysis."
+    },
+    {
+      "id": 9,
+      "title": "Spermidine in Drinking Water Shortens Lifespan in Mice",
+      "claim": "Spermidine shortens lifespan in Mus musculus when administered in drinking water. This route of delivery decreases median and maximum lifespan relative to untreated controls.",
+      "rationale": "Drinking-water delivery produces continuous exposure that may exceed beneficial polyamine levels. Chronic excess can disrupt polyamine homeostasis and metabolism in ways that accelerate mortality.",
+      "prediction": "Mice receiving spermidine in drinking water will show significantly shorter median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of age-matched mice to spermidine in drinking water or plain water, maintain treatment for life, and compare survival curves with log-rank analysis."
+    },
+    {
+      "id": 10,
+      "title": "Syringaresinol Extends Lifespan in Mice",
+      "claim": "Administration of syringaresinol extends lifespan in Mus musculus. The compound increases median and maximum lifespan relative to untreated controls.",
+      "rationale": "Syringaresinol is a lignan with antioxidant and anti-inflammatory activities relevant to aging biology. Reducing cumulative inflammatory and oxidative stress can preserve tissue function and extend survival.",
+      "prediction": "Syringaresinol-treated mice will show significantly longer median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of age-matched mice to syringaresinol or vehicle, maintain treatment for life, and compare survival curves with log-rank analysis."
+    }
+  ],
+  "assistant_notes": {}
+}
