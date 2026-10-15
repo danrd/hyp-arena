@@ -49,6 +49,8 @@ class PubTatorSearch:
                     text=re.sub(r"\s+", " ", NOISE.sub("", hl)).strip(),
                     url=f"https://pubmed.ncbi.nlm.nih.gov/{r.get('pmid')}/", publication_date=date,
                     retrieved_at=now, query=query, tier=2,
+                    # the excerpt is the paper's own text; the entity tags on it are machine-derived
+                    epistemic_type="primary_text",
                     entity_ids=sorted({f"{t}:{i}" for t, i in TAG.findall(hl)}),
                     extra={k: r[k] for k in ("pmid", "doi", "journal", "citations") if r.get(k)}))
         out = out[:limit]

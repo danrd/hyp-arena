@@ -48,7 +48,7 @@ class OpenGenesSearch:
             ev = Evidence(source="opengenes", record_id=f"OG:{g['symbol']}", title=f"Open Genes: {g['symbol']} ({g.get('name', '')})",
                           text=text, url=f"https://open-genes.com/genes/{g['symbol']}",
                           retrieved_at=datetime.now(timezone.utc).isoformat(timespec="seconds"), tier=1,
-                          study_type="curated database", entity_ids=[f"HGNC:{g['symbol']}"],
+                          study_type="curated database", epistemic_type="curated_record", entity_ids=[f"HGNC:{g['symbol']}"],
                           extra={"lifespan_pmids": [r.get("pmid") for r in lifespan if r.get("pmid")][:20]})
         with self._lock:
             self._cache[symbol] = ev

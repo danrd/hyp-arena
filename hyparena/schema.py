@@ -5,11 +5,12 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Optional, Union
 
 import yaml
 from pydantic import BaseModel
 
+from hyparena.aggregate import centroid_weights, groups_of
 from hyparena.state import Criterion
 
 CONFIGS = Path(__file__).resolve().parents[1] / "configs"
@@ -39,10 +40,23 @@ class CardSchema(BaseModel):
 class CriteriaSet(BaseModel):
     version: str
     criteria: list[Criterion]
+    # Order of importance instead of numeric weights (aggregation by МРСП, hyparena/aggregate.py): names from
+    # most to least important; a nested list is a group of equally important criteria.
+    importance: Optional[list[Union[str, list[str]]]] = None
 
 
 def load_criteria(path: str | Path = CONFIGS / "criteria.yaml") -> CriteriaSet:
-    return CriteriaSet(**yaml.safe_load(Path(path).read_text(encoding="utf-8")))
+    """Criteria from YAML. With an importance order, each criterion's weight becomes its expected weight
+    under that order (rank-order centroid), used where one number is needed (pair selection)."""
+    cs = CriteriaSet(**yaml.safe_load(Path(path).read_text(encoding="utf-8")))
+    if cs.importance:
+        groups = groups_of(cs.importance)
+        named = [c for g in groups for c in g]
+        if sorted(named) != sorted(c.name for c in cs.criteria):
+            raise ValueError(f"importance must list every criterion exactly once: {named}")
+        w = centroid_weights(groups)
+        cs.criteria = [c.model_copy(update={"weight": w[c.name]}) for c in cs.criteria]
+    return cs
 
 
 def load_card_schema(path: str | Path = CONFIGS / "card.yaml") -> CardSchema:

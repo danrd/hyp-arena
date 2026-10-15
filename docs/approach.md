@@ -15,7 +15,7 @@ Co-Scientist (Google, 2025) ranks hypotheses with an Elo tournament of pairwise 
 | Elo tournament of pairwise LLM comparisons | Pairwise comparisons plus a **Bradley–Terry** model instead of online Elo. It gives an uncertainty estimate, which we need to choose the next pairs |
 | Proximity graph | Embeddings and clusters. Duplicates are merged, and comparisons mostly happen between topically close hypotheses |
 | Reflection (reviews), debate for top pairs | Structured, search-grounded review before the tournament. Debate only for top and contested pairs |
-| Single Elo over configurable criteria (feasibility can be one attribute) | **One rating per criterion** (criteria in `configs/criteria.yaml`; default: novelty, evidence support, testability, value), combined by weights, with the Pareto front shown |
+| Single Elo over configurable criteria (feasibility can be one attribute); TrueSkill + UCB in the 2026 version | **One rating per criterion** (criteria in `configs/criteria.yaml`; default: novelty, evidence support, testability, value), combined **without numeric weights**: only an order of importance is set, and the final order comes from randomized aggregation (МРСП) with spreads and dominance probabilities; the Pareto front is shown |
 | One model family for generator and judges | **Judges come from other model families than the generator.** An ensemble of several families, because errors within a family are correlated |
 
 We also add **verifiable output**: every verdict carries citations and a "fact / assumption" label.
@@ -76,7 +76,7 @@ hypotheses → [1] normalization → [2] enrichment/RAG → [3] rubric review
 4. **Deduplication.** Hypotheses closer than a cosine-similarity threshold are merged. Clusters are also used to diversify the final list.
 5. **Tournament.** Section 4.
 6. **Debate.** For top pairs where the judge is uncertain, or where the verdict flips when A/B order is swapped, run a multi-turn debate as in Co-Scientist. It is expensive, so it is applied only there.
-7. **Result.** A Pareto front over the two axes. Selection from the front uses weights set by the person ranking (for example, "early screening" weights feasibility more, "grant-ready" weights promise more). Near-duplicates are removed from the top using clusters.
+7. **Result.** The final order comes from randomized aggregation over all weight vectors consistent with the order of importance of the criteria (МРСП, Hovanov's АСПИД methodology; analogue: SMAA; `hyparena/aggregate.py`): expected score, spread, 90% rank interval and the probability that one hypothesis outranks another. The person ranking sets only the order (current default: value ≥ evidence support ≥ testability ≥ novelty, decision 2026-10-15, to be revisited with experts), not numbers. The Pareto front is shown as context. Near-duplicates are removed from the top using clusters.
 
 ## 4. Tournament: avoiding N² comparisons
 
@@ -106,8 +106,8 @@ What the table shows:
 
 - **Judge ≠ truth.** An LLM judge prefers long, smooth, familiar wording (risk of "beautiful but trite" hypotheses) and may invent sources. Mitigations: citation check via RAG, "fact / assumption" labels, length and style normalization before comparison. Co-Scientist's own validation is modest: review scores predict correctness with AUC of only about 0.64–0.65 on GPQA, and its Elo is not tied to ground truth.
 - **Synthetic data does not prove real-world quality.** The simulated judge is independent and homogeneous; real LLM errors are correlated. The simulation tests only the pair-selection mechanics.
-- **Criteria conflict.** Hence per-criterion ratings, not a single score, with weights visible to the user. With four or more criteria the Pareto front stops discriminating (in a small test, all 12 active hypotheses were on it), so the combined score and the per-criterion intervals carry the ranking; the front is context.
-- **Judge novelty can mislead.** HindSight (2603.15164, from the working notes) reports a negative correlation between an LLM judge's novelty rating and later impact (ρ = −0.29, ML ideas). Novelty is therefore judged only against the retrieved evidence, and its weight should be set by the backtest, not assumed.
+- **Criteria conflict.** Hence per-criterion ratings, not a single score, and an order of importance instead of hand-set weights. With four or more criteria the Pareto front stops discriminating (in a small test, all 12 active hypotheses were on it), so the combined score and the per-criterion intervals carry the ranking; the front is context.
+- **Judge novelty can mislead.** HindSight (2603.15164, from the working notes) reports a negative correlation between an LLM judge's novelty rating and later impact (ρ = −0.29, ML ideas). Novelty is therefore judged only against the retrieved evidence, and its place in the order of importance should be checked by the backtest, not assumed (in the negative-sampling test its AUC was 0.52, no signal).
 - **Novelty.** It is assessed against retrieved literature, and RAG is incomplete. Low novelty caused by poor retrieval will unfairly lower a rating.
 
 ## 7. Validation without expert labels
@@ -127,10 +127,22 @@ Decision (working notes): expert labels are **not assumed**; they are an optiona
 
 1. Done: Europe PMC, PubTator3, Open Genes, ClinicalTrials.gov connectors and the Retraction Watch check (architecture, section 8). Next: evaluate retrieval quality; PubTator3 entity normalization of the card; date-aware sources for curated databases.
 2. Verified layer of the card: each declared sub-claim linked to evidence records with a status (established, supported, contested, speculative, refuted), once the card format is agreed.
-3. Done: the ITP backtest harness (architecture, section 8a). Next: run it with judges whose training cutoff precedes T, add more label sources (trial outcomes, other DrugAge species), and fit criterion weights against the labels on a held-out split.
+3. Done: the ITP backtest harness (architecture, section 8a). Next: run it with judges whose training cutoff precedes T, add more label sources (trial outcomes, other DrugAge species), and check the order of importance of the criteria against the labels on a held-out split.
 4. Cost and time of the decisive experiment from registries (reference classes), reported as intervals, instead of being judged.
 5. Done: the Co-Scientist baseline mode (architecture, section 8b). The comparison itself is **postponed** (decision 2026-10-14): the project is still in development, and on the current ITP pool any result would be contaminated by what the models already know.
 6. **Beta: memorization not handled** (decision 2026-10-14): the current ITP pool is used as it is; results are an upper bound. Later: **fresh slice, accumulated over time.** Keep collecting labelled outcomes published after the training cutoff of the judge models (new ITP and DrugAge results, trial outcomes), and rebuild the pool with T set after the latest cutoff (`build-itp --as-of <cutoff>`). Run the comparison once that slice is large enough to give useful intervals.
+
+## 8a. Lines of work (from the working notes, 2026-10-15) and where the code stands
+
+The working notes split the project into three nested lines; stage 1 is line 1 plus thin versions of lines 2 and 3.
+
+| Line | Content | In the repository | Not yet |
+|---|---|---|---|
+| 1. Improve on Co-Scientist | reimplemented baseline, new mechanisms, evaluation infrastructure, cost and time of the decisive experiment | both baselines (L0 Elo 2025, L0ts TrueSkill + UCB 2026), ablation ladder, per-criterion Bradley–Terry, МРСП aggregation, independent judge ensemble, advisory reviews, ITP backtest, negative-sampling test, leakage probe | cost and time of the decisive experiment (item 4 above); runs at a scale that gives usable intervals |
+| 2. Structure of hypotheses and data | card v2 (narrative, PICO, claim graph), evidence record with verbatim quote and role, declared vs verified layers, judge packet | card draft-1 (declared layer only, from config); evidence records with source tier, date, retraction flag and epistemic type (six types from the notes) shown to the judges | claim graph, quotes and roles, verification statuses: wait for the card v2 decisions |
+| 3. Own knowledge graph | observation-level graph on lifespan over Open Genes and HAGR, temporal snapshots | connectors to Open Genes, DrugAge (backtest and negative sampling), Europe PMC, PubTator3, ClinicalTrials.gov | everything else; MVP slice proposed in the notes: mTOR interventions and senolytics |
+
+A finding from the negative-sampling test that bears on line 2: judges most often prefer a variant that adds a false mechanism to a true effect. Splitting a hypothesis into claims and checking each link separately is the direct remedy.
 
 ## 9. Example input data: a ChatGPT dialogue
 

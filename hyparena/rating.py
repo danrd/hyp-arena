@@ -3,6 +3,7 @@
 Uses dense N x N count matrices, which is fine up to a few thousand active hypotheses."""
 from __future__ import annotations
 
+import math
 import random
 
 import numpy as np
@@ -132,4 +133,66 @@ def select_pairs_coscientist(ids: list[str], ratings: dict[str, dict[str, Rating
         partner = min(pool, key=lambda o: abs(by[o] - by[h]) + rng.random() * 1e-6)
         seen.add(frozenset((h, partner)))
         out.append((h, partner))
+    return out
+
+
+# ---- Co-Scientist 2026 baseline (arXiv 2608.26701): TrueSkill ratings and UCB selection ----
+
+def _pdf(x: float) -> float:
+    return math.exp(-0.5 * x * x) / math.sqrt(2 * math.pi)
+
+
+def _cdf(x: float) -> float:
+    return 0.5 * (1.0 + math.erf(x / math.sqrt(2)))
+
+
+def trueskill_ratings(ids: list[str], matches: list[Match], axis: str, mu: float = 25.0,
+                      sigma: float = 25.0 / 3, beta: float = 25.0 / 6, tau: float = 25.0 / 300) -> dict[str, Rating]:
+    """Sequential two-player TrueSkill (Herbrich et al. 2006) without draws, over the match log in order.
+    score = mu, se = sigma. The paper gives no parameters; these are TrueSkill's defaults."""
+    m_, s2, games = {h: mu for h in ids}, {h: sigma ** 2 for h in ids}, {h: 0 for h in ids}
+    for m in matches:
+        w = m.winners.get(axis)
+        if w is None or m.a not in m_ or m.b not in m_:
+            continue
+        l = m.b if w == m.a else m.a
+        s2[w] += tau ** 2
+        s2[l] += tau ** 2
+        c2 = 2 * beta ** 2 + s2[w] + s2[l]
+        c = math.sqrt(c2)
+        t = (m_[w] - m_[l]) / c
+        v = _pdf(t) / max(_cdf(t), 1e-12)
+        k = v * (v + t)
+        m_[w] += s2[w] / c * v
+        m_[l] -= s2[l] / c * v
+        s2[w] *= max(1 - s2[w] / c2 * k, 1e-6)
+        s2[l] *= max(1 - s2[l] / c2 * k, 1e-6)
+        games[w] += 1
+        games[l] += 1
+    return {h: Rating(score=m_[h], se=math.sqrt(s2[h]), games=games[h]) for h in ids}
+
+
+def select_pairs_ucb(ids: list[str], ratings: dict[str, dict[str, Rating]], weights: dict[str, float],
+                     n_matches: int, kappa: float = 1.0) -> list[tuple[str, str]]:
+    """Contenders by UCB = mu + kappa * sigma (kappa 1.0 in the paper): new, uncertain hypotheses play first.
+    Each contender, in UCB order, meets the next contender it has not met yet in this round, so the
+    highest-UCB hypotheses get the most matches."""
+    if len(ids) < 2:
+        return []
+    mu, sigma = combined(ratings, weights, ids)
+    order = [ids[i] for i in sorted(range(len(ids)), key=lambda i: -(mu[i] + kappa * sigma[i]))]
+    out, seen = [], set()
+    while len(out) < n_matches:
+        added = False
+        for i, h in enumerate(order):
+            partner = next((o for o in order[i + 1:] if frozenset((h, o)) not in seen), None)
+            if partner is None:
+                continue
+            seen.add(frozenset((h, partner)))
+            out.append((h, partner))
+            added = True
+            if len(out) >= n_matches:
+                break
+        if not added:
+            break
     return out

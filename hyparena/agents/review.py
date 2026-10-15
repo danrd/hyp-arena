@@ -54,7 +54,7 @@ def make_review(ctx):
                 return reject()
 
         evidence = usable(h.evidence)
-        full = ask_json(ctx, role="review_full", family=fam_full, template="review_full", version="v3",
+        full = ask_json(ctx, role="review_full", family=fam_full, template="review_full", version="v4",
                         variables={**common, "evidence": evidence, "as_of": cfg.as_of}, phase="review",
                         validate=_numbers, avoid=avoid)
         if full.value is None and gate:
