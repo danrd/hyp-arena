@@ -49,8 +49,8 @@ def make_report(ctx):
                 break
         reply, prov = ctx.call(
             role="research_overview", family=ctx.utility_family(), template="research_overview",
-            version="v2", phase="meta",
-            variables={"goal": state["goal"], "plan": plan,
+            version="v3", phase="meta",
+            variables={"goal": state["goal"], "plan": plan, "language": ctx.cfg.report_language,
                        "items": [{"id": s["id"], "text": s["text"][:3000],
                                   "scores": {c: round(s["ratings"][c]["score"], 2) for c in names},
                                   "evidence": [f"{e['record_id']} ({e['publication_date']}): {e['title']}"

@@ -46,6 +46,7 @@ class RunConfig:
     max_tokens: int = 2_000_000          # estimated tokens
     # generation and evolution
     gen_per_cycle: int = 6
+    gen_cycles: int = 0                  # generate only in the first N cycles (0: every cycle)
     evolve_per_cycle: int = 3
     normalize_rounds: int = 2
     # evidence
@@ -67,10 +68,12 @@ class RunConfig:
     swiss_share: float = 0.2
     z: float = 2.0
     judges_per_match: int = 2
+    round_robin_max: int = 8              # pools this small first play every pair not yet played (our pairing only)
     extra_judges: int = 1
     debate_top: int = 5                   # pairs inside the current top-N are judged by debate
     # report
     report_size: int = 10
+    report_language: str = ""            # language of the research overview, e.g. "Russian" (default English)
 
 
 @dataclass

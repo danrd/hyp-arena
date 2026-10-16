@@ -20,6 +20,9 @@ dependencies = [
     "toolkit[llm-kit,llm-kit-openrouter] @ git+https://github.com/danrd/toolkit.git",
 ]
 
+[project.optional-dependencies]
+demo = ["gradio>=5"]
+
 [tool.hatch.metadata]
 allow-direct-references = true
 

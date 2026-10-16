@@ -12,6 +12,8 @@ def next_id(state: GraphState, offset: int = 0) -> str:
 
 def make_generate(ctx):
     def generate(state: GraphState) -> dict:
+        if ctx.cfg.gen_cycles and state.get("cycle", 0) > ctx.cfg.gen_cycles:
+            return {}
         plan, goal = state["plan"], state["goal"]
         known_titles = [h.text.split("\n", 1)[0][:100] for h in state.get("hypotheses", {}).values()][:30]
         # Assignments are fixed here, in order, so the parallel calls below do not change them.
