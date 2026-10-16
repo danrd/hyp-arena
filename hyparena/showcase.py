@@ -72,12 +72,52 @@ def _args(config: str, fake: bool, search: str, max_calls: int, seed: int) -> Si
                            card=str(CONFIGS / "card.yaml"), max_tokens=None, as_of=None, search=search)
 
 
+class _Recorder:
+    """Wraps the LLM client (or the search tool) and appends every call, with its full prompt and reply
+    (or query and records), to `sink`. Used for traces of a run (`run(trace=...)`)."""
+
+    def __init__(self, inner, sink: list):
+        self._inner, self._sink = inner, sink
+
+    def __getattr__(self, name):
+        return getattr(self._inner, name)
+
+    def call(self, *, role, family, prompt, avoid=frozenset()):
+        started = time.time()
+        reply = self._inner.call(role=role, family=family, prompt=prompt, avoid=avoid)
+        self._sink.append({"kind": "llm", "t": round(started, 3), "seconds": round(time.time() - started, 1),
+                           "role": role, "asked_family": family, "family": reply.family, "model": reply.model_id,
+                           "avoid": sorted(avoid), "prompt": prompt, "reply": reply.text, "error": reply.error,
+                           "tokens_in": reply.tokens_in, "tokens_out": reply.tokens_out})
+        return reply
+
+    def search(self, query, limit=5, as_of=None):
+        found = self._inner.search(query, limit, as_of)
+        self._sink.append({"kind": "search", "t": round(time.time(), 3), "query": query, "as_of": as_of,
+                           "records": [{"id": e.record_id, "source": e.source, "title": e.title,
+                                        "date": e.publication_date, "type": e.epistemic_type} for e in found]})
+        return found
+
+
+def _plain(x):
+    """Graph-state values as JSON-friendly data (pydantic models dumped, containers walked)."""
+    if hasattr(x, "model_dump"):
+        return x.model_dump()
+    if isinstance(x, dict):
+        return {str(k): _plain(v) for k, v in x.items()}
+    if isinstance(x, (list, tuple, set)):
+        return [_plain(v) for v in x]
+    return x
+
+
 def run(texts: Optional[list[str]] = None, goal: str = "", generate: int = 0, writer: str = "unknown",
         config: str = "configs/paid-test.yaml", fake: bool = False, search: str = "europepmc",
         cycles: int = 2, matches: float = 2.0, max_calls: int = 400, seed: int = 0,
-        on_stage: Callable[[str, str], None] = lambda node, text: None) -> dict:
+        on_stage: Callable[[str, str], None] = lambda node, text: None, trace: Optional[dict] = None) -> dict:
     """One demonstration run with our full method (L4). `texts`: pasted hypotheses; or `generate` > 0 to
-    have the model families write that many for `goal`. `on_stage(node, message)` reports progress."""
+    have the model families write that many for `goal`. `on_stage(node, message)` reports progress.
+    With `trace` (a dict), every node's output and every model and search call inside it are recorded
+    into trace["steps"]."""
     texts = texts or []
     if not texts and generate <= 0:
         raise ValueError("nothing to rank: paste hypotheses or ask to generate some")
@@ -87,8 +127,19 @@ def run(texts: Optional[list[str]] = None, goal: str = "", generate: int = 0, wr
                            matches_per_item=matches, report_language="Russian", dedup_threshold=0.97)
     prov = Provenance(family=writer or "unknown", model_version="pasted", role="imported", strategy="pasted")
     imported = [Hypothesis(id=f"imp{i:03d}", text=t, provenance=prov) for i, t in enumerate(texts, start=1)]
+    sink: list = []
+    if trace is not None:
+        ctx.client = _Recorder(ctx.client, sink)
+        ctx.search = _Recorder(ctx.search, sink)
+        trace.update({"config": {k: getattr(ctx.cfg, k) for k in ("max_cycles", "matches_per_item", "judges_per_match",
+                                                                   "extra_judges", "debate_top", "round_robin_max",
+                                                                   "review_gate", "rating", "pairing", "lineage_mode")},
+                      "families": [j.family for j in ctx.judge_pool], "models": [j.model_version for j in ctx.judge_pool],
+                      "criteria": [c.model_dump() for c in ctx.criteria.criteria],
+                      "importance": ctx.criteria.importance, "steps": []})
     graph = build_graph(ctx)
     state, done = None, set()
+    seen, node_started = 0, time.time()
     try:
         for mode, chunk in graph.stream(initial_state(goal or DEFAULT_GOAL, imported), {"recursion_limit": 200},
                                         stream_mode=["updates", "values"]):
@@ -96,6 +147,10 @@ def run(texts: Optional[list[str]] = None, goal: str = "", generate: int = 0, wr
                 state = chunk
                 continue
             for node in chunk:
+                if trace is not None:
+                    trace["steps"].append({"node": node, "cycle": cycle_of(state), "seconds": round(time.time() - node_started, 1),
+                                           "output": _plain(chunk[node]), "calls": sink[seen:]})
+                    seen, node_started = len(sink), time.time()
                 if node in ("supervisor", "evolve") or (node == "generate" and (texts or cycle_of(state) > 1)):
                     continue
                 cycle = (state or {}).get("cycle", 0)
@@ -326,6 +381,7 @@ def main() -> None:
     ap.add_argument("--out", default=None, help="result JSON")
     ap.add_argument("--render", default=None, help="render an existing result JSON instead of running")
     ap.add_argument("--html", default=None, help="write the result as a standalone HTML page")
+    ap.add_argument("--trace", default=None, help="also record every step and call (full prompts) to this JSON")
     ap.add_argument("--reaggregate", action="store_true",
                     help="with --render: recompute ratings and aggregation from the saved match log")
     args = ap.parse_args()
@@ -335,8 +391,13 @@ def main() -> None:
             result = reaggregate(result)
     else:
         texts = split_hypotheses(Path(args.paste).read_text(encoding="utf-8")) if args.paste else []
+        trace = {} if args.trace else None
         result = run(texts, args.goal, args.generate, args.writer, args.config, args.fake, args.search,
-                     max_calls=args.max_calls, on_stage=lambda node, msg: print(msg, flush=True))
+                     max_calls=args.max_calls, on_stage=lambda node, msg: print(msg, flush=True), trace=trace)
+        if trace is not None:
+            Path(args.trace).parent.mkdir(parents=True, exist_ok=True)
+            Path(args.trace).write_text(json.dumps({**trace, "result": result}, ensure_ascii=False, indent=1, default=str))
+            print(f"trace: {args.trace}")
     if args.out:
         Path(args.out).parent.mkdir(parents=True, exist_ok=True)
         Path(args.out).write_text(json.dumps(result, ensure_ascii=False, indent=2))
