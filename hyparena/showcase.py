@@ -37,6 +37,14 @@ STAGES = {
 CRITERIA_RU = {"value": "Ценность", "evidence_support": "Опора на данные", "testability": "Проверяемость",
                "novelty": "Новизна", "overall": "Общая оценка", "promise": "Перспективность",
                "feasibility": "Реализуемость"}
+CARD_RU = {"claim": "Утверждение", "mechanism": "Механизм", "intervention": "Вмешательство", "hallmarks": "Признаки старения",
+           "outcome_claimed": "Заявленный исход", "known": "Что заявлено как известное", "assumptions": "Допущения",
+           "decisive_experiment": "Решающий эксперимент", "falsifiable_implications": "Что опровергнет",
+           "unknowns": "Открытые вопросы"}
+EVIDENCE_RU = {"primary_text": "первичная работа", "review_text": "обзор: фон, а не результат",
+               "curated_record": "курируемая база: сигнал, не доказательство", "measurement": "измерение",
+               "machine_derived": "машинная подсказка, не доказательство", "quality_metadata": "метаданные качества",
+               "plans": "реестр: планы и статус, не результаты"}
 REVIEW_RU = {"initial": "Первичная", "full": "С литературой", "deep": "Глубокая проверка"}
 
 
@@ -135,7 +143,7 @@ def collect(final: dict, ctx, client, goal: str, seconds: float, mode: str, fake
             "aggregate": agg.get("by_id", {}).get(hid), "scores": scores,
             "card": h.card.filled() if h.card else {}, "gaps": h.card.gaps if h.card else [],
             "evidence": [{"id": e.record_id, "title": e.title, "url": e.url, "date": e.publication_date,
-                          "type": e.epistemic_label} for e in h.evidence if e.usable][:8],
+                          "type": e.epistemic_type} for e in h.evidence if e.usable][:8],
             "reviews": [{"kind": r.kind, "family": r.provenance.family, "scores": r.scores, "notes": r.notes[:4]}
                         for r in h.reviews],
             "matches": played})
@@ -217,6 +225,8 @@ def _md(text: str) -> str:
 def render(result: dict, standalone: bool = False) -> str:
     """The result as HTML: ranking table, pairwise dominance, details per hypothesis, overview."""
     meta, items, crit = result["meta"], result["items"], result["meta"]["criteria"]
+    rank_of = {c: i for i, g in enumerate(meta.get("importance") or []) for c in ([g] if isinstance(g, str) else g)}
+    crit = sorted(crit, key=lambda c: rank_of.get(c["name"], len(rank_of)))     # most important first
     order_ru = " ≥ ".join(CRITERIA_RU.get(c, c) if isinstance(c, str) else " = ".join(CRITERIA_RU.get(x, x) for x in c)
                           for c in (meta.get("importance") or []))
     sub = (f'{len(items)} гипотез · {"вставлены" if meta["mode"] == "paste" else "сгенерированы"} · судьи: '
@@ -248,7 +258,7 @@ def render(result: dict, standalone: bool = False) -> str:
     details = []
     for it in items:
         ev = "".join(f'<div>• <a href="{_e(e["url"])}" target="_blank">{_e(e["id"])}</a> ({_e(e["date"] or "дата неизвестна")}'
-                     f'{", " + _e(e["type"]) if e["type"] else ""}) {_e(e["title"])}</div>' for e in it["evidence"]) \
+                     f'{", " + _e(EVIDENCE_RU.get(e["type"], e["type"])) if e["type"] else ""}) {_e(e["title"])}</div>' for e in it["evidence"]) \
             or '<div class="muted">ничего не найдено</div>'
         rv = "".join(f'<div><span class="pill">{_e(REVIEW_RU.get(r["kind"], r["kind"]))}</span><span class="muted">{_e(r["family"])}</span> '
                      f'{_e("; ".join(r["notes"]))}</div>' for r in it["reviews"]) or '<div class="muted">нет</div>'
@@ -259,12 +269,12 @@ def render(result: dict, standalone: bool = False) -> str:
             + ", ".join(f'{_e(CRITERIA_RU.get(c, c))} {"✓" if w else ("✗" if w is False else "=")}' for c, w in m["won"].items())
             + (f'<div class="muted">{_e(m["rationale"][:400])}</div>' if m["rationale"] else "") + "</div>"
             for m in it["matches"]) or '<div class="muted">не сравнивалась</div>'
-        card = "".join(f'<div><span class="muted">{_e(k)}:</span> {_e(v if isinstance(v, str) else "; ".join(map(str, v)))}</div>'
+        card = "".join(f'<div><span class="muted">{_e(CARD_RU.get(k, k))}:</span> {_e(v if isinstance(v, str) else "; ".join(map(str, v)))}</div>'
                        for k, v in it["card"].items() if k != "search_queries")
         details.append(f'<details><summary>{it["rank"] or "—"}. {_e(it["title"])}</summary>'
                        f'<pre>{_e(it["text"])}</pre>'
                        + (f'<h4>Карточка (из текста, не проверена)</h4>{card}' if card else "")
-                       + (f'<div class="warn">Не указано: {_e(", ".join(it["gaps"]))}</div>' if it["gaps"] else "")
+                       + (f'<div class="warn">Не указано: {_e(", ".join(CARD_RU.get(g, g) for g in it["gaps"]))}</div>' if it["gaps"] else "")
                        + f'<h4>Литература</h4>{ev}<h4>Рецензии</h4>{rv}<h4>Сравнения</h4>{mt}</details>')
     overview = f'<div class="overview"><h3>Обзор</h3>{_md(result.get("overview", ""))}</div>' if result.get("overview") else ""
     body = (f'<div class="hx"><h2>Ранжирование гипотез</h2><div class="sub">{sub}</div>'
