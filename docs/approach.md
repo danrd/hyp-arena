@@ -76,7 +76,7 @@ hypotheses → [1] normalization → [2] enrichment/RAG → [3] rubric review
 4. **Deduplication.** Hypotheses closer than a cosine-similarity threshold are merged. Clusters are also used to diversify the final list.
 5. **Tournament.** Section 4.
 6. **Debate.** For top pairs where the judge is uncertain, or where the verdict flips when A/B order is swapped, run a multi-turn debate as in Co-Scientist. It is expensive, so it is applied only there.
-7. **Result.** The final order comes from randomized aggregation over all weight vectors consistent with the order of importance of the criteria (МРСП, Hovanov's АСПИД methodology; analogue: SMAA; `hyparena/aggregate.py`): expected score, spread, 90% rank interval and the probability that one hypothesis outranks another. The person ranking sets only the order (current default: value ≥ evidence support ≥ testability ≥ novelty, decision 2026-10-15, to be revisited with experts), not numbers. The Pareto front is shown as context. Near-duplicates are removed from the top using clusters.
+7. **Result.** The final order comes from randomized aggregation over all weight vectors consistent with the order of importance of the criteria (based on МРСП from Hovanov's АСПИД methodology, adapted to pairwise ratings and their uncertainty; analogue: SMAA; `hyparena/aggregate.py`, adaptations in architecture 3a): expected score, spread, 90% rank interval and the probability that one hypothesis outranks another. The person ranking sets only the order (current default: value ≥ evidence support ≥ testability ≥ novelty, decision 2026-10-15, to be revisited with experts), not numbers. The Pareto front is shown as context. Near-duplicates are removed from the top using clusters.
 
 ## 4. Tournament: avoiding N² comparisons
 
