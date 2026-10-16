@@ -59,10 +59,10 @@ def new_run(source, text, goal, count, writer, models, search):
     config, fake = MODELS[models]
     texts = showcase.split_hypotheses(text) if source == "Вставить" else []
     if source == "Вставить" and not texts:
-        yield "Вставьте хотя бы две гипотезы (нумерованным списком или через пустую строку).", "", None
+        yield "Вставьте хотя бы две гипотезы (нумерованным списком или через пустую строку).", "", gr.update(visible=False)
         return
     if not fake and "paid" in config and os.environ.get(ALLOW_PAID_ENV) != "1":
-        yield f"Платные модели выключены: запустите приложение с {ALLOW_PAID_ENV}=1.", "", None
+        yield f"Платные модели выключены: запустите приложение с {ALLOW_PAID_ENV}=1.", "", gr.update(visible=False)
         return
     events, box = queue.Queue(), {}
 
@@ -78,19 +78,19 @@ def new_run(source, text, goal, count, writer, models, search):
     threading.Thread(target=work, daemon=True).start()
     what = f"{len(texts)} гипотез" if texts else f"генерация {int(count)} гипотез"
     log = [f"**Идёт прогон** ({what}; для пяти гипотез на дешёвых моделях обычно 3–6 минут)"]
-    yield "\n\n".join(log), "", None
+    yield "\n\n".join(log), "", gr.update(visible=False)
     while True:
         msg = events.get()
         if msg is None:
             break
         log.append(f"- {msg}")
-        yield "\n".join(log), "", None
+        yield "\n".join(log), "", gr.update(visible=False)
     if "error" in box:
-        yield "\n".join(log + [f"\n**Ошибка:** {box['error']}"]), "", None
+        yield "\n".join(log + [f"\n**Ошибка:** {box['error']}"]), "", gr.update(visible=False)
         return
     result = box["result"]
     log[0] = f"**Готово** за {result['meta']['seconds'] // 60} мин {result['meta']['seconds'] % 60} с"
-    yield "\n".join(log), showcase.render(result), _files(result)
+    yield "\n".join(log), showcase.render(result), gr.update(value=_files(result), visible=True)
 
 
 def build() -> gr.Blocks:
@@ -123,7 +123,7 @@ def build() -> gr.Blocks:
                     go = gr.Button("Ранжировать", variant="primary")
             status = gr.Markdown()
             result_html = gr.HTML()
-            files = gr.File(label="Скачать результат (HTML, JSON)", file_count="multiple")
+            files = gr.File(label="Скачать результат (HTML, JSON)", file_count="multiple", visible=False)
             source.change(lambda s: (gr.update(visible=s == "Вставить"), gr.update(visible=s == "Вставить"),
                                      gr.update(visible=s != "Вставить"), gr.update(visible=s == "Вставить")),
                           source, [text, writer, count, sample])

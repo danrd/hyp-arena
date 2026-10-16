@@ -1,0 +1,1321 @@
+{
+  "meta": {
+    "goal": "Identify the most promising and feasible hypotheses on the biology of ageing.",
+    "mode": "paste",
+    "created": "2026-10-16T12:05:43",
+    "seconds": 198,
+    "calls": 39,
+    "failures": 1,
+    "tokens_estimated": 138436,
+    "families": [
+      "openai",
+      "zhipu",
+      "google"
+    ],
+    "models": [
+      "gpt-5-nano",
+      "glm-5.3-flash",
+      "gemini-3.1-flash-lite-preview"
+    ],
+    "fake": false,
+    "criteria": [
+      {
+        "name": "novelty",
+        "label": "Новизна"
+      },
+      {
+        "name": "evidence_support",
+        "label": "Опора на данные"
+      },
+      {
+        "name": "testability",
+        "label": "Проверяемость"
+      },
+      {
+        "name": "value",
+        "label": "Ценность"
+      }
+    ],
+    "importance": [
+      "value",
+      "evidence_support",
+      "testability",
+      "novelty"
+    ],
+    "matches": 14,
+    "step": "L4"
+  },
+  "items": [
+    {
+      "id": "imp001",
+      "rank": 1,
+      "status": "active",
+      "title": "Перехват внеклеточного cGAMP может замедлить распространение сенесценции между клетками",
+      "text": "Перехват внеклеточного cGAMP может замедлить распространение сенесценции между клетками\n\nГипотеза: В стареющей ткани часть ещё функциональных клеток переходит в сенесценцию вследствие поступления **свободного внеклеточного cGAMP**, выделяемого повреждёнными соседями. Его локальное связывание должно уменьшить скорость появления новых сенесцентных клеток, даже если исходные повреждённые клетки остаются на месте.\n\ncGAMP — небольшая сигнальная молекула, которая образуется при обнаружении ДНК в неправильном клеточном compartmentе и активирует воспалительный путь STING.\n\nЧто уже известно: Участие cGAS–STING в возрастном воспалении и функциональных нарушениях показано на мышах. Межклеточная передача сигнала через внеклеточный cGAMP и возможность его перехвата белковой ловушкой продемонстрированы в исследованиях опухолевого иммунитета. Значимость именно этого пути для распространения возрастной сенесценции требует проверки.\n\nРешающий эксперимент: В трёхмерной модели человеческой дермы смешать меченые сенесцентные фибробласты и исходно здоровые клетки. У последних сравнить три генотипа: обычный, выключенный **cGAS**, выключенный **STING**. Для каждого — ловушка внеклеточного cGAMP и её контрольный вариант, неспособный связывать молекулу.\n\nЧерез 7–14 дней измерить появление сенесценции именно среди первоначально здоровых клеток. Нужны несколько признаков и проверка устойчивости остановки деления после удаления воспалительной среды.\n\nСпецифическое предсказание: Клетки без собственного cGAS сохранят чувствительность к сигналу соседей: они могут получать уже готовый cGAMP. Клетки без STING будут защищены. Внеклеточная ловушка защитит первые две группы, не уничтожая клетки — источники сигнала.\n\nЧто опровергнет гипотезу: Подтверждённое удаление свободного cGAMP не уменьшает вторичную сенесценцию, хотя выключение STING помогает. Тогда значим другой способ его активации — например, перенос ДНК или передача сигнала через непосредственные контакты.\n\nПотенциальное вмешательство: локальная ловушка cGAMP в стареющей ткани. Отдельное условие перспективности — сохранение достаточной противоинфекционной и противоопухолевой защиты.",
+      "writer": "openai",
+      "writer_model": "pasted",
+      "aggregate": {
+        "mean": 0.6544261411270792,
+        "sd": 0.12088433836157204,
+        "rank_lo": 1,
+        "rank_hi": 4,
+        "p_top": 1.0
+      },
+      "scores": {
+        "novelty": {
+          "p": 0.5731658368248641,
+          "games": 5,
+          "lo": 0.25628126111656696,
+          "hi": 0.8395584599665821
+        },
+        "evidence_support": {
+          "p": 0.6202946573911942,
+          "games": 5,
+          "lo": 0.25046919726279704,
+          "hi": 0.8887177205396104
+        },
+        "testability": {
+          "p": 0.6991903560014612,
+          "games": 5,
+          "lo": 0.27644766231785894,
+          "hi": 0.9339519277636484
+        },
+        "value": {
+          "p": 0.7274187047604107,
+          "games": 5,
+          "lo": 0.3454008436580548,
+          "hi": 0.9310189727772674
+        }
+      },
+      "card": {
+        "claim": "Перехват свободного внеклеточного cGAMP, выделяемого повреждёнными соседями, должен уменьшить скорость появления новых сенесцентных клеток в стареющей ткани, даже если исходные повреждённые клетки остаются на месте.",
+        "mechanism": "Свободный внеклеточный cGAMP, образуемый при обнаружении ДНК в неправильном клеточном компартменте и активирующий воспалительный путь STING, передаётся от повреждённых клеток к ещё функциональным соседям и вызывает их сенесценцию; локальное связывание cGAMP блокирует эту передачу.",
+        "intervention": "Локальная ловушка внеклеточного cGAMP (белковая ловушка) в стареющей ткани; условие перспективности — сохранение достаточной противоинфекционной и противоопухолевой защиты.",
+        "hallmarks": [
+          "клеточное старение — снижение распространения",
+          "воспаление, связанное с возрастом (STING-опосредованное) — снижение"
+        ],
+        "outcome_claimed": "Снижение скорости появления новых сенесцентных клеток (вторичной сенесценции) в трёхмерной модели человеческой дермы in vitro.",
+        "known": [
+          "Участие cGAS–STING в возрастном воспалении и функциональных нарушениях показано на мышах.",
+          "Межклеточная передача сигнала через внеклеточный cGAMP продемонстрирована в исследованиях опухолевого иммунитета.",
+          "Возможность перехвата внеклеточного cGAMP белковой ловушкой продемонстрирована в исследованиях опухолевого иммунитета."
+        ],
+        "assumptions": [
+          "Часть ещё функциональных клеток в стареющей ткани переходит в сенесценцию вследствие поступления свободного внеклеточного cGAMP от повреждённых соседей.",
+          "Значимость пути внеклеточного cGAMP для распространения возрастной сенесценции (требует проверки, но предполагается)."
+        ],
+        "decisive_experiment": "В трёхмерной модели человеческой дермы смешать меченые сенесцентные фибробласты и исходно здоровые клетки трёх генотипов (обычный, выключенный cGAS, выключенный STING), с ловушкой внеклеточного cGAMP и контрольным вариантом, неспособным связывать молекулу; через 7–14 дней измерить появление сенесценции среди первоначально здоровых клеток по нескольким признакам и проверить устойчивость остановки деления после удаления воспалительной среды.",
+        "falsifiable_implications": [
+          "Подтверждённое удаление свободного cGAMP не уменьшает вторичную сенесценцию, хотя выключение STING помогает — тогда значим другой способ активации STING, например перенос ДНК или передача сигнала через непосредственные контакты."
+        ],
+        "unknowns": [
+          "Значимость именно пути внеклеточного cGAMP для распространения возрастной сенесценции."
+        ]
+      },
+      "gaps": [],
+      "evidence": [
+        {
+          "id": "MED:42657115",
+          "title": "The cGAS-STING pathway in pulmonary infectious and sterile inflammation: differences, connections, and therapeutic implications.",
+          "url": "https://europepmc.org/article/MED/42657115",
+          "date": "2026-08-12",
+          "type": "review_text"
+        },
+        {
+          "id": "MED:42383355",
+          "title": "Molecular mechanisms regulating cGAS/STING activation in health and disease.",
+          "url": "https://europepmc.org/article/MED/42383355",
+          "date": "2026-07-01",
+          "type": "review_text"
+        },
+        {
+          "id": "MED:42106567",
+          "title": "Extracellular cGAMP in health and disease.",
+          "url": "https://europepmc.org/article/MED/42106567",
+          "date": "2026-05-10",
+          "type": "review_text"
+        },
+        {
+          "id": "MED:42761452",
+          "title": "The cGAS-STING/MITA pathway in innate antiviral immunity and beyond.",
+          "url": "https://europepmc.org/article/MED/42761452",
+          "date": "2026-08-27",
+          "type": "review_text"
+        },
+        {
+          "id": "MED:42544584",
+          "title": "The cGAS/STING pathway in cancer: translating innate DNA sensing into therapeutic potential.",
+          "url": "https://europepmc.org/article/MED/42544584",
+          "date": "2026-08-03",
+          "type": "review_text"
+        },
+        {
+          "id": "MED:42713362",
+          "title": "Mitochondrial homeostasis and aging: the mtDNA-cGAS-STING axis.",
+          "url": "https://europepmc.org/article/MED/42713362",
+          "date": "2026-08-25",
+          "type": "review_text"
+        },
+        {
+          "id": "MED:42734990",
+          "title": "USP18 Serves as a Key Mediator of cGAS-STING for Cardiac Aging in Diabetes.",
+          "url": "https://europepmc.org/article/MED/42734990",
+          "date": "2026-09-01",
+          "type": "primary_text"
+        },
+        {
+          "id": "MED:42769403",
+          "title": "From mitochondria to innate immunity: The mtDNA-driven cGAS/STING-NLRP3 cascade and its therapeutic implications in neurodegenerative diseases (Review).",
+          "url": "https://europepmc.org/article/MED/42769403",
+          "date": "2026-09-04",
+          "type": "review_text"
+        }
+      ],
+      "reviews": [
+        {
+          "kind": "initial",
+          "family": "zhipu",
+          "scores": {
+            "correctness": 8.0,
+            "novelty": 6.0,
+            "quality": 8.0
+          },
+          "notes": [
+            "Mechanistically sound: cGAMP can be released via gap junctions and extracellular vesicles, and extracellular cGAMP degradation/trapping (e.g., ENPP1, SLC19A1 context) is established in tumor immunology.",
+            "Applying extracellular cGAMP interception to senescence spread is a plausible, moderately novel extension; cGAS-STING role in senescence/SASP is well documented, so incremental novelty.",
+            "Well-designed decisive experiment: cGAS vs STING knockouts cleanly distinguish uptake of pre-made cGAMP from autogenous production; falsification criteria are explicit and appropriate.",
+            "Good attention to controls (binding-deficient trap) and to multiple senescence markers with irreversible growth arrest testing."
+          ]
+        },
+        {
+          "kind": "full",
+          "family": "google",
+          "scores": {
+            "correctness": 9.0,
+            "novelty": 5.0,
+            "quality": 9.0
+          },
+          "notes": [
+            "Coverage of the specific intervention (extracellular cGAMP trap to block paracrine senescence) is unknown in the retrieved primary literature, hence novelty is set to 5.",
+            "The reasoning is grounded in well-established cell biology regarding second messengers and paracrine signaling loops in senescence.",
+            "The proposed decisive experiment is exceptionally clear, specific, and directly tests the mechanistic predictions."
+          ]
+        },
+        {
+          "kind": "deep",
+          "family": "zhipu",
+          "scores": {},
+          "notes": [
+            "Главная неопределённость — относительный вклад внеклеточного cGAMP против SASP/везикул/контактных механизмов; это эмпирический вопрос, который решающий эксперимент прямо тестирует",
+            "Гипотеза фальсифицируема: предложен чёткий критерий опровержения (ловушка неэффективна при сохранении эффекта нокаута STING)",
+            "Нефундаментальные слабости: дозировка/доступность ловушки в 3D-ткани, компенсаторные пути активации STING (экзогенная ДНК), риск подавления иммунитета — устранимы уточнением дизайна",
+            "Нокаут cGAS может иметь вторичные эффекты (cGAS участвует и в других процессах, напр. в репарации ДНК), что стоит контролировать"
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "opponent": "imp002",
+          "mode": "debate",
+          "won": {
+            "novelty": true,
+            "evidence_support": true,
+            "testability": true,
+            "value": true
+          },
+          "judges": [
+            "google"
+          ],
+          "rationale": "Hypothesis 2 outperforms Hypothesis 1 by leveraging well-documented cGAS-STING biology, offering a cleaner 3D experimental design with robust genetic controls, and presenting a translatable extracellular trapping intervention against aging-associated inflammation."
+        },
+        {
+          "opponent": "imp003",
+          "mode": "debate",
+          "won": {
+            "novelty": false,
+            "evidence_support": true,
+            "testability": true,
+            "value": false
+          },
+          "judges": [
+            "zhipu"
+          ],
+          "rationale": "H1 has stronger shown evidential grounding (established cGAS-STING senescence biology and existing cGAMP-trapping tools), while H2's specific premises lack primary support in the retrieved evidence. H2 edges out on novelty (sign-dependence reframes droplet removal) and value (a flux-ratio biomarker that discriminates droplets-as-cause vs droplets-as-buffer), with both equally and exceptionally testable."
+        },
+        {
+          "opponent": "imp004",
+          "mode": "debate",
+          "won": {
+            "novelty": true,
+            "evidence_support": false,
+            "testability": false,
+            "value": true
+          },
+          "judges": [
+            "zhipu"
+          ],
+          "rationale": "H1 wins on evidence_support (two retrieved primary papers vs only reviews for H2) and slightly on testability (routine single-cell yeast aging assays vs a more complex 3D human skin model). H2 wins on novelty (extracellular cGAMP trapping for senescence spread goes further beyond the retrieved evidence) and on value (a druggable, human-relevant intervention that cleanly discriminates spread mechanisms), though its core premise currently rests entirely on unverified assumptions."
+        },
+        {
+          "opponent": "imp005",
+          "mode": "debate",
+          "won": {
+            "novelty": true,
+            "evidence_support": false,
+            "testability": true,
+            "value": true
+          },
+          "judges": [
+            "zhipu"
+          ],
+          "rationale": "Both hypotheses go beyond the shown evidence, but H1's application of extracellular cGAMP trapping to senescence spread is a somewhat more incremental extension of well-documented STING-senescence biology, while H2's repair-masks-degradation competition via PCMTD1 is a fresher angle. However, H2 is backed by primary findings (PCMTD1 structural data, phenotypic repair effects) whereas H1 rests only on reviews, making H2 stronger on evidence; H1's decisive experiment is cleaner, and its direct link to a hallmark of ageing with a druggable intervention gives it greater translational value."
+        },
+        {
+          "opponent": "imp004",
+          "mode": "debate",
+          "won": {
+            "novelty": false,
+            "evidence_support": true,
+            "testability": false,
+            "value": true
+          },
+          "judges": [
+            "google"
+          ],
+          "rationale": "Hypothesis 1 wins on evidence support and translational value due to established cGAS-STING biology and druggable local traps, while Hypothesis 2 wins on novelty and testable design by probing temporal dynamics of stress signaling."
+        }
+      ]
+    },
+    {
+      "id": "imp004",
+      "rank": 2,
+      "status": "active",
+      "title": "Восстановление пауз между стрессовыми сигналами может продлевать жизнь старой клетки",
+      "text": "Восстановление пауз между стрессовыми сигналами может продлевать жизнь старой клетки\n\nГипотеза: Возрастное удлинение импульсов стрессового регулятора Msn2 меняет соотношение активируемых генов и сокращает оставшуюся жизнь клетки. Возвращение коротких импульсов с полноценными паузами улучшит её состояние даже при прежней суммарной ядерной экспозиции Msn2.\n\nПредполагаемый механизм: разные промоторы по-разному реагируют на длительность сигнала. Растянутый импульс способен поддерживать хроническую стрессовую программу и нарушать чередование защиты, восстановления и роста.\n\nЧто уже известно: В стареющих дрожжах меняются сборка ядерных пор и динамика ядерного транспорта. Импульсы ядерной локализации Msn2 становятся шире; их ширина коррелирует с меньшей оставшейся продолжительностью жизни. Отдельные оптогенетические эксперименты показали, что промоторы действительно различают временные режимы активности Msn2. Причинность возрастного изменения импульсов для сокращения жизни пока из этого не следует.\n\nРешающий эксперимент: У дрожжевых материнских клеток, уже достигших заданного репликативного возраста, управлять Msn2 оптогенетически. Сравнить:\n\n- частые короткие импульсы;\n- редкие длинные импульсы;\n- естественный возрастной режим.\n\nДля первых двух режимов сопоставить пиковую концентрацию и суммарную ядерную экспозицию. Измерять фактическую форму импульсов в каждой клетке.\n\nОсновной результат — **оставшееся число делений**. Дополнительно: длительность клеточного цикла, накопление белковых агрегатов и экспрессия разных групп генов-мишеней.\n\nСпецифическое предсказание: Короткие импульсы увеличат оставшееся число делений при сопоставимой суммарной экспозиции. Эффект будет зависеть от длительности пауз и может возникнуть без восстановления самих ядерных пор.\n\nЧто опровергнет гипотезу: После подтверждённого восстановления временного режима меняется экспрессия генов, но оставшееся число делений не увеличивается. Либо результат полностью определяется суммарной экспозицией, независимо от формы импульсов.\n\nПотенциальное вмешательство: Восстановление временной структуры защитных программ. Сначала — строгая проверка на дрожжах; перенос принципа на клетки млекопитающих потребует поиска соответствующего регулятора.",
+      "writer": "openai",
+      "writer_model": "pasted",
+      "aggregate": {
+        "mean": 0.5455614367849485,
+        "sd": 0.12284220354249138,
+        "rank_lo": 1,
+        "rank_hi": 5,
+        "p_top": 1.0
+      },
+      "scores": {
+        "novelty": {
+          "p": 0.5092174611596455,
+          "games": 6,
+          "lo": 0.22998412381807587,
+          "hi": 0.7828153443393928
+        },
+        "evidence_support": {
+          "p": 0.6289651371477797,
+          "games": 6,
+          "lo": 0.26431704824912566,
+          "hi": 0.8888659724108443
+        },
+        "testability": {
+          "p": 0.9300139875344869,
+          "games": 6,
+          "lo": 0.5324649047283376,
+          "hi": 0.9935919135989799
+        },
+        "value": {
+          "p": 0.41931680306964364,
+          "games": 6,
+          "lo": 0.15004601113762206,
+          "hi": 0.7470769712539365
+        }
+      },
+      "card": {
+        "claim": "Возрастное удлинение импульсов стрессового регулятора Msn2 меняет соотношение активируемых генов и сокращает оставшуюся жизнь клетки; возвращение коротких импульсов с полноценными паузами улучшит её состояние даже при прежней суммарной ядерной экспозиции Msn2.",
+        "mechanism": "Разные промоторы по-разному реагируют на длительность сигнала; растянутый импульс поддерживает хроническую стрессовую программу и нарушает чередование защиты, восстановления и роста.",
+        "intervention": "Оптогенетическое управление Msn2 — восстановление временной структуры импульсов (частые короткие импульсы с паузами) у дрожжевых материнских клеток заданного репликативного возраста.",
+        "outcome_claimed": "Оставшееся число делений (репликативная продолжительность жизни) стареющих дрожжевых клеток; дополнительно длительность клеточного цикла, накопление белковых агрегатов, экспрессия генов-мишеней.",
+        "known": [
+          "В стареющих дрожжах меняются сборка ядерных пор и динамика ядерного транспорта",
+          "Импульсы ядерной локализации Msn2 становятся шире с возрастом; их ширина коррелирует с меньшей оставшейся продолжительностью жизни",
+          "Отдельные оптогенетические эксперименты показали, что промоторы различают временные режимы активности Msn2",
+          "Причинность возрастного изменения импульсов для сокращения жизни пока не показана"
+        ],
+        "assumptions": [
+          "Разные промоторы по-разному реагируют на длительность сигнала Msn2",
+          "Временная форма импульсов, а не только суммарная экспозиция, определяет исход для клетки",
+          "Эффект может возникнуть без восстановления самих ядерных пор"
+        ],
+        "decisive_experiment": "У дрожжевых материнских клеток заданного репликативного возраста управлять Msn2 оптогенетически, сравнивая частые короткие импульсы, редкие длинные импульсы и естественный возрастной режим при сопоставлении пиковой концентрации и суммарной ядерной экспозиции, с измерением фактической формы импульсов в каждой клетке; основной результат — оставшееся число делений.",
+        "falsifiable_implications": [
+          "После подтверждённого восстановления временного режима меняется экспрессия генов, но оставшееся число делений не увеличивается",
+          "Результат полностью определяется суммарной экспозицией, независимо от формы импульсов"
+        ],
+        "unknowns": [
+          "Причинность возрастного изменения импульсов для сокращения жизни",
+          "Какой регулятор соответствует Msn2 у клеток млекопитающих для переноса принципа"
+        ]
+      },
+      "gaps": [],
+      "evidence": [
+        {
+          "id": "MED:42165638",
+          "title": "Twenty-Five Years of the Environmental Stress Response and the Enduring Power of Yeast in Stress Biology.",
+          "url": "https://europepmc.org/article/MED/42165638",
+          "date": "2026-05-21",
+          "type": "review_text"
+        },
+        {
+          "id": "MED:42510863",
+          "title": "Hexokinase 2 and Carbohydrate Metabolism: A Multifaceted Metabolic Hub.",
+          "url": "https://europepmc.org/article/MED/42510863",
+          "date": "2026-07-19",
+          "type": "review_text"
+        },
+        {
+          "id": "MED:41999887",
+          "title": "Role of mitochondrial translation in modulating inflammatory disease outcome: Current knowledge and future perspectives.",
+          "url": "https://europepmc.org/article/MED/41999887",
+          "date": "2026-04-17",
+          "type": "review_text"
+        },
+        {
+          "id": "MED:40953108",
+          "title": "Dynamic phosphorylation of Hcm1 promotes fitness in chronic stress.",
+          "url": "https://europepmc.org/article/MED/40953108",
+          "date": "2025-09-15",
+          "type": "primary_text"
+        },
+        {
+          "id": "MED:31157618",
+          "title": "Age-dependent deterioration of nuclear pore assembly in mitotic cells decreases transport dynamics.",
+          "url": "https://europepmc.org/article/MED/31157618",
+          "date": "2019-06-03",
+          "type": "primary_text"
+        },
+        {
+          "id": "MED:38038975",
+          "title": "A guide to ERK dynamics, part 2: downstream decoding.",
+          "url": "https://europepmc.org/article/MED/38038975",
+          "date": "2023-12-01",
+          "type": "review_text"
+        },
+        {
+          "id": "MED:31031756",
+          "title": "Techniques for Studying Decoding of Single Cell Dynamics.",
+          "url": "https://europepmc.org/article/MED/31031756",
+          "date": "2019-04-11",
+          "type": "review_text"
+        },
+        {
+          "id": "MED:28035051",
+          "title": "Model-guided optogenetic study of PKA signaling in budding yeast.",
+          "url": "https://europepmc.org/article/MED/28035051",
+          "date": "2016-11-09",
+          "type": "primary_text"
+        }
+      ],
+      "reviews": [
+        {
+          "kind": "initial",
+          "family": "google",
+          "scores": {
+            "correctness": 9.0,
+            "novelty": 8.0,
+            "quality": 9.0
+          },
+          "notes": [
+            "Strong mechanistic link to conserved stress response pathways (Msn2/STRE in yeast, analogous to FOXO/NFAT in mammals).",
+            "Highly testable using existing optogenetic tools in single-cell yeast aging models.",
+            "Clear, falsifiable predictions and a well-designed crucial experiment that addresses the gap between correlation and causation.",
+            "Addresses temporal coding in gene regulation as a driver of aging, shifting focus from total dose to signal dynamics."
+          ]
+        },
+        {
+          "kind": "full",
+          "family": "zhipu",
+          "scores": {
+            "correctness": 7.0,
+            "novelty": 6.0,
+            "quality": 9.0
+          },
+          "notes": [
+            "Assumption: age-related widening of Msn2 nuclear pulses and its correlation with remaining lifespan — plausible given MED:31157618 (decreased TF shuttling in aged yeast) but the specific Msn2 pulse-width/lifespan link has no retrieved identifier.",
+            "Assumption: promoters differentially decode Msn2 pulse duration via optogenetics — consistent with general dynamics-decoding literature [MED:38038975, MED:31031756] but the specific Msn2 result is not retrieved.",
+            "Reasoning is sound: dynamic decoding of TF activity is established, and optogenetic dissection of pulse frequency vs. total exposure is a well-posed causal test [MED:28035051].",
+            "Strengths: clear falsification criteria, matched total exposure design, single-cell measurement of actual pulse shapes, remaining-divisions as primary endpoint — highly testable."
+          ]
+        },
+        {
+          "kind": "deep",
+          "family": "google",
+          "scores": {},
+          "notes": [
+            "Гипотеза логически стройна, опирается на известные факты о динамике Msn2 и предлагает четкий верифицируемый эксперимент с оптогенетическим управлением."
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "opponent": "imp001",
+          "mode": "debate",
+          "won": {
+            "novelty": false,
+            "evidence_support": true,
+            "testability": true,
+            "value": false
+          },
+          "judges": [
+            "zhipu"
+          ],
+          "rationale": "H1 wins on evidence_support (two retrieved primary papers vs only reviews for H2) and slightly on testability (routine single-cell yeast aging assays vs a more complex 3D human skin model). H2 wins on novelty (extracellular cGAMP trapping for senescence spread goes further beyond the retrieved evidence) and on value (a druggable, human-relevant intervention that cleanly discriminates spread mechanisms), though its core premise currently rests entirely on unverified assumptions."
+        },
+        {
+          "opponent": "imp002",
+          "mode": "debate",
+          "won": {
+            "novelty": true,
+            "evidence_support": true,
+            "testability": true,
+            "value": true
+          },
+          "judges": [
+            "google"
+          ],
+          "rationale": "Hypothesis 1 is selected because optogenetic control of transcription factor pulse dynamics in yeast offers superior testability, mechanistic clarity, and conceptual novelty compared to the technically demanding transient mitochondrial transporter manipulation in Hypothesis 2."
+        },
+        {
+          "opponent": "imp003",
+          "mode": "debate",
+          "won": {
+            "novelty": true,
+            "evidence_support": true,
+            "testability": true,
+            "value": false
+          },
+          "judges": [
+            "zhipu"
+          ],
+          "rationale": "H2 edges out on novelty, evidence support and testability: its ageing-specific causal claim about pulse-shape restoration is a genuinely new element, backed by a directly relevant primary finding (NPC deterioration) and an exceptionally clean optogenetic falsification design, whereas H1's sign-dependence refines established foam-cell logic with mostly review-level support. H1 wins on value because it yields druggable targets, flux-based biomarkers and direct brain-ageing/remyelination relevance."
+        },
+        {
+          "opponent": "imp005",
+          "mode": "debate",
+          "won": {
+            "novelty": false,
+            "evidence_support": false,
+            "testability": true,
+            "value": true
+          },
+          "judges": [
+            "zhipu"
+          ],
+          "rationale": "Hypothesis 1 is more novel and better supported by retrieved primary evidence (PCMT1 repair function plus PCMTD1 E3 recognition of the same mark), but its ageing relevance is indirect and substrate-specific. Hypothesis 2, though its central Msn2 claims are assumptions not covered by retrieved data, offers a decisive optogenetic lifespan experiment that cleanly discriminates pulse shape from total exposure, giving it the edge on testability and value."
+        },
+        {
+          "opponent": "imp001",
+          "mode": "debate",
+          "won": {
+            "novelty": true,
+            "evidence_support": false,
+            "testability": true,
+            "value": false
+          },
+          "judges": [
+            "google"
+          ],
+          "rationale": "Hypothesis 1 wins on evidence support and translational value due to established cGAS-STING biology and druggable local traps, while Hypothesis 2 wins on novelty and testable design by probing temporal dynamics of stress signaling."
+        },
+        {
+          "opponent": "imp003",
+          "mode": "debate",
+          "won": {
+            "novelty": false,
+            "evidence_support": true,
+            "testability": true,
+            "value": false
+          },
+          "judges": [
+            "google"
+          ],
+          "rationale": "Hypothesis 1 wins on evidence support and testability due to cleaner yeast optogenetic execution, whereas Hypothesis 2 wins on novelty and conceptual value by revealing a crucial conditional sign-reversal mechanism for lipid-lowering interventions in aging microglia."
+        }
+      ]
+    },
+    {
+      "id": "imp003",
+      "rank": 3,
+      "status": "active",
+      "title": "Удаление липидных капель из старой микроглии полезно только тогда, когда освобождённый холестерин успевает покинуть клетку",
+      "text": "Удаление липидных капель из старой микроглии полезно только тогда, когда освобождённый холестерин успевает покинуть клетку\n\nГипотеза: В старой микроглии липидные капли могут одновременно отражать нарушение обмена и временно защищать клетку, удерживая холестерин в форме эфиров. Ускоренный гидролиз этих эфиров при слабом экспорте увеличит доступный свободный холестерин, повреждение лизосом и воспаление.\n\nПоэтому **одно и то же вмешательство, уменьшающее липидные капли, должно менять знак эффекта в зависимости от измеренной скорости вывода холестерина**.\n\nМикроглия — клетки, которые поддерживают среду мозга и поглощают клеточные остатки, включая богатые липидами фрагменты миелина.\n\nЧто уже известно: В старой центральной нервной системе недостаточное выведение холестерина после поглощения миелина связано с образованием кристаллов, повреждением фаголизосом и нарушением ремиелинизации. В другой работе образование эфиров холестерина и липидных капель оказалось необходимой адаптацией для эффективного восстановления миелина. Следовательно, уменьшение числа капель само по себе не является достаточным признаком улучшения.\n\nРешающий эксперимент: Микроглию молодых и старых мышей нагрузить одинаковым количеством меченого миелина. Затем независимо менять:\n\n- скорость гидролиза эфиров холестерина;\n- возможность экспорта холестерина через клеточные транспортёры и внеклеточные молекулы-переносчики.\n\nПолучится матрица условий — от слабого до сильного гидролиза при нескольких уровнях экспорта.\n\nПо изотопной метке проследить путь холестерина: из поглощённого миелина в свободную фракцию, эфиры и внеклеточную среду. Отдельно измерять кристаллы, целостность лизосом, воспалительную секрецию и способность микроглии поддерживать образование нового миелина в совместной культуре.\n\nВажно различать капли, богатые эфирами холестерина, и капли, преимущественно содержащие триглицериды.\n\nСпецифическое предсказание: При слабом экспорте усиление гидролиза уменьшит капли, но ухудшит функцию. При достаточном экспорте такое же уменьшение капель улучшит её. Граница смены знака должна зависеть от соотношения фактических потоков освобождения и выведения холестерина.\n\nЧто опровергнет гипотезу: Усиление гидролиза одинаково полезно при всех подтверждённых уровнях экспорта; либо повреждение не связано с ростом доступного свободного холестерина.\n\nПотенциальное вмешательство: сначала обеспечить достаточный вывод холестерина, затем мобилизовать его внутриклеточные запасы. Конкретная дополнительная проверка — можно ли заранее предсказывать пользу по измерению этих двух потоков.",
+      "writer": "openai",
+      "writer_model": "pasted",
+      "aggregate": {
+        "mean": 0.4771850050171669,
+        "sd": 0.12386643893524117,
+        "rank_lo": 1,
+        "rank_hi": 5,
+        "p_top": 1.0
+      },
+      "scores": {
+        "novelty": {
+          "p": 0.5,
+          "games": 6,
+          "lo": 0.22380045995520043,
+          "hi": 0.7761995400447996
+        },
+        "evidence_support": {
+          "p": 0.09260615879844421,
+          "games": 6,
+          "lo": 0.00844217114195513,
+          "hi": 0.5502289749206911
+        },
+        "testability": {
+          "p": 0.2214500009300015,
+          "games": 6,
+          "lo": 0.043150386667041345,
+          "hi": 0.6420980835607369
+        },
+        "value": {
+          "p": 0.7421648161580822,
+          "games": 6,
+          "lo": 0.371984443611851,
+          "hi": 0.9332808696259907
+        }
+      },
+      "card": {
+        "claim": "Удаление липидных капель из старой микроглии полезно только тогда, когда освобождённый холестерин успевает покинуть клетку",
+        "mechanism": "Ускоренный гидролиз эфиров холестерина при слабом экспорте увеличивает доступный свободный холестерин, повреждение лизосом и воспаление; уменьшение липидных капель может улучшить функцию только при достаточном экспорте холестерина; граница смены знака зависит от соотношения потоков освобождения и выведения холестерина",
+        "intervention": "модификация скорости гидролиза эфиров холестерина и/или возможности экспорта холестерина через клеточные транспортёры и внеклеточные переносчики; нагрузка меченым миелином на микроглии молодых и старых мышей",
+        "hallmarks": [
+          "острая фаза старения",
+          "нарушение липидного обмена/метаболизма",
+          "воспаление",
+          "повреждение лизосом",
+          "ремиелинизация"
+        ],
+        "outcome_claimed": "биомаркеры холестерина/липидного обмена, кристаллы холестерина, целостность лизосом, воспалительная секреция, способность микроглии поддерживать образование нового миелина, виды организм/мышь",
+        "known": [
+          "недостаточное выведение холестерина после поглощения миелина связано с кристаллами, фаголизосомными повреждениями и ремиелинизацией",
+          "образование эфиров холестерина и липидных капель — адаптация для восстановления миелина"
+        ],
+        "assumptions": [
+          "предполагается, что скорость гидролиза и скорость экспорта холестерина являются детерминирующими потоками свободного холестерина внутри клетки"
+        ],
+        "decisive_experiment": "молодые и старые мыши нагрузить меченым миелином; независимо изменять скорость гидролиза эфиров холестерина и возможность экспорта холестерина; измерять пути холестерина и связанные эффекты (кристаллы, лизосомные повреждения, воспаление, ремиелинизацию)",
+        "falsifiable_implications": [
+          "усиление гидролиза полезно при всех уровнях экспорта",
+          "повреждение не связано с ростом доступного свободного холестерина"
+        ],
+        "unknowns": [
+          "точные пороги соотношения потоков освобождения и выведения",
+          "механизм, как различается триглицеридные капли и капли богатые эфиром холестерина",
+          "предикторы пользы по измерению потоков холестерина"
+        ]
+      },
+      "gaps": [],
+      "evidence": [
+        {
+          "id": "MED:42745992",
+          "title": "Lipid metabolic reprogramming in clear cell renal cell carcinoma: focus on high-density lipoprotein-related pathways.",
+          "url": "https://europepmc.org/article/MED/42745992",
+          "date": "2026-09-01",
+          "type": "review_text"
+        },
+        {
+          "id": "MED:42529163",
+          "title": "The endo-lysosomal-lipid axis: bidirectional interactions between membrane trafficking dysfunction and lipid metabolic disorders.",
+          "url": "https://europepmc.org/article/MED/42529163",
+          "date": "2026-07-15",
+          "type": "review_text"
+        },
+        {
+          "id": "MED:42310661",
+          "title": "Lipophagy in disease: signaling control, organelle communication, and therapeutic opportunities.",
+          "url": "https://europepmc.org/article/MED/42310661",
+          "date": "2026-06-17",
+          "type": "review_text"
+        },
+        {
+          "id": "MED:42631879",
+          "title": "Microglial Immunometabolic Remodeling After Ischemic Stroke: The Interplay Between Mitochondrial Stress and the Ischemic Microenvironment.",
+          "url": "https://europepmc.org/article/MED/42631879",
+          "date": "2026-08-22",
+          "type": "review_text"
+        },
+        {
+          "id": "MED:42274750",
+          "title": "From lipid overload to autophagy collapse: how lipid dysregulation drives chronic inflammation and metabolic disease.",
+          "url": "https://europepmc.org/article/MED/42274750",
+          "date": "2026-06-11",
+          "type": "review_text"
+        },
+        {
+          "id": "MED:42616848",
+          "title": "Lipid droplets as redox-active organelles after spinal cord injury: lipid peroxidation, mitochondrial dysfunction, and neuroinflammation.",
+          "url": "https://europepmc.org/article/MED/42616848",
+          "date": "2026-08-19",
+          "type": "review_text"
+        },
+        {
+          "id": "MED:42793029",
+          "title": "Epigenomic Remodeling by Lipid Metabolism: A Cross-Disease Perspective on Cancer and Brain Disorders.",
+          "url": "https://europepmc.org/article/MED/42793029",
+          "date": "2026-09-17",
+          "type": "review_text"
+        },
+        {
+          "id": "PMC:PMC13644168",
+          "title": "Lysosomes as chemical and metabolic organizers of central nervous system injury and repair",
+          "url": "https://europepmc.org/article/PMC/PMC13644168",
+          "date": "2026-10-08",
+          "type": "review_text"
+        }
+      ],
+      "reviews": [
+        {
+          "kind": "initial",
+          "family": "zhipu",
+          "scores": {
+            "correctness": 8.0,
+            "novelty": 6.0,
+            "quality": 8.0
+          },
+          "notes": [
+            "Biologically sound: free cholesterol accumulation in aged microglia, foam cell-like lipid droplets, LXR/ABCA1 export, and CE storage as protective buffering are consistent with known literature (e.g., lipid-droplet-accumulating microglia in aging, myelin phagocytosis studies).",
+            "Sign-dependence of LD-reducing interventions on cholesterol efflux capacity is a plausible and useful refinement; conceptually analogous to foam-cell biology in atherosclerosis, so novelty is moderate rather than high.",
+            "Proposed matrix experiment (independent manipulation of hydrolysis vs export with isotope tracing) is well-designed, falsifiable, with clear predictions and a stated disproof criterion — good quality reasoning.",
+            "Minor caveats: distinguishing CE- vs TG-rich droplets is mentioned but measuring efflux in vivo in brain (acceptors like apoE-HDL) is technically hard; effects on remyelination in co-culture may be confounded by other glial cells."
+          ]
+        },
+        {
+          "kind": "full",
+          "family": "google",
+          "scores": {
+            "correctness": 9.0,
+            "novelty": 5.0,
+            "quality": 10.0
+          },
+          "notes": [
+            "Coverage of the exact hypothesis is unknown based on the strict primary evidence criterion, yielding a novelty score of 5.",
+            "The reasoning is exceptionally sound, integrating concepts of lipotoxicity, esterification buffering, lysosomal damage, and flux-dependent intervention outcomes.",
+            "The proposed experiment is exceptionally clear, highly specific, and directly testable with isotopic tracing and functional readouts."
+          ]
+        },
+        {
+          "kind": "deep",
+          "family": "zhipu",
+          "scores": {},
+          "notes": [
+            "Гипотеза внутренне согласована и фальсифицируема; матрица условий — сильный дизайн.",
+            "Некритические слабости: возможная неспецифичность токсичности к свободному холестерину (жирные кислоты как конфаундер) и переносимость результатов in vitro на in vivo.",
+            "Оба слабых допущения устранимы уточнением: контроль липолиза жирных кислот и параллельные in vivo проверки — гипотезу можно отремонтировать без смены ядра.",
+            "Требуется прямое измерение свободного холестерина в компартментах, а не только изотопного баланса, чтобы исключить альтернативные медиаторы повреждения."
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "opponent": "imp001",
+          "mode": "debate",
+          "won": {
+            "novelty": true,
+            "evidence_support": false,
+            "testability": false,
+            "value": true
+          },
+          "judges": [
+            "zhipu"
+          ],
+          "rationale": "H1 has stronger shown evidential grounding (established cGAS-STING senescence biology and existing cGAMP-trapping tools), while H2's specific premises lack primary support in the retrieved evidence. H2 edges out on novelty (sign-dependence reframes droplet removal) and value (a flux-ratio biomarker that discriminates droplets-as-cause vs droplets-as-buffer), with both equally and exceptionally testable."
+        },
+        {
+          "opponent": "imp002",
+          "mode": "debate",
+          "won": {
+            "novelty": false,
+            "evidence_support": false,
+            "testability": true,
+            "value": false
+          },
+          "judges": [
+            "zhipu"
+          ],
+          "rationale": "Гипотеза 1 опирается на первичные данные о компартментном лимитировании NAD+ и предлагает новый таймированный механизм с драгабельным таргетом, хотя её ключевой шаг остаётся допущением и частично противоречится MED:41639843. Гипотеза 2 выигрывает в тестируемости благодаря стандартным методам и матричному дизайну, но полностью лишена первичной поддержки в retrieved-доказательствах и концептуально близка к биологии пенных клеток."
+        },
+        {
+          "opponent": "imp004",
+          "mode": "debate",
+          "won": {
+            "novelty": false,
+            "evidence_support": false,
+            "testability": false,
+            "value": true
+          },
+          "judges": [
+            "zhipu"
+          ],
+          "rationale": "H2 edges out on novelty, evidence support and testability: its ageing-specific causal claim about pulse-shape restoration is a genuinely new element, backed by a directly relevant primary finding (NPC deterioration) and an exceptionally clean optogenetic falsification design, whereas H1's sign-dependence refines established foam-cell logic with mostly review-level support. H1 wins on value because it yields druggable targets, flux-based biomarkers and direct brain-ageing/remyelination relevance."
+        },
+        {
+          "opponent": "imp005",
+          "mode": "debate",
+          "won": {
+            "novelty": true,
+            "evidence_support": false,
+            "testability": false,
+            "value": true
+          },
+          "judges": [
+            "google"
+          ],
+          "rationale": "Hypothesis 1 wins on novelty and broader neurogerontological value regarding lipid metabolism, while Hypothesis 2 wins on direct primary evidence support and cleaner biochemical testability."
+        },
+        {
+          "opponent": "imp005",
+          "mode": "debate",
+          "won": {
+            "novelty": false,
+            "evidence_support": false,
+            "testability": false,
+            "value": true
+          },
+          "judges": [
+            "zhipu"
+          ],
+          "rationale": "H2 wins novelty and evidence_support because its core mechanism is grounded in primary findings (PCMTD1 ligase structure, PCMT1 function) and its 'repair masks degradation' framing is absent from the retrieved literature, while H1's claims rest only on reviews and transplant foam-cell logic. H2's first-step test is simpler and more decisive, but H1 wins value due to its predictive flux biomarker, druggable export targets, and direct ageing-relevant outcomes in remyelination and neuroinflammation."
+        },
+        {
+          "opponent": "imp004",
+          "mode": "debate",
+          "won": {
+            "novelty": true,
+            "evidence_support": false,
+            "testability": false,
+            "value": true
+          },
+          "judges": [
+            "google"
+          ],
+          "rationale": "Hypothesis 1 wins on evidence support and testability due to cleaner yeast optogenetic execution, whereas Hypothesis 2 wins on novelty and conceptual value by revealing a crucial conditional sign-reversal mechanism for lipid-lowering interventions in aging microglia."
+        }
+      ]
+    },
+    {
+      "id": "imp005",
+      "rank": 4,
+      "status": "active",
+      "title": "Частичный ремонт белка может продлевать жизнь его неработающей форме",
+      "text": "Частичный ремонт белка может продлевать жизнь его неработающей форме\n\nГипотеза: У старого белка одновременно присутствуют несколько повреждений. Одно из них — изоаспартат — служит признаком для распознавания системой утилизации. Фермент PCMT1 исправляет этот участок, но оставляет другое повреждение, которое продолжает нарушать функцию.\n\nВ результате белок становится менее заметен для удаления, сохраняя свою неисправность. Усиление ремонта в такой ситуации увеличивает время пребывания дефектного белка в клетке.\n\nЧто уже известно: PCMT1 участвует в исправлении изоаспартильных повреждений. Работа 2025 года показала, как PCMTD1 в составе комплекса убиквитинлигазы распознаёт изоаспартат. Утилизацию конкретного многократно повреждённого белка через этот механизм необходимо сначала подтвердить отдельно.\n\nРешающий эксперимент: Выбрать белок с измеримой активностью и подтвердить его PCMTD1-зависимое удаление. Подготовить четыре версии: неповреждённую, с изоаспартатом, с другим определённым повреждением и с обоими повреждениями.\n\nСравнить действие активного и каталитически неактивного PCMT1. Измерять исправление изоаспартата, остаточную активность белка, убиквитинирование и время жизни. Повторить при отключённом PCMTD1. После этого искать такой же эффект у эндогенных белков старых клеток.\n\nСпецифическое предсказание: **При одиночном повреждении PCMT1 восстановит функцию; при двойном — снизит измеряемое содержание изоаспартата, но продлит существование неработающего белка.** Разница в скорости утилизации должна зависеть от PCMTD1.\n\nЧто опровергнет гипотезу: Исправление изоаспартата не меняет распознавание и удаление выбранного субстрата либо восстанавливает его функцию и при сочетании повреждений. Отсутствие PCMTD1-зависимой утилизации закроет эту конкретную механистическую версию ещё на первом этапе.\n\nПотенциальное вмешательство: Усиливать удаление белков с сочетанием повреждений, сохраняя ремонт тех молекул, которым он действительно возвращает функцию. Критерием результата должны стать активность и обновление белкового состава.",
+      "writer": "openai",
+      "writer_model": "pasted",
+      "aggregate": {
+        "mean": 0.476779139264534,
+        "sd": 0.12298467612774451,
+        "rank_lo": 1,
+        "rank_hi": 5,
+        "p_top": 1.0
+      },
+      "scores": {
+        "novelty": {
+          "p": 0.4907825388403544,
+          "games": 6,
+          "lo": 0.21718465566060716,
+          "hi": 0.7700158761819241
+        },
+        "evidence_support": {
+          "p": 0.9043212979021236,
+          "games": 6,
+          "lo": 0.44058527883274745,
+          "hi": 0.9912608523121904
+        },
+        "testability": {
+          "p": 0.5584646570197074,
+          "games": 6,
+          "lo": 0.19412108744651216,
+          "hi": 0.8691333731553038
+        },
+        "value": {
+          "p": 0.23301157138955295,
+          "games": 6,
+          "lo": 0.059782263804662866,
+          "hi": 0.5920955958983776
+        }
+      },
+      "card": {
+        "claim": "Частичный ремонт белка с помощью фермента PCMT1 убирает маркер утилизации (изоаспартат), но оставляет другое повреждение, в результате чего дефектный неработающий белок реже удаляется и дольше сохраняется в клетке.",
+        "mechanism": "Фермент PCMT1 исправляет изоаспартат на старом белке, который служит признаком для распознавания системой утилизации через комплекс с PCMTD1, но оставляет другое повреждение, из-за чего белок становится менее заметен для удаления и увеличивается время его пребывания в клетке.",
+        "intervention": "Усиливать удаление белков с сочетанием повреждений, сохраняя ремонт тех молекул, которым он действительно возвращает функцию",
+        "outcome_claimed": "время пребывания дефектного белка в клетке",
+        "known": [
+          "PCMT1 участвует в исправлении изоаспартильных повреждений",
+          "Работа 2025 года показала, как PCMTD1 в составе комплекса убиквитинлигазы распознаёт изоаспартат"
+        ],
+        "decisive_experiment": "Выбрать белок с измеримой активностью и подтвердить его PCMTD1-зависимое удаление. Подготовить четыре версии: неповреждённую, с изоаспартатом, с другим определённым повреждением и с обоими повреждениями. Сравнить действие активного и каталитически неактивного PCMT1. Измерять исправление изоаспартата, остаточную активность белка, убиквитинирование и время жизни. Повторить при отключённом PCMTD1. После этого искать такой же эффект у эндогенных белков старых клеток.",
+        "falsifiable_implications": [
+          "Исправление изоаспартата не меняет распознавание и удаление выбранного субстрата",
+          "Исправление изоаспартата восстанавливает функцию белка и при сочетании повреждений",
+          "Отсутствие PCMTD1-зависимой утилизации закроет эту конкретную механистическую версию ещё на первом этапе"
+        ],
+        "unknowns": [
+          "Утилизацию конкретного многократно повреждённого белка через этот механизм необходимо сначала подтвердить отдельно"
+        ]
+      },
+      "gaps": [],
+      "evidence": [
+        {
+          "id": "MED:42007445",
+          "title": "Improved red blood cell storage quality of blood from donors carrying the hypermorphic PIMT I120 variant.",
+          "url": "https://europepmc.org/article/MED/42007445",
+          "date": "2026-04-16",
+          "type": "primary_text"
+        },
+        {
+          "id": "MED:40465401",
+          "title": "Isoaspartate Repair of TGF- β Receptor 2 : A Novel Checkpoint in Kidney Fibrosis.",
+          "url": "https://europepmc.org/article/MED/40465401",
+          "date": "2025-06-04",
+          "type": "primary_text"
+        },
+        {
+          "id": "MED:41491065",
+          "title": "The role of PCMT1 in prognosis tumor immune microenvironment and therapeutic responses across cancers.",
+          "url": "https://europepmc.org/article/MED/41491065",
+          "date": "2026-01-05",
+          "type": "primary_text"
+        },
+        {
+          "id": "MED:41790433",
+          "title": "Aspartimide Modification in RiPP Natural Products.",
+          "url": "https://europepmc.org/article/MED/41790433",
+          "date": "2026-03-06",
+          "type": "review_text"
+        },
+        {
+          "id": "MED:40975169",
+          "title": "Structural basis for L-isoaspartyl-containing protein recognition by the human PCMTD1 cullin-RING E3 ubiquitin ligase.",
+          "url": "https://europepmc.org/article/MED/40975169",
+          "date": "2025-09-18",
+          "type": "primary_text"
+        },
+        {
+          "id": "PPR:PPR1023798",
+          "title": "Structural basis for L-isoaspartyl-containing protein recognition by the PCMTD1 cullin-RING E3 ubiquitin ligase",
+          "url": "https://europepmc.org/article/PPR/PPR1023798",
+          "date": "2025-05-21",
+          "type": "primary_text"
+        },
+        {
+          "id": "MED:42078440",
+          "title": "CUL5-mediated ubiquitination in cancer cell therapy: context-dependent roles, molecular networks, and emerging therapeutic avenues.",
+          "url": "https://europepmc.org/article/MED/42078440",
+          "date": "2026-04-17",
+          "type": "review_text"
+        },
+        {
+          "id": "MED:42300786",
+          "title": "Ubiquitin and ubiquitin-like modifications in the endoplasmic reticulum stress response.",
+          "url": "https://europepmc.org/article/MED/42300786",
+          "date": "2026-06-16",
+          "type": "review_text"
+        }
+      ],
+      "reviews": [
+        {
+          "kind": "initial",
+          "family": "zhipu",
+          "scores": {
+            "correctness": 7.0,
+            "novelty": 6.0,
+            "quality": 8.0
+          },
+          "notes": [
+            "Mechanistically plausible: PCMT1 repairs L-isoaspartyl damage and PCMTD1 as substrate-recognition component of a ubiquitin ligase is consistent with recent literature, so repair could reduce recognition of a doubly damaged protein.",
+            "Main weakness: PCMT1-mediated repair is largely cytosolic and its impact on protein turnover is modest; the 'repair prolongs survival of nonfunctional protein' effect is speculative and may be substrate-specific.",
+            "Well-posed falsifiable prediction with clear four-variant experimental design and controls (catalytically dead PCMT1, PCMTD1 knockout).",
+            "Falsification criteria are explicit and reasonable."
+          ]
+        },
+        {
+          "kind": "full",
+          "family": "google",
+          "scores": {
+            "correctness": 8.0,
+            "novelty": 5.0,
+            "quality": 9.0
+          },
+          "notes": [
+            "Coverage of the specific dual-damage hypothesis where partial repair hides proteins from degradation is unknown from the retrieved literature, thus novelty is set to 5.",
+            "The reasoning on how enzymatic repair of one lesion could modulate recognition by an E3 ligase dependent on that same lesion is sound and testable."
+          ]
+        },
+        {
+          "kind": "deep",
+          "family": "zhipu",
+          "scores": {},
+          "notes": [
+            "Главное уязвимое звено — допущение, что изоаспартат является доминирующим/необходимым сигналом деградации конкретного мультиповреждённого субстрата; оно проверяемо (эксперимент с PCMTD1-нокаутом и одиночными повреждениями) и при опровержении не рушит всю рамку, а лишь сужает её.",
+            "Гипотеза корректно фальсифицируема: заранее указаны критерии опровержения и решающий эксперимент с четырьмя версиями белка и каталитически неактивным PCMT1.",
+            "Различение PCMT1 (ремонт) и PCMTD1 (распознавание) — сильная сторона: они могут конкурировать за один и тот же маркер, что делает предсказание нетривиальным.",
+            "Ослабляющий сценарий: если деградация запускается вторым повреждением независимо от изоаспартата, эффект 'продления жизни дефектного белка' исчезнет — но это будет уточнение, а не крах гипотезы."
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "opponent": "imp001",
+          "mode": "debate",
+          "won": {
+            "novelty": false,
+            "evidence_support": true,
+            "testability": false,
+            "value": false
+          },
+          "judges": [
+            "zhipu"
+          ],
+          "rationale": "Both hypotheses go beyond the shown evidence, but H1's application of extracellular cGAMP trapping to senescence spread is a somewhat more incremental extension of well-documented STING-senescence biology, while H2's repair-masks-degradation competition via PCMTD1 is a fresher angle. However, H2 is backed by primary findings (PCMTD1 structural data, phenotypic repair effects) whereas H1 rests only on reviews, making H2 stronger on evidence; H1's decisive experiment is cleaner, and its direct link to a hallmark of ageing with a druggable intervention gives it greater translational value."
+        },
+        {
+          "opponent": "imp002",
+          "mode": "debate",
+          "won": {
+            "novelty": true,
+            "evidence_support": true,
+            "testability": true,
+            "value": false
+          },
+          "judges": [
+            "zhipu"
+          ],
+          "rationale": "H1's repair-masks-quality-control mechanism is absent from retrieved evidence and rests on two independently supported primary findings (PCMT1 repair, PCMTD1 recognition) with a fully feasible four-variant test, whereas H2's core premise is an unverified assumption with a partially contradicting primary study and harder methodology; H2 nevertheless wins on value because a confirmed time-windowed NAD⁺ redistribution would link two ageing hallmarks with a strongly discriminating test."
+        },
+        {
+          "opponent": "imp003",
+          "mode": "debate",
+          "won": {
+            "novelty": false,
+            "evidence_support": true,
+            "testability": true,
+            "value": false
+          },
+          "judges": [
+            "google"
+          ],
+          "rationale": "Hypothesis 1 wins on novelty and broader neurogerontological value regarding lipid metabolism, while Hypothesis 2 wins on direct primary evidence support and cleaner biochemical testability."
+        },
+        {
+          "opponent": "imp004",
+          "mode": "debate",
+          "won": {
+            "novelty": true,
+            "evidence_support": true,
+            "testability": false,
+            "value": false
+          },
+          "judges": [
+            "zhipu"
+          ],
+          "rationale": "Hypothesis 1 is more novel and better supported by retrieved primary evidence (PCMT1 repair function plus PCMTD1 E3 recognition of the same mark), but its ageing relevance is indirect and substrate-specific. Hypothesis 2, though its central Msn2 claims are assumptions not covered by retrieved data, offers a decisive optogenetic lifespan experiment that cleanly discriminates pulse shape from total exposure, giving it the edge on testability and value."
+        },
+        {
+          "opponent": "imp003",
+          "mode": "debate",
+          "won": {
+            "novelty": true,
+            "evidence_support": true,
+            "testability": true,
+            "value": false
+          },
+          "judges": [
+            "zhipu"
+          ],
+          "rationale": "H2 wins novelty and evidence_support because its core mechanism is grounded in primary findings (PCMTD1 ligase structure, PCMT1 function) and its 'repair masks degradation' framing is absent from the retrieved literature, while H1's claims rest only on reviews and transplant foam-cell logic. H2's first-step test is simpler and more decisive, but H1 wins value due to its predictive flux biomarker, druggable export targets, and direct ageing-relevant outcomes in remyelination and neuroinflammation."
+        },
+        {
+          "opponent": "imp002",
+          "mode": "debate",
+          "won": {
+            "novelty": false,
+            "evidence_support": true,
+            "testability": true,
+            "value": true
+          },
+          "judges": [
+            "zhipu"
+          ],
+          "rationale": "H2 offers the more novel, uncovered idea (timed NAD+ redistribution window), but its key mechanistic link is an unretieved assumption with a contradicting primary study in context, and its decisive test faces real feasibility barriers. H1 rests on two primary evidence pillars (PCMT1 repair, PCMTD1 recognition), is immediately testable with standard tools and clean falsification, and yields a discriminating mechanistic result, making it the stronger overall pick despite moderate novelty."
+        }
+      ]
+    },
+    {
+      "id": "imp002",
+      "rank": 5,
+      "status": "active",
+      "title": "Краткое перераспределение NAD⁺ в пользу ядра может защищать старую клетку лучше, чем постоянное изменение его распределения",
+      "text": "Краткое перераспределение NAD⁺ в пользу ядра может защищать старую клетку лучше, чем постоянное изменение его распределения\n\nГипотеза: В части старых клеток во время повреждения ДНК ограничивающим фактором становится доступность NAD⁺ для ядерной репарации. Кратковременное уменьшение его импорта в митохондрии должно ускорять ремонт ДНК. Последующее восстановление транспорта позволит избежать энергетической цены постоянного ограничения.\n\nПредполагается существование полезного временного окна: **сначала повысить доступность NAD⁺ для ремонта, затем восстановить обычное распределение**. Оно должно зависеть от энергетического резерва клетки.\n\nЧто уже известно: SLC25A51 переносит NAD⁺ в митохондрии. В клеточных моделях его отсутствие повышало ядерный NAD⁺ и ускоряло PARP1-зависимую репарацию повреждений ДНК, одновременно ухудшая окислительный метаболизм. Следовательно, сама конкуренция между клеточными отсеками уже имеет экспериментальное основание. Польза краткого переключения для старых клеток остаётся отдельной гипотезой.\n\nРешающий эксперимент: В первичных фибробластах молодых и пожилых доноров создать систему обратимого регулирования количества SLC25A51. После одинакового умеренного повреждения ДНК сравнить:\n\n- неизменный транспорт;\n- краткое снижение транспорта непосредственно во время репарации;\n- такой же импульс, сдвинутый на период после репарации;\n- более слабое продолжительное снижение с сопоставимой суммарной экспозицией.\n\nИзмерять NAD⁺ отдельно в ядре и митохондриях, скорость устранения повреждений, ATP, дыхание и последующее появление устойчивой сенесценции. Контролировать клеточный цикл: замедление деления само по себе может уменьшать некоторые последствия повреждения ДНК.\n\nДля проверки механизма повторить сравнение при подавлении PARP1, учитывая его собственное влияние на репарацию.\n\nСпецифическое предсказание: Ранний короткий импульс уменьшит остаточные повреждения и последующую сенесценцию сильнее позднего. После восстановления транспорта дыхание вернётся к исходному уровню. Преимущество будет выражено у клеток с недостаточной доступностью ядерного NAD⁺, но достаточным энергетическим резервом.\n\nЕсли эффект связан именно с PARP1-зависимой репарацией, подавление PARP1 должно существенно ослабить преимущество раннего импульса.\n\nЧто опровергнет гипотезу: Ядерный NAD⁺ действительно увеличивается, но ремонт не ускоряется; либо энергетические потери полностью перекрывают пользу во всём проверенном диапазоне. Отсутствие зависимости от времени вмешательства опровергнет предположение об особом окне репарации.\n\nПотенциальное вмешательство: временное управление внутриклеточным распределением NAD⁺ в периоды повышенной нагрузки на репарацию. До практического применения потребуется разработать способ достаточно быстрого и обратимого управления транспортом.",
+      "writer": "openai",
+      "writer_model": "pasted",
+      "aggregate": {
+        "mean": 0.34348149539409806,
+        "sd": 0.1250131354785967,
+        "rank_lo": 2,
+        "rank_hi": 5,
+        "p_top": 1.0
+      },
+      "scores": {
+        "novelty": {
+          "p": 0.4268341631751359,
+          "games": 5,
+          "lo": 0.16044154003341793,
+          "hi": 0.7437187388834331
+        },
+        "evidence_support": {
+          "p": 0.27238670714488217,
+          "games": 5,
+          "lo": 0.05267785497268122,
+          "hi": 0.7159276525901115
+        },
+        "testability": {
+          "p": 0.08256116570466036,
+          "games": 5,
+          "lo": 0.007217808561269448,
+          "hi": 0.5269406159288126
+        },
+        "value": {
+          "p": 0.3724188270313775,
+          "games": 5,
+          "lo": 0.11849242039972073,
+          "hi": 0.7237374008262967
+        }
+      },
+      "card": {
+        "claim": "Кратковременное уменьшение импорта NAD⁺ в митохондрии во время повреждения ДНК должно ускорять ремонт ДНК и защищать старую клетку лучше, чем постоянное изменение его распределения.",
+        "mechanism": "В части старых клеток во время повреждения ДНК ограничивающим фактором становится доступность NAD⁺ для ядерной репарации; кратковременное уменьшение импорта в митохондрии перераспределяет NAD⁺ в пользу ядра, ускоряя PARP1-зависимый ремонт, а последующее восстановление транспорта позволяет избежать энергетической цены постоянного ограничения.",
+        "intervention": "временное управление внутриклеточным распределением NAD⁺ в периоды повышенной нагрузки на репарацию (краткое снижение транспорта SLC25A51)",
+        "hallmarks": [
+          "Genomic instability (positive)",
+          "Mitochondrial dysfunction (positive)"
+        ],
+        "outcome_claimed": "скорость устранения повреждений, уменьшение остаточных повреждений и последующей сенесценции, возвращение дыхания к исходному уровню в первичных фибробластах молодых и пожилых доноров",
+        "known": [
+          "SLC25A51 переносит NAD⁺ в митохондрии.",
+          "В клеточных моделях отсутствие SLC25A51 повышало ядерный NAD⁺ и ускоряло PARP1-зависимую репарацию повреждений ДНК, одновременно ухудшая окислительный метаболизм.",
+          "Конкуренция между клеточными отсеками уже имеет экспериментальное основание."
+        ],
+        "assumptions": [
+          "Существует полезное временное окно: сначала повысить доступность NAD⁺ для ремонта, затем восстановить обычное распределение.",
+          "Эффект зависит от энергетического резерва клетки."
+        ],
+        "decisive_experiment": "В первичных фибробластах молодых и пожилых доноров создать систему обратимого регулирования количества SLC25A51. После одинакового умеренного повреждения ДНК сравнить неизменный транспорт, краткое снижение транспорта непосредственно во время репарации, такой же импульс, сдвинутый на период после репарации, и более слабое продолжительное снижение с сопоставимой суммарной экспозицией. Измерять NAD⁺ отдельно в ядре и митохондриях, скорость устранения повреждений, ATP, дыхание и последующее появление устойчивой сенесценции, контролируя клеточный цикл. Для проверки механизма повторить сравнение при подавлении PARP1.",
+        "falsifiable_implications": [
+          "Ядерный NAD⁺ действительно увеличивается, но ремонт не ускоряется.",
+          "Энергетические потери полностью перекрывают пользу во всём проверенном диапазоне.",
+          "Отсутствие зависимости от времени вмешательства опровергнет предположение об особом окне репарации."
+        ],
+        "unknowns": [
+          "Польза краткого переключения для старых клеток остаётся отдельной гипотезой."
+        ]
+      },
+      "gaps": [],
+      "evidence": [
+        {
+          "id": "MED:41639843",
+          "title": "Targeting miR-4653-3p/SLC25A51/SIRT3 axis to induce synthetic lethality in ARID1A-deficient colorectal cancer via blockade of DNA repair.",
+          "url": "https://europepmc.org/article/MED/41639843",
+          "date": "2026-02-04",
+          "type": "primary_text"
+        },
+        {
+          "id": "MED:42514364",
+          "title": "NAD Metabolism in Acute Myeloid Leukaemia: Biological Rationale and Therapeutic Opportunities.",
+          "url": "https://europepmc.org/article/MED/42514364",
+          "date": "2026-07-13",
+          "type": "review_text"
+        },
+        {
+          "id": "MED:42646333",
+          "title": "Nicotinamide Mononucleotide Adenylyltransferase 1 and NAD&lt;sup&gt;+&lt;/sup&gt; Homeostasis in Neuroprotection and Aging.",
+          "url": "https://europepmc.org/article/MED/42646333",
+          "date": "2026-08-21",
+          "type": "review_text"
+        },
+        {
+          "id": "MED:42107767",
+          "title": "Nutrition Information Briefs - Niacin.",
+          "url": "https://europepmc.org/article/MED/42107767",
+          "date": "2026-05-08",
+          "type": "primary_text"
+        },
+        {
+          "id": "MED:41266821",
+          "title": "Hepatocyte mitochondrial NAD&lt;sup&gt;+&lt;/sup&gt; content is limiting for liver regeneration.",
+          "url": "https://europepmc.org/article/MED/41266821",
+          "date": "2025-11-20",
+          "type": "primary_text"
+        },
+        {
+          "id": "MED:42663289",
+          "title": "Advances in sirtuin research in lung diseases (Review).",
+          "url": "https://europepmc.org/article/MED/42663289",
+          "date": "2026-08-28",
+          "type": "review_text"
+        },
+        {
+          "id": "MED:42188047",
+          "title": "Targeting NAD Homeostasis: Compartmentalization, Quantification, and Modulation.",
+          "url": "https://europepmc.org/article/MED/42188047",
+          "date": "2026-05-18",
+          "type": "review_text"
+        },
+        {
+          "id": "MED:42325507",
+          "title": "Sarcopenia and satellite cell homeostasis disruption: the dual function of NAD+ metabolism.",
+          "url": "https://europepmc.org/article/MED/42325507",
+          "date": "2026-06-05",
+          "type": "review_text"
+        }
+      ],
+      "reviews": [
+        {
+          "kind": "initial",
+          "family": "google",
+          "scores": {
+            "correctness": 8.0,
+            "novelty": 7.0,
+            "quality": 9.0
+          },
+          "notes": [
+            "The hypothesis is well-reasoned, highly testable, and leverages known biology regarding NAD+ compartmentalization and SLC25A51. It addresses the trade-off between nuclear DNA repair and mitochondrial bioenergetics in aging cells through a dynamic, pulsed intervention rather than chronic inhibition. The proposed experiments are detailed, include appropriate controls (cell cycle, PARP1 dependence), and clearly state falsification criteria."
+          ]
+        },
+        {
+          "kind": "full",
+          "family": "zhipu",
+          "scores": {
+            "correctness": 7.0,
+            "novelty": 6.0,
+            "quality": 8.0
+          },
+          "notes": [
+            "The retrieved evidence does not directly show that reducing mitochondrial NAD+ import raises nuclear NAD+ and accelerates PARP1-dependent repair; the hypothesis states this from prior work not retrieved, so this link is an assumption here, though mechanistically plausible.",
+            "MED:41639843 actually shows the opposite direction (SLC25A51 loss impairs SIRT3-related repair in a cancer context), which the hypothesis should address; it does not contradict nuclear PARP1 competition but complicates the simple picture.",
+            "The genuinely new element is the transient, time-windowed redistribution of NAD+ toward the nucleus during repair in old cells, with reversibility to avoid energetic cost; retrieved reviews on spatiotemporal NAD+ control [MED:42708068] discuss the concept but no primary evidence covers timed SLC25A51 pulses, so coverage is largely unknown.",
+            "Experimental design is well specified: inducible SLC25A51 control, four timing/dose arms, compartmental NAD+ measurement, PARP1 epistasis, cell-cycle control, and clear falsification criteria."
+          ]
+        },
+        {
+          "kind": "deep",
+          "family": "google",
+          "scores": {},
+          "notes": [
+            "Гипотеза логично структурирована, опирается на известные биохимические механизмы (PARP1, SLC25A51) и предлагает исчерпывающий набор контролируемых экспериментов для верификации."
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "opponent": "imp001",
+          "mode": "debate",
+          "won": {
+            "novelty": false,
+            "evidence_support": false,
+            "testability": false,
+            "value": false
+          },
+          "judges": [
+            "google"
+          ],
+          "rationale": "Hypothesis 2 outperforms Hypothesis 1 by leveraging well-documented cGAS-STING biology, offering a cleaner 3D experimental design with robust genetic controls, and presenting a translatable extracellular trapping intervention against aging-associated inflammation."
+        },
+        {
+          "opponent": "imp003",
+          "mode": "debate",
+          "won": {
+            "novelty": true,
+            "evidence_support": true,
+            "testability": false,
+            "value": true
+          },
+          "judges": [
+            "zhipu"
+          ],
+          "rationale": "Гипотеза 1 опирается на первичные данные о компартментном лимитировании NAD+ и предлагает новый таймированный механизм с драгабельным таргетом, хотя её ключевой шаг остаётся допущением и частично противоречится MED:41639843. Гипотеза 2 выигрывает в тестируемости благодаря стандартным методам и матричному дизайну, но полностью лишена первичной поддержки в retrieved-доказательствах и концептуально близка к биологии пенных клеток."
+        },
+        {
+          "opponent": "imp004",
+          "mode": "debate",
+          "won": {
+            "novelty": false,
+            "evidence_support": false,
+            "testability": false,
+            "value": false
+          },
+          "judges": [
+            "google"
+          ],
+          "rationale": "Hypothesis 1 is selected because optogenetic control of transcription factor pulse dynamics in yeast offers superior testability, mechanistic clarity, and conceptual novelty compared to the technically demanding transient mitochondrial transporter manipulation in Hypothesis 2."
+        },
+        {
+          "opponent": "imp005",
+          "mode": "debate",
+          "won": {
+            "novelty": false,
+            "evidence_support": false,
+            "testability": false,
+            "value": true
+          },
+          "judges": [
+            "zhipu"
+          ],
+          "rationale": "H1's repair-masks-quality-control mechanism is absent from retrieved evidence and rests on two independently supported primary findings (PCMT1 repair, PCMTD1 recognition) with a fully feasible four-variant test, whereas H2's core premise is an unverified assumption with a partially contradicting primary study and harder methodology; H2 nevertheless wins on value because a confirmed time-windowed NAD⁺ redistribution would link two ageing hallmarks with a strongly discriminating test."
+        },
+        {
+          "opponent": "imp005",
+          "mode": "debate",
+          "won": {
+            "novelty": true,
+            "evidence_support": false,
+            "testability": false,
+            "value": false
+          },
+          "judges": [
+            "zhipu"
+          ],
+          "rationale": "H2 offers the more novel, uncovered idea (timed NAD+ redistribution window), but its key mechanistic link is an unretieved assumption with a contradicting primary study in context, and its decisive test faces real feasibility barriers. H1 rests on two primary evidence pillars (PCMT1 repair, PCMTD1 recognition), is immediately testable with standard tools and clean falsification, and yields a discriminating mechanistic result, making it the stronger overall pick despite moderate novelty."
+        }
+      ]
+    }
+  ],
+  "dominance": {
+    "imp001": {
+      "imp004": 0.738,
+      "imp003": 0.847,
+      "imp005": 0.8415,
+      "imp002": 0.9475
+    },
+    "imp004": {
+      "imp001": 0.262,
+      "imp003": 0.665,
+      "imp005": 0.673,
+      "imp002": 0.8755
+    },
+    "imp003": {
+      "imp001": 0.153,
+      "imp004": 0.335,
+      "imp005": 0.484,
+      "imp002": 0.7845
+    },
+    "imp005": {
+      "imp001": 0.1585,
+      "imp004": 0.327,
+      "imp003": 0.516,
+      "imp002": 0.7845
+    },
+    "imp002": {
+      "imp001": 0.0525,
+      "imp004": 0.1245,
+      "imp003": 0.2155,
+      "imp005": 0.2155
+    }
+  },
+  "overview": "# Обзор научных направлений по биологии старения (по результатам турнира гипотез)\n\nНиже представлен исследовательский обзор, обобщающий наиболее перспективные и технологичные гипотезы о биологии старения. Обзор ориентирован на фундаментальные механизмы, консервативные пути регуляции, трансляционный потенциал и возможности экспериментальной проверки.\n\n---\n\n## 1. Исследовательские направления и их значение\n\nДля достижения целей долгосрочного поддержания тканевого гомеостаза и борьбы с возрастными патологиями ключевое значение имеют механизмы межклеточной коммуникации, хронического воспаления («inflammaging») и распространения клеточного старения. \n\nВ данную категорию входит ведущая гипотеза турнира:\n* **imp001**: *Перехват внеклеточного cGAMP как метод замедления парадоксального распространения сенесценции между клетками.*\n\n**Почему это важно:** \nВозрастное воспаление и дисфункция тканей во многом обусловлены не только появлением первичных поврежденных клеток, но и каскадным вовлечением здорового микроокружения (феномен «bystander senescence»). Традиционные подходы (сенолитики) направлены на уничтожение уже сорвавшихся в сенесценцию клеток. Гипотеза `imp001` предлагает принципиально иную стратегию — прерывание сигнальных путей тканевого повреждения на уровне внеклети, что позволяет защитить здоровые клетки без их уничтожения и минимизировать побочные эффекты цитотоксической терапии. Путь cGAS–STING тесно связан с эволюционно консервативными механизмами врожденного иммунитета и распознавания цитозольной ДНК (MED:42383355, MED:42761452).\n\n---\n\n## 2. Первоочередные эксперименты и критерии принятия решений\n\n### Направление: Межклеточный сигналинг и перехват внеклеточного cGAMP (`imp001`)\n\n* **Дизайн эксперимента:**\n  Использование трехмерной (3D) модели человеческой дермы, в которой смешиваются метченые сенесцентные фибробласты и исходно здоровые клетки. Здоровые клетки берутся с тремя вариантами генотипа:\n  1. Дикий тип (обычный).\n  2. Нокаут/выключение гена **cGAS**.\n  3. Нокаут/выключение гена **STING**.\n  \n  Каждое из этих условий тестируется в присутствии белковой ловушки внеклеточного cGAMP или её неактивного контрольного аналога. Через 7–14 дней оценивается частота возникновения маркеров сенесценции строго среди изначально здоровой популяции клеток (с проверкой устойчивости остановки деления после устранения воспалительной среды).\n\n* **Специфические предсказания:**\n  * Клетки без собственного cGAS сохраняют чувствительность к сигналу соседей (поскольку способны принимать готовый внеклеточный cGAMP).\n  * Клетки без STING устойчивы к этому сигналу.\n  * Внеклеточная ловушка должна защищать как клетки дикого типа, так и клетки с дефицитом cGAS, не повреждая при этом клетки-источники сигнала.\n\n* **Критические результаты, меняющие план (Фальсификация):**\n  Если экспериментальное удаление свободного cGAMP **не снижает** уровень вторичной сенесценции (при условии, что генетический нокаут STING в здоровых клетках всё же защищает их), это опровергает гипотезу о доминирующей роли внеклеточного cGAMP. В таком случае основным драйвером вторичной сенесценции признается альтернативный механизм — например, прямой перенос поврежденной ДНК или контактный межклеточный сигналинг.\n\n---\n\n## 3. Конфликты, пересечения и зависимости гипотез\n\nПоскольку в текущем срезе представлена одна детально проработанная гипотеза (`imp001`), классические конфликты с альтернативными парадигмами сводятся к конкуренции за источник активации STING:\n* **Пересечения с литературой:** Роль пути cGAS–STING активно изучается не только в контексте старения, но и при опухолевом иммунитете и инфекционном/стерильном воспалении (MED:42657115, MED:42106567, MED:42544584). Методы перехвата внеклеточного cGAMP заимствованы из онкоиммунологических исследований, что демонстрирует синергию между терапией рака и борьбой со старением.\n* **Зависимости:** Эффективность предполагаемого вмешательства (локальной ловушки cGAMP) напрямую зависит от того, является ли внеклеточный пул cGAMP лимитирующим фактором для распространения сенесценции *in vivo*.\n\n---\n\n## 4. Главные открытые риски и допущения\n\nПри переходе от теоретического обоснования к практической реализации (`imp001`) принимаются следующие допущения, требующие жесткой экспериментальной верификации:\n\n1. **Допущение о роли внеклеточной формы:** Предполагается, что cGAMP свободно мигрирует во внеклеточном матриксе тканей человека в достаточных для активации рецепторов концентрациях и доступен для связывания белковыми ловушками до того, как будет разрушен экзонуклеазами (например, ENPP1).\n2. **Риск для системного иммунитета (Дробный баланс защиты):** Путь cGAS–STING критически важен для защиты организма от вирусов и опухолей (MED:42761452, MED:42544584). Главным биологическим риском локального или системного подавления этого пути (через ловушки cGAMP или ингибиторы STING) является ослабление противоинфекционного и противоопухолевого иммунного ответа. Безопасность подхода требует строгой локальности вмешательства (например, местные аппликации ловушек в стареющие ткани).\n\n---\n*Список использованных источников литературы:* MED:42657115, MED:42383355, MED:42106567, MED:42761452, MED:42544584."
+}

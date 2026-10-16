@@ -12,7 +12,7 @@ python -m hyparena.app --share               # also a temporary public link (Gra
 - **Готовый пример** (saved example): a saved run from `data/demo/*.json`. It opens instantly, which makes it suitable for a demonstration.
 - **Новый прогон** (new run): pasted hypotheses (a numbered list or blocks separated by blank lines; the writer's family can be given, so judges avoid it) or generated ones (3–8, for a stated goal). The run uses our full method (L4), two cycles. Models can be the cheap paid set, the free set, or no models at all (fake LLM, to check the interface). Progress is shown by stage.
 
-**What a run costs.** Five pasted hypotheses on the cheap paid models: see the saved example for the exact numbers (about 50–60 calls and a few minutes). Small pools play every pair first (`round_robin_max`, 8 by default), then the usual selection.
+**What a run costs.** The saved example (`data/demo/chatgpt-5.json`: five hypotheses from the ChatGPT dialogue, cheap paid models, Europe PMC on) took 3 min 18 s, 39 model calls, 14 pairwise comparisons and about 140k estimated tokens, roughly $0.03. Small pools play every pair first (`round_robin_max`, 8 by default), then the usual selection.
 
 **The result** shows:
 - the place and 90% rank interval;
