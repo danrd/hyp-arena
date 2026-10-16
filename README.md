@@ -14,4 +14,5 @@ An approach to ranking thousands of scientific hypotheses (biology, ageing) by p
 - Retraction check: `python -m hyparena.tools.retractions download` (Retraction Watch CSV, ~67 MB, kept out of git)
 - Tournament simulation prototype: `pip install -e . && python -m hyparena.sim` (takes a few minutes)
 - Graph skeleton with a fake LLM (no real calls): `python -m hyparena.demo`
+- Demonstration interface (Gradio, in Russian: paste or generate a few hypotheses, get a ranking; a saved example opens instantly): `pip install -e ".[demo]" && python -m hyparena.app`, see [`docs/demo.md`](docs/demo.md)
 - Live checks on real models (free OpenRouter models by default; paid ones need `ALLOW_PAID=1`): `python -m hyparena.live smoke` and `python -m hyparena.live run` (add `--checkpoint runs/state.sqlite` to make a run resumable with `--resume --thread <id>`; `--criteria`, `--card`, `--search europepmc|none`, `--as-of YYYY-MM-DD` for backtests). Models are set in [`configs/models.yaml`](configs/models.yaml); cheap paid models for small tests are in [`configs/paid-test.yaml`](configs/paid-test.yaml) (`--config configs/paid-test.yaml`, needs `COMET_API_KEY` and `ALLOW_PAID=1`).

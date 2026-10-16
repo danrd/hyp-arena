@@ -117,7 +117,11 @@ def make_tournament(ctx):
         top_k = max(2, int(len(ids) * cfg.top_frac))
         n_matches = max(4, int(cfg.matches_per_item * len(ids)))
         rng = ctx.rng_for("pairs", state.get("cycle", 0))
-        if cfg.pairing == "ucb":
+        played = {frozenset((m.a, m.b)) for m in old}
+        unplayed = [(a, b) for i, a in enumerate(ids) for b in ids[i + 1:] if frozenset((a, b)) not in played]
+        if cfg.pairing == "bt" and len(ids) <= cfg.round_robin_max and unplayed:
+            pairs = unplayed                       # a small pool: compare everything first
+        elif cfg.pairing == "ucb":
             pairs = select_pairs_ucb(ids, ratings, plan.weights, n_matches)
         elif cfg.pairing == "coscientist":
             pairs = select_pairs_coscientist(ids, ratings, plan.weights, {h: hyps[h].cluster for h in ids}, rng,
