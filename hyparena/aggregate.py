@@ -1,5 +1,6 @@
-"""Aggregation of per-criterion ratings without explicit weights: the method of randomized aggregated
-indicators (МРСП, part of Hovanov's АСПИД methodology; international analogue: SMAA).
+"""Aggregation of per-criterion ratings without explicit weights. Based on the method of randomized
+aggregated indicators (МРСП, part of Hovanov's АСПИД methodology; international analogue: SMAA) and adapted
+to pairwise ratings; see docs/architecture.md, 3a, for what is ours.
 
 Only an order of importance of the criteria is given, e.g. value >= evidence_support >= testability >=
 novelty (groups of equally important criteria allowed). The weight vector is treated as random and uniform
