@@ -11,7 +11,6 @@ from __future__ import annotations
 import argparse
 import html
 import json
-import math
 import re
 import time
 from datetime import datetime
@@ -19,12 +18,13 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Callable, Optional
 
-from hyparena.aggregate import to_logit
+from hyparena.aggregate import mrsp
 from hyparena.graph import build_graph
 from hyparena.live import _context
 from hyparena.llm.providers import CallCapExceeded
 from hyparena.schema import CONFIGS
-from hyparena.state import Hypothesis, Provenance, initial_state
+from hyparena.rating import fit_bt
+from hyparena.state import Hypothesis, Match, Provenance, initial_state
 
 DEFAULT_GOAL = "Identify the most promising and feasible hypotheses on the biology of ageing."
 
@@ -119,13 +119,10 @@ def collect(final: dict, ctx, client, goal: str, seconds: float, mode: str, fake
     for rank, hid in enumerate(order + rest, start=1):
         h = hyps[hid]
         ranked = hid in order
-        scores = {}
-        for c in names:
-            r = ratings.get(c, {}).get(hid)
-            if r is not None:
-                theta, se = to_logit(r, ctx.cfg.rating)
-                scores[c] = {"p": 1 / (1 + math.exp(-theta)), "games": r.games,
-                             "lo": 1 / (1 + math.exp(-(theta - 1.64 * se))), "hi": 1 / (1 + math.exp(-(theta + 1.64 * se)))}
+        per = (agg.get("by_id", {}).get(hid) or {}).get("criteria", {})
+        scores = {c: {"p": v["share"], "lo": v["lo"], "hi": v["hi"],
+                      "games": ratings.get(c, {}).get(hid).games if ratings.get(c, {}).get(hid) else 0}
+                  for c, v in per.items()}
         played = []
         for m in final.get("matches", []):
             if hid not in (m.a, m.b):
@@ -156,6 +153,32 @@ def collect(final: dict, ctx, client, goal: str, seconds: float, mode: str, fake
                      "step": ctx.cfg.step},
             "items": items, "dominance": agg.get("dominance", {}),
             "overview": (final.get("report") or {}).get("overview", "")}
+
+
+def reaggregate(result: dict, n: int = 2000, seed: int = 0) -> dict:
+    """Recompute ratings and the aggregation of a saved result from its match log alone (the log is the
+    source of truth; ratings and scores are derived). Uses Bradley-Terry, as our method does."""
+    names = [c["name"] for c in result["meta"]["criteria"]]
+    ids = [it["id"] for it in result["items"] if it["status"] == "active"]
+    matches = []
+    for it in result["items"]:              # each match is listed under both players; keep one copy
+        for m in it["matches"]:
+            if it["id"] < m["opponent"]:
+                matches.append(Match(a=it["id"], b=m["opponent"], winners={
+                    c: (it["id"] if w else m["opponent"]) if w is not None else None for c, w in m["won"].items()}))
+    ratings = {c: fit_bt(ids, matches, c) for c in names}
+    agg = mrsp(ratings, names, ids, kind="bt", importance=result["meta"].get("importance"), n=n, seed=seed,
+               top=10, matches=matches)
+    items = {it["id"]: it for it in result["items"]}
+    ordered = [items[h] for h in agg["order"]] + [it for it in result["items"] if it["id"] not in agg["by_id"]]
+    for rank, it in enumerate(ordered, start=1):
+        a = agg["by_id"].get(it["id"])
+        it["rank"] = rank if a else None
+        it["aggregate"] = a
+        it["scores"] = {c: {"p": v["share"], "lo": v["lo"], "hi": v["hi"], "games": ratings[c][it["id"]].games}
+                        for c, v in (a or {}).get("criteria", {}).items()}
+    return {**result, "items": ordered, "dominance": agg["dominance"],
+            "meta": {**result["meta"], "indicator": agg["indicator"]}}
 
 
 # ---- rendering ----
@@ -243,7 +266,7 @@ def render(result: dict, standalone: bool = False) -> str:
                     f'<div class="muted">{_e(it["id"])} · автор: {_e(it["writer"])}</div></td>'
                     f'<td>{score}</td><td>{_bars(it, crit)}</td></tr>')
     table = ('<table><tr><th>Место</th><th>Гипотеза</th><th>Балл</th><th>По критериям (вероятность выиграть '
-             'у средней гипотезы, 90% интервал)</th></tr>' + "".join(rows) + "</table>")
+             'у случайной гипотезы этого пула, 90% интервал)</th></tr>' + "".join(rows) + "</table>")
     dom = result.get("dominance") or {}
     head = [it["id"] for it in items if it["id"] in dom][:6]
     dom_html = ""
@@ -279,7 +302,8 @@ def render(result: dict, standalone: bool = False) -> str:
     overview = f'<div class="overview"><h3>Обзор</h3>{_md(result.get("overview", ""))}</div>' if result.get("overview") else ""
     body = (f'<div class="hx"><h2>Ранжирование гипотез</h2><div class="sub">{sub}</div>'
             f'<div class="sub">Цель: {_e(meta["goal"])}<br>Порядок важности критериев: {_e(order_ru) or "заданные веса"}. '
-            f'Итоговый балл — ожидаемое значение по всем весам, согласованным с этим порядком (на основе МРСП).</div>'
+            f'Итоговый балл — ожидаемое значение по всем весам, согласованным с этим порядком (на основе МРСП). '
+            f'Баллы и вероятности относятся к этому пулу и этим судьям: сравнивать их можно только внутри одного прогона.</div>'
             f'{table}{dom_html}<h3>Подробно</h3>{"".join(details)}{overview}</div>')
     style = f"<style>{CSS}</style>"
     if not standalone:
@@ -302,9 +326,13 @@ def main() -> None:
     ap.add_argument("--out", default=None, help="result JSON")
     ap.add_argument("--render", default=None, help="render an existing result JSON instead of running")
     ap.add_argument("--html", default=None, help="write the result as a standalone HTML page")
+    ap.add_argument("--reaggregate", action="store_true",
+                    help="with --render: recompute ratings and aggregation from the saved match log")
     args = ap.parse_args()
     if args.render:
         result = json.loads(Path(args.render).read_text())
+        if args.reaggregate:
+            result = reaggregate(result)
     else:
         texts = split_hypotheses(Path(args.paste).read_text(encoding="utf-8")) if args.paste else []
         result = run(texts, args.goal, args.generate, args.writer, args.config, args.fake, args.search,

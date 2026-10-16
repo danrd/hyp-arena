@@ -17,7 +17,7 @@ python -m hyparena.app --share               # also a temporary public link (Gra
 **The result** shows:
 - the place and 90% rank interval;
 - the expected score with its spread (aggregation by order of importance, based on МРСП);
-- per criterion, the probability of beating an average hypothesis, with an interval;
+- per criterion, the probability of beating a random hypothesis of this pool, with an interval (comparable within one run only);
 - a matrix "probability that A is above B" for the top;
 - per hypothesis: the text, the declared card, the literature with links and epistemic types, the reviewers' remarks, every comparison with the judges' reasons;
 - the research overview.

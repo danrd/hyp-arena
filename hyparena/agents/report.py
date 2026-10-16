@@ -28,7 +28,8 @@ def make_report(ctx):
                                "tokens": ctx.tracer.summary()}}
         points = {i: tuple(ratings[c][i].score for c in names) for i in ids}
         agg = mrsp(ratings, names, ids, kind=ctx.cfg.rating, importance=plan.importance, weights=plan.weights,
-                   seed=ctx.cfg.seed, top=ctx.cfg.report_size)
+                   seed=ctx.cfg.seed, top=ctx.cfg.report_size,
+                   matches=state.get("matches", []))
         by_id = {i: v["mean"] for i, v in agg["by_id"].items()}
         shown, clusters = [], set()
         for i in agg["order"]:                                   # best first, one per cluster

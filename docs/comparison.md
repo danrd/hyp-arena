@@ -28,7 +28,7 @@ Same upstream stages (normalization, retrieval, reviews) for every arm; only the
 | L3 | + card and retrieved evidence | one | per criterion | as L2 | text, card, evidence, reviews |
 | L4 | full method: + independent judge ensemble | all | per criterion | as L2 | as L3 |
 
-The main comparison is L4 against both baselines, L0 (the 2025 paper) and L0ts (the 2026 version); the steps in between show which change produces a difference. All arms produce the final order by МРСП over their own ratings (Elo and TrueSkill are mapped to log-odds); with one holistic criterion this is the rating order itself.
+The main comparison is L4 against both baselines, L0 (the 2025 paper) and L0ts (the 2026 version); the steps in between show which change produces a difference. All arms produce the final order by the МРСП-based aggregation over their own ratings, with the win share against the pool as the indicator; with one holistic criterion this is the rating order itself. Arms are compared only through the labels, never through their scores.
 
 ## 4. Equalizing conditions
 
