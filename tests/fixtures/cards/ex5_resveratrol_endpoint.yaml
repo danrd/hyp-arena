@@ -9,7 +9,7 @@ card:
     population: {taxon: "NCBITaxon:10090", label: mouse, age_at_start: "middle age"}
     intervention:
       - {type: compound, label: resveratrol, id: "CHEBI:27881"}
-    comparator: {type: untreated, label: "standard diet"}
+    comparator: {type: unknown, label: unknown}    # not in the text (spec 9)
     outcome: {endpoint: lifespan, metric: unknown}
   claims:
     - {id: c1, subject: {label: resveratrol, id: "CHEBI:27881"}, relation: extends_lifespan_in, object: {label: mouse, id: "NCBITaxon:10090"}, qualifiers: {age_at_start: "middle age"}, role: outcome, source_span: "Resveratrol started in middle age extends the lifespan of mice"}
@@ -25,10 +25,10 @@ verification:
       counterevidence:
         - {source: PubMed, record_id: "PMID:18599363", epistemic_type: A_text, species: mouse, endpoint: lifespan, quote_role: finding,
            quote: "mice fed a standard diet did not live longer when treated with resveratrol beginning at 12 months of age",
-           qualifiers_match: {species: "yes", age_at_start: "yes", comparator: "yes", intervention_match: exact}}
+           qualifiers_match: {species: "yes", age_at_start: "yes", comparator: "n/a", intervention_match: exact}}
         - {source: PubMed, record_id: "PMID:20974732", epistemic_type: A_text, species: mouse, study_type: primary_experiment, endpoint: lifespan, quote_role: finding,
            quote: "Resveratrol (at 300 and 1200 ppm food) and simvastatin (12 and 120 ppm) did not have significant effects on survival in male or female mice.",
-           qualifiers_match: {species: "yes", comparator: "yes", intervention_match: exact}, program: {name: ITP}}
+           qualifiers_match: {species: "yes", comparator: "n/a", intervention_match: exact}, program: {name: ITP}}
       refusals:
         - {type: endpoint_mismatch, record_id: "PMID:18599363", quote: "resveratrol-fed elderly mice show a marked reduction in signs of aging", notes: "healthspan finding; does not support a lifespan claim"}
 expected:

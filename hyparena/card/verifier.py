@@ -6,14 +6,16 @@ from __future__ import annotations
 import re
 from typing import Optional
 
-from hyparena.card.llm import ask
-from hyparena.card.models import Claim, ClaimVerification, Entity, EvidenceRecord, HypothesisCard, ProgramInfo, Refusal, Verification
-from hyparena.card.rules import claim_endpoint
+from hyparena.card.llm import ask, parse_objects
+from hyparena.card.models import (UNKNOWN, Claim, ClaimVerification, Entity, EvidenceRecord,
+                                  HypothesisCard, ProgramInfo, Refusal, Verification)
+from hyparena.card.rules import ORGANISM_PATTERNS, claim_endpoint, pico_value, quote_organisms, species_key
 from hyparena.card.sources import drugage_records
 from hyparena.tools import pubmed
 
-TEMPLATE = ("verify_claim", "v2")
+TEMPLATE = ("verify_claim", "v3")
 REL_WORDS = {"extends_lifespan_in": "lifespan", "shortens_lifespan_in": "lifespan", "no_lifespan_effect_in": "lifespan",
+             "slows_aging_in": "slows aging",
              "improves_healthspan_in": "healthspan OR physical function", "changes_biomarker": "", "predicts": "predicts",
              "inhibits": "inhibits", "activates": "activates", "increases_expression": "expression",
              "decreases_expression": "expression", "promotes": "", "suppresses": "", "part_of": "",
@@ -41,21 +43,56 @@ def _core(label: str, card: HypothesisCard) -> str:
     return " ".join(hits) if hits else label
 
 
-def queries(claim: Claim, card: HypothesisCard) -> list[str]:
-    """Search terms: entity, relation word, object; the organism as a search word."""
+def queries(claim, card: HypothesisCard) -> list[str]:
+    """Search terms: entity, relation word, object; the organism as a search word. When the object is not an
+    organism, also the relation alone ("rapamycin slows aging mice"): long object phrases often match nothing."""
     subject = _core(claim.subject.label, card)
     obj = claim.object.label
     organism = SPECIES_WORDS.get(obj.strip().lower()) or SPECIES_WORDS.get(claim.qualifiers.get("species", "").strip().lower(), "")
     obj_term = "" if obj.strip().lower() in SPECIES_WORDS else obj
-    words = [subject, REL_WORDS.get(claim.relation, ""), obj_term, organism]
-    q1 = " ".join(_clean(w) for w in words if w and w != "unknown")
-    q2 = " ".join(_clean(w) for w in (subject, obj_term or organism) if w and w != "unknown")
-    q3 = " ".join(_clean(w) for w in (subject, obj_term, organism, "lifespan" if "lifespan" not in q1 else "") if w and w != "unknown")
-    return list(dict.fromkeys([q for q in (q1, q2, q3) if q]))
+    rel = REL_WORDS.get(claim.relation, "")
+
+    def q(*words):
+        return " ".join(_clean(w) for w in words if w and w != UNKNOWN)
+
+    q1 = q(subject, rel, obj_term, organism)
+    q_rel = q(subject, rel, organism) if rel and obj_term and organism else ""
+    q2 = q(subject, obj_term or organism)
+    q3 = q(subject, obj_term, organism, "lifespan" if "lifespan" not in q1 else "")
+    return list(dict.fromkeys([x for x in (q1, q_rel, q2, q3) if x]))
+
+
+def _context_match(qm: dict[str, str], claim, card: HypothesisCard, quote: str = "") -> dict[str, str]:
+    """Spec 7: a qualifier the card leaves unknown gives n/a, never a mismatch."""
+    out = dict(qm)
+    for key in ("sex", "age_at_start", "dose", "comparator", "strain"):
+        value = claim.qualifiers.get(key) or (pico_value(card, key) if key != "dose"
+                                              else next((i.regimen for i in card.pico.intervention), UNKNOWN))
+        if out.get(key) == "no" and (not value or value.strip().lower() in (UNKNOWN, "", "n/a")):
+            out[key] = "n/a"
+    # the quote names organisms and the claim's is not among them (e.g. a sentence about yeast, worms and flies
+    # extracted as a mouse finding): a species mismatch, whatever the extractor said
+    organism = species_key(claim.qualifiers.get("species", "")) or species_key(claim.object.label)
+    named = quote_organisms(quote)
+    if organism in ORGANISM_PATTERNS and named and organism not in named:
+        out["species"] = "no"
+    return out
+
+
+def parse_records(text: str) -> Optional[dict]:
+    """{"records": [...]}; from a reply cut off at the token limit, the records that are complete."""
+    found = parse_objects(text)
+    whole = next((v for v in found if isinstance(v.get("records"), list)), None)
+    if whole is not None:
+        return whole
+    records = [v for v in found if "pmid" in v and "quote" in v]
+    return {"records": records, "truncated": True} if records else None
 
 
 def _validate(value: dict, abstracts: dict[str, dict]) -> list[str]:
-    problems = []
+    if not isinstance(value.get("records"), list):
+        return ['the reply must be an object with a "records" list']
+    problems = ["the reply was cut off before the end: reply again, complete"] if value.get("truncated") else []
     for i, r in enumerate(value.get("records") or []):
         if not isinstance(r, dict):
             problems.append(f"record {i}: not an object")
@@ -69,8 +106,11 @@ def _validate(value: dict, abstracts: dict[str, dict]) -> list[str]:
     return problems
 
 
-def verify_claim(client, family: str, avoid: frozenset, claim: Claim, card: HypothesisCard,
-                 as_of: Optional[str] = None, retmax: int = 8, log: Optional[list] = None) -> ClaimVerification:
+def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisCard,
+                 as_of: Optional[str] = None, retmax: int = 8, log: Optional[list] = None,
+                 fallback: Optional[str] = None) -> ClaimVerification:
+    """`fallback`: the family asked when `family`'s reply is cut off with no complete record (gemini stops in
+    the middle of verbatim quotes, most likely its recitation filter)."""
     cv = ClaimVerification(id=claim.id)
     allowed = None
     support, against = drugage_records(claim)
@@ -98,7 +138,11 @@ def verify_claim(client, family: str, avoid: frozenset, claim: Claim, card: Hypo
         return cv
     p = card.pico
     negated = claim.qualifiers.get("direction", "").lower() in ("no_effect", "none", "no", "not", "no effect")
-    variables = {"claim": claim, "negated": negated, "qualifiers": ", ".join(f"{k}: {v}" for k, v in claim.qualifiers.items() if v and v != "unknown"),
+    contrast = next((a for a in card.declared_alternatives if a.id == claim.qualifiers.get("contrast")), None)
+    variables = {"claim": claim, "negated": negated, "alternative": claim.role == "alternative",
+                 "contrast": contrast.subject.label + " " + contrast.relation + " " + contrast.object.label if contrast else "",
+                 "qualifiers": ", ".join(f"{k}: {v}" for k, v in claim.qualifiers.items()
+                                         if v and v != "unknown" and k != "contrast"),
                  "endpoint": claim_endpoint(claim), "claim_plain": card.claim_plain,
                  "population": ", ".join(f"{k} {v}" for k, v in p.population.model_dump().items() if v and v != "unknown") or "unknown",
                  "intervention": "; ".join(f"{i.label} ({i.regimen})" for i in p.intervention) or "unknown",
@@ -106,7 +150,12 @@ def verify_claim(client, family: str, avoid: frozenset, claim: Claim, card: Hypo
                  "abstracts": [{"pmid": k, "year": a["year"], "title": a["title"], "abstract": a["abstract"],
                                 "review": pubmed.is_review(a)} for k, a in abstracts.items()]}
     value, fam = ask(client, role="verify_claim", family=family, template=TEMPLATE[0], version=TEMPLATE[1],
-                     variables=variables, validate=lambda v: _validate(v, abstracts), rounds=2, avoid=avoid, log=log)
+                     variables=variables, validate=lambda v: _validate(v, abstracts), rounds=2, avoid=avoid, log=log,
+                     parse=parse_records)
+    if fallback and fallback != fam and (value is None or (value.get("truncated") and not value.get("records"))):
+        value, fam = ask(client, role="verify_claim", family=fallback, template=TEMPLATE[0], version=TEMPLATE[1],
+                         variables=variables, validate=lambda v: _validate(v, abstracts), rounds=2, avoid=avoid,
+                         log=log, parse=parse_records)
     rejected = []
     for r in (value or {}).get("records") or []:
         if not isinstance(r, dict):
@@ -119,6 +168,7 @@ def verify_claim(client, family: str, avoid: frozenset, claim: Claim, card: Hypo
             continue                                      # never keep a quote that is not in the source
         review = pubmed.is_review(a)
         qm = {k: str(v) for k, v in (r.get("qualifiers_match") or {}).items() if str(v) in ("yes", "no", "n/a")}
+        qm = _context_match(qm, claim, card, quote)
         qm["intervention_match"] = r.get("intervention_match") or "exact"
         prog = r.get("program") or ""
         rec = EvidenceRecord(
@@ -135,7 +185,12 @@ def verify_claim(client, family: str, avoid: frozenset, claim: Claim, card: Hypo
             notes=f"extracted by {fam}")
         stance = r.get("stance")
         need = claim_endpoint(claim)
-        if stance == "supports":
+        mismatched = [k for k, v in qm.items() if v == "no" and k != "intervention_match"]
+        if stance in ("supports", "refutes") and mismatched and set(mismatched) <= set(claim.inherited_from_pico):
+            # a mismatch only on a value inherited from PICO: a soft refusal, not a status (spec 7)
+            cv.refusals.append(Refusal(type="inherited_mismatch", record_id=rec.record_id, quote=quote,
+                                       notes=f"{', '.join(mismatched)} inherited from PICO; the record is about {rec.species}"))
+        elif stance == "supports":
             cv.evidence.append(rec)
         elif stance == "refutes":
             cv.counterevidence.append(rec)
@@ -144,6 +199,8 @@ def verify_claim(client, family: str, avoid: frozenset, claim: Claim, card: Hypo
                                        notes=f"measures {rec.endpoint}, the claim is about {need}"))
     if rejected:
         cv.notes = (cv.notes + "; " if cv.notes else "") + f"quotes not found verbatim, dropped: {', '.join(rejected)}"
+    if (value or {}).get("truncated"):
+        cv.notes = (cv.notes + "; " if cv.notes else "") + "reply cut off: only its complete records were kept"
     return cv
 
 
@@ -159,21 +216,23 @@ def analog_probes(card: HypothesisCard) -> list[Claim]:
     if not human:
         return []
     label = " + ".join(i.label for i in card.pico.intervention)
-    return [Claim(id="a1", subject=Entity(label=label), relation="extends_lifespan_in", object=Entity(label="mouse"),
+    return [Claim(id="an1", subject=Entity(label=label), relation="extends_lifespan_in", object=Entity(label="mouse"),
                   qualifiers={"species": "mouse"}, role="analog", note="added by the verifier"),
-            Claim(id="a2", subject=Entity(label=label), relation="improves_healthspan_in", object=Entity(label="mouse"),
+            Claim(id="an2", subject=Entity(label=label), relation="improves_healthspan_in", object=Entity(label="mouse"),
                   qualifiers={"species": "mouse"}, role="analog", note="added by the verifier")]
 
 
 def verify(client, families: list[str], writer: str, card: HypothesisCard, as_of: Optional[str] = None,
            log: Optional[list] = None, map_fn=map) -> Verification:
-    """All declared claims plus analog probes; the verifier's family is never the writer's (its records feed
-    the ranking)."""
+    """All declared claims, the rejected alternatives of a contrast (checked like claims, spec 7), plus analog
+    probes; the verifier's family is never the writer's (its records feed the ranking)."""
     allowed = [f for f in families if f != writer] or families
-    claims = card.claims + analog_probes(card)
-    tasks = [(c, allowed[i % len(allowed)]) for i, c in enumerate(claims)]
-    cvs = list(map_fn(lambda t: verify_claim(client, t[1], frozenset({writer}), t[0], card, as_of, log=log), tasks))
-    added = {c.id for c in claims[len(card.claims):]}
+    probes = analog_probes(card)
+    claims = card.claims + card.rejected_alternatives + probes
+    tasks = [(c, allowed[i % len(allowed)], allowed[(i + 1) % len(allowed)]) for i, c in enumerate(claims)]
+    cvs = list(map_fn(lambda t: verify_claim(client, t[1], frozenset({writer}), t[0], card, as_of, log=log,
+                                             fallback=t[2]), tasks))
+    added = {c.id for c in probes}
     for cv, c in zip(cvs, claims):
         if cv.id in added:
             cv.added_claim = c

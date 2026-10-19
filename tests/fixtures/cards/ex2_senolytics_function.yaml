@@ -1,4 +1,5 @@
 # Card spec, Example 2: dasatinib + quercetin and physical function in older adults.
+# c1, c2 inherit species from PICO (subject = the intervention); c3 is a general mechanism claim: no inheritance.
 raw: "Intermittent dasatinib plus quercetin improves physical function in older adults because it clears senescent cells and lowers their inflammatory secretions (SASP), which drive physical decline."
 card:
   id: H-0002
@@ -12,8 +13,8 @@ card:
       - {type: compound, label: quercetin, regimen: intermittent}
     outcome: {endpoint: healthspan, metric: "physical function"}
   claims:
-    - {id: c1, subject: {label: "dasatinib + quercetin"}, relation: suppresses, object: {label: "senescent cell burden", hallmark: cellular_senescence}, qualifiers: {species: human, direction: decrease}, role: mechanism, source_span: "it clears senescent cells"}
-    - {id: c2, subject: {label: "dasatinib + quercetin"}, relation: suppresses, object: {label: SASP}, qualifiers: {species: human}, role: mechanism, source_span: "lowers their inflammatory secretions (SASP)"}
+    - {id: c1, subject: {label: "dasatinib + quercetin"}, relation: suppresses, object: {label: "senescent cell burden", hallmark: cellular_senescence}, qualifiers: {species: human, direction: decrease}, inherited_from_pico: [species], role: mechanism, source_span: "it clears senescent cells"}
+    - {id: c2, subject: {label: "dasatinib + quercetin"}, relation: suppresses, object: {label: SASP}, qualifiers: {species: human}, inherited_from_pico: [species], role: mechanism, source_span: "lowers their inflammatory secretions (SASP)"}
     - {id: c3, subject: {label: "senescent cells / SASP"}, relation: promotes, object: {label: "physical decline"}, qualifiers: {species: unknown}, role: mechanism, source_span: "which drive physical decline"}
     - {id: c4, subject: {label: "dasatinib + quercetin"}, relation: improves_healthspan_in, object: {label: human, id: "NCBITaxon:9606"}, qualifiers: {age_at_start: older_adults, measure: "physical function"}, role: outcome, source_span: "improves physical function in older adults"}
   edges:
@@ -50,8 +51,8 @@ verification:
         - {source: PubMed, record_id: "PMID:30616998", epistemic_type: A_text, study_type: open_label_pilot, species: human, endpoint: healthspan, quote_role: finding,
            quote: "Physical function evaluated as 6-min walk distance, 4-m gait speed, and chair-stands time was significantly and clinically-meaningfully improved (p < .05)",
            qualifiers_match: {species: "yes", population: "no"}, flags: [open_label, small_n]}
-    - id: a1
-      added_claim: {id: a1, subject: {label: "dasatinib + quercetin"}, relation: improves_healthspan_in, object: {label: mouse}, qualifiers: {age_at_start: old}, role: analog}
+    - id: an1
+      added_claim: {id: an1, subject: {label: "dasatinib + quercetin"}, relation: improves_healthspan_in, object: {label: mouse}, qualifiers: {age_at_start: old}, role: analog}
       evidence:
         - source: PubMed
           record_id: "PMID:29988130"
@@ -65,7 +66,7 @@ verification:
           qualifiers_match: {species: "yes", intervention_match: exact}
           flags: [conflict_of_interest]
 expected:
-  statuses: {c1: unverified, c2: unverified, c3: supported, c4: unverified, a1: supported}
+  statuses: {c1: unverified, c2: unverified, c3: supported, c4: unverified, an1: supported}
   profile:
     gate: pass
     effect_level: mammals

@@ -1,0 +1,44 @@
+You convert one research hypothesis on ageing into a structured card. Record only what the text states. You are a parser, not a scientist: add no facts, no evidence, no judgements.
+
+Hypothesis text:
+<<<TEXT
+{{ text }}
+TEXT>>>
+
+Fields:
+- hypothesis_type: interventional (an intervention changes an outcome; also when the text adds the mechanism behind it) | mechanistic (the main point is an explanation of how or why a known effect happens) | biomarker (a marker predicts an outcome) | observational (an exposure or variant is associated with an outcome).
+- claim_plain: one plain sentence, no jargon: what is proposed and what it should lead to.
+- pico: population {taxon (NCBITaxon id if obvious, else omit), label, strain, sex, age, age_at_start}; intervention: list of {type: compound|gene|diet|procedure|other, label, regimen} (one item, or several for a combination); comparator {type: placebo|untreated|standard_care|wild_type|monotherapy|active_drug|chronological_age|other, label}; outcome {endpoint: lifespan|healthspan|biomarker|disease|mechanism|unknown, metric}; time. Write "unknown" for anything the text does not state. Never fill a missing population, species or endpoint from background knowledge.
+- claims: 1 to 8 atomic claims. Each: id (c1, c2, ...), subject {label}, relation, object {label, hallmark (optional)}, qualifiers (species, strain, sex, tissue, dose, age_at_start, comparator, direction, measure: only those the text states), inherited_from_pico (optional), role, source_span.
+  - Inheritance from PICO: a claim whose subject is the intervention itself (e.g. "it" referring to the intervention) may take species, strain, sex, age_at_start or comparator from pico when its own span does not state them. Copy the PICO value into qualifiers and list the keys in inherited_from_pico, e.g. "qualifiers": {"species": "human"}, "inherited_from_pico": ["species"]. Never inherit into general mechanism claims whose subject is not the intervention (e.g. "senescent cells drive physical decline"): leave their species out.
+  - relation, closed list: {{ relations }}. If nothing fits, use "other" and add "note".
+  - role: premise | mechanism | analog | outcome | translation. Exactly one claim has role "outcome": the main claim of the hypothesis.
+  - Atomic: one relation and one context per claim. "inhibits X and reduces Y" gives two claims; "in mice and flies" gives two claims. A mechanism chain is several claims linked by "requires" edges. A step from one species to another is its own claim (role translation).
+  - source_span: copy the exact words of the text this claim comes from, character for character (a fragment of the text above, not a paraphrase). A claim the text does not state is not allowed.
+  - subject and object labels are plain entity names: "rapamycin", "mouse", "mTORC1", "senescent cell burden". Doses, regimens and timing go to qualifiers and pico, not into the label. For lifespan and healthspan relations the object is the organism or population ("mouse", "older adults").
+  - Interventional: the outcome claim is the intervention's effect on the endpoint in the stated population; mechanism steps are separate claims with role mechanism or premise.
+  - Mechanistic: the outcome claim is the explanation itself (e.g. "X suppresses cancer mortality"); the effect being explained ("X extends lifespan in mice") is a premise claim.
+  - Contrast "mainly X, not Y" (or "X rather than Y"): the outcome claim is X with qualifiers.contrast set to the alternative's id (e.g. "contrast": "a1"); Y goes to declared_alternatives, not to claims (see below).
+  - "Aging", "health", "longevity" or "well-being" in general are not measurable endpoints: use outcome.endpoint "unknown" unless the text names lifespan, a healthspan measure, a biomarker or a disease.
+  - hallmark (optional) is one of: {{ hallmarks }}.
+- edges: list of {from, to, type: requires|supports_if_true|analog_of|contradicts} between claim ids.
+- declared_novelty: what the text says is new, else "unknown".
+- decisive_experiment: {system: cells|worm|fly|yeast|mouse|rat|human|data_analysis|unknown, endpoint, duration_class: weeks|months|years|decades|unknown}: the experiment that would settle the outcome claim, as far as the text defines it.
+- declared_alternatives: alternatives the text itself names, else []. Each is structured like a claim: {id (a1, a2, ...), subject {label}, relation, object {label}, qualifiers, source_span (verbatim), stated_as}. stated_as "rejected" when the text rejects it in a contrast ("not by slowing aging itself": relation slows_aging_in), "listed" when it is only mentioned. Never add alternatives the text does not name.
+- declared_decision_criteria: only if the text states them, else "unknown".
+- risks: risks the text names, else [].
+
+Worked example (a different hypothesis, for the format only):
+Text: "Metformin, by activating AMPK, extends the lifespan of male mice when started at middle age, as it does in nematodes."
+{"hypothesis_type": "interventional", "claim_plain": "Metformin started in middle age makes male mice live longer.", "pico": {"population": {"taxon": "NCBITaxon:10090", "label": "mouse", "sex": "male", "age_at_start": "middle age"}, "intervention": [{"type": "compound", "label": "metformin", "regimen": "unknown"}], "comparator": {"type": "unknown", "label": "unknown"}, "outcome": {"endpoint": "lifespan", "metric": "unknown"}, "time": "unknown"}, "claims": [{"id": "c1", "subject": {"label": "metformin"}, "relation": "activates", "object": {"label": "AMPK"}, "role": "mechanism", "source_span": "by activating AMPK"}, {"id": "c2", "subject": {"label": "metformin"}, "relation": "extends_lifespan_in", "object": {"label": "mouse"}, "qualifiers": {"species": "mouse", "sex": "male", "age_at_start": "middle age"}, "role": "outcome", "source_span": "extends the lifespan of male mice when started at middle age"}, {"id": "c3", "subject": {"label": "metformin"}, "relation": "extends_lifespan_in", "object": {"label": "nematode"}, "qualifiers": {"species": "C. elegans"}, "role": "analog", "source_span": "as it does in nematodes"}], "edges": [{"from": "c2", "to": "c1", "type": "requires"}, {"from": "c3", "to": "c2", "type": "analog_of"}], "declared_novelty": "unknown", "decisive_experiment": {"system": "mouse", "endpoint": "lifespan", "duration_class": "years"}, "declared_alternatives": [], "declared_decision_criteria": "unknown", "risks": []}
+
+Second worked example (a contrast; also only for the format):
+Text: "Metformin extends the lifespan of male mice mainly by lowering food intake, not by activating AMPK."
+{"hypothesis_type": "mechanistic", "claim_plain": "Metformin's lifespan effect in male mice comes from eating less rather than from AMPK activation.", "pico": {"population": {"taxon": "NCBITaxon:10090", "label": "mouse", "sex": "male"}, "intervention": [{"type": "compound", "label": "metformin", "regimen": "unknown"}], "comparator": {"type": "unknown", "label": "unknown"}, "outcome": {"endpoint": "mechanism", "metric": "cause of lifespan extension"}, "time": "unknown"}, "claims": [{"id": "c1", "subject": {"label": "metformin"}, "relation": "extends_lifespan_in", "object": {"label": "mouse"}, "qualifiers": {"species": "mouse", "sex": "male"}, "role": "premise", "source_span": "Metformin extends the lifespan of male mice"}, {"id": "c2", "subject": {"label": "metformin"}, "relation": "suppresses", "object": {"label": "food intake"}, "qualifiers": {"species": "mouse", "sex": "male", "contrast": "a1"}, "inherited_from_pico": ["species", "sex"], "role": "outcome", "source_span": "mainly by lowering food intake"}], "edges": [{"from": "c2", "to": "c1", "type": "supports_if_true"}], "declared_novelty": "unknown", "decisive_experiment": {"system": "mouse", "endpoint": "lifespan under pair feeding", "duration_class": "years"}, "declared_alternatives": [{"id": "a1", "subject": {"label": "metformin"}, "relation": "activates", "object": {"label": "AMPK"}, "qualifiers": {"species": "mouse"}, "inherited_from_pico": ["species"], "source_span": "not by activating AMPK", "stated_as": "rejected"}], "declared_decision_criteria": "unknown", "risks": []}
+
+Reply with a single JSON object and nothing else, with these keys:
+{"hypothesis_type": "", "claim_plain": "", "pico": {"population": {"label": "unknown"}, "intervention": [], "comparator": {"type": "unknown", "label": "unknown"}, "outcome": {"endpoint": "unknown", "metric": "unknown"}, "time": "unknown"}, "claims": [], "edges": [], "declared_novelty": "unknown", "decisive_experiment": {"system": "unknown", "endpoint": "unknown", "duration_class": "unknown"}, "declared_alternatives": [], "declared_decision_criteria": "unknown", "risks": []}
+{% if history_text %}
+
+{{ history_text }}
+{% endif %}
