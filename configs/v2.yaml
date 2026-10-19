@@ -1,0 +1,17 @@
+# Models for method v2 (hyparena/card/pipeline.py) through CometAPI. Needs COMET_API_KEY and ALLOW_PAID=1.
+# The normalizer runs on the google family (gemini-3.5-flash): in a comparison on the card-spec examples
+# (2026-10-19) it split a mechanistic hypothesis into premise / outcome / mechanism as the specification
+# does, where gpt-5-nano, gemini-3.1-flash-lite and gpt-5-mini kept the premise as the outcome. The verifier
+# rotates over all families except the writer's. Cheap models elsewhere; strong models for final runs.
+rpm: 30
+concurrency: 4
+generation:
+  temperature: 0.2
+  max_tokens: 4000
+timeout: 150
+max_retries: 0
+deadline: 180
+models:
+  - {family: openai, provider: cometapi, model: "gpt-5-nano", tier: paid, api_key_env: COMET_API_KEY, generation: {temperature: null, max_tokens: null, max_completion_tokens: 6000, reasoning_effort: minimal}}
+  - {family: zhipu,  provider: cometapi, model: "glm-5.3-flash", tier: paid, api_key_env: COMET_API_KEY, generation: {reasoning_effort: low, max_tokens: 6000}}
+  - {family: google, provider: cometapi, model: "gemini-3.5-flash", tier: paid, api_key_env: COMET_API_KEY}

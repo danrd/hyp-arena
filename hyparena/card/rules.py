@@ -157,7 +157,7 @@ def admissible(record: EvidenceRecord, claim: Claim) -> bool:
 
 
 def claim_status(cv: ClaimVerification, claim: Claim) -> str:
-    if cv.unresolved:
+    if cv.unresolved or claim.relation == "other":       # `other` is ignored by symbolic checks (spec 5)
         return "unresolved"
     support = [r for r in cv.evidence if admissible(r, claim)]
     against = [r for r in cv.counterevidence if admissible(r, claim)]
@@ -210,12 +210,11 @@ def _parts(label: str) -> set[str]:
 
 def same_intervention(claim: Claim, card: HypothesisCard) -> bool:
     """The claim's subject is the hypothesis's intervention (or the whole combination)."""
-    labels = {_norm(i.label) for i in card.pico.intervention}
     ids = {i.id for i in card.pico.intervention if i.id}
     if claim.subject.id and claim.subject.id in ids:
         return True
-    subject = _parts(claim.subject.label)
-    return bool(labels) and (subject == labels or (len(labels) == 1 and _norm(claim.subject.label) in labels))
+    labels = set().union(*(_parts(i.label) for i in card.pico.intervention)) if card.pico.intervention else set()
+    return bool(labels) and _parts(claim.subject.label) == labels
 
 
 def _all_claims(card: HypothesisCard, ver: Verification) -> list[tuple[Claim, ClaimVerification]]:
