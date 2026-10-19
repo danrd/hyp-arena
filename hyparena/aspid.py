@@ -44,6 +44,18 @@ class IndicatorSpec:
         return x if self.higher_is_better else 1.0 - x
 
 
+@dataclass(frozen=True)
+class Prefer:
+    """An expert's pairwise choice under a profile (Aggregation_Spec 6a): hypothesis `a` is at least as good as
+    (`>=`) or better than (`>`) `b`. Becomes the linear weight constraint sum_j w_j (q_aj - q_bj) >= 0."""
+    a: str
+    b: str
+    op: str = ">="
+    by: str = ""
+    at: str = ""
+    approximate: bool = False                   # set when an unknown value was replaced by its expectation
+
+
 @dataclass
 class Profile:
     """A named, versioned preference profile: tiers of importance (every indicator of a tier weighs at least
@@ -54,6 +66,7 @@ class Profile:
     tiers: list = field(default_factory=list)
     equal: list = field(default_factory=list)
     description: str = ""
+    prefer: list = field(default_factory=list)  # Prefer constraints from expert pairwise choices
 
     def resolved_tiers(self, ids: list[str]) -> list[list[str]]:
         listed = {x for t in self.tiers if t != "rest" for x in t}
@@ -71,7 +84,8 @@ class Profile:
 def load_profiles(path: Union[str, Path] = CONFIG) -> dict[str, Profile]:
     data = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
     return {name: Profile(name=name, version=str(p.get("version", "1")), tiers=p.get("tiers", []),
-                          equal=p.get("equal", []), description=p.get("description", ""))
+                          equal=p.get("equal", []), description=p.get("description", ""),
+                          prefer=[Prefer(**x) for x in p.get("prefer", [])])
             for name, p in data["profiles"].items()}
 
 
@@ -82,13 +96,19 @@ class WeightSampler:
     that cover every indicator (a sorted flat Dirichlet, the top values given to the first tier in random
     order, and so on); hit-and-run (parallel chains) for everything else."""
 
-    def __init__(self, ids: list[str], profile: Optional[Profile], burn_in: int = 500, chains: int = 256):
+    def __init__(self, ids: list[str], profile: Optional[Profile], burn_in: int = 500, chains: int = 256,
+                 extra: Optional[list[np.ndarray]] = None):
+        """`extra`: further constraints g·w <= 0 in weight space (expert pairwise choices)."""
         self.ids, self.n = ids, len(ids)
         self.profile = profile
         self.tiers = profile.resolved_tiers(ids) if profile else []
         self.equal = [g for g in (profile.equal if profile else []) if len(g) > 1]
+        self.extra = list(extra or [])
         covered = {x for t in self.tiers for x in t}
-        if not self.tiers and not self.equal:
+        if self.extra:
+            self.mode = "hit_and_run"
+            self._setup_har()
+        elif not self.tiers and not self.equal:
             self.mode = "uniform"
         elif covered == set(ids) and not self.equal and len(covered) == sum(len(t) for t in self.tiers):
             self.mode = "tiers"
@@ -98,39 +118,11 @@ class WeightSampler:
         self.burn_in, self.chains = burn_in, chains
 
     def _setup_har(self):
-        # merge equal indicators into one variable; w = M v
-        cls = {}
-        for g in self.equal:
-            root = next((cls[x] for x in g if x in cls), None)
-            root = root if root is not None else len(set(cls.values()))
-            for x in g:
-                cls[x] = root
-        nxt = len(set(cls.values()))
-        for x in self.ids:
-            if x not in cls:
-                cls[x] = nxt
-                nxt += 1
-        self.p = nxt
-        self.M = np.zeros((self.n, self.p))
-        for j, x in enumerate(self.ids):
-            self.M[j, cls[x]] = 1.0
-        self.size = self.M.sum(0)
-        rows = [-np.eye(self.p)]                                     # v >= 0
-        col = {x: j for j, x in enumerate(self.ids)}
-        for a_tier, b_tier in zip(self.tiers, self.tiers[1:]):
-            for a in a_tier:
-                for b in b_tier:
-                    g = np.zeros(self.n)
-                    g[col[b]], g[col[a]] = 1.0, -1.0                 # w_b - w_a <= 0
-                    rows.append((g @ self.M)[None, :])
-        self.A = np.vstack(rows)
-        # a strictly feasible start: higher base for higher tiers, free indicators in the middle
-        base = np.full(self.n, (len(self.tiers) + 1) / 2.0)
-        for t, tier in enumerate(self.tiers):
-            for x in tier:
-                base[col[x]] = len(self.tiers) - t + 0.5
-        v = np.array([base[self.M[:, c] > 0].mean() for c in range(self.p)])
-        self.v0 = v / (self.size @ v)
+        self.M, self.size, self.A, self.v0 = constraint_matrix(self.ids, self.tiers, self.equal)
+        if self.extra:
+            self.A = np.vstack([self.A, *[(g @ self.M)[None, :] for g in self.extra]])
+            self.v0 = _interior_point(self.A, self.size)
+        self.p = self.M.shape[1]
 
     def sample(self, k: int, rng: np.random.Generator) -> np.ndarray:
         if self.mode == "uniform":
@@ -175,6 +167,141 @@ class WeightSampler:
         return np.vstack(out)[:k]
 
 
+def constraint_matrix(ids: list[str], tiers: list[list[str]], equal: list[list[str]]):
+    """(M, size, A, v0): weights w = M v with equal indicators merged into one variable v_c (size_c members);
+    rows of A v <= 0 for v >= 0 and the tier order; v0 a strictly feasible start."""
+    n = len(ids)
+    cls = {}
+    for g in equal:
+        root = next((cls[x] for x in g if x in cls), None)
+        root = root if root is not None else len(set(cls.values()))
+        for x in g:
+            cls[x] = root
+    nxt = len(set(cls.values()))
+    for x in ids:
+        if x not in cls:
+            cls[x] = nxt
+            nxt += 1
+    M = np.zeros((n, nxt))
+    for j, x in enumerate(ids):
+        M[j, cls[x]] = 1.0
+    size = M.sum(0)
+    rows = [-np.eye(nxt)]                                            # v >= 0
+    col = {x: j for j, x in enumerate(ids)}
+    for a_tier, b_tier in zip(tiers, tiers[1:]):
+        for a in a_tier:
+            for b in b_tier:
+                g = np.zeros(n)
+                g[col[b]], g[col[a]] = 1.0, -1.0                     # w_b - w_a <= 0
+                rows.append((g @ M)[None, :])
+    # a strictly feasible start: higher base for higher tiers, free indicators in the middle
+    base = np.full(n, (len(tiers) + 1) / 2.0)
+    for t, tier in enumerate(tiers):
+        for x in tier:
+            base[col[x]] = len(tiers) - t + 0.5
+    v = np.array([base[M[:, c] > 0].mean() for c in range(nxt)])
+    return M, size, np.vstack(rows), v / (size @ v)
+
+
+def _interior_point(A: np.ndarray, size: np.ndarray) -> np.ndarray:
+    """A point of {A v <= 0, size·v = 1} as deep inside as possible (max t with A_i v + t |A_i| <= 0), the start
+    of hit-and-run. Raises ValueError when the set is empty."""
+    from scipy.optimize import linprog
+    p = A.shape[1]
+    norms = np.linalg.norm(A, axis=1)
+    res = linprog(c=np.r_[np.zeros(p), -1.0], A_ub=np.c_[A, norms], b_ub=np.zeros(len(A)),
+                  A_eq=np.r_[size, 0.0][None, :], b_eq=[1.0], bounds=[(None, None)] * p + [(None, 1.0)],
+                  method="highs")
+    if res.status != 0 or res.x[-1] < -1e-12:
+        raise ValueError("the preference constraints leave no admissible weights")
+    return np.maximum(res.x[:p], 0.0)
+
+
+def expected_value(spec: IndicatorSpec, value) -> tuple[float, bool]:
+    """(expected mapped value, approximate): an unknown gives the middle of its range (approximate); an ordinal
+    level gives the mean of the SMAA-O mapping, which equals the equal-step value."""
+    if value is None:
+        return 0.5, True
+    if spec.kind == "ordinal":
+        m = len(spec.levels)
+        return (spec.levels.index(value) / (m - 1) if m > 1 else 1.0), False
+    return spec.scale(float(value)), False
+
+
+def preference_rows(prefer: list[Prefer], values: dict, indicators: list[IndicatorSpec]) -> list[tuple[Prefer, np.ndarray]]:
+    """Each choice as a row g with g·w <= 0 (Aggregation_Spec 6a, MVP: unknowns at their expected value)."""
+    out = []
+    for c in prefer:
+        if c.a not in values or c.b not in values:
+            raise KeyError(f"preference {c.a} {c.op} {c.b}: hypothesis not in the ranked pool")
+        qa = [expected_value(s, values[c.a].get(s.id)) for s in indicators]
+        qb = [expected_value(s, values[c.b].get(s.id)) for s in indicators]
+        approx = any(x[1] for x in qa + qb)
+        dq = np.array([x[0] for x in qa]) - np.array([x[0] for x in qb])
+        out.append((Prefer(c.a, c.b, c.op, c.by, c.at, approx or c.approximate), -dq))
+    return out
+
+
+@dataclass
+class Feasibility:
+    feasible: bool
+    conflicting: list = field(default_factory=list)   # a minimal set of conflicting choices (criterion_gap)
+
+
+def check_feasible(profile: Profile, values: dict, indicators: list[IndicatorSpec]) -> Feasibility:
+    """Do the profile's tiers and the expert choices leave any admissible weights? Strict choices (">") must
+    hold with a positive margin. When not, a minimal conflicting subset of the choices (deletion filter)."""
+    rows = preference_rows(profile.prefer, values, indicators)
+    if _feasible(profile, indicators, rows):
+        return Feasibility(True)
+    core = list(rows)
+    for r in list(core):
+        trial = [x for x in core if x is not r]
+        if not _feasible(profile, indicators, trial):
+            core = trial
+    return Feasibility(False, [c for c, _ in core])
+
+
+def _feasible(profile: Profile, indicators: list[IndicatorSpec], rows) -> bool:
+    from scipy.optimize import linprog
+    ids = [s.id for s in indicators]
+    M, size, A, _ = constraint_matrix(ids, profile.resolved_tiers(ids), [g for g in profile.equal if len(g) > 1])
+    strict = [np.r_[g @ M, 1.0] for c, g in rows if c.op == ">"]       # g·w + t <= 0: holds with margin t
+    weak = [np.r_[g @ M, 0.0] for c, g in rows if c.op != ">"]
+    A_ub = np.vstack([np.c_[A, np.zeros(len(A))], *[r[None, :] for r in weak + strict]])
+    res = linprog(c=np.r_[np.zeros(M.shape[1]), -1.0], A_ub=A_ub, b_ub=np.zeros(len(A_ub)),
+                  A_eq=np.r_[size, 0.0][None, :], b_eq=[1.0], bounds=[(None, None)] * M.shape[1] + [(0.0, 1.0)],
+                  method="highs")
+    if res.status != 0:
+        return False
+    return not strict or res.x[-1] > 1e-9
+
+
+def next_pair(result: "AggregationResult", threshold: float = 0.5) -> Optional[tuple[str, str]]:
+    """The pair to ask an expert next (Aggregation_Spec 6a): among hypotheses with P(top-k) >= threshold, the
+    one whose pairwise winning index is closest to 0.5 (ties: the better expected values first)."""
+    top = [h for h in result.order if result.p_topk.get(h, 0.0) >= threshold]
+    best, pair = None, None
+    for i, a in enumerate(top):
+        for b in top[i + 1:]:
+            p = result.pairwise.get(a, {}).get(b)
+            if p is None:
+                continue
+            d = abs(p - 0.5)
+            if best is None or d < best - 1e-12:
+                best, pair = d, (a, b)
+    return pair
+
+
+class InfeasiblePreferences(ValueError):
+    """criterion_gap: the expert choices contradict each other (or the profile) under the indicators."""
+
+    def __init__(self, conflicting: list[Prefer]):
+        self.conflicting = conflicting
+        super().__init__("criterion_gap: conflicting expert choices: " +
+                         "; ".join(f"{c.a} {c.op} {c.b} ({c.by})" for c in conflicting))
+
+
 # ---- aggregation ----
 
 @dataclass
@@ -214,7 +341,12 @@ def aggregate(values: dict[str, dict[str, object]], indicators: list[IndicatorSp
     ids = list(values)
     m, n = len(ids), len(indicators)
     rng = np.random.default_rng(seed)
-    sampler = WeightSampler([s.id for s in indicators], profile)
+    prefs = preference_rows(profile.prefer, values, indicators) if profile and profile.prefer else []
+    if prefs:
+        feas = check_feasible(profile, values, indicators)
+        if not feas.feasible:
+            raise InfeasiblePreferences(feas.conflicting)
+    sampler = WeightSampler([s.id for s in indicators], profile, extra=[g for _, g in prefs])
     W = sampler.sample(K, rng)                                      # drawn first: common to any pool
     # per-indicator data: known ordinal index / known cardinal value / unknown mask
     known_lvl, known_val, unknown = {}, {}, {}
@@ -287,7 +419,12 @@ def aggregate(values: dict[str, dict[str, object]], indicators: list[IndicatorSp
               "profile": profile.name if profile else None, "profile_version": profile.version if profile else None,
               "mapping": {s.id: s.mapping for s in indicators if s.kind == "ordinal"},
               "scales": {s.id: [*s.bounds, "log" if s.log else "linear"] for s in indicators if s.kind == "cardinal"},
-              "mc_halfwidth_max": 1.96 * math.sqrt(0.25 / K)})
+              "mc_halfwidth_max": 1.96 * math.sqrt(0.25 / K),
+              # expert choices: how often the drawn data still violate them (SMAA-O mappings and unknowns
+              # vary per draw; the weights satisfy them at the expected values)
+              "prefer": [{"a": c.a, "op": c.op, "b": c.b, "by": c.by, "at": c.at, "approximate": c.approximate,
+                          "violated_share": float((U[:, ids.index(c.a)] < U[:, ids.index(c.b)]).mean())}
+                         for c, _ in prefs]})
 
 
 def _data_only(values, ids, indicators, w, K, seed) -> np.ndarray:

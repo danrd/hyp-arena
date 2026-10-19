@@ -110,7 +110,7 @@ def _validate(value: dict, abstracts: dict[str, dict]) -> list[str]:
 
 def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisCard,
                  as_of: Optional[str] = None, retmax: int = 8, log: Optional[list] = None,
-                 fallback: Optional[str] = None) -> ClaimVerification:
+                 fallback: Optional[str] = None, expert_pmids: Optional[list[tuple[str, str]]] = None) -> ClaimVerification:
     """`fallback`: the family asked when `family`'s reply is cut off with no complete record (gemini stops in
     the middle of verbatim quotes, most likely its recitation filter)."""
     cv = ClaimVerification(id=claim.id)
@@ -131,9 +131,12 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
         if len(pmids) >= retmax:
             break
     pmids = pmids[:retmax]
+    by_expert = {pmid: did for pmid, did in (expert_pmids or [])}    # sources an expert gave (spec 7a)
+    pmids = list(by_expert) + [p for p in pmids if p not in by_expert]
     abstracts = {p: a for p, a in pubmed.fetch(pmids).items() if a.get("abstract")}
     if log is not None:
         log.append({"kind": "search", "claim": claim.id, "queries": queries(claim, card), "as_of": as_of,
+                    "expert_pmids": list(by_expert),
                     "pmids": list(abstracts), "drugage": [r.record_id for r in support + against]})
     if not abstracts:
         cv.notes = "no abstracts found"
@@ -184,7 +187,7 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
             sexes=[s for s in (r.get("sexes") or []) if s in ("male", "female")], qualifiers_match=qm,
             program=ProgramInfo(name=prog) if prog in ("ITP", "CITP") else None,
             flags=[f for f in (r.get("flags") or []) if isinstance(f, str)], retrieved_at=a.get("year", ""),
-            notes=f"extracted by {fam}")
+            notes=f"extracted by {fam}" + (f"; source given by expert decision {by_expert[pmid]}" if pmid in by_expert else ""))
         stance = r.get("stance")
         need = claim_endpoint(claim)
         mismatched = [k for k, v in qm.items() if v == "no" and k != "intervention_match"]
@@ -225,15 +228,17 @@ def analog_probes(card: HypothesisCard) -> list[Claim]:
 
 
 def verify(client, families: list[str], writer: str, card: HypothesisCard, as_of: Optional[str] = None,
-           log: Optional[list] = None, map_fn=map) -> Verification:
+           log: Optional[list] = None, map_fn=map,
+           expert_sources: Optional[dict[str, list[tuple[str, str]]]] = None) -> Verification:
     """All declared claims, the rejected alternatives of a contrast (checked like claims, spec 7), plus analog
     probes; the verifier's family is never the writer's (its records feed the ranking)."""
     allowed = [f for f in families if f != writer] or families
     probes = analog_probes(card)
     claims = card.claims + card.rejected_alternatives + probes
     tasks = [(c, allowed[i % len(allowed)], allowed[(i + 1) % len(allowed)]) for i, c in enumerate(claims)]
+    expert_sources = expert_sources or {}
     cvs = list(map_fn(lambda t: verify_claim(client, t[1], frozenset({writer}), t[0], card, as_of, log=log,
-                                             fallback=t[2]), tasks))
+                                             fallback=t[2], expert_pmids=expert_sources.get(t[0].id)), tasks))
     added = {c.id for c in probes}
     for cv, c in zip(cvs, claims):
         if cv.id in added:

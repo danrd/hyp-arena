@@ -16,6 +16,7 @@ generated ideas and manuscripts, and external hypotheses have no experiment logs
 | Aggregation under preference profiles (МРСП / SMAA-2) | code: `hyparena/aspid.py`, profiles in `configs/profiles.yaml` | done |
 | Ranking across profiles, robust candidates | code: `hyparena/card/rank.py` | done |
 | End to end | `python -m hyparena.card.pipeline --paste file.txt --out result.json` (`configs/v2.yaml`, `--fake` for no model calls) | done |
+| Expert layer (card spec 7a; Aggregation_Spec 6a): sources sent through the verifier, opinions kept apart, pairwise choices as weight constraints, the expert's own hypotheses | `hyparena/card/expert.py`, `Prefer` / `check_feasible` / `next_pair` in `hyparena/aspid.py`; `--expert expert.yaml` | done (file input; no interface yet) |
 | Debates on the top (prosecution vs defence; competitor pairs) | LLM | later |
 | Card-based proximity, alternatives and prediction table, evolution loop | code + LLM | later |
 
@@ -33,6 +34,16 @@ generated ideas and manuscripts, and external hypotheses have no experiment logs
 - an end-to-end ranking of the examples.
 
 **Profiles** (`configs/profiles.yaml`, all drafts until set with experts): `evidence_first` (verified evidence first), `cheap_feasible` and `fundamental` (the examples in the notes).
+
+## Expert layer (2026-10-20)
+
+An expert file (YAML) next to a run holds decisions and hypotheses written by the expert; it never edits the declared or verified layer (card spec 7a). `hyparena/card/expert.py` documents the format.
+- **A decision with a PubMed source** on a claim or a rejected alternative: the PMID is fetched together with the search results for that claim and goes through the verifier like any abstract; the record notes which decision gave it. The status changes only through the usual rules.
+- **A decision without a source** stays in the layer and appears in the output as "expert opinion".
+- **Pairwise** ("prefer H-A" on [H-A, H-B], optionally for one profile): the constraint sum_j w_j (q_Aj − q_Bj) ≥ 0 in that profile, whose version gets "+expert-N". Unknown values enter at their expected value and the constraint is marked approximate; ordinal levels enter at the mean of the SMAA-O mapping (= equal steps). Weights are sampled by hit-and-run from an interior point found by linear programming; the output reports, per choice, the share of draws in which the drawn data still violate it. Results are reported with and without the choices (`ranking_autonomous`). Choices naming a hypothesis that is not ranked (filtered, not admitted) are listed in `expert_skipped`.
+- **Contradictions**: `check_feasible` solves a linear program (strict choices need a positive margin); when no weights remain it returns a minimal conflicting set of choices (deletion filter). The pipeline then reports it as `criterion_gap` and ranks without the choices.
+- **Which pair to ask next**: `next_pair` picks, among hypotheses with P(top-k) above the threshold, the pair with P(A > B) closest to 0.5.
+- **Expert hypotheses** run through the same pipeline with origin "expert".
 
 ## Rules added on 2026-10-19 (spec sections 5–7, 9, 10)
 

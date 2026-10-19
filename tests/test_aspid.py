@@ -4,7 +4,8 @@ import math
 import numpy as np
 import pytest
 
-from hyparena.aspid import IndicatorSpec, Profile, WeightSampler, aggregate, load_profiles
+from hyparena.aspid import (IndicatorSpec, InfeasiblePreferences, Prefer, Profile, WeightSampler, aggregate,
+                            check_feasible, load_profiles, next_pair)
 from hyparena.card.indicators import INDICATORS
 
 IDS = ["a", "b", "c", "d"]
@@ -86,3 +87,49 @@ def test_profiles_reference_known_indicators():
         for t in p.tiers:
             if t != "rest":
                 assert set(t) <= ids, (p.name, set(t) - ids)
+
+
+def _expert_pool():
+    # B is better on x1, A on x2 and x3: without expert information either can win
+    ind = [IndicatorSpec("x1", "cardinal"), IndicatorSpec("x2", "cardinal"),
+           IndicatorSpec("x3", "ordinal", levels=("lo", "mid", "hi"), mapping="equal_steps")]
+    vals = {"A": {"x1": 0.1, "x2": 0.6, "x3": "mid"}, "B": {"x1": 0.9, "x2": 0.3, "x3": "lo"},
+            "C": {"x1": 0.05, "x2": 0.2, "x3": "lo"}}                    # dominated by A
+    return ind, vals
+
+
+def test_expert_constraint_holds():
+    """Aggregation_Spec 7: after Prefer(A >= B) with no unknowns, P(u_A >= u_B) = 1."""
+    ind, vals = _expert_pool()
+    free = aggregate(vals, ind, None, K=4000, seed=1)
+    assert 0.05 < free.pairwise["A"]["B"] < 0.95
+    prof = Profile("p", prefer=[Prefer("A", "B", ">=", by="expert")])
+    res = aggregate(vals, ind, prof, K=4000, seed=1)
+    assert res.pairwise["A"]["B"] >= 1 - res.mc_halfwidth(1.0) - 1e-9
+    assert res.meta["prefer"][0]["violated_share"] == 0.0 and not res.meta["prefer"][0]["approximate"]
+
+
+def test_opposite_strict_choices_are_infeasible():
+    ind, vals = _expert_pool()
+    both = [Prefer("A", "B", ">", by="e1"), Prefer("B", "A", ">", by="e2"), Prefer("A", "C", ">=", by="e3")]
+    feas = check_feasible(Profile("p", prefer=both), vals, ind)
+    assert not feas.feasible and {(c.a, c.b) for c in feas.conflicting} == {("A", "B"), ("B", "A")}
+    with pytest.raises(InfeasiblePreferences):
+        aggregate(vals, ind, Profile("p", prefer=both), K=500)
+    weak = [Prefer("A", "B", ">="), Prefer("B", "A", ">=")]       # equality is still admissible
+    assert check_feasible(Profile("p", prefer=weak), vals, ind).feasible
+
+
+def test_expert_constraint_with_unknown_is_approximate():
+    ind, vals = _expert_pool()
+    vals["A"]["x2"] = None
+    res = aggregate(vals, ind, Profile("p", prefer=[Prefer("A", "B")]), K=2000, seed=3)
+    assert res.meta["prefer"][0]["approximate"]
+
+
+def test_next_pair_is_the_closest_call():
+    ind, vals = _expert_pool()
+    res = aggregate(vals, ind, None, K=4000, seed=1, k_top=3)
+    pair = next_pair(res, threshold=0.0)
+    d = lambda p: abs(res.pairwise[p[0]][p[1]] - 0.5)
+    assert all(d(pair) <= d((a, b)) + 1e-12 for a in res.order for b in res.order if a != b)

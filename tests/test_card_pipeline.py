@@ -126,3 +126,53 @@ def test_unknown_species_is_not_a_mismatch(monkeypatch):
     _stub(monkeypatch, [_record(qualifiers_match={"species": "no"})])
     cv = verifier.verify_claim(None, "google", frozenset(), c2, card)
     assert cv.evidence[0].qualifiers_match["species"] == "n/a"
+
+
+def _expert_file(tmp_path, decisions, hypotheses=()):
+    import yaml
+    f = tmp_path / "expert.yaml"
+    f.write_text(yaml.safe_dump({"decisions": decisions, "hypotheses": list(hypotheses)}, allow_unicode=True))
+    return str(f)
+
+
+def test_pipeline_with_expert_layer(monkeypatch, tmp_path):
+    fetched = []
+    monkeypatch.setattr(pubmed, "search", lambda q, retmax=8, as_of=None: ["1"])
+    monkeypatch.setattr(pubmed, "fetch", lambda ids: (fetched.append(list(ids)), {"1": ABSTRACT})[1])
+    monkeypatch.setattr(verifier, "drugage_records", lambda claim, allowed=None: ([], []))
+    monkeypatch.setattr(drug_phase, "max_phase", lambda name: 2)
+    path = _expert_file(tmp_path, [
+        {"id": "e1", "by": "expert A", "at": "2026-10-20", "point": "evidence_conflict", "hypothesis": "H-0001",
+         "target": "c1", "decision": "accept", "source": "PMID:23863708"},
+        {"id": "e2", "by": "expert A", "at": "2026-10-20", "point": "objection", "target": "H-0002",
+         "decision": "reject", "rationale": "no source: an opinion only"},
+        {"id": "e3", "by": "expert A", "at": "2026-10-20", "point": "pairwise", "target": ["H-0001", "H-0002"],
+         "decision": "prefer H-0002", "profile": "evidence_first"}],
+        hypotheses=["The expert compound extends the lifespan of mice."])
+    res = pipeline.run(["The fake compound extends the lifespan of mice.", "Another fake compound helps old mice."],
+                       fake=True, K=2000, expert=path)
+    assert [x["origin"] for x in res["items"]] == ["external", "external", "expert"]
+    assert any("23863708" in ids for ids in fetched)                         # the expert's source went to the verifier
+    h1, h2 = res["items"][0], res["items"][1]
+    assert h1["expert"][0]["kind"] == "source sent to the verifier"
+    assert h2["expert"][0]["kind"] == "expert opinion"
+    ef = res["ranking"]["evidence_first"]
+    assert ef["meta"]["profile_version"].endswith("+expert-1") and ef["meta"]["prefer"][0]["a"] == "H-0002"
+    assert ef["meta"]["prefer"][0]["approximate"]       # the fake cards leave cost, time ... unknown (spec 6a, MVP)
+    assert set(res["ranking_autonomous"]) == set(res["ranking"]) and not res["criterion_gap"]
+
+
+def test_preferences_from_pairwise_decisions():
+    from hyparena.card import expert as ex
+    layer = ex.ExpertLayer.model_validate({"decisions": [
+        {"id": "e1", "point": "pairwise", "target": ["H-1", "H-2"], "decision": "prefer H-2"},
+        {"id": "e2", "point": "pairwise", "target": ["H-1", "H-3"], "decision": "prefer H-1", "profile": "fundamental"}]})
+    prefs = ex.preferences(layer)
+    assert [(c.a, c.b) for c in prefs[None]] == [("H-2", "H-1")] and prefs["fundamental"][0].a == "H-1"
+    bad = ex.ExpertLayer.model_validate({"decisions": [
+        {"id": "e3", "point": "pairwise", "target": ["H-1", "H-2"], "decision": "prefer H-9"}]})
+    try:
+        ex.preferences(bad)
+        assert False
+    except ValueError:
+        pass
