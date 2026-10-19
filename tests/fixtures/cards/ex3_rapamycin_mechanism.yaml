@@ -1,0 +1,41 @@
+# Card spec, Example 3: mechanistic, rapamycin extends lifespan via cancer (refuted outcome → gate).
+raw: "Rapamycin extends mouse lifespan mainly by postponing death from cancer, not by slowing aging itself."
+card:
+  id: H-0003
+  raw_id: R-0003
+  hypothesis_type: mechanistic
+  claim_plain: Rapamycin's lifespan effect in mice comes from delayed cancer death rather than slower aging.
+  pico:
+    population: {taxon: "NCBITaxon:10090", label: mouse}
+    intervention:
+      - {type: compound, label: rapamycin, id: "CHEBI:9168"}
+    outcome: {endpoint: mechanism, metric: "cause of lifespan extension"}
+  claims:
+    - {id: c1, subject: {label: rapamycin}, relation: extends_lifespan_in, object: {label: mouse, id: "NCBITaxon:10090"}, role: premise, source_span: "Rapamycin extends mouse lifespan"}
+    - {id: c2, subject: {label: rapamycin}, relation: suppresses, object: {label: "cancer mortality"}, qualifiers: {species: mouse}, role: mechanism, source_span: "mainly by postponing death from cancer"}
+    - {id: c3, subject: {label: rapamycin}, relation: suppresses, object: {label: "non-neoplastic age-dependent changes"}, qualifiers: {species: mouse, direction: no_effect}, role: outcome, source_span: "not by slowing aging itself"}
+  edges:
+    - {from: c1, to: c2, type: requires}
+    - {from: c3, to: c2, type: supports_if_true}
+  decisive_experiment: {system: mouse, endpoint: "cause-of-death and non-neoplastic aging pathology", duration_class: years}
+verification:
+  card_id: H-0003
+  claims:
+    - id: c1
+      evidence:
+        - {source: PubMed, record_id: "PMID:19587680", epistemic_type: A_text, species: mouse, endpoint: lifespan, quote_role: finding,
+           quote: "Here we report that rapamycin, an inhibitor of the mTOR pathway, extends median and maximal lifespan of both male and female mice when fed beginning at 600 days of age."}
+    - id: c2
+      evidence:
+        - {source: PubMed, record_id: "PMID:19587680", epistemic_type: A_text, species: mouse, quote_role: speculation,
+           quote: "Rapamycin may extend lifespan by postponing death from cancer, by retarding mechanisms of ageing, or both"}
+    - id: c3
+      counterevidence:
+        - {source: PubMed, record_id: "PMID:22587563", epistemic_type: A_text, species: mouse, quote_role: finding,
+           quote: "suggesting strongly that rapamycin retards multiple aspects of aging in mice, in addition to any beneficial effects it may have on neoplastic disease"}
+expected:
+  statuses: {c1: supported, c2: unverified, c3: refuted}
+  profile:
+    gate: filtered
+  known_result: false
+  admission: accepted
