@@ -9,7 +9,7 @@ from typing import Optional
 from hyparena.card.llm import ask, parse_objects
 from hyparena.card.models import (UNKNOWN, Claim, ClaimVerification, Entity, EvidenceRecord,
                                   HypothesisCard, ProgramInfo, Refusal, Verification)
-from hyparena.card.rules import ORGANISM_PATTERNS, claim_endpoint, pico_value, quote_organisms, species_key
+from hyparena.card.rules import ORGANISM_PATTERNS, claim_organism, claim_endpoint, pico_value, quote_organisms, species_key
 from hyparena.card.sources import drugage_records
 from hyparena.tools import pubmed
 
@@ -70,6 +70,8 @@ def _context_match(qm: dict[str, str], claim, card: HypothesisCard, quote: str =
                                               else next((i.regimen for i in card.pico.intervention), UNKNOWN))
         if out.get(key) == "no" and (not value or value.strip().lower() in (UNKNOWN, "", "n/a")):
             out[key] = "n/a"
+    if out.get("species") == "no" and not claim_organism(claim):
+        out["species"] = "n/a"                             # the claim names no organism: unknown, not a mismatch
     # the quote names organisms and the claim's is not among them (e.g. a sentence about yeast, worms and flies
     # extracted as a mouse finding): a species mismatch, whatever the extractor said
     organism = species_key(claim.qualifiers.get("species", "")) or species_key(claim.object.label)

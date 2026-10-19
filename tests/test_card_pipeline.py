@@ -118,3 +118,11 @@ def test_stated_species_is_not_inherited():
     c4 = card.claims[3]                                   # span "... in healthy older adults"
     c4.qualifiers["species"], c4.inherited_from_pico = "human", ["species"]
     assert mark_inherited(card).claims[3].inherited_from_pico == []
+
+
+def test_unknown_species_is_not_a_mismatch(monkeypatch):
+    card = _fixture_card("ex1_rapamycin_healthspan")
+    c2 = card.claims[1]                                   # "slows multiple aspects of aging": no organism
+    _stub(monkeypatch, [_record(qualifiers_match={"species": "no"})])
+    cv = verifier.verify_claim(None, "google", frozenset(), c2, card)
+    assert cv.evidence[0].qualifiers_match["species"] == "n/a"
