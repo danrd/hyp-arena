@@ -10,9 +10,9 @@ from hyparena.llm.prompts import render
 from hyparena.llm.structured import parse_json
 
 
-def parse_fullest(text: str) -> Optional[dict]:
-    """The top-level JSON object with the most keys (a reply may add a second, partial object after the
-    answer; taking the last one would lose the answer)."""
+def parse_objects(text: str) -> list[dict]:
+    """Every JSON object that decodes, scanning left to right; inside an object that does not decode (a reply
+    cut off at the token limit) its complete inner objects are found instead."""
     decoder, found, i = json.JSONDecoder(), [], text.find("{")
     while i >= 0:
         try:
@@ -23,12 +23,19 @@ def parse_fullest(text: str) -> Optional[dict]:
         if isinstance(value, dict):
             found.append(value)
         i = text.find("{", end)
+    return found
+
+
+def parse_fullest(text: str) -> Optional[dict]:
+    """The top-level JSON object with the most keys (a reply may add a second, partial object after the
+    answer; taking the last one would lose the answer)."""
+    found = parse_objects(text)
     return max(found, key=len) if found else None
 
 
 def ask(client, *, role: str, family: str, template: str, version: str, variables: dict,
         validate: Optional[Callable[[dict], list[str]]] = None, rounds: int = 2, avoid=frozenset(),
-        log: Optional[list] = None) -> tuple[Optional[dict], str]:
+        log: Optional[list] = None, parse: Callable[[str], Optional[dict]] = parse_fullest) -> tuple[Optional[dict], str]:
     """(value, family that answered); value is None if no attempt produced valid JSON. The last parsed value
     is returned even when it still has problems; callers re-check what matters to them."""
     history, best, fam = "", None, family
@@ -36,7 +43,7 @@ def ask(client, *, role: str, family: str, template: str, version: str, variable
         prompt = render(template, version, **variables, history_text=history)
         started = time.time()
         reply = client.call(role=role, family=family, prompt=prompt, avoid=frozenset(avoid))
-        value = parse_fullest(reply.text)
+        value = parse(reply.text)
         problems = ["The reply did not contain a valid JSON object."] if value is None else (validate(value) if validate else [])
         if log is not None:
             log.append({"kind": "llm", "role": role, "template": f"{template}/{version}", "attempt": attempt + 1,

@@ -8,13 +8,13 @@ from __future__ import annotations
 
 from typing import Literal, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 UNKNOWN = "unknown"
 
 HypothesisType = Literal["interventional", "mechanistic", "biomarker", "observational"]
 Relation = Literal[
-    "extends_lifespan_in", "shortens_lifespan_in", "no_lifespan_effect_in", "improves_healthspan_in",
+    "extends_lifespan_in", "shortens_lifespan_in", "no_lifespan_effect_in", "slows_aging_in", "improves_healthspan_in",
     "changes_biomarker", "predicts", "inhibits", "activates", "increases_expression", "decreases_expression",
     "promotes", "suppresses", "part_of", "associated_with", "affects_hallmark", "translates_to", "other"]
 Role = Literal["premise", "mechanism", "analog", "outcome", "translation"]
@@ -29,6 +29,7 @@ Hallmark = Literal[
 Status = Literal["supported", "contested", "refuted", "unverified", "unresolved"]
 Rung = Literal["none", "cells", "invertebrates", "mammals", "human_markers", "human_clinical"]
 RUNGS: tuple[str, ...] = ("none", "cells", "invertebrates", "mammals", "human_markers", "human_clinical")
+INHERITABLE = ("species", "strain", "sex", "age_at_start", "comparator")    # qualifiers a claim may take from PICO (spec 9)
 
 
 # ---- declared layer ----
@@ -46,9 +47,25 @@ class Claim(BaseModel):
     relation: Relation
     object: Entity
     qualifiers: dict[str, str] = Field(default_factory=dict)   # species, strain, sex, tissue, dose, age_at_start, comparator, direction, measure
+    inherited_from_pico: list[str] = Field(default_factory=list)   # qualifiers copied from PICO, not stated in the span
     role: Role
     source_span: str = ""                        # verbatim fragment of the hypothesis text (empty only for verifier-added claims)
     note: str = ""                               # e.g. why `other` was used
+
+
+class DeclaredAlternative(BaseModel):
+    """An alternative the text names, structured like a claim (spec 4, 8c). `rejected`: the Y of a contrast
+    "mainly X, not Y", verified like a claim; `listed`: only shown, never scored."""
+    id: str
+    subject: Entity
+    relation: Relation
+    object: Entity
+    qualifiers: dict[str, str] = Field(default_factory=dict)
+    inherited_from_pico: list[str] = Field(default_factory=list)
+    source_span: str = ""
+    stated_as: Literal["rejected", "listed"] = "listed"
+    note: str = ""
+    role: Literal["alternative"] = "alternative"   # not a declared role: lets the verifier treat it like a claim
 
 
 class Edge(BaseModel):
@@ -109,13 +126,27 @@ class HypothesisCard(BaseModel):
     edges: list[Edge] = Field(default_factory=list)
     declared_novelty: str = UNKNOWN
     decisive_experiment: DecisiveExperiment = Field(default_factory=DecisiveExperiment)
-    declared_alternatives: list[str] = Field(default_factory=list)
+    declared_alternatives: list[DeclaredAlternative] = Field(default_factory=list)
     declared_decision_criteria: str = UNKNOWN
     risks: list[str] = Field(default_factory=list)
+
+    @field_validator("declared_alternatives", mode="before")
+    @classmethod
+    def _plain_alternatives(cls, v):
+        """A bare string (an alternative only listed by the text) becomes a `listed` entry."""
+        if not isinstance(v, list):
+            return v
+        return [{"id": f"alt{i}", "subject": {"label": x}, "relation": "other", "object": {"label": UNKNOWN},
+                 "stated_as": "listed", "note": "listed as plain text"} if isinstance(x, str) else x
+                for i, x in enumerate(v, start=1)]
 
     @property
     def outcome_claim(self) -> Optional[Claim]:
         return next((c for c in self.claims if c.role == "outcome"), None)
+
+    @property
+    def rejected_alternatives(self) -> list[DeclaredAlternative]:
+        return [a for a in self.declared_alternatives if a.stated_as == "rejected"]
 
 
 class RawHypothesis(BaseModel):
@@ -170,7 +201,7 @@ class EvidenceRecord(BaseModel):
 
 
 class Refusal(BaseModel):
-    type: str                                    # endpoint_mismatch | species_mismatch | direction | type ...
+    type: str                                    # endpoint_mismatch | inherited_mismatch | species_mismatch | direction | type ...
     record_id: str = ""
     quote: str = ""
     notes: str = ""
@@ -184,6 +215,8 @@ class ClaimVerification(BaseModel):
     counterevidence: list[EvidenceRecord] = Field(default_factory=list)
     refusals: list[Refusal] = Field(default_factory=list)
     unresolved: bool = False                     # entities could not be mapped
+    contrast: dict[str, str] = Field(default_factory=dict)   # outcome of a contrast: alternative, x_status, y_status
+    flags: list[str] = Field(default_factory=list)            # e.g. contrast_unchecked
     notes: str = ""
     added_claim: Optional[Claim] = None          # analogs added by the verifier (verified layer only)
 

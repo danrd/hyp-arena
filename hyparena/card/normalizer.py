@@ -10,9 +10,9 @@ from pydantic import ValidationError
 
 from hyparena.card.llm import ask
 from hyparena.card.models import Hallmark, HypothesisCard, Relation
-from hyparena.card.rules import validate_card
+from hyparena.card.rules import mark_inherited, validate_card
 
-TEMPLATE = ("normalize_card", "v2")
+TEMPLATE = ("normalize_card", "v3")
 
 
 def _problems(value: dict, raw_text: str, card_id: str) -> tuple[Optional[HypothesisCard], list[str]]:
@@ -20,7 +20,7 @@ def _problems(value: dict, raw_text: str, card_id: str) -> tuple[Optional[Hypoth
         card = HypothesisCard.model_validate({**value, "id": card_id, "raw_id": card_id})
     except ValidationError as e:
         return None, [f"{'.'.join(map(str, err['loc']))}: {err['msg']}" for err in e.errors()[:12]]
-    return card, validate_card(card, raw_text)
+    return mark_inherited(card), validate_card(card, raw_text)
 
 
 def normalize(client, family: str, raw_text: str, card_id: str, log: Optional[list] = None,

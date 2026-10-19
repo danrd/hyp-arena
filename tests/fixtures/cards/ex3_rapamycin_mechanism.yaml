@@ -1,4 +1,5 @@
-# Card spec, Example 3: mechanistic, rapamycin extends lifespan via cancer (refuted outcome → gate).
+# Card spec, Example 3: the contrast fixture "mainly X, not Y" (spec 6, 7). X (c2) is the outcome; Y (a1) is a
+# rejected declared alternative, checked like a claim and supported by PMID 22587563 → c2 refuted → gate.
 raw: "Rapamycin extends mouse lifespan mainly by postponing death from cancer, not by slowing aging itself."
 card:
   id: H-0003
@@ -12,11 +13,12 @@ card:
     outcome: {endpoint: mechanism, metric: "cause of lifespan extension"}
   claims:
     - {id: c1, subject: {label: rapamycin}, relation: extends_lifespan_in, object: {label: mouse, id: "NCBITaxon:10090"}, role: premise, source_span: "Rapamycin extends mouse lifespan"}
-    - {id: c2, subject: {label: rapamycin}, relation: suppresses, object: {label: "cancer mortality"}, qualifiers: {species: mouse}, role: mechanism, source_span: "mainly by postponing death from cancer"}
-    - {id: c3, subject: {label: rapamycin}, relation: suppresses, object: {label: "non-neoplastic age-dependent changes"}, qualifiers: {species: mouse, direction: no_effect}, role: outcome, source_span: "not by slowing aging itself"}
+    - {id: c2, subject: {label: rapamycin}, relation: suppresses, object: {label: "cancer mortality"}, qualifiers: {species: mouse, contrast: a1}, inherited_from_pico: [species], role: outcome, source_span: "mainly by postponing death from cancer"}
   edges:
-    - {from: c1, to: c2, type: requires}
-    - {from: c3, to: c2, type: supports_if_true}
+    - {from: c2, to: c1, type: supports_if_true}
+  declared_alternatives:
+    - {id: a1, subject: {label: rapamycin}, relation: slows_aging_in, object: {label: "age-related changes, non-neoplastic"}, qualifiers: {species: mouse}, inherited_from_pico: [species], source_span: "not by slowing aging itself", stated_as: rejected}
+    # inherited_from_pico added here: the reference card leaves a1 unmarked although its span names no organism (spec 9)
   decisive_experiment: {system: mouse, endpoint: "cause-of-death and non-neoplastic aging pathology", duration_class: years}
 verification:
   card_id: H-0003
@@ -29,13 +31,16 @@ verification:
       evidence:
         - {source: PubMed, record_id: "PMID:19587680", epistemic_type: A_text, species: mouse, quote_role: speculation,
            quote: "Rapamycin may extend lifespan by postponing death from cancer, by retarding mechanisms of ageing, or both"}
-    - id: c3
-      counterevidence:
+    - id: a1
+      evidence:
         - {source: PubMed, record_id: "PMID:22587563", epistemic_type: A_text, species: mouse, quote_role: finding,
-           quote: "suggesting strongly that rapamycin retards multiple aspects of aging in mice, in addition to any beneficial effects it may have on neoplastic disease"}
+           quote: "suggesting strongly that rapamycin retards multiple aspects of aging in mice, in addition to any beneficial effects it may have on neoplastic disease",
+           qualifiers_match: {species: "yes", intervention_match: exact}}
 expected:
-  statuses: {c1: supported, c2: unverified, c3: refuted}
+  statuses: {c1: supported, c2: refuted, a1: supported}
+  contrast: {c2: {alternative: a1, x_status: unverified, y_status: supported}}
   profile:
     gate: filtered
+    gate_reason: "c2 refuted by the contrast rule: a1 supported by PMID:22587563"
   known_result: false
   admission: accepted

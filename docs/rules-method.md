@@ -8,10 +8,10 @@ generated ideas and manuscripts, and external hypotheses have no experiment logs
 
 | Step | Who | Status |
 |---|---|---|
-| Normalizer: text → declared card (claims in a closed vocabulary, each with a verbatim `source_span`) | LLM (`normalize_card/v2`, gemini-3.5-flash), code validates and asks again: `hyparena/card/normalizer.py` | done |
+| Normalizer: text → declared card (claims in a closed vocabulary, each with a verbatim `source_span`; qualifiers inherited from PICO marked; contrast "mainly X, not Y" as outcome X plus a rejected alternative Y) | LLM (`normalize_card/v3`, gemini-3.5-flash), code marks unmarked species inheritance, validates and asks again: `hyparena/card/normalizer.py` | done |
 | Validation and admission (accepted / needs refinement / not a hypothesis) | code: `hyparena/card/rules.py` | done |
-| Verifier: evidence records with verbatim quotes, quote role, context match, endpoint; analog probes in mice for human outcomes | DrugAge (curated, deterministic) + PubMed abstracts (LLM extracts with `verify_claim/v2`; code drops quotes that are not verbatim): `hyparena/card/verifier.py` | done |
-| Claim statuses, gate, evidence profile, next step, known result | code: `hyparena/card/rules.py` | done |
+| Verifier: evidence records with verbatim quotes, quote role, context match, endpoint; rejected alternatives checked like claims; analog probes in mice for human outcomes | DrugAge (curated, deterministic) + PubMed abstracts (LLM extracts with `verify_claim/v3`; code drops quotes that are not verbatim and checks the context, see below): `hyparena/card/verifier.py` | done |
+| Claim statuses (with the contrast rule), gate, evidence profile, next step, known result | code: `hyparena/card/rules.py` | done |
 | Indicators (spec 8a) | code: `hyparena/card/indicators.py` | done for evidence-based ones; cost, time, late start and informativeness stay unknown until their inputs exist |
 | Aggregation under preference profiles (МРСП / SMAA-2) | code: `hyparena/aspid.py`, profiles in `configs/profiles.yaml` | done |
 | Ranking across profiles, robust candidates | code: `hyparena/card/rank.py` | done |
@@ -34,26 +34,38 @@ generated ideas and manuscripts, and external hypotheses have no experiment logs
 
 **Profiles** (`configs/profiles.yaml`, all drafts until set with experts): `evidence_first` (verified evidence first), `cheap_feasible` and `fundamental` (the examples in the notes).
 
-## Check against the worked examples (2026-10-19)
+## Rules added on 2026-10-19 (spec sections 5–7, 9, 10)
 
-The raw texts of the card-spec examples run through the whole pipeline (normalizer and verifier on cheap models; the examples' expected cards and verified layers are in `tests/fixtures/cards`). About 40 model calls in total over the attempts below.
+- **Unknown stays unknown.** A qualifier the card leaves `unknown` gives `n/a` in the context match, never `no`; the verifier's "no" is overridden in code.
+- **Inheritance from PICO.** Species, strain, sex, age at start and comparator may be copied from PICO into claims whose subject is the intervention; they are listed in `inherited_from_pico`. Code marks a species the span does not name but PICO does (normalizers often copy it without the mark), removes the mark when the span names the species, and rejects an unstated species in any other claim. A record that mismatches only an inherited value goes to `refusals` as `inherited_mismatch`: it sets no status (a mouse finding still does not support a claim inherited as human).
+- **Contrast "mainly X, not Y".** The outcome is X with `qualifiers.contrast`; Y is a declared alternative with `stated_as: rejected` (claim-like, verbatim span), searched for and checked like a claim. The outcome status follows the table of spec 7, computed in `rules.contrast_status`: X refuted or Y supported → refuted; Y contested → contested; Y refuted → X's status; X supported with Y unchecked → unverified with the flag `contrast_unchecked`; the inputs are kept on the claim (`contrast`). Y checked in another species does not decide X. Alternatives only listed by the text are kept and never scored.
+- **Relation `slows_aging_in`** (intervention → organism; non-neoplastic age-related change).
+- **Ex vivo ≠ in vivo** (code): an ex vivo or in vitro record does not count for a claim about an organism; for a claim without an organism it counts at the cells rung.
+- **Organisms in the quote** (code): when the quote names organisms and the claim's organism is not among them, the species does not match, whatever the extractor said (a sentence on yeast, worms and flies was extracted as a mouse finding).
+- **Search by the relation alone** ("rapamycin slows aging mice") when the object is not an organism: long object phrases often match nothing. This query finds Wilkinson 2012 (PMID 22587563) for example 3's alternative.
+- **Cut-off replies.** Gemini stops in the middle of some verbatim quotes, at the same place on every attempt (most likely its recitation filter, not the token limit: the replies were 100–900 tokens). A cut-off reply is asked again; the complete records of a cut-off reply are kept; a reply with none goes to the verifier of another family.
+
+## Check against the worked examples (2026-10-19, after the rules above)
+
+The raw texts of the card-spec examples run through the whole pipeline (normalizer and verifier on cheap models; the examples' expected cards and verified layers are in `tests/fixtures/cards`). Five runs while the rules above were added, 23–31 model calls each; the table gives the last run (`runs/v2_spec9.json`) and what varied.
 
 | Example | Expected (spec) | Pipeline |
 |---|---|---|
-| 1. Low-dose rapamycin, human healthspan | mammals · replicated · ITP positive · mechanism partial · human_markers contested · next: trial with pre-registered primary outcome | the same. PEARL (PMID 40188830) is found and split into a supporting subgroup record and a refuting null primary outcome |
-| 2. D+Q, physical function | mammals (analog in aged mice) · single · partial | mammals · **replicated** (the verifier found a second independent mouse study, PMID 25754370) · partial |
-| 3. Rapamycin mainly via cancer, not aging | filtered: "not by slowing aging" refuted by PMID 22587563 | **known result**: the normalizer makes "rapamycin suppresses death from cancer" the outcome (supported, PMID 22107964), and retrieval does not find PMID 22587563 for the "not by slowing aging" claim |
+| 1. Low-dose rapamycin, human healthspan | mammals · replicated · ITP positive · mechanism partial · human_markers contested · next: trial with pre-registered primary outcome | the same. Earlier runs lost PEARL (PMID 40188830) to a cut-off reply (now: another family), and gpt-5-nano once took "mTORC1 inhibitors increase pain" as refuting "rapamycin inhibits mTORC1" (now: the stance rule in `verify_claim/v3`) |
+| 2. D+Q, physical function | mammals (analog in aged mice) · single · partial | mammals · **replicated** (a second independent mouse study, PMID 25754370) · partial or unverified (whether "SASP drives physical decline" finds a finding varies). c2 and c3 inherit "human": mouse findings land in refusals as `inherited_mismatch`, the ex vivo explant finding no longer counts |
+| 3. Rapamycin mainly via cancer, not aging | filtered: Y supported by PMID 22587563 → outcome refuted | the card has the expected structure in all five runs, and the search for Y finds PMID 22587563 every time. But the verifier also finds **Neff et al. 2013 (PMID 23863708)**: "our data largely dissociate rapamycin's longevity effects from effects on aging itself". So Y is **contested**, and by the table the outcome is contested (three runs). In the last run the outcome is **refuted** and filtered through X: the verifier counted "Disease patterns of rapamycin-treated mice did not differ from those of control mice" (PMID 19587680) against X; the reference reads it as "does not support", i.e. X unverified |
 | 4. "Senolytics slow aging" | needs refinement (population, endpoint) | the same |
 | 5. "Senescent cells are bad for health" | not a hypothesis | the same |
-| 6. Resveratrol from middle age, mouse lifespan | filtered (refuted) | the same: DrugAge records of the two ITP papers (PMID 20974732, 22451473) refute it |
+| 6. Resveratrol from middle age, mouse lifespan (comparator now unknown) | filtered (refuted) | the same: DrugAge records of the two ITP papers (PMID 20974732, 22451473). One run was contested: gpt-5-nano extracted Baur et al. 2006's sentence on yeast, worms and flies as a mouse finding (now: organisms in the quote) |
 
-**What it took:**
+**What stage B took** (first check, before the rules above):
 - **Normalizer.** A worked example in the prompt (on metformin, deliberately not one of the fixtures), rules for mechanistic hypotheses, and "aging" and "health" as non-measurable endpoints. Also a stronger model: gemini-3.5-flash split example 3 correctly, while gpt-5-nano, gemini-3.1-flash-lite and gpt-5-mini kept the premise as the outcome.
 - **Verifier.** Rules for negative claims and for primary versus secondary or subgroup outcomes (`verify_claim/v2`); the analog probes in mice; a third search query.
 - **DrugAge.** A paper counts against a lifespan claim only if neither average nor maximum lifespan rose significantly. PMID 22107964 is listed with a non-significant mean, but the paper reports longer survival of the last survivors.
 
-**Departures from the specification found on the way (to decide):**
-1. Example 6's expected card has comparator "standard diet", which the raw text does not state. With the text as written, a high-calorie-diet study (PMID 17086191) also matches, and the rules give "contested" unless DrugAge's ITP records settle it. The ITP records did settle it here, and the hypothesis is filtered as expected.
-2. Example 2's expected c1 has species "human"; the text does not say so. With species unknown, mouse evidence matches, and the claim becomes supported.
-3. Hypotheses of the form "mainly X, not Y" (example 3) carry their point in the contrast. The outcome claim should be the contrast. This is a normalizer rule to add, and a known weak spot until then.
-4. Claims with relation `other` get the status `unresolved` (spec 5: ignored by symbolic checks).
+**Departures from the reference to decide:**
+1. Example 3: the reference expects Y supported; the literature found by the verifier has Y contested (Wilkinson 2012 vs Neff 2013), which makes the outcome contested by the contrast table. Either the reference adds Neff 2013, or the table needs a rule for this case.
+2. Example 3's alternative a1 carries `species: mouse` that the span ("not by slowing aging itself") does not state; the reference leaves a1 without `inherited_from_pico` (c2 next to it has it). Our fixture marks it.
+3. Admission of mechanistic hypotheses (spec 4a) asks for "≥1 mechanism claim"; with the contrast form the explanation is the outcome claim, so the outcome claim counts as the mechanism.
+4. Example 1's c2 (the normalizer now writes `rapamycin slows_aging_in older adults`): the population sits in the object, not a qualifier; inheritance into the object is not covered by spec 9.
+5. Claims with relation `other` get the status `unresolved` (spec 5: ignored by symbolic checks).
