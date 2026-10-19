@@ -7,12 +7,12 @@ import re
 from typing import Optional
 
 from hyparena.card.llm import ask
-from hyparena.card.models import Claim, ClaimVerification, EvidenceRecord, HypothesisCard, ProgramInfo, Refusal, Verification
+from hyparena.card.models import Claim, ClaimVerification, Entity, EvidenceRecord, HypothesisCard, ProgramInfo, Refusal, Verification
 from hyparena.card.rules import claim_endpoint
 from hyparena.card.sources import drugage_records
 from hyparena.tools import pubmed
 
-TEMPLATE = ("verify_claim", "v1")
+TEMPLATE = ("verify_claim", "v2")
 REL_WORDS = {"extends_lifespan_in": "lifespan", "shortens_lifespan_in": "lifespan", "no_lifespan_effect_in": "lifespan",
              "improves_healthspan_in": "healthspan OR physical function", "changes_biomarker": "", "predicts": "predicts",
              "inhibits": "inhibits", "activates": "activates", "increases_expression": "expression",
@@ -50,7 +50,8 @@ def queries(claim: Claim, card: HypothesisCard) -> list[str]:
     words = [subject, REL_WORDS.get(claim.relation, ""), obj_term, organism]
     q1 = " ".join(_clean(w) for w in words if w and w != "unknown")
     q2 = " ".join(_clean(w) for w in (subject, obj_term or organism) if w and w != "unknown")
-    return list(dict.fromkeys([q for q in (q1, q2) if q]))
+    q3 = " ".join(_clean(w) for w in (subject, obj_term, organism, "lifespan" if "lifespan" not in q1 else "") if w and w != "unknown")
+    return list(dict.fromkeys([q for q in (q1, q2, q3) if q]))
 
 
 def _validate(value: dict, abstracts: dict[str, dict]) -> list[str]:
@@ -69,7 +70,7 @@ def _validate(value: dict, abstracts: dict[str, dict]) -> list[str]:
 
 
 def verify_claim(client, family: str, avoid: frozenset, claim: Claim, card: HypothesisCard,
-                 as_of: Optional[str] = None, retmax: int = 6, log: Optional[list] = None) -> ClaimVerification:
+                 as_of: Optional[str] = None, retmax: int = 8, log: Optional[list] = None) -> ClaimVerification:
     cv = ClaimVerification(id=claim.id)
     allowed = None
     support, against = drugage_records(claim)
@@ -96,7 +97,8 @@ def verify_claim(client, family: str, avoid: frozenset, claim: Claim, card: Hypo
         cv.notes = "no abstracts found"
         return cv
     p = card.pico
-    variables = {"claim": claim, "qualifiers": ", ".join(f"{k}: {v}" for k, v in claim.qualifiers.items() if v and v != "unknown"),
+    negated = claim.qualifiers.get("direction", "").lower() in ("no_effect", "none", "no", "not", "no effect")
+    variables = {"claim": claim, "negated": negated, "qualifiers": ", ".join(f"{k}: {v}" for k, v in claim.qualifiers.items() if v and v != "unknown"),
                  "endpoint": claim_endpoint(claim), "claim_plain": card.claim_plain,
                  "population": ", ".join(f"{k} {v}" for k, v in p.population.model_dump().items() if v and v != "unknown") or "unknown",
                  "intervention": "; ".join(f"{i.label} ({i.regimen})" for i in p.intervention) or "unknown",
@@ -145,10 +147,34 @@ def verify_claim(client, family: str, avoid: frozenset, claim: Claim, card: Hypo
     return cv
 
 
+def analog_probes(card: HypothesisCard) -> list[Claim]:
+    """Claims the verifier adds in its own layer (spec 4, 8): when an interventional hypothesis is about
+    humans, the same intervention's lifespan and healthspan effect in mice, which can set the effect level
+    below the human rungs."""
+    out = card.outcome_claim
+    if card.hypothesis_type != "interventional" or not card.pico.intervention or out is None:
+        return []
+    human = any(w in (out.object.label + " " + card.pico.population.label + " " + (card.pico.population.taxon or "")).lower()
+                for w in ("human", "adult", "people", "patient", "9606"))
+    if not human:
+        return []
+    label = " + ".join(i.label for i in card.pico.intervention)
+    return [Claim(id="a1", subject=Entity(label=label), relation="extends_lifespan_in", object=Entity(label="mouse"),
+                  qualifiers={"species": "mouse"}, role="analog", note="added by the verifier"),
+            Claim(id="a2", subject=Entity(label=label), relation="improves_healthspan_in", object=Entity(label="mouse"),
+                  qualifiers={"species": "mouse"}, role="analog", note="added by the verifier")]
+
+
 def verify(client, families: list[str], writer: str, card: HypothesisCard, as_of: Optional[str] = None,
            log: Optional[list] = None, map_fn=map) -> Verification:
-    """All declared claims; the verifier's family is never the writer's (its records feed the ranking)."""
+    """All declared claims plus analog probes; the verifier's family is never the writer's (its records feed
+    the ranking)."""
     allowed = [f for f in families if f != writer] or families
-    tasks = [(c, allowed[i % len(allowed)]) for i, c in enumerate(card.claims)]
+    claims = card.claims + analog_probes(card)
+    tasks = [(c, allowed[i % len(allowed)]) for i, c in enumerate(claims)]
     cvs = list(map_fn(lambda t: verify_claim(client, t[1], frozenset({writer}), t[0], card, as_of, log=log), tasks))
+    added = {c.id for c in claims[len(card.claims):]}
+    for cv, c in zip(cvs, claims):
+        if cv.id in added:
+            cv.added_claim = c
     return Verification(card_id=card.id, claims=cvs)

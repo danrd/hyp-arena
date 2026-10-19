@@ -43,9 +43,9 @@ def _extra(card: HypothesisCard) -> dict:
     return {}
 
 
-def run(texts: list[str], writer: str = "unknown", config: str = "configs/paid-test.yaml", fake: bool = False,
+def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yaml", fake: bool = False,
         as_of: Optional[str] = None, K: int = 10000, k_top: int = 3, max_calls: int = 400, workers: int = 4,
-        on_stage=lambda msg: None) -> dict:
+        normalizer_family: str = "google", on_stage=lambda msg: None) -> dict:
     started = time.time()
     client, families = _client(config, fake, max_calls)
     log: list = []
@@ -55,8 +55,8 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/paid-t
     def one(idx_text):
         i, text = idx_text
         cid = f"H-{i:04d}"
-        norm_family = [f for f in families if f != writer][i % max(1, len([f for f in families if f != writer]))] \
-            if any(f != writer for f in families) else families[0]
+        # the normalizer is a parser, not a judge: one strong family for every text (independence does not apply)
+        norm_family = normalizer_family if normalizer_family in families else families[0]
         card, problems = normalize(client, norm_family, text, cid, log=log)
         return {"id": cid, "text": text, "card": card, "problems": problems}
 
@@ -117,7 +117,8 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--paste", required=True, help="text file with hypotheses (numbered or separated by blank lines)")
     ap.add_argument("--writer", default="unknown")
-    ap.add_argument("--config", default="configs/paid-test.yaml")
+    ap.add_argument("--config", default="configs/v2.yaml")
+    ap.add_argument("--normalizer-family", default="google")
     ap.add_argument("--fake", action="store_true")
     ap.add_argument("--as-of", default=None)
     ap.add_argument("--K", type=int, default=10000)
@@ -127,7 +128,7 @@ def main() -> None:
     args = ap.parse_args()
     texts = split_hypotheses(Path(args.paste).read_text(encoding="utf-8"))
     res = run(texts, args.writer, args.config, args.fake, args.as_of, args.K, args.k_top, args.max_calls,
-              on_stage=lambda m: print(m, flush=True))
+              normalizer_family=args.normalizer_family, on_stage=lambda m: print(m, flush=True))
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     Path(args.out).write_text(json.dumps(res, ensure_ascii=False, indent=1, default=str))
     for x in res["items"]:
