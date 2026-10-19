@@ -151,7 +151,7 @@ class HypothesisCard(BaseModel):
 
 class RawHypothesis(BaseModel):
     id: str
-    origin: Literal["external", "internal"] = "external"
+    origin: Literal["external", "internal", "expert"] = "external"
     text: str
     received_at: str = ""
     generator: Optional[str] = None
@@ -251,8 +251,33 @@ class Verification(BaseModel):
     declared_vs_verified: list[str] = Field(default_factory=list)
 
 
+# ---- expert layer (spec 7a): expert decisions; never edits the declared or verified layer ----
+
+ExpertPoint = Literal["profile", "pairwise", "evidence_conflict", "objection", "alternative", "variant", "portfolio"]
+
+
+class ExpertDecision(BaseModel):
+    id: str
+    by: str = ""                                 # name or role
+    at: str = ""                                 # date
+    point: ExpertPoint
+    target: Union[str, list[str]]                # claim, objection, alternative, variant or hypothesis id; pairwise: [H-A, H-B]
+    decision: str                                # e.g. accept | reject | prefer H-A | take into work
+    rationale: str = ""
+    source: Optional[str] = None                 # e.g. "PMID:..."; only a source can change a claim status
+    hypothesis: Optional[str] = None             # the card a claim-level target belongs to (in a run-level file)
+    profile: Optional[str] = None                # pairwise: the preference profile it applies to (None: every profile)
+
+
+class ExpertLayer(BaseModel):
+    """The expert file of a run: decisions, and hypotheses written by the expert (origin: expert)."""
+    decisions: list[ExpertDecision] = Field(default_factory=list)
+    hypotheses: list[str] = Field(default_factory=list)
+
+
 def json_schema() -> dict:
     """JSON Schema of the declared card and the verified layer (for people and other tools)."""
     return {"HypothesisCard": HypothesisCard.model_json_schema(by_alias=True),
             "Verification": Verification.model_json_schema(by_alias=True),
-            "RawHypothesis": RawHypothesis.model_json_schema(), "Admission": Admission.model_json_schema()}
+            "RawHypothesis": RawHypothesis.model_json_schema(), "Admission": Admission.model_json_schema(),
+            "ExpertLayer": ExpertLayer.model_json_schema()}
