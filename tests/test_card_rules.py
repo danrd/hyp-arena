@@ -190,3 +190,11 @@ def test_unmarked_inheritance_is_marked_or_rejected():
     assert validate_card(mark_inherited(card), d["raw"]) == [] and card.claims[0].inherited_from_pico == ["species"]
     card.claims[2].qualifiers["species"] = "human"   # general mechanism claim: cannot inherit → a problem stays
     assert any("c3: species" in p for p in validate_card(mark_inherited(card), d["raw"]))
+
+
+def test_listed_alternative_span_must_be_verbatim():
+    d = load("ex1_rapamycin_healthspan")
+    alt = {"id": "a1", "subject": {"label": "rapamycin"}, "relation": "suppresses", "object": {"label": "food intake"},
+           "source_span": "by lowering food intake", "stated_as": "listed"}
+    card = HypothesisCard.model_validate({**d["card"], "declared_alternatives": [alt]})
+    assert any(p.startswith("a1: source_span") for p in validate_card(card, d["raw"]))

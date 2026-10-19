@@ -53,9 +53,10 @@ def validate_card(card: HypothesisCard, raw_text: Optional[str] = None) -> list[
     if len(alternatives) != len(card.declared_alternatives) or ids & set(alternatives):
         problems.append("alternative ids must be unique and differ from claim ids")
     rejected = [a for a in card.declared_alternatives if a.stated_as == "rejected"]
+    spanned = [a for a in card.declared_alternatives if a.note != "listed as plain text"]   # plain strings carry no span
     if raw_text is not None:
         text = _norm(raw_text)
-        for c in [*card.claims, *rejected]:
+        for c in [*card.claims, *spanned]:
             if not c.source_span:
                 problems.append(f"{c.id}: source_span is missing")
             elif _norm(c.source_span) not in text:
@@ -203,13 +204,13 @@ def admissible(record: EvidenceRecord, claim: Claim) -> bool:
         return False
     if any(v == "no" for k, v in record.qualifiers_match.items() if k != "intervention_match"):
         return False
-    if record.system in ("ex_vivo", "in_vitro") and _claim_organism(claim):
+    if record.system in ("ex_vivo", "in_vitro") and claim_organism(claim):
         return False                                     # ex vivo ≠ in vivo: cells do not support a claim about an organism
     need = claim_endpoint(claim)
     return not (need and record.endpoint not in ("unknown", need))
 
 
-def _claim_organism(claim) -> bool:
+def claim_organism(claim) -> bool:
     """The claim is about a living organism: a species qualifier or an organism as the object."""
     return bool(species_key(claim.qualifiers.get("species", ""))) or _species_rung(claim.object.label) is not None
 
