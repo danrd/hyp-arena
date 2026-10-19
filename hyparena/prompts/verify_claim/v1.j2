@@ -1,0 +1,38 @@
+You check one claim of a research hypothesis against PubMed abstracts. Extract evidence; do not judge the hypothesis. Code decides the claim's status from what you extract, so be literal and conservative.
+
+Hypothesis (context): {{ claim_plain }}
+Population: {{ population }}. Intervention: {{ intervention }}. Comparator: {{ comparator }}.
+
+Claim {{ claim.id }} ({{ claim.role }}): {{ claim.subject.label }} — {{ claim.relation }} — {{ claim.object.label }}
+Qualifiers stated by the hypothesis: {{ qualifiers or "none" }}
+{% if endpoint %}
+This claim is about {{ endpoint }}. A finding on another endpoint (e.g. healthspan or a marker for a lifespan claim) neither supports nor refutes it: give it stance "neither" and the endpoint it measures.
+{% endif %}
+
+Abstracts:
+{% for a in abstracts %}
+[PMID {{ a.pmid }}] {{ a.year }}{% if a.review %} (review){% endif %}. {{ a.title }}
+{{ a.abstract }}
+
+{% endfor %}
+For every abstract that contains a sentence relevant to this claim, return one record:
+- pmid;
+- quote: one or two consecutive sentences copied exactly, character for character, from that abstract;
+- quote_role: finding (a result of this study) | background (stated as known, cited, or a review summarising others) | speculation (may, might, could, suggests, we propose);
+- stance: supports | refutes | neither (for this claim, in this context);
+- endpoint: what the finding measures: lifespan | healthspan | biomarker | disease | mechanism | unknown;
+- species; system: in_vivo | ex_vivo | in_vitro; study_type: primary_experiment | rct | open_label_pilot | observational | review | other;
+- sexes: list of male/female in which the effect was found (empty if not stated);
+- effect_percent: % change of lifespan if the abstract states it, else null;
+- qualifiers_match: for each of species, sex, age_at_start, dose, comparator, population: "yes" (matches), "no" (contradicts, e.g. a disease population for healthy adults, ex vivo for an in vivo claim) or "n/a" (the claim does not specify it, or the abstract does not say);
+- intervention_match: exact | dose_differs | regimen_differs | related_compound | class;
+- program: "ITP" or "CITP" if the study is from such a multi-site program, else "";
+- flags: any of conflict_of_interest, small_n, open_label, subgroup_only, preprint, short_lived_controls.
+Skip abstracts with nothing relevant. Return an empty list if none is relevant. Do not use knowledge outside these abstracts.
+
+Reply with a single JSON object and nothing else:
+{"records": [{"pmid": "", "quote": "", "quote_role": "finding", "stance": "neither", "endpoint": "unknown", "species": "", "system": "in_vivo", "study_type": "other", "sexes": [], "effect_percent": null, "qualifiers_match": {"species": "n/a"}, "intervention_match": "exact", "program": "", "flags": []}]}
+{% if history_text %}
+
+{{ history_text }}
+{% endif %}

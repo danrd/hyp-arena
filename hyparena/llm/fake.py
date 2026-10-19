@@ -130,3 +130,20 @@ class FakeLLMClient:
         ids = list(dict.fromkeys(re.findall(r"^\[(\w+)\]", prompt, flags=re.M)))
         rng.shuffle(ids)
         return json.dumps({"ranking": ids})
+
+    # method v2 (hyparena/card)
+
+    def _normalize_card(self, rng, prompt, n):
+        m = re.search(r"<<<TEXT\n(.*?)\nTEXT>>>", prompt, flags=re.S)
+        text = (m.group(1) if m else "a fake hypothesis").strip()
+        span = text[:min(len(text), 50)]
+        return json.dumps({"hypothesis_type": "interventional", "claim_plain": span,
+                           "pico": {"population": {"label": "mouse", "taxon": "NCBITaxon:10090"},
+                                    "intervention": [{"type": "compound", "label": "fake compound", "regimen": "unknown"}],
+                                    "outcome": {"endpoint": "lifespan", "metric": "unknown"}},
+                           "claims": [{"id": "c1", "subject": {"label": "fake compound"}, "relation": "extends_lifespan_in",
+                                       "object": {"label": "mouse"}, "role": "outcome", "source_span": span}],
+                           "edges": [], "decisive_experiment": {"system": "mouse", "endpoint": "lifespan", "duration_class": "years"}})
+
+    def _verify_claim(self, rng, prompt, n):
+        return json.dumps({"records": []})
