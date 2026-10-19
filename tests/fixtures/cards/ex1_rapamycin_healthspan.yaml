@@ -1,0 +1,100 @@
+# Card spec, Example 1 (Hypothesis_Card_Examples): low-dose rapamycin and human healthspan.
+# Quotes verbatim from PubMed abstracts (fetched 2026-10-15 by the notes' author).
+raw: "Weekly low-dose intermittent rapamycin, by inhibiting mTORC1, slows multiple aspects of aging and can improve healthspan in healthy older adults, as it does in mice where it extends lifespan even when started late in life."
+card:
+  id: H-0001
+  raw_id: R-0001
+  hypothesis_type: interventional
+  claim_plain: Weekly low-dose rapamycin improves healthspan in healthy older adults.
+  pico:
+    population: {taxon: "NCBITaxon:9606", label: human, sex: unknown, age: "older adults, healthy"}
+    intervention:
+      - {type: compound, label: rapamycin, id: "CHEBI:9168", regimen: "weekly, low-dose, intermittent"}
+    outcome: {endpoint: healthspan, metric: unknown}
+  claims:
+    - {id: c1, subject: {label: rapamycin}, relation: inhibits, object: {label: mTORC1}, role: premise, source_span: "by inhibiting mTORC1"}
+    - {id: c2, subject: {label: rapamycin}, relation: suppresses, object: {label: "multiple aspects of aging"}, qualifiers: {species: unknown}, role: mechanism, source_span: "slows multiple aspects of aging"}
+    - {id: c3, subject: {label: rapamycin}, relation: extends_lifespan_in, object: {label: mouse, id: "NCBITaxon:10090"}, qualifiers: {age_at_start: late_life}, role: analog, source_span: "in mice where it extends lifespan even when started late in life"}
+    - {id: c4, subject: {label: rapamycin}, relation: improves_healthspan_in, object: {label: human, id: "NCBITaxon:9606"}, qualifiers: {dose: "weekly low-dose intermittent", age_at_start: older_adults}, role: outcome, source_span: "can improve healthspan in healthy older adults"}
+  edges:
+    - {from: c2, to: c1, type: requires}
+    - {from: c2, to: c4, type: supports_if_true}
+    - {from: c3, to: c4, type: analog_of}
+  decisive_experiment: {system: human, endpoint: "healthspan composite / physical function", duration_class: years}
+verification:
+  card_id: H-0001
+  claims:
+    - id: c1
+      notes: "Only background: PMID 19587680, 'rapamycin, an inhibitor of the mTOR pathway' (quote_role background)."
+      evidence:
+        - {source: PubMed, record_id: "PMID:19587680", epistemic_type: A_text, quote: "rapamycin, an inhibitor of the mTOR pathway", quote_role: background}
+    - id: c2
+      evidence:
+        - source: PubMed
+          record_id: "PMID:22587563"
+          lab_or_cohort: "Wilkinson et al. 2012"
+          epistemic_type: A_text
+          study_type: primary_experiment
+          species: mouse
+          quote: "many forms of age-dependent change, including alterations in heart, liver, adrenal glands, endometrium, and tendon, as well as age-dependent decline in spontaneous activity, occur more slowly in rapamycin-treated mice"
+          quote_role: finding
+          qualifiers_match: {species: "yes"}
+    - id: c3
+      evidence:
+        - source: PubMed
+          record_id: "PMID:19587680"
+          lab_or_cohort: "ITP (Harrison et al. 2009)"
+          epistemic_type: A_text
+          study_type: primary_experiment
+          species: mouse
+          endpoint: lifespan
+          quote: "On the basis of age at 90% mortality, rapamycin led to an increase of 14% for females and 9% for males."
+          quote_role: finding
+          metric: age at 90% mortality
+          effect_percent: 14
+          sexes: [female, male]
+          qualifiers_match: {species: "yes", age_at_start: "yes"}
+          program: {name: ITP, sites_with_effect: 3}
+        - source: DrugAge
+          record_id: "DrugAge:rapamycin/UM-HET3/20 months"
+          epistemic_type: B_curated
+          linked_pmid: "19587680"
+          endpoint: lifespan
+          metric: average lifespan
+          quote_role: finding
+          fields: {avg_lifespan_change_percent: "13 (F), 9 (M)", significance: S, ITP: "Yes"}
+    - id: c4
+      evidence:
+        - source: PubMed
+          record_id: "PMID:40188830"
+          lab_or_cohort: "PEARL trial NCT04488601"
+          epistemic_type: A_text
+          study_type: rct
+          species: human
+          endpoint: healthspan
+          quote: "Lean tissue mass (ηp2 = 0.202, p = 0.013) and self-reported pain (ηp2 = 0.168, p = 0.015) improved significantly for women using 10 mg rapamycin."
+          quote_role: finding
+          flags: [subgroup_only, conflict_of_interest]
+      counterevidence:
+        - source: PubMed
+          record_id: "PMID:40188830"
+          lab_or_cohort: "PEARL trial NCT04488601"
+          epistemic_type: A_text
+          study_type: rct
+          species: human
+          endpoint: healthspan
+          quote: "Visceral adiposity did not change significantly (ηp2 = 0.001, p = 0.942)"
+          quote_role: finding
+          notes: primary outcome of the trial
+expected:
+  statuses: {c1: unverified, c2: supported, c3: supported, c4: contested}
+  profile:
+    gate: pass
+    effect_level: mammals
+    effect_contested: [human_markers]
+    robustness: replicated
+    multi_site_program: {tested: "yes", outcome: positive}
+    mechanism: partial
+    next_step: "human_markers: trial with pre-registered primary outcome"
+  known_result: false
+  admission: accepted

@@ -1,0 +1,40 @@
+# Card spec, Example 5: endpoint mismatch fixture. The healthspan sentence must not support a lifespan claim.
+raw: "Resveratrol started in middle age extends the lifespan of mice."
+card:
+  id: H-0006
+  raw_id: R-0006
+  hypothesis_type: interventional
+  claim_plain: Resveratrol given from middle age makes mice live longer.
+  pico:
+    population: {taxon: "NCBITaxon:10090", label: mouse, age_at_start: "middle age"}
+    intervention:
+      - {type: compound, label: resveratrol, id: "CHEBI:27881"}
+    comparator: {type: untreated, label: "standard diet"}
+    outcome: {endpoint: lifespan, metric: unknown}
+  claims:
+    - {id: c1, subject: {label: resveratrol, id: "CHEBI:27881"}, relation: extends_lifespan_in, object: {label: mouse, id: "NCBITaxon:10090"}, qualifiers: {age_at_start: "middle age"}, role: outcome, source_span: "Resveratrol started in middle age extends the lifespan of mice"}
+  decisive_experiment: {system: mouse, endpoint: lifespan, duration_class: years}
+verification:
+  card_id: H-0006
+  claims:
+    - id: c1
+      evidence:
+        # a verifier that ignores the endpoint would put this here; the rules must not count it
+        - {source: PubMed, record_id: "PMID:18599363", epistemic_type: A_text, species: mouse, endpoint: healthspan, quote_role: finding,
+           quote: "resveratrol-fed elderly mice show a marked reduction in signs of aging", qualifiers_match: {species: "yes", age_at_start: "yes"}}
+      counterevidence:
+        - {source: PubMed, record_id: "PMID:18599363", epistemic_type: A_text, species: mouse, endpoint: lifespan, quote_role: finding,
+           quote: "mice fed a standard diet did not live longer when treated with resveratrol beginning at 12 months of age",
+           qualifiers_match: {species: "yes", age_at_start: "yes", comparator: "yes", intervention_match: exact}}
+        - {source: PubMed, record_id: "PMID:20974732", epistemic_type: A_text, species: mouse, study_type: primary_experiment, endpoint: lifespan, quote_role: finding,
+           quote: "Resveratrol (at 300 and 1200 ppm food) and simvastatin (12 and 120 ppm) did not have significant effects on survival in male or female mice.",
+           qualifiers_match: {species: "yes", comparator: "yes", intervention_match: exact}, program: {name: ITP}}
+      refusals:
+        - {type: endpoint_mismatch, record_id: "PMID:18599363", quote: "resveratrol-fed elderly mice show a marked reduction in signs of aging", notes: "healthspan finding; does not support a lifespan claim"}
+expected:
+  statuses: {c1: refuted}
+  profile:
+    gate: filtered
+    multi_site_program: {tested: "yes", outcome: negative}
+  known_result: false
+  admission: accepted

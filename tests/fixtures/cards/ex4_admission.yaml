@@ -1,0 +1,48 @@
+# Card spec, Example 4: admission and refinement.
+cases:
+  - name: R-0004 vague
+    raw: "Senolytics slow aging."
+    card:
+      id: H-0004
+      raw_id: R-0004
+      hypothesis_type: interventional
+      claim_plain: Senolytics slow aging.
+      pico:
+        intervention: [{type: compound, label: senolytics}]
+      claims:
+        - {id: c1, subject: {label: senolytics}, relation: suppresses, object: {label: aging}, role: outcome, source_span: "Senolytics slow aging"}
+    expected: {decision: needs_refinement, missing: ["pico.population", "pico.outcome.endpoint"]}
+  - name: R-0005 not a hypothesis
+    raw: "Senescent cells are bad for health."
+    card:
+      id: H-0005
+      raw_id: R-0005
+      hypothesis_type: observational
+      claim_plain: Senescent cells are bad for health.
+      claims:
+        - {id: c1, subject: {label: "senescent cells"}, relation: associated_with, object: {label: "poor health"}, role: outcome, source_span: "Senescent cells are bad for health"}
+    expected: {decision: not_a_hypothesis}
+  - name: R-0004a known result
+    raw: "Intermittent dasatinib plus quercetin started in old mice increases their remaining survival."
+    card:
+      id: H-0004a
+      raw_id: R-0004a
+      hypothesis_type: interventional
+      claim_plain: Intermittent dasatinib plus quercetin started in old mice increases their remaining survival.
+      pico:
+        population: {taxon: "NCBITaxon:10090", label: mouse, age_at_start: old}
+        intervention:
+          - {type: compound, label: dasatinib, regimen: intermittent}
+          - {type: compound, label: quercetin, regimen: intermittent}
+        outcome: {endpoint: lifespan, metric: "remaining survival"}
+      claims:
+        - {id: c1, subject: {label: "dasatinib plus quercetin"}, relation: extends_lifespan_in, object: {label: mouse}, qualifiers: {age_at_start: old}, role: outcome, source_span: "Intermittent dasatinib plus quercetin started in old mice increases their remaining survival"}
+    verification:
+      card_id: H-0004a
+      claims:
+        - id: c1
+          evidence:
+            - {source: PubMed, record_id: "PMID:29988130", epistemic_type: A_text, species: mouse, endpoint: lifespan, quote_role: finding,
+               quote: "intermittent oral administration of senolytics to both senescent cell-transplanted young mice and naturally aged mice alleviated physical dysfunction and increased post-treatment survival by 36% while reducing mortality hazard to 65%.",
+               qualifiers_match: {species: "yes", age_at_start: "yes", intervention_match: exact}}
+    expected: {decision: accepted, context_specificity: 3, known_result: true}

@@ -3,6 +3,7 @@
 An approach to ranking thousands of scientific hypotheses (biology, ageing) by promise and feasibility, based on ideas from Google's Co-Scientist.
 
 - Approach: [`docs/approach.md`](docs/approach.md)
+- **Method v2 (2026-10-19): verified card → rule-based indicators → aggregation under preference profiles**: [`docs/rules-method.md`](docs/rules-method.md); specifications in [`docs/spec/`](docs/spec/); tests: `pip install pytest && python -m pytest tests/`
 - Architecture (LangGraph multi-agent design): [`docs/architecture.md`](docs/architecture.md)
 - Criteria, card schema and models are configuration: [`configs/criteria.yaml`](configs/criteria.yaml), [`configs/card.yaml`](configs/card.yaml) (draft), [`configs/models.yaml`](configs/models.yaml)
 - Comparison protocol (our ranking vs Co-Scientist-style baselines, the 2025 Elo version and the 2026 TrueSkill + UCB version; ablation ladder, budgets, statistics): [`docs/comparison.md`](docs/comparison.md)

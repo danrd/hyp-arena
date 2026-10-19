@@ -1,0 +1,19 @@
+# Preference profiles for the aggregation (hyparena/aspid.py): named, versioned orders of importance of the
+# indicators (hyparena/card/indicators.py). A tier's indicators each weigh at least as much as every indicator
+# of the next tier; "rest" stands for all indicators not listed; indicators not listed when there is no "rest"
+# are free. Weights are uniform over everything the profile allows. All three are drafts: the orders are to be
+# set with experts (Working_Notes 2.1); the first follows the stance "verified evidence matters most", the
+# other two are the examples from the notes.
+profiles:
+  evidence_first:
+    version: "draft-1"
+    description: Verified evidence matters most.
+    tiers: [[effect_level, robustness, mechanism], rest]
+  cheap_feasible:
+    version: "draft-1"
+    description: Cheap and feasible ideas with decent novelty.
+    tiers: [[cost, time, translational_distance], [novelty], [effect_level]]
+  fundamental:
+    version: "draft-1"
+    description: Mechanism, informativeness and novelty before cost.
+    tiers: [[mechanism, informativeness, novelty], [cost]]
