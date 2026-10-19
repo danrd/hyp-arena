@@ -95,7 +95,21 @@ def export(out: Path, log=print, workers: int = 3) -> dict:
     log(f"matches: {len(matches)} unique of {total}")
 
     _summary(out, rows)
+    judge_call(out, s, ids)
     return {"hypotheses": len(ids), "matches": len(matches), "snapshot": snapshot}
+
+
+def judge_call(out: Path, s: httpx.Client, ids: list[str]) -> None:
+    """One full call of the match judge (instructions, input dossiers, verdict): the judge prompt is not in the
+    match records."""
+    for hid in ids:
+        d = json.loads((out / "raw" / f"h_{hid}.json").read_text())
+        call = next((c for c in d.get("recentCalls") or [] if c.get("stage") == "matches" and c.get("status") == "succeeded"), None)
+        if call:
+            data = _get(s, f"/hypotheses/{hid}/calls/{call['id']}")
+            (out / "judge_call_example.json").write_text(json.dumps(data, ensure_ascii=False, indent=1))
+            (out / "judge_instructions.txt").write_text(data["request"]["instructions"])
+            return
 
 
 def _summary(out: Path, rows: list[dict]) -> None:
