@@ -271,6 +271,65 @@ def evaluate(labels_path: str, result_path: str, split: str = "all", unrated: st
     return out
 
 
+def run_v2(pool_path: str, out: str, config: str = "configs/v2.yaml", profile: str = "evidence_first",
+           fake: bool = False, max_calls: int = 600, K: int = 10000) -> dict:
+    """Our method v2 on a backtest pool, evidence as of the pool's date. Writes the full v2 output (`out`) and
+    the ladder-format result (`out` with suffix .ladder.json) that `evaluate` and `compare` read."""
+    from hyparena.card.pipeline import as_ladder_result
+    from hyparena.card.pipeline import run as v2
+    from hyparena.data import load_imported
+    pool = json.loads(Path(pool_path).read_text())
+    hyps = load_imported(pool_path)
+    res = v2([h.text for h in hyps], writer=pool["source"].get("family", "unknown"), config=config, fake=fake,
+             as_of=pool["source"]["as_of"], max_calls=max_calls, K=K)
+    Path(out).parent.mkdir(parents=True, exist_ok=True)
+    Path(out).write_text(json.dumps(res, ensure_ascii=False, indent=1, default=str))
+    ladder = as_ladder_result(res, [h.id for h in hyps], profile)
+    Path(out).with_suffix(".ladder.json").write_text(json.dumps(ladder, indent=2))
+    return ladder
+
+
+def axes(labels_path: str, v2_path: str, split: str = "all") -> dict:
+    """Card spec 8 validation: does each axis of the evidence profile (and each indicator) separate the later
+    ITP positives from the negatives? AUC per axis over the items of the split; hypotheses filtered by the gate
+    take the lowest value of every axis, items not admitted are left out."""
+    from hyparena.card import indicators as ind
+    labels = json.loads(Path(labels_path).read_text())
+    items = _items(labels, split, set())
+    res = json.loads(Path(v2_path).read_text())
+    by_id = dict(zip([f"imp{i:03d}" for i in range(1, len(res["items"]) + 1)], res["items"]))
+    specs = {s.id: s for s in ind.INDICATORS}
+    out = {"split": split, "n": 0, "outcomes": defaultdict(lambda: defaultdict(int)), "axes": {}}
+    values = defaultdict(dict)
+    for h, lab in items.items():
+        x = by_id.get(h)
+        if x is None:
+            continue
+        out["outcomes"][x["outcome"]][str(lab["label"])] += 1
+        if x["outcome"] not in ("ranked", "known_result", "filtered"):
+            continue
+        out["n"] += 1
+        for sid, spec in specs.items():
+            if x["outcome"] == "filtered":
+                v = 0.0
+            else:
+                raw = (x.get("indicators") or {}).get(sid)
+                if raw is None:
+                    continue
+                v = spec.levels.index(raw) if spec.kind == "ordinal" else spec.scale(float(raw))
+            values[sid][h] = v
+        values["gate_pass"][h] = 0.0 if x["outcome"] == "filtered" else 1.0
+    for sid, vals in values.items():
+        pos = [v for h, v in vals.items() if items[h]["label"] == 1]
+        neg = [v for h, v in vals.items() if items[h]["label"] == 0]
+        if pos and neg:
+            lo, hi = bootstrap_auc(pos, neg)
+            out["axes"][sid] = {"auc": auc(pos, neg), "auc_95ci": [lo, hi], "n_pos": len(pos), "n_neg": len(neg),
+                                "distinct_values": len(set(vals.values()))}
+    out["outcomes"] = {k: dict(v) for k, v in out["outcomes"].items()}
+    return out
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -288,8 +347,25 @@ def main() -> None:
     c.add_argument("--a", nargs="+", required=True, help="result files of arm A (globs allowed)")
     c.add_argument("--b", nargs="+", required=True, help="result files of arm B (globs allowed)")
     c.add_argument("--key", default="combined", help="combined or a criterion name")
+    v = sub.add_parser("v2", help="our method v2 on a backtest pool")
+    v.add_argument("--pool", required=True)
+    v.add_argument("--out", required=True)
+    v.add_argument("--config", default="configs/v2.yaml")
+    v.add_argument("--profile", default="evidence_first")
+    v.add_argument("--max-calls", type=int, default=600)
+    v.add_argument("--fake", action="store_true")
+    a = sub.add_parser("axes", help="AUC of each evidence-profile axis against the labels (card spec 8)")
+    a.add_argument("--labels", required=True)
+    a.add_argument("--v2", required=True, help="full v2 output written by the v2 command")
+    a.add_argument("--split", choices=["dev", "test", "all"], default="all")
     args = ap.parse_args()
     fams = args.known_families.split(",") if getattr(args, "known_families", None) else None
+    if args.cmd == "v2":
+        print(json.dumps(run_v2(args.pool, args.out, args.config, args.profile, args.fake, args.max_calls), indent=1)[:2000])
+        return
+    if args.cmd == "axes":
+        print(json.dumps(axes(args.labels, args.v2, args.split), indent=2))
+        return
     if args.cmd == "build-itp":
         build_itp(args.as_of)
     elif args.cmd == "evaluate":

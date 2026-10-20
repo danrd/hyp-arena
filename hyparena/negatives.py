@@ -252,6 +252,27 @@ def run(args) -> None:
     execute(runs, args.execute, Path(args.out_dir) / "manifest.json")
 
 
+def run_v2(args) -> None:
+    """Our method v2 (verified cards, rules, aggregation) on every group, evidence as of the group's date;
+    results in the format `evaluate` reads, plus the full v2 output next to each."""
+    from hyparena.card.pipeline import as_ladder_result
+    from hyparena.card.pipeline import run as v2
+    labels, gids = _groups(Path(args.data))
+    out = Path(args.out_dir) / f"v2-{args.profile}"
+    out.mkdir(parents=True, exist_ok=True)
+    for gid in gids:
+        path = out / f"{gid}.json"
+        if path.exists():
+            continue
+        hyps = load_imported(Path(args.data) / f"{gid}.json")
+        res = v2([h.text for h in hyps], writer=labels[gid]["writer"], config=args.config, fake=args.fake,
+                 as_of=labels[gid]["as_of"], max_calls=args.max_calls, K=args.K)
+        (out / f"{gid}.v2.json").write_text(json.dumps(res, ensure_ascii=False, indent=1, default=str))
+        path.write_text(json.dumps(as_ladder_result(res, [h.id for h in hyps], args.profile), indent=2))
+        print(f"{gid}: {res['meta']['calls']} calls, {res['meta']['seconds']} s")
+    print(out)
+
+
 def listwise(args) -> None:
     """Baseline: one call per group and family that ranks all ten hypotheses at once (no tournament)."""
     labels, gids = _groups(Path(args.data))
@@ -404,6 +425,13 @@ def main() -> None:
     lw = sub.add_parser("listwise", parents=[llm, data])
     lw.add_argument("--families", default=None)
     lw.add_argument("--out-dir", default=str(RUNS))
+    v = sub.add_parser("v2", parents=[data], help="our method v2 on every group")
+    v.add_argument("--config", default="configs/v2.yaml")
+    v.add_argument("--profile", default="evidence_first")
+    v.add_argument("--max-calls", type=int, default=200)
+    v.add_argument("--K", type=int, default=10000)
+    v.add_argument("--out-dir", default=str(RUNS))
+    v.add_argument("--fake", action="store_true")
     e = sub.add_parser("evaluate", parents=[data])
     e.add_argument("--runs", nargs="+", required=True, help="run directories (one per seed; globs allowed)")
     e.add_argument("--key", default="combined", help="combined or a criterion name")
@@ -419,6 +447,8 @@ def main() -> None:
         run(args)
     elif args.cmd == "listwise":
         listwise(args)
+    elif args.cmd == "v2":
+        run_v2(args)
     elif args.cmd == "evaluate":
         print(json.dumps(evaluate(args.data, expand(args.runs), args.key), indent=2))
     else:

@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Optional
 
 from hyparena.aspid import InfeasiblePreferences, load_profiles
+from hyparena.card import entities
 from hyparena.card import expert as ex
 from hyparena.card import indicators as ind
 from hyparena.card.models import HypothesisCard, Verification
@@ -23,7 +24,6 @@ from hyparena.card.rules import admit, finalize
 from hyparena.card.verifier import verify
 from hyparena.llm.fake import FakeLLMClient
 from hyparena.llm.providers import DEFAULT_CONFIG, GuardedClient, build_client, load_config
-from hyparena.tools import drug_phase
 
 
 def _client(config: str, fake: bool, max_calls: int):
@@ -35,14 +35,10 @@ def _client(config: str, fake: bool, max_calls: int):
 
 
 def _extra(card: HypothesisCard) -> dict:
-    """Values from other components: translational distance from the max clinical phase of the compounds (a
-    combination is as advanced as its least advanced component)."""
-    comps = [i for i in card.pico.intervention if i.type == "compound"]
-    if comps and len(comps) == len(card.pico.intervention):
-        phases = [drug_phase.max_phase(i.label) for i in comps]
-        if all(p is not None for p in phases):
-            return {"max_phase": min(phases)}
-    return {}
+    """Values from other components: translational distance from the max clinical phase of the resolved
+    compounds (ChEMBL by InChIKey; a combination is as advanced as its least advanced component)."""
+    phase = entities.max_phase(card)
+    return {"max_phase": phase} if phase is not None else {}
 
 
 def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yaml", fake: bool = False,
@@ -74,6 +70,7 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
         if card is None:
             x["outcome"] = "normalization_failed"
             continue
+        x["unresolved_compounds"] = entities.resolve_card(card)
         adm = admit(card)
         x["admission"] = adm
         if adm.decision != "accepted":
@@ -118,12 +115,39 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
                        "card": x["card"].model_dump(by_alias=True) if x["card"] else None,
                        "admission": x["admission"].model_dump() if x.get("admission") else None,
                        "verification": x["verification"].model_dump(by_alias=True) if x.get("verification") else None,
-                       "indicators": x.get("indicators"), "extra": x.get("extra")} for x in items],
+                       "indicators": x.get("indicators"), "extra": x.get("extra"),
+                       "unresolved_compounds": x.get("unresolved_compounds", [])} for x in items],
             "ranking": profiles, "robust": ranking.robust if ranking else [],
             "ranking_autonomous": autonomous, "criterion_gap": gap,
             "expert_skipped": [vars(c) for c in ranking.expert_skipped] if ranking else [],
             "filtered": ranking.filtered if ranking else {}, "known_results": ranking.known_results if ranking else [],
             "calls": log}
+
+
+OUTCOME_SCORE = {"known_result": 3.0, "ranked": 2.0, "needs_refinement": 1.0, "not_a_hypothesis": 1.0,
+                 "normalization_failed": 1.0, "filtered": 0.0}
+
+
+def as_ladder_result(res: dict, ids: list[str], profile: str = "evidence_first", step: str = "v2") -> dict:
+    """A v2 result in the format the ladder evaluations read (negatives, backtest): one combined score per
+    hypothesis. Order: known result (a supported finding in the same context) > ranked, by the expected value
+    under `profile` > not admitted > filtered by the gate. `ids[i]` names the i-th input text."""
+    ranking = res["ranking"].get(profile) or {}
+    hyps = {}
+    for hid, x in zip(ids, res["items"]):
+        score = OUTCOME_SCORE.get(x["outcome"], 1.0)
+        if x["outcome"] == "ranked":
+            score += ranking.get("expected", {}).get(x["id"], 0.0)
+        out_claim = next((c for c in (x["verification"] or {}).get("claims", [])
+                          if c["id"] == next((k["id"] for k in (x["card"] or {}).get("claims", []) if k["role"] == "outcome"), None)), {})
+        hyps[hid] = {"status": x["outcome"], "combined": score, "card_id": x["id"],
+                     "outcome_status": out_claim.get("status"),
+                     "gate_reason": ((x["verification"] or {}).get("evidence_profile") or {}).get("gate_reason", "")}
+    return {"criteria": [], "step": step, "profile": profile, "families": res["meta"]["families"],
+            "calls": res["meta"]["calls"], "as_of": res["meta"]["as_of"],
+            "tokens": {"all": {"tokens_in": sum(c.get("tokens_in") or 0 for c in res["calls"] if c.get("kind") == "llm"),
+                               "tokens_out": sum(c.get("tokens_out") or 0 for c in res["calls"] if c.get("kind") == "llm")}},
+            "hypotheses": hyps}
 
 
 def main() -> None:

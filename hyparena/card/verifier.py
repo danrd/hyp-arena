@@ -10,6 +10,7 @@ from hyparena.card.llm import ask, parse_objects
 from hyparena.card.models import (UNKNOWN, Claim, ClaimVerification, Entity, EvidenceRecord,
                                   HypothesisCard, ProgramInfo, Refusal, Verification)
 from hyparena.card.rules import ORGANISM_PATTERNS, claim_organism, claim_endpoint, pico_value, quote_organisms, species_key
+from hyparena.card.entities import subject_compounds
 from hyparena.card.sources import drugage_records
 from hyparena.tools import pubmed
 
@@ -115,7 +116,8 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
     the middle of verbatim quotes, most likely its recitation filter)."""
     cv = ClaimVerification(id=claim.id)
     allowed = None
-    support, against = drugage_records(claim)
+    comps = subject_compounds(claim.subject.label, card)
+    support, against = drugage_records(claim, cid=comps[0].cid if comps and len(comps) == 1 else None)
     if as_of and (support or against):
         from hyparena.backtest import _pubdates
         dates = _pubdates([r.linked_pmid for r in support + against])
