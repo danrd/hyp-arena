@@ -29,6 +29,7 @@ import json
 import random
 import zipfile
 from collections import defaultdict
+from typing import Optional
 from pathlib import Path
 
 import httpx
@@ -270,7 +271,7 @@ def evaluate(labels_path: str, result_path: str, split: str = "all", unrated: st
 
 
 def run_v2(pool_path: str, out: str, config: str = "configs/v2.yaml", profile: str = "evidence_first",
-           fake: bool = False, max_calls: int = 600, K: int = 10000) -> dict:
+           fake: bool = False, max_calls: int = 600, K: int = 10000, verifiers: Optional[list[str]] = None) -> dict:
     """Our method v2 on a backtest pool, evidence as of the pool's date. Writes the full v2 output (`out`) and
     the ladder-format result (`out` with suffix .ladder.json) that `evaluate` and `compare` read."""
     from hyparena.card.pipeline import as_ladder_result
@@ -279,7 +280,7 @@ def run_v2(pool_path: str, out: str, config: str = "configs/v2.yaml", profile: s
     pool = json.loads(Path(pool_path).read_text())
     hyps = load_imported(pool_path)
     res = v2([h.text for h in hyps], writer=pool["source"].get("family", "unknown"), config=config, fake=fake,
-             as_of=pool["source"]["as_of"], max_calls=max_calls, K=K)
+             as_of=pool["source"]["as_of"], max_calls=max_calls, K=K, verifiers=verifiers)
     Path(out).parent.mkdir(parents=True, exist_ok=True)
     Path(out).write_text(json.dumps(res, ensure_ascii=False, indent=1, default=str))
     ladder = as_ladder_result(res, [h.id for h in hyps], profile)
@@ -352,6 +353,7 @@ def main() -> None:
     v.add_argument("--profile", default="evidence_first")
     v.add_argument("--max-calls", type=int, default=600)
     v.add_argument("--fake", action="store_true")
+    v.add_argument("--verifiers", default=None, help="comma-separated families that verify (default: all)")
     a = sub.add_parser("axes", help="AUC of each evidence-profile axis against the labels (card spec 8)")
     a.add_argument("--labels", required=True)
     a.add_argument("--v2", required=True, help="full v2 output written by the v2 command")
@@ -359,7 +361,8 @@ def main() -> None:
     args = ap.parse_args()
     fams = args.known_families.split(",") if getattr(args, "known_families", None) else None
     if args.cmd == "v2":
-        print(json.dumps(run_v2(args.pool, args.out, args.config, args.profile, args.fake, args.max_calls), indent=1)[:2000])
+        print(json.dumps(run_v2(args.pool, args.out, args.config, args.profile, args.fake, args.max_calls,
+                                verifiers=args.verifiers.split(",") if args.verifiers else None), indent=1)[:2000])
         return
     if args.cmd == "axes":
         print(json.dumps(axes(args.labels, args.v2, args.split), indent=2))

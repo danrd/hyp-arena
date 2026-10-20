@@ -258,15 +258,22 @@ def run_v2(args) -> None:
     from hyparena.card.pipeline import as_ladder_result
     from hyparena.card.pipeline import run as v2
     labels, gids = _groups(Path(args.data))
-    out = Path(args.out_dir) / f"v2-{args.profile}"
+    out = Path(args.out_dir) / (f"v2-{args.profile}" + (f"-{args.tag}" if args.tag else ""))
     out.mkdir(parents=True, exist_ok=True)
     for gid in gids:
         path = out / f"{gid}.json"
         if path.exists():
             continue
         hyps = load_imported(Path(args.data) / f"{gid}.json")
+        saved = Path(args.cards_from) / f"{gid}.v2.json" if args.cards_from else None
+        cards = None
+        if saved and saved.exists():
+            earlier = json.loads(saved.read_text())
+            if not any("quota" in (c.get("error") or "") for c in earlier["calls"]):   # a run cut by the balance has no cards
+                cards = [x["card"] for x in earlier["items"]]
         res = v2([h.text for h in hyps], writer=labels[gid]["writer"], config=args.config, fake=args.fake,
-                 as_of=labels[gid]["as_of"], max_calls=args.max_calls, K=args.K)
+                 as_of=labels[gid]["as_of"], max_calls=args.max_calls, K=args.K,
+                 verifiers=args.verifiers.split(",") if args.verifiers else None, cards=cards)
         (out / f"{gid}.v2.json").write_text(json.dumps(res, ensure_ascii=False, indent=1, default=str))
         path.write_text(json.dumps(as_ladder_result(res, [h.id for h in hyps], args.profile), indent=2))
         print(f"{gid}: {res['meta']['calls']} calls, {res['meta']['seconds']} s")
@@ -450,6 +457,9 @@ def main() -> None:
     v.add_argument("--K", type=int, default=10000)
     v.add_argument("--out-dir", default=str(RUNS))
     v.add_argument("--fake", action="store_true")
+    v.add_argument("--verifiers", default=None, help="comma-separated families that verify (default: all)")
+    v.add_argument("--cards-from", default=None, help="directory of an earlier v2 run whose cards are reused")
+    v.add_argument("--tag", default="", help="suffix of the output directory")
     rf = sub.add_parser("v2-refresh", parents=[data], help="recompute saved v2 results without model calls")
     rf.add_argument("--profile", default="evidence_first")
     rf.add_argument("--suffix", default="refreshed")

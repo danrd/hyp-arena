@@ -43,8 +43,12 @@ def _extra(card: HypothesisCard) -> dict:
 
 def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yaml", fake: bool = False,
         as_of: Optional[str] = None, K: int = 10000, k_top: int = 3, max_calls: int = 400, workers: int = 4,
-        normalizer_family: str = "google", on_stage=lambda msg: None, expert=None) -> dict:
-    """`expert`: path to an expert file (hyparena/card/expert.py) or an ExpertLayer."""
+        normalizer_family: str = "google", on_stage=lambda msg: None, expert=None,
+        verifiers: Optional[list[str]] = None, cards: Optional[list[Optional[dict]]] = None) -> dict:
+    """`expert`: path to an expert file (hyparena/card/expert.py) or an ExpertLayer. `verifiers`: the families
+    that verify (default: every family of the config). `cards`: declared cards from an earlier run, one per
+    text (None where normalization failed); the normalizer is then skipped, so a change of the verifier is
+    compared on the same cards."""
     started = time.time()
     layer = expert if isinstance(expert, ex.ExpertLayer) else ex.load(expert)
     origins = ["external"] * len(texts) + ["expert"] * len(layer.hypotheses)
@@ -59,7 +63,12 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
         cid = f"H-{i:04d}"
         # the normalizer is a parser, not a judge: one strong family for every text (independence does not apply)
         norm_family = normalizer_family if normalizer_family in families else families[0]
-        card, problems = normalize(client, norm_family, text, cid, log=log)
+        if cards is not None:
+            saved = cards[i - 1]
+            card = HypothesisCard.model_validate(saved) if saved else None
+            problems = [] if card else ["no card in the earlier run"]
+        else:
+            card, problems = normalize(client, norm_family, text, cid, log=log)
         return {"id": cid, "text": text, "card": card, "problems": problems, "origin": origins[i - 1]}
 
     items = list(pool.map(one, enumerate(texts, start=1)))
@@ -76,7 +85,7 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
         if adm.decision != "accepted":
             x["outcome"] = adm.decision
             continue
-        ver = verify(client, families, writer, card, as_of=as_of, log=log, map_fn=pool.map,
+        ver = verify(client, verifiers or families, writer, card, as_of=as_of, log=log, map_fn=pool.map,
                      expert_sources=ex.sources(layer, card.id))
         x["verification"] = finalize(card, ver)
         x["extra"] = _extra(card)
@@ -105,6 +114,7 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
     autonomous = {name: view(r) for name, r in ranking.autonomous.items()} if ranking else {}
     return {"meta": {"created": time.strftime("%Y-%m-%dT%H:%M:%S"), "seconds": round(time.time() - started),
                      "calls": client.calls, "failures": client.failures, "families": families, "writer": writer,
+                     "verifiers": verifiers or families, "config": config, "cards_reused": cards is not None,
                      "as_of": as_of, "fake": fake, "k_top": k_top,
                      "profiles": {n: {"tiers": p.tiers, "version": p.version, "description": p.description}
                                   for n, p in load_profiles().items()},
@@ -203,11 +213,15 @@ def main() -> None:
     ap.add_argument("--k-top", type=int, default=3)
     ap.add_argument("--max-calls", type=int, default=400)
     ap.add_argument("--expert", default=None, help="expert file (YAML, see hyparena/card/expert.py)")
+    ap.add_argument("--verifiers", default=None, help="comma-separated families that verify (default: all)")
+    ap.add_argument("--cards-from", default=None, help="an earlier v2 result whose cards are reused (no normalizer)")
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
     texts = split_hypotheses(Path(args.paste).read_text(encoding="utf-8"))
     res = run(texts, args.writer, args.config, args.fake, args.as_of, args.K, args.k_top, args.max_calls,
-              normalizer_family=args.normalizer_family, on_stage=lambda m: print(m, flush=True), expert=args.expert)
+              normalizer_family=args.normalizer_family, on_stage=lambda m: print(m, flush=True), expert=args.expert,
+              verifiers=args.verifiers.split(",") if args.verifiers else None,
+              cards=[x["card"] for x in json.loads(Path(args.cards_from).read_text())["items"]] if args.cards_from else None)
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     Path(args.out).write_text(json.dumps(res, ensure_ascii=False, indent=1, default=str))
     for x in res["items"]:
