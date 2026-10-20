@@ -12,6 +12,7 @@ from functools import lru_cache
 from typing import Optional
 
 from hyparena.card.models import Claim, EvidenceRecord, ProgramInfo
+from hyparena.tools.compounds import drugage_map, key as cp_key
 
 SPECIES = {"mouse": "Mus musculus", "mice": "Mus musculus", "mus musculus": "Mus musculus", "ncbitaxon:10090": "Mus musculus",
            "rat": "Rattus norvegicus", "ncbitaxon:10116": "Rattus norvegicus",
@@ -38,9 +39,12 @@ def _pct(v: str) -> Optional[float]:
         return None
 
 
-def drugage_records(claim: Claim, allowed_pmids: Optional[set[str]] = None) -> tuple[list[EvidenceRecord], list[EvidenceRecord]]:
+def drugage_records(claim: Claim, allowed_pmids: Optional[set[str]] = None,
+                    cid: Optional[int] = None) -> tuple[list[EvidenceRecord], list[EvidenceRecord]]:
     """(evidence, counterevidence) for an `extends_lifespan_in` claim; empty for other relations or unknown
-    species. `allowed_pmids` restricts to papers published by an as-of date."""
+    species. `allowed_pmids` restricts to papers published by an as-of date. `cid`: the PubChem parent compound
+    of the claim's subject; DrugAge rows then match by compound (sirolimus = rapamycin, quercetin dihydrate =
+    quercetin), and by name otherwise."""
     if claim.relation != "extends_lifespan_in":
         return [], []
     species = None
@@ -51,9 +55,15 @@ def drugage_records(claim: Claim, allowed_pmids: Optional[set[str]] = None) -> t
     if not species:
         return [], []
     target = _key(claim.subject.label)
+    names = drugage_map() if cid else {}
+
+    def same(name: str) -> bool:
+        mapped = names.get(cp_key(name))
+        return mapped == cid if cid and mapped else _key(name) == target
+
     by_paper = defaultdict(list)
     for r in _rows():
-        if r["species"].strip() == species and _key(r["compound_name"]) == target and r["pubmed_id"].strip():
+        if r["species"].strip() == species and same(r["compound_name"]) and r["pubmed_id"].strip():
             by_paper[r["pubmed_id"].strip()].append(r)
     support, against = [], []
     for pmid, rows in sorted(by_paper.items()):

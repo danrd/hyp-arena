@@ -9,6 +9,7 @@ generated ideas and manuscripts, and external hypotheses have no experiment logs
 | Step | Who | Status |
 |---|---|---|
 | Normalizer: text → declared card (claims in a closed vocabulary, each with a verbatim `source_span`; qualifiers inherited from PICO marked; contrast "mainly X, not Y" as outcome X plus a rejected alternative Y) | LLM (`normalize_card/v3`, gemini-3.5-flash), code marks unmarked species inheritance, validates and asks again: `hyparena/card/normalizer.py` | done |
+| Compound identifiers: interventions typed as compounds → PubChem parent compound, ChEBI, ChEMBL, max clinical phase, synonyms | code: `hyparena/tools/compounds.py`, `hyparena/card/entities.py`; DrugAge names mapped once in `data/drugage_compounds.json` | done (compounds only) |
 | Validation and admission (accepted / needs refinement / not a hypothesis) | code: `hyparena/card/rules.py` | done |
 | Verifier: evidence records with verbatim quotes, quote role, context match, endpoint; rejected alternatives checked like claims; analog probes in mice for human outcomes | DrugAge (curated, deterministic) + PubMed abstracts (LLM extracts with `verify_claim/v3`; code drops quotes that are not verbatim and checks the context, see below): `hyparena/card/verifier.py` | done |
 | Claim statuses (with the contrast rule), gate, evidence profile, next step, known result | code: `hyparena/card/rules.py` | done |
@@ -34,6 +35,17 @@ generated ideas and manuscripts, and external hypotheses have no experiment logs
 - an end-to-end ranking of the examples.
 
 **Profiles** (`configs/profiles.yaml`, all drafts until set with experts): `evidence_first` (verified evidence first), `cheap_feasible` and `fundamental` (the examples in the notes).
+
+## Compound identifiers (2026-10-20)
+
+After normalization, every intervention the normalizer typed as a compound is looked up in PubChem by name and mapped to its parent compound, so salts, hydrates and synonyms collapse (sirolimus = rapamycin, quercetin dihydrate = quercetin, 17‐α‐estradiol with any dash). From the parent: the preferred name, InChIKey, the ChEBI id (listed among PubChem's synonyms), the ChEMBL id and maximum clinical phase (ChEMBL, by InChIKey). The card gets `Intervention.id` (ChEBI, else `PubChem:<CID>`); a claim's subject gets an id only when every part of it is one of the card's compounds by name or synonym (a combination: "CHEBI:a+CHEBI:b"). Other subjects are never looked up: "SASP" is also a synonym of sulfasalazine.
+
+Uses:
+- "the same intervention" (effect level, novelty, inheritance) compares identifier sets when both sides have them, names otherwise;
+- DrugAge rows match the claim's compound by parent CID (all 1,046 DrugAge names mapped once), by name when a name does not map;
+- translational distance takes ChEMBL's max phase of the resolved compound (a compound in ChEMBL without a phase counts as preclinical); before, the phase came from a fuzzy name search in Open Targets, which always returns some best match.
+
+Classes and mixtures ("senolytics", "omega-3 fatty acids") do not resolve; they are listed in `unresolved_compounds` and keep matching by name. Statuses do not change for an unresolved compound: the text search works with or without an identifier. Genes, proteins, processes and species are not resolved yet. Lookups are cached in `data/cache/compounds.json`; tests use an offline table (`tests/conftest.py`).
 
 ## Expert layer (2026-10-20)
 

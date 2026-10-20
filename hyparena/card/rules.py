@@ -374,10 +374,11 @@ def _parts(label: str) -> set[str]:
 
 
 def same_intervention(claim: Claim, card: HypothesisCard) -> bool:
-    """The claim's subject is the hypothesis's intervention (or the whole combination)."""
-    ids = {i.id for i in card.pico.intervention if i.id}
-    if claim.subject.id and claim.subject.id in ids:
-        return True
+    """The claim's subject is the hypothesis's intervention (or the whole combination): by identifiers when
+    the subject and every intervention have one (a combination subject is "CHEBI:a+CHEBI:b"), else by name."""
+    ids = [i.id for i in card.pico.intervention]
+    if claim.subject.id and ids and all(ids):
+        return set(claim.subject.id.split("+")) == set(ids)
     labels = set().union(*(_parts(i.label) for i in card.pico.intervention)) if card.pico.intervention else set()
     return bool(labels) and _parts(claim.subject.label) == labels
 

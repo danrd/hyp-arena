@@ -1,6 +1,6 @@
 """Pipeline machinery with the fake LLM and stubbed sources (no network)."""
 from hyparena.card import pipeline, sources, verifier
-from hyparena.tools import drug_phase, pubmed
+from hyparena.tools import pubmed
 
 ABSTRACT = {"pmid": "1", "title": "A fake compound extends lifespan in mice.", "year": "2020", "pubtypes": ["Journal Article"],
             "abstract": "We show that the fake compound extends median lifespan of mice by 12%.", "first_author": "X", "journal": "J"}
@@ -9,8 +9,7 @@ ABSTRACT = {"pmid": "1", "title": "A fake compound extends lifespan in mice.", "
 def test_pipeline_fake(monkeypatch):
     monkeypatch.setattr(pubmed, "search", lambda q, retmax=8, as_of=None: ["1"])
     monkeypatch.setattr(pubmed, "fetch", lambda ids: {"1": ABSTRACT})
-    monkeypatch.setattr(verifier, "drugage_records", lambda claim, allowed=None: ([], []))
-    monkeypatch.setattr(drug_phase, "max_phase", lambda name: 2)
+    monkeypatch.setattr(verifier, "drugage_records", lambda claim, allowed=None, cid=None: ([], []))
     res = pipeline.run(["The fake compound extends the lifespan of mice.", "Another fake compound helps old mice."],
                        fake=True, K=2000)
     assert [x["outcome"] for x in res["items"]] == ["ranked", "ranked"]
@@ -40,7 +39,7 @@ def _fixture_card(name):
 def _stub(monkeypatch, records):
     monkeypatch.setattr(pubmed, "search", lambda q, retmax=8, as_of=None: ["1"])
     monkeypatch.setattr(pubmed, "fetch", lambda ids: {"1": ABSTRACT})
-    monkeypatch.setattr(verifier, "drugage_records", lambda claim, allowed=None: ([], []))
+    monkeypatch.setattr(verifier, "drugage_records", lambda claim, allowed=None, cid=None: ([], []))
     monkeypatch.setattr(verifier, "ask", lambda *a, **k: ({"records": records}, "fake"))
 
 
@@ -139,8 +138,7 @@ def test_pipeline_with_expert_layer(monkeypatch, tmp_path):
     fetched = []
     monkeypatch.setattr(pubmed, "search", lambda q, retmax=8, as_of=None: ["1"])
     monkeypatch.setattr(pubmed, "fetch", lambda ids: (fetched.append(list(ids)), {"1": ABSTRACT})[1])
-    monkeypatch.setattr(verifier, "drugage_records", lambda claim, allowed=None: ([], []))
-    monkeypatch.setattr(drug_phase, "max_phase", lambda name: 2)
+    monkeypatch.setattr(verifier, "drugage_records", lambda claim, allowed=None, cid=None: ([], []))
     path = _expert_file(tmp_path, [
         {"id": "e1", "by": "expert A", "at": "2026-10-20", "point": "evidence_conflict", "hypothesis": "H-0001",
          "target": "c1", "decision": "accept", "source": "PMID:23863708"},
@@ -176,3 +174,15 @@ def test_preferences_from_pairwise_decisions():
         assert False
     except ValueError:
         pass
+
+
+def test_ladder_result_orders_by_outcome():
+    res = {"meta": {"families": ["google"], "calls": 3, "as_of": None},
+           "calls": [{"kind": "llm", "tokens_in": 10, "tokens_out": 5}],
+           "ranking": {"evidence_first": {"expected": {"H-0002": 0.4, "H-0003": 0.6}}},
+           "items": [{"id": f"H-000{i}", "outcome": o, "card": None, "verification": None}
+                     for i, o in enumerate(["filtered", "ranked", "ranked", "known_result", "needs_refinement"], 1)]}
+    out = pipeline.as_ladder_result(res, ["a", "b", "c", "d", "e"])
+    score = {h: v["combined"] for h, v in out["hypotheses"].items()}
+    assert sorted(score, key=score.get, reverse=True) == ["d", "c", "b", "e", "a"]
+    assert out["tokens"]["all"] == {"tokens_in": 10, "tokens_out": 5}
