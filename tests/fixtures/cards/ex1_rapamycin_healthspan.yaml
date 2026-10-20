@@ -7,15 +7,15 @@ card:
   hypothesis_type: interventional
   claim_plain: Weekly low-dose rapamycin improves healthspan in healthy older adults.
   pico:
-    population: {taxon: "NCBITaxon:9606", label: human, sex: unknown, age: "older adults, healthy"}
+    population: {taxon: "NCBITaxon:9606", label: human, sex: unknown, age_at_start: "older adults, healthy"}
     intervention:
       - {type: compound, label: rapamycin, id: "CHEBI:9168", regimen: "weekly, low-dose, intermittent"}
     outcome: {endpoint: healthspan, metric: unknown}
   claims:
     - {id: c1, subject: {label: rapamycin}, relation: inhibits, object: {label: mTORC1}, role: premise, source_span: "by inhibiting mTORC1"}
-    - {id: c2, subject: {label: rapamycin}, relation: suppresses, object: {label: "multiple aspects of aging"}, qualifiers: {species: unknown}, role: mechanism, source_span: "slows multiple aspects of aging"}
+    - {id: c2, subject: {label: rapamycin}, relation: slows_aging_in, object: {label: human, id: "NCBITaxon:9606"}, qualifiers: {species: human, measure: "multiple aspects of aging"}, inherited_from_pico: [species], role: mechanism, source_span: "slows multiple aspects of aging"}
     - {id: c3, subject: {label: rapamycin}, relation: extends_lifespan_in, object: {label: mouse, id: "NCBITaxon:10090"}, qualifiers: {age_at_start: late_life}, role: analog, source_span: "in mice where it extends lifespan even when started late in life"}
-    - {id: c4, subject: {label: rapamycin}, relation: improves_healthspan_in, object: {label: human, id: "NCBITaxon:9606"}, qualifiers: {dose: "weekly low-dose intermittent", age_at_start: older_adults}, role: outcome, source_span: "can improve healthspan in healthy older adults"}
+    - {id: c4, subject: {label: rapamycin}, relation: improves_healthspan_in, object: {label: human, id: "NCBITaxon:9606"}, qualifiers: {age_at_start: older_adults}, role: outcome, source_span: "can improve healthspan in healthy older adults"}
   edges:
     - {from: c2, to: c1, type: requires}
     - {from: c2, to: c4, type: supports_if_true}
@@ -29,16 +29,11 @@ verification:
       evidence:
         - {source: PubMed, record_id: "PMID:19587680", epistemic_type: A_text, quote: "rapamycin, an inhibitor of the mTOR pathway", quote_role: background}
     - id: c2
-      evidence:
-        - source: PubMed
+      refusals:
+        - type: inherited_mismatch
           record_id: "PMID:22587563"
-          lab_or_cohort: "Wilkinson et al. 2012"
-          epistemic_type: A_text
-          study_type: primary_experiment
-          species: mouse
           quote: "many forms of age-dependent change, including alterations in heart, liver, adrenal glands, endometrium, and tendon, as well as age-dependent decline in spontaneous activity, occur more slowly in rapamycin-treated mice"
-          quote_role: finding
-          qualifiers_match: {species: "yes"}
+          notes: "mouse finding vs species inherited from PICO (human): soft refusal, visible, does not set the status"
     - id: c3
       evidence:
         - source: PubMed
@@ -52,7 +47,7 @@ verification:
           quote_role: finding
           metric: age at 90% mortality
           effect_percent: 14
-          sexes: [female, male]
+          sex: both
           qualifiers_match: {species: "yes", age_at_start: "yes"}
           program: {name: ITP, sites_with_effect: 3}
         - source: DrugAge
@@ -63,6 +58,7 @@ verification:
           metric: average lifespan
           quote_role: finding
           fields: {avg_lifespan_change_percent: "13 (F), 9 (M)", significance: S, ITP: "Yes"}
+          qualifiers_match: {intervention_match: regimen_differs}   # ITP: in diet, continuous; card: weekly intermittent
     - id: c4
       evidence:
         - source: PubMed
@@ -74,6 +70,7 @@ verification:
           endpoint: healthspan
           quote: "Lean tissue mass (ηp2 = 0.202, p = 0.013) and self-reported pain (ηp2 = 0.168, p = 0.015) improved significantly for women using 10 mg rapamycin."
           quote_role: finding
+          human_rungs: [human_markers, human_clinical]
           flags: [subgroup_only, conflict_of_interest]
       counterevidence:
         - source: PubMed
@@ -85,16 +82,20 @@ verification:
           endpoint: healthspan
           quote: "Visceral adiposity did not change significantly (ηp2 = 0.001, p = 0.942)"
           quote_role: finding
+          human_rungs: [human_markers]
           notes: primary outcome of the trial
 expected:
-  statuses: {c1: unverified, c2: supported, c3: supported, c4: contested}
+  statuses: {c1: unverified, c2: unverified, c3: supported, c4: contested}
   profile:
     gate: pass
     effect_level: mammals
-    effect_contested: [human_markers]
+    intervention_match: regimen_differs
+    effect_contested: [human_markers, human_clinical]
     robustness: replicated
     multi_site_program: {tested: "yes", outcome: positive}
-    mechanism: partial
-    next_step: "human_markers: trial with pre-registered primary outcome"
+    mechanism: unverified
+    conflicts:
+      - {rung: human_markers, for: ["PMID:40188830"], against: ["PMID:40188830"], against_is_program: false}
+      - {rung: human_clinical, for: ["PMID:40188830"], against: ["PMID:40188830"], against_is_program: false}
   known_result: false
   admission: accepted

@@ -32,7 +32,7 @@ def test_statuses_and_profile(name):
     by_id = {c.id: c for c in card.claims}
     got = {cv.id: cv.status for cv in ver.claims}
     assert got == d["expected"]["statuses"]
-    prof = ver.evidence_profile.model_dump()
+    prof = ver.evidence_profile.model_dump(by_alias=True)
     for key, value in d["expected"]["profile"].items():
         assert prof[key] == value, (key, prof[key], value)
     assert ver.known_result == d["expected"]["known_result"]
@@ -198,3 +198,172 @@ def test_listed_alternative_span_must_be_verbatim():
            "source_span": "by lowering food intake", "stated_as": "listed"}
     card = HypothesisCard.model_validate({**d["card"], "declared_alternatives": [alt]})
     assert any(p.startswith("a1: source_span") for p in validate_card(card, d["raw"]))
+
+
+def test_refined_variant_specificity():
+    d = load("ex2_senolytics_function")                # R-0004b has the text and card of Example 2
+    assert admit(HypothesisCard.model_validate(d["card"])).context_specificity == 3
+
+
+# ---- inheritance from PICO (spec 9): species and strain only, only claims about the intervention ----
+
+def _ex2():
+    d = load("ex2_senolytics_function")
+    return d, HypothesisCard.model_validate(d["card"])
+
+
+def test_inheritance_is_mandatory_and_deterministic():
+    from hyparena.card.rules import mark_inherited
+    d, card = _ex2()
+    for c in card.claims[:2]:
+        c.qualifiers.pop("species"), c.inherited_from_pico.clear()
+    assert any("c1: species must be inherited" in p for p in validate_card(card, d["raw"]))
+    card = mark_inherited(card)
+    assert [c.inherited_from_pico for c in card.claims] == [["species"], ["species"], [], []]
+    assert card.claims[0].qualifiers["species"] == "human" and validate_card(card, d["raw"]) == []
+
+
+def test_span_naming_the_organism_blocks_inheritance():
+    from hyparena.card.rules import mark_inherited
+    d = load("ex1_rapamycin_healthspan")
+    card = HypothesisCard.model_validate(d["card"])
+    c3 = card.claims[2]                              # "in mice where it extends lifespan": named, not inherited
+    c3.inherited_from_pico = ["species"]
+    assert mark_inherited(card).claims[2].inherited_from_pico == []
+
+
+def test_molecular_relations_never_inherit():
+    from hyparena.card.rules import mark_inherited
+    d = load("ex1_rapamycin_healthspan")
+    card = HypothesisCard.model_validate(d["card"])
+    c1 = card.claims[0]                              # rapamycin inhibits mTORC1: molecular
+    assert mark_inherited(card).claims[0].inherited_from_pico == [] and "species" not in c1.qualifiers
+    c1.qualifiers["species"], c1.inherited_from_pico = "human", ["species"]
+    assert any(p.startswith("c1:") for p in validate_card(card, d["raw"]))
+
+
+def test_organism_relation_inherits_into_the_object():
+    from hyparena.card.rules import mark_inherited
+    d = load("ex1_rapamycin_healthspan")
+    card = HypothesisCard.model_validate(d["card"])
+    c2 = card.claims[1]                              # the pre-2026-10-19 normalizer output
+    c2.object.label, c2.object.id = "multiple aspects of aging", None
+    c2.qualifiers, c2.inherited_from_pico = {}, []
+    c2 = mark_inherited(card).claims[1]
+    assert (c2.object.label, c2.qualifiers.get("species"), c2.qualifiers.get("measure")) == \
+        ("human", "human", "multiple aspects of aging")
+    assert c2.inherited_from_pico == ["species"] and validate_card(card, d["raw"]) == []
+
+
+def test_only_species_and_strain_inherit():
+    from hyparena.card.rules import mark_inherited
+    d, card = _ex2()
+    card.claims[0].inherited_from_pico = ["species", "age_at_start"]
+    assert any("cannot be inherited" in p for p in validate_card(card, d["raw"]))
+    assert mark_inherited(card).claims[0].inherited_from_pico == ["species"]
+
+
+# ---- human rungs and the subgroup rule (spec 8) ----
+
+def test_human_claim_has_a_status_per_rung():
+    d = load("ex1_rapamycin_healthspan")
+    card = HypothesisCard.model_validate(d["card"])
+    ver = finalize(card, Verification.model_validate(d["verification"]))
+    c4 = next(cv for cv in ver.claims if cv.id == "c4")
+    assert c4.rung_status == {"human_markers": "contested", "human_clinical": "contested"}
+
+
+def test_whole_sample_support_on_one_rung_is_not_contested_by_another():
+    d = load("ex1_rapamycin_healthspan")
+    card = HypothesisCard.model_validate(d["card"])
+    ver = Verification.model_validate(d["verification"])
+    c4 = next(cv for cv in ver.claims if cv.id == "c4")
+    c4.evidence[0].flags = []                        # pretend the support were in the whole sample
+    c4.evidence[0].human_rungs = ["human_clinical"]
+    ver = finalize(card, ver)
+    c4 = next(cv for cv in ver.claims if cv.id == "c4")
+    assert c4.rung_status == {"human_markers": "refuted", "human_clinical": "supported"}
+    assert ver.evidence_profile.effect_level == "human_clinical"
+
+
+def test_record_rungs_fall_back_to_the_endpoint():
+    from hyparena.card.models import EvidenceRecord
+    from hyparena.card.rules import record_rungs
+    rec = lambda **k: EvidenceRecord(source="PubMed", record_id="PMID:1", epistemic_type="A_text", **k)
+    assert record_rungs(rec(endpoint="biomarker")) == ["human_markers"]
+    assert record_rungs(rec(endpoint="lifespan")) == ["human_clinical"]
+    assert record_rungs(rec(endpoint="biomarker", human_rungs=["human_clinical"])) == ["human_clinical"]
+
+
+# ---- strain rule (spec 7) ----
+
+def _strain_case(strain, inherited=False):
+    d = load("ex5_resveratrol_endpoint")
+    card = HypothesisCard.model_validate(d["card"])
+    if inherited:
+        card.pico.population.strain = strain
+        card.claims[0].source_span = "Resveratrol started in middle age extends the lifespan"
+        card.claims[0].qualifiers["species"] = "mouse"
+        card.claims[0].inherited_from_pico = ["species", "strain"]
+    card.claims[0].qualifiers["strain"] = strain
+    ver = Verification.model_validate(d["verification"])
+    for r in ver.claims[0].counterevidence:
+        r.strain = "UM-HET3" if r.program else "C57BL/6"
+    return card, ver
+
+
+def test_strain_unspecified_in_the_card_is_na():
+    from hyparena.card.rules import add_strain_analogs
+    d = load("ex5_resveratrol_endpoint")
+    card = HypothesisCard.model_validate(d["card"])
+    ver = Verification.model_validate(d["verification"])
+    ver.claims[0].counterevidence[0].strain = "C57BL/6"
+    ver = add_strain_analogs(card, ver)
+    assert ver.claims[0].counterevidence[0].qualifiers_match["strain"] == "n/a" and len(ver.claims) == 1
+
+
+def test_other_strain_moves_to_an_analog():
+    from hyparena.card.rules import add_strain_analogs
+    card, ver = _strain_case("C57BL/6")
+    ver = add_strain_analogs(card, ver)
+    c1, an1 = ver.claims[0], ver.claims[-1]
+    assert [r.record_id for r in c1.counterevidence] == ["PMID:18599363"]
+    assert c1.counterevidence[0].qualifiers_match["strain"] == "yes"
+    assert an1.id == "an1" and an1.claim.role == "analog" and "strain" not in an1.claim.qualifiers
+    assert [r.record_id for r in an1.counterevidence] == ["PMID:20974732"]
+    assert not c1.refusals[1:]                      # stated strain: no inherited_mismatch
+    ver = finalize(card, ver)
+    assert {cv.id: cv.status for cv in ver.claims} == {"c1": "refuted", "an1": "refuted"}
+
+
+def test_inherited_strain_that_differs_leaves_a_refusal():
+    from hyparena.card.rules import add_strain_analogs
+    card, ver = _strain_case("C57BL/6", inherited=True)
+    ver = add_strain_analogs(card, ver)
+    assert any(r.type == "inherited_mismatch" and r.record_id == "PMID:20974732" for r in ver.claims[0].refusals)
+    assert ver.claims[-1].id == "an1"
+
+
+def test_analog_strain_does_not_make_a_known_result():
+    from hyparena.card.models import EvidenceRecord
+    from hyparena.card.rules import add_strain_analogs
+    card, ver = _strain_case("C57BL/6")
+    cv = ver.claims[0]
+    cv.counterevidence = []
+    cv.evidence = [EvidenceRecord(source="PubMed", record_id="PMID:2", epistemic_type="A_text", species="mouse",
+                                  endpoint="lifespan", quote_role="finding", strain="DBA/2", quote="x",
+                                  qualifiers_match={"species": "yes", "age_at_start": "yes", "intervention_match": "exact"})]
+    ver = finalize(card, add_strain_analogs(card, ver))
+    assert ver.evidence_profile.effect_level == "mammals" and ver.known_result is False
+
+
+def test_generic_heterogeneous_strain_matches_um_het3():
+    from hyparena.card.models import EvidenceRecord
+    from hyparena.card.rules import strain_match
+    d = load("ex5_resveratrol_endpoint")
+    claim = HypothesisCard.model_validate(d["card"]).claims[0]
+    claim.qualifiers["strain"] = "genetically heterogeneous"
+    rec = EvidenceRecord(source="PubMed", record_id="PMID:1", epistemic_type="A_text", strain="UM-HET3")
+    assert strain_match(claim, rec) == "yes"
+    rec.strain = ""
+    assert strain_match(claim, rec) is None

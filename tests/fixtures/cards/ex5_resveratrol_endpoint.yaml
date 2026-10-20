@@ -9,7 +9,7 @@ card:
     population: {taxon: "NCBITaxon:10090", label: mouse, age_at_start: "middle age"}
     intervention:
       - {type: compound, label: resveratrol, id: "CHEBI:27881"}
-    comparator: {type: unknown, label: unknown}    # not in the text (spec 9)
+    comparator: unknown                  # not in the text (spec 9)
     outcome: {endpoint: lifespan, metric: unknown}
   claims:
     - {id: c1, subject: {label: resveratrol, id: "CHEBI:27881"}, relation: extends_lifespan_in, object: {label: mouse, id: "NCBITaxon:10090"}, qualifiers: {age_at_start: "middle age"}, role: outcome, source_span: "Resveratrol started in middle age extends the lifespan of mice"}
@@ -35,6 +35,7 @@ expected:
   statuses: {c1: refuted}
   profile:
     gate: filtered
+    gate_reason: "PMID:20974732"         # outcome claim c1 refuted (ITP)
     multi_site_program: {tested: "yes", outcome: negative}
   known_result: false
   admission: accepted

@@ -54,7 +54,7 @@ def test_rejected_alternative_is_verified(monkeypatch):
     _stub(monkeypatch, [])
     ver = verifier.verify(None, ["google"], "openai", card)
     assert [cv.id for cv in ver.claims] == ["c1", "c2", "a1"]
-    assert all(cv.added_claim is None for cv in ver.claims)
+    assert all(cv.claim is None for cv in ver.claims)
 
 
 def test_inherited_mismatch_is_a_soft_refusal(monkeypatch):

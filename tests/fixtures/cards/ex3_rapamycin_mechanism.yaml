@@ -17,8 +17,7 @@ card:
   edges:
     - {from: c2, to: c1, type: supports_if_true}
   declared_alternatives:
-    - {id: a1, subject: {label: rapamycin}, relation: slows_aging_in, object: {label: "age-related changes, non-neoplastic"}, qualifiers: {species: mouse}, inherited_from_pico: [species], source_span: "not by slowing aging itself", stated_as: rejected}
-    # inherited_from_pico added here: the reference card leaves a1 unmarked although its span names no organism (spec 9)
+    - {id: a1, subject: {label: rapamycin}, relation: slows_aging_in, object: {label: mouse, id: "NCBITaxon:10090"}, qualifiers: {species: mouse, measure: "age-related changes, non-neoplastic"}, inherited_from_pico: [species], source_span: "not by slowing aging itself", stated_as: rejected}
   decisive_experiment: {system: mouse, endpoint: "cause-of-death and non-neoplastic aging pathology", duration_class: years}
 verification:
   card_id: H-0003
@@ -41,6 +40,6 @@ expected:
   contrast: {c2: {alternative: a1, x_status: unverified, y_status: supported}}
   profile:
     gate: filtered
-    gate_reason: "c2 refuted by the contrast rule: a1 supported by PMID:22587563"
+    gate_reason: "contrast rule: a1 supported (PMID:22587563)"
   known_result: false
   admission: accepted

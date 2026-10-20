@@ -302,5 +302,5 @@ def verify(client, families: list[str], writer: str, card: HypothesisCard, as_of
     added = {c.id for c in probes}
     for cv, c in zip(cvs, claims):
         if cv.id in added:
-            cv.added_claim = c
+            cv.claim = c
     return Verification(card_id=card.id, claims=cvs)
