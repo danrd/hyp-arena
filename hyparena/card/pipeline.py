@@ -137,8 +137,9 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
 def refresh_curated(res: dict, K: int = 10000, k_top: int = 3) -> dict:
     """Recompute a saved v2 result after a change of the curated sources or the rules, without model calls:
     the DrugAge records of every verified claim are rebuilt (as of the run's date), statuses, profiles and
-    the ranking recomputed. Records from the literature (the verifier's extractions) stay as they were."""
-    from hyparena.card.verifier import curated
+    the ranking recomputed. Records from the literature keep the extractor's fields; the code checks on them
+    (the compound named in the quote, context flags, the stance of lifespan findings) are applied again."""
+    from hyparena.card.verifier import curated, recheck
     as_of = res["meta"]["as_of"]
     triples = []
     for x in res["items"]:
@@ -152,8 +153,10 @@ def refresh_curated(res: dict, K: int = 10000, k_top: int = 3) -> dict:
             if claim is None:
                 continue
             support, against = curated(claim, card, as_of)
-            cv.evidence = [r for r in cv.evidence if r.source != "DrugAge"] + support
-            cv.counterevidence = [r for r in cv.counterevidence if r.source != "DrugAge"] + against
+            pub_for, pub_against = recheck(claim, card, [r for r in cv.evidence if r.source == "PubMed"],
+                                           [r for r in cv.counterevidence if r.source == "PubMed"])
+            cv.evidence = [r for r in cv.evidence if r.source not in ("DrugAge", "PubMed")] + pub_for + support
+            cv.counterevidence = [r for r in cv.counterevidence if r.source not in ("DrugAge", "PubMed")] + pub_against + against
         ver = finalize(card, ver)
         x["verification"] = ver.model_dump(by_alias=True)
         triples.append((card, ver, x.get("extra") or {}))

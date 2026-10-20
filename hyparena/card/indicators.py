@@ -78,6 +78,6 @@ def novelty(card: HypothesisCard, ver: Verification) -> str:
         if c.role == "analog" and claim_status(cv, c) == "supported":
             return "analog"
         if any(r.qualifiers_match.get("intervention_match") in ("related_compound", "class")
-               for r in cv.evidence if admissible(r, c)):
+               and r.quote_role == "finding" for r in cv.evidence):
             return "analog"
     return "new_link"

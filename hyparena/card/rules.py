@@ -200,13 +200,16 @@ def claim_endpoint(claim: Claim, card: Optional[HypothesisCard] = None) -> Optio
 
 def admissible(record: EvidenceRecord, claim: Claim) -> bool:
     """A record counts for or against a claim only if it is a finding of an admissible epistemic type, its
-    context matches (no qualifier marked "no"), it is not retracted, and it measures the claim's endpoint."""
+    context matches (no qualifier marked "no"), it is about the claim's own intervention (not a related compound
+    or class), it is not retracted, and it measures the claim's endpoint."""
     if record.quote_role != "finding" or record.epistemic_type not in ADMISSIBLE_TYPES or "retracted" in record.flags:
         return False
     if any(v == "no" for k, v in record.qualifiers_match.items() if k != "intervention_match"):
         return False
     if record.system in ("ex_vivo", "in_vitro") and claim_organism(claim):
         return False                                     # ex vivo ≠ in vivo: cells do not support a claim about an organism
+    if record.qualifiers_match.get("intervention_match") in ("related_compound", "class"):
+        return False                                     # spec 8: related compounds and classes count only as analogs
     need = claim_endpoint(claim)
     return not (need and record.endpoint not in ("unknown", need))
 
