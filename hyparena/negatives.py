@@ -284,8 +284,8 @@ def refresh_v2(args) -> None:
     """Recompute saved v2 results with the current curated sources and rules (no model calls)."""
     from hyparena.card.pipeline import as_ladder_result, refresh_curated
     labels, gids = _groups(Path(args.data))
-    src = Path(args.out_dir) / f"v2-{args.profile}"
-    dst = Path(args.out_dir) / f"v2-{args.profile}-{args.suffix}"
+    src = Path(args.out_dir) / (f"v2-{args.profile}" + (f"-{args.tag}" if args.tag else ""))
+    dst = Path(src.parent) / f"{src.name}-{args.suffix}"
     dst.mkdir(parents=True, exist_ok=True)
     for gid in gids:
         f = src / f"{gid}.v2.json"
@@ -463,6 +463,7 @@ def main() -> None:
     rf = sub.add_parser("v2-refresh", parents=[data], help="recompute saved v2 results without model calls")
     rf.add_argument("--profile", default="evidence_first")
     rf.add_argument("--suffix", default="refreshed")
+    rf.add_argument("--tag", default="", help="suffix of the source directory")
     rf.add_argument("--K", type=int, default=10000)
     rf.add_argument("--out-dir", default=str(RUNS))
     e = sub.add_parser("evaluate", parents=[data])

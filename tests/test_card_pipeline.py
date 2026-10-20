@@ -224,3 +224,25 @@ def test_effect_level_on_disease_models_only_is_noted(monkeypatch):
     ver = finalize(card, Verification(card_id="H-1", claims=[cv]))
     assert ver.claims[0].status == "supported"                        # flags do not change a status (spec 7)
     assert ver.evidence_profile.effect_level_note == "mammals (disease models or special conditions only)"
+
+
+def test_a_quote_about_another_compound_does_not_count(monkeypatch):
+    card = _fixture_card("ex5_resveratrol_endpoint")
+    other = {**ABSTRACT, "title": "Malate and fumarate extend lifespan in mice.", "abstract": "Malate increased lifespan in mice."}
+    _stub(monkeypatch, [_record(quote="Malate increased lifespan in mice.", effect="increase", qualifiers_match={"species": "yes"})])
+    monkeypatch.setattr(pubmed, "fetch", lambda ids: {"1": other})
+    cv = verifier.verify_claim(None, "google", frozenset(), card.claims[0], card)
+    rec = cv.evidence[0]
+    assert rec.qualifiers_match["intervention_match"] == "related_compound"
+    from hyparena.card.rules import claim_status
+    assert claim_status(cv, card.claims[0]) == "unverified"          # related compounds count only as analogs
+
+
+def test_a_combination_needs_every_component_named(monkeypatch):
+    from hyparena.card import entities
+    card = _fixture_card("ex2_senolytics_function")
+    entities.resolve_card(card)
+    c4 = card.claims[3]
+    assert verifier.names_intervention(c4, card, "Dasatinib plus quercetin improved function")
+    assert not verifier.names_intervention(c4, card, "Dasatinib alone improved function")
+    assert verifier.names_intervention(c4, card, "Sprycel and sophoretin")           # synonyms

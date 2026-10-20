@@ -12,6 +12,7 @@ from hyparena.card.models import (UNKNOWN, Claim, ClaimVerification, Entity, Evi
 from hyparena.card.rules import ORGANISM_PATTERNS, claim_organism, claim_endpoint, pico_value, quote_organisms, species_key
 from hyparena.card import contexts
 from hyparena.card.entities import subject_compounds
+from hyparena.tools.compounds import split as split_label
 from hyparena.card.sources import drugage_records, lifespan_wanted
 from hyparena.tools import pubmed
 
@@ -62,6 +63,20 @@ def queries(claim, card: HypothesisCard) -> list[str]:
     q2 = q(subject, obj_term or organism)
     q3 = q(subject, obj_term, organism, "lifespan" if "lifespan" not in q1 else "")
     return list(dict.fromkeys([x for x in (q1, q_rel, q2, q3) if x]))
+
+
+def names_intervention(claim, card: HypothesisCard, text: str) -> bool:
+    """Does the text name the claim's compound (or every component of a combination), by name or synonym?
+    True when the subject is not a resolved compound: then there is nothing to check by name."""
+    comps = subject_compounds(claim.subject.label, card)
+    if not comps:
+        return True
+    low = " " + re.sub(r"[‐-―−]", "-", text.lower()) + " "
+    for part, c in zip(split_label(claim.subject.label), comps):     # each component by its own names
+        names = {n.lower() for n in [part, c.name, *c.synonyms] if len(n) >= 4 and not re.fullmatch(r"[\d-]+", n)}
+        if not any(re.search(rf"(?<![a-z0-9]){re.escape(n)}(?![a-z0-9])", low) for n in names):
+            return False
+    return True
 
 
 def _context_match(qm: dict[str, str], claim, card: HypothesisCard, quote: str = "") -> dict[str, str]:
@@ -121,6 +136,30 @@ def curated(claim, card: HypothesisCard, as_of: Optional[str] = None) -> tuple[l
         support = [r for r in support if r.linked_pmid in allowed]
         against = [r for r in against if r.linked_pmid in allowed]
     return support, against
+
+
+def recheck(claim, card: HypothesisCard, evidence: list[EvidenceRecord], counter: list[EvidenceRecord]
+            ) -> tuple[list[EvidenceRecord], list[EvidenceRecord]]:
+    """The code checks of `verify_claim` applied again to saved PubMed records (abstracts from the cache):
+    the compound named in the quote or the title, context flags, and the stance of lifespan findings set from
+    their extracted direction. Returns (evidence, counterevidence)."""
+    abstracts = pubmed.fetch(sorted({r.record_id.replace("PMID:", "") for r in evidence + counter}))
+    need = claim_endpoint(claim)
+    out_for, out_against = [], []
+    for side, records in (("supports", evidence), ("refutes", counter)):
+        for r in records:
+            r = r.model_copy(deep=True)
+            a = abstracts.get(r.record_id.replace("PMID:", "")) or {"title": "", "abstract": ""}
+            contexts.flag(r, a["title"] + " " + a["abstract"])
+            if r.qualifiers_match.get("intervention_match", "exact") in ("exact", "dose_differs", "regimen_differs") \
+                    and a["title"] and not names_intervention(claim, card, a["title"] + " " + r.quote):
+                r.qualifiers_match["intervention_match"] = "related_compound"
+                r.notes += "; the quote and the title do not name the intervention: counted as a related compound"
+            stance = side
+            if need == "lifespan" and r.endpoint == "lifespan" and r.quote_role == "finding" and r.effect != "unknown":
+                stance = "supports" if r.effect == lifespan_wanted(claim) else "refutes"
+            (out_for if stance == "supports" else out_against).append(r)
+    return out_for, out_against
 
 
 def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisCard,
@@ -197,6 +236,10 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
             flags=[f for f in (r.get("flags") or []) if isinstance(f, str)], retrieved_at=a.get("year", ""),
             notes=f"extracted by {fam}" + (f"; source given by expert decision {by_expert[pmid]}" if pmid in by_expert else ""))
         contexts.flag(rec, a["title"] + " " + a["abstract"])
+        if rec.qualifiers_match["intervention_match"] in ("exact", "dose_differs", "regimen_differs") and not names_intervention(
+                claim, card, a["title"] + " " + quote):
+            rec.qualifiers_match["intervention_match"] = "related_compound"   # e.g. malate quoted for a claim about citrate
+            rec.notes += "; the quote and the title do not name the intervention: counted as a related compound"
         stance = r.get("stance")
         need = claim_endpoint(claim)
         effect = r.get("effect") if r.get("effect") in ("increase", "decrease", "no_effect") else "unknown"
