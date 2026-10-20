@@ -45,6 +45,8 @@ Uses:
 - DrugAge rows match the claim's compound by parent CID (all 1,046 DrugAge names mapped once), by name when a name does not map;
 - translational distance takes ChEMBL's max phase of the resolved compound (a compound in ChEMBL without a phase counts as preclinical); before, the phase came from a fuzzy name search in Open Targets, which always returns some best match.
 
+PubChem's parent compound drops metal counter-ions, which made zinc, nickel and barium acetate all "acetic acid"; a name whose metal is the active part (lithium, transition and heavy metals, selenium; sodium, potassium, calcium or magnesium with an inorganic anion) keeps its own compound, while drug salts collapse to the drug. Of the 1,046 DrugAge names, 755 map to a compound; 33 compounds carry several DrugAge names (salts and hydrates of a drug, sodium or calcium salts of organic acids; two doubtful merges from PubChem's synonyms: AA26-8 / AA26-9 and Epitalon / Epithalamin).
+
 Classes and mixtures ("senolytics", "omega-3 fatty acids") do not resolve; they are listed in `unresolved_compounds` and keep matching by name. Statuses do not change for an unresolved compound: the text search works with or without an identifier. Genes, proteins, processes and species are not resolved yet. Lookups are cached in `data/cache/compounds.json`; tests use an offline table (`tests/conftest.py`).
 
 ## Expert layer (2026-10-20)
