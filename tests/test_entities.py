@@ -70,3 +70,10 @@ def test_drugage_matches_by_compound(monkeypatch):
 
 def test_key_folds_unicode_dashes():
     assert cp.key("17‐alpha‐estradiol") == cp.key("17-alpha-estradiol")
+
+
+def test_active_metals_keep_their_own_compound():
+    keep = ["Zinc acetate", "Cupric gluconate", "Lithium Chloride", "Sodium Chloride", "Magnesium chloride"]
+    collapse = ["Dexamethasone sodium phosphate", "Calcium pantothenate", "Sodium pyruvate", "Doxycycline hydrochloride"]
+    assert all(cp.keeps_own_compound(n) for n in keep)
+    assert not any(cp.keeps_own_compound(n) for n in collapse)

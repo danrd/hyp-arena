@@ -75,10 +75,31 @@ def _get(url: str) -> Optional[dict]:
     raise LookupError_(url)
 
 
+ACTIVE_METALS = re.compile(
+    r"\b(lithium|barium|strontium|zinc|cupric|cuprous|copper|ferric|ferrous|iron|nickel|nickelous|cobalt|cobaltous|"
+    r"manganese|manganous|cadmium|mercuric|mercury|lead|alumin(?:i)?um|silver|gold|chromium|chromic|vanadium|"
+    r"vanadyl|selen\w*|tin|stannous|platinum|palladium|ruthenium|bismuth|molybd\w*|tungst\w*|arsen\w*|antimony|"
+    r"thallium|cesium|caesium|rubidium|titanium)\b", re.I)
+COUNTER_IONS = re.compile(r"\b(sodium|disodium|potassium|calcium|magnesium|ammonium)\b", re.I)
+INORGANIC = re.compile(r"^\s*(?:(?:di|tri)?(?:chloride|sulfate|sulphate|nitrate|phosphate|carbonate|bicarbonate|"
+                       r"hydroxide|oxide|iodide|bromide|fluoride|selenite|selenate)\s*)+$", re.I)
+
+
+def keeps_own_compound(name: str) -> bool:
+    """PubChem's parent drops metal counter-ions, which makes zinc, nickel and barium acetate all "acetic acid".
+    A name keeps its own compound when the metal is the active part: lithium, transition and heavy metals,
+    selenium; or sodium, potassium, calcium, magnesium with an inorganic anion (sodium chloride). As counter-ions
+    of an organic compound they collapse (dexamethasone sodium phosphate = dexamethasone)."""
+    if ACTIVE_METALS.search(name):
+        return True
+    return bool(COUNTER_IONS.search(name)) and bool(INORGANIC.match(COUNTER_IONS.sub(" ", name)))
+
+
 def parent_cid(name: str) -> Optional[int]:
-    """PubChem parent CID of a name (first match), or None."""
+    """PubChem parent CID of a name (first match), or None; see `keeps_own_compound`."""
     q = urllib.parse.quote(re.sub(r"[‐-―−]", "-", name.strip()), safe="")
-    data = _get(f"{PUG}/compound/name/{q}/cids/JSON?cids_type=parent")
+    kind = "" if keeps_own_compound(name) else "?cids_type=parent"
+    data = _get(f"{PUG}/compound/name/{q}/cids/JSON{kind}")
     cids = (data or {}).get("IdentifierList", {}).get("CID") or []
     return int(cids[0]) if cids and cids[0] else None
 
