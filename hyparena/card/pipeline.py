@@ -149,7 +149,7 @@ def refresh_curated(res: dict, K: int = 10000, k_top: int = 3) -> dict:
         ver = Verification.model_validate(x["verification"])
         by_id = {c.id: c for c in [*card.claims, *card.declared_alternatives]}
         for cv in ver.claims:
-            claim = cv.added_claim or by_id.get(cv.id)
+            claim = cv.claim or by_id.get(cv.id)
             if claim is None:
                 continue
             support, against = curated(claim, card, as_of)

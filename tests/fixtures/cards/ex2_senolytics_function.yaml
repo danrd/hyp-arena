@@ -7,7 +7,7 @@ card:
   hypothesis_type: interventional
   claim_plain: Intermittent dasatinib plus quercetin improves physical function in older adults.
   pico:
-    population: {taxon: "NCBITaxon:9606", label: human, age: "older adults"}
+    population: {taxon: "NCBITaxon:9606", label: human, age_at_start: "older adults"}
     intervention:
       - {type: compound, label: dasatinib, regimen: intermittent}
       - {type: compound, label: quercetin, regimen: intermittent}
@@ -43,7 +43,7 @@ verification:
           species: mouse
           quote: "transplanting relatively small numbers of senescent cells into young mice is sufficient to cause persistent physical dysfunction"
           quote_role: finding
-          qualifiers_match: {species: "yes"}
+          qualifiers_match: {species: n/a}     # declared species unknown → n/a (counts as matching)
           flags: [conflict_of_interest]
     - id: c4
       notes: "Related human evidence in a different population (IPF, open-label, n = 14): population does not match."
@@ -52,7 +52,7 @@ verification:
            quote: "Physical function evaluated as 6-min walk distance, 4-m gait speed, and chair-stands time was significantly and clinically-meaningfully improved (p < .05)",
            qualifiers_match: {species: "yes", population: "no"}, flags: [open_label, small_n]}
     - id: an1
-      added_claim: {id: an1, subject: {label: "dasatinib + quercetin"}, relation: improves_healthspan_in, object: {label: mouse}, qualifiers: {age_at_start: old}, role: analog}
+      claim: {subject: "dasatinib + quercetin", relation: improves_healthspan_in, object: mouse, qualifiers: {age_at_start: old}}
       evidence:
         - source: PubMed
           record_id: "PMID:29988130"
@@ -70,6 +70,7 @@ expected:
   profile:
     gate: pass
     effect_level: mammals
+    intervention_match: exact
     effect_contested: []
     robustness: single
     multi_site_program: {tested: "no"}

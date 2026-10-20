@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Literal, Optional, Union
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import AliasChoices, BaseModel, Field, field_validator, model_validator
 
 UNKNOWN = "unknown"
 
@@ -29,7 +29,12 @@ Hallmark = Literal[
 Status = Literal["supported", "contested", "refuted", "unverified", "unresolved"]
 Rung = Literal["none", "cells", "invertebrates", "mammals", "human_markers", "human_clinical"]
 RUNGS: tuple[str, ...] = ("none", "cells", "invertebrates", "mammals", "human_markers", "human_clinical")
-INHERITABLE = ("species", "strain", "sex", "age_at_start", "comparator")    # qualifiers a claim may take from PICO (spec 9)
+INHERITABLE = ("species", "strain")          # qualifiers a claim takes from PICO (spec 9, narrowed 2026-10-20)
+MOLECULAR = ("inhibits", "activates", "increases_expression", "decreases_expression", "part_of")   # never inherit
+ORGANISM_RELATIONS = ("extends_lifespan_in", "shortens_lifespan_in", "no_lifespan_effect_in", "slows_aging_in",
+                      "improves_healthspan_in")  # the object is an organism
+HUMAN_RUNGS = ("human_markers", "human_clinical")
+RefusalType = Literal["type_mismatch", "direction_mismatch", "species_mismatch", "endpoint_mismatch", "inherited_mismatch"]
 
 
 # ---- declared layer ----
@@ -39,6 +44,11 @@ class Entity(BaseModel):
     id: Optional[str] = None                     # resolved identifier (CHEBI, NCBITaxon, HGNC ...), optional at normalization
     hallmark: Optional[Hallmark] = None
 
+    @model_validator(mode="before")
+    @classmethod
+    def _plain_label(cls, v):
+        return {"label": v} if isinstance(v, str) else v       # `object: mouse` as in the verified-layer examples
+
 
 class Claim(BaseModel):
     """One atomic claim: one relation, one context set, checkable by one source type."""
@@ -47,7 +57,7 @@ class Claim(BaseModel):
     relation: Relation
     object: Entity
     qualifiers: dict[str, str] = Field(default_factory=dict)   # species, strain, sex, tissue, dose, age_at_start, comparator, direction, measure
-    inherited_from_pico: list[str] = Field(default_factory=list)   # qualifiers copied from PICO, not stated in the span
+    inherited_from_pico: list[str] = Field(default_factory=list)   # species / strain copied from PICO (spec 9)
     role: Role
     source_span: str = ""                        # verbatim fragment of the hypothesis text (empty only for verifier-added claims)
     note: str = ""                               # e.g. why `other` was used
@@ -80,8 +90,21 @@ class Population(BaseModel):
     label: str = UNKNOWN
     strain: str = UNKNOWN
     sex: str = UNKNOWN
-    age: str = UNKNOWN
-    age_at_start: str = UNKNOWN
+    age_at_start: str = UNKNOWN                  # age of the population when the intervention starts
+
+    @model_validator(mode="before")
+    @classmethod
+    def _old_age(cls, v):
+        """Cards written before 2026-10-19 used `age` (spec 4 renamed it)."""
+        if isinstance(v, dict) and "age" in v:
+            v = dict(v)
+            age = v.pop("age")
+            if not v.get("age_at_start") or v.get("age_at_start") == UNKNOWN:
+                v["age_at_start"] = age
+        return v
+
+
+Route = Literal["diet", "water", "oral", "injection", "topical", "other", "unknown"]
 
 
 class Intervention(BaseModel):
@@ -89,11 +112,17 @@ class Intervention(BaseModel):
     label: str
     id: Optional[str] = None
     regimen: str = UNKNOWN
+    route: Route = "unknown"                     # diet / water: mixed into food or drinking water
 
 
 class Comparator(BaseModel):
     type: str = UNKNOWN                          # placebo | untreated | standard_care | wild_type | monotherapy | active_drug | chronological_age | other
     label: str = UNKNOWN
+
+    @model_validator(mode="before")
+    @classmethod
+    def _plain(cls, v):
+        return {"type": v, "label": v} if isinstance(v, str) else v   # `comparator: unknown`
 
 
 class Outcome(BaseModel):
@@ -136,7 +165,7 @@ class HypothesisCard(BaseModel):
         """A bare string (an alternative only listed by the text) becomes a `listed` entry."""
         if not isinstance(v, list):
             return v
-        return [{"id": f"alt{i}", "subject": {"label": x}, "relation": "other", "object": {"label": UNKNOWN},
+        return [{"id": f"a{i}", "subject": {"label": x}, "relation": "other", "object": {"label": UNKNOWN},
                  "stated_as": "listed", "note": "listed as plain text"} if isinstance(x, str) else x
                 for i, x in enumerate(v, start=1)]
 
@@ -163,6 +192,7 @@ class Admission(BaseModel):
     decision: Literal["accepted", "needs_refinement", "not_a_hypothesis"]
     missing_critical: list[str] = Field(default_factory=list)
     context_specificity: int = 0
+    known_result: Optional[bool] = None          # set after verification (spec 4a)
     reason: str = ""
 
 
@@ -183,13 +213,17 @@ class EvidenceRecord(BaseModel):
     derived_from: str = ""                       # set for reviews / reanalyses / curated copies: does not add robustness
     linked_pmid: str = ""                        # curated records: the paper they come from
     species: str = UNKNOWN
+    strain: str = UNKNOWN                        # as reported: UM-HET3, C57BL/6J, N2 ...
+    sex: Literal["male", "female", "both", "unknown"] = "unknown"   # of the animals or participants of the finding
+    dose: str = UNKNOWN                          # as reported
+    age_at_start: str = UNKNOWN                  # as reported
+    human_rungs: list[Literal["human_markers", "human_clinical"]] = Field(default_factory=list)   # human records (spec 8)
     system: str = ""                             # in_vivo | ex_vivo | in_vitro (empty: in vivo)
     location: str = ""
     quote: str = ""
     quote_role: Literal["finding", "background", "speculation"] = "finding"
     metric: str = UNKNOWN
     effect_percent: Optional[float] = None       # e.g. % change of median lifespan, when extracted
-    sexes: list[Literal["male", "female"]] = Field(default_factory=list)
     endpoint: Endpoint = "unknown"               # what the finding measures (lifespan, healthspan, biomarker, disease)
     effect: Literal["increase", "decrease", "no_effect", "unknown"] = "unknown"   # direction of a lifespan finding
     qualifiers_match: dict[str, str] = Field(default_factory=dict)   # species/sex/age_at_start/dose/comparator: yes|no|n/a; intervention_match
@@ -200,9 +234,24 @@ class EvidenceRecord(BaseModel):
     retrieved_at: str = ""
     notes: str = ""
 
+    @model_validator(mode="before")
+    @classmethod
+    def _old_sexes(cls, v):
+        """Records written before 2026-10-20 had a list `sexes` instead of `sex`."""
+        if isinstance(v, dict) and "sexes" in v:
+            v = dict(v)
+            sexes = set(v.pop("sexes") or [])
+            if "sex" not in v:
+                v["sex"] = "both" if sexes >= {"male", "female"} else next(iter(sexes)) if sexes else "unknown"
+        return v
+
+    @property
+    def sexes(self) -> set[str]:
+        return {"male", "female"} if self.sex == "both" else {self.sex} if self.sex in ("male", "female") else set()
+
 
 class Refusal(BaseModel):
-    type: str                                    # endpoint_mismatch | inherited_mismatch | species_mismatch | direction | type ...
+    type: RefusalType
     record_id: str = ""
     quote: str = ""
     notes: str = ""
@@ -218,8 +267,21 @@ class ClaimVerification(BaseModel):
     unresolved: bool = False                     # entities could not be mapped
     contrast: dict[str, str] = Field(default_factory=dict)   # outcome of a contrast: alternative, x_status, y_status
     flags: list[str] = Field(default_factory=list)            # e.g. contrast_unchecked
+    rung_status: dict[str, str] = Field(default_factory=dict)  # human claims: status per human rung (spec 8)
     notes: str = ""
-    added_claim: Optional[Claim] = None          # analogs added by the verifier (verified layer only)
+    claim: Optional[Claim] = Field(default=None, validation_alias=AliasChoices("claim", "added_claim"))
+    # claims added by the verifier (analogs an<N>, verified layer only); `added_claim` is the older name
+
+    @model_validator(mode="before")
+    @classmethod
+    def _short_claim(cls, v):
+        """The short form `claim: {subject, relation, object, qualifiers}` (examples, spec 7): id from the record,
+        role analog."""
+        if isinstance(v, dict):
+            key = "claim" if "claim" in v else "added_claim" if "added_claim" in v else None
+            if key and isinstance(v[key], dict):
+                v = {**v, key: {"id": v.get("id"), "role": "analog", **v[key]}}
+        return v
 
 
 class Conflict(BaseModel):
@@ -244,11 +306,28 @@ class EvidenceProfile(BaseModel):
     conflicts: list[Conflict] = Field(default_factory=list)
 
 
+class Alternative(BaseModel):
+    """An alternative explanation (spec 8c). ids: a<N> declared, alt<N> added by the pipeline."""
+    id: str
+    type: str                                    # checklist id (food_intake ...), "declared", "competitor"
+    source: Literal["checklist", "proximity", "debate", "declared", "expert"]
+    status: Literal["open", "excluded_by_evidence", "supported", "contested", "refuted", "unverified", "unresolved"] = "open"
+    explanation: str = ""
+    discriminating_design: str = ""
+    ref: str = ""                                # competitor hypothesis id
+    record_id: str = ""                          # the study with the discriminating control, when excluded
+    quote: str = ""
+
+
 class Verification(BaseModel):
     card_id: str
     claims: list[ClaimVerification] = Field(default_factory=list)
     evidence_profile: Optional[EvidenceProfile] = None
     known_result: bool = False
+    alternatives: list[Alternative] = Field(default_factory=list)
+    prediction_table: list[dict] = Field(default_factory=list)     # stage C (spec 8c)
+    decision_criteria: dict[str, str] = Field(default_factory=dict)   # stage C
+    searched_pmids: list[str] = Field(default_factory=list)        # abstracts the verifier read (checklist check)
     declared_vs_verified: list[str] = Field(default_factory=list)
 
 
