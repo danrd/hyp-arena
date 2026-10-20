@@ -102,3 +102,21 @@ The raw texts of the card-spec examples run through the whole pipeline (normaliz
 3. Admission of mechanistic hypotheses (spec 4a) asks for "≥1 mechanism claim"; with the contrast form the explanation is the outcome claim, so the outcome claim counts as the mechanism.
 4. Example 1's c2 (the normalizer now writes `rapamycin slows_aging_in older adults`): the population sits in the object, not a qualifier; inheritance into the object is not covered by spec 9.
 5. Claims with relation `other` get the status `unresolved` (spec 5: ignored by symbolic checks).
+
+## Validation with DeepSeek V4.1 Flash as the verifier (2026-10-20)
+
+`configs/v2-flash.yaml`: verifier `deepseek-v4.1-flash-1017` (the 2026-10-17 snapshot, pinned) without thinking; normalizer unchanged (gemini-3.5-flash). Through CometAPI the model with thinking spent the whole output budget (6,000 of 6,000 tokens) on hidden reasoning in about half of the calls and returned nothing; neither `reasoning_effort` nor a token budget is honoured, and our logs had counted only the visible output. With `extra_body: {thinking: {type: disabled}}` a verifier call takes about 5 s and 800–900 output tokens. Spent on the three runs below: about 190 Flash calls and 47 normalizer calls.
+
+**Card-spec examples, same cards as the last Gemini run** (only the verifier differs): 16 calls, 42 s, no failures (with thinking: 80 calls, 60 failures, 15 min). Results as with Gemini, including example 3 contested by Neff et al. 2013. One error: in example 1 "Rapamycin is widely used as a complete inhibitor of mTORC1" (background) was labelled a finding; with thinking it was labelled background. The run with thinking matched the reference on example 3 only because its search did not return Neff 2013.
+
+**Negative-sampling test, six groups** (groups 1–5 on the earlier cards, group 6 normalized anew): AUC 0.69 [0.48, 0.89]; after two fixes found in this run and applied without model calls (`negatives v2-refresh`), hit@1 0.50, MRR 0.60, AUC 0.78 [0.59, 0.94]. The fixes were found on these data, so part of the gain is fitting; the evidence-based decisions (procaine, carbinoxamine, alpha-lipoic acid, prednisolone refuted by DrugAge; coenzyme Q10 after the fix) agree with the test's labels, the order among unverified items is still noise. The fixes:
+- a record that the extractor called "exact" while its quote and title name neither the compound nor a synonym counts as a related compound (malate and oxaloacetate quoted for citrate, SkQ1 for coenzyme Q10);
+- related compounds and classes no longer set a status (spec 8: they count only as analogs); before, the rules let them.
+
+**ITP backtest (T = 2010-12-31, 47 compounds, 10 later positive):** AUC 0.70 [0.54, 0.84] over all items, 0.64 [0.37, 0.89] on the test split; precision in the top quarter 0.36 against a base rate of 0.21. The per-axis check (`backtest axes`, spec 8 validation) shows where it comes from:
+- effect level, robustness, mechanism and the multi-site flag take one value for every item (nothing at the rung by 2010), so they carry no signal here;
+- the signal is translational distance (AUC 0.72) and novelty (0.62). Translational distance is ChEMBL's **current** max phase: a leak from the future in a backtest (drugs approved after T). Proposed: in a run with `as_of`, phase 4 only if ChEMBL's first approval year is before T, else unknown.
+
+Two data problems found:
+- **the pool is stale:** resveratrol and simvastatin are filtered by their own ITP paper (PMID 20974732, online October 2010, before T). The pool was built before the cut-off moved to the earliest date (online, print, PubMed entry), so these compounds should not be in it; rebuild with `backtest build-itp`;
+- **strain is not checked:** every pool hypothesis names UM-HET3 mice (the normalizer puts it into qualifiers), but the DrugAge rule checks only the species and the verifier's prompt has no strain field. Earlier positive studies in other strains (2,4-dinitrophenol 2008, green tea extract 2007, metformin in SHR and HER2/neu mice) made three later ITP negatives known results. Whether evidence in another strain of the same species should count for a strain-specific claim, or only as an analog, is a specification question.
