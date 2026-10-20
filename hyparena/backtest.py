@@ -34,7 +34,6 @@ from pathlib import Path
 import httpx
 
 DRUGAGE_URL = "https://genomics.senescence.info/drugs/dataset.zip"
-ESUMMARY = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
 OUT = Path(__file__).resolve().parents[1] / "data" / "backtest"
 
 
@@ -59,21 +58,20 @@ def _pubdates(pmids: list[str]) -> dict[str, str]:
     """PubMed id -> ISO date of first public appearance, via NCBI E-utilities (batches of 150): the earliest
     of the electronic, print and PubMed-entry dates. (The print date alone can come weeks after the paper
     was online, which let a backtest's evidence cut-off include the paper itself.)"""
+    from hyparena.tools import pubmed                # shares PubMed's rate limit with the verifier's threads
     dates = {}
-    with httpx.Client(timeout=60) as client:
-        for i in range(0, len(pmids), 150):
-            batch = pmids[i:i + 150]
-            r = client.get(ESUMMARY, params={"db": "pubmed", "id": ",".join(batch), "retmode": "json"})
-            r.raise_for_status()
-            res = r.json().get("result", {})
-            for p in batch:
-                rec = res.get(p) or {}
-                found = [_pubmed_date(rec.get(k) or "") for k in ("epubdate", "pubdate", "sortpubdate")]
-                found += [_pubmed_date(h.get("date", "")) for h in rec.get("history") or []
-                          if h.get("pubstatus") in ("entrez", "pubmed", "aheadofprint")]
-                found = [d for d in found if d]
-                if found:
-                    dates[p] = min(found)
+    for i in range(0, len(pmids), 150):
+        batch = pmids[i:i + 150]
+        r = pubmed._get("esummary.fcgi", {"db": "pubmed", "id": ",".join(batch), "retmode": "json"})
+        res = r.json().get("result", {})
+        for p in batch:
+            rec = res.get(p) or {}
+            found = [_pubmed_date(rec.get(k) or "") for k in ("epubdate", "pubdate", "sortpubdate")]
+            found += [_pubmed_date(h.get("date", "")) for h in rec.get("history") or []
+                      if h.get("pubstatus") in ("entrez", "pubmed", "aheadofprint")]
+            found = [d for d in found if d]
+            if found:
+                dates[p] = min(found)
     return dates
 
 
