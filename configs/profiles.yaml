@@ -6,14 +6,14 @@
 # other two are the examples from the notes.
 profiles:
   evidence_first:
-    version: "draft-1"
+    version: "draft-2"
     description: Verified evidence matters most.
     tiers: [[effect_level, robustness, mechanism], rest]
   cheap_feasible:
-    version: "draft-1"
+    version: "draft-2"
     description: Cheap and feasible ideas with decent novelty.
-    tiers: [[cost, time, translational_distance], [novelty], [effect_level]]
+    tiers: [[path_to_human], [novelty], [effect_level]]
   fundamental:
-    version: "draft-1"
-    description: Mechanism, informativeness and novelty before cost.
-    tiers: [[mechanism, informativeness, novelty], [cost]]
+    version: "draft-2"
+    description: Mechanism, informativeness and novelty before the path to a human test.
+    tiers: [[mechanism, informativeness, novelty], [path_to_human]]

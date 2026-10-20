@@ -34,11 +34,11 @@ def _client(config: str, fake: bool, max_calls: int):
     return client, [j.family for j in pool]
 
 
-def _extra(card: HypothesisCard) -> dict:
-    """Values from other components: translational distance from the max clinical phase of the resolved
-    compounds (ChEMBL by InChIKey; a combination is as advanced as its least advanced component)."""
-    phase = entities.max_phase(card)
-    return {"max_phase": phase} if phase is not None else {}
+def _extra(card: HypothesisCard, as_of: Optional[str] = None) -> dict:
+    """Values from other components: human safety data of the interventions (ChEMBL phase and first approval,
+    ClinicalTrials.gov as of T) for path_to_human."""
+    safety = entities.human_safety(card, as_of)
+    return {"human_safety": safety} if safety is not None else {}
 
 
 def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yaml", fake: bool = False,
@@ -88,7 +88,7 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
         ver = verify(client, verifiers or families, writer, card, as_of=as_of, log=log, map_fn=pool.map,
                      expert_sources=ex.sources(layer, card.id))
         x["verification"] = finalize(card, ver)
-        x["extra"] = _extra(card)
+        x["extra"] = _extra(card, as_of)
         triples.append((card, x["verification"], x["extra"]))
         on_stage(f"{card.id} проверена; вызовов: {client.calls}")
     pool.shutdown()
@@ -162,7 +162,8 @@ def refresh_curated(res: dict, K: int = 10000, k_top: int = 3) -> dict:
             cv.counterevidence = [r for r in cv.counterevidence if r.source not in ("DrugAge", "PubMed")] + pub_against + against
         ver = finalize(card, add_strain_analogs(card, ver))
         x["verification"] = ver.model_dump(by_alias=True)
-        triples.append((card, ver, x.get("extra") or {}))
+        x["extra"] = _extra(card, as_of)                      # path_to_human inputs as of the run's date
+        triples.append((card, ver, x["extra"]))
     ranking = rank(triples, K=K, k_top=k_top) if triples else None
     for x in res["items"]:
         if not x.get("verification") or ranking is None:

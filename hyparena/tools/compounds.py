@@ -1,6 +1,6 @@
 """Compound identifiers: a name → its PubChem parent compound (salts and hydrates collapse to the parent:
 "quercetin dihydrate" and "quercetin" are the same compound), with the preferred name, InChIKey, ChEBI id
-(from PubChem's synonyms), ChEMBL id and maximum clinical phase (ChEMBL, by InChIKey) and the synonyms.
+(from PubChem's synonyms), ChEMBL id, maximum clinical phase and first approval year (ChEMBL, by InChIKey) and the synonyms.
 
 Classes and mixtures ("senolytics", "omega-3 fatty acids") have no compound and stay unresolved: matching then
 falls back to names. Results, including "not found", are cached on disk (data/cache/compounds.json); network
@@ -38,6 +38,7 @@ class Compound:
     chebi: str = ""                            # "CHEBI:9168"
     chembl: str = ""                           # "CHEMBL413"
     max_phase: Optional[int] = None            # ChEMBL max phase 0..4 (None: not in ChEMBL or no phase)
+    first_approval: Optional[int] = None       # ChEMBL year of first approval (None: not approved or unknown)
     synonyms: list[str] = field(default_factory=list)
 
     @property
@@ -112,15 +113,31 @@ def _details(cid: int) -> Compound:
                  synonyms=[s for s in syn if len(s) <= 60][:80])       # skip long systematic names
     if c.inchikey:
         mol = (_get(f"{CHEMBL}/molecule.json?molecule_structures__standard_inchi_key={c.inchikey}"
-                    "&only=molecule_chembl_id,max_phase") or {}).get("molecules") or []
+                    "&only=molecule_chembl_id,max_phase,first_approval") or {}).get("molecules") or []
         if mol:
-            c.chembl = mol[0].get("molecule_chembl_id") or ""
-            phase = mol[0].get("max_phase")
-            try:
-                c.max_phase = max(0, min(4, int(float(phase)))) if phase is not None else None
-            except ValueError:
-                c.max_phase = None
+            _chembl_fields(c, mol[0])
     return c
+
+
+def _chembl_fields(c: Compound, mol: dict) -> None:
+    c.chembl = mol.get("molecule_chembl_id") or ""
+    phase = mol.get("max_phase")
+    try:
+        c.max_phase = max(0, min(4, int(float(phase)))) if phase is not None else None
+    except ValueError:
+        c.max_phase = None
+    year = mol.get("first_approval")
+    c.first_approval = int(year) if isinstance(year, (int, float)) or (isinstance(year, str) and year.isdigit()) else None
+
+
+def _add_first_approval(hit: dict) -> dict:
+    """Cache entries written before `first_approval` existed: fetch it from ChEMBL once."""
+    c = Compound(**hit)
+    if c.chembl:
+        mol = (_get(f"{CHEMBL}/molecule/{c.chembl}.json?only=molecule_chembl_id,max_phase,first_approval") or {})
+        if mol:
+            _chembl_fields(c, mol)
+    return asdict(c)
 
 
 def _load() -> dict:
@@ -142,6 +159,14 @@ def lookup(name: str) -> Optional[Compound]:
         return None
     with _lock:
         hit = _load().get(k, "missing")
+    if hit and "first_approval" not in hit:
+        try:
+            hit = _add_first_approval(hit)
+        except LookupError_:
+            return Compound(**hit)
+        with _lock:
+            _load()[k] = hit
+            _save()
     if hit != "missing":
         return Compound(**hit) if hit else None
     try:

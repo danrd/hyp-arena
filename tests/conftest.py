@@ -1,12 +1,12 @@
-"""Tests never look compounds up on the network: an offline table stands in for PubChem and ChEMBL."""
+"""Tests never look compounds up on the network: offline tables stand in for PubChem, ChEMBL and ClinicalTrials.gov."""
 import pytest
 
-from hyparena.tools import compounds as cp
+from hyparena.tools import compounds as cp, trials
 
 OFFLINE = {
-    "rapamycin": cp.Compound(5284616, "Sirolimus", chebi="CHEBI:9168", chembl="CHEMBL413", max_phase=4,
+    "rapamycin": cp.Compound(5284616, "Sirolimus", chebi="CHEBI:9168", chembl="CHEMBL413", max_phase=4, first_approval=1999,
                              synonyms=["rapamycin", "Sirolimus", "Rapamune"]),
-    "dasatinib": cp.Compound(3062316, "Dasatinib", chebi="CHEBI:49375", chembl="CHEMBL1421", max_phase=4,
+    "dasatinib": cp.Compound(3062316, "Dasatinib", chebi="CHEBI:49375", chembl="CHEMBL1421", max_phase=4, first_approval=2006,
                              synonyms=["dasatinib", "Sprycel"]),
     "quercetin": cp.Compound(5280343, "Quercetin", chebi="CHEBI:16243", chembl="CHEMBL50", max_phase=3,
                              synonyms=["quercetin", "Sophoretin"]),
@@ -17,6 +17,11 @@ OFFLINE = {
 OFFLINE["sirolimus"] = OFFLINE["rapamycin"]
 
 
+TRIALS = {"sirolimus": "1989-09-15", "dasatinib": "2003-11", "quercetin": "2004-02", "resveratrol": "2007-01",
+          "fake compound": ""}
+
+
 @pytest.fixture(autouse=True)
 def offline_compounds(monkeypatch):
     monkeypatch.setattr(cp, "lookup", lambda name: OFFLINE.get(cp.key(name)))
+    monkeypatch.setattr(trials, "first_trial_start", lambda name: TRIALS.get(name.strip().lower(), ""))
