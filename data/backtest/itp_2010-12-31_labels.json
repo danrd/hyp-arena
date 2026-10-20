@@ -1,8 +1,21 @@
 {
   "imp001": {
     "label": 1,
+    "outcome": "supports",
+    "by_sex": {
+      "female": "supports",
+      "male": "no_effect"
+    },
+    "effect": 1.0,
     "compound": "(R/S)-1,3-butanediol",
-    "first_itp_publication": "2022-12-01",
+    "dose": "100000 ppm food",
+    "age_at_start": "6 months",
+    "first_itp_publication": "2022-09-30",
+    "public_date": "2022-09-30",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
       "36179270"
     ],
@@ -10,17 +23,43 @@
   },
   "imp002": {
     "label": 1,
+    "outcome": "supports",
+    "by_sex": {
+      "female": "harmful",
+      "male": "supports"
+    },
+    "effect": 15.0,
     "compound": "16-alpha-hydroxyestradiol",
-    "first_itp_publication": "2024-10-01",
+    "dose": "5 ppm food",
+    "age_at_start": "12 months",
+    "first_itp_publication": "2024-05-16",
+    "public_date": "2024-05-16",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
       "38753230"
     ],
-    "split": "dev"
+    "split": "test"
   },
   "imp003": {
     "label": 0,
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
     "compound": "17-dimethylaminoethylamino-17-demethoxygeldanamycin hydrochloride",
+    "dose": "30 ppm food",
+    "age_at_start": "6 months",
     "first_itp_publication": "2020-11-01",
+    "public_date": "2020-11-01",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
       "33145977"
     ],
@@ -28,202 +67,481 @@
   },
   "imp004": {
     "label": 1,
+    "outcome": "supports",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "supports"
+    },
+    "effect": 19.0,
     "compound": "17‐alpha‐estradiol",
-    "first_itp_publication": "2014-04-01",
+    "dose": "14.4 ppm food",
+    "age_at_start": "10 months",
+    "first_itp_publication": "2016-06-16",
+    "public_date": "2016-06-16",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "17‐alpha‐estradiol",
     "pmids": [
-      "24245565",
-      "27312235",
-      "33788371"
+      "27312235"
     ],
     "split": "dev"
   },
   "imp005": {
-    "label": 0,
-    "compound": "2,4-dinitrophenol",
-    "first_itp_publication": "2024-10-01",
+    "label": 1,
+    "outcome": "supports",
+    "by_sex": {
+      "male": "supports"
+    },
+    "effect": 19.0,
+    "compound": "17‐alpha‐estradiol",
+    "dose": "14.4 ppm food",
+    "age_at_start": "16 months",
+    "first_itp_publication": "2021-03-31",
+    "public_date": "2021-03-31",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "17‐alpha‐estradiol",
     "pmids": [
-      "38753230"
+      "33788371"
     ],
-    "split": "dev"
+    "split": "test"
   },
   "imp006": {
-    "label": 0,
-    "compound": "2-(2-hydroxyphenyl)benzothiazole",
-    "first_itp_publication": "2019-04-01",
+    "label": 1,
+    "outcome": "supports",
+    "by_sex": {
+      "male": "supports"
+    },
+    "effect": 11.0,
+    "compound": "17‐alpha‐estradiol",
+    "dose": "14.4 ppm food",
+    "age_at_start": "20 months",
+    "first_itp_publication": "2021-03-31",
+    "public_date": "2021-03-31",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "17‐alpha‐estradiol",
     "pmids": [
-      "30688027"
+      "33788371"
     ],
     "split": "dev"
   },
   "imp007": {
-    "label": 0,
-    "compound": "4-phenylbutyrate",
-    "first_itp_publication": "2024-02-01",
+    "label": 1,
+    "outcome": "supports",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "supports"
+    },
+    "effect": 12.0,
+    "compound": "17‐alpha‐estradiol",
+    "dose": "4.8 ppm food",
+    "age_at_start": "10 months",
+    "first_itp_publication": "2013-11-19",
+    "public_date": "2013-11-19",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
-      "38041783"
+      "24245565"
     ],
     "split": "test"
   },
   "imp008": {
-    "label": 1,
-    "compound": "Acarbose",
-    "first_itp_publication": "2014-04-01",
+    "label": 0,
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "2,4-dinitrophenol",
+    "dose": "3 ppm food",
+    "age_at_start": "6 months",
+    "first_itp_publication": "2024-05-16",
+    "public_date": "2024-05-16",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
-      "24245565",
-      "27312235",
-      "30688027"
+      "38753230"
     ],
     "split": "dev"
   },
   "imp009": {
     "label": 0,
-    "compound": "Alpha-ketoglutarate",
-    "first_itp_publication": "2024-10-01",
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "2-(2-hydroxyphenyl)benzothiazole",
+    "dose": "1 ppm food",
+    "age_at_start": "15 months",
+    "first_itp_publication": "2019-01-27",
+    "public_date": "2019-01-27",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
-      "38753230"
+      "30688027"
     ],
-    "split": "test"
+    "split": "dev"
   },
   "imp010": {
-    "label": 1,
-    "compound": "Astaxanthin",
-    "first_itp_publication": "2024-02-01",
+    "label": 0,
+    "outcome": "harmful",
+    "by_sex": {
+      "female": "harmful",
+      "male": "no_effect"
+    },
+    "effect": -2.0,
+    "compound": "4-phenylbutyrate",
+    "dose": "1000 ppm food",
+    "age_at_start": "9 months",
+    "first_itp_publication": "2023-12-02",
+    "public_date": "2023-12-02",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
       "38041783"
     ],
     "split": "test"
   },
   "imp011": {
-    "label": 0,
-    "compound": "Beta-guanidinopropionic acid",
-    "first_itp_publication": "2020-11-01",
+    "label": 1,
+    "outcome": "supports",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "supports"
+    },
+    "effect": 6.0,
+    "compound": "Acarbose",
+    "dose": "1000 ppm food",
+    "age_at_start": "16 months",
+    "first_itp_publication": "2016-06-16",
+    "public_date": "2016-06-16",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "Acarbose",
     "pmids": [
-      "33145977"
+      "27312235"
     ],
     "split": "dev"
   },
   "imp012": {
     "label": 1,
-    "compound": "Canagliflozin",
-    "first_itp_publication": "2020-11-05",
+    "outcome": "supports",
+    "by_sex": {
+      "female": "supports",
+      "male": "supports"
+    },
+    "effect": 22.0,
+    "compound": "Acarbose",
+    "dose": "1000 ppm food",
+    "age_at_start": "4 months",
+    "first_itp_publication": "2013-11-19",
+    "public_date": "2013-11-19",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
-      "32990681",
-      "38753230"
+      "24245565"
     ],
     "split": "test"
   },
   "imp013": {
-    "label": 0,
-    "compound": "Candesartan cilexetil",
-    "first_itp_publication": "2021-05-01",
-    "pmids": [
-      "33788371"
-    ],
-    "split": "test"
-  },
-  "imp014": {
     "label": 1,
-    "compound": "Captopril",
-    "first_itp_publication": "2022-12-01",
+    "outcome": "supports",
+    "by_sex": {
+      "female": "supports",
+      "male": "supports"
+    },
+    "effect": 17.0,
+    "compound": "Acarbose",
+    "dose": "1000 ppm food",
+    "age_at_start": "8 months",
+    "first_itp_publication": "2019-01-27",
+    "public_date": "2019-01-27",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "Acarbose",
     "pmids": [
-      "36179270"
+      "30688027"
     ],
     "split": "dev"
   },
-  "imp015": {
-    "label": 0,
-    "compound": "Curcumin",
-    "first_itp_publication": "2013-01-01",
+  "imp014": {
+    "label": 1,
+    "outcome": "supports",
+    "by_sex": {
+      "female": "supports",
+      "male": "supports"
+    },
+    "effect": 16.0,
+    "compound": "Acarbose",
+    "dose": "2500 ppm food",
+    "age_at_start": "8 months",
+    "first_itp_publication": "2019-01-27",
+    "public_date": "2019-01-27",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "Acarbose",
     "pmids": [
-      "22451473"
+      "30688027"
     ],
     "split": "test"
   },
+  "imp015": {
+    "label": 1,
+    "outcome": "supports",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "supports"
+    },
+    "effect": 11.0,
+    "compound": "Acarbose",
+    "dose": "400 ppm food",
+    "age_at_start": "8 months",
+    "first_itp_publication": "2019-01-27",
+    "public_date": "2019-01-27",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "Acarbose",
+    "pmids": [
+      "30688027"
+    ],
+    "split": "dev"
+  },
   "imp016": {
     "label": 0,
-    "compound": "Dimethyl fumarate",
-    "first_itp_publication": "2024-02-01",
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Alpha-ketoglutarate",
+    "dose": "20000 ppm food",
+    "age_at_start": "18 months",
+    "first_itp_publication": "2024-05-16",
+    "public_date": "2024-05-16",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
-      "38041783"
+      "38753230"
     ],
     "split": "test"
   },
   "imp017": {
     "label": 0,
-    "compound": "Fisetin",
-    "first_itp_publication": "2024-02-01",
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Aspirin",
+    "dose": "200 ppm food",
+    "age_at_start": "11 months",
+    "first_itp_publication": "2019-03-27",
+    "public_date": "2019-03-27",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "Aspirin",
     "pmids": [
-      "38041783"
-    ],
-    "split": "test"
-  },
-  "imp018": {
-    "label": 0,
-    "compound": "Fish oil",
-    "first_itp_publication": "2016-10-01",
-    "pmids": [
-      "27312235"
-    ],
-    "split": "test"
-  },
-  "imp019": {
-    "label": 0,
-    "compound": "Geranylgeranylacetone",
-    "first_itp_publication": "2021-05-01",
-    "pmids": [
-      "33788371"
+      "30916479"
     ],
     "split": "dev"
   },
-  "imp020": {
-    "label": 1,
-    "compound": "Glycine",
-    "first_itp_publication": "2019-06-01",
+  "imp018": {
+    "label": 0,
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Aspirin",
+    "dose": "60 ppm food",
+    "age_at_start": "11 months",
+    "first_itp_publication": "2019-03-27",
+    "public_date": "2019-03-27",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "Aspirin",
     "pmids": [
       "30916479"
     ],
     "split": "test"
   },
-  "imp021": {
-    "label": 0,
-    "compound": "Green tea extract",
-    "first_itp_publication": "2013-01-01",
+  "imp019": {
+    "label": 1,
+    "outcome": "supports",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "supports"
+    },
+    "effect": 12.0,
+    "compound": "Astaxanthin",
+    "dose": "4000 ppm food",
+    "age_at_start": "12 months",
+    "first_itp_publication": "2023-12-02",
+    "public_date": "2023-12-02",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
-      "22451473"
+      "38041783"
+    ],
+    "split": "test"
+  },
+  "imp020": {
+    "label": 0,
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Beta-guanidinopropionic acid",
+    "dose": "3300 ppm food",
+    "age_at_start": "6 months",
+    "first_itp_publication": "2020-11-01",
+    "public_date": "2020-11-01",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
+    "pmids": [
+      "33145977"
+    ],
+    "split": "test"
+  },
+  "imp021": {
+    "label": 1,
+    "outcome": "supports",
+    "by_sex": {
+      "female": "harmful",
+      "male": "supports"
+    },
+    "effect": 14.0,
+    "compound": "Canagliflozin",
+    "dose": "180 ppm food",
+    "age_at_start": "16 months",
+    "first_itp_publication": "2024-05-16",
+    "public_date": "2024-05-16",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "Canagliflozin",
+    "pmids": [
+      "38753230"
     ],
     "split": "dev"
   },
   "imp022": {
-    "label": 0,
-    "compound": "Hydralazine",
-    "first_itp_publication": "2024-10-01",
+    "label": 1,
+    "outcome": "supports",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "supports"
+    },
+    "effect": 9.0,
+    "compound": "Canagliflozin",
+    "dose": "180 ppm food",
+    "age_at_start": "6 months",
+    "first_itp_publication": "2024-05-16",
+    "public_date": "2024-05-16",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "Canagliflozin",
     "pmids": [
       "38753230"
     ],
     "split": "test"
   },
   "imp023": {
-    "label": 0,
-    "compound": "INT-767d (FXR/TGR5 agonist)",
-    "first_itp_publication": "2019-04-01",
+    "label": 1,
+    "outcome": "supports",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "supports"
+    },
+    "effect": 14.0,
+    "compound": "Canagliflozin",
+    "dose": "180 ppm food (30 ppm bodyweight)",
+    "age_at_start": "7 months",
+    "first_itp_publication": "2020-09-29",
+    "public_date": "2020-09-29",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
-      "30688027"
+      "32990681"
     ],
     "split": "dev"
   },
   "imp024": {
     "label": 0,
-    "compound": "Inulin",
-    "first_itp_publication": "2019-06-01",
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Candesartan cilexetil",
+    "dose": "30 ppm food",
+    "age_at_start": "8 months",
+    "first_itp_publication": "2021-03-31",
+    "public_date": "2021-03-31",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
-      "30916479"
+      "33788371"
     ],
-    "split": "dev"
+    "split": "test"
   },
   "imp025": {
-    "label": 0,
-    "compound": "Leucine",
-    "first_itp_publication": "2022-12-01",
+    "label": 1,
+    "outcome": "supports",
+    "by_sex": {
+      "female": "supports",
+      "male": "supports"
+    },
+    "effect": 14.0,
+    "compound": "Captopril",
+    "dose": "180 ppm food",
+    "age_at_start": "5 months",
+    "first_itp_publication": "2022-09-30",
+    "public_date": "2022-09-30",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
       "36179270"
     ],
@@ -231,201 +549,989 @@
   },
   "imp026": {
     "label": 0,
-    "compound": "MIF098 (CD74 antagonist)",
-    "first_itp_publication": "2021-05-01",
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Curcumin",
+    "dose": "2000 ppm food",
+    "age_at_start": "4 months",
+    "first_itp_publication": "2012-03-26",
+    "public_date": "2012-03-26",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
-      "33788371"
+      "22451473"
     ],
     "split": "test"
   },
   "imp027": {
-    "label": 1,
-    "compound": "Meclizine",
-    "first_itp_publication": "2024-02-01",
+    "label": 0,
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Dimethyl fumarate",
+    "dose": "120 ppm food",
+    "age_at_start": "10 months",
+    "first_itp_publication": "2023-12-02",
+    "public_date": "2023-12-02",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
       "38041783"
     ],
-    "split": "dev"
+    "split": "test"
   },
   "imp028": {
     "label": 0,
-    "compound": "Medium-chain triglyceride oil",
-    "first_itp_publication": "2013-01-01",
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Dimethyl fumarate",
+    "dose": "120 ppm food",
+    "age_at_start": "16 months",
+    "first_itp_publication": "2023-12-02",
+    "public_date": "2023-12-02",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
-      "22451473"
+      "38041783"
     ],
     "split": "dev"
   },
   "imp029": {
     "label": 0,
-    "compound": "Metformin",
-    "first_itp_publication": "2016-10-01",
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Fisetin",
+    "dose": "600 ppm food fed continuously",
+    "age_at_start": "20 months",
+    "first_itp_publication": "2023-12-02",
+    "public_date": "2023-12-02",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
-      "27312235"
+      "38041783"
     ],
-    "split": "test"
+    "split": "dev"
   },
   "imp030": {
     "label": 0,
-    "compound": "Methylene blue",
-    "first_itp_publication": "2014-04-01",
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Fisetin",
+    "dose": "600 ppm food fed on a repeated cycle of 3 days on and 11 days off",
+    "age_at_start": "20 months",
+    "first_itp_publication": "2023-12-02",
+    "public_date": "2023-12-02",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
-      "24245565"
+      "38041783"
     ],
     "split": "test"
   },
   "imp031": {
     "label": 0,
-    "compound": "Minocycline",
-    "first_itp_publication": "2020-11-01",
+    "outcome": "no_effect",
+    "by_sex": {
+      "male": "no_effect",
+      "female": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Fish oil",
+    "dose": "15000 ppm food",
+    "age_at_start": "9 months",
+    "first_itp_publication": "2016-06-16",
+    "public_date": "2016-06-16",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
-      "33145977"
+      "27312235"
     ],
     "split": "dev"
   },
   "imp032": {
     "label": 0,
-    "compound": "MitoQ",
-    "first_itp_publication": "2020-11-01",
+    "outcome": "no_effect",
+    "by_sex": {
+      "male": "no_effect",
+      "female": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Fish oil",
+    "dose": "50000 ppm food",
+    "age_at_start": "9 months",
+    "first_itp_publication": "2016-06-16",
+    "public_date": "2016-06-16",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
-      "33145977"
+      "27312235"
     ],
     "split": "test"
   },
   "imp033": {
     "label": 0,
-    "compound": "Mycophenolic acid",
-    "first_itp_publication": "2024-02-01",
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Geranylgeranylacetone",
+    "dose": "600 ppm food",
+    "age_at_start": "9 months",
+    "first_itp_publication": "2021-03-31",
+    "public_date": "2021-03-31",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
-      "38041783"
+      "33788371"
     ],
     "split": "dev"
   },
   "imp034": {
-    "label": 0,
-    "compound": "Nebivolol",
-    "first_itp_publication": "2024-10-01",
+    "label": 1,
+    "outcome": "supports",
+    "by_sex": {
+      "female": "supports",
+      "male": "supports"
+    },
+    "effect": 6.0,
+    "compound": "Glycine",
+    "dose": "80000 ppm food",
+    "age_at_start": "9 months",
+    "first_itp_publication": "2019-03-27",
+    "public_date": "2019-03-27",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
-      "38753230"
+      "30916479"
     ],
     "split": "test"
   },
   "imp035": {
     "label": 0,
-    "compound": "Nicotinamide riboside",
-    "first_itp_publication": "2021-05-01",
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Green tea extract",
+    "dose": "2000 ppm food",
+    "age_at_start": "4 months",
+    "first_itp_publication": "2012-03-26",
+    "public_date": "2012-03-26",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
-      "33788371"
+      "22451473"
     ],
-    "split": "test"
+    "split": "dev"
   },
   "imp036": {
     "label": 0,
-    "compound": "Oxaloacetate",
-    "first_itp_publication": "2013-01-01",
-    "pmids": [
-      "22451473"
-    ],
-    "split": "test"
-  },
-  "imp037": {
-    "label": 0,
-    "compound": "PB125 (carnosol, withaferin A and luteolin)",
-    "first_itp_publication": "2022-12-01",
-    "pmids": [
-      "36179270"
-    ],
-    "split": "dev"
-  },
-  "imp038": {
-    "label": 1,
-    "compound": "Protandim",
-    "first_itp_publication": "2016-10-01",
-    "pmids": [
-      "27312235"
-    ],
-    "split": "test"
-  },
-  "imp039": {
-    "label": 0,
-    "compound": "Resveratrol",
-    "first_itp_publication": "2011-02-01",
-    "pmids": [
-      "20974732",
-      "22451473"
-    ],
-    "split": "dev"
-  },
-  "imp040": {
-    "label": 0,
-    "compound": "SG1002 (hydrogen sulfide donor)",
-    "first_itp_publication": "2024-02-01",
-    "pmids": [
-      "38041783"
-    ],
-    "split": "dev"
-  },
-  "imp041": {
-    "label": 0,
-    "compound": "Simvastatin",
-    "first_itp_publication": "2011-02-01",
-    "pmids": [
-      "20974732"
-    ],
-    "split": "test"
-  },
-  "imp042": {
-    "label": 0,
-    "compound": "Sodium thiosulfate",
-    "first_itp_publication": "2024-10-01",
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Hydralazine",
+    "dose": "30 ppm food",
+    "age_at_start": "16 months",
+    "first_itp_publication": "2024-05-16",
+    "public_date": "2024-05-16",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
       "38753230"
     ],
     "split": "test"
   },
-  "imp043": {
+  "imp037": {
     "label": 0,
-    "compound": "Sulindac",
-    "first_itp_publication": "2022-12-01",
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Hydralazine",
+    "dose": "30 ppm food",
+    "age_at_start": "6 months",
+    "first_itp_publication": "2024-05-16",
+    "public_date": "2024-05-16",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
-      "36179270"
+      "38753230"
     ],
     "split": "dev"
   },
-  "imp044": {
+  "imp038": {
     "label": 0,
-    "compound": "Syringaresinol",
-    "first_itp_publication": "2022-12-01",
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "INT-767d (FXR/TGR5 agonist)",
+    "dose": "180 ppm food",
+    "age_at_start": "10 months",
+    "first_itp_publication": "2019-01-27",
+    "public_date": "2019-01-27",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
-      "36179270"
+      "30688027"
     ],
     "split": "dev"
   },
-  "imp045": {
+  "imp039": {
     "label": 0,
-    "compound": "TM5441 (PAI-1 inhibitor)",
-    "first_itp_publication": "2019-06-01",
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Inulin",
+    "dose": "600 ppm food",
+    "age_at_start": "11 months",
+    "first_itp_publication": "2019-03-27",
+    "public_date": "2019-03-27",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
       "30916479"
     ],
     "split": "dev"
   },
-  "imp046": {
+  "imp040": {
     "label": 0,
-    "compound": "Ursodeoxycholic acid",
-    "first_itp_publication": "2016-10-01",
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Leucine",
+    "dose": "40000 ppm food",
+    "age_at_start": "5 months",
+    "first_itp_publication": "2022-09-30",
+    "public_date": "2022-09-30",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
+    "pmids": [
+      "36179270"
+    ],
+    "split": "test"
+  },
+  "imp041": {
+    "label": 0,
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "MIF098 (CD74 antagonist)",
+    "dose": "240 ppm food",
+    "age_at_start": "8 months",
+    "first_itp_publication": "2021-03-31",
+    "public_date": "2021-03-31",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
+    "pmids": [
+      "33788371"
+    ],
+    "split": "test"
+  },
+  "imp042": {
+    "label": 1,
+    "outcome": "supports",
+    "by_sex": {
+      "female": "supports",
+      "male": "supports"
+    },
+    "effect": 8.0,
+    "compound": "Meclizine",
+    "dose": "800 ppm food",
+    "age_at_start": "12 months",
+    "first_itp_publication": "2023-12-02",
+    "public_date": "2023-12-02",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
+    "pmids": [
+      "38041783"
+    ],
+    "split": "dev"
+  },
+  "imp043": {
+    "label": 0,
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Medium-chain triglyceride oil",
+    "dose": "60000 ppm food",
+    "age_at_start": "4 months",
+    "first_itp_publication": "2012-03-26",
+    "public_date": "2012-03-26",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
+    "pmids": [
+      "22451473"
+    ],
+    "split": "dev"
+  },
+  "imp044": {
+    "label": 0,
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Metformin",
+    "dose": "1000 ppm food",
+    "age_at_start": "9 months",
+    "first_itp_publication": "2016-06-16",
+    "public_date": "2016-06-16",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
       "27312235"
     ],
     "split": "test"
   },
+  "imp045": {
+    "label": 0,
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Methylene blue",
+    "dose": "27 ppm food",
+    "age_at_start": "4 months",
+    "first_itp_publication": "2013-11-19",
+    "public_date": "2013-11-19",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
+    "pmids": [
+      "24245565"
+    ],
+    "split": "test"
+  },
+  "imp046": {
+    "label": 0,
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Minocycline",
+    "dose": "300 ppm food",
+    "age_at_start": "6 months",
+    "first_itp_publication": "2020-11-01",
+    "public_date": "2020-11-01",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
+    "pmids": [
+      "33145977"
+    ],
+    "split": "test"
+  },
   "imp047": {
     "label": 0,
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "MitoQ",
+    "dose": "100 ppm food",
+    "age_at_start": "7 months",
+    "first_itp_publication": "2020-11-01",
+    "public_date": "2020-11-01",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
+    "pmids": [
+      "33145977"
+    ],
+    "split": "dev"
+  },
+  "imp048": {
+    "label": 0,
+    "outcome": "harmful",
+    "by_sex": {
+      "female": "harmful",
+      "male": "no_effect"
+    },
+    "effect": -1.0,
+    "compound": "Mycophenolic acid",
+    "dose": "6.7 ppm food",
+    "age_at_start": "9 months",
+    "first_itp_publication": "2023-12-02",
+    "public_date": "2023-12-02",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
+    "pmids": [
+      "38041783"
+    ],
+    "split": "test"
+  },
+  "imp049": {
+    "label": 0,
+    "outcome": "harmful",
+    "by_sex": {
+      "female": "harmful",
+      "male": "no_effect"
+    },
+    "effect": -5.0,
+    "compound": "Nebivolol",
+    "dose": "60 ppm food",
+    "age_at_start": "6 months",
+    "first_itp_publication": "2024-05-16",
+    "public_date": "2024-05-16",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
+    "pmids": [
+      "38753230"
+    ],
+    "split": "test"
+  },
+  "imp050": {
+    "label": 0,
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Nicotinamide riboside",
+    "dose": "1000 ppm food",
+    "age_at_start": "8 months",
+    "first_itp_publication": "2021-03-31",
+    "public_date": "2021-03-31",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
+    "pmids": [
+      "33788371"
+    ],
+    "split": "dev"
+  },
+  "imp051": {
+    "label": 1,
+    "outcome": "supports",
+    "by_sex": {
+      "male": "supports"
+    },
+    "effect": 10.0,
+    "compound": "Nordihydroguaiaretic acid",
+    "dose": "2500 ppm food",
+    "age_at_start": "6 months",
+    "first_itp_publication": "2016-06-16",
+    "public_date": "2016-06-16",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "Nordihydroguaiaretic acid",
+    "pmids": [
+      "27312235"
+    ],
+    "split": "dev"
+  },
+  "imp052": {
+    "label": 1,
+    "outcome": "supports",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "supports"
+    },
+    "effect": 9.0,
+    "compound": "Nordihydroguaiaretic acid",
+    "dose": "5000 ppm food",
+    "age_at_start": "6 months",
+    "first_itp_publication": "2016-06-16",
+    "public_date": "2016-06-16",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "Nordihydroguaiaretic acid",
+    "pmids": [
+      "27312235"
+    ],
+    "split": "test"
+  },
+  "imp053": {
+    "label": 1,
+    "outcome": "supports",
+    "by_sex": {
+      "male": "supports"
+    },
+    "effect": 6.0,
+    "compound": "Nordihydroguaiaretic acid",
+    "dose": "800 ppm food",
+    "age_at_start": "6 months",
+    "first_itp_publication": "2016-06-16",
+    "public_date": "2016-06-16",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "Nordihydroguaiaretic acid",
+    "pmids": [
+      "27312235"
+    ],
+    "split": "dev"
+  },
+  "imp054": {
+    "label": 0,
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Oxaloacetate",
+    "dose": "2200 ppm food",
+    "age_at_start": "4 months",
+    "first_itp_publication": "2012-03-26",
+    "public_date": "2012-03-26",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
+    "pmids": [
+      "22451473"
+    ],
+    "split": "dev"
+  },
+  "imp055": {
+    "label": 0,
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "PB125 (carnosol, withaferin A and luteolin)",
+    "dose": "4.7 ppm carnosol, 9 ppm luteolin, and 0.47 ppm withaferin A food",
+    "age_at_start": "5 months",
+    "first_itp_publication": "2022-09-30",
+    "public_date": "2022-09-30",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
+    "pmids": [
+      "36179270"
+    ],
+    "split": "dev"
+  },
+  "imp056": {
+    "label": 1,
+    "outcome": "supports",
+    "by_sex": {
+      "female": "supports",
+      "male": "supports"
+    },
+    "effect": 7.0,
+    "compound": "Protandim",
+    "dose": "600 ppm food 10-17 months, 1200 ppm food (17 months-death)",
+    "age_at_start": "10 months",
+    "first_itp_publication": "2016-06-16",
+    "public_date": "2016-06-16",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
+    "pmids": [
+      "27312235"
+    ],
+    "split": "dev"
+  },
+  "imp057": {
+    "label": 1,
+    "outcome": "supports",
+    "by_sex": {
+      "female": "supports",
+      "male": "supports"
+    },
+    "effect": 21.0,
+    "compound": "Rapamycin",
+    "dose": "14 ppm food",
+    "age_at_start": "9 months",
+    "first_itp_publication": "2013-12-18",
+    "public_date": "2013-12-18",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "Rapamycin",
+    "pmids": [
+      "24341993"
+    ],
+    "split": "test"
+  },
+  "imp058": {
+    "label": 1,
+    "outcome": "supports",
+    "by_sex": {
+      "female": "supports",
+      "male": "no_effect"
+    },
+    "effect": 16.0,
+    "compound": "Rapamycin",
+    "dose": "4.7 ppm food",
+    "age_at_start": "9 months",
+    "first_itp_publication": "2013-12-18",
+    "public_date": "2013-12-18",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "Rapamycin",
+    "pmids": [
+      "24341993"
+    ],
+    "split": "dev"
+  },
+  "imp059": {
+    "label": 1,
+    "outcome": "supports",
+    "by_sex": {
+      "female": "supports",
+      "male": "supports"
+    },
+    "effect": 15.0,
+    "compound": "Rapamycin",
+    "dose": "42 ppm food",
+    "age_at_start": "20 months",
+    "first_itp_publication": "2020-11-01",
+    "public_date": "2020-11-01",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "Rapamycin",
+    "pmids": [
+      "33145977"
+    ],
+    "split": "test"
+  },
+  "imp060": {
+    "label": 1,
+    "outcome": "supports",
+    "by_sex": {
+      "female": "supports",
+      "male": "supports"
+    },
+    "effect": 26.0,
+    "compound": "Rapamycin",
+    "dose": "42 ppm food",
+    "age_at_start": "9 months",
+    "first_itp_publication": "2013-12-18",
+    "public_date": "2013-12-18",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "Rapamycin",
+    "pmids": [
+      "24341993"
+    ],
+    "split": "dev"
+  },
+  "imp061": {
+    "label": 1,
+    "outcome": "supports",
+    "by_sex": {
+      "female": "supports",
+      "male": "supports"
+    },
+    "effect": 9.0,
+    "compound": "Rapamycin",
+    "dose": "42 ppm food every other month",
+    "age_at_start": "20 months",
+    "first_itp_publication": "2020-11-01",
+    "public_date": "2020-11-01",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "Rapamycin",
+    "pmids": [
+      "33145977"
+    ],
+    "split": "test"
+  },
+  "imp062": {
+    "label": 0,
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Resveratrol",
+    "dose": "300 ppm food",
+    "age_at_start": "4 months",
+    "first_itp_publication": "2012-03-26",
+    "public_date": "2012-03-26",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "Resveratrol",
+    "pmids": [
+      "22451473"
+    ],
+    "split": "dev"
+  },
+  "imp063": {
+    "label": 0,
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "SG1002 (hydrogen sulfide donor)",
+    "dose": "240 ppm food",
+    "age_at_start": "16 months",
+    "first_itp_publication": "2023-12-02",
+    "public_date": "2023-12-02",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
+    "pmids": [
+      "38041783"
+    ],
+    "split": "dev"
+  },
+  "imp064": {
+    "label": 0,
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "SG1002 (hydrogen sulfide donor)",
+    "dose": "240 ppm food",
+    "age_at_start": "5-9 months",
+    "first_itp_publication": "2023-12-02",
+    "public_date": "2023-12-02",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
+    "pmids": [
+      "38041783"
+    ],
+    "split": "test"
+  },
+  "imp065": {
+    "label": 0,
+    "outcome": "no_effect",
+    "by_sex": {
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Sodium thiosulfate",
+    "dose": "10000 ppm food",
+    "age_at_start": "6 months",
+    "first_itp_publication": "2024-05-16",
+    "public_date": "2024-05-16",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
+    "pmids": [
+      "38753230"
+    ],
+    "split": "test"
+  },
+  "imp066": {
+    "label": 0,
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Sulindac",
+    "dose": "5 ppm food",
+    "age_at_start": "5 months",
+    "first_itp_publication": "2022-09-30",
+    "public_date": "2022-09-30",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
+    "pmids": [
+      "36179270"
+    ],
+    "split": "dev"
+  },
+  "imp067": {
+    "label": 0,
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Syringaresinol",
+    "dose": "300 ppm food",
+    "age_at_start": "5 months",
+    "first_itp_publication": "2022-09-30",
+    "public_date": "2022-09-30",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
+    "pmids": [
+      "36179270"
+    ],
+    "split": "test"
+  },
+  "imp068": {
+    "label": 0,
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "TM5441 (PAI-1 inhibitor)",
+    "dose": "60 ppm food",
+    "age_at_start": "11 months",
+    "first_itp_publication": "2019-03-27",
+    "public_date": "2019-03-27",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
+    "pmids": [
+      "30916479"
+    ],
+    "split": "dev"
+  },
+  "imp069": {
+    "label": 0,
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
+    "compound": "Ursodeoxycholic acid",
+    "dose": "5000 ppm food",
+    "age_at_start": "5 months",
+    "first_itp_publication": "2016-06-16",
+    "public_date": "2016-06-16",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
+    "pmids": [
+      "27312235"
+    ],
+    "split": "test"
+  },
+  "imp070": {
+    "label": 0,
+    "outcome": "no_effect",
+    "by_sex": {
+      "female": "no_effect",
+      "male": "no_effect"
+    },
+    "effect": 0.0,
     "compound": "Ursolic  acid",
-    "first_itp_publication": "2019-04-01",
+    "dose": "2000 ppm food",
+    "age_at_start": "10 months",
+    "first_itp_publication": "2019-01-27",
+    "public_date": "2019-01-27",
+    "program": "ITP",
+    "species": "mouse",
+    "set": "historical",
+    "repeat_of": "",
     "pmids": [
       "30688027"
     ],
-    "split": "dev"
+    "split": "test"
   }
 }
