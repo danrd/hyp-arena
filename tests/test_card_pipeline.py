@@ -16,7 +16,7 @@ def test_pipeline_fake(monkeypatch):
     assert set(res["ranking"]) == {"evidence_first", "cheap_feasible", "fundamental"}
     x = res["items"][0]
     assert x["card"]["claims"][0]["source_span"] in x["text"]
-    assert x["indicators"]["translational_distance"] == "phase2"
+    assert x["extra"] == {"human_safety": True} and x["indicators"]["path_to_human"] in ("0", "1")
     assert any(c["kind"] == "search" for c in res["calls"]) and any(c.get("role") == "normalize_card" for c in res["calls"])
 
 

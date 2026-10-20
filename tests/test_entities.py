@@ -48,12 +48,30 @@ def test_unresolved_class_falls_back_to_names():
     c.pico.intervention[0].label = "senolytics"
     c.pico.intervention[0].id = None
     assert entities.resolve_card(c) == ["senolytics"]
-    assert entities.max_phase(c) is None
+    assert entities.human_safety(c) is None
 
 
-def test_phase_of_a_combination_is_its_least_advanced_part():
-    c = card("ex2_senolytics_function")
-    assert entities.max_phase(c) == 3
+def test_human_safety_today_and_as_of_t():
+    c = card("ex1_rapamycin_healthspan")                       # approved 1999, first trial 1989
+    assert entities.human_safety(c) is True
+    assert entities.human_safety(c, "2000-01-01") is True        # approved by then
+    assert entities.human_safety(c, "1995-01-01") is True        # clinical stage: a trial started before T
+    assert entities.human_safety(c, "1985-01-01") is False
+
+
+def test_human_safety_of_a_combination_needs_every_part():
+    c = card("ex2_senolytics_function")                        # dasatinib trial 2003-11, quercetin 2004-02
+    assert entities.human_safety(c) is True
+    assert entities.human_safety(c, "2004-06-01") is True
+    assert entities.human_safety(c, "2004-01-01") is False
+
+
+def test_diet_has_human_safety_data_and_a_gene_is_unknown():
+    c = card("ex1_rapamycin_healthspan")
+    c.pico.intervention[0].type, c.pico.intervention[0].label = "diet", "caloric restriction"
+    assert entities.human_safety(c, "1950-01-01") is True
+    c.pico.intervention[0].type, c.pico.intervention[0].label = "gene", "PAPPA knockout"
+    assert entities.human_safety(c) is None
 
 
 def test_drugage_matches_by_compound(monkeypatch):
