@@ -186,3 +186,41 @@ def test_ladder_result_orders_by_outcome():
     score = {h: v["combined"] for h, v in out["hypotheses"].items()}
     assert sorted(score, key=score.get, reverse=True) == ["d", "c", "b", "e", "a"]
     assert out["tokens"]["all"] == {"tokens_in": 10, "tokens_out": 5}
+
+
+LOVAZA = {**ABSTRACT, "abstract": "Results show for the first time that 4% Lovaza significantly extends both the median "
+          "and maximal life span of (NZBxNZW)F1 mice."}
+
+
+def _lovaza_card(relation):
+    from hyparena.card.models import HypothesisCard
+    return HypothesisCard.model_validate({"id": "H-1", "hypothesis_type": "interventional", "claim_plain": "",
+        "pico": {"population": {"label": "mouse"}, "intervention": [{"type": "compound", "label": "Lovaza"}],
+                 "outcome": {"endpoint": "lifespan"}},
+        "claims": [{"id": "c1", "subject": {"label": "Lovaza"}, "relation": relation, "object": {"label": "mouse"},
+                    "qualifiers": {"species": "mouse"}, "role": "outcome", "source_span": "x"}]})
+
+
+def test_lifespan_stance_comes_from_the_effect_direction(monkeypatch):
+    card = _lovaza_card("shortens_lifespan_in")
+    quote = "4% Lovaza significantly extends both the median and maximal life span of (NZBxNZW)F1 mice."
+    _stub(monkeypatch, [_record(quote=quote, stance="supports", effect="increase", qualifiers_match={"species": "yes"})])
+    monkeypatch.setattr(pubmed, "fetch", lambda ids: {"1": LOVAZA})
+    cv = verifier.verify_claim(None, "google", frozenset(), card.claims[0], card)
+    assert not cv.evidence and len(cv.counterevidence) == 1          # "extends" refutes "shortens", whatever the extractor said
+    rec = cv.counterevidence[0]
+    assert rec.effect == "increase" and "stance set from the effect direction" in rec.notes
+    assert "disease_model" in rec.flags and "NZB/W F1" in rec.notes  # a lupus-prone strain named in the abstract
+
+
+def test_effect_level_on_disease_models_only_is_noted(monkeypatch):
+    from hyparena.card.models import Verification
+    from hyparena.card.rules import finalize
+    card = _lovaza_card("extends_lifespan_in")
+    quote = "4% Lovaza significantly extends both the median and maximal life span of (NZBxNZW)F1 mice."
+    _stub(monkeypatch, [_record(quote=quote, effect="increase", qualifiers_match={"species": "yes"})])
+    monkeypatch.setattr(pubmed, "fetch", lambda ids: {"1": LOVAZA})
+    cv = verifier.verify_claim(None, "google", frozenset(), card.claims[0], card)
+    ver = finalize(card, Verification(card_id="H-1", claims=[cv]))
+    assert ver.claims[0].status == "supported"                        # flags do not change a status (spec 7)
+    assert ver.evidence_profile.effect_level_note == "mammals (disease models or special conditions only)"
