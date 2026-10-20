@@ -1,6 +1,20 @@
 # Architecture: a Co-Scientist-style multi-agent graph
 
-Status: design, not implemented. The first code iteration is a skeleton with a fake LLM, no real calls and no tests for now.
+Status (2026-10-20): implemented and tested; since the method v2 decisions (card spec, Working_Notes A3) this graph is **the baseline and ablation harness**, not the main ranking. The main mode is method v2 ([`rules-method.md`](rules-method.md), `hyparena/card/`): verified card → rule-based indicators → АСПИД per preference profile. Section 0 maps the decisions to the code; sections 1–11 describe the graph, which still runs the Co-Scientist baselines (2025, 2026) and the ladder of ablations.
+
+## 0. Method v2 against this design (reconciled with Working_Notes A3, 2026-10-20)
+
+| Topic | This graph (sections 1–11) | Decided (A3) | Code now |
+|---|---|---|---|
+| Ranking | tournament per criterion with judges, МРСП over win shares | rule-based indicators + АСПИД; tournaments only in baselines and the ablation | v2: `hyparena/card/indicators.py`, `hyparena/aspid.py`, `rank.py`; the tournament runs only in `--mode coscientist*` and the ladder L0–L4 |
+| Debates | escalation for top and contested pairs, ends in a verdict | strong hypotheses only (P(top-k) ≥ 0.5); outputs are check requests, refinements, discriminating experiments, no verdict | **not yet in v2** (stage C); the verdict debates exist only in the baselines. The v2 pipeline already does the check for strong hypotheses that precedes debates: a dedicated search per open checklist alternative |
+| Filtering | reviews advisory, no gate | admission (spec 4a) and a factual gate: a refuted outcome, mechanism or premise filters (spec 8) | v2: `rules.admit`, `rules.evidence_profile` (gate, `gate_reason`) |
+| Proximity | embeddings (section 6.5) | typed proximity from the card (spec 8b); embeddings only as an approximation for unresolved entities | **not yet**: identifiers are resolved (PubChem, ChEBI, ChEMBL), the typed relation function (`duplicate`, `variant`, `competitor`, ...) is not written; `competitor` alternatives wait for it |
+| Leakage probe | `hyparena/leakage.py`, `--exclude-known` | dropped; may stay switched off | kept for the old ladder, not used by v2 or `hyparena/outcomes.py`; models are chosen by cutoff ≤ T |
+| Expert in the loop | not in v1, no fields reserved (section 10) | expert layer (spec 7a), `Prefer` constraints (Aggregation_Spec 6a) | v2: `hyparena/card/expert.py` (decisions, expert hypotheses `origin: expert`, sources for claims, `Prefer` constraints from pairwise decisions); `check_feasible` and `next_pair` in `hyparena/aspid.py` |
+| Backtest | ITP pool from DrugAge, label "significant increase", fresh slice (section 8a) | A2: ITP + CITP, template hypotheses, evidence ≤ T, labels supports / no effect / harmful, repeats separate, clean and historical sets, post-2022 outcomes from the papers | `hyparena/outcomes.py` + `data/backtest/outcomes_itp_citp.yaml` (59 tests, 2022–2026), `backtest build-itp` (historical, per regimen, three labels); metrics AUC, Spearman with effect size, precision@k, calibration of P(A > B) |
+
+Consistent already: judges and verifiers from families other than the writer's, both Co-Scientist baselines, comparison at an equal token budget.
 
 This document turns the approach in [`approach.md`](approach.md) into a concrete multi-agent design built on LangGraph, reusing [`toolkit`](https://github.com/danrd/toolkit) (`llm_kit`, `agent_kit`). How the original system works is summarized in [`co-scientist-reference.md`](co-scientist-reference.md).
 
@@ -138,10 +152,10 @@ Pipeline per hypothesis, as in the paper:
 **Reviewers never come from the writer's family**, also when the client falls back to another family after a failure (`avoid`), because the judges read the reviews. Observation, simulation and recurrent reviews are later additions. Every claim in a review carries a citation or the label "assumption". A grounding check (citation exists and supports the claim) can run as the `review` function of a refine loop.
 
 ### 6.5 `proximity`
-Embeds hypotheses (an `Embedder` interface, stubbed), builds a neighbour graph and clusters, and merges near-duplicates above a threshold (merged ones stay in the log with `status = merged` and a pointer). Clusters are used by pair selection and by final diversification.
+(Baseline graph. Method v2 replaces this by typed proximity from the card, spec 8b, not implemented yet.) Embeds hypotheses (an `Embedder` interface, stubbed), builds a neighbour graph and clusters, and merges near-duplicates above a threshold (merged ones stay in the log with `status = merged` and a pointer). Clusters are used by pair selection and by final diversification.
 
 ### 6.6 `tournament`
-The core node. One round:
+(Baseline graph and ablations only; method v2 ranks by rules and АСПИД.) The core node of the graph. One round:
 1. **Select pairs** from the active hypotheses: eliminate those whose upper bound is below the k-th best lower bound; pair neighbours in rating among candidates; reserve a share for a Swiss exploration round. (Planned, not implemented: a bias towards pairs in the same cluster and priority for new hypotheses.)
 2. **Pick judges** for each pair with the independence rule (section 7).
 3. **Judge** each pair in single-turn mode; escalate to a multi-turn debate for top-ranked pairs and for contested pairs (judges disagree, or the verdict flips when positions are swapped).
@@ -203,9 +217,10 @@ Reply: text, model_id (what actually answered), tokens_in, tokens_out, seconds
 
 `hyparena/backtest.py` builds a labelled pool as of a date T and evaluates a run against labels the pipeline never sees.
 
-- **ITP pool** (`build-itp --as-of T`): interventions tested by the NIA Interventions Testing Program, from DrugAge rows flagged ITP. A compound enters if its first ITP publication is after T (dates from PubMed via E-utilities, since DrugAge has no date column). Label 1 if any ITP row reports a significant increase of average lifespan. The hypothesis text states the intervention and the claimed effect, not the outcome. For T = 2010-12-31: 47 compounds, 10 positive. Templated items differ only in a name, so the dataset turns deduplication off.
-- **Evaluation** (`evaluate --labels --result`): AUC of the combined score and of each criterion with a bootstrap 95% interval, precision in the top quarter against the base rate, and the status of positives and negatives (a rejected positive is a miss).
-- **Leakage**: judges trained after T may know ITP outcomes, so with current models the numbers are an upper bound. Use models with an earlier training cutoff, or add a leakage probe. Chosen approach: accumulate a **fresh slice** (outcomes published after the judges' training cutoff) and use it for the comparison with the baseline when it is large enough; until then the comparison is not run.
+- **Historical ITP pool** (`build-itp --as-of T`): ITP tests from DrugAge rows flagged ITP, one per compound and regimen (dosage, age at initiation); a test enters if its first ITP publication is after T (dates from PubMed via E-utilities, the earliest public date). Labels supports / no_effect / harmful, with the result per sex and the effect size apart; a repeat at another dose or start age is its own hypothesis. For T = 2010-12-31: 70 tests (27 supports, 40 no effect, 3 harmful). The hypothesis text states the intervention and the regimen, not the outcome. Templated items differ only in a name, so the dataset turns deduplication off.
+- **Post-2022 pool** (`python -m hyparena.outcomes build --as-of T`): ITP and CITP tests from the batch papers (DrugAge has few entries after 2022), curated in `data/backtest/outcomes_itp_citp.yaml` with verbatim quotes (`outcomes check`). Each test is `clean` (public after the latest cutoff of the models compared) or `historical`.
+- **Evaluation**: `evaluate --labels --result` for the ladder format (AUC of the combined score and of each criterion, precision in the top quarter); `outcomes metrics --labels --v2` for method v2 (AUC supports vs the rest, Spearman correlation with the effect size, precision@k, calibration of pairwise P(A > B)).
+- **Leakage** (Working_Notes A1, A2): models are chosen by training cutoff ≤ T (`configs/model_cutoffs.yaml`; heuristic cutoff = release date − 6 months; `outcomes models --as-of T`). Baselines are compared on the clean set only; the historical set is for our system, whose evidence is cut at T. The leakage probe is not used.
 
 ## 8b. Co-Scientist baseline mode
 
@@ -215,7 +230,7 @@ Reply: text, model_id (what actually answered), tokens_in, tokens_out, seconds
 
 ## 8c. Comparison tooling
 
-The protocol is in [`comparison.md`](comparison.md): ablation ladder L0–L4 (`hyparena/ladder.py`, `live run --ladder`), dev/test splits in the labels, the leakage probe (`hyparena/leakage.py`), the run grid (`hyparena/experiment.py`), paired comparison with bootstrap (`backtest compare`), and `--fake` for running all of it without model calls. The tournament stops scheduling matches when the token budget is spent.
+The protocol is in [`comparison.md`](comparison.md): ablation ladder L0–L4 (`hyparena/ladder.py`, `live run --ladder`), dev/test splits in the labels, the leakage probe (`hyparena/leakage.py`; not used for method v2, Working_Notes A1), the run grid (`hyparena/experiment.py`), paired comparison with bootstrap (`backtest compare`), and `--fake` for running all of it without model calls. The tournament stops scheduling matches when the token budget is spent.
 
 ## 9. Package layout
 
@@ -250,13 +265,13 @@ Dependencies in `pyproject.toml`: `toolkit[llm-kit,llm-kit-openrouter]` (include
 - Multi-turn debate as separate calls: the skeleton asks for the whole panel discussion in one call and a final JSON verdict.
 - `llm_kit.PromptBuilder`: prompts are rendered with Jinja2 directly from the same `<name>/<version>.j2` layout, so `PromptBuilder` can be swapped in later.
 - Calibration of judges against expert labels (designed in `approach.md`, sections 7 and the judge ensemble).
-- Expert-in-the-loop input (expert hypotheses and reviews, as in the paper's interface). Decision: not in the first version, and no state fields are reserved for it yet.
+- Expert-in-the-loop input in this graph. (Changed 2026-10-19: method v2 has the expert layer, `hyparena/card/expert.py`.)
 
 ## 11. Decisions and open questions
 
 Decided:
 1. **Lineage strictness:** the looser `writer` mode is the default; `lineage` is available.
-2. **Expert in the loop:** not in the first version.
+2. **Expert in the loop:** not in this graph; in method v2 as the expert layer (spec 7a).
 
 Open:
 1. **Per-axis debate.** Whether a debate should be run per axis or once for both axes (the skeleton runs once for both).

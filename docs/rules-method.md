@@ -8,18 +8,20 @@ generated ideas and manuscripts, and external hypotheses have no experiment logs
 
 | Step | Who | Status |
 |---|---|---|
-| Normalizer: text → declared card (claims in a closed vocabulary, each with a verbatim `source_span`; qualifiers inherited from PICO marked; contrast "mainly X, not Y" as outcome X plus a rejected alternative Y) | LLM (`normalize_card/v3`, gemini-3.5-flash), code marks unmarked species inheritance, validates and asks again: `hyparena/card/normalizer.py` | done |
-| Compound identifiers: interventions typed as compounds → PubChem parent compound, ChEBI, ChEMBL, max clinical phase, synonyms | code: `hyparena/tools/compounds.py`, `hyparena/card/entities.py`; DrugAge names mapped once in `data/drugage_compounds.json` | done (compounds only) |
+| Normalizer: text → declared card (claims in a closed vocabulary, each with a verbatim `source_span`; qualifiers inherited from PICO marked; contrast "mainly X, not Y" as outcome X plus a rejected alternative Y) | LLM (`normalize_card/v4`, gemini-3.5-flash), code sets inheritance of species and strain (deterministic), validates and asks again: `hyparena/card/normalizer.py` | done |
+| Compound identifiers: interventions typed as compounds → PubChem parent compound, ChEBI, ChEMBL, max clinical phase, first approval year, synonyms | code: `hyparena/tools/compounds.py`, `hyparena/card/entities.py`; DrugAge names mapped once in `data/drugage_compounds.json` | done (compounds only) |
 | Validation and admission (accepted / needs refinement / not a hypothesis) | code: `hyparena/card/rules.py` | done |
-| Verifier: evidence records with verbatim quotes, quote role, context match, endpoint; rejected alternatives checked like claims; analog probes in mice for human outcomes | DrugAge (curated, deterministic) + PubMed abstracts (LLM extracts with `verify_claim/v3`; code drops quotes that are not verbatim and checks the context, see below): `hyparena/card/verifier.py` | done |
+| Verifier: evidence records with verbatim quotes, quote role, context match, endpoint; rejected alternatives checked like claims; analog probes in mice for human outcomes | DrugAge (curated, deterministic) + PubMed abstracts (LLM extracts with `verify_claim/v5`; code drops quotes that are not verbatim, checks the context and the strain, see below): `hyparena/card/verifier.py` | done |
 | Claim statuses (with the contrast rule), gate, evidence profile, next step, known result | code: `hyparena/card/rules.py` | done |
-| Indicators (spec 8a) | code: `hyparena/card/indicators.py` | done for evidence-based ones; cost, time, late start and informativeness stay unknown until their inputs exist |
+| Indicators (spec 8a) | code: `hyparena/card/indicators.py` | done for evidence-based ones and `path_to_human`; late start and informativeness stay unknown until their inputs exist |
 | Aggregation under preference profiles (МРСП / SMAA-2) | code: `hyparena/aspid.py`, profiles in `configs/profiles.yaml` | done |
 | Ranking across profiles, robust candidates | code: `hyparena/card/rank.py` | done |
 | End to end | `python -m hyparena.card.pipeline --paste file.txt --out result.json` (`configs/v2.yaml`, `--fake` for no model calls) | done |
 | Expert layer (card spec 7a; Aggregation_Spec 6a): sources sent through the verifier, opinions kept apart, pairwise choices as weight constraints, the expert's own hypotheses | `hyparena/card/expert.py`, `Prefer` / `check_feasible` / `next_pair` in `hyparena/aspid.py`; `--expert expert.yaml` | done (file input; no interface yet) |
-| Debates on the top (prosecution vs defence; competitor pairs) | LLM | later |
-| Card-based proximity, alternatives and prediction table, evolution loop | code + LLM | later |
+| Alternatives row (spec 8c): declared rejected alternatives with their status, 14 checklist rows by rules, one check call per hypothesis, a dedicated search for P(top-k) ≥ 0.5 | code + LLM (`check_alternatives/v1`): `hyparena/card/alternatives.py` | done |
+| Backtest pools and metrics (Working_Notes A2) | code: `hyparena/outcomes.py`, `hyparena/backtest.py` | done (no run yet) |
+| Debates on the top (prosecution vs defence; competitor pairs), prediction table, informativeness | LLM | stage C |
+| Card-based proximity, evolution loop | code + LLM | later |
 
 **Aggregation as implemented** (Aggregation_Spec):
 - additive value over indicators in [0, 1];
@@ -34,7 +36,19 @@ generated ideas and manuscripts, and external hypotheses have no experiment logs
 - the checks of Aggregation_Spec section 7: uniform simplex, centroid weights by both samplers, dominance, symmetry, unknowns widen the spread, Monte Carlo error, independence from the pool;
 - an end-to-end ranking of the examples.
 
-**Profiles** (`configs/profiles.yaml`, all drafts until set with experts): `evidence_first` (verified evidence first), `cheap_feasible` and `fundamental` (the examples in the notes).
+**Profiles** (`configs/profiles.yaml`, all drafts until set with experts): `evidence_first` (verified evidence first), `cheap_feasible` (path_to_human ≥ novelty ≥ effect_level) and `fundamental` (mechanism, informativeness, novelty ≥ path_to_human; path_to_human took the place of cost).
+
+## Spec decisions of 2026-10-20 in the code
+
+- **Schema.** PICO `age` → `age_at_start` (old cards are read); `intervention.route` (diet, water, oral, injection, topical, other, unknown); qualifiers `measure` and `contrast`; `Admission.known_result`; refusal types a closed list (type, direction, species, endpoint, inherited mismatch); `origin: expert`; the short verified-layer form `claim: {subject, relation, object}` for analogs; `comparator: unknown`.
+- **Inheritance (spec 9), code-enforced.** Only species and strain; only into claims and rejected alternatives about the intervention; only when the span does not name the key (an organism in the span counts); never into molecular relations; mandatory when the conditions hold, so `mark_inherited` makes the result deterministic and `validate_card` reports a missing one; for organism relations the inherited species also fills the object (the old object label moves to `measure`).
+- **Human rungs.** Evidence records carry `human_rungs` (markers: laboratory and instrumental measures; clinical: function, frailty, pain, disease, mortality); a human claim has a status per rung (`rung_status`). Subgroup rule: when all support is subgroup-only and the claim has admissible counterevidence, the rung is contested and the conflict lists that counterevidence.
+- **Strain rule.** The card's strain unspecified → `n/a`. Specified and different → the record moves to an analog `an<N>` (same intervention and species, other strain): it counts for the effect level, not for the known result, and novelty becomes `new_context`. An inherited strain that differs also leaves an `inherited_mismatch` refusal. Code sets `qualifiers_match.strain` (left out when the record reports no strain); "genetically heterogeneous" matches UM-HET3 and outbred stocks.
+- **Evidence records.** `sex` (male, female, both, unknown), `strain`, `dose`, `age_at_start` from the verifier (v5: keys the abstract does not report are left out, not guessed) and from DrugAge (one record per paper and strain). Curated `intervention_match` by field rules: the card's route differs from the record's (ppm in food = diet, in drinking water = water) or the card is intermittent and the record continuous → `regimen_differs`; `dose_differs` only from the model.
+- **gate_reason.** The refuting record ("PMID:20974732", program records first) or "contrast rule: a1 supported (PMID:22587563)".
+- **path_to_human** replaces cost, time and translational distance: preliminary steps before a human trial with marker or function endpoints — a preclinical safety package when there are no human safety data (approved drug, clinical-stage compound or diet count), a mouse study when there is no supported mammalian effect; 0 · 1 · 2, a gene without a drug unknown. As of T: approved if ChEMBL's first approval year ≤ the year of T, clinical stage if ClinicalTrials.gov has a trial with the compound started before T (`hyparena/tools/trials.py`; its intervention search can over-match names). `next_step` stays outside the ranking.
+- **Novelty levels** new_context < translation < analog < new_link; `both_sexes` from the records' `sex`; SMAA-O is the default ordinal mapping.
+- **Alternatives (spec 8c).** Ids a<N> declared, alt<N> pipeline, an<N> analogs. The checklist rows are included by rules over card and record fields; one call per gate-passing hypothesis over the abstracts the verifier already read: an abstract with the discriminating control and the effect persisting → `excluded_by_evidence` with a verbatim quote; with the effect gone → `supported` (our addition: the spec has only excluded and open); else `open`. A dedicated search per open row only when P(top-k) ≥ 0.5 in some profile. Informativeness stays unknown until stage C.
 
 ## Lifespan stance by code, context flags (2026-10-20)
 
@@ -51,7 +65,7 @@ After normalization, every intervention the normalizer typed as a compound is lo
 Uses:
 - "the same intervention" (effect level, novelty, inheritance) compares identifier sets when both sides have them, names otherwise;
 - DrugAge rows match the claim's compound by parent CID (all 1,046 DrugAge names mapped once), by name when a name does not map;
-- translational distance takes ChEMBL's max phase of the resolved compound (a compound in ChEMBL without a phase counts as preclinical); before, the phase came from a fuzzy name search in Open Targets, which always returns some best match.
+- human safety data for `path_to_human` take ChEMBL's max phase and first approval year of the resolved compound (a compound in ChEMBL without a phase counts as preclinical); before, the phase came from a fuzzy name search in Open Targets, which always returns some best match.
 
 PubChem's parent compound drops metal counter-ions, which made zinc, nickel and barium acetate all "acetic acid"; a name whose metal is the active part (lithium, transition and heavy metals, selenium; sodium, potassium, calcium or magnesium with an inorganic anion) keeps its own compound, while drug salts collapse to the drug. Of the 1,046 DrugAge names, 755 map to a compound; 33 compounds carry several DrugAge names (salts and hydrates of a drug, sodium or calcium salts of organic acids; two doubtful merges from PubChem's synonyms: AA26-8 / AA26-9 and Epitalon / Epithalamin).
 
@@ -70,7 +84,7 @@ An expert file (YAML) next to a run holds decisions and hypotheses written by th
 ## Rules added on 2026-10-19 (spec sections 5–7, 9, 10)
 
 - **Unknown stays unknown.** A qualifier the card leaves `unknown` gives `n/a` in the context match, never `no`; the verifier's "no" is overridden in code.
-- **Inheritance from PICO.** Species, strain, sex, age at start and comparator may be copied from PICO into claims whose subject is the intervention; they are listed in `inherited_from_pico`. Code marks a species the span does not name but PICO does (normalizers often copy it without the mark), removes the mark when the span names the species, and rejects an unstated species in any other claim. A record that mismatches only an inherited value goes to `refusals` as `inherited_mismatch`: it sets no status (a mouse finding still does not support a claim inherited as human).
+- **Inheritance from PICO** (narrowed on 2026-10-20, see above). Species, strain, sex, age at start and comparator could be copied from PICO into claims whose subject is the intervention, listed in `inherited_from_pico`; code marked a species the span does not name but PICO does, removed the mark when the span names the species, and rejected an unstated species in any other claim. A record that mismatches only an inherited value goes to `refusals` as `inherited_mismatch`: it sets no status (a mouse finding still does not support a claim inherited as human).
 - **Contrast "mainly X, not Y".** The outcome is X with `qualifiers.contrast`; Y is a declared alternative with `stated_as: rejected` (claim-like, verbatim span), searched for and checked like a claim. The outcome status follows the table of spec 7, computed in `rules.contrast_status`: X refuted or Y supported → refuted; Y contested → contested; Y refuted → X's status; X supported with Y unchecked → unverified with the flag `contrast_unchecked`; the inputs are kept on the claim (`contrast`). Y checked in another species does not decide X. Alternatives only listed by the text are kept and never scored.
 - **Relation `slows_aging_in`** (intervention → organism; non-neoplastic age-related change).
 - **Ex vivo ≠ in vivo** (code): an ex vivo or in vitro record does not count for a claim about an organism; for a claim without an organism it counts at the cells rung.
@@ -96,7 +110,7 @@ The raw texts of the card-spec examples run through the whole pipeline (normaliz
 - **Verifier.** Rules for negative claims and for primary versus secondary or subgroup outcomes (`verify_claim/v2`); the analog probes in mice; a third search query.
 - **DrugAge.** A paper counts against a lifespan claim only if neither average nor maximum lifespan rose significantly. PMID 22107964 is listed with a non-significant mean, but the paper reports longer survival of the last survivors.
 
-**Departures from the reference to decide:**
+**Departures from the reference to decide** (status 2026-10-20: 2–4 resolved by the spec update — a1 inherits species, the outcome with a contrast counts as the mechanism, organism relations inherit into the object; 1 and 5 open):
 1. Example 3: the reference expects Y supported; the literature found by the verifier has Y contested (Wilkinson 2012 vs Neff 2013), which makes the outcome contested by the contrast table. Either the reference adds Neff 2013, or the table needs a rule for this case.
 2. Example 3's alternative a1 carries `species: mouse` that the span ("not by slowing aging itself") does not state; the reference leaves a1 without `inherited_from_pico` (c2 next to it has it). Our fixture marks it.
 3. Admission of mechanistic hypotheses (spec 4a) asks for "≥1 mechanism claim"; with the contrast form the explanation is the outcome claim, so the outcome claim counts as the mechanism.
@@ -120,3 +134,5 @@ The raw texts of the card-spec examples run through the whole pipeline (normaliz
 Two data problems found:
 - **the pool is stale:** resveratrol and simvastatin are filtered by their own ITP paper (PMID 20974732, online October 2010, before T). The pool was built before the cut-off moved to the earliest date (online, print, PubMed entry), so these compounds should not be in it; rebuild with `backtest build-itp`;
 - **strain is not checked:** every pool hypothesis names UM-HET3 mice (the normalizer puts it into qualifiers), but the DrugAge rule checks only the species and the verifier's prompt has no strain field. Earlier positive studies in other strains (2,4-dinitrophenol 2008, green tea extract 2007, metformin in SHR and HER2/neu mice) made three later ITP negatives known results. Whether evidence in another strain of the same species should count for a strain-specific claim, or only as an analog, is a specification question.
+
+Status 2026-10-20: the strain question is decided (strain rule above); translational distance is replaced by `path_to_human` computed as of T; the pool is rebuilt (one test per compound and regimen, 70 tests, three labels). The backtest has not been re-run.
