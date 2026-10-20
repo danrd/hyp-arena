@@ -110,3 +110,25 @@ This needs more groups before it means anything. If it holds, a cheap listwise p
 - **Mechanism variants contain the true effect.** "X extends lifespan through Y", with Y wrong, is false but says the true thing about lifespan. Ranking it above the finding is an error of a different kind than ranking a reversed claim above it; the per-kind numbers keep them apart.
 - **Memorization** (section 2): not handled in the beta.
 - **Species** with fewer real negatives than the group size are skipped (in the current release: rat, yeast), so worms, flies and mice dominate.
+
+## 6. Method v2 on the same groups (2026-10-20)
+
+`ALLOW_PAID=1 python -m hyparena.negatives v2 --out-dir runs/neg_v2` (cards, verifier with evidence as of the day before the finding, rules, aggregation under `evidence_first`; `hyparena.card.pipeline.as_ladder_result` turns the result into one score: known result > ranked by expected value > not admitted > filtered). About 160 model calls for groups 1–5. Group 6 did not complete (the API quota ran out during it), so the comparison is over groups 1–5. The DrugAge rule for "shortens" and "no effect" claims was added after the run and applied with `v2-refresh` (no model calls).
+
+| Arm (groups 1–5) | hit@1 | MRR | mean rank | AUC [95% CI] |
+|---|---|---|---|---|
+| chance | 0.10 | 0.29 | 5.5 | 0.50 |
+| one call, gpt-5-nano | 0.20 | 0.40 | 3.8 | 0.69 [0.47, 0.87] |
+| one call, Gemini flash-lite | 0.40 | 0.54 | 3.6 | 0.71 [0.40, 0.96] |
+| L0 (Co-Scientist-style tournament) | 0.20 | 0.34 | 5.6 | 0.49 [0.20, 0.78] |
+| L4 (tournament, full) | 0.60 | 0.65 | 4.2 | 0.64 [0.24, 1.00] |
+| v2 (cards and rules) | 0.40 | 0.54 | 3.6 | 0.71 [0.40, 0.96] |
+
+**Rank of the finding per group** (L4 / one call Gemini / v2): vitamin D3 in worms 10 / 9 / 3; black tea extract in flies 8 / 4 / 1; 17-α-estradiol in mice 1 / 1 / 9; ethosuximide in worms 1 / 3 / 1; carnosine in flies 1 / 1 / 4. v2 and the LLM judges fail on different groups: v2 does better on the two little-known findings, the judges on the well-known one, which fits the warning that judges may remember findings.
+
+**What decided v2's order.** With evidence cut the day before the finding, the finding itself is unverified in every group (42 of 50 items are unverified). Only in group 2 did evidence decide: a 1971 DrugAge paper refutes the three procaine statements (with the new rule also "procaine shortens lifespan"), and the finding comes first among the rest. In groups 1 and 4 every item is unverified, so the order there comes from indicators without evidence (clinical phase, novelty) and from the draws of unknowns: noise, not skill. v2 abstains where nothing is known, by design; this test rewards a guess.
+
+**Errors found (group 3, mice):**
+- "Lovaza shortens lifespan in mice" became supported by a quote that says Lovaza extends lifespan: gpt-5-nano gave the record the wrong stance. Proposed fix: for lifespan claims the verifier extracts only the direction of the effect (increase, decrease, none) and code sets the stance, as for DrugAge.
+- "Lovaza extends lifespan in mice", a real negative of the test (no significant effect in DrugAge), is supported by PMID 23918873: "4% Lovaza significantly extends both the median and maximal life span of (NZBxNZW)F1 mice", a lupus-prone, short-lived strain. The claim names no strain, so the finding matches by the rules; the test's label and the verifier both miss that the strain is a disease model. Proposed fix: a disease-model or short-lived-strain flag on records.
+- The mechanism variant ("... by activating SIRT1") inherits the supported outcome and becomes a known result; its mechanism stays unverified. This follows the specification.
