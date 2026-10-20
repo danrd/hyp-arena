@@ -124,6 +124,46 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
             "calls": log}
 
 
+def refresh_curated(res: dict, K: int = 10000, k_top: int = 3) -> dict:
+    """Recompute a saved v2 result after a change of the curated sources or the rules, without model calls:
+    the DrugAge records of every verified claim are rebuilt (as of the run's date), statuses, profiles and
+    the ranking recomputed. Records from the literature (the verifier's extractions) stay as they were."""
+    from hyparena.card.verifier import curated
+    as_of = res["meta"]["as_of"]
+    triples = []
+    for x in res["items"]:
+        if not x.get("verification"):
+            continue
+        card = HypothesisCard.model_validate(x["card"])
+        ver = Verification.model_validate(x["verification"])
+        by_id = {c.id: c for c in [*card.claims, *card.declared_alternatives]}
+        for cv in ver.claims:
+            claim = cv.added_claim or by_id.get(cv.id)
+            if claim is None:
+                continue
+            support, against = curated(claim, card, as_of)
+            cv.evidence = [r for r in cv.evidence if r.source != "DrugAge"] + support
+            cv.counterevidence = [r for r in cv.counterevidence if r.source != "DrugAge"] + against
+        ver = finalize(card, ver)
+        x["verification"] = ver.model_dump(by_alias=True)
+        triples.append((card, ver, x.get("extra") or {}))
+    ranking = rank(triples, K=K, k_top=k_top) if triples else None
+    for x in res["items"]:
+        if not x.get("verification") or ranking is None:
+            continue
+        cid = x["card"]["id"]
+        x["outcome"] = ("filtered" if cid in ranking.filtered else "known_result" if cid in ranking.known_results
+                        else "ranked")
+        x["indicators"] = ranking.values.get(cid)
+    res["ranking"] = {name: {"order": r.order, "expected": r.expected, "std": r.std, "p_topk": r.p_topk,
+                             "p_best": r.p_best, "meta": r.meta} for name, r in ranking.by_profile.items()} if ranking else {}
+    res["robust"] = ranking.robust if ranking else []
+    res["filtered"] = ranking.filtered if ranking else {}
+    res["known_results"] = ranking.known_results if ranking else []
+    res["meta"]["refreshed"] = time.strftime("%Y-%m-%dT%H:%M:%S")
+    return res
+
+
 OUTCOME_SCORE = {"known_result": 3.0, "ranked": 2.0, "needs_refinement": 1.0, "not_a_hypothesis": 1.0,
                  "normalization_failed": 1.0, "filtered": 0.0}
 

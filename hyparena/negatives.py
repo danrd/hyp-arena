@@ -273,6 +273,24 @@ def run_v2(args) -> None:
     print(out)
 
 
+def refresh_v2(args) -> None:
+    """Recompute saved v2 results with the current curated sources and rules (no model calls)."""
+    from hyparena.card.pipeline import as_ladder_result, refresh_curated
+    labels, gids = _groups(Path(args.data))
+    src = Path(args.out_dir) / f"v2-{args.profile}"
+    dst = Path(args.out_dir) / f"v2-{args.profile}-{args.suffix}"
+    dst.mkdir(parents=True, exist_ok=True)
+    for gid in gids:
+        f = src / f"{gid}.v2.json"
+        if not f.exists():
+            continue
+        res = refresh_curated(json.loads(f.read_text()), K=args.K)
+        hyps = load_imported(Path(args.data) / f"{gid}.json")
+        (dst / f"{gid}.v2.json").write_text(json.dumps(res, ensure_ascii=False, indent=1, default=str))
+        (dst / f"{gid}.json").write_text(json.dumps(as_ladder_result(res, [h.id for h in hyps], args.profile), indent=2))
+    print(dst)
+
+
 def listwise(args) -> None:
     """Baseline: one call per group and family that ranks all ten hypotheses at once (no tournament)."""
     labels, gids = _groups(Path(args.data))
@@ -432,6 +450,11 @@ def main() -> None:
     v.add_argument("--K", type=int, default=10000)
     v.add_argument("--out-dir", default=str(RUNS))
     v.add_argument("--fake", action="store_true")
+    rf = sub.add_parser("v2-refresh", parents=[data], help="recompute saved v2 results without model calls")
+    rf.add_argument("--profile", default="evidence_first")
+    rf.add_argument("--suffix", default="refreshed")
+    rf.add_argument("--K", type=int, default=10000)
+    rf.add_argument("--out-dir", default=str(RUNS))
     e = sub.add_parser("evaluate", parents=[data])
     e.add_argument("--runs", nargs="+", required=True, help="run directories (one per seed; globs allowed)")
     e.add_argument("--key", default="combined", help="combined or a criterion name")
@@ -449,6 +472,8 @@ def main() -> None:
         listwise(args)
     elif args.cmd == "v2":
         run_v2(args)
+    elif args.cmd == "v2-refresh":
+        refresh_v2(args)
     elif args.cmd == "evaluate":
         print(json.dumps(evaluate(args.data, expand(args.runs), args.key), indent=2))
     else:
