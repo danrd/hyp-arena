@@ -120,11 +120,32 @@ def test_stated_species_is_not_inherited():
 
 
 def test_unknown_species_is_not_a_mismatch(monkeypatch):
+    card = _fixture_card("ex2_senolytics_function")
+    c3 = card.claims[2]                                   # general mechanism claim: species unknown, not inherited
+    _stub(monkeypatch, [_record(qualifiers_match={"species": "no"})])
+    cv = verifier.verify_claim(None, "google", frozenset(), c3, card)
+    assert cv.evidence[0].qualifiers_match["species"] == "n/a"
+
+
+def test_inherited_species_mismatch_is_a_soft_refusal(monkeypatch):
     card = _fixture_card("ex1_rapamycin_healthspan")
-    c2 = card.claims[1]                                   # "slows multiple aspects of aging": no organism
+    c2 = card.claims[1]                                   # species human inherited; the finding is in mice
     _stub(monkeypatch, [_record(qualifiers_match={"species": "no"})])
     cv = verifier.verify_claim(None, "google", frozenset(), c2, card)
-    assert cv.evidence[0].qualifiers_match["species"] == "n/a"
+    assert not cv.evidence and [r.type for r in cv.refusals] == ["inherited_mismatch"]
+
+
+def test_v5_record_fields(monkeypatch):
+    card = _fixture_card("ex1_rapamycin_healthspan")
+    c4 = card.claims[3]
+    _stub(monkeypatch, [_record(species="human", sex="female", strain="unknown", dose="10 mg weekly", quote="improved pain in women",
+                                human_rungs=["human_clinical", "cells"], qualifiers_match={"species": "yes", "strain": "no"})])
+    monkeypatch.setattr(pubmed, "fetch", lambda ids: {"1": {**ABSTRACT, "title": "Rapamycin in older adults.",
+                                                            "abstract": "Rapamycin improved pain in women."}})
+    cv = verifier.verify_claim(None, "google", frozenset(), c4, card)
+    r = cv.evidence[0]
+    assert (r.sex, r.strain, r.dose, r.human_rungs) == ("female", "", "10 mg weekly", ["human_clinical"])
+    assert "strain" not in r.qualifiers_match
 
 
 def _expert_file(tmp_path, decisions, hypotheses=()):

@@ -53,6 +53,74 @@ def lifespan_wanted(claim) -> Optional[str]:
             "no_lifespan_effect_in": "no_effect"}.get(relation)
 
 
+def _sex(rows: list[dict]) -> str:
+    g = {r["gender"].strip().lower() for r in rows}
+    if g & {"both", "pooled"} or {"male", "female"} <= g:
+        return "both"
+    return "male" if g == {"male"} else "female" if g == {"female"} else "unknown"
+
+
+def _record(rows: list[dict], pmid: str, species: str, suffix: str = "") -> Optional[EvidenceRecord]:
+    """One curated record for the rows of a paper (and strain); its category: increase, decrease or none."""
+    pos = [r for r in rows if (r["avg_lifespan_significance"].strip() == "S" and (_pct(r["avg_lifespan_change_percent"]) or 0) > 0)
+           or (r["max_lifespan_significance"].strip() == "S" and (_pct(r["max_lifespan_change_percent"]) or 0) > 0)]
+    neg = [r for r in rows if r["avg_lifespan_significance"].strip() == "S" and (_pct(r["avg_lifespan_change_percent"]) or 0) < 0]
+    ns = [r for r in rows if r["avg_lifespan_significance"].strip() == "NS"]
+    use = pos or neg or ns
+    if not use:
+        return None
+    itp = any(r.get("ITP", "").strip().lower() == "yes" for r in use)
+    sizes = [p for p in (_pct(r["avg_lifespan_change_percent"]) for r in use) if p is not None]
+    joined = lambda key: "; ".join(sorted({r.get(key, "").strip() for r in use} - {""}))
+    rec = EvidenceRecord(
+        source="DrugAge", record_id=f"DrugAge:{rows[0]['compound_name']}/{species}/PMID{pmid}{suffix}", epistemic_type="B_curated",
+        linked_pmid=pmid, lab_or_cohort=f"PMID:{pmid}", species=species, endpoint="lifespan", quote_role="finding",
+        metric="average lifespan", effect_percent=max(sizes) if pos and sizes else None, sex=_sex(use),
+        strain=joined("strain"), dose=joined("dosage")[:200], age_at_start=joined("age_at_initiation"),
+        qualifiers_match={"species": "yes", "intervention_match": "exact"},
+        program=ProgramInfo(name="ITP") if itp else None,
+        fields={"rows": len(use), "significance": "S" if pos or neg else "NS",
+                "avg_lifespan_change_percent": ", ".join(r["avg_lifespan_change_percent"] for r in use[:6]),
+                "dosage": joined("dosage")[:200]},
+        notes="DrugAge rows for this paper" + (" (ITP)" if itp else ""))
+    category = "increase" if pos else "decrease" if neg else "none"
+    rec.fields["category"] = category
+    rec.effect = {"increase": "increase", "decrease": "decrease", "none": "no_effect"}[category]
+    for strain in sorted({r.get("strain", "").strip() for r in use} - {""}):
+        contexts.flag(rec, strain=strain)
+    return rec
+
+
+ROUTES = [("water", r"drinking water|\bin water\b|\bwater\b"),
+          ("diet", r"\bppm\b|\bfood\b|\bdiet\b|\bchow\b|\bfeed\b"),
+          ("injection", r"inject|\bi\.p\.|\bip\b|intraperitoneal|subcutaneous|\bs\.c\.|intravenous"),
+          ("oral", r"gavage|\boral\b|\bp\.o\."), ("topical", r"topical")]
+INTERMITTENT = r"intermittent|weekly|per week|/ ?week|a week|every (?:other|\d+|second|third)|once every|pulse|cycl|alternate|on/off|days? on"
+
+
+def dose_route(text: str) -> str:
+    """The route a DrugAge dosage names: diet (ppm in food), water (in drinking water), injection, oral, topical."""
+    low = (text or "").lower()
+    return next((route for route, pat in ROUTES if re.search(pat, low)), "unknown")
+
+
+def intermittent(text: str) -> bool:
+    return bool(re.search(INTERMITTENT, (text or "").lower()))
+
+
+def curated_intervention_match(card, rec: EvidenceRecord) -> str:
+    """Spec 7, rules over fields (no free-text comparison of regimens): the card's route differs from the
+    record's → regimen_differs; the card's regimen is intermittent or weekly and the record's dosing is
+    continuous → regimen_differs; else exact. dose_differs is never set by code."""
+    route = dose_route(rec.dose)
+    for i in card.pico.intervention:
+        if i.route not in ("unknown", "other") and route != "unknown" and route != i.route:
+            return "regimen_differs"
+        if intermittent(i.regimen) and rec.dose and not intermittent(rec.dose):
+            return "regimen_differs"
+    return "exact"
+
+
 def drugage_records(claim: Claim, allowed_pmids: Optional[set[str]] = None,
                     cid: Optional[int] = None) -> tuple[list[EvidenceRecord], list[EvidenceRecord]]:
     """(evidence, counterevidence) for a lifespan claim (extends, shortens, no effect; a negated "extends" with
@@ -84,34 +152,15 @@ def drugage_records(claim: Claim, allowed_pmids: Optional[set[str]] = None,
         if r["species"].strip() == species and same(r["compound_name"]) and r["pubmed_id"].strip():
             by_paper[r["pubmed_id"].strip()].append(r)
     support, against = [], []
-    for pmid, rows in sorted(by_paper.items()):
+    for pmid, paper_rows in sorted(by_paper.items()):
         if allowed_pmids is not None and pmid not in allowed_pmids:
             continue
-        pos = [r for r in rows if (r["avg_lifespan_significance"].strip() == "S" and (_pct(r["avg_lifespan_change_percent"]) or 0) > 0)
-               or (r["max_lifespan_significance"].strip() == "S" and (_pct(r["max_lifespan_change_percent"]) or 0) > 0)]
-        neg = [r for r in rows if r["avg_lifespan_significance"].strip() == "S" and (_pct(r["avg_lifespan_change_percent"]) or 0) < 0]
-        ns = [r for r in rows if r["avg_lifespan_significance"].strip() == "NS"]
-        use = pos or neg or ns
-        if not use:
-            continue
-        sexes = sorted({s for r in use for s in (["male"] if r["gender"].lower() == "male" else ["female"] if r["gender"].lower() == "female"
-                                                  else ["male", "female"] if r["gender"].lower() in ("both", "pooled") else [])})
-        itp = any(r.get("ITP", "").strip().lower() == "yes" for r in use)
-        sizes = [p for p in (_pct(r["avg_lifespan_change_percent"]) for r in use) if p is not None]
-        rec = EvidenceRecord(
-            source="DrugAge", record_id=f"DrugAge:{rows[0]['compound_name']}/{species}/PMID{pmid}", epistemic_type="B_curated",
-            linked_pmid=pmid, lab_or_cohort=f"PMID:{pmid}", species=species, endpoint="lifespan", quote_role="finding",
-            metric="average lifespan", effect_percent=max(sizes) if pos and sizes else None, sexes=sexes,
-            qualifiers_match={"species": "yes", "intervention_match": "exact"},
-            program=ProgramInfo(name="ITP") if itp else None,
-            fields={"rows": len(use), "significance": "S" if pos or neg else "NS",
-                    "avg_lifespan_change_percent": ", ".join(r["avg_lifespan_change_percent"] for r in use[:6]),
-                    "dosage": "; ".join(sorted({r["dosage"] for r in use}))[:200]},
-            notes="DrugAge rows for this paper" + (" (ITP)" if itp else ""))
-        category = "increase" if pos else "decrease" if neg else "none"
-        rec.fields["category"] = category
-        rec.effect = {"increase": "increase", "decrease": "decrease", "none": "no_effect"}[category]
-        for strain in sorted({r.get("strain", "").strip() for r in use} - {""}):
-            contexts.flag(rec, strain=strain)
-        (support if category == wanted else against).append(rec)
+        strains = sorted({r.get("strain", "").strip() for r in paper_rows})
+        for strain in strains:                            # one record per strain: the strain rule compares them (spec 7)
+            rows = [r for r in paper_rows if r.get("strain", "").strip() == strain]
+            suffix = f"/{strain}" if len(strains) > 1 and strain else ""
+            rec = _record(rows, pmid, species, suffix)
+            if rec is None:
+                continue
+            (support if rec.fields["category"] == wanted else against).append(rec)
     return support, against

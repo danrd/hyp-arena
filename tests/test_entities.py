@@ -106,3 +106,38 @@ def test_drugage_strain_flags_a_disease_model(monkeypatch):
                   object=Entity(label="mouse"), role="outcome")
     rec = sources.drugage_records(claim)[0][0]
     assert "disease_model" in rec.flags and "AKR" in rec.notes and rec.effect == "increase"
+
+
+def _rapa_row(**kw):
+    return {"compound_name": "Rapamycin", "species": "Mus musculus", "strain": "UM-HET3", "pubmed_id": "19587680",
+            "avg_lifespan_significance": "S", "avg_lifespan_change_percent": "13", "max_lifespan_significance": "",
+            "max_lifespan_change_percent": "", "gender": "Female", "ITP": "Yes", "dosage": "14 ppm food",
+            "age_at_initiation": "20 months", **kw}
+
+
+def test_drugage_record_fields_and_one_record_per_strain(monkeypatch):
+    rows = [_rapa_row(), _rapa_row(gender="Male", avg_lifespan_change_percent="9"),
+            _rapa_row(strain="C57BL/6", avg_lifespan_significance="NS", avg_lifespan_change_percent="1")]
+    monkeypatch.setattr(sources, "_rows", lambda: rows)
+    monkeypatch.setattr(sources, "drugage_map", lambda: {})
+    claim = Claim(id="c", subject=Entity(label="Rapamycin"), relation="extends_lifespan_in",
+                  object=Entity(label="mouse"), role="outcome")
+    support, against = sources.drugage_records(claim)
+    assert [(r.strain, r.sex) for r in support] == [("UM-HET3", "both")]
+    assert [(r.strain, r.sex) for r in against] == [("C57BL/6", "female")]
+    assert support[0].dose == "14 ppm food" and support[0].age_at_start == "20 months"
+    assert support[0].record_id.endswith("PMID19587680/UM-HET3")
+
+
+def test_curated_intervention_match_by_route_and_regimen(monkeypatch):
+    from tests.test_card_rules import load
+    from hyparena.card.models import EvidenceRecord, HypothesisCard
+    card = HypothesisCard.model_validate(load("ex1_rapamycin_healthspan")["card"])     # weekly, intermittent
+    rec = EvidenceRecord(source="DrugAge", record_id="x", epistemic_type="B_curated", dose="14 ppm food")
+    assert sources.curated_intervention_match(card, rec) == "regimen_differs"
+    card.pico.intervention[0].regimen, card.pico.intervention[0].route = "unknown", "diet"
+    assert sources.curated_intervention_match(card, rec) == "exact"
+    card.pico.intervention[0].route = "water"
+    assert sources.curated_intervention_match(card, rec) == "regimen_differs"
+    rec.dose = "2 mg/kg"                                                               # route not stated: no grade
+    assert sources.curated_intervention_match(card, rec) == "exact"

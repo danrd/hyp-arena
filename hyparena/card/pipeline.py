@@ -20,7 +20,7 @@ from hyparena.card import indicators as ind
 from hyparena.card.models import HypothesisCard, Verification
 from hyparena.card.normalizer import normalize
 from hyparena.card.rank import rank
-from hyparena.card.rules import admit, finalize
+from hyparena.card.rules import STRAIN_ANALOG, add_strain_analogs, admit, finalize
 from hyparena.card.verifier import verify
 from hyparena.llm.fake import FakeLLMClient
 from hyparena.llm.providers import DEFAULT_CONFIG, GuardedClient, build_client, load_config
@@ -147,6 +147,9 @@ def refresh_curated(res: dict, K: int = 10000, k_top: int = 3) -> dict:
             continue
         card = HypothesisCard.model_validate(x["card"])
         ver = Verification.model_validate(x["verification"])
+        ver.claims = [cv for cv in ver.claims if not (cv.claim and cv.claim.note.startswith(STRAIN_ANALOG))]
+        for cv in ver.claims:                                 # their records come back from the rebuilt sources
+            cv.refusals = [r for r in cv.refusals if not (r.type == "inherited_mismatch" and "counted for analog" in r.notes)]
         by_id = {c.id: c for c in [*card.claims, *card.declared_alternatives]}
         for cv in ver.claims:
             claim = cv.claim or by_id.get(cv.id)
@@ -157,7 +160,7 @@ def refresh_curated(res: dict, K: int = 10000, k_top: int = 3) -> dict:
                                            [r for r in cv.counterevidence if r.source == "PubMed"])
             cv.evidence = [r for r in cv.evidence if r.source not in ("DrugAge", "PubMed")] + pub_for + support
             cv.counterevidence = [r for r in cv.counterevidence if r.source not in ("DrugAge", "PubMed")] + pub_against + against
-        ver = finalize(card, ver)
+        ver = finalize(card, add_strain_analogs(card, ver))
         x["verification"] = ver.model_dump(by_alias=True)
         triples.append((card, ver, x.get("extra") or {}))
     ranking = rank(triples, K=K, k_top=k_top) if triples else None
