@@ -109,13 +109,8 @@ def _validate(value: dict, abstracts: dict[str, dict]) -> list[str]:
     return problems
 
 
-def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisCard,
-                 as_of: Optional[str] = None, retmax: int = 8, log: Optional[list] = None,
-                 fallback: Optional[str] = None, expert_pmids: Optional[list[tuple[str, str]]] = None) -> ClaimVerification:
-    """`fallback`: the family asked when `family`'s reply is cut off with no complete record (gemini stops in
-    the middle of verbatim quotes, most likely its recitation filter)."""
-    cv = ClaimVerification(id=claim.id)
-    allowed = None
+def curated(claim, card: HypothesisCard, as_of: Optional[str] = None) -> tuple[list[EvidenceRecord], list[EvidenceRecord]]:
+    """DrugAge records for a lifespan claim (deterministic), restricted to papers published by `as_of`."""
     comps = subject_compounds(claim.subject.label, card)
     support, against = drugage_records(claim, cid=comps[0].cid if comps and len(comps) == 1 else None)
     if as_of and (support or against):
@@ -124,6 +119,16 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
         allowed = {p for p, d in dates.items() if d <= as_of}
         support = [r for r in support if r.linked_pmid in allowed]
         against = [r for r in against if r.linked_pmid in allowed]
+    return support, against
+
+
+def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisCard,
+                 as_of: Optional[str] = None, retmax: int = 8, log: Optional[list] = None,
+                 fallback: Optional[str] = None, expert_pmids: Optional[list[tuple[str, str]]] = None) -> ClaimVerification:
+    """`fallback`: the family asked when `family`'s reply is cut off with no complete record (gemini stops in
+    the middle of verbatim quotes, most likely its recitation filter)."""
+    cv = ClaimVerification(id=claim.id)
+    support, against = curated(claim, card, as_of)
     cv.evidence += support
     cv.counterevidence += against
     pmids = []
