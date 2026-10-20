@@ -1,0 +1,166 @@
+# Post-2022 outcomes of the multi-site programs (ITP: mice; CITP: Caenorhabditis), for backtests with T after
+# 2022 (card spec 8a, Data_Sources 9.4). Curated by hand from the PubMed abstracts of the batch papers on
+# 2026-10-20; every `quote` is verbatim from the abstract of `pmid` (python -m hyparena.backtest check-outcomes).
+# DrugAge is not a source here: its invertebrate entries end around 2021 and Build 5 added 7 papers from
+# 2023-2024 only.
+#
+# Unit = one compound tested in one regimen (dose, start age): a repeat at another dose or start age is a
+# separate test (`repeat_of`). label: supports (a significant increase of lifespan in at least one sex) |
+# no_effect | harmful (only a significant decrease). Sex-specific results and effect sizes are kept apart
+# (`by_sex`, `effect_percent`: % change of median lifespan as the abstract states it).
+# public_date: first public date (e-pub; preprint where known, Data_Sources 9.4); date_precision "year" when
+# PubMed gives only the year (the date then is the first of January: such tests leave the pool earlier,
+# which errs on the side of no leakage).
+# Not labelled (the abstract does not state the result): the rapamycin + acarbose combination started at 16
+# months and sodium thiosulfate (36179270, 38753230), 17alpha-estradiol, acarbose and rapamycin in CITP
+# (37923874), the three unnamed compounds of 41843349, and 42694712 (an FUdR dependence study, not a test).
+tests:
+  # ---- ITP C2017 cohort (PMID 36179270, online 2022-09-30) ----
+  - {id: itp-2022-bd, program: ITP, pmid: "36179270", public_date: "2022-09-30", compound: "(R/S)-1,3-butanediol", species: mouse, strain: UM-HET3, route: diet,
+     label: no_effect, quote: "BD seemed to produce a small (2%) increase in females, but only if the analysis included data from the site with unusually short-lived controls.",
+     notes: "the small female effect depends on one site with short-lived controls"}
+  - {id: itp-2022-captopril, program: ITP, pmid: "36179270", public_date: "2022-09-30", compound: captopril, species: mouse, strain: UM-HET3, route: diet,
+     label: supports, by_sex: {female: supports, male: unclear}, effect_percent: {female: 4.5},
+     quote: "Capt led to a significant, though small (4% or 5%), increase in female lifespan."}
+  - {id: itp-2022-leucine, program: ITP, pmid: "36179270", public_date: "2022-09-30", compound: leucine, species: mouse, strain: UM-HET3, route: diet,
+     label: no_effect, quote: "None of the other 4 tested agents led to any lifespan benefit."}
+  - {id: itp-2022-pb125, program: ITP, pmid: "36179270", public_date: "2022-09-30", compound: PB125, species: mouse, strain: UM-HET3, route: diet,
+     label: no_effect, quote: "None of the other 4 tested agents led to any lifespan benefit.", notes: "Nrf2-activating botanical mixture"}
+  - {id: itp-2022-sulindac, program: ITP, pmid: "36179270", public_date: "2022-09-30", compound: sulindac, species: mouse, strain: UM-HET3, route: diet,
+     label: no_effect, quote: "None of the other 4 tested agents led to any lifespan benefit."}
+  - {id: itp-2022-syringaresinol, program: ITP, pmid: "36179270", public_date: "2022-09-30", compound: syringaresinol, species: mouse, strain: UM-HET3, route: diet,
+     label: no_effect, quote: "None of the other 4 tested agents led to any lifespan benefit."}
+  - {id: itp-2022-rapa-aca-9m, program: ITP, pmid: "36179270", public_date: "2022-09-30", compound: "rapamycin + acarbose", species: mouse, strain: UM-HET3, route: diet,
+     age_at_start: "9 months", label: supports, by_sex: {male: supports, female: unclear},
+     quote: "In male mice, the combination of Rapa and Aca started at 9 months and led to a longer lifespan than in either of the two prior cohorts of mice treated with Rapa only, suggesting that this drug combination was more potent than either of its components used alone.",
+     notes: "compared with earlier rapamycin-only cohorts; each component was known to extend lifespan before"}
+
+  # ---- ITP C2018 cohort (PMID 38041783, online 2023-12-02) ----
+  - {id: itp-2023-astaxanthin, program: ITP, pmid: "38041783", public_date: "2023-12-02", compound: astaxanthin, species: mouse, strain: UM-HET3, route: diet,
+     dose: "1840 ppm", age_at_start: "12 months", label: supports, by_sex: {male: supports, female: no_effect}, effect_percent: {male: 12},
+     quote: "In genetically heterogeneous (UM-HET3) mice produced by the CByB6F1 × C3D2F1 cross, the Nrf2 activator astaxanthin (Asta) extended the median male lifespan by 12% (p = 0.003, log-rank test), while meclizine (Mec), an mTORC1 inhibitor, extended the male lifespan by 8% (p = 0.03)."}
+  - {id: itp-2023-meclizine, program: ITP, pmid: "38041783", public_date: "2023-12-02", compound: meclizine, species: mouse, strain: UM-HET3, route: diet,
+     dose: "544 ppm", age_at_start: "12 months", label: supports, by_sex: {male: supports, female: no_effect}, effect_percent: {male: 8},
+     quote: "In genetically heterogeneous (UM-HET3) mice produced by the CByB6F1 × C3D2F1 cross, the Nrf2 activator astaxanthin (Asta) extended the median male lifespan by 12% (p = 0.003, log-rank test), while meclizine (Mec), an mTORC1 inhibitor, extended the male lifespan by 8% (p = 0.03)."}
+  - {id: itp-2023-fisetin, program: ITP, pmid: "38041783", public_date: "2023-12-02", compound: fisetin, species: mouse, strain: UM-HET3, route: diet,
+     label: no_effect, quote: "None of these increased lifespan significantly at the dose and method of administration tested in either sex."}
+  - {id: itp-2023-sg1002, program: ITP, pmid: "38041783", public_date: "2023-12-02", compound: SG1002, species: mouse, strain: UM-HET3, route: diet,
+     label: no_effect, quote: "None of these increased lifespan significantly at the dose and method of administration tested in either sex.", notes: "hydrogen sulfide donor"}
+  - {id: itp-2023-dmf, program: ITP, pmid: "38041783", public_date: "2023-12-02", compound: dimethyl fumarate, species: mouse, strain: UM-HET3, route: diet,
+     label: no_effect, quote: "Amounts of dimethyl fumarate in the diet averaged 35% of the target dose, which may explain the absence of lifespan effects.",
+     notes: "exposure failed (checklist alternative exposure_failed)"}
+  - {id: itp-2023-mycophenolic, program: ITP, pmid: "38041783", public_date: "2023-12-02", compound: mycophenolic acid, species: mouse, strain: UM-HET3, route: diet,
+     label: no_effect, quote: "None of these increased lifespan significantly at the dose and method of administration tested in either sex."}
+  - {id: itp-2023-4pba, program: ITP, pmid: "38041783", public_date: "2023-12-02", compound: 4-phenylbutyrate, species: mouse, strain: UM-HET3, route: diet,
+     label: no_effect, quote: "None of these increased lifespan significantly at the dose and method of administration tested in either sex."}
+
+  # ---- ITP C2020 cohort (PMID 38753230, online 2024-05-16) ----
+  - {id: itp-2024-akg, program: ITP, pmid: "38753230", public_date: "2024-05-16", compound: alpha-ketoglutarate, species: mouse, strain: UM-HET3, route: diet,
+     label: no_effect, quote: "None of the other tested drugs provided a lifespan benefit in either sex."}
+  - {id: itp-2024-dnp, program: ITP, pmid: "38753230", public_date: "2024-05-16", compound: "2,4-dinitrophenol", species: mouse, strain: UM-HET3, route: diet,
+     label: no_effect, quote: "None of the other tested drugs provided a lifespan benefit in either sex."}
+  - {id: itp-2024-hydralazine, program: ITP, pmid: "38753230", public_date: "2024-05-16", compound: hydralazine, species: mouse, strain: UM-HET3, route: diet,
+     label: no_effect, quote: "None of the other tested drugs provided a lifespan benefit in either sex."}
+  - {id: itp-2024-nebivolol, program: ITP, pmid: "38753230", public_date: "2024-05-16", compound: nebivolol, species: mouse, strain: UM-HET3, route: diet,
+     label: harmful, by_sex: {female: harmful, male: no_effect}, effect_percent: {female: -4},
+     quote: "NEBI was also found to produce a female-specific decline (4%, p = 0.03) in lifespan."}
+  - {id: itp-2024-oh-estriol, program: ITP, pmid: "38753230", public_date: "2024-05-16", compound: 16alpha-hydroxyestriol, species: mouse, strain: UM-HET3, route: diet,
+     label: supports, by_sex: {male: supports, female: harmful}, effect_percent: {male: 15, female: -7},
+     quote: "OH_Est produced a 15% increase (p = 0.0001) in median lifespan in males but led to a significant (7%) decline in female lifespan."}
+  - {id: itp-2024-cana-16m, program: ITP, pmid: "38753230", public_date: "2024-05-16", compound: canagliflozin, species: mouse, strain: UM-HET3, route: diet,
+     age_at_start: "16 months", repeat_of: "canagliflozin started at 6-7 months (ITP, before 2023)", label: supports,
+     by_sex: {male: supports, female: harmful}, effect_percent: {male: 14, female: -6},
+     quote: "Cana, started at 16 months, also led to a significant increase (14%, p = 0.004) in males and a significant decline (6%, p = 0.03) in females."}
+
+  # ---- ITP C2021 cohort (PMID 40973907, online 2025-09-19) ----
+  - {id: itp-2025-epicatechin, program: ITP, pmid: "40973907", public_date: "2025-09-19", compound: epicatechin, species: mouse, strain: UM-HET3, route: diet,
+     age_at_start: "7 months", label: supports, by_sex: {male: supports, female: no_effect}, effect_percent: {male: 5},
+     quote: "In male mice, EPI increased median lifespan by ~ 5%, and HAL and MIT each increased median lifespan by ~ 9%."}
+  - {id: itp-2025-halofuginone, program: ITP, pmid: "40973907", public_date: "2025-09-19", compound: halofuginone, species: mouse, strain: UM-HET3, route: diet,
+     age_at_start: "7 months", label: supports, by_sex: {male: supports, female: no_effect}, effect_percent: {male: 9},
+     quote: "In male mice, EPI increased median lifespan by ~ 5%, and HAL and MIT each increased median lifespan by ~ 9%."}
+  - {id: itp-2025-mitoglitazone, program: ITP, pmid: "40973907", public_date: "2025-09-19", compound: mitoglitazone, species: mouse, strain: UM-HET3, route: diet,
+     age_at_start: "7 months", label: supports, by_sex: {male: supports, female: no_effect}, effect_percent: {male: 9},
+     quote: "In male mice, EPI increased median lifespan by ~ 5%, and HAL and MIT each increased median lifespan by ~ 9%."}
+  - {id: itp-2025-2bact, program: ITP, pmid: "40973907", public_date: "2025-09-19", compound: 2BAct, species: mouse, strain: UM-HET3, route: diet,
+     age_at_start: "7 months", label: no_effect,
+     quote: "In addition to adding 3 new agents to the list of interventions identified by the ITP that extend lifespan, this report continues the strong male bias in the efficacy of life-extending drugs identified so far.",
+     notes: "implied: only EPI, HAL and MIT are reported as extending lifespan"}
+  - {id: itp-2025-dca, program: ITP, pmid: "40973907", public_date: "2025-09-19", compound: dichloroacetate, species: mouse, strain: UM-HET3, route: diet,
+     age_at_start: "7 months", label: no_effect,
+     quote: "In addition to adding 3 new agents to the list of interventions identified by the ITP that extend lifespan, this report continues the strong male bias in the efficacy of life-extending drugs identified so far.",
+     notes: "implied: only EPI, HAL and MIT are reported as extending lifespan"}
+  - {id: itp-2025-forskolin, program: ITP, pmid: "40973907", public_date: "2025-09-19", compound: forskolin, species: mouse, strain: UM-HET3, route: diet,
+     age_at_start: "7 months", label: no_effect,
+     quote: "In addition to adding 3 new agents to the list of interventions identified by the ITP that extend lifespan, this report continues the strong male bias in the efficacy of life-extending drugs identified so far.",
+     notes: "implied: only EPI, HAL and MIT are reported as extending lifespan"}
+
+  # ---- ITP, eleven compounds (PMID 41843349, online 2026-03-17); doses and start ages are not in the abstract ----
+  - {id: itp-2026-astaxanthin-repeat, program: ITP, pmid: "41843349", public_date: "2026-03-17", compound: astaxanthin, species: mouse, strain: UM-HET3, route: diet,
+     repeat_of: itp-2023-astaxanthin, label: no_effect,
+     quote: "Notably, astaxanthin, mitoglitazone, and meclizine-previously associated with lifespan extension in the ITP-showed no benefit when administered at different doses or starting at later ages.",
+     notes: "the female decline on pooled data did not hold without the Jackson Laboratory site"}
+  - {id: itp-2026-meclizine-repeat, program: ITP, pmid: "41843349", public_date: "2026-03-17", compound: meclizine, species: mouse, strain: UM-HET3, route: diet,
+     repeat_of: itp-2023-meclizine, label: no_effect,
+     quote: "Notably, astaxanthin, mitoglitazone, and meclizine-previously associated with lifespan extension in the ITP-showed no benefit when administered at different doses or starting at later ages."}
+  - {id: itp-2026-mitoglitazone-late, program: ITP, pmid: "41843349", public_date: "2026-03-17", compound: mitoglitazone, species: mouse, strain: UM-HET3, route: diet,
+     repeat_of: itp-2025-mitoglitazone, label: harmful, by_sex: {female: harmful, male: no_effect},
+     quote: "However, site-specific analysis revealed unusually long lifespans in control females at The Jackson Laboratory, prompting reanalysis using data from the other two sites and only showed a negative effect for mitoglitazone and pioglitazone.",
+     notes: "late start; the abstract says late-start mitoglitazone reduced female lifespan on pooled data"}
+  - {id: itp-2026-pioglitazone, program: ITP, pmid: "41843349", public_date: "2026-03-17", compound: pioglitazone, species: mouse, strain: UM-HET3, route: diet,
+     label: harmful, by_sex: {female: harmful, male: no_effect},
+     quote: "However, site-specific analysis revealed unusually long lifespans in control females at The Jackson Laboratory, prompting reanalysis using data from the other two sites and only showed a negative effect for mitoglitazone and pioglitazone."}
+  - {id: itp-2026-akg, program: ITP, pmid: "41843349", public_date: "2026-03-17", compound: alpha-ketoglutarate, species: mouse, strain: UM-HET3, route: diet,
+     repeat_of: itp-2024-akg, label: no_effect,
+     quote: "Despite prior evidence suggesting lifespan benefits of these proposed interventions in other models or under different conditions, none of the tested compounds significantly increased lifespan in male or female mice."}
+  - {id: itp-2026-mifepristone, program: ITP, pmid: "41843349", public_date: "2026-03-17", compound: mifepristone, species: mouse, strain: UM-HET3, route: diet,
+     label: no_effect,
+     quote: "Despite prior evidence suggesting lifespan benefits of these proposed interventions in other models or under different conditions, none of the tested compounds significantly increased lifespan in male or female mice."}
+  - {id: itp-2026-methotrexate, program: ITP, pmid: "41843349", public_date: "2026-03-17", compound: methotrexate, species: mouse, strain: UM-HET3, route: diet,
+     label: no_effect,
+     quote: "Despite prior evidence suggesting lifespan benefits of these proposed interventions in other models or under different conditions, none of the tested compounds significantly increased lifespan in male or female mice."}
+  - {id: itp-2026-atorva-telmi, program: ITP, pmid: "41843349", public_date: "2026-03-17", compound: "atorvastatin + telmisartan", species: mouse, strain: UM-HET3, route: diet,
+     label: no_effect,
+     quote: "Despite prior evidence suggesting lifespan benefits of these proposed interventions in other models or under different conditions, none of the tested compounds significantly increased lifespan in male or female mice."}
+
+  # ---- CITP (Caenorhabditis: three species, several strains) ----
+  - {id: citp-2023-gte, program: CITP, pmid: "37923874", public_date: "2023-11-04", compound: green tea extract, species: Caenorhabditis, strain: "CITP panel",
+     label: supports, quote: "We found that green tea extract and nordihydroguaiaretic acid extend Caenorhabditis lifespan in a species-specific manner.",
+     notes: "species-specific; decreased survival for some genetic backgrounds in manual assays"}
+  - {id: citp-2023-ndga, program: CITP, pmid: "37923874", public_date: "2023-11-04", compound: nordihydroguaiaretic acid, species: Caenorhabditis, strain: "CITP panel",
+     label: supports, quote: "We found that green tea extract and nordihydroguaiaretic acid extend Caenorhabditis lifespan in a species-specific manner.",
+     notes: "species-specific; decreased survival for some genetic backgrounds in manual assays"}
+  - {id: citp-2025-tamibarotene, program: CITP, pmid: "40027526", public_date: "2025-02-12", date_source: "Data_Sources 9.4 (PubMed gives the year only)", compound: tamibarotene, species: Caenorhabditis, strain: "three strains",
+     label: no_effect, quote: "Both tamibarotene, a potent RAR agonist, and bakuchiol, a meroterpene derived from Psoralea corylifolia , showed no significant increase in lifespan across a dosage range of six concentrations."}
+  - {id: citp-2025-bakuchiol, program: CITP, pmid: "40027526", public_date: "2025-02-12", date_source: "Data_Sources 9.4 (PubMed gives the year only)", compound: bakuchiol, species: Caenorhabditis, strain: "three strains",
+     label: no_effect, quote: "Both tamibarotene, a potent RAR agonist, and bakuchiol, a meroterpene derived from Psoralea corylifolia , showed no significant increase in lifespan across a dosage range of six concentrations.",
+     notes: "broadly toxic at higher doses"}
+  # 41432067: preprint 2025-07-21 (Data_Sources 9.4), eLife 2025-12-23
+  - {id: citp-2025-atra, program: CITP, pmid: "41432067", public_date: "2025-07-21", compound: all-trans retinoic acid, species: Caenorhabditis, strain: "CITP panel",
+     label: supports, quote: "While 11 compounds (aldosterone, arecoline, bortezomib, dasatinib, decitabine, dexamethasone, erlotinib, everolimus, gefitinib, temsirolimus, and thalidomide) either had no effect on median lifespan or were toxic, 5 compounds (all-trans retinoic acid, berberine, fisetin, propranolol, and ritonavir) extended lifespan in Caenorhabditis elegans.",
+     notes: "FUdR-dependent (PMID 42694712)"}
+  - {id: citp-2025-berberine, program: CITP, pmid: "41432067", public_date: "2025-07-21", compound: berberine, species: Caenorhabditis, strain: "CITP panel", label: supports, quote_ref: citp-2025-atra}
+  - {id: citp-2025-fisetin, program: CITP, pmid: "41432067", public_date: "2025-07-21", compound: fisetin, species: Caenorhabditis, strain: "CITP panel", label: supports, quote_ref: citp-2025-atra}
+  - {id: citp-2025-propranolol, program: CITP, pmid: "41432067", public_date: "2025-07-21", compound: propranolol, species: Caenorhabditis, strain: "CITP panel", label: supports, quote_ref: citp-2025-atra}
+  - {id: citp-2025-ritonavir, program: CITP, pmid: "41432067", public_date: "2025-07-21", compound: ritonavir, species: Caenorhabditis, strain: "CITP panel", label: supports, quote_ref: citp-2025-atra}
+  - {id: citp-2025-aldosterone, program: CITP, pmid: "41432067", public_date: "2025-07-21", compound: aldosterone, species: Caenorhabditis, strain: "CITP panel", label: no_effect, quote_ref: citp-2025-atra, notes: "no effect or toxic"}
+  - {id: citp-2025-arecoline, program: CITP, pmid: "41432067", public_date: "2025-07-21", compound: arecoline, species: Caenorhabditis, strain: "CITP panel", label: no_effect, quote_ref: citp-2025-atra, notes: "no effect or toxic"}
+  - {id: citp-2025-bortezomib, program: CITP, pmid: "41432067", public_date: "2025-07-21", compound: bortezomib, species: Caenorhabditis, strain: "CITP panel", label: no_effect, quote_ref: citp-2025-atra, notes: "no effect or toxic"}
+  - {id: citp-2025-dasatinib, program: CITP, pmid: "41432067", public_date: "2025-07-21", compound: dasatinib, species: Caenorhabditis, strain: "CITP panel", label: no_effect, quote_ref: citp-2025-atra, notes: "no effect or toxic"}
+  - {id: citp-2025-decitabine, program: CITP, pmid: "41432067", public_date: "2025-07-21", compound: decitabine, species: Caenorhabditis, strain: "CITP panel", label: no_effect, quote_ref: citp-2025-atra, notes: "no effect or toxic"}
+  - {id: citp-2025-dexamethasone, program: CITP, pmid: "41432067", public_date: "2025-07-21", compound: dexamethasone, species: Caenorhabditis, strain: "CITP panel", label: no_effect, quote_ref: citp-2025-atra, notes: "no effect or toxic"}
+  - {id: citp-2025-erlotinib, program: CITP, pmid: "41432067", public_date: "2025-07-21", compound: erlotinib, species: Caenorhabditis, strain: "CITP panel", label: no_effect, quote_ref: citp-2025-atra, notes: "no effect or toxic"}
+  - {id: citp-2025-everolimus, program: CITP, pmid: "41432067", public_date: "2025-07-21", compound: everolimus, species: Caenorhabditis, strain: "CITP panel", label: no_effect, quote_ref: citp-2025-atra, notes: "no effect or toxic"}
+  - {id: citp-2025-gefitinib, program: CITP, pmid: "41432067", public_date: "2025-07-21", compound: gefitinib, species: Caenorhabditis, strain: "CITP panel", label: no_effect, quote_ref: citp-2025-atra, notes: "no effect or toxic"}
+  - {id: citp-2025-temsirolimus, program: CITP, pmid: "41432067", public_date: "2025-07-21", compound: temsirolimus, species: Caenorhabditis, strain: "CITP panel", label: no_effect, quote_ref: citp-2025-atra, notes: "no effect or toxic"}
+  - {id: citp-2025-thalidomide, program: CITP, pmid: "41432067", public_date: "2025-07-21", compound: thalidomide, species: Caenorhabditis, strain: "CITP panel", label: no_effect, quote_ref: citp-2025-atra, notes: "no effect or toxic"}
+  - {id: citp-2026-levetiracetam, program: CITP, pmid: "41993912", public_date: "2026-01-01", date_precision: year, compound: levetiracetam, species: Caenorhabditis, strain: "three species",
+     label: no_effect, quote: "Our results do not reveal an effect of levetiracetam on nematode lifespan, indicating that anticonvulsants can differ in their ability to extend lifespan."}
+  - {id: citp-2026-cinnarizine-low, program: CITP, pmid: "42807283", public_date: "2026-01-01", date_precision: year, compound: cinnarizine, species: Caenorhabditis, strain: C. elegans,
+     dose: lower doses, label: no_effect, quote: "Our results indicate that cinnarizine and meclizine have no effect on C. elegans lifespan at lower doses, and that both compounds exert a toxic effect at higher doses, significantly shortening lifespan."}
+  - {id: citp-2026-cinnarizine-high, program: CITP, pmid: "42807283", public_date: "2026-01-01", date_precision: year, compound: cinnarizine, species: Caenorhabditis, strain: C. elegans,
+     dose: higher doses, repeat_of: citp-2026-cinnarizine-low, label: harmful, quote_ref: citp-2026-cinnarizine-low}
+  - {id: citp-2026-meclizine-low, program: CITP, pmid: "42807283", public_date: "2026-01-01", date_precision: year, compound: meclizine, species: Caenorhabditis, strain: C. elegans,
+     dose: lower doses, label: no_effect, quote_ref: citp-2026-cinnarizine-low}
+  - {id: citp-2026-meclizine-high, program: CITP, pmid: "42807283", public_date: "2026-01-01", date_precision: year, compound: meclizine, species: Caenorhabditis, strain: C. elegans,
+     dose: higher doses, repeat_of: citp-2026-meclizine-low, label: harmful, quote_ref: citp-2026-cinnarizine-low}

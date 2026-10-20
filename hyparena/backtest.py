@@ -9,15 +9,17 @@ Splits: every item is assigned to `dev` (for tuning prompts and weights) or `tes
 comparison), stratified by label and deterministic (hash of the compound name). Items that a judge model
 already knows (hyparena.leakage) can be excluded with --exclude-known.
 
-ITP pool: interventions tested by the NIA Interventions Testing Program, taken from DrugAge (HAGR, CC BY
-3.0; rows flagged ITP). A compound enters the pool if its first ITP publication in DrugAge is after T; its
-label is 1 if any ITP row reports a significant increase of average lifespan, else 0. The hypothesis text
-states the intervention and the claimed effect, not the outcome. Labels go to a separate file that the
-pipeline never reads; metrics are computed here, outside the graph (hidden evaluation).
+ITP pool (historical, for T before 2023): ITP tests from DrugAge (HAGR, CC BY 3.0; rows flagged ITP), one
+per compound and regimen (dosage, age at initiation): a repeat at another dose or start age is its own
+hypothesis. A test enters the pool if its first ITP publication is after T. Labels supports / no_effect /
+harmful, with the result per sex and the effect size apart. For T after 2022 the outcomes come from the batch
+papers themselves (hyparena/outcomes.py; DrugAge has few post-2022 entries). The hypothesis text states the
+intervention and the claimed effect, not the outcome. Labels go to a separate file that the pipeline never
+reads; metrics are computed outside the graph (hidden evaluation).
 
-Caveat, important: models trained after T may know ITP outcomes. With current models this measures
-recall of known results as much as judgement. Use judges whose training cutoff precedes T, or treat the
-numbers as an upper bound."""
+Leakage (Working_Notes A2, 2026-10-20): models are chosen by training cutoff <= T (hyparena.outcomes models);
+the leakage probe (hyparena.leakage, --exclude-known) is not used for method v2. Pools whose results models
+may know (`historical`) are for our system only, whose evidence is cut at T."""
 from __future__ import annotations
 
 import argparse
@@ -83,30 +85,63 @@ def drugage_rows() -> list[dict]:
     return list(csv.DictReader(io.TextIOWrapper(z.open("drugage.csv"), encoding="utf-8", errors="replace")))
 
 
-def build_itp(as_of: str) -> tuple[Path, Path]:
+def _pct(v: str) -> Optional[float]:
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
+
+
+def itp_outcome(rows: list[dict]) -> dict:
+    """Label of one ITP test (one compound in one regimen) from its DrugAge rows: supports (a significant
+    increase of average lifespan in at least one sex), harmful (only significant decreases), else no_effect;
+    with the result per sex and the effect size (the largest change of average lifespan) kept apart."""
+    results = defaultdict(set)
+    for r in rows:
+        sig, pct = r["avg_lifespan_significance"].strip() == "S", _pct(r["avg_lifespan_change_percent"])
+        results[r["gender"].strip().lower() or "pooled"].add(
+            "supports" if sig and (pct or 0) > 0 else "harmful" if sig and (pct or 0) < 0 else "no_effect")
+    by_sex = {sex: "supports" if "supports" in rs else "harmful" if "harmful" in rs else "no_effect"
+              for sex, rs in results.items()}
+    label = "supports" if "supports" in by_sex.values() else "harmful" if "harmful" in by_sex.values() else "no_effect"
+    sizes = [x for x in (_pct(r["avg_lifespan_change_percent"]) for r in rows
+                         if r["avg_lifespan_significance"].strip() == "S") if x is not None]
+    effect = (max(sizes) if label == "supports" else min(sizes)) if sizes and label != "no_effect" else (
+        0.0 if label == "no_effect" else None)
+    return {"outcome": label, "by_sex": by_sex, "effect": effect}
+
+
+def build_itp(as_of: str, clean_after: Optional[str] = None) -> tuple[Path, Path]:
+    """Historical ITP pool from DrugAge (for T before 2023; Working_Notes A2): one test per compound and
+    regimen (dosage, age at initiation), entering the pool if its first ITP publication is after T. A repeat
+    at another dose or start age is its own hypothesis. Labels supports / no_effect / harmful with the result
+    per sex and the effect size apart; `set` historical unless public after `clean_after`."""
     rows = drugage_rows()
     itp = [r for r in rows if r.get("ITP", "").strip().lower() == "yes"]
-    by_compound = defaultdict(list)
+    by_test = defaultdict(list)
     for r in itp:
-        by_compound[r["compound_name"].strip()].append(r)
+        by_test[(r["compound_name"].strip(), r["dosage"].strip(), r["age_at_initiation"].strip())].append(r)
     dates = _pubdates(sorted({r["pubmed_id"] for r in itp if r["pubmed_id"].strip()}))
+    first_by_compound = defaultdict(list)
+    for (compound, _, _), rs in by_test.items():
+        first_by_compound[compound] += [dates[r["pubmed_id"]] for r in rs if r["pubmed_id"] in dates]
     items, labels = [], {}
-    for n, (compound, rs) in enumerate(sorted(by_compound.items()), start=1):
+    for (compound, dosage, age), rs in sorted(by_test.items()):
         pub = sorted(dates[r["pubmed_id"]] for r in rs if r["pubmed_id"] in dates)
         if not pub or pub[0] <= as_of:
             continue
-        def pct(v):
-            try:
-                return float(v)
-            except ValueError:
-                return 0.0
-        positive = any(r["avg_lifespan_significance"].strip() == "S" and pct(r["avg_lifespan_change_percent"]) > 0 for r in rs)
+        regimen = ", ".join(x for x in (f"at {dosage}" if dosage else "", f"started at {age}" if age else "") if x)
         hid = len(items) + 1
-        items.append({"id": hid, "title": f"{compound} extends lifespan in genetically heterogeneous mice",
-                      "claim": (f"Chronic dietary administration of {compound}, started in adulthood, increases the "
-                                f"median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex."),
-                      "message": 0})
-        labels[f"imp{hid:03d}"] = {"label": int(positive), "compound": compound, "first_itp_publication": pub[0],
+        text = (f"Dietary {compound}{f' ({regimen})' if regimen else ''} extends the median lifespan of "
+                f"genetically heterogeneous UM-HET3 mice of at least one sex.")
+        items.append({"id": hid, "title": text, "claim": text, "message": 0})
+        res = itp_outcome(rs)
+        earlier = min(first_by_compound[compound])
+        labels[f"imp{hid:03d}"] = {"label": int(res["outcome"] == "supports"), **res, "compound": compound,
+                                   "dose": dosage, "age_at_start": age, "first_itp_publication": pub[0],
+                                   "public_date": pub[0], "program": "ITP", "species": "mouse",
+                                   "set": "clean" if clean_after and pub[0] > clean_after else "historical",
+                                   "repeat_of": compound if earlier < pub[0] else "",
                                    "pmids": sorted({r["pubmed_id"] for r in rs})}
     assign_splits(labels)
     OUT.mkdir(parents=True, exist_ok=True)
@@ -117,8 +152,8 @@ def build_itp(as_of: str) -> tuple[Path, Path]:
                                      "hypotheses": items, "assistant_notes": {}}, ensure_ascii=False, indent=2))
     label_path.write_text(json.dumps(labels, ensure_ascii=False, indent=2))
     pos = sum(v["label"] for v in labels.values())
-    print(f"ITP compounds in DrugAge: {len(by_compound)}; first ITP publication after {as_of}: {len(items)} "
-          f"({pos} positive, {len(items) - pos} negative)\n{data_path}\n{label_path}")
+    print(f"ITP tests in DrugAge (compound x regimen): {len(by_test)}; first publication after {as_of}: "
+          f"{len(items)} ({pos} supports, {len(items) - pos} no effect or harmful)\n{data_path}\n{label_path}")
     return data_path, label_path
 
 
@@ -334,6 +369,7 @@ def main() -> None:
     sub = ap.add_subparsers(dest="cmd", required=True)
     b = sub.add_parser("build-itp")
     b.add_argument("--as-of", required=True)
+    b.add_argument("--clean-after", default=None, help="latest cutoff of the models compared")
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--labels", required=True)
     common.add_argument("--split", choices=["dev", "test", "all"], default="all")
@@ -368,7 +404,7 @@ def main() -> None:
         print(json.dumps(axes(args.labels, args.v2, args.split), indent=2))
         return
     if args.cmd == "build-itp":
-        build_itp(args.as_of)
+        build_itp(args.as_of, args.clean_after)
     elif args.cmd == "evaluate":
         print(json.dumps(evaluate(args.labels, args.result, args.split, args.unrated, args.exclude_known, fams), indent=2))
     else:

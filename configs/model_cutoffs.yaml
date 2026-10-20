@@ -1,0 +1,7 @@
+# Release dates of the models the backtests may use (Working_Notes A2, decided 2026-10-20). A model may judge
+# a backtest pool as of T only if its training cutoff is <= T. Cutoff: the stated one when the provider states
+# it, else the heuristic release date minus 6 months. A model without a release date here is not eligible.
+heuristic_months: 6
+models:
+  gemini-3.5-flash: {released: "2026-05-19"}
+  deepseek-v4.1-flash-1017: {released: "2026-10-17"}
