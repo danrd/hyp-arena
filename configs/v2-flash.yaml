@@ -12,5 +12,8 @@ max_retries: 0
 deadline: 180
 models:
   - {family: google, provider: cometapi, model: "gemini-3.5-flash", tier: paid, api_key_env: COMET_API_KEY}
+  # thinking off: with thinking on, the model spends the whole output budget on hidden reasoning (6000 of 6000
+  # tokens, no answer) in about half of the verifier calls, and neither reasoning_effort nor a token budget is
+  # honoured through CometAPI (tested 2026-10-20); off, a call takes about 5 s and 800 tokens
   - {family: deepseek, provider: cometapi, model: "deepseek-v4.1-flash-1017", tier: paid, api_key_env: COMET_API_KEY,
-     generation: {max_tokens: 6000}}
+     generation: {max_tokens: 4000, extra_body: {thinking: {type: disabled}}}}
