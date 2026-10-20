@@ -41,11 +41,18 @@ def _pct(v: str) -> Optional[float]:
 
 def drugage_records(claim: Claim, allowed_pmids: Optional[set[str]] = None,
                     cid: Optional[int] = None) -> tuple[list[EvidenceRecord], list[EvidenceRecord]]:
-    """(evidence, counterevidence) for an `extends_lifespan_in` claim; empty for other relations or unknown
-    species. `allowed_pmids` restricts to papers published by an as-of date. `cid`: the PubChem parent compound
+    """(evidence, counterevidence) for a lifespan claim (extends, shortens, no effect; a negated "extends" with
+    `qualifiers.direction` no_effect counts as no effect); empty for other relations or unknown species. Each
+    paper falls in one category, increase (a significant increase of average or maximum lifespan), decrease
+    (a significant decrease of average lifespan, and no increase) or none, which supports the matching relation
+    and counts against the other two. `allowed_pmids` restricts to papers published by an as-of date. `cid`: the PubChem parent compound
     of the claim's subject; DrugAge rows then match by compound (sirolimus = rapamycin, quercetin dihydrate =
     quercetin), and by name otherwise."""
-    if claim.relation != "extends_lifespan_in":
+    relation = claim.relation
+    if relation == "extends_lifespan_in" and claim.qualifiers.get("direction", "").lower() in ("no_effect", "none", "no", "not", "no effect"):
+        relation = "no_lifespan_effect_in"
+    wanted = {"extends_lifespan_in": "increase", "shortens_lifespan_in": "decrease", "no_lifespan_effect_in": "none"}.get(relation)
+    if wanted is None:
         return [], []
     species = None
     for text in (claim.object.id or "", claim.object.label, claim.qualifiers.get("species", "")):
@@ -90,5 +97,7 @@ def drugage_records(claim: Claim, allowed_pmids: Optional[set[str]] = None,
                     "avg_lifespan_change_percent": ", ".join(r["avg_lifespan_change_percent"] for r in use[:6]),
                     "dosage": "; ".join(sorted({r["dosage"] for r in use}))[:200]},
             notes="DrugAge rows for this paper" + (" (ITP)" if itp else ""))
-        (support if pos else against).append(rec)
+        category = "increase" if pos else "decrease" if neg else "none"
+        rec.fields["category"] = category
+        (support if category == wanted else against).append(rec)
     return support, against
