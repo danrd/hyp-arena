@@ -147,3 +147,7 @@ class FakeLLMClient:
 
     def _verify_claim(self, rng, prompt, n):
         return json.dumps({"records": []})
+
+    def _check_alternatives(self, rng, prompt, n):
+        ids = list(dict.fromkeys(re.findall(r"^- (alt\d+):", prompt, flags=re.M)))
+        return json.dumps({"alternatives": [{"id": i, "found": "absent", "pmid": "", "quote": ""} for i in ids]})

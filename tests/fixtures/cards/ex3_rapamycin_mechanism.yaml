@@ -38,6 +38,7 @@ verification:
 expected:
   statuses: {c1: supported, c2: refuted, a1: supported}
   contrast: {c2: {alternative: a1, x_status: unverified, y_status: supported}}
+  alternatives: [{id: a1, source: declared, status: supported}]   # the prediction table comes at stage C
   profile:
     gate: filtered
     gate_reason: "contrast rule: a1 supported (PMID:22587563)"

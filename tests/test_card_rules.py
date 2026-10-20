@@ -36,6 +36,8 @@ def test_statuses_and_profile(name):
     for key, value in d["expected"]["profile"].items():
         assert prof[key] == value, (key, prof[key], value)
     assert ver.known_result == d["expected"]["known_result"]
+    if "alternatives" in d["expected"]:
+        assert [{"id": a.id, "source": a.source, "status": a.status} for a in ver.alternatives] == d["expected"]["alternatives"]
     for cid, contrast in d["expected"].get("contrast", {}).items():
         assert next(cv for cv in ver.claims if cv.id == cid).contrast == contrast
     assert verified_layer_problems(card, ver) == []

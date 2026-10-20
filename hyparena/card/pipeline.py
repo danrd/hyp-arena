@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Optional
 
 from hyparena.aspid import InfeasiblePreferences, load_profiles
-from hyparena.card import entities
+from hyparena.card import alternatives, entities
 from hyparena.card import expert as ex
 from hyparena.card import indicators as ind
 from hyparena.card.models import HypothesisCard, Verification
@@ -44,17 +44,20 @@ def _extra(card: HypothesisCard, as_of: Optional[str] = None) -> dict:
 def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yaml", fake: bool = False,
         as_of: Optional[str] = None, K: int = 10000, k_top: int = 3, max_calls: int = 400, workers: int = 4,
         normalizer_family: str = "google", on_stage=lambda msg: None, expert=None,
-        verifiers: Optional[list[str]] = None, cards: Optional[list[Optional[dict]]] = None) -> dict:
+        verifiers: Optional[list[str]] = None, cards: Optional[list[Optional[dict]]] = None,
+        check_alternatives: bool = True) -> dict:
     """`expert`: path to an expert file (hyparena/card/expert.py) or an ExpertLayer. `verifiers`: the families
     that verify (default: every family of the config). `cards`: declared cards from an earlier run, one per
     text (None where normalization failed); the normalizer is then skipped, so a change of the verifier is
-    compared on the same cards."""
+    compared on the same cards. `check_alternatives`: one call per gate-passing hypothesis over the abstracts
+    already read, and a dedicated search per open alternative for P(top-k) >= 0.5 (spec 8c)."""
     started = time.time()
     layer = expert if isinstance(expert, ex.ExpertLayer) else ex.load(expert)
     origins = ["external"] * len(texts) + ["expert"] * len(layer.hypotheses)
     texts = list(texts) + list(layer.hypotheses)
     client, families = _client(config, fake, max_calls)
     log: list = []
+    checker = next((f for f in (verifiers or families) if f != writer), (verifiers or families)[0])
     pool = ThreadPoolExecutor(max_workers=workers)
     items = []
 
@@ -88,6 +91,8 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
         ver = verify(client, verifiers or families, writer, card, as_of=as_of, log=log, map_fn=pool.map,
                      expert_sources=ex.sources(layer, card.id))
         x["verification"] = finalize(card, ver)
+        if check_alternatives and x["verification"].evidence_profile.gate == "pass":
+            alternatives.check(client, checker, card, x["verification"], avoid=frozenset({writer}), log=log)
         x["extra"] = _extra(card, as_of)
         triples.append((card, x["verification"], x["extra"]))
         on_stage(f"{card.id} проверена; вызовов: {client.calls}")
@@ -106,6 +111,12 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
                         if ranking and cid in ranking.known_results else "ranked")
         if ranking and cid in ranking.values:
             x["indicators"] = ranking.values[cid]
+    # a dedicated search per open checklist alternative, only for strong hypotheses (spec 8c, before debates)
+    strong = {h for r in (ranking.by_profile.values() if ranking else []) for h, p in r.p_topk.items() if p >= 0.5}
+    for x in items:
+        if check_alternatives and x.get("verification") and x["card"].id in strong and x["outcome"] == "ranked":
+            alternatives.deep_check(client, checker, x["card"], x["verification"], as_of=as_of,
+                                    avoid=frozenset({writer}), log=log)
     view = lambda r: {"order": r.order, "expected": r.expected, "std": r.std, "quantiles": r.quantiles,
                       "p_topk": r.p_topk, "p_best": r.p_best, "pairwise": r.pairwise,
                       "rank_acceptability": r.rank_acceptability, "central_weights": r.central_weights,
