@@ -53,7 +53,7 @@ API, three requests at a time (a hypothesis page takes the server 7–10 s).
 | Bio Arena | Ours (method v2, `docs/rules-method.md`) |
 |---|---|
 | dossier: the author's claims with quotes, supporting and opposing evidence with quotes, uncertainties | card: declared claims in a closed vocabulary with verbatim spans; verified layer with evidence records, statuses computed by rules |
-| quotes and consistency checked by an LLM | quotes checked verbatim by code; statuses, gate, evidence profile by code |
+| quotes are verbatim (checked 2026-10-20: all 3,309 author-claim quotes are in the hypothesis texts; a random sample of 232 evidence quotes from 30 verified dossiers is in the 128 source texts, character for character); whether a quote supports the model-written claim beside it is reviewed by an LLM consistency step | quotes checked verbatim by code; what a quote supports (stance, finding vs background or speculation, species, endpoint, primary outcome) is extracted as fields by an LLM, partly re-checked by code, and statuses, gate and profile follow from rules |
 | one judge decides everything, pairwise, in both orders | indicators from the card by rules; LLM judges only for the top (stage C) |
 | criteria inside one prompt (plausibility, evidence, benefit, next experiment) | criteria as separate indicators with an importance order per profile (АСПИД/SMAA) |
 | Bradley–Terry with intervals, adaptive scheduling | our ladder steps L1–L4 use per-criterion Bradley–Terry; the Co-Scientist baselines use Elo and TrueSkill |
