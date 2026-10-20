@@ -615,6 +615,7 @@ def next_step(prof: EvidenceProfile) -> str:
 
 HETEROGENEOUS = ("um-het3", "het3", "genetically heterogeneous", "outbred", "swiss", "cd-1", "nmri", "wistar",
                  "sprague", "long-evans", "diversity outbred")
+STRAIN_ANALOG = "same intervention and species, strain other than"
 GENERIC_HETEROGENEOUS = {"geneticallyheterogeneous", "heterogeneous", "outbred"}
 
 
@@ -674,7 +675,7 @@ def add_strain_analogs(card: HypothesisCard, ver: Verification) -> Verification:
         taken.add(f"an{n}")
         analog = Claim(id=f"an{n}", subject=claim.subject, relation=claim.relation, object=claim.object,
                        qualifiers={k: v for k, v in claim.qualifiers.items() if k not in ("strain", "contrast")},
-                       role="analog", note=f"same intervention and species, strain other than {strain} (added by the verifier)")
+                       role="analog", note=f"{STRAIN_ANALOG} {strain} (added by the verifier)")
 
         def relabel(r):
             r = r.model_copy(deep=True)

@@ -9,14 +9,15 @@ from typing import Optional
 from hyparena.card.llm import ask, parse_objects
 from hyparena.card.models import (UNKNOWN, Claim, ClaimVerification, Entity, EvidenceRecord,
                                   HypothesisCard, ProgramInfo, Refusal, Verification)
-from hyparena.card.rules import ORGANISM_PATTERNS, claim_organism, claim_endpoint, pico_value, quote_organisms, species_key
+from hyparena.card.rules import (HUMAN_RUNGS, ORGANISM_PATTERNS, add_strain_analogs, claim_organism, claim_endpoint,
+                                 pico_value, quote_organisms, species_key)
 from hyparena.card import contexts
 from hyparena.card.entities import subject_compounds
 from hyparena.tools.compounds import split as split_label
-from hyparena.card.sources import drugage_records, lifespan_wanted
+from hyparena.card.sources import curated_intervention_match, drugage_records, lifespan_wanted
 from hyparena.tools import pubmed
 
-TEMPLATE = ("verify_claim", "v4")
+TEMPLATE = ("verify_claim", "v5")
 REL_WORDS = {"extends_lifespan_in": "lifespan", "shortens_lifespan_in": "lifespan", "no_lifespan_effect_in": "lifespan",
              "slows_aging_in": "slows aging",
              "improves_healthspan_in": "healthspan OR physical function", "changes_biomarker": "", "predicts": "predicts",
@@ -82,7 +83,8 @@ def names_intervention(claim, card: HypothesisCard, text: str) -> bool:
 def _context_match(qm: dict[str, str], claim, card: HypothesisCard, quote: str = "") -> dict[str, str]:
     """Spec 7: a qualifier the card leaves unknown gives n/a, never a mismatch."""
     out = dict(qm)
-    for key in ("sex", "age_at_start", "dose", "comparator", "strain"):
+    out.pop("strain", None)                               # strain is compared by code (rules.strain_match)
+    for key in ("sex", "age_at_start", "dose", "comparator"):
         value = claim.qualifiers.get(key) or (pico_value(card, key) if key != "dose"
                                               else next((i.regimen for i in card.pico.intervention), UNKNOWN))
         if out.get(key) == "no" and (not value or value.strip().lower() in (UNKNOWN, "", "n/a")):
@@ -129,6 +131,8 @@ def curated(claim, card: HypothesisCard, as_of: Optional[str] = None) -> tuple[l
     """DrugAge records for a lifespan claim (deterministic), restricted to papers published by `as_of`."""
     comps = subject_compounds(claim.subject.label, card)
     support, against = drugage_records(claim, cid=comps[0].cid if comps and len(comps) == 1 else None)
+    for r in support + against:
+        r.qualifiers_match["intervention_match"] = curated_intervention_match(card, r)
     if as_of and (support or against):
         from hyparena.backtest import _pubdates
         dates = _pubdates([r.linked_pmid for r in support + against])
@@ -197,7 +201,8 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
                                          if v and v != "unknown" and k != "contrast"),
                  "endpoint": claim_endpoint(claim), "claim_plain": card.claim_plain,
                  "population": ", ".join(f"{k} {v}" for k, v in p.population.model_dump().items() if v and v != "unknown") or "unknown",
-                 "intervention": "; ".join(f"{i.label} ({i.regimen})" for i in p.intervention) or "unknown",
+                 "intervention": "; ".join(f"{i.label} ({', '.join(x for x in (i.regimen, i.route) if x and x != UNKNOWN) or 'regimen unknown'})"
+                                           for i in p.intervention) or "unknown",
                  "comparator": p.comparator.label,
                  "abstracts": [{"pmid": k, "year": a["year"], "title": a["title"], "abstract": a["abstract"],
                                 "review": pubmed.is_review(a)} for k, a in abstracts.items()]}
@@ -231,7 +236,9 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
             quote=quote, quote_role=r.get("quote_role") if r.get("quote_role") in ("finding", "background", "speculation") else "background",
             endpoint=r.get("endpoint") if r.get("endpoint") in ("lifespan", "healthspan", "biomarker", "disease", "mechanism") else "unknown",
             effect_percent=r.get("effect_percent") if isinstance(r.get("effect_percent"), (int, float)) else None,
-            sexes=[s for s in (r.get("sexes") or []) if s in ("male", "female")], qualifiers_match=qm,
+            sex=_sex(r), strain=_text(r.get("strain")), dose=_text(r.get("dose")), age_at_start=_text(r.get("age_at_start")),
+            human_rungs=[x for x in (r.get("human_rungs") or []) if x in HUMAN_RUNGS] if species_key(r.get("species") or "") == "human" else [],
+            qualifiers_match=qm,
             program=ProgramInfo(name=prog) if prog in ("ITP", "CITP") else None,
             flags=[f for f in (r.get("flags") or []) if isinstance(f, str)], retrieved_at=a.get("year", ""),
             notes=f"extracted by {fam}" + (f"; source given by expert decision {by_expert[pmid]}" if pmid in by_expert else ""))
@@ -269,6 +276,18 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
     return cv
 
 
+def _sex(r: dict) -> str:
+    sex = str(r.get("sex") or "").lower()
+    if sex in ("male", "female", "both", "unknown"):
+        return sex
+    sexes = {x for x in (r.get("sexes") or []) if x in ("male", "female")}       # the v4 reply form
+    return "both" if len(sexes) == 2 else next(iter(sexes), "unknown")
+
+
+def _text(v) -> str:
+    return str(v).strip() if isinstance(v, (str, int, float)) and str(v).strip().lower() not in ("", "unknown", "none", "n/a") else ""
+
+
 def analog_probes(card: HypothesisCard) -> list[Claim]:
     """Claims the verifier adds in its own layer (spec 4, 8): when an interventional hypothesis is about
     humans, the same intervention's lifespan and healthspan effect in mice, which can set the effect level
@@ -292,6 +311,7 @@ def verify(client, families: list[str], writer: str, card: HypothesisCard, as_of
            expert_sources: Optional[dict[str, list[tuple[str, str]]]] = None) -> Verification:
     """All declared claims, the rejected alternatives of a contrast (checked like claims, spec 7), plus analog
     probes; the verifier's family is never the writer's (its records feed the ranking)."""
+    log = log if log is not None else []                  # its search entries give searched_pmids
     allowed = [f for f in families if f != writer] or families
     probes = analog_probes(card)
     claims = card.claims + card.rejected_alternatives + probes
@@ -303,4 +323,6 @@ def verify(client, families: list[str], writer: str, card: HypothesisCard, as_of
     for cv, c in zip(cvs, claims):
         if cv.id in added:
             cv.claim = c
-    return Verification(card_id=card.id, claims=cvs)
+    searched = [p for e in (log or []) if e.get("kind") == "search" for p in e.get("pmids", [])]
+    ver = Verification(card_id=card.id, claims=cvs, searched_pmids=list(dict.fromkeys(searched)))
+    return add_strain_analogs(card, ver)
