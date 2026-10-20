@@ -94,3 +94,15 @@ def test_drugage_paper_category_decides_every_lifespan_relation(monkeypatch):
     assert counts(claim("shortens_lifespan_in")) == (0, 1)       # no effect refutes "shortens" too
     assert counts(claim("no_lifespan_effect_in")) == (1, 0)
     assert counts(claim("extends_lifespan_in", direction="no_effect")) == (1, 0)   # a negated claim
+
+
+def test_drugage_strain_flags_a_disease_model(monkeypatch):
+    row = {"compound_name": "Rapamycin", "species": "Mus musculus", "strain": "AKR", "pubmed_id": "2",
+           "avg_lifespan_significance": "S", "avg_lifespan_change_percent": "12", "max_lifespan_significance": "",
+           "max_lifespan_change_percent": "", "gender": "female", "ITP": "", "dosage": "x"}
+    monkeypatch.setattr(sources, "_rows", lambda: [row])
+    monkeypatch.setattr(sources, "drugage_map", lambda: {})
+    claim = Claim(id="c", subject=Entity(label="Rapamycin"), relation="extends_lifespan_in",
+                  object=Entity(label="mouse"), role="outcome")
+    rec = sources.drugage_records(claim)[0][0]
+    assert "disease_model" in rec.flags and "AKR" in rec.notes and rec.effect == "increase"

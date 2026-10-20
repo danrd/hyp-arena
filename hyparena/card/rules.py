@@ -8,6 +8,7 @@ from __future__ import annotations
 import re
 from typing import Iterable, Optional
 
+from hyparena.card.contexts import CONTEXT_FLAGS
 from hyparena.card.models import (INHERITABLE, RUNGS, UNKNOWN, Admission, Claim, ClaimVerification, Conflict,
                                   DeclaredAlternative, EvidenceProfile, EvidenceRecord, HypothesisCard, Verification)
 
@@ -436,6 +437,8 @@ def evidence_profile(card: HypothesisCard, ver: Verification) -> EvidenceProfile
         prof.intervention_match = _grade(records)
         prof.robustness = "replicated" if _independent(records) >= 2 or any(
             r.program and (r.program.sites_with_effect or 0) >= 2 for r in records) else "single"
+        if records and all(any(f in CONTEXT_FLAGS for f in r.flags) for r in records):
+            prof.effect_level_note = f"{prof.effect_level} (disease models or special conditions only)"
         if prof.effect_level.startswith("human"):
             if records and all(r.study_type == "observational" for r in records):
                 prof.effect_level_note = f"{prof.effect_level} (observational only)"

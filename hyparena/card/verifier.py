@@ -10,11 +10,12 @@ from hyparena.card.llm import ask, parse_objects
 from hyparena.card.models import (UNKNOWN, Claim, ClaimVerification, Entity, EvidenceRecord,
                                   HypothesisCard, ProgramInfo, Refusal, Verification)
 from hyparena.card.rules import ORGANISM_PATTERNS, claim_organism, claim_endpoint, pico_value, quote_organisms, species_key
+from hyparena.card import contexts
 from hyparena.card.entities import subject_compounds
-from hyparena.card.sources import drugage_records
+from hyparena.card.sources import drugage_records, lifespan_wanted
 from hyparena.tools import pubmed
 
-TEMPLATE = ("verify_claim", "v3")
+TEMPLATE = ("verify_claim", "v4")
 REL_WORDS = {"extends_lifespan_in": "lifespan", "shortens_lifespan_in": "lifespan", "no_lifespan_effect_in": "lifespan",
              "slows_aging_in": "slows aging",
              "improves_healthspan_in": "healthspan OR physical function", "changes_biomarker": "", "predicts": "predicts",
@@ -195,8 +196,17 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
             program=ProgramInfo(name=prog) if prog in ("ITP", "CITP") else None,
             flags=[f for f in (r.get("flags") or []) if isinstance(f, str)], retrieved_at=a.get("year", ""),
             notes=f"extracted by {fam}" + (f"; source given by expert decision {by_expert[pmid]}" if pmid in by_expert else ""))
+        contexts.flag(rec, a["title"] + " " + a["abstract"])
         stance = r.get("stance")
         need = claim_endpoint(claim)
+        effect = r.get("effect") if r.get("effect") in ("increase", "decrease", "no_effect") else "unknown"
+        rec.effect = effect
+        if need == "lifespan" and rec.endpoint == "lifespan" and rec.quote_role == "finding" and effect != "unknown":
+            # the stance of a lifespan finding follows from its direction, as for DrugAge (code, not the extractor)
+            coded = "supports" if effect == lifespan_wanted(claim) else "refutes"
+            if coded != stance:
+                rec.notes += f"; stance set from the effect direction ({effect}); the extractor said {stance}"
+            stance = coded
         mismatched = [k for k, v in qm.items() if v == "no" and k != "intervention_match"]
         if stance in ("supports", "refutes") and mismatched and set(mismatched) <= set(claim.inherited_from_pico):
             # a mismatch only on a value inherited from PICO: a soft refusal, not a status (spec 7)

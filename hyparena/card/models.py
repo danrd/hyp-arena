@@ -191,10 +191,11 @@ class EvidenceRecord(BaseModel):
     effect_percent: Optional[float] = None       # e.g. % change of median lifespan, when extracted
     sexes: list[Literal["male", "female"]] = Field(default_factory=list)
     endpoint: Endpoint = "unknown"               # what the finding measures (lifespan, healthspan, biomarker, disease)
+    effect: Literal["increase", "decrease", "no_effect", "unknown"] = "unknown"   # direction of a lifespan finding
     qualifiers_match: dict[str, str] = Field(default_factory=dict)   # species/sex/age_at_start/dose/comparator: yes|no|n/a; intervention_match
     marker_validation: Literal["validated_surrogate", "exploratory", "n/a"] = "n/a"
     program: Optional[ProgramInfo] = None
-    flags: list[str] = Field(default_factory=list)   # retracted, preprint, conflict_of_interest, small_n, open_label, subgroup_only, short_lived_controls
+    flags: list[str] = Field(default_factory=list)   # retracted, preprint, conflict_of_interest, small_n, open_label, subgroup_only, short_lived_controls, disease_model, special_diet
     fields: dict[str, Union[str, float, int]] = Field(default_factory=dict)   # curated-record fields (e.g. DrugAge row)
     retrieved_at: str = ""
     notes: str = ""

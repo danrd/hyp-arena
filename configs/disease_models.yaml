@@ -1,0 +1,47 @@
+# Disease models, progeroid and short-lived strains, and special diets that change what a lifespan finding
+# means (hyparena/card/contexts.py). Matched (case-insensitive regex, word boundaries added) against the
+# record's abstract; `strains` are exact names in DrugAge's strain field. A match sets a flag on the record: flags lower trust and are
+# shown, they do not change a status by themselves (card spec 7). A draft seed until a strain ontology (MGI/JAX)
+# is part of the knowledge graph; extend it as audits find cases.
+#   category → flag: disease_model → disease_model; progeroid, accelerated_aging → short_lived_controls;
+#   special_diet → special_diet
+models:
+  # autoimmune
+  - {pattern: "NZB ?(?:x|×|/) ?NZW|NZB/W|\\(NZB ?x ?NZW\\) ?F1|B/W F1", name: "NZB/W F1", category: disease_model, note: lupus-prone, short-lived}
+  - {pattern: "New Zealand Black|NZB mice", strains: [New Zealand Black, NZB], name: NZB, category: disease_model, note: autoimmune haemolytic anaemia, lupus-like}
+  - {pattern: "MRL/lpr|MRL-lpr|MRL/MpJ-Fas", name: MRL/lpr, category: disease_model, note: lupus-prone}
+  - {pattern: "BXSB", name: BXSB, category: disease_model, note: lupus-prone (males)}
+  # cancer-prone
+  - {pattern: "AKR(?:/J)? (?:mice|mouse|strain)|AKR/J", strains: [AKR, AKR/J], name: AKR, category: disease_model, note: spontaneous leukaemia, short-lived}
+  - {pattern: "C3H(?:/Sn|/HeJ|/He)?", strains: [C3H, C3H/Sn, C3H/HeJ, C3H/He], name: C3H, category: disease_model, note: high incidence of mammary tumours (MMTV)}
+  - {pattern: "Apc ?\\(?Min|ApcMin", name: Apc Min, category: disease_model, note: intestinal tumours}
+  - {pattern: "MMTV-(?:neu|HER-?2|PyMT|Wnt)", name: MMTV transgenic, category: disease_model, note: mammary tumours}
+  - {pattern: "TRAMP mice", name: TRAMP, category: disease_model, note: prostate cancer}
+  - {pattern: "p53 ?(?:-/-|\\+/-|null|knockout|deficient)|Trp53 ?(?:-/-|\\+/-)", name: p53-deficient, category: disease_model, note: cancer-prone}
+  - {pattern: "HER-2/neu", name: HER-2/neu, category: disease_model, note: mammary tumours}
+  # metabolic and cardiovascular
+  - {pattern: "db/db|Lepr ?db", name: db/db, category: disease_model, note: leptin-receptor deficient, diabetic}
+  - {pattern: "ob/ob|Lep ?ob", name: ob/ob, category: disease_model, note: leptin deficient, obese}
+  - {pattern: "NOD mice|non-obese diabetic", name: NOD, category: disease_model, note: autoimmune diabetes}
+  - {pattern: "ApoE ?(?:-/-|knockout|deficient|null)|apolipoprotein E[- ]deficient", name: ApoE-deficient, category: disease_model, note: atherosclerosis}
+  - {pattern: "Ldlr ?(?:-/-|knockout|deficient)|LDL receptor[- ]deficient", name: Ldlr-deficient, category: disease_model, note: atherosclerosis}
+  - {pattern: "Zucker diabetic|ZDF rats", name: ZDF rat, category: disease_model, note: diabetic}
+  - {pattern: "spontaneously hypertensive rats?|SHRSP|stroke-prone", name: SHR rat, category: disease_model, note: hypertensive}
+  # neurodegeneration and muscle
+  - {pattern: "SOD1[- ]?G93A|G93A", name: SOD1 G93A, category: disease_model, note: ALS}
+  - {pattern: "APP/PS1|APPswe|3xTg|5xFAD|Tg2576", name: Alzheimer's model, category: disease_model, note: amyloid pathology}
+  - {pattern: "R6/2|Huntington(?:'s)? disease (?:model|mice)", name: Huntington's model, category: disease_model, note: Huntington's disease}
+  - {pattern: "mdx mice|mdx\\b", name: mdx, category: disease_model, note: muscular dystrophy}
+  # progeroid and accelerated ageing
+  - {pattern: "SAMP ?\\d+|senescence[- ]accelerated mice|senescence[- ]accelerated mouse|SAM-?P", name: SAMP, category: accelerated_aging, note: senescence-accelerated, short-lived}
+  - {pattern: "Ercc1 ?(?:-/Δ|-/-|-/delta)|Ercc1-deficient", name: Ercc1-deficient, category: progeroid, note: DNA repair deficient}
+  - {pattern: "Zmpste24 ?(?:-/-|deficient|null)", name: Zmpste24-deficient, category: progeroid, note: progeria model}
+  - {pattern: "Lmna ?G609G|LmnaG609G|progerin|progeroid mice|Hutchinson-Gilford", name: progeria model, category: progeroid, note: Hutchinson-Gilford progeria}
+  - {pattern: "BubR1 ?(?:H/H|hypomorphic)|Bub1b ?H/H", name: BubR1 hypomorph, category: progeroid, note: progeroid}
+  - {pattern: "klotho ?(?:-/-|deficient|mutant)|kl/kl", name: klotho-deficient, category: progeroid, note: accelerated ageing}
+  - {pattern: "PolgA ?D257A|mtDNA mutator", name: mtDNA mutator, category: progeroid, note: accelerated ageing}
+  - {pattern: "Terc ?(?:-/-|null|deficient)|telomerase[- ]deficient", name: telomerase-deficient, category: progeroid, note: short telomeres in late generations}
+  # worms and flies: short-lived mutants
+  - {pattern: "mev-1|gas-1|isp-1\\b", name: short-lived C. elegans mutant, category: accelerated_aging, note: mitochondrial mutant with altered lifespan}
+  # diets that change the baseline
+  - {pattern: "high[- ](?:fat|calorie|sucrose|sugar) diet|HFD|HCD|western diet", name: high-calorie diet, category: special_diet, note: lifespan shortened by the diet itself}

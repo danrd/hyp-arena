@@ -1,0 +1,50 @@
+You check one claim of a research hypothesis against PubMed abstracts. Extract evidence; do not judge the hypothesis. Code decides the claim's status from what you extract, so be literal and conservative.
+
+Hypothesis (context): {{ claim_plain }}
+Population: {{ population }}. Intervention: {{ intervention }}. Comparator: {{ comparator }}.
+
+Claim {{ claim.id }} ({{ claim.role }}): {{ claim.subject.label }} — {{ claim.relation }} — {{ claim.object.label }}
+Qualifiers stated by the hypothesis: {{ qualifiers or "none" }}
+{% if alternative %}
+This is an alternative explanation that the hypothesis REJECTS. Check it as a claim on its own: a finding that {{ claim.subject.label }} does {{ claim.relation }} {{ claim.object.label }} is stance "supports" (even though it goes against the hypothesis).
+{% endif %}
+{% if contrast %}
+The hypothesis asserts this claim as the main explanation, in contrast to "{{ contrast }}" (checked separately). Judge only this claim; a sentence that only lists both explanations as possibilities is speculation.
+{% endif %}
+{% if negated %}
+This claim is NEGATIVE: it says {{ claim.subject.label }} does NOT {{ claim.relation }} {{ claim.object.label }}. A finding that it does is stance "refutes"; a finding of no effect is stance "supports".
+{% endif %}
+{% if endpoint %}
+This claim is about {{ endpoint }}. A finding on another endpoint (e.g. healthspan or a marker for a lifespan claim) neither supports nor refutes it: give it stance "neither" and the endpoint it measures.
+{% endif %}
+
+Abstracts:
+{% for a in abstracts %}
+[PMID {{ a.pmid }}] {{ a.year }}{% if a.review %} (review){% endif %}. {{ a.title }}
+{{ a.abstract }}
+
+{% endfor %}
+For every abstract that contains a sentence relevant to this claim, return one record:
+- pmid;
+- quote: one or two consecutive sentences copied exactly, character for character, from that abstract;
+- quote_role: finding (a result of this study) | background (stated as known, cited, or a review summarising others) | speculation (may, might, could, suggests, we propose);
+- stance: supports | refutes | neither (for this claim, in this context). "refutes" only when the finding says the relation itself does not hold (no effect, or the opposite effect); a finding about consequences, side effects or other relations of the same entities is "neither";
+- species: the organism the quoted sentence is about (a sentence about other organisms does not support a claim about this one);
+- endpoint: what the finding measures: lifespan | healthspan | biomarker | disease | mechanism | unknown;
+- effect: for a lifespan finding, the direction the study found: increase | decrease | no_effect (no significant change); for other endpoints "unknown";
+- system: in_vivo | ex_vivo | in_vitro; study_type: primary_experiment | rct | open_label_pilot | observational | review | other;
+- sexes: list of male/female in which the effect was found (empty if not stated);
+- effect_percent: % change of lifespan if the abstract states it, else null;
+- qualifiers_match: for each of species, sex, age_at_start, dose, comparator, population: "yes" (matches), "no" (contradicts, e.g. a disease population for healthy adults, ex vivo for an in vivo claim) or "n/a" (the claim does not specify it, or the abstract does not say);
+- intervention_match: exact | dose_differs | regimen_differs | related_compound | class;
+- program: "ITP" or "CITP" if the study is from such a multi-site program, else "";
+- flags: any of conflict_of_interest, small_n, open_label, subgroup_only, preprint, short_lived_controls.
+Trials and studies with several outcomes: judge the claim by the primary outcome. If the primary outcome was null and only secondary outcomes or subgroups improved, return two records from that abstract: the null primary outcome with stance "refutes", and the positive secondary or subgroup result with stance "supports" and flag "subgroup_only".
+Skip abstracts with nothing relevant. Return an empty list if none is relevant. Do not use knowledge outside these abstracts.
+
+Reply with a single JSON object and nothing else:
+{"records": [{"pmid": "", "quote": "", "quote_role": "finding", "stance": "neither", "endpoint": "unknown", "effect": "unknown", "species": "", "system": "in_vivo", "study_type": "other", "sexes": [], "effect_percent": null, "qualifiers_match": {"species": "n/a"}, "intervention_match": "exact", "program": "", "flags": []}]}
+{% if history_text %}
+
+{{ history_text }}
+{% endif %}

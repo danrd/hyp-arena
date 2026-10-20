@@ -11,6 +11,7 @@ from collections import defaultdict
 from functools import lru_cache
 from typing import Optional
 
+from hyparena.card import contexts
 from hyparena.card.models import Claim, EvidenceRecord, ProgramInfo
 from hyparena.tools.compounds import drugage_map, key as cp_key
 
@@ -39,6 +40,19 @@ def _pct(v: str) -> Optional[float]:
         return None
 
 
+NEGATED = ("no_effect", "none", "no", "not", "no effect")
+
+
+def lifespan_wanted(claim) -> Optional[str]:
+    """The direction of effect a lifespan claim asserts: increase, decrease or no_effect (a negated "extends",
+    `qualifiers.direction` no_effect, asserts no effect); None for other relations."""
+    relation = claim.relation
+    if relation == "extends_lifespan_in" and claim.qualifiers.get("direction", "").lower() in NEGATED:
+        return "no_effect"
+    return {"extends_lifespan_in": "increase", "shortens_lifespan_in": "decrease",
+            "no_lifespan_effect_in": "no_effect"}.get(relation)
+
+
 def drugage_records(claim: Claim, allowed_pmids: Optional[set[str]] = None,
                     cid: Optional[int] = None) -> tuple[list[EvidenceRecord], list[EvidenceRecord]]:
     """(evidence, counterevidence) for a lifespan claim (extends, shortens, no effect; a negated "extends" with
@@ -48,10 +62,7 @@ def drugage_records(claim: Claim, allowed_pmids: Optional[set[str]] = None,
     and counts against the other two. `allowed_pmids` restricts to papers published by an as-of date. `cid`: the PubChem parent compound
     of the claim's subject; DrugAge rows then match by compound (sirolimus = rapamycin, quercetin dihydrate =
     quercetin), and by name otherwise."""
-    relation = claim.relation
-    if relation == "extends_lifespan_in" and claim.qualifiers.get("direction", "").lower() in ("no_effect", "none", "no", "not", "no effect"):
-        relation = "no_lifespan_effect_in"
-    wanted = {"extends_lifespan_in": "increase", "shortens_lifespan_in": "decrease", "no_lifespan_effect_in": "none"}.get(relation)
+    wanted = {"increase": "increase", "decrease": "decrease", "no_effect": "none"}.get(lifespan_wanted(claim))
     if wanted is None:
         return [], []
     species = None
@@ -99,5 +110,8 @@ def drugage_records(claim: Claim, allowed_pmids: Optional[set[str]] = None,
             notes="DrugAge rows for this paper" + (" (ITP)" if itp else ""))
         category = "increase" if pos else "decrease" if neg else "none"
         rec.fields["category"] = category
+        rec.effect = {"increase": "increase", "decrease": "decrease", "none": "no_effect"}[category]
+        for strain in sorted({r.get("strain", "").strip() for r in use} - {""}):
+            contexts.flag(rec, strain=strain)
         (support if category == wanted else against).append(rec)
     return support, against
