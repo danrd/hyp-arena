@@ -77,3 +77,20 @@ def test_active_metals_keep_their_own_compound():
     collapse = ["Dexamethasone sodium phosphate", "Calcium pantothenate", "Sodium pyruvate", "Doxycycline hydrochloride"]
     assert all(cp.keeps_own_compound(n) for n in keep)
     assert not any(cp.keeps_own_compound(n) for n in collapse)
+
+
+def test_drugage_paper_category_decides_every_lifespan_relation(monkeypatch):
+    ns = {"compound_name": "Procaine HCl", "species": "Drosophila melanogaster", "pubmed_id": "4397875",
+          "avg_lifespan_significance": "NS", "avg_lifespan_change_percent": "2", "max_lifespan_significance": "",
+          "max_lifespan_change_percent": "", "gender": "male", "ITP": "", "dosage": "1 mg"}
+    monkeypatch.setattr(sources, "_rows", lambda: [ns])
+    monkeypatch.setattr(sources, "drugage_map", lambda: {})
+
+    def claim(relation, **q):
+        return Claim(id="c", subject=Entity(label="Procaine HCl"), relation=relation, object=Entity(label="fly"),
+                     qualifiers=q, role="outcome")
+    counts = lambda c: tuple(len(x) for x in sources.drugage_records(c))
+    assert counts(claim("extends_lifespan_in")) == (0, 1)
+    assert counts(claim("shortens_lifespan_in")) == (0, 1)       # no effect refutes "shortens" too
+    assert counts(claim("no_lifespan_effect_in")) == (1, 0)
+    assert counts(claim("extends_lifespan_in", direction="no_effect")) == (1, 0)   # a negated claim
