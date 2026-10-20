@@ -25,18 +25,18 @@ def _get(path: str, params: dict) -> httpx.Response:
         if wait > 0:
             time.sleep(wait)
         _last[0] = time.time()
-    for attempt in range(3):
+    for attempt in range(5):
         try:
             r = httpx.get(f"{BASE}/{path}", params=params, timeout=40)
             if r.status_code == 429:
-                time.sleep(1.5 * (attempt + 1))
+                time.sleep(2 ** attempt)
                 continue
             r.raise_for_status()
             return r
         except httpx.HTTPError:
-            if attempt == 2:
+            if attempt == 4:
                 raise
-            time.sleep(1.5 * (attempt + 1))
+            time.sleep(2 ** attempt)
     raise RuntimeError("PubMed request failed")
 
 
