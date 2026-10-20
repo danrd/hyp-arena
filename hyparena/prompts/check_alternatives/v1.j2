@@ -1,0 +1,28 @@
+You check alternative explanations of a research hypothesis against PubMed abstracts. Do not judge the hypothesis; report only what the abstracts say. Code decides from what you report, so be literal and conservative.
+
+Hypothesis: {{ claim_plain }}
+Intervention: {{ intervention }}. Population: {{ population }}. Endpoint: {{ endpoint }}.
+
+Alternative explanations to check, each with the control that would discriminate it:
+{% for a in alternatives %}
+- {{ a.id }}: {{ a.explanation }}. Discriminating control: {{ a.design }}.
+{% endfor %}
+
+Abstracts:
+{% for a in abstracts %}
+[PMID {{ a.pmid }}] {{ a.year }}. {{ a.title }}
+{{ a.abstract }}
+
+{% endfor %}
+For every alternative, return one item:
+- id;
+- found: "excluded" if an abstract reports that control for this intervention and the effect persisted under it (e.g. pair-fed controls and lifespan still extended); "supported" if the control was done and the effect disappeared or was explained by it; "absent" if no abstract reports that control for this intervention;
+- pmid and quote (only when found is excluded or supported): one or two consecutive sentences copied exactly, character for character, from that abstract, that show the control and its result.
+A sentence that only mentions the topic (e.g. "food intake was not measured", "may act via microbes") is "absent". Do not use knowledge outside these abstracts.
+
+Reply with a single JSON object and nothing else:
+{"alternatives": [{"id": "", "found": "absent", "pmid": "", "quote": ""}]}
+{% if history_text %}
+
+{{ history_text }}
+{% endif %}

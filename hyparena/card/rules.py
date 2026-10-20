@@ -701,7 +701,7 @@ def known_result(card: HypothesisCard, ver: Verification) -> bool:
 
 
 def finalize(card: HypothesisCard, ver: Verification) -> Verification:
-    """Fill computed statuses, the evidence profile and the known-result flag."""
+    """Fill computed statuses, the evidence profile, the known-result flag and the alternatives row."""
     st = statuses(card, ver)
     for cv in ver.claims:
         if cv.id in st:
@@ -710,6 +710,8 @@ def finalize(card: HypothesisCard, ver: Verification) -> Verification:
             cv.rung_status = rung_statuses(claim, cv) if claim is not None and claim_rung(claim, cv).startswith("human") else {}
     ver.evidence_profile = evidence_profile(card, ver)
     ver.known_result = known_result(card, ver)
+    from hyparena.card.alternatives import rows               # declared and checklist alternatives (spec 8c)
+    ver.alternatives = rows(card, ver)
     return ver
 
 
