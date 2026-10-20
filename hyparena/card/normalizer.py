@@ -12,7 +12,7 @@ from hyparena.card.llm import ask
 from hyparena.card.models import Hallmark, HypothesisCard, Relation
 from hyparena.card.rules import mark_inherited, validate_card
 
-TEMPLATE = ("normalize_card", "v3")
+TEMPLATE = ("normalize_card", "v4")
 
 
 def _problems(value: dict, raw_text: str, card_id: str) -> tuple[Optional[HypothesisCard], list[str]]:
