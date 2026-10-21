@@ -306,7 +306,8 @@ def evaluate(labels_path: str, result_path: str, split: str = "all", unrated: st
 
 
 def run_v2(pool_path: str, out: str, config: str = "configs/v2.yaml", profile: str = "evidence_first",
-           fake: bool = False, max_calls: int = 600, K: int = 10000, verifiers: Optional[list[str]] = None) -> dict:
+           fake: bool = False, max_calls: int = 600, K: int = 10000, verifiers: Optional[list[str]] = None,
+           limit: Optional[int] = None, split: Optional[str] = None, labels_path: Optional[str] = None) -> dict:
     """Our method v2 on a backtest pool, evidence as of the pool's date. Writes the full v2 output (`out`) and
     the ladder-format result (`out` with suffix .ladder.json) that `evaluate` and `compare` read."""
     from hyparena.card.pipeline import as_ladder_result
@@ -314,6 +315,10 @@ def run_v2(pool_path: str, out: str, config: str = "configs/v2.yaml", profile: s
     from hyparena.data import load_imported
     pool = json.loads(Path(pool_path).read_text())
     hyps = load_imported(pool_path)
+    if split and labels_path:                               # e.g. only the dev half
+        labels = json.loads(Path(labels_path).read_text())
+        hyps = [h for h in hyps if labels.get(h.id, {}).get("split") == split]
+    hyps = hyps[:limit] if limit else hyps
     res = v2([h.text for h in hyps], writer=pool["source"].get("family", "unknown"), config=config, fake=fake,
              as_of=pool["source"]["as_of"], max_calls=max_calls, K=K, verifiers=verifiers)
     Path(out).parent.mkdir(parents=True, exist_ok=True)
@@ -321,6 +326,30 @@ def run_v2(pool_path: str, out: str, config: str = "configs/v2.yaml", profile: s
     ladder = as_ladder_result(res, [h.id for h in hyps], profile)
     Path(out).with_suffix(".ladder.json").write_text(json.dumps(ladder, indent=2))
     return ladder
+
+
+def audit(v2_path: str) -> dict:
+    """Date audit (Working_Notes A1): no evidence record published after the run's T reaches any component. Every
+    PubMed record (and the paper behind every curated record) of every verified claim, alternative check and
+    refusal is dated with PubMed's earliest public date."""
+    res = json.loads(Path(v2_path).read_text())
+    as_of = res["meta"].get("as_of")
+    ids = {}
+    for x in res["items"]:
+        ver = x.get("verification") or {}
+        for cv in ver.get("claims", []):
+            for r in cv.get("evidence", []) + cv.get("counterevidence", []) + cv.get("refusals", []):
+                pmid = (r.get("linked_pmid") or r.get("record_id", "")).replace("PMID:", "")
+                if pmid.isdigit():
+                    ids.setdefault(pmid, set()).add(f"{x['id']}/{cv['id']}")
+        for a in ver.get("alternatives", []):
+            pmid = (a.get("record_id") or "").replace("PMID:", "")
+            if pmid.isdigit():
+                ids.setdefault(pmid, set()).add(f"{x['id']}/{a['id']}")
+    dates = _pubdates(sorted(ids)) if ids and as_of else {}
+    late = {p: {"date": d, "where": sorted(ids[p])} for p, d in dates.items() if d > as_of}
+    return {"as_of": as_of, "records": len(ids), "undated": sorted(set(ids) - set(dates)), "after_T": late,
+            "ok": not late}
 
 
 def axes(labels_path: str, v2_path: str, split: str = "all") -> dict:
@@ -391,6 +420,11 @@ def main() -> None:
     v.add_argument("--max-calls", type=int, default=600)
     v.add_argument("--fake", action="store_true")
     v.add_argument("--verifiers", default=None, help="comma-separated families that verify (default: all)")
+    v.add_argument("--limit", type=int, default=None, help="only the first N items")
+    v.add_argument("--split", choices=["dev", "test"], default=None, help="only this split (needs --labels)")
+    v.add_argument("--labels", default=None)
+    d = sub.add_parser("audit", help="no record after T reached the run (date audit)")
+    d.add_argument("--v2", required=True)
     a = sub.add_parser("axes", help="AUC of each evidence-profile axis against the labels (card spec 8)")
     a.add_argument("--labels", required=True)
     a.add_argument("--v2", required=True, help="full v2 output written by the v2 command")
@@ -399,7 +433,11 @@ def main() -> None:
     fams = args.known_families.split(",") if getattr(args, "known_families", None) else None
     if args.cmd == "v2":
         print(json.dumps(run_v2(args.pool, args.out, args.config, args.profile, args.fake, args.max_calls,
-                                verifiers=args.verifiers.split(",") if args.verifiers else None), indent=1)[:2000])
+                                verifiers=args.verifiers.split(",") if args.verifiers else None,
+                                limit=args.limit, split=args.split, labels_path=args.labels), indent=1)[:2000])
+        return
+    if args.cmd == "audit":
+        print(json.dumps(audit(args.v2), indent=1))
         return
     if args.cmd == "axes":
         print(json.dumps(axes(args.labels, args.v2, args.split), indent=2))

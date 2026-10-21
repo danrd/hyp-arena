@@ -77,3 +77,16 @@ def test_scores_from_a_v2_output():
            "ranking": {"evidence_first": {"expected": {"H-0001": 0.4}}}}
     s = oc.scores_v2(res, "evidence_first")
     assert s["imp001"] == 0.4 and s["imp002"] == float("-inf") and s["imp003"] == float("inf")
+
+
+def test_date_audit_finds_records_after_t(tmp_path, monkeypatch):
+    from hyparena import backtest
+    res = {"meta": {"as_of": "2010-12-31"}, "items": [{"id": "H-0001", "verification": {
+        "claims": [{"id": "c1", "evidence": [{"record_id": "PMID:1"}], "counterevidence": [
+            {"record_id": "DrugAge:x", "linked_pmid": "2"}], "refusals": []}],
+        "alternatives": [{"id": "alt1", "record_id": "PMID:3"}]}}]}
+    path = tmp_path / "r.json"
+    path.write_text(json.dumps(res))
+    monkeypatch.setattr(backtest, "_pubdates", lambda ids: {"1": "2009-01-01", "2": "2012-03-26", "3": "2010-12-31"})
+    got = backtest.audit(str(path))
+    assert not got["ok"] and list(got["after_T"]) == ["2"] and got["after_T"]["2"]["where"] == ["H-0001/c1"]
