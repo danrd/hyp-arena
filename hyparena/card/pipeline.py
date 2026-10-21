@@ -115,7 +115,7 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
             continue
         card = x["card"]
         ver = verify(client, verifiers or families, writer, card, as_of=as_of, log=log, map_fn=pool.map,
-                     expert_sources=ex.sources(layer, card.id))
+                     expert_sources=ex.sources(layer, card.id), fallback_families=families)
         ver.alternatives += alternatives.competitor_rows(
             [by_card[h] for h in rivals.get(card.id, []) if h not in dup_of])
         x["verification"] = finalize(card, ver)

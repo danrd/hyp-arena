@@ -516,7 +516,7 @@ def evidence_profile(card: HypothesisCard, ver: Verification) -> EvidenceProfile
                 y = next((r for r in alt.evidence if admissible(r, claim_of(card, alt))), None)
                 reason = f"contrast rule: {alt.id} supported ({y.record_id if y else 'evidence'})"
             else:
-                reason = rec.record_id if rec else f"{c.id} refuted"
+                reason = (f"PMID:{rec.linked_pmid}" if rec and rec.linked_pmid else rec.record_id) if rec else f"{c.id} refuted"
             prof.gate, prof.gate_reason = "filtered", reason
             break
 

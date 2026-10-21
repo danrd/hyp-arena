@@ -347,3 +347,41 @@ def test_pipeline_does_not_verify_a_duplicate_twice(monkeypatch):
     assert all("H-0002" not in r["expected"] for r in res["ranking"].values())   # one entry in АСПИД
     ladder = pipeline.as_ladder_result(res, ["a", "b"])
     assert ladder["hypotheses"]["b"]["combined"] == ladder["hypotheses"]["a"]["combined"]
+
+
+# ---- stage 2 findings (2026-10-21) ----
+
+def test_generic_referent_counts_when_the_abstract_names_the_intervention():
+    card = _fixture_card("ex2_senolytics_function")
+    an1 = card.claims[3]
+    abstract = "We treated aged mice with dasatinib plus quercetin. Intermittent oral administration of senolytics improved function."
+    title = "Senolytics improve physical function and increase lifespan in old age."
+    assert verifier.names_in_source(an1, card, title, abstract, "intermittent oral administration of senolytics improved function")
+    assert not verifier.names_in_source(an1, card, title, "Fisetin was given.", "intermittent oral administration of senolytics")
+    assert not verifier.names_in_source(an1, card, title, abstract, "malate extended lifespan")   # no generic referent
+
+
+def test_one_sex_result_with_a_null_result_in_the_same_paper_is_a_subgroup():
+    from hyparena.card.models import EvidenceRecord
+    rec = lambda **k: EvidenceRecord(source="PubMed", record_id="PMID:40188830", epistemic_type="A_text", **k)
+    sup, null = rec(sex="female"), rec(sex="unknown")
+    verifier.mark_subgroup([sup], [null])
+    assert "subgroup_only" in sup.flags
+    both = rec(sex="both")
+    verifier.mark_subgroup([both], [null])
+    assert "subgroup_only" not in both.flags
+
+
+def test_verifier_falls_back_to_another_family_on_an_empty_reply(monkeypatch):
+    card = _fixture_card("ex5_resveratrol_endpoint")
+    monkeypatch.setattr(pubmed, "search", lambda q, retmax=8, as_of=None: ["1"])
+    monkeypatch.setattr(pubmed, "fetch", lambda ids: {"1": ABSTRACT})
+    monkeypatch.setattr(verifier, "drugage_records", lambda claim, allowed=None, cid=None: ([], []))
+    asked = []
+
+    def fake_ask(client, *, family, **k):
+        asked.append(family)
+        return (None, family) if family == "deepseek" else ({"records": [_record()]}, family)   # content filter
+    monkeypatch.setattr(verifier, "ask", fake_ask)
+    ver = verifier.verify(None, ["deepseek"], "unknown", card, fallback_families=["deepseek", "google"])
+    assert asked == ["deepseek", "google"] and ver.claims[0].evidence

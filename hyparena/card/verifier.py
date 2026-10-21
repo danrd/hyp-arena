@@ -87,6 +87,30 @@ def names_intervention(claim, card: HypothesisCard, text: str) -> bool:
     return True
 
 
+GENERIC = re.compile(r"\b(?:senolytics?|senomorphics?|the (?:drugs?|compounds?|combination|treatment|intervention|agents?)"
+                     r"|these (?:drugs|compounds|agents)|this (?:drug|compound|combination|treatment))\b", re.I)
+
+
+def names_in_source(claim, card: HypothesisCard, title: str, abstract: str, quote: str) -> bool:
+    """The record is about the claim's intervention: the title or the quote names it, or the quote refers to it
+    generically ("senolytics", "the combination") in an abstract that names it (Xu et al. 2018: "intermittent
+    oral administration of senolytics" in an abstract about dasatinib plus quercetin)."""
+    if names_intervention(claim, card, title + " " + quote):
+        return True
+    return bool(GENERIC.search(quote)) and names_intervention(claim, card, title + " " + abstract)
+
+
+def mark_subgroup(evidence: list[EvidenceRecord], counter: list[EvidenceRecord]) -> None:
+    """A trial result in one sex only, from a paper whose other result for the same claim is null or negative,
+    is a subgroup result (PEARL: "improved significantly for women using 10 mg", primary outcome null). Set by
+    code when the extractor left the flag out."""
+    against = {r.record_id for r in counter if r.record_id.startswith("PMID:")}
+    for r in evidence:
+        if r.record_id in against and r.sex in ("male", "female") and "subgroup_only" not in r.flags:
+            r.flags.append("subgroup_only")
+            r.notes += "; subgroup_only set by code: one sex, and a null result for the claim in the same paper"
+
+
 def _context_match(qm: dict[str, str], claim, card: HypothesisCard, quote: str = "") -> dict[str, str]:
     """Spec 7: a qualifier the card leaves unknown gives n/a, never a mismatch."""
     out = dict(qm)
@@ -163,13 +187,14 @@ def recheck(claim, card: HypothesisCard, evidence: list[EvidenceRecord], counter
             a = abstracts.get(r.record_id.replace("PMID:", "")) or {"title": "", "abstract": ""}
             contexts.flag(r, a["title"] + " " + a["abstract"])
             if r.qualifiers_match.get("intervention_match", "exact") in ("exact", "dose_differs", "regimen_differs") \
-                    and a["title"] and not names_intervention(claim, card, a["title"] + " " + r.quote):
+                    and a["title"] and not names_in_source(claim, card, a["title"], a["abstract"], r.quote):
                 r.qualifiers_match["intervention_match"] = "related_compound"
                 r.notes += "; the quote and the title do not name the intervention: counted as a related compound"
             stance = side
             if need == "lifespan" and r.endpoint == "lifespan" and r.quote_role == "finding" and r.effect != "unknown":
                 stance = "supports" if r.effect == lifespan_wanted(claim) else "refutes"
             (out_for if stance == "supports" else out_against).append(r)
+    mark_subgroup(out_for, out_against)
     return out_for, out_against
 
 
@@ -252,8 +277,8 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
             flags=[f for f in (r.get("flags") or []) if isinstance(f, str)], retrieved_at=a.get("year", ""),
             notes=f"extracted by {fam}" + (f"; source given by expert decision {by_expert[pmid]}" if pmid in by_expert else ""))
         contexts.flag(rec, a["title"] + " " + a["abstract"])
-        if rec.qualifiers_match["intervention_match"] in ("exact", "dose_differs", "regimen_differs") and not names_intervention(
-                claim, card, a["title"] + " " + quote):
+        if rec.qualifiers_match["intervention_match"] in ("exact", "dose_differs", "regimen_differs") and not names_in_source(
+                claim, card, a["title"], a["abstract"], quote):
             rec.qualifiers_match["intervention_match"] = "related_compound"   # e.g. malate quoted for a claim about citrate
             rec.notes += "; the quote and the title do not name the intervention: counted as a related compound"
         stance = r.get("stance")
@@ -278,6 +303,7 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
         elif need and rec.endpoint not in ("unknown", need) and rec.quote_role == "finding":
             cv.refusals.append(Refusal(type="endpoint_mismatch", record_id=rec.record_id, quote=quote,
                                        notes=f"measures {rec.endpoint}, the claim is about {need}"))
+    mark_subgroup(cv.evidence, cv.counterevidence)
     if rejected:
         cv.notes = (cv.notes + "; " if cv.notes else "") + f"quotes not found verbatim, dropped: {', '.join(rejected)}"
     if (value or {}).get("truncated"):
@@ -317,14 +343,22 @@ def analog_probes(card: HypothesisCard) -> list[Claim]:
 
 def verify(client, families: list[str], writer: str, card: HypothesisCard, as_of: Optional[str] = None,
            log: Optional[list] = None, map_fn=map,
-           expert_sources: Optional[dict[str, list[tuple[str, str]]]] = None) -> Verification:
+           expert_sources: Optional[dict[str, list[tuple[str, str]]]] = None,
+           fallback_families: Optional[list[str]] = None) -> Verification:
     """All declared claims, the rejected alternatives of a contrast (checked like claims, spec 7), plus analog
     probes; the verifier's family is never the writer's (its records feed the ranking)."""
     log = log if log is not None else []                  # its search entries give searched_pmids
     allowed = [f for f in families if f != writer] or families
     probes = analog_probes(card)
     claims = card.claims + card.rejected_alternatives + probes
-    tasks = [(c, allowed[i % len(allowed)], allowed[(i + 1) % len(allowed)]) for i, c in enumerate(claims)]
+    # the family asked when the first returns nothing: the next verifier, else another family of the config (a
+    # provider content filter blocks some abstracts: DeepSeek on PMID 22587563, 2026-10-21)
+    spare = [f for f in (fallback_families or []) if f != writer and f not in allowed]
+
+    def fallback(i):
+        nxt = allowed[(i + 1) % len(allowed)]
+        return nxt if nxt != allowed[i % len(allowed)] else (spare[0] if spare else nxt)
+    tasks = [(c, allowed[i % len(allowed)], fallback(i)) for i, c in enumerate(claims)]
     expert_sources = expert_sources or {}
     cvs = list(map_fn(lambda t: verify_claim(client, t[1], frozenset({writer}), t[0], card, as_of, log=log,
                                              fallback=t[2], expert_pmids=expert_sources.get(t[0].id)), tasks))

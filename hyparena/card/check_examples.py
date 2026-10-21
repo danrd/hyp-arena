@@ -93,7 +93,8 @@ def run_normalize(families: list[str], repeats: int, out_dir: Path, config: str,
 
 
 def run_verify(family: str, repeats: int, out_dir: Path, config: str, max_calls: int) -> dict:
-    client, _, _ = build_client(config, max_calls=max_calls, families=[family])
+    client, pool, _ = build_client(config, max_calls=max_calls)
+    spare = [j.family for j in pool if j.family != family]
     rows = []
     for rep in range(repeats):
         for name in EXAMPLES:
@@ -101,7 +102,7 @@ def run_verify(family: str, repeats: int, out_dir: Path, config: str, max_calls:
             card = HypothesisCard.model_validate(d["card"])
             entities.resolve_card(card)
             log: list = []
-            ver = finalize(card, verify(client, [family], "unknown", card, log=log))
+            ver = finalize(card, verify(client, [family], "unknown", card, log=log, fallback_families=spare))
             if ver.evidence_profile.gate == "pass":
                 alternatives.check(client, family, card, ver, log=log)
             exp = d["expected"]
