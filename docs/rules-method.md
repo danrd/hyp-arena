@@ -91,7 +91,21 @@ visible to the expert and judges, and they are ranked separately (embeddings do 
 class gives `analog_weak` only when at least one of the two compounds has no ChEMBL mechanism target (then the
 class is the only information); when both have targets, target and ATC decide (sirolimus and tacrolimus share
 macrolide lactam and are not analogs). "Narrow" = the most specific common is_a ancestor with at most
-`chebi.MAX_DESCENDANTS` descendants (the class size); the cap is chosen on the backtest pool (below). Earlier
+`chebi.MAX_DESCENDANTS` descendants (the class size). The cap, 100, is chosen on the backtest pool (2026-10-21):
+78 ITP and CITP compounds with a ChEBI id, 2,134 pairs in which at least one compound has no ChEMBL target.
+Pairs linked by the most specific common class at each cap:
+
+| cap | pairs | classes (size) |
+|---|---|---|
+| 25 | 0 | — |
+| 50 | 2 | proteinogenic amino acid (38): glycine–leucine |
+| 100 | 5 | + oxo dicarboxylic acid (78): alpha-ketoglutarate–oxaloacetate; 11beta-hydroxy steroid (95): aldosterone–dexamethasone |
+| 200 | 6 | + 17alpha-hydroxy steroid (114): 17alpha-estradiol–dexamethasone |
+| 500 | 16 | + tertiary alpha-hydroxy ketone (230): minocycline–forskolin; guanidines (259): metformin–beta-guanidinopropionic acid; lignan (417); enoate ester (467): dimethyl fumarate–arecoline |
+
+Above about 200 functional-group classes appear (alpha-hydroxy ketone, enoate ester), which say nothing about
+mechanism; 100 keeps the pairs that are plausibly related (and 7-hydroxyflavonol, 41, for quercetin–fisetin).
+Price of the choice: metformin and beta-guanidinopropionic acid (guanidines, 259) are not linked. Earlier
 version, kept for the record: the direct is_a parents with at most 50 descendants. "macrolide lactam" (10) joins rapamycin and everolimus,
 "7-hydroxyflavonol" (41) quercetin, fisetin and kaempferol; "ether" (9,036) or "polyphenol" (885) are too broad.
 Roles (has_role) are not used: "geroprotector" is a role of rapamycin, quercetin, resveratrol, metformin and
