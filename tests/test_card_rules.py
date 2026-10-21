@@ -398,3 +398,15 @@ def test_stage1_findings():
         "claims": [{"id": "c1", "subject": {"label": "senescent cells"}, "relation": "other", "note": "bad for",
                     "object": {"label": "health"}, "role": "outcome", "source_span": "Senescent cells are bad for health."}]})
     assert admit(r5).decision == "not_a_hypothesis"
+
+
+def test_gate_reason_of_a_curated_record_is_its_pmid():
+    from hyparena.card.models import EvidenceRecord
+    d = load("ex5_resveratrol_endpoint")
+    card = HypothesisCard.model_validate(d["card"])
+    ver = Verification.model_validate(d["verification"])
+    ver.claims[0].counterevidence = [EvidenceRecord(
+        source="DrugAge", record_id="DrugAge:Resveratrol/Mus musculus/PMID20974732", epistemic_type="B_curated",
+        linked_pmid="20974732", species="mouse", endpoint="lifespan", quote_role="finding", program={"name": "ITP"},
+        qualifiers_match={"species": "yes", "intervention_match": "exact"})]
+    assert finalize(card, ver).evidence_profile.gate_reason == "PMID:20974732"

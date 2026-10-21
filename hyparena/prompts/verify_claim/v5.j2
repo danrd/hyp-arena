@@ -42,7 +42,7 @@ For every abstract that contains a sentence relevant to this claim, return one r
 - intervention_match: exact | dose_differs (same compound and schedule, another dose) | regimen_differs (another route or schedule: in food or water vs a weekly dose, continuous vs intermittent) | related_compound | class;
 - program: "ITP" or "CITP" if the study is from such a multi-site program, else "";
 - flags: any of conflict_of_interest, small_n, open_label, subgroup_only, preprint, short_lived_controls.
-Trials and studies with several outcomes: judge the claim by the primary outcome. If the primary outcome was null and only secondary outcomes or subgroups improved, return two records from that abstract: the null primary outcome with stance "refutes", and the positive secondary or subgroup result with stance "supports" and flag "subgroup_only".
+Trials and studies with several outcomes: judge the claim by the primary outcome. A result reported only for one sex, one dose arm or another subset of the participants is flagged "subgroup_only". If the primary outcome was null and only secondary outcomes or subgroups improved, return two records from that abstract: the null primary outcome with stance "refutes", and the positive secondary or subgroup result with stance "supports" and flag "subgroup_only".
 Skip abstracts with nothing relevant. Return an empty list if none is relevant. Do not use knowledge outside these abstracts.
 
 Reply with a single JSON object and nothing else:
