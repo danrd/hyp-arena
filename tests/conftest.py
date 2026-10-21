@@ -5,6 +5,7 @@ from hyparena.tools import compounds as cp, trials
 
 OFFLINE = {
     "rapamycin": cp.Compound(5284616, "Sirolimus", chebi="CHEBI:9168", chembl="CHEMBL413", max_phase=4, first_approval=1999,
+                             targets=["CHEMBL1902"],
                              synonyms=["rapamycin", "Sirolimus", "Rapamune"]),
     "dasatinib": cp.Compound(3062316, "Dasatinib", chebi="CHEBI:49375", chembl="CHEMBL1421", max_phase=4, first_approval=2006,
                              synonyms=["dasatinib", "Sprycel"]),
@@ -12,6 +13,8 @@ OFFLINE = {
                              synonyms=["quercetin", "Sophoretin"]),
     "resveratrol": cp.Compound(445154, "Resveratrol", chebi="CHEBI:27881", chembl="CHEMBL165", max_phase=3,
                                synonyms=["resveratrol"]),
+    "everolimus": cp.Compound(6442177, "Everolimus", chebi="CHEBI:68478", chembl="CHEMBL1908360", max_phase=4,
+                              first_approval=2009, targets=["CHEMBL1902"], synonyms=["everolimus", "RAD001"]),
     "fakecompound": cp.Compound(1, "Fake compound", chembl="CHEMBL1", max_phase=2, synonyms=["fake compound"]),
 }
 OFFLINE["sirolimus"] = OFFLINE["rapamycin"]

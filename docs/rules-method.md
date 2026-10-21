@@ -21,7 +21,8 @@ generated ideas and manuscripts, and external hypotheses have no experiment logs
 | Alternatives row (spec 8c): declared rejected alternatives with their status, 14 checklist rows by rules, one check call per hypothesis, a dedicated search for P(top-k) ≥ 0.5 | code + LLM (`check_alternatives/v1`): `hyparena/card/alternatives.py` | done |
 | Backtest pools and metrics (Working_Notes A2) | code: `hyparena/outcomes.py`, `hyparena/backtest.py` | done (no run yet) |
 | Debates on the top (prosecution vs defence; competitor pairs), prediction table, informativeness | LLM | stage C |
-| Card-based proximity, evolution loop | code + LLM | later |
+| Card-based proximity (spec 8b): duplicate, variant, competitor, contradiction, analog (shared ChEMBL mechanism target), mechanism neighbour (shared hallmark or molecular node); duplicates are not verified twice, competitors become alternatives | code: `hyparena/card/proximity.py` | done (no embeddings fallback, no ChEBI classes, refinement siblings not linked) |
+| Evolution loop | code + LLM | later |
 
 **Aggregation as implemented** (Aggregation_Spec):
 - additive value over indicators in [0, 1];
@@ -49,6 +50,34 @@ generated ideas and manuscripts, and external hypotheses have no experiment logs
 - **path_to_human** replaces cost, time and translational distance: preliminary steps before a human trial with marker or function endpoints — a preclinical safety package when there are no human safety data (approved drug, clinical-stage compound or diet count), a mouse study when there is no supported mammalian effect; 0 · 1 · 2, a gene without a drug unknown. As of T: approved if ChEMBL's first approval year ≤ the year of T, clinical stage if ClinicalTrials.gov has a trial with the compound started before T (`hyparena/tools/trials.py`; its intervention search can over-match names). `next_step` stays outside the ranking.
 - **Novelty levels** new_context < translation < analog < new_link; `both_sexes` from the records' `sex`; SMAA-O is the default ordinal mapping.
 - **Alternatives (spec 8c).** Ids a<N> declared, alt<N> pipeline, an<N> analogs. The checklist rows are included by rules over card and record fields; one call per gate-passing hypothesis over the abstracts the verifier already read: an abstract with the discriminating control and the effect persisting → `excluded_by_evidence` with a verbatim quote; with the effect gone → `supported` (our addition: the spec has only excluded and open); else `open`. A dedicated search per open row only when P(top-k) ≥ 0.5 in some profile. Informativeness stays unknown until stage C.
+
+## Typed proximity (2026-10-21)
+
+`hyparena/card/proximity.py` compares cards by keys, not by text. Keys: the intervention (identifiers of
+`pico.intervention`, names when unresolved), the population's species, the explained effect (the outcome claim;
+for a mechanistic hypothesis its premise claims) with its direction, the mechanism claims, the context (sex, age at
+start, strain, regimen, route, comparator, dose, measure), every claim as a triple (subject, relation family,
+object, species) with a direction (extends / shortens / no effect, promotes / suppresses, inhibits / activates,
+a negated relation), the ChEMBL mechanism targets of the compounds (`compounds.py` fetches them once) and the
+hallmarks and molecular objects of the intervention's own claims.
+
+| type | rule |
+|---|---|
+| duplicate | same intervention, species, effect and direction, same context, same mechanism claims |
+| variant | same core, other context, or a mechanism stated in only one of the two |
+| competitor | same core, both state mechanisms, the mechanisms differ (a mechanistic hypothesis: the same premise explained differently) |
+| contradiction | a claim triple of one card with the opposite direction in the other |
+| analog | other interventions with a shared mechanism target (rapamycin, everolimus, temsirolimus: FKBP1A) |
+| mechanism_neighbour | other interventions acting on the same hallmark or molecular node (both "inhibit mTORC1") |
+
+A pair can carry several types (a competitor in another context is also a variant; opposite mechanism claims
+under the same outcome are a contradiction and competitors). Pairs come from buckets (same intervention,
+triple, target, node), so a pool of thousands of cards is cheap. In the pipeline: a duplicate of an earlier card
+gets the outcome `duplicate` with `duplicate_of`, is not verified and takes the score of the card it duplicates
+in the ladder format (`dedup=False` turns this off); competitors are added to each other's alternatives row
+(`source: proximity`, `ref`); the result lists all relations (`proximity`) and the groups of variants.
+Not done: the embedding fallback for unresolved entities, the ChEBI class hierarchy for `analog`, refinement
+siblings (`parent_id`), novelty against a knowledge graph.
 
 ## Spec decisions of 2026-10-21 in the code
 

@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Optional
 
 from hyparena.aspid import InfeasiblePreferences, load_profiles
-from hyparena.card import alternatives, entities
+from hyparena.card import alternatives, entities, proximity
 from hyparena.card import expert as ex
 from hyparena.card import indicators as ind
 from hyparena.card.models import HypothesisCard, Verification
@@ -52,12 +52,13 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
         as_of: Optional[str] = None, K: int = 10000, k_top: int = 3, max_calls: int = 400, workers: int = 4,
         normalizer_family: str = "google", on_stage=lambda msg: None, expert=None,
         verifiers: Optional[list[str]] = None, cards: Optional[list[Optional[dict]]] = None,
-        check_alternatives: bool = True) -> dict:
+        check_alternatives: bool = True, dedup: bool = True) -> dict:
     """`expert`: path to an expert file (hyparena/card/expert.py) or an ExpertLayer. `verifiers`: the families
     that verify (default: every family of the config). `cards`: declared cards from an earlier run, one per
     text (None where normalization failed); the normalizer is then skipped, so a change of the verifier is
     compared on the same cards. `check_alternatives`: one call per gate-passing hypothesis over the abstracts
-    already read, and a dedicated search per open alternative for P(top-k) >= 0.5 (spec 8c)."""
+    already read, and a dedicated search per open alternative for P(top-k) >= 0.5 (spec 8c). `dedup`: a card
+    that duplicates an earlier one (spec 8b) is not verified and gets the outcome `duplicate`."""
     started = time.time()
     layer = expert if isinstance(expert, ex.ExpertLayer) else ex.load(expert)
     origins = ["external"] * len(texts) + ["expert"] * len(layer.hypotheses)
@@ -94,12 +95,26 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
         x["admission"] = adm
         if adm.decision != "accepted":
             x["outcome"] = adm.decision
-            continue
-        if "unmapped_relation" in adm.flags:                 # outcome still `other` after the re-parse (spec 5)
+        elif "unmapped_relation" in adm.flags:               # outcome still `other` after the re-parse (spec 5)
             x["outcome"] = "unparsed"
+    # typed proximity among the admitted cards (spec 8b): duplicates are not verified twice, competitors become
+    # alternatives of each other
+    admitted = [x["card"] for x in items if "outcome" not in x]
+    rels = proximity.relations(admitted, proximity.compound_targets)
+    dup_of = proximity.duplicates(rels, [c.id for c in admitted]) if dedup else {}
+    rivals = proximity.competitors(rels)
+    by_card = {c.id: c for c in admitted}
+    for x in items:
+        if "outcome" not in x and x["card"].id in dup_of:
+            x["outcome"], x["duplicate_of"] = "duplicate", dup_of[x["card"].id]
+    for x in items:
+        if "outcome" in x:
             continue
+        card = x["card"]
         ver = verify(client, verifiers or families, writer, card, as_of=as_of, log=log, map_fn=pool.map,
                      expert_sources=ex.sources(layer, card.id))
+        ver.alternatives += alternatives.competitor_rows(
+            [by_card[h] for h in rivals.get(card.id, []) if h not in dup_of])
         x["verification"] = finalize(card, ver)
         if check_alternatives and x["verification"].evidence_profile.gate == "pass":
             alternatives.check(client, checker, card, x["verification"], avoid=frozenset({writer}), log=log)
@@ -142,6 +157,7 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
                      "indicators": [{"id": s.id, "kind": s.kind, "levels": list(s.levels), "bounds": list(s.bounds),
                                      "note": s.note} for s in ind.INDICATORS]},
             "items": [{"id": x["id"], "text": x["text"], "origin": x["origin"], "outcome": x["outcome"],
+                       "duplicate_of": x.get("duplicate_of"),
                        "problems": x["problems"], "expert": ex.opinions(layer, x["id"]),
                        "card": x["card"].model_dump(by_alias=True) if x["card"] else None,
                        "admission": x["admission"].model_dump() if x.get("admission") else None,
@@ -150,13 +166,14 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
                        "unresolved_compounds": x.get("unresolved_compounds", [])} for x in items],
             "ranking": profiles, "robust": ranking.robust if ranking else [],
             **unranked_lists(items),
+            "proximity": [r.as_dict() for r in rels], "variant_groups": proximity.variant_groups(rels),
             "ranking_autonomous": autonomous, "criterion_gap": gap,
             "expert_skipped": [vars(c) for c in ranking.expert_skipped] if ranking else [],
             "filtered": ranking.filtered if ranking else {}, "known_results": ranking.known_results if ranking else [],
             "calls": log}
 
 
-OUTCOMES = ("ranked", "filtered", "known_result", "needs_refinement", "not_a_hypothesis", "unparsed",
+OUTCOMES = ("ranked", "filtered", "known_result", "duplicate", "needs_refinement", "not_a_hypothesis", "unparsed",
             "normalization_failed")
 
 
@@ -182,6 +199,8 @@ def unranked_lists(items: list[dict]) -> dict:
                        for x in items if x["outcome"] == "not_a_hypothesis"],
         "normalization_failed": [{"id": x["id"], "problems": x.get("problems", [])}
                                  for x in items if x["outcome"] == "normalization_failed"],
+        "duplicates": [{"id": x["id"], "duplicate_of": x.get("duplicate_of")}
+                       for x in items if x["outcome"] == "duplicate"],
         "outcome_counts": counts,
         "outcome_shares": {o: round(n / len(items), 3) for o, n in counts.items()} if items else {},
     }
@@ -195,11 +214,16 @@ def refresh_curated(res: dict, K: int = 10000, k_top: int = 3) -> dict:
     from hyparena.card.verifier import curated, recheck
     as_of = res["meta"]["as_of"]
     triples = []
+    verified = [HypothesisCard.model_validate(x["card"]) for x in res["items"] if x.get("verification")]
+    rels = proximity.relations(verified, proximity.compound_targets)
+    rivals, by_card = proximity.competitors(rels), {c.id: c for c in verified}
     for x in res["items"]:
         if not x.get("verification"):
             continue
         card = HypothesisCard.model_validate(x["card"])
         ver = Verification.model_validate(x["verification"])
+        ver.alternatives = [a for a in ver.alternatives if a.source != "proximity"] + alternatives.competitor_rows(
+            [by_card[h] for h in rivals.get(card.id, [])])
         ver.claims = [cv for cv in ver.claims if not (cv.claim and cv.claim.note.startswith(STRAIN_ANALOG))]
         for cv in ver.claims:                                 # their records come back from the rebuilt sources
             cv.refusals = [r for r in cv.refusals if not (r.type == "inherited_mismatch" and "counted for analog" in r.notes)]
@@ -231,11 +255,12 @@ def refresh_curated(res: dict, K: int = 10000, k_top: int = 3) -> dict:
     res["filtered"] = ranking.filtered if ranking else {}
     res["known_results"] = ranking.known_results if ranking else []
     res.update(unranked_lists(res["items"]))
+    res["proximity"], res["variant_groups"] = [r.as_dict() for r in rels], proximity.variant_groups(rels)
     res["meta"]["refreshed"] = time.strftime("%Y-%m-%dT%H:%M:%S")
     return res
 
 
-OUTCOME_SCORE = {"known_result": 3.0, "ranked": 2.0, "needs_refinement": 1.0, "not_a_hypothesis": 1.0,
+OUTCOME_SCORE = {"known_result": 3.0, "ranked": 2.0, "duplicate": 1.0, "needs_refinement": 1.0, "not_a_hypothesis": 1.0,
                  "unparsed": 1.0, "normalization_failed": 1.0, "filtered": 0.0}
 
 
@@ -258,7 +283,18 @@ def as_ladder_result(res: dict, ids: list[str], profile: str = "evidence_first",
             "calls": res["meta"]["calls"], "as_of": res["meta"]["as_of"],
             "tokens": {"all": {"tokens_in": sum(c.get("tokens_in") or 0 for c in res["calls"] if c.get("kind") == "llm"),
                                "tokens_out": sum(c.get("tokens_out") or 0 for c in res["calls"] if c.get("kind") == "llm")}},
-            "hypotheses": hyps}
+            "hypotheses": _with_duplicates(hyps, res)}
+
+
+def _with_duplicates(hyps: dict, res: dict) -> dict:
+    """A duplicate takes the score and status of the card it duplicates."""
+    by_card = {v["card_id"]: v for v in hyps.values()}
+    dup = {x["id"]: x.get("duplicate_of") for x in res["items"] if x["outcome"] == "duplicate"}
+    for h, v in hyps.items():
+        rep = by_card.get(dup.get(v["card_id"]))
+        if rep is not None:
+            hyps[h] = {**rep, "card_id": v["card_id"], "duplicate_of": rep["card_id"]}
+    return hyps
 
 
 def main() -> None:

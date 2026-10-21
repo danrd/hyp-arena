@@ -134,22 +134,34 @@ BY_ID = {r.id: r for r in CHECKLIST}
 def rows(card: HypothesisCard, ver: Verification) -> list[Alternative]:
     """The alternatives row of a verified card: declared rejected alternatives with their claim status, then
     the checklist rows whose inclusion rule holds (open until checked; results of an earlier check are kept),
-    then alternatives from other sources unchanged."""
+    then alternatives from other sources (proximity competitors, debates, experts) unchanged except their ids."""
     st = statuses(card, ver)
     out = [Alternative(id=a.id, type="declared", source="declared", status=st.get(a.id, "unverified"),
                        explanation=f"{a.subject.label} {a.relation} {a.object.label}")
            for a in card.rejected_alternatives]
     f = fields(card, ver)
     checked = {a.type: a for a in ver.alternatives if a.source == "checklist" and a.status != "open"}
-    for n, r in enumerate((r for r in CHECKLIST if r.include(f)), 1):
-        alt = Alternative(id=f"alt{n}", type=r.id, source="checklist", explanation=r.explanation,
+    added = []
+    for r in CHECKLIST:
+        if not r.include(f):
+            continue
+        alt = Alternative(id="", type=r.id, source="checklist", explanation=r.explanation,
                           discriminating_design=r.design)
         if r.id in checked:                                # a result of an earlier check stays
             old = checked[r.id]
             alt.status, alt.record_id, alt.quote = old.status, old.record_id, old.quote
-        out.append(alt)
-    out += [a for a in ver.alternatives if a.source not in ("checklist", "declared")]   # proximity, debate, expert
-    return out
+        added.append(alt)
+    added += [a.model_copy() for a in ver.alternatives if a.source not in ("checklist", "declared")]  # proximity, debate, expert
+    for n, alt in enumerate(added, 1):                     # pipeline ids alt<N>: checklist first, then the others
+        alt.id = f"alt{n}"
+    return out + added
+
+
+def competitor_rows(rivals: list[HypothesisCard]) -> list[Alternative]:
+    """Competitor hypotheses of the pool (spec 8b: same intervention and effect, other mechanism) as
+    alternatives with source proximity; ids are given by `rows`."""
+    return [Alternative(id="", type="competitor", source="proximity", ref=c.id, explanation=c.claim_plain)
+            for c in rivals]
 
 
 def _norm(s: str) -> str:
