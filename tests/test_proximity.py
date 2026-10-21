@@ -21,7 +21,7 @@ def mech(c, relation, obj, cid="m1", hallmark=None):
 
 
 def types(a, b):
-    r = px.relate(px.signature(a, px.compound_targets), px.signature(b, px.compound_targets))
+    r = px.relate(px.signature(a, px.analog_keys), px.signature(b, px.analog_keys))
     return r.types if r else []
 
 
@@ -75,8 +75,9 @@ def test_analog_by_shared_target():
     for c in b.claims:
         c.subject = Entity(label="everolimus")
     resolve_card(b)
-    r = px.relate(px.signature(a, px.compound_targets), px.signature(b, px.compound_targets))
+    r = px.relate(px.signature(a, px.analog_keys), px.signature(b, px.analog_keys))
     assert "analog" in r.types and r.details["shared_targets"] == ["CHEMBL1902"]
+    assert r.details["shared_classes"] == ["CHEBI:145565 macrolide lactam"]
     assert "mechanism_neighbour" in r.types and "mtorc1" in r.details["shared_nodes"]   # both inhibit mTORC1
 
 
@@ -127,3 +128,61 @@ def test_many_cards_are_cheap():
     t = time.time()
     rels = px.relations(base)
     assert time.time() - t < 5 and len(rels) == 150                       # 150 duplicate pairs
+
+
+# ---- ChEBI classes and the embedding fallback (2026-10-21) ----
+
+def _with_intervention(name, cid, label):
+    c = card(name, cid)
+    c.pico.intervention = c.pico.intervention[:1]
+    c.pico.intervention[0].label, c.pico.intervention[0].id, c.pico.intervention[0].type = label, None, "compound"
+    for cl in c.claims:
+        if px.same_intervention(cl, c) or cl.subject.label.startswith(("dasatinib", "resveratrol")):
+            cl.subject = Entity(label=label)
+    resolve_card(c)
+    return c
+
+
+def test_analog_by_a_narrow_chebi_class_only():
+    a = _with_intervention("ex5_resveratrol_endpoint", "H-A", "quercetin")
+    b = _with_intervention("ex5_resveratrol_endpoint", "H-B", "fisetin")
+    r = px.relate(px.signature(a, px.analog_keys), px.signature(b, px.analog_keys))
+    assert r.types == ["analog"] and r.details == {"shared_classes": ["CHEBI:52267 7-hydroxyflavonol"]}
+
+
+class FakeEmbedder:
+    """Fixed vectors: near-synonyms close together, a digit-only difference close too (the number rule must
+    keep it apart)."""
+    VEC = {"senolytics": [1, 0, 0], "senolytic drugs": [0.95, 0.31, 0], "omega-3 fatty acids": [0, 1, 0],
+           "omega-6 fatty acids": [0, 0.97, 0.24], "exercise": [0, 0, 1]}
+
+    def embed(self, texts):
+        import numpy as np
+        v = np.array([self.VEC.get(t.lower(), [0.3, 0.3, 0.3]) for t in texts], dtype=float)
+        return v / np.linalg.norm(v, axis=1, keepdims=True)
+
+
+def _unresolved(cid, label):
+    c = card(cid=cid)
+    c.pico.intervention[0].label, c.pico.intervention[0].id, c.pico.intervention[0].type = label, None, "other"
+    c.claims[0].subject = Entity(label=label)
+    return c
+
+
+def test_name_aliases_merge_synonyms_and_keep_numbers_apart():
+    cards = [_unresolved("H-1", "senolytics"), _unresolved("H-2", "senolytic drugs"),
+             _unresolved("H-3", "omega-3 fatty acids"), _unresolved("H-4", "omega-6 fatty acids")]
+    al = px.name_aliases(cards, FakeEmbedder())
+    assert al == {"senolytics": "~senolyticdrugs", "senolyticdrugs": "~senolyticdrugs"}
+
+
+def test_embedding_fallback_gives_approximate_relations_that_are_not_deduplicated():
+    a, b = _unresolved("H-1", "senolytics"), _unresolved("H-2", "senolytic drugs")
+    assert px.relations([a, b]) == []                                     # by name alone: unrelated
+    rels = px.relations([a, b], embedder=FakeEmbedder())
+    assert rels[0].types == ["duplicate"] and rels[0].approximate
+    assert rels[0].details["approximate"] == [["senolyticdrugs", "senolytics"]]
+    assert px.duplicates(rels, ["H-1", "H-2"]) == {}                      # an approximate duplicate stays
+    c = _unresolved("H-3", "senolytics")
+    exact = [r for r in px.relations([a, c], embedder=FakeEmbedder())]
+    assert exact[0].types == ["duplicate"] and not exact[0].approximate   # the same name: exact

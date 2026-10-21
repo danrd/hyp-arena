@@ -21,7 +21,7 @@ generated ideas and manuscripts, and external hypotheses have no experiment logs
 | Alternatives row (spec 8c): declared rejected alternatives with their status, 14 checklist rows by rules, one check call per hypothesis, a dedicated search for P(top-k) ≥ 0.5 | code + LLM (`check_alternatives/v1`): `hyparena/card/alternatives.py` | done |
 | Backtest pools and metrics (Working_Notes A2) | code: `hyparena/outcomes.py`, `hyparena/backtest.py` | done (no run yet) |
 | Debates on the top (prosecution vs defence; competitor pairs), prediction table, informativeness | LLM | stage C |
-| Card-based proximity (spec 8b): duplicate, variant, competitor, contradiction, analog (shared ChEMBL mechanism target), mechanism neighbour (shared hallmark or molecular node); duplicates are not verified twice, competitors become alternatives | code: `hyparena/card/proximity.py` | done (no embeddings fallback, no ChEBI classes, refinement siblings not linked) |
+| Card-based proximity (spec 8b): duplicate, variant, competitor, contradiction, analog (shared ChEMBL mechanism target or narrow ChEBI class), mechanism neighbour (shared hallmark or molecular node); embedding fallback for unresolved names (SapBERT, approximate); duplicates are not verified twice, competitors become alternatives | code: `hyparena/card/proximity.py`, `hyparena/tools/chebi.py`, `hyparena/tools/embed.py` | done (refinement siblings not linked) |
 | Evolution loop | code + LLM | later |
 
 **Aggregation as implemented** (Aggregation_Spec):
@@ -76,8 +76,35 @@ triple, target, node), so a pool of thousands of cards is cheap. In the pipeline
 gets the outcome `duplicate` with `duplicate_of`, is not verified and takes the score of the card it duplicates
 in the ladder format (`dedup=False` turns this off); competitors are added to each other's alternatives row
 (`source: proximity`, `ref`); the result lists all relations (`proximity`) and the groups of variants.
-Not done: the embedding fallback for unresolved entities, the ChEBI class hierarchy for `analog`, refinement
-siblings (`parent_id`), novelty against a knowledge graph.
+Not done: refinement siblings (`parent_id`), novelty against a knowledge graph.
+
+**ChEBI classes for `analog`** (`hyparena/tools/chebi.py`, OLS4, cached): the direct is_a parents of the
+compound's ChEBI entry with at most 50 descendants. "macrolide lactam" (10) joins rapamycin and everolimus,
+"7-hydroxyflavonol" (41) quercetin, fisetin and kaempferol; "ether" (9,036) or "polyphenol" (885) are too broad.
+Roles (has_role) are not used: "geroprotector" is a role of rapamycin, quercetin, resveratrol, metformin and
+dasatinib alike, so it would make most pairs analogs.
+
+**Embedding fallback for unresolved names** (spec 8b). Entities without identifiers (classes such as
+"senolytics", diets, procedures, processes) used to match only by exact name. Now the names are embedded and
+near-synonyms merged before the keys are built; a relation resting on a merge carries `approximate` with the
+names, and an approximate duplicate is reported but not removed. The model is SapBERT (Liu et al. 2021,
+PubMedBERT trained on UMLS synonyms; ONNX int8 export by Xenova, about 110 MB, run locally, `pip install -e
+".[embed]"`); without it (or with `HYPARENA_EMBEDDER=none`) there is no fallback. Calibration on 18 synonym and
+18 non-synonym pairs of ageing entities (2026-10-21; the set is small, so the threshold is provisional):
+
+| model | synonyms median | non-synonyms median | at the threshold without false merges |
+|---|---|---|---|
+| bge-small-en-v1.5 | 0.81 | 0.75 | 0.90: 5 of 18 synonyms |
+| all-MiniLM-L6-v2 | 0.65 | 0.47 | 0.90: 2 of 18 |
+| SapBERT | 0.81 | 0.54 | 0.80 with the number rule: 10 of 18 |
+
+The worst false matches of every model differ in one number (omega-3 / omega-6 0.87, mTORC1 / mTORC2, GLP-1 /
+GIP), hence the rule: two names merge only if they contain the same numbers. Missed at 0.80: abbreviations
+(SASP), drug classes against their members (SGLT2 inhibitors / gliflozins, statins / HMG-CoA reductase
+inhibitors), fish oil / omega-3. On a test pool of 17 unresolved interventions SapBERT merged senolytics =
+senolytic drugs, young plasma = plasma from young donors, caloric = calorie = dietary restriction (the last is
+broader in the strict sense, hence "approximate"), and kept omega-3 / omega-6, protein restriction and plasma
+exchange apart.
 
 ## Spec decisions of 2026-10-21 in the code
 

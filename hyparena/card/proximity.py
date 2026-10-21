@@ -7,15 +7,21 @@ claims in the closed relation vocabulary; the output is a relation type, not one
 | variant | as duplicate, but the context differs (sex, age at start, strain, dose or regimen, route, comparator, measure), or only one of the two states a mechanism |
 | competitor | same intervention and effect, both state mechanisms, the mechanisms differ |
 | contradiction | the same claim triple (subject, relation family, object, species) with opposite direction, in any claims of the two cards |
-| analog | different interventions sharing a ChEMBL mechanism target (rapamycin, everolimus, temsirolimus: FKBP1A) |
+| analog | different interventions sharing a ChEMBL mechanism target (rapamycin, everolimus, temsirolimus: FKBP1A) or a narrow ChEBI class (macrolide lactam; 7-hydroxyflavonol: quercetin, fisetin, kaempferol) |
 | mechanism_neighbour | different interventions whose own claims act on the same hallmark or the same molecular node |
 
 A pair can carry several types (a competitor in another context is also a variant). Pairs are found through
-buckets (same intervention, same claim triple, same target, same node), not by comparing every pair, so pools
-of thousands of cards are cheap. Limits: entities without identifiers match by normalized name; refinement
-siblings (`parent_id`) are not linked yet; the ChEBI class hierarchy is not used for `analog`; mechanisms
-worded differently match only through the same object entity or hallmark. Applied to supported edges of a
-knowledge graph the same keys would give novelty (spec 8b); the graph does not exist yet."""
+buckets (same intervention, same claim triple, same target or class, same node), not by comparing every pair,
+so pools of thousands of cards are cheap.
+
+Entities without identifiers (classes, diets, procedures, genes, processes) match by name. With an embedder,
+names that are near-synonyms are merged first (`name_aliases`: SapBERT, cosine >= 0.80 and the same numbers in
+both names, so omega-3 / omega-6 and mTORC1 / mTORC2 stay apart); a relation that rests on such a merge carries
+`approximate` with the merged names (spec 8b: "fall back to embedding similarity, marked as an approximation"),
+and an approximate duplicate is reported but never removed. Limits: refinement siblings (`parent_id`) are not
+linked yet; mechanisms worded differently match only through the same object entity, a merged name or a
+hallmark. Applied to supported edges of a knowledge graph the same keys would give novelty (spec 8b); the
+graph does not exist yet."""
 from __future__ import annotations
 
 import re
@@ -41,6 +47,7 @@ MOLECULAR = {"inhibits", "activates", "increases_expression", "decreases_express
 NEGATED = {"no_effect", "none", "no", "not", "no effect"}
 DOWN = {"decrease", "down", "lower", "reduce", "reduces", "decreases"}
 TYPES = ("duplicate", "contradiction", "competitor", "variant", "analog", "mechanism_neighbour")
+ALIAS_THRESHOLD = 0.80                       # cosine for merging unresolved names (SapBERT; see name_aliases)
 
 
 def _norm(s: Optional[str]) -> str:
@@ -48,18 +55,36 @@ def _norm(s: Optional[str]) -> str:
     return "" if s in (UNKNOWN, "n/a", "none") else s
 
 
-def entity_key(entity) -> frozenset:
+class Names:
+    """Name keys of unresolved entities, with near-synonyms merged (`aliases`: name key → canonical key); records
+    which original names a card used for each merged key."""
+
+    def __init__(self, aliases: Optional[dict] = None):
+        self.aliases = aliases or {}
+        self.merged = defaultdict(set)
+
+    def key(self, name: str) -> str:
+        k = cp.key(name)
+        c = self.aliases.get(k, k)
+        if c != k:
+            self.merged[c].add(k)
+        return c
+
+
+def entity_key(entity, names: Optional[Names] = None) -> frozenset:
     """Identifiers when resolved (a combination "CHEBI:a+CHEBI:b" → both), else the normalized names of its parts."""
     if entity.id:
         return frozenset(entity.id.split("+"))
-    return frozenset(cp.key(p) for p in cp.split(entity.label) if cp.key(p)) or frozenset({cp.key(entity.label)})
+    names = names or Names()
+    return frozenset(names.key(p) for p in cp.split(entity.label) if cp.key(p)) or frozenset({names.key(entity.label)})
 
 
-def intervention_key(card: HypothesisCard) -> frozenset:
+def intervention_key(card: HypothesisCard, names: Optional[Names] = None) -> frozenset:
     items = card.pico.intervention
     if items and all(i.id for i in items):
         return frozenset(i.id for i in items)
-    return frozenset(k for i in items for k in ([cp.key(p) for p in cp.split(i.label)] or [cp.key(i.label)]) if k)
+    names = names or Names()
+    return frozenset(names.key(p) for i in items for p in (cp.split(i.label) or [i.label]) if cp.key(p))
 
 
 def direction(claim: Claim) -> int:
@@ -79,12 +104,12 @@ def claim_species(claim: Claim, card: HypothesisCard) -> str:
     return s
 
 
-def triple(claim: Claim, card: HypothesisCard) -> Optional[tuple]:
+def triple(claim: Claim, card: HypothesisCard, names: Optional[Names] = None) -> Optional[tuple]:
     """(subject, relation family, object, species), direction left out; None for `other`."""
     if claim.relation not in FAMILY:
         return None
-    obj = frozenset({claim_species(claim, card)}) if claim.relation in ORGANISM else entity_key(claim.object)
-    return (entity_key(claim.subject), FAMILY[claim.relation][0], obj, claim_species(claim, card))
+    obj = frozenset({claim_species(claim, card)}) if claim.relation in ORGANISM else entity_key(claim.object, names)
+    return (entity_key(claim.subject, names), FAMILY[claim.relation][0], obj, claim_species(claim, card))
 
 
 @dataclass
@@ -96,8 +121,9 @@ class Signature:
     explanation: frozenset                   # mechanism claims (for a mechanistic card: its outcome and mechanisms)
     context: tuple
     triples: dict = field(default_factory=dict)    # triple → (claim id, direction)
-    targets: frozenset = frozenset()
+    targets: frozenset = frozenset()         # analog keys: "target:<ChEMBL id>", "class:<ChEBI id>|<label>"
     nodes: frozenset = frozenset()           # hallmarks and molecular objects of the intervention's own claims
+    merged: dict = field(default_factory=dict)     # canonical name key → the card's own names merged into it
 
 
 def _context(card: HypothesisCard, out: Optional[Claim]) -> tuple:
@@ -109,8 +135,11 @@ def _context(card: HypothesisCard, out: Optional[Claim]) -> tuple:
             _norm(p.comparator.type), _norm(q.get("dose")), _norm(q.get("measure")) or _norm(p.outcome.metric))
 
 
-def signature(card: HypothesisCard, targets: Optional[Callable[[HypothesisCard], Iterable[str]]] = None) -> Signature:
-    keyed = lambda c: (triple(c, card), direction(c))
+def signature(card: HypothesisCard, targets: Optional[Callable[[HypothesisCard], Iterable[str]]] = None,
+              aliases: Optional[dict] = None) -> Signature:
+    names = Names(aliases)
+    triple_ = lambda c: triple(c, card, names)
+    keyed = lambda c: (triple_(c), direction(c))
     out = card.outcome_claim
     if card.hypothesis_type == "mechanistic":
         explained = [c for c in card.claims if c.role == "premise"]
@@ -118,25 +147,26 @@ def signature(card: HypothesisCard, targets: Optional[Callable[[HypothesisCard],
     else:
         explained = [out] if out else []
         explaining = [c for c in card.claims if c.role in ("mechanism", "premise")]
-    effect = frozenset(keyed(c) for c in explained if triple(c, card)) or None
-    own = intervention_key(card)
+    effect = frozenset(keyed(c) for c in explained if triple_(c)) or None
+    own = intervention_key(card, names)
     nodes = set()
     for c in card.claims:
         if same_intervention(c, card):
             if c.object.hallmark:
                 nodes.add(("hallmark", c.object.hallmark))
             if c.relation in MOLECULAR:
-                nodes.add(("node", entity_key(c.object)))
+                nodes.add(("node", entity_key(c.object, names)))
     tri = {}
     for c in card.claims:
-        t = triple(c, card)
+        t = triple_(c)
         if t is not None:
             tri.setdefault(t, (c.id, direction(c)))
     return Signature(id=card.id, intervention=own, species=species_key(card.pico.population.label)
                      or species_key(card.pico.population.taxon or ""), effect=effect,
-                     explanation=frozenset(keyed(c) for c in explaining if triple(c, card)),
+                     explanation=frozenset(keyed(c) for c in explaining if triple_(c)),
                      context=_context(card, out), triples=tri,
-                     targets=frozenset(targets(card)) if targets else frozenset(), nodes=frozenset(nodes))
+                     targets=frozenset(targets(card)) if targets else frozenset(), nodes=frozenset(nodes),
+                     merged={k: frozenset(v) for k, v in names.merged.items()})
 
 
 @dataclass
@@ -145,6 +175,10 @@ class Relation:
     b: str
     types: list[str]
     details: dict = field(default_factory=dict)
+
+    @property
+    def approximate(self) -> bool:
+        return bool(self.details.get("approximate"))
 
     def as_dict(self) -> dict:
         return {"a": self.a, "b": self.b, "types": self.types, "details": self.details}
@@ -180,20 +214,29 @@ def relate(x: Signature, y: Signature) -> Optional[Relation]:
         shared = sorted(x.targets & y.targets)
         if shared:
             types.append("analog")
-            details["shared_targets"] = shared
+            tg = [k.split(":", 1)[1] for k in shared if k.startswith("target:")]
+            cl = [k.split(":", 1)[1].replace("|", " ") for k in shared if k.startswith("class:")]
+            details.update({"shared_targets": tg} if tg else {})
+            details.update({"shared_classes": cl} if cl else {})
         nodes = x.nodes & y.nodes
         if nodes:
             types.append("mechanism_neighbour")
             details["shared_nodes"] = sorted(n[1] if n[0] == "hallmark" else "+".join(sorted(n[1])) for n in nodes)
     if not types:
         return None
+    approx = sorted({tuple(sorted(x.merged[k] | y.merged[k])) for k in set(x.merged) & set(y.merged)
+                     if x.merged[k] != y.merged[k]})
+    if approx:
+        details["approximate"] = [list(names) for names in approx]      # names merged by embedding similarity
     return Relation(x.id, y.id, [t for t in TYPES if t in types], details)
 
 
-def relations(cards: list[HypothesisCard], targets: Optional[Callable] = None) -> list[Relation]:
-    """Typed relations among the cards, through buckets: same intervention, same claim triple, same target,
-    same node."""
-    sigs = {c.id: signature(c, targets) for c in cards}
+def relations(cards: list[HypothesisCard], targets: Optional[Callable] = None, embedder=None,
+              threshold: float = ALIAS_THRESHOLD) -> list[Relation]:
+    """Typed relations among the cards, through buckets: same intervention, same claim triple, same target or
+    class, same node. With an embedder, near-synonymous names of unresolved entities are merged first."""
+    aliases = name_aliases(cards, embedder, threshold) if embedder is not None else {}
+    sigs = {c.id: signature(c, targets, aliases) for c in cards}
     buckets = defaultdict(set)
     for s in sigs.values():
         buckets[("i", s.intervention)].add(s.id)
@@ -212,14 +255,98 @@ def relations(cards: list[HypothesisCard], targets: Optional[Callable] = None) -
     return out
 
 
-def compound_targets(card: HypothesisCard) -> list[str]:
-    """ChEMBL mechanism targets of the card's compound interventions (union for a combination)."""
-    return sorted({t for i in card.pico.intervention if i.type == "compound"
-                   for c in [cp.lookup(i.label)] if c is not None for t in (c.targets or [])})
+def analog_keys(card: HypothesisCard) -> list[str]:
+    """ChEMBL mechanism targets and narrow ChEBI classes of the card's compound interventions (union for a
+    combination)."""
+    from hyparena.tools import chebi
+    out = set()
+    for i in card.pico.intervention:
+        c = cp.lookup(i.label) if i.type == "compound" else None
+        if c is None:
+            continue
+        out |= {f"target:{t}" for t in c.targets or []}
+        out |= {f"class:{cid}|{label}" for cid, label in chebi.classes(c.chebi)}
+    return sorted(out)
+
+
+# ---- embedding fallback for unresolved names (spec 8b) ----
+
+
+def unresolved_names(cards: list[HypothesisCard]) -> dict[str, str]:
+    """Name key → a label, for every entity without an identifier: interventions, claim subjects and objects
+    (organisms excluded: species are compared as species)."""
+    out = {}
+
+    def add(label):
+        for part in cp.split(label) or [label]:
+            k = cp.key(part)
+            if k and k not in out:
+                out[k] = part
+    for card in cards:
+        for i in card.pico.intervention:
+            if not i.id:
+                add(i.label)
+        for c in card.claims:
+            if not c.subject.id:
+                add(c.subject.label)
+            if not c.object.id and c.relation not in ORGANISM:
+                add(c.object.label)
+    return out
+
+
+def _numbers(text: str) -> tuple:
+    return tuple(sorted(re.findall(r"\d+", text)))
+
+
+def name_aliases(cards: list[HypothesisCard], embedder, threshold: float = ALIAS_THRESHOLD) -> dict[str, str]:
+    """Name key → canonical key for groups of near-synonymous names: cosine >= threshold of the embeddings and
+    the same numbers in both names (omega-3 / omega-6, mTORC1 / mTORC2, GLP-1 / GIP stay apart). Calibrated on 18
+    synonym and 18 non-synonym pairs of ageing entities (2026-10-21): with SapBERT, 0.80 and the number rule
+    merged 10 synonym pairs and no other pair."""
+    import numpy as np
+    names = unresolved_names(cards)
+    keys = sorted(names)
+    if len(keys) < 2:
+        return {}
+    vec = embedder.embed([names[k] for k in keys])
+    sim = vec @ vec.T
+    parent = list(range(len(keys)))
+
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+    for i, j in zip(*np.where(np.triu(sim, 1) >= threshold)):
+        if _numbers(names[keys[i]]) == _numbers(names[keys[j]]):
+            parent[find(i)] = find(j)
+    groups = defaultdict(list)
+    for i, k in enumerate(keys):
+        groups[find(i)].append(k)
+    return {k: f"~{min(g)}" for g in groups.values() if len(g) > 1 for k in g}
+
+
+_EMBEDDER = None
+
+
+def default_embedder():
+    """SapBERT when its packages are installed and HYPARENA_EMBEDDER is not "none"; else None (no fallback)."""
+    global _EMBEDDER
+    import os
+    if os.environ.get("HYPARENA_EMBEDDER", "sapbert").lower() == "none":
+        return None
+    if _EMBEDDER is None:
+        try:
+            from hyparena.tools.embed import SapBertEmbedder
+            _EMBEDDER = SapBertEmbedder()
+        except Exception:                                  # packages missing or the model cannot be fetched
+            return None
+    return _EMBEDDER
 
 
 def duplicates(rels: list[Relation], order: list[str]) -> dict[str, str]:
-    """Card id → the card it duplicates (the earliest in `order` of its duplicate group)."""
+    """Card id → the card it duplicates (the earliest in `order` of its duplicate group). Approximate duplicates
+    (resting on merged names) are not removed."""
     rank = {h: i for i, h in enumerate(order)}
     parent = {h: h for h in order}
 
@@ -229,7 +356,7 @@ def duplicates(rels: list[Relation], order: list[str]) -> dict[str, str]:
             h = parent[h]
         return h
     for r in rels:
-        if "duplicate" in r.types and r.a in parent and r.b in parent:
+        if "duplicate" in r.types and not r.approximate and r.a in parent and r.b in parent:
             ra, rb = find(r.a), find(r.b)
             if ra != rb:
                 keep, drop = (ra, rb) if rank[ra] < rank[rb] else (rb, ra)

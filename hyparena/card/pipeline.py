@@ -100,7 +100,7 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
     # typed proximity among the admitted cards (spec 8b): duplicates are not verified twice, competitors become
     # alternatives of each other
     admitted = [x["card"] for x in items if "outcome" not in x]
-    rels = proximity.relations(admitted, proximity.compound_targets)
+    rels = proximity.relations(admitted, proximity.analog_keys, proximity.default_embedder())
     dup_of = proximity.duplicates(rels, [c.id for c in admitted]) if dedup else {}
     rivals = proximity.competitors(rels)
     by_card = {c.id: c for c in admitted}
@@ -215,7 +215,7 @@ def refresh_curated(res: dict, K: int = 10000, k_top: int = 3) -> dict:
     as_of = res["meta"]["as_of"]
     triples = []
     verified = [HypothesisCard.model_validate(x["card"]) for x in res["items"] if x.get("verification")]
-    rels = proximity.relations(verified, proximity.compound_targets)
+    rels = proximity.relations(verified, proximity.analog_keys, proximity.default_embedder())
     rivals, by_card = proximity.competitors(rels), {c.id: c for c in verified}
     for x in res["items"]:
         if not x.get("verification"):
