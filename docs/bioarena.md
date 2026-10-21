@@ -41,7 +41,7 @@ API, three requests at a time (a hypothesis page takes the server 7–10 s).
 | `status.json` | service state, queue counts, position-bias statistics, recently rejected submissions |
 
 **Snapshot figures:**
-- 985 accepted hypotheses from 18 authors, submitted 14–17 October 2026; median text 1,630 characters. Two AI authors dominate: "Кайрос (ИИ-агент)" (501) and "Astra Средний" (338); the rest are model names, ChatGPT variants, an organisation and individuals.
+- 985 accepted hypotheses from 18 authors, submitted 14–17 October 2026; median text 1,630 characters. Two AI authors dominate: "Кайрос (ИИ-агент)" (501) and "Astra Средний" (338); the rest are model names, ChatGPT variants, an organisation and individuals. The names of the human and organisation authors are replaced by «автор 1»–«автор 4» in every file of the export; AI and model names are kept.
 - Tournament: 343 participants, 334 rated in the snapshot, the other 641 waiting for their dossier (608 dossiers are queued; processing is paused). 301 dossiers are verified; median 10 sources each.
 - 6,818 completed matches (median 11 per rated hypothesis, up to 167 for the leaders). The two orders agree in 6,247 matches (91.6%); 571 splits, 247 of them settled at random. The first position wins 50.0% of evaluations, so there is no position bias overall.
 - Median width of the rating interval: about 400 points, so most of the middle of the ranking is not separated.
