@@ -51,6 +51,52 @@ generated ideas and manuscripts, and external hypotheses have no experiment logs
 - **Novelty levels** new_context < translation < analog < new_link; `both_sexes` from the records' `sex`; SMAA-O is the default ordinal mapping.
 - **Alternatives (spec 8c).** Ids a<N> declared, alt<N> pipeline, an<N> analogs. The checklist rows are included by rules over card and record fields; one call per gate-passing hypothesis over the abstracts the verifier already read: an abstract with the discriminating control and the effect persisting → `excluded_by_evidence` with a verbatim quote; with the effect gone → `supported` (our addition: the spec has only excluded and open); else `open`. A dedicated search per open row only when P(top-k) ≥ 0.5 in some profile. Informativeness stays unknown until stage C.
 
+## Calibration, stages 0-2 (2026-10-21)
+
+Tool: `python -m hyparena.card.check_examples normalize|verify` (worked examples against the reference cards).
+
+**Stage 0** (no models): fake runs on both backtest pools reach the metrics; `backtest audit --v2 run.json` checks
+that no record after T reached a run.
+
+**Stage 1, normalizer** (`normalize_card/v4`, 7 texts × 3 repeats per family, 57 calls, no failures):
+
+| | gemini-3.5-flash | deepseek-v4.1-flash (no thinking) |
+|---|---|---|
+| admission right | 21/21 | 20/21 ("Senescent cells are bad for health" accepted once) |
+| type, outcome relation, contrast of Example 3, `measure` | all | all |
+| inheritance | 15/15 | 13/15 ("clears senescent cells" parsed as `other`, so no inheritance) |
+| spans | complete | once cut ("in mice" lost from Example 1's c4) |
+| time | 285 s | 76 s |
+
+Both models vary between `premise` and `mechanism` for the same claim; both roles feed the same axis. The
+normalizer stays on Gemini. Code fixes from this stage: the inherited species is written clean ("human", not
+"healthy older adults"); a text with nothing measurable is not a hypothesis whatever type it is parsed as.
+
+**Stage 2, verifier** (deepseek-v4.1-flash, reference cards, 3 rounds of 2 repeats, 173 calls). Findings and fixes:
+- *Provider content filter.* DeepSeek's endpoint answers some prompts with `finish_reason: content_filter` and no
+  text; the trigger in Example 3 is the Wilkinson 2012 abstract (PMID 22587563), the key record. The verifier now
+  falls back to another family of the config (Gemini). With 20 abstracts per prompt the filter fires more often:
+  in the last round 17 of 42 claims were answered by the fallback.
+- *PubMed Best Match is not deterministic.* The same query a second later gives another top 8 (4 of 12 PMIDs
+  stable over 6 repeats; Neff 2013 in and out of the top 12). The top 20 is nearly stable (18 of 22), so the
+  verifier now reads 20 abstracts per claim.
+- *Subgroups.* The extractor did not flag PEARL's "for women using 10 mg" as subgroup-only; code now flags a
+  one-sex result when the same paper reports a null result for the claim, and the prompt names subsets.
+- *Generic referents.* "intermittent oral administration of senolytics" (Xu et al. 2018) was counted as a related
+  compound because the title does not name D+Q; a generic referent in an abstract that names the intervention
+  now counts.
+- *Human markers.* A marker finding (endpoint biomarker) counts for a human healthspan claim at its markers rung
+  (PEARL's null primary outcome was dropped as an endpoint mismatch).
+- `gate_reason` of a curated record is its PMID.
+
+Last round against the reference: Example 5 matches in both repeats; Example 3 matches in one repeat (Wilkinson
+and Neff found, a1 and c2 contested), in the other X is refuted by "Disease patterns of rapamycin-treated mice did
+not differ" (the reading the reference calls "does not support"); Example 2 matches except c3 ("senescent cells
+drive physical decline": found in one earlier round, not in this one); Example 1: c1 and c2 now have support from
+papers newer than the reference (c2: a 2026 placebo-controlled study in older adults, p21 in immune cells), and in
+one repeat the extractor left out PEARL's null primary outcome, so the subgroup result stands alone and c4 is
+supported.
+
 ## Typed proximity (2026-10-21)
 
 `hyparena/card/proximity.py` compares cards by keys, not by text. Keys: the intervention (identifiers of
