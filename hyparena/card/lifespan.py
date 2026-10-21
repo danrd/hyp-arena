@@ -4,7 +4,8 @@ or a verbal age ("middle age", "older adults": an age interval per species) is d
 the card: species + strain + sex; strain unknown → all strains of the species; sex unknown → the "both" row if
 there is one, else all sexes. With medians [m_lo, m_hi] and ages [a_lo, a_hi] the fraction is
 [a_lo / m_hi, min(1, a_hi / m_lo)]: a number when both are points, else an interval that the aggregation draws
-uniformly. A species, strain or sex not in the table, or an age it cannot read, stays unknown (drawn over [0, 1]).
+uniformly. A species, strain or sex not in the table, assay conditions the card states that differ from the row's
+(worms: 20 °C with FUdR; flies: 25 °C), or an age it cannot read, stay unknown (drawn over [0, 1]).
 Tables: configs/lifespan_medians.yaml."""
 from __future__ import annotations
 
@@ -57,10 +58,38 @@ def _known(v: Optional[str]) -> bool:
     return bool(v) and v.strip().lower() not in (UNKNOWN, "", "n/a", "none")
 
 
+TEMPERATURE = re.compile(r"(\d+(?:\.\d+)?)\s*(?:°\s*c\b|º\s*c\b|degrees?\s*c(?:elsius)?\b)")
+NO_FUDR = re.compile(r"(?:without|no|absence of|free of|lacking)\s+(?:fudr|floxuridine)|(?:fudr|floxuridine)[- ]free")
+FUDR = re.compile(r"\b(?:fudr|floxuridine)\b")
+
+
+def stated_conditions(card: HypothesisCard) -> dict:
+    """Assay conditions the card states anywhere in its text fields: temperature (°C), FUdR yes/no."""
+    p = card.pico
+    text = " ".join([card.claim_plain, p.population.label, p.population.strain, p.outcome.metric,
+                     *(f"{i.label} {i.regimen}" for i in p.intervention),
+                     *(f"{c.source_span} {' '.join(c.qualifiers.values())}" for c in card.claims)]).lower()
+    out = {}
+    m = TEMPERATURE.search(text)
+    if m:
+        out["temperature_c"] = float(m.group(1))
+    if NO_FUDR.search(text):
+        out["fudr"] = False
+    elif FUDR.search(text):
+        out["fudr"] = True
+    return out
+
+
+def _conditions_fit(row: dict, stated: dict) -> bool:
+    """A row applies unless the card states a condition that differs from the row's."""
+    return all(k not in stated or stated[k] == v for k, v in (row.get("conditions") or {}).items())
+
+
 def median_interval(species: str, strain: str = "", sex: str = "", population: str = "",
-                    table: Optional[dict] = None) -> Optional[tuple[float, float]]:
-    """[m_lo, m_hi] in days for the card's species, strain and sex (Data_Sources 19), or None."""
-    rows = [r for r in (table or load())["medians"] if species_key(r.get("species", "")) == species]
+                    table: Optional[dict] = None, conditions: Optional[dict] = None) -> Optional[tuple[float, float]]:
+    """[m_lo, m_hi] in days for the card's species, strain, sex and stated conditions (Data_Sources 19), or None."""
+    rows = [r for r in (table or load())["medians"] if species_key(r.get("species", "")) == species
+            and _conditions_fit(r, conditions or {})]
     if species == "human" and rows:                    # setting: high-income by default, world for LMIC populations
         setting = "world" if any(w in (population or "").lower() for w in LOW_INCOME) else "high-income countries"
         rows = [r for r in rows if r.get("strain", "") == setting]
@@ -100,7 +129,7 @@ def late_start(card: HypothesisCard, table: Optional[dict] = None) -> Value:
     age = pop.age_at_start
     if not species or not _known(age):
         return None
-    med = median_interval(species, pop.strain, pop.sex, pop.label, table)
+    med = median_interval(species, pop.strain, pop.sex, pop.label, table, stated_conditions(card))
     if med is None:
         return None
     days = age_days(age)

@@ -78,7 +78,7 @@ def test_analog_needs_a_shared_target_and_atc_class():
     r = px.relate(px.signature(a, px.analog_keys), px.signature(b, px.analog_keys))
     assert "analog" in r.types and r.details["shared_targets"] == ["CHEMBL1902"]
     assert r.details["shared_atc4"] == ["L01EG", "L04AH"]
-    assert r.details["shared_classes"] == ["CHEBI:145565 macrolide lactam"]
+    assert r.details["shared_class"] == "CHEBI:145565 macrolide lactam (10)"
     assert "mechanism_neighbour" in r.types and "mtorc1" in r.details["shared_nodes"]   # both inhibit mTORC1
 
 
@@ -159,8 +159,13 @@ def test_fkbp1a_binders_that_inhibit_calcineurin_are_not_analogs_of_sirolimus():
     assert _types("sirolimus", "FKBP binder X") == ["analog_weak"]           # shared target, no ATC on one side
 
 
-def test_a_chebi_class_alone_makes_no_analog():
-    assert _types("quercetin", "fisetin") == []                              # 7-hydroxyflavonol, no shared target
+def test_chebi_class_gives_analog_weak_only_without_targets():
+    assert _types("quercetin", "fisetin") == ["analog_weak"]                 # no ChEMBL targets: 7-hydroxyflavonol (41)
+    assert _types("sirolimus", "tacrolimus") == []                           # macrolide lactam, but targets + ATC decide
+    a = _with_intervention("ex5_resveratrol_endpoint", "H-A", "quercetin")
+    b = _with_intervention("ex5_resveratrol_endpoint", "H-B", "fisetin")
+    r = px.relate(px.signature(a, px.analog_keys), px.signature(b, px.analog_keys))
+    assert r.details == {"shared_class": "CHEBI:52267 7-hydroxyflavonol (41)"}
 
 
 class FakeEmbedder:
@@ -193,7 +198,7 @@ def test_embedding_fallback_gives_approximate_relations_that_are_not_deduplicate
     a, b = _unresolved("H-1", "senolytics"), _unresolved("H-2", "senolytic drugs")
     assert px.relations([a, b]) == []                                     # by name alone: unrelated
     rels = px.relations([a, b], embedder=FakeEmbedder())
-    assert rels[0].types == ["duplicate"] and rels[0].approximate
+    assert rels[0].types == ["duplicate_approx"] and rels[0].approximate
     assert rels[0].details["approximate"] == [["senolyticdrugs", "senolytics"]]
     assert px.duplicates(rels, ["H-1", "H-2"]) == {}                      # an approximate duplicate stays
     c = _unresolved("H-3", "senolytics")

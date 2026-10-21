@@ -8,7 +8,7 @@ claims in the closed relation vocabulary; the output is a relation type, not one
 | competitor | same intervention and effect, both state mechanisms, the mechanisms differ |
 | contradiction | the same claim triple (subject, relation family, object, species) with opposite direction, in any claims of the two cards |
 | analog | different interventions sharing a ChEMBL mechanism target and an ATC level-4 class (sirolimus, everolimus, temsirolimus: FKBP1A + L04AH / L01EG); not tacrolimus or pimecrolimus, which bind FKBP1A too but inhibit calcineurin (L04AD, D11AH) |
-| analog_weak | a shared mechanism target, and one of the two has no ATC code |
+| analog_weak | a shared mechanism target, and one of the two has no ATC code; or, when at least one of the two has no ChEMBL mechanism target, a narrow shared ChEBI class (most specific common is_a ancestor of at most `chebi.MAX_DESCENDANTS` members: quercetin and fisetin, 7-hydroxyflavonol, 41) |
 | mechanism_neighbour | different interventions whose own claims act on the same hallmark or the same molecular node |
 
 A pair can carry several types (a competitor in another context is also a variant). Pairs are found through
@@ -19,7 +19,7 @@ Entities without identifiers (classes, diets, procedures, genes, processes) matc
 names that are near-synonyms are merged first (`name_aliases`: SapBERT, cosine >= 0.80 and the same numbers in
 both names, so omega-3 / omega-6 and mTORC1 / mTORC2 stay apart); a relation that rests on such a merge carries
 `approximate` with the merged names (spec 8b: "fall back to embedding similarity, marked as an approximation"),
-and an approximate duplicate is reported but never removed. Limits: refinement siblings (`parent_id`) are not
+and an approximate duplicate gets the type `duplicate_approx` (shown to the expert and judges, never removed). Limits: refinement siblings (`parent_id`) are not
 linked yet; mechanisms worded differently match only through the same object entity, a merged name or a
 hallmark. Applied to supported edges of a knowledge graph the same keys would give novelty (spec 8b); the
 graph does not exist yet."""
@@ -47,7 +47,8 @@ ORGANISM = {"extends_lifespan_in", "shortens_lifespan_in", "no_lifespan_effect_i
 MOLECULAR = {"inhibits", "activates", "increases_expression", "decreases_expression", "part_of", "affects_hallmark"}
 NEGATED = {"no_effect", "none", "no", "not", "no effect"}
 DOWN = {"decrease", "down", "lower", "reduce", "reduces", "decreases"}
-TYPES = ("duplicate", "contradiction", "competitor", "variant", "analog", "analog_weak", "mechanism_neighbour")
+TYPES = ("duplicate", "duplicate_approx", "contradiction", "competitor", "variant", "analog", "analog_weak",
+         "mechanism_neighbour")
 ALIAS_THRESHOLD = 0.80                       # cosine for merging unresolved names (SapBERT; see name_aliases)
 
 
@@ -195,9 +196,13 @@ def _strip(effect: frozenset) -> frozenset:
 
 def _analog(a: frozenset, b: frozenset) -> str:
     """analog: a shared mechanism target and a shared ATC level-4 class; analog_weak: a shared target and one side
-    without ATC; "" otherwise (ATC alone never makes an analog: some level-4 groups name an indication, D11AH).
-    Shared ChEBI classes are reported with an analog, they do not make one."""
+    without ATC, or a shared narrow ChEBI class when at least one side has no mechanism target (the class is then
+    the only information); "" otherwise. ATC alone never makes an analog (some level-4 groups name an indication,
+    D11AH), nor does a class when both sides have targets (sirolimus and tacrolimus share macrolide lactam)."""
+    has_target = lambda k: any(x.startswith("target:") for x in k)
     if not any(k.startswith("target:") for k in a & b):
+        if (not has_target(a) or not has_target(b)) and any(k.startswith("class:") for k in a & b):
+            return "analog_weak"
         return ""
     atc_a, atc_b = {k for k in a if k.startswith("atc4:")}, {k for k in b if k.startswith("atc4:")}
     if not atc_a or not atc_b:
@@ -230,9 +235,12 @@ def relate(x: Signature, y: Signature) -> Optional[Relation]:
             shared = sorted(x.targets & y.targets)
             details["shared_targets"] = [k.split(":", 1)[1] for k in shared if k.startswith("target:")]
             atc = [k.split(":", 1)[1] for k in shared if k.startswith("atc4:")]
-            cl = [k.split(":", 1)[1].replace("|", " ") for k in shared if k.startswith("class:")]
             details.update({"shared_atc4": atc} if atc else {})
-            details.update({"shared_classes": cl} if cl else {})
+            cls = sorted((k.split(":", 1)[1].split("|") for k in shared if k.startswith("class:")), key=lambda c: int(c[2]))
+            if cls:                                       # the most specific common class and its size
+                details["shared_class"] = f"{cls[0][0]} {cls[0][1]} ({cls[0][2]})"
+            if not details["shared_targets"]:
+                del details["shared_targets"]
         nodes = x.nodes & y.nodes
         if nodes:
             types.append("mechanism_neighbour")
@@ -243,6 +251,8 @@ def relate(x: Signature, y: Signature) -> Optional[Relation]:
                      if x.merged[k] != y.merged[k]})
     if approx:
         details["approximate"] = [list(names) for names in approx]      # names merged by embedding similarity
+        # embeddings do not separate opposite claims: such a pair is flagged, never collapsed (spec 8b)
+        types = ["duplicate_approx" if t == "duplicate" else t for t in types]
     return Relation(x.id, y.id, [t for t in TYPES if t in types], details)
 
 
@@ -258,7 +268,7 @@ def relations(cards: list[HypothesisCard], targets: Optional[Callable] = None, e
         for t in s.triples:
             buckets[("t", t)].add(s.id)
         for t in s.targets:
-            if t.startswith("target:"):                   # only a shared target can make an analog
+            if t.startswith(("target:", "class:")):       # a shared target, or a class (analog_weak), can link
                 buckets[("g", t)].add(s.id)
         for n in s.nodes:
             buckets[("n", n)].add(s.id)
@@ -282,7 +292,7 @@ def analog_keys(card: HypothesisCard) -> list[str]:
             continue
         out |= {f"target:{t}" for t in c.targets or []}
         out |= {f"atc4:{code[:5]}" for code in c.atc or [] if len(code) >= 5}
-        out |= {f"class:{cid}|{label}" for cid, label in chebi.classes(c.chebi)}
+        out |= {f"class:{cid}|{label}|{size}" for cid, label, size in chebi.classes(c.chebi)}
     return sorted(out)
 
 
