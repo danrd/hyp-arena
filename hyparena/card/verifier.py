@@ -9,15 +9,17 @@ from typing import Optional
 from hyparena.card.llm import ask, parse_objects
 from hyparena.card.models import (UNKNOWN, Claim, ClaimVerification, Entity, EvidenceRecord,
                                   HypothesisCard, ProgramInfo, Refusal, Verification)
-from hyparena.card.rules import (HUMAN_RUNGS, ORGANISM_PATTERNS, add_strain_analogs, claim_organism, claim_endpoint,
-                                 pico_value, quote_organisms, species_key)
+from hyparena.card.rules import (HUMAN_RUNGS, ORGANISM_PATTERNS, add_strain_analogs, admissible, claim_organism,
+                                 claim_endpoint, pico_value, quote_organisms, species_key, subgroup_only)
 from hyparena.card import contexts
 from hyparena.card.entities import subject_compounds
 from hyparena.tools.compounds import split as split_label
 from hyparena.card.sources import curated_intervention_match, drugage_records, lifespan_wanted
-from hyparena.tools import pubmed
+from hyparena.tools import pubmed, trials
 
 TEMPLATE = ("verify_claim", "v5")
+SUBGROUP_TEMPLATE = ("check_subgroup", "v1")
+NCT = re.compile(r"\bNCT\d{8}\b")
 # PubMed's Best Match order is not deterministic: the same query a second later returns another top 8 (only 4 of 12
 # PMIDs were in all of 6 repeats); the top 20 is nearly stable (18 of 22), so 20 abstracts per claim (2026-10-21)
 RETMAX = 20
@@ -203,7 +205,8 @@ def recheck(claim, card: HypothesisCard, evidence: list[EvidenceRecord], counter
 
 def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisCard,
                  as_of: Optional[str] = None, retmax: int = RETMAX, log: Optional[list] = None,
-                 fallback: Optional[str] = None, expert_pmids: Optional[list[tuple[str, str]]] = None) -> ClaimVerification:
+                 fallback: Optional[str] = None, expert_pmids: Optional[list[tuple[str, str]]] = None,
+                 check_subgroups: bool = True) -> ClaimVerification:
     """`fallback`: the family asked when `family`'s reply is cut off with no complete record (gemini stops in
     the middle of verbatim quotes, most likely its recitation filter)."""
     cv = ClaimVerification(id=claim.id)
@@ -307,11 +310,86 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
             cv.refusals.append(Refusal(type="endpoint_mismatch", record_id=rec.record_id, quote=quote,
                                        notes=f"measures {rec.endpoint}, the claim is about {need}"))
     mark_subgroup(cv.evidence, cv.counterevidence)
+    if check_subgroups:
+        check_subgroup(client, family, avoid, claim, card, cv, log=log, fallback=fallback)
     if rejected:
         cv.notes = (cv.notes + "; " if cv.notes else "") + f"quotes not found verbatim, dropped: {', '.join(rejected)}"
     if (value or {}).get("truncated"):
         cv.notes = (cv.notes + "; " if cv.notes else "") + "reply cut off: only its complete records were kept"
     return cv
+
+
+def check_subgroup(client, family: str, avoid: frozenset, claim, card: HypothesisCard, cv: ClaimVerification,
+                   log: Optional[list] = None, fallback: Optional[str] = None) -> None:
+    """Spec 7, "Subgroup-only support" (2026-10-21): when all the support is subgroup-only and no null or negative
+    finding was found, one targeted query asks the same papers' abstracts, and the ClinicalTrials.gov record of a
+    registered trial, for the whole-sample result on the primary outcome. Null or negative → counterevidence
+    (the claim becomes contested), positive → evidence (supported); nothing → the rules leave it unverified with
+    flag `subgroup_unchecked`. The subgroup records stay in evidence."""
+    support = [r for r in cv.evidence if admissible(r, claim)]
+    if not subgroup_only(support) or any(admissible(r, claim) for r in cv.counterevidence):
+        return
+    pmids = list(dict.fromkeys(r.record_id.replace("PMID:", "") for r in support if r.record_id.startswith("PMID:")))
+    abstracts = {p: a for p, a in pubmed.fetch(pmids).items() if a.get("abstract")}
+    sources, of_pmid = [], {}
+    for p, a in abstracts.items():
+        sources.append({"id": f"PMID:{p}", "kind": f"abstract, {a.get('year', '')}",
+                        "text": f"{a['title']}\n{a['abstract']}"})
+        for nct in dict.fromkeys(NCT.findall(a["abstract"])):
+            text = trials.registry_text(nct)
+            if text:
+                sources.append({"id": nct, "kind": f"ClinicalTrials.gov record of PMID {p}", "text": text})
+                of_pmid[nct] = p
+    if log is not None:
+        log.append({"kind": "subgroup_check", "claim": claim.id, "sources": [x["id"] for x in sources]})
+    if not sources:
+        return
+    texts = {x["id"]: x["text"] for x in sources}
+
+    def validate(v: dict) -> list[str]:
+        problems = []
+        for i, r in enumerate(v.get("results") or []):
+            if not isinstance(r, dict):
+                problems.append(f"result {i}: not an object")
+            elif r.get("quote") and str(r.get("source")) not in texts:
+                problems.append(f"result {i}: source {r.get('source')} is not one of the given sources")
+            elif r.get("quote") and _norm(r["quote"]) not in _norm(texts[str(r["source"])]):
+                problems.append(f"result {i}: the quote is not copied verbatim from {r.get('source')}")
+        return problems
+    variables = {"claim": claim, "claim_plain": card.claim_plain, "sources": sources,
+                 "subgroup": [{"record_id": r.record_id, "quote": r.quote} for r in support]}
+    value, fam = ask(client, role="verify_claim", family=family, template=SUBGROUP_TEMPLATE[0],
+                     version=SUBGROUP_TEMPLATE[1], variables=variables, validate=validate, rounds=2, avoid=avoid, log=log)
+    if value is None and fallback and fallback != family:
+        value, fam = ask(client, role="verify_claim", family=fallback, template=SUBGROUP_TEMPLATE[0],
+                         version=SUBGROUP_TEMPLATE[1], variables=variables, validate=validate, rounds=2, avoid=avoid, log=log)
+    found = []
+    for r in (value or {}).get("results") or []:
+        if not isinstance(r, dict) or r.get("result") not in ("positive", "null", "negative"):
+            continue
+        src, quote = str(r.get("source", "")), r.get("quote", "")
+        if src not in texts or not quote or _norm(quote) not in _norm(texts[src]):
+            continue                                      # never keep a quote that is not in the source
+        pmid = of_pmid.get(src) or src.replace("PMID:", "")
+        base = next((x for x in support if x.record_id == f"PMID:{pmid}"), support[0])
+        rec = base.model_copy(deep=True, update={
+            "source": "ClinicalTrials.gov" if src in of_pmid else "PubMed", "record_id": src,
+            "lab_or_cohort": f"PMID:{pmid}", "linked_pmid": pmid if src in of_pmid else "", "quote": quote,
+            "quote_role": "finding", "sex": "unknown", "effect_percent": None, "effect": "unknown",
+            "endpoint": r.get("endpoint") if r.get("endpoint") in ("lifespan", "healthspan", "biomarker", "disease",
+                                                                    "mechanism") else base.endpoint,
+            "human_rungs": [x for x in (r.get("human_rungs") or []) if x in HUMAN_RUNGS] if base.human_rungs else [],
+            "flags": [f for f in base.flags if f not in ("subgroup_only", "secondary_outcome")],
+            "notes": f"whole-sample primary outcome ({r['result']}), found by the subgroup check; extracted by {fam}"})
+        rec.qualifiers_match.pop("sex", None)
+        if rec.endpoint == "lifespan":
+            wanted = lifespan_wanted(claim)
+            opposite = {"increase": "decrease", "decrease": "increase"}.get(wanted, "unknown")
+            rec.effect = {"positive": wanted, "null": "no_effect", "negative": opposite}[r["result"]] or "unknown"
+        (cv.evidence if r["result"] == "positive" else cv.counterevidence).append(rec)
+        found.append(f"{src} {r['result']}")
+    cv.notes = (cv.notes + "; " if cv.notes else "") + \
+        f"subgroup check: {', '.join(found) if found else 'no whole-sample primary result found'}"
 
 
 def _sex(r: dict) -> str:

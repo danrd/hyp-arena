@@ -1,0 +1,31 @@
+You check one claim of a research hypothesis. The only support found for it is a result in a subgroup (one sex, one dose arm, another subset of the participants) or on a secondary outcome. Find, in the same study, the result for the whole sample on the primary outcome. Extract; do not judge the hypothesis.
+
+Hypothesis (context): {{ claim_plain }}
+Claim {{ claim.id }}: {{ claim.subject.label }} — {{ claim.relation }} — {{ claim.object.label }}
+
+Subgroup or secondary-outcome support found:
+{% for s in subgroup %}
+- [{{ s.record_id }}] "{{ s.quote }}"
+{% endfor %}
+
+Sources:
+{% for src in sources %}
+[{{ src.id }}] {{ src.kind }}
+{{ src.text }}
+
+{% endfor %}
+For every study, return one result:
+- source: the id in square brackets of the source you quote (an abstract or a ClinicalTrials.gov record);
+- pmid: the PMID of the study;
+- quote: one or two consecutive sentences copied exactly, character for character, from that source, that state the whole-sample result on the primary outcome; "" when the sources do not state it;
+- result: positive (the primary outcome improved in the whole sample, in the direction of the claim) | null (no significant change) | negative (it worsened) | not_reported (the sources name the primary outcome but give no whole-sample result, or do not say which outcome is primary);
+- endpoint: what the primary outcome measures: lifespan | healthspan | biomarker | disease | mechanism | unknown;
+- human_rungs: for a study in humans, "human_markers" (laboratory and instrumental measures: blood markers, body composition, imaging) and/or "human_clinical" (function, frailty, pain, disease, mortality).
+A registered primary outcome tells you which outcome is primary; the abstract may report its result. Do not report a subgroup or secondary result here. Do not use knowledge outside these sources.
+
+Reply with a single JSON object and nothing else:
+{"results": [{"source": "", "pmid": "", "quote": "", "result": "not_reported", "endpoint": "unknown", "human_rungs": []}]}
+{% if history_text %}
+
+{{ history_text }}
+{% endif %}

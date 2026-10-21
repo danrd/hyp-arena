@@ -64,3 +64,63 @@ def first_trial_start(name: str) -> Optional[str]:
         CACHE.parent.mkdir(parents=True, exist_ok=True)
         CACHE.write_text(json.dumps(_cache, ensure_ascii=False, indent=0))
     return date
+
+
+RECORDS = ROOT / "data" / "cache" / "trial_records.json"
+_records: Optional[dict] = None
+
+
+def _record_text(study: dict) -> str:
+    """The registry text a verifier quotes from: title, primary outcomes as registered, and the posted results
+    of the primary outcomes (groups, values, analyses) when the trial has results."""
+    proto = study.get("protocolSection") or {}
+    lines = [f"Title: {(proto.get('identificationModule') or {}).get('briefTitle', '')}"]
+    for o in (proto.get("outcomesModule") or {}).get("primaryOutcomes") or []:
+        lines.append(f"Primary outcome (registered): {o.get('measure', '')}. {o.get('description', '')} "
+                     f"Time frame: {o.get('timeFrame', '')}".strip())
+    for m in ((study.get("resultsSection") or {}).get("outcomeMeasuresModule") or {}).get("outcomeMeasures") or []:
+        if m.get("type") != "PRIMARY":
+            continue
+        groups = {g.get("id"): g.get("title", "") for g in m.get("groups") or []}
+        lines.append(f"Primary outcome result: {m.get('title', '')}. {m.get('description', '')}".strip())
+        for c in m.get("classes") or []:
+            for cat in c.get("categories") or []:
+                for v in cat.get("measurements") or []:
+                    lines.append(f"{groups.get(v.get('groupId'), v.get('groupId'))}: {v.get('value', '')} "
+                                 f"{m.get('unitOfMeasure', '')}".strip())
+        for a in m.get("analyses") or []:
+            lines.append(f"Analysis: {a.get('statisticalMethod', '')}, p = {a.get('pValue', '')}. "
+                         f"{a.get('pValueComment', '') or ''}".strip())
+    return "\n".join(lines)
+
+
+def registry_text(nct: str) -> Optional[str]:
+    """Cached registry text of a trial (see `_record_text`); "" when there is no such trial, None on network
+    trouble."""
+    global _records
+    with _lock:
+        if _records is None:
+            _records = json.loads(RECORDS.read_text()) if RECORDS.exists() else {}
+        if nct in _records:
+            return _records[nct]
+    text = None
+    for attempt in range(4):
+        try:
+            r = httpx.get(f"{API}/{nct}", timeout=30)
+        except httpx.HTTPError:
+            time.sleep(2 ** attempt)
+            continue
+        if r.status_code == 404:
+            text = ""
+            break
+        if r.status_code == 200:
+            text = _record_text(r.json())
+            break
+        time.sleep(2 ** attempt)
+    if text is None:
+        return None
+    with _lock:
+        _records[nct] = text
+        RECORDS.parent.mkdir(parents=True, exist_ok=True)
+        RECORDS.write_text(json.dumps(_records, ensure_ascii=False, indent=0))
+    return text
