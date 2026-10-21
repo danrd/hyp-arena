@@ -446,3 +446,21 @@ def test_subgroup_check_is_not_asked_when_a_null_finding_exists(monkeypatch):
                                          endpoint="healthspan")]
     verifier.check_subgroup(None, "google", frozenset(), card.claims[3], card, cv)
     assert not asked
+
+
+def test_dose_in_words_is_not_contradicted(monkeypatch):
+    card = _fixture_card("ex1_rapamycin_healthspan")          # regimen "weekly, low-dose, intermittent"
+    c4 = card.claims[3]
+    assert verifier._context_match({"dose": "no"}, c4, card)["dose"] == "n/a"
+    card.pico.intervention[0].regimen = "1 mg/kg weekly"
+    assert verifier._context_match({"dose": "no"}, c4, card)["dose"] == "no"
+
+
+def test_human_healthspan_prompt_counts_markers():
+    from hyparena.card.llm import render
+    card = _fixture_card("ex1_rapamycin_healthspan")
+    text = lambda hh: render("verify_claim", "v5", claim=card.claims[3], endpoint="healthspan", human_healthspan=hh,
+                             claim_plain="", population="", intervention="", comparator="", qualifiers="",
+                             negated=False, alternative=False, contrast="",
+                             abstracts=[], history_text="")
+    assert "in humans, a finding on a laboratory" in text(True) and "in humans, a finding" not in text(False)

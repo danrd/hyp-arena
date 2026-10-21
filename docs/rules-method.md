@@ -111,6 +111,14 @@ also showed the model writing source ids in brackets ("[PMID:40188830]"), now re
 the reference as in the previous round (c1: one dose-specific mechanism finding refutes it in repeat 1; many
 findings in other contexts make it contested in repeat 2; c2: the 2026 p21 study).
 
+Fixes after the fourth round (agreed 2026-10-21, `verify_claim/v5` amended in place): for a human healthspan claim
+the prompt says a human marker finding counts (stance supports or refutes, a null primary outcome refutes); a dose
+"no" against a card dose without a number ("weekly, low-dose, intermittent") is n/a (code). Example 1 again, two
+repeats (12 calls, runs/stage2e): c4 contested in both, as in the reference; its markers rung also lists the 2026 p21
+study as support. c1 is contested and supported against the reference's unverified: the extractor counts
+"Rapamycin is widely used as a complete inhibitor of the mTORC1 ..." as a finding, where the reference calls such
+sentences background; c2 as before.
+
 ## Typed proximity (2026-10-21)
 
 `hyparena/card/proximity.py` compares cards by keys, not by text. Keys: the intervention (identifiers of

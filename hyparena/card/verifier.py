@@ -125,6 +125,8 @@ def _context_match(qm: dict[str, str], claim, card: HypothesisCard, quote: str =
                                               else next((i.regimen for i in card.pico.intervention), UNKNOWN))
         if out.get(key) == "no" and (not value or value.strip().lower() in (UNKNOWN, "", "n/a")):
             out[key] = "n/a"
+        elif key == "dose" and out.get(key) == "no" and not re.search(r"\d", value or ""):
+            out[key] = "n/a"                               # a dose in words ("low-dose") is not a number to contradict
     if out.get("species") == "no" and not claim_organism(claim):
         out["species"] = "n/a"                             # the claim names no organism: unknown, not a mismatch
     # the quote names organisms and the claim's is not among them (e.g. a sentence about yeast, worms and flies
@@ -235,7 +237,10 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
     p = card.pico
     negated = claim.qualifiers.get("direction", "").lower() in ("no_effect", "none", "no", "not", "no effect")
     contrast = next((a for a in card.declared_alternatives if a.id == claim.qualifiers.get("contrast")), None)
+    human_healthspan = claim_endpoint(claim) == "healthspan" and \
+        species_key(claim.qualifiers.get("species") or claim.object.label) == "human"
     variables = {"claim": claim, "negated": negated, "alternative": claim.role == "alternative",
+                 "human_healthspan": human_healthspan,
                  "contrast": contrast.subject.label + " " + contrast.relation + " " + contrast.object.label if contrast else "",
                  "qualifiers": ", ".join(f"{k}: {v}" for k, v in claim.qualifiers.items()
                                          if v and v != "unknown" and k != "contrast"),

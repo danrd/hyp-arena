@@ -92,12 +92,13 @@ def run_normalize(families: list[str], repeats: int, out_dir: Path, config: str,
     return _save(out_dir, "normalize", rows, client)
 
 
-def run_verify(family: str, repeats: int, out_dir: Path, config: str, max_calls: int) -> dict:
+def run_verify(family: str, repeats: int, out_dir: Path, config: str, max_calls: int,
+               examples: list[str] | None = None) -> dict:
     client, pool, _ = build_client(config, max_calls=max_calls)
     spare = [j.family for j in pool if j.family != family]
     rows = []
     for rep in range(repeats):
-        for name in EXAMPLES:
+        for name in examples or EXAMPLES:
             d = load(name)
             card = HypothesisCard.model_validate(d["card"])
             entities.resolve_card(card)
@@ -146,6 +147,7 @@ def main() -> None:
     n.add_argument("--families", default="google,deepseek")
     v = sub.add_parser("verify")
     v.add_argument("--family", default="deepseek")
+    v.add_argument("--examples", default="", help="comma-separated example names (default: all)")
     for p in (n, v):
         p.add_argument("--repeats", type=int, default=2)
         p.add_argument("--out", required=True)
@@ -155,7 +157,8 @@ def main() -> None:
     if a.cmd == "normalize":
         run_normalize(a.families.split(","), a.repeats, Path(a.out), a.config, a.max_calls)
     else:
-        run_verify(a.family, a.repeats, Path(a.out), a.config, a.max_calls)
+        run_verify(a.family, a.repeats, Path(a.out), a.config, a.max_calls,
+                   [x for x in a.examples.split(",") if x] or None)
 
 
 if __name__ == "__main__":
