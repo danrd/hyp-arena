@@ -333,3 +333,17 @@ Reading:
   early start, after T. The start age is in the hypothesis text, so the indicator can read that decision.
 - Known results at the top of the ranking are not predictions; whether they stay in the metric is open.
 - Several regimens of one compound are correlated items; the per-compound cut gives the same AUC here.
+
+**Ablation on the dev half** (`backtest ablate`: the saved indicators re-aggregated without some axes, no model
+calls; dropping nothing reproduces the run):
+
+| Without | AUC, items [95% CI] | items, known results left out | compounds, known results left out | precision top quarter |
+|---|---|---|---|---|
+| nothing | 0.83 [0.67, 0.94] | 0.80 | 0.80 | 0.75 |
+| late_start | 0.63 [0.42, 0.81] | 0.57 | 0.53 | 0.50 |
+| path_to_human | 0.74 [0.55, 0.88] | 0.69 | 0.71 | 0.62 |
+| both | 0.68 [0.49, 0.86] | 0.62 | 0.60 | 0.62 |
+
+Most of the AUC rests on `late_start`, the axis suspected of reading the ITP's later choice of late-start
+retests; without it and without known results the ranking of compounds is near chance (0.53). That both
+dropped gives more than `late_start` dropped alone is within the noise of 13 positives.

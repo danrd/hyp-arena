@@ -90,3 +90,21 @@ def test_date_audit_finds_records_after_t(tmp_path, monkeypatch):
     monkeypatch.setattr(backtest, "_pubdates", lambda ids: {"1": "2009-01-01", "2": "2012-03-26", "3": "2010-12-31"})
     got = backtest.audit(str(path))
     assert not got["ok"] and list(got["after_T"]) == ["2"] and got["after_T"]["2"]["where"] == ["H-0001/c1"]
+
+
+def test_ablate_without_drop_reproduces_the_aggregation(tmp_path):
+    import json
+    from hyparena.aspid import aggregate, load_profiles
+    from hyparena.backtest import ablate
+    from hyparena.card import indicators as ind
+    vals = {"H-1": {"effect_level": "mammals", "path_to_human": "1", "late_start": 0.3},
+            "H-2": {"effect_level": "none", "path_to_human": "2", "late_start": [0.6, 0.7]},
+            "H-3": {"effect_level": "none", "path_to_human": "0", "late_start": None}}
+    items = [{"id": h, "outcome": "ranked", "indicators": v} for h, v in vals.items()] + [{"id": "H-4", "outcome": "filtered"}]
+    f = tmp_path / "v2.json"
+    f.write_text(json.dumps({"meta": {"as_of": "2010-12-31", "ids": ["a", "b", "c", "d"]}, "items": items}))
+    want = aggregate(vals, ind.INDICATORS, load_profiles()["evidence_first"], K=2000).expected
+    got = ablate(str(f), ["none"], K=2000)["hypotheses"]
+    assert all(abs(got[k]["combined"] - 2.0 - want[h]) < 1e-9 for k, h in zip("abc", vals))
+    assert got["d"]["combined"] < 1.0
+    assert ablate(str(f), ["late_start"], K=2000)["hypotheses"]["a"]["combined"] != got["a"]["combined"]

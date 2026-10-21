@@ -22,6 +22,8 @@ the leakage probe (hyparena.leakage, --exclude-known) is not used for method v2.
 may know (`historical`) are for our system only, whose evidence is cut at T."""
 from __future__ import annotations
 
+from dataclasses import replace
+
 import argparse
 import csv
 import glob
@@ -353,6 +355,29 @@ def audit(v2_path: str) -> dict:
             "ok": not late}
 
 
+def ablate(v2_path: str, drop: list[str], profile: str = "evidence_first", K: int = 10000) -> dict:
+    """The ladder-format result of a saved v2 run re-aggregated without the indicators `drop` (no model calls):
+    which part of the ranking comes from which axis. Gate, known results and the other indicators as saved."""
+    from hyparena.aspid import aggregate, load_profiles
+    from hyparena.card import indicators as ind
+    from hyparena.card.pipeline import OUTCOME_SCORE
+    res = json.loads(Path(v2_path).read_text())
+    ids = res["meta"].get("ids") or [f"imp{i:03d}" for i in range(1, len(res["items"]) + 1)]
+    specs = [s for s in ind.INDICATORS if s.id not in drop]
+    keep = {s.id for s in specs}
+    values = {x["id"]: {k: v for k, v in (x.get("indicators") or {}).items() if k in keep}
+              for x in res["items"] if x["outcome"] == "ranked"}
+    prof = load_profiles()[profile]
+    prof = replace(prof, tiers=[tier if isinstance(tier, str) else [t for t in tier if t in keep] for tier in prof.tiers])
+    prof = replace(prof, tiers=[t for t in prof.tiers if t])
+    expected = aggregate(values, specs, prof, K=K).expected if values else {}
+    hyps = {hid: {"status": x["outcome"], "card_id": x["id"],
+                  "combined": OUTCOME_SCORE.get(x["outcome"], 1.0) + (expected.get(x["id"], 0.0) if x["outcome"] == "ranked" else 0.0)}
+            for hid, x in zip(ids, res["items"])}
+    return {"criteria": [], "step": f"v2-without-{'-'.join(drop)}", "profile": profile, "as_of": res["meta"]["as_of"],
+            "hypotheses": hyps}
+
+
 def axes(labels_path: str, v2_path: str, split: str = "all") -> dict:
     """Card spec 8 validation: does each axis of the evidence profile (and each indicator) separate the later
     ITP positives from the negatives? AUC per axis over the items of the split; hypotheses filtered by the gate
@@ -425,6 +450,11 @@ def main() -> None:
     v.add_argument("--limit", type=int, default=None, help="only the first N items")
     v.add_argument("--split", choices=["dev", "test"], default=None, help="only this split (needs --labels)")
     v.add_argument("--labels", default=None)
+    ab = sub.add_parser("ablate", help="re-aggregate a saved v2 run without some indicators (no model calls)")
+    ab.add_argument("--v2", required=True)
+    ab.add_argument("--drop", required=True, help="comma-separated indicator ids")
+    ab.add_argument("--profile", default="evidence_first")
+    ab.add_argument("--out", required=True)
     d = sub.add_parser("audit", help="no record after T reached the run (date audit)")
     d.add_argument("--v2", required=True)
     a = sub.add_parser("axes", help="AUC of each evidence-profile axis against the labels (card spec 8)")
@@ -437,6 +467,12 @@ def main() -> None:
         print(json.dumps(run_v2(args.pool, args.out, args.config, args.profile, args.fake, args.max_calls,
                                 verifiers=args.verifiers.split(",") if args.verifiers else None,
                                 limit=args.limit, split=args.split, labels_path=args.labels), indent=1)[:2000])
+        return
+    if args.cmd == "ablate":
+        out = ablate(args.v2, args.drop.split(","), args.profile)
+        Path(args.out).parent.mkdir(parents=True, exist_ok=True)
+        Path(args.out).write_text(json.dumps(out, indent=2))
+        print(args.out)
         return
     if args.cmd == "audit":
         print(json.dumps(audit(args.v2), indent=1))
