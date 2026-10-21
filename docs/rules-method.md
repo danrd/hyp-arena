@@ -347,3 +347,11 @@ calls; dropping nothing reproduces the run):
 Most of the AUC rests on `late_start`, the axis suspected of reading the ITP's later choice of late-start
 retests; without it and without known results the ranking of compounds is near chance (0.53). That both
 dropped gives more than `late_start` dropped alone is within the noise of 13 positives.
+
+**Protocol for the test half (agreed 2026-10-21, fixed before the run).** Primary metric (`backtest primary`): AUC
+per compound (the mean score over its regimens; positive if any regimen is), on the ranking without
+`late_start`, with known results left out and listed apart. Secondary: AUC per regimen on the same ranking; the
+full ranking with `late_start` is reported for reference only. Run: `backtest v2 --split test`, same config,
+verifier and profile as the dev half. On the dev half the primary metric is 0.53 [0.29, 0.77] (6 positive, 21
+negative compounds), per regimen 0.57 [0.35, 0.76]. Outside the backtest `late_start` stays: in fresh hypotheses
+the start age is the author's choice, not the ITP's later one.

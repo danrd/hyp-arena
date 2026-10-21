@@ -378,6 +378,33 @@ def ablate(v2_path: str, drop: list[str], profile: str = "evidence_first", K: in
             "hypotheses": hyps}
 
 
+PRIMARY_DROP = ["late_start"]        # reads the ITP's later choice of late-start retests (dev half, 2026-10-21)
+
+
+def primary(labels_path: str, v2_path: str, split: str = "all", K: int = 10000) -> dict:
+    """The backtest's primary metric, fixed before the test half was run (2026-10-21): the ranking without
+    `late_start`, known results left out (they are not predictions, reported apart), one score per compound
+    (the mean over its regimens; a compound is positive if any regimen is). Secondary: AUC per regimen."""
+    labels = json.loads(Path(labels_path).read_text())
+    hyps = ablate(v2_path, PRIMARY_DROP, K=K)["hypotheses"]
+    items = {h: v for h, v in hyps.items() if h in labels and (split == "all" or labels[h].get("split") == split)}
+    known = sorted(h for h, v in items.items() if v["status"] == "known_result")
+    kept = {h: v for h, v in items.items() if v["status"] != "known_result"}
+    score = lambda v: v["combined"] if v["combined"] is not None else -1.0
+    by_compound = defaultdict(list)
+    for h, v in kept.items():
+        by_compound[labels[h]["compound"]].append((score(v), labels[h]["label"]))
+    comp = {c: (sum(s for s, _ in xs) / len(xs), max(y for _, y in xs)) for c, xs in by_compound.items()}
+    out = {"split": split, "dropped": PRIMARY_DROP,
+           "known_results": [{"id": h, "compound": labels[h]["compound"], "label": labels[h]["label"]} for h in known]}
+    for name, pairs in (("per_compound", list(comp.values())), ("per_regimen", [(score(v), labels[h]["label"]) for h, v in kept.items()])):
+        pos, neg = [s for s, y in pairs if y == 1], [s for s, y in pairs if y == 0]
+        if pos and neg:
+            lo, hi = bootstrap_auc(pos, neg)
+            out[name] = {"auc": auc(pos, neg), "auc_95ci": [lo, hi], "n_pos": len(pos), "n_neg": len(neg)}
+    return out
+
+
 def axes(labels_path: str, v2_path: str, split: str = "all") -> dict:
     """Card spec 8 validation: does each axis of the evidence profile (and each indicator) separate the later
     ITP positives from the negatives? AUC per axis over the items of the split; hypotheses filtered by the gate
@@ -450,6 +477,10 @@ def main() -> None:
     v.add_argument("--limit", type=int, default=None, help="only the first N items")
     v.add_argument("--split", choices=["dev", "test"], default=None, help="only this split (needs --labels)")
     v.add_argument("--labels", default=None)
+    pm = sub.add_parser("primary", help="the primary metric (without late_start, known results apart, per compound)")
+    pm.add_argument("--labels", required=True)
+    pm.add_argument("--v2", required=True)
+    pm.add_argument("--split", choices=["dev", "test", "all"], default="all")
     ab = sub.add_parser("ablate", help="re-aggregate a saved v2 run without some indicators (no model calls)")
     ab.add_argument("--v2", required=True)
     ab.add_argument("--drop", required=True, help="comma-separated indicator ids")
@@ -467,6 +498,9 @@ def main() -> None:
         print(json.dumps(run_v2(args.pool, args.out, args.config, args.profile, args.fake, args.max_calls,
                                 verifiers=args.verifiers.split(",") if args.verifiers else None,
                                 limit=args.limit, split=args.split, labels_path=args.labels), indent=1)[:2000])
+        return
+    if args.cmd == "primary":
+        print(json.dumps(primary(args.labels, args.v2, args.split), indent=2))
         return
     if args.cmd == "ablate":
         out = ablate(args.v2, args.drop.split(","), args.profile)
