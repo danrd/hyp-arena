@@ -346,14 +346,20 @@ def check_subgroup(client, family: str, avoid: frozenset, claim, card: Hypothesi
         return
     texts = {x["id"]: x["text"] for x in sources}
 
+    def source_of(r: dict) -> str:
+        """The source id as given ("[PMID:1]", "PMID 1", "1" are read as "PMID:1"), else the study's abstract."""
+        src = re.sub(r"^PMID\s*:?\s*", "PMID:", str(r.get("source", "")).strip(" []"), flags=re.I)
+        src = src if src in texts else f"PMID:{src}"
+        return src if src in texts else f"PMID:{str(r.get('pmid', '')).replace('PMID:', '').strip()}"
+
     def validate(v: dict) -> list[str]:
         problems = []
         for i, r in enumerate(v.get("results") or []):
             if not isinstance(r, dict):
                 problems.append(f"result {i}: not an object")
-            elif r.get("quote") and str(r.get("source")) not in texts:
+            elif r.get("quote") and source_of(r) not in texts:
                 problems.append(f"result {i}: source {r.get('source')} is not one of the given sources")
-            elif r.get("quote") and _norm(r["quote"]) not in _norm(texts[str(r["source"])]):
+            elif r.get("quote") and _norm(r["quote"]) not in _norm(texts[source_of(r)]):
                 problems.append(f"result {i}: the quote is not copied verbatim from {r.get('source')}")
         return problems
     variables = {"claim": claim, "claim_plain": card.claim_plain, "sources": sources,
@@ -367,7 +373,7 @@ def check_subgroup(client, family: str, avoid: frozenset, claim, card: Hypothesi
     for r in (value or {}).get("results") or []:
         if not isinstance(r, dict) or r.get("result") not in ("positive", "null", "negative"):
             continue
-        src, quote = str(r.get("source", "")), r.get("quote", "")
+        src, quote = source_of(r), r.get("quote", "")
         if src not in texts or not quote or _norm(quote) not in _norm(texts[src]):
             continue                                      # never keep a quote that is not in the source
         pmid = of_pmid.get(src) or src.replace("PMID:", "")

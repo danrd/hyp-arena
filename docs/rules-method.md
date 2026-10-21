@@ -99,6 +99,18 @@ supported. Fixed by the subgroup rule above: such a c4 is now unverified with `s
 query finds the null primary outcome ("Visceral adiposity did not change significantly", in the abstract of
 PMID 40188830; the registry record NCT04488601 names visceral fat by DXA as primary and has no posted results).
 
+Fourth round (2026-10-21, after the subgroup rule; 35 calls, no failures; runs/stage2d): Examples 3 and 5 match in
+both repeats; Example 2 matches except c3, as before. Example 1, repeat 2: c4 contested as in the reference (the
+extractor returned the null primary outcome itself). Repeat 1: c4 unverified, for two reasons outside the new rule:
+the extractor marked the dose "no" for PEARL (5–10 mg weekly against "weekly low-dose"), which made the subgroup
+record inadmissible, and it gave the null primary outcome stance "neither" with endpoint biomarker, so it became an
+`endpoint_mismatch` refusal (the prompt's endpoint instruction predates the rule that human markers count for a
+healthspan claim). With the dose set to "yes", the targeted query on that repeat found "Visceral adiposity did not
+change significantly" in the abstract (one call), and c4 came out contested at both rungs; the first live call
+also showed the model writing source ids in brackets ("[PMID:40188830]"), now read as given. c1 and c2 differ from
+the reference as in the previous round (c1: one dose-specific mechanism finding refutes it in repeat 1; many
+findings in other contexts make it contested in repeat 2; c2: the 2026 p21 study).
+
 ## Typed proximity (2026-10-21)
 
 `hyparena/card/proximity.py` compares cards by keys, not by text. Keys: the intervention (identifiers of

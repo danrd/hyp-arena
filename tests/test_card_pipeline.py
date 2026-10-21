@@ -412,7 +412,7 @@ def _subgroup_cv(monkeypatch, results, registry="Primary outcome (registered): v
 
 
 def test_subgroup_check_finds_a_null_primary_outcome(monkeypatch):
-    cv, asked = _subgroup_cv(monkeypatch, [{"source": "PMID:40188830", "pmid": "40188830", "result": "null",
+    cv, asked = _subgroup_cv(monkeypatch, [{"source": "[PMID:40188830]", "pmid": "40188830", "result": "null",
                                             "quote": "Visceral adiposity did not change significantly.",
                                             "endpoint": "biomarker", "human_rungs": ["human_markers"]}])
     assert [s["id"] for s in asked[0]["sources"]] == ["PMID:40188830", "NCT04488601"]
