@@ -321,6 +321,7 @@ def run_v2(pool_path: str, out: str, config: str = "configs/v2.yaml", profile: s
     hyps = hyps[:limit] if limit else hyps
     res = v2([h.text for h in hyps], writer=pool["source"].get("family", "unknown"), config=config, fake=fake,
              as_of=pool["source"]["as_of"], max_calls=max_calls, K=K, verifiers=verifiers)
+    res["meta"]["ids"] = [h.id for h in hyps]                # pool ids of the items, also for a split or a limit
     Path(out).parent.mkdir(parents=True, exist_ok=True)
     Path(out).write_text(json.dumps(res, ensure_ascii=False, indent=1, default=str))
     ladder = as_ladder_result(res, [h.id for h in hyps], profile)
@@ -361,7 +362,8 @@ def axes(labels_path: str, v2_path: str, split: str = "all") -> dict:
     labels = json.loads(Path(labels_path).read_text())
     items = _items(labels, split, set())
     res = json.loads(Path(v2_path).read_text())
-    by_id = dict(zip([f"imp{i:03d}" for i in range(1, len(res["items"]) + 1)], res["items"]))
+    ids = res["meta"].get("ids") or [f"imp{i:03d}" for i in range(1, len(res["items"]) + 1)]
+    by_id = dict(zip(ids, res["items"]))
     specs = {s.id: s for s in ind.INDICATORS}
     out = {"split": split, "n": 0, "outcomes": defaultdict(lambda: defaultdict(int)), "axes": {}}
     values = defaultdict(dict)
