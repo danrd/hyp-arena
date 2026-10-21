@@ -18,7 +18,10 @@ from hyparena.card.sources import curated_intervention_match, drugage_records, l
 from hyparena.tools import pubmed
 
 TEMPLATE = ("verify_claim", "v5")
-ALTERNATIVE_RETMAX = 12
+# PubMed's Best Match order is not deterministic: the same query a second later returns another top 8 (only 4 of 12
+# PMIDs were in all of 6 repeats); the top 20 is nearly stable (18 of 22), so 20 abstracts per claim (2026-10-21)
+RETMAX = 20
+ALTERNATIVE_RETMAX = 20
 REL_WORDS = {"extends_lifespan_in": "lifespan", "shortens_lifespan_in": "lifespan", "no_lifespan_effect_in": "lifespan",
              "slows_aging_in": "slows aging",
              "improves_healthspan_in": "healthspan OR physical function", "changes_biomarker": "", "predicts": "predicts",
@@ -199,7 +202,7 @@ def recheck(claim, card: HypothesisCard, evidence: list[EvidenceRecord], counter
 
 
 def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisCard,
-                 as_of: Optional[str] = None, retmax: int = 8, log: Optional[list] = None,
+                 as_of: Optional[str] = None, retmax: int = RETMAX, log: Optional[list] = None,
                  fallback: Optional[str] = None, expert_pmids: Optional[list[tuple[str, str]]] = None) -> ClaimVerification:
     """`fallback`: the family asked when `family`'s reply is cut off with no complete record (gemini stops in
     the middle of verbatim quotes, most likely its recitation filter)."""
