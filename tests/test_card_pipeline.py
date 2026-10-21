@@ -385,3 +385,64 @@ def test_verifier_falls_back_to_another_family_on_an_empty_reply(monkeypatch):
     monkeypatch.setattr(verifier, "ask", fake_ask)
     ver = verifier.verify(None, ["deepseek"], "unknown", card, fallback_families=["deepseek", "google"])
     assert asked == ["deepseek", "google"] and ver.claims[0].evidence
+
+
+# ---- the targeted subgroup check (spec 7, "Subgroup-only support") ----
+
+PEARL = {**ABSTRACT, "pmid": "40188830", "title": "Rapamycin in healthy older adults (PEARL).",
+         "abstract": "Visceral adiposity did not change significantly. Lean tissue mass improved in women. "
+                     "ClinicalTrials.gov: NCT04488601."}
+
+
+def _subgroup_cv(monkeypatch, results, registry="Primary outcome (registered): visceral fat by DXA."):
+    from hyparena.card.models import ClaimVerification, EvidenceRecord
+    from hyparena.tools import trials
+    card = _fixture_card("ex1_rapamycin_healthspan")
+    c4 = card.claims[3]
+    sub = EvidenceRecord(source="PubMed", record_id="PMID:40188830", quote="Lean tissue mass improved in women.",
+                         species="human", sex="female", endpoint="healthspan", human_rungs=["human_markers"],
+                         flags=["subgroup_only"], qualifiers_match={"species": "yes", "sex": "n/a"})
+    cv = ClaimVerification(id="c4", evidence=[sub])
+    asked = []
+    monkeypatch.setattr(pubmed, "fetch", lambda ids: {"40188830": PEARL})
+    monkeypatch.setattr(trials, "registry_text", lambda nct: registry)
+    monkeypatch.setattr(verifier, "ask", lambda *a, **k: (asked.append(k["variables"]), ({"results": results}, "fake"))[1])
+    verifier.check_subgroup(None, "google", frozenset(), c4, card, cv)
+    return cv, asked
+
+
+def test_subgroup_check_finds_a_null_primary_outcome(monkeypatch):
+    cv, asked = _subgroup_cv(monkeypatch, [{"source": "PMID:40188830", "pmid": "40188830", "result": "null",
+                                            "quote": "Visceral adiposity did not change significantly.",
+                                            "endpoint": "biomarker", "human_rungs": ["human_markers"]}])
+    assert [s["id"] for s in asked[0]["sources"]] == ["PMID:40188830", "NCT04488601"]
+    r = cv.counterevidence[0]
+    assert (r.record_id, r.sex, r.flags, r.endpoint) == ("PMID:40188830", "unknown", [], "biomarker")
+    assert "sex" not in r.qualifiers_match and len(cv.evidence) == 1
+
+
+def test_subgroup_check_reads_the_registry(monkeypatch):
+    cv, _ = _subgroup_cv(monkeypatch, [{"source": "NCT04488601", "pmid": "40188830", "result": "positive",
+                                        "quote": "visceral fat by DXA", "endpoint": "biomarker"}])
+    r = cv.evidence[1]
+    assert (r.source, r.record_id, r.linked_pmid, r.lab_or_cohort) == ("ClinicalTrials.gov", "NCT04488601", "40188830",
+                                                                       "PMID:40188830")
+
+
+def test_subgroup_check_with_nothing_found_adds_nothing(monkeypatch):
+    cv, _ = _subgroup_cv(monkeypatch, [{"source": "PMID:40188830", "pmid": "40188830", "result": "not_reported", "quote": ""},
+                                       {"source": "PMID:40188830", "result": "null", "quote": "a sentence not in the abstract"}])
+    assert len(cv.evidence) == 1 and not cv.counterevidence
+    assert "no whole-sample primary result found" in cv.notes
+
+
+def test_subgroup_check_is_not_asked_when_a_null_finding_exists(monkeypatch):
+    from hyparena.card.models import EvidenceRecord
+    card = _fixture_card("ex1_rapamycin_healthspan")
+    cv, _ = _subgroup_cv(monkeypatch, [])
+    asked = []
+    monkeypatch.setattr(verifier, "ask", lambda *a, **k: asked.append(1))
+    cv.counterevidence = [EvidenceRecord(source="PubMed", record_id="PMID:3", quote="no change", species="human",
+                                         endpoint="healthspan")]
+    verifier.check_subgroup(None, "google", frozenset(), card.claims[3], card, cv)
+    assert not asked

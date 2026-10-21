@@ -260,10 +260,19 @@ def claim_status(cv: ClaimVerification, claim: Claim) -> str:
     return _status_of(cv, claim, cv.evidence, cv.counterevidence)
 
 
+SUBGROUP_FLAGS = ("subgroup_only", "secondary_outcome")
+
+
+def subgroup_only(support: list[EvidenceRecord]) -> bool:
+    """All the support is from a subgroup or a secondary outcome (spec 7, "Subgroup-only support")."""
+    return bool(support) and all(any(f in r.flags for f in SUBGROUP_FLAGS) for r in support)
+
+
 def _status_of(cv: ClaimVerification, claim, evidence, counter) -> str:
-    """Status from the records for and against (spec 7). Support only from subgroups or secondary outcomes
-    (flag subgroup_only) while the claim has an admissible null or negative finding is contested, also when that
-    finding sits at another human rung (PEARL: primary outcome a marker, positive subgroup a marker and pain)."""
+    """Status from the records for and against (spec 7). Support only from subgroups or secondary outcomes never
+    gives `supported` on its own: with an admissible null or negative finding for the claim it is contested, also
+    when that finding sits at another human rung (PEARL: primary outcome a marker, positive subgroup a marker and
+    pain); without one (the whole-sample result was not found) it is unverified, flag `subgroup_unchecked`."""
     if cv.unresolved or claim.relation == "other":       # `other` is ignored by symbolic checks (spec 5)
         return "unresolved"
     support = [r for r in evidence if admissible(r, claim)]
@@ -271,12 +280,20 @@ def _status_of(cv: ClaimVerification, claim, evidence, counter) -> str:
     if support and against:
         return "contested"
     if support:
-        if all("subgroup_only" in r.flags for r in support) and any(admissible(r, claim) for r in cv.counterevidence):
-            return "contested"
+        if subgroup_only(support):
+            return "contested" if any(admissible(r, claim) for r in cv.counterevidence) else "unverified"
         return "supported"
     if against:
         return "refuted"
     return "unverified"
+
+
+def subgroup_unchecked(cv: ClaimVerification, claim) -> bool:
+    """Some rung (or the claim) is unverified only because its support is subgroup-only and no whole-sample or
+    primary-outcome result was found: the same case as `contrast_unchecked`, an unfound null is not a finding."""
+    if cv.unresolved or claim.relation == "other" or any(admissible(r, claim) for r in cv.counterevidence):
+        return False
+    return any(subgroup_only([r for r in sup if admissible(r, claim)]) for sup, _ in rung_views(claim, cv).values())
 
 
 def record_rungs(r: EvidenceRecord) -> list[str]:
@@ -335,12 +352,15 @@ def _same_context(x: Claim, y: DeclaredAlternative) -> bool:
 
 def statuses(card: HypothesisCard, ver: Verification) -> dict[str, str]:
     """Status of every verified claim and checked alternative; contrast outcomes follow the contrast rule.
-    Also records the inputs on the outcome claim (`contrast`) and the `contrast_unchecked` flag."""
+    Also records the inputs on the outcome claim (`contrast`) and the flags `contrast_unchecked` and
+    `subgroup_unchecked`."""
     out = {}
     for cv in ver.claims:
         claim = claim_of(card, cv)
         if claim is not None:
             out[cv.id] = claim_status(cv, claim)
+            cv.flags = [f for f in cv.flags if f != "subgroup_unchecked"] + \
+                (["subgroup_unchecked"] if subgroup_unchecked(cv, claim) else [])
     alternatives = {a.id: a for a in card.declared_alternatives}
     for cv in ver.claims:
         claim = claim_of(card, cv)

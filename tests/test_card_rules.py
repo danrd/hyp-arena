@@ -300,6 +300,39 @@ def test_whole_sample_support_on_one_rung_is_not_contested_by_another():
     assert ver.evidence_profile.effect_level == "human_clinical"
 
 
+def _ex1_c4(counter=True, overall=False):
+    d = load("ex1_rapamycin_healthspan")
+    card = HypothesisCard.model_validate(d["card"])
+    ver = Verification.model_validate(d["verification"])
+    c4 = next(cv for cv in ver.claims if cv.id == "c4")
+    if not counter:
+        c4.counterevidence = []                      # the extractor left out PEARL's null primary outcome
+    if overall:                                      # a positive whole-sample result from another trial
+        c4.evidence.append(c4.evidence[0].model_copy(update={"record_id": "PMID:2", "lab_or_cohort": "PMID:2",
+                                                             "flags": [], "sex": "both"}))
+    ver = finalize(card, ver)
+    return ver, next(cv for cv in ver.claims if cv.id == "c4")
+
+
+def test_subgroup_only_with_a_null_primary_is_contested():
+    _, c4 = _ex1_c4()                                # (a) spec 7, "Subgroup-only support"
+    assert c4.status == "contested" and "subgroup_unchecked" not in c4.flags
+
+
+def test_subgroup_only_without_a_primary_result_is_unverified():
+    ver, c4 = _ex1_c4(counter=False)                 # (b) an unfound null is not a finding
+    assert c4.status == "unverified" and c4.flags == ["subgroup_unchecked"]
+    assert set(c4.rung_status.values()) == {"unverified"}
+    assert len(c4.evidence) == 1                     # the subgroup record stays visible
+    assert ver.evidence_profile.effect_level != "human_clinical"
+
+
+def test_subgroup_with_a_positive_whole_sample_result_is_supported():
+    ver, c4 = _ex1_c4(counter=False, overall=True)   # (c)
+    assert c4.status == "supported" and "subgroup_unchecked" not in c4.flags
+    assert ver.evidence_profile.effect_level == "human_clinical"
+
+
 def test_record_rungs_fall_back_to_the_endpoint():
     from hyparena.card.models import EvidenceRecord
     from hyparena.card.rules import record_rungs
