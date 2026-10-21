@@ -1,0 +1,214 @@
+{
+  "source": {
+    "url": "data/backtest/outcomes_itp_citp.yaml",
+    "family": "unknown",
+    "model": "backtest-template",
+    "as_of": "2024-12-31",
+    "note": "outcome labels are in a separate file",
+    "options": {
+      "dedup": false,
+      "lang": "en"
+    }
+  },
+  "hypotheses": [
+    {
+      "id": 1,
+      "title": "Dietary epicatechin (started at 7 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "claim": "Dietary epicatechin (started at 7 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "message": 0
+    },
+    {
+      "id": 2,
+      "title": "Dietary halofuginone (started at 7 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "claim": "Dietary halofuginone (started at 7 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "message": 0
+    },
+    {
+      "id": 3,
+      "title": "Dietary mitoglitazone (started at 7 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "claim": "Dietary mitoglitazone (started at 7 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "message": 0
+    },
+    {
+      "id": 4,
+      "title": "Dietary 2BAct (started at 7 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "claim": "Dietary 2BAct (started at 7 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "message": 0
+    },
+    {
+      "id": 5,
+      "title": "Dietary dichloroacetate (started at 7 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "claim": "Dietary dichloroacetate (started at 7 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "message": 0
+    },
+    {
+      "id": 6,
+      "title": "Dietary forskolin (started at 7 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "claim": "Dietary forskolin (started at 7 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "message": 0
+    },
+    {
+      "id": 7,
+      "title": "Dietary pioglitazone extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "claim": "Dietary pioglitazone extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "message": 0
+    },
+    {
+      "id": 8,
+      "title": "Dietary mifepristone extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "claim": "Dietary mifepristone extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "message": 0
+    },
+    {
+      "id": 9,
+      "title": "Dietary methotrexate extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "claim": "Dietary methotrexate extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "message": 0
+    },
+    {
+      "id": 10,
+      "title": "Dietary atorvastatin + telmisartan extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "claim": "Dietary atorvastatin + telmisartan extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "message": 0
+    },
+    {
+      "id": 11,
+      "title": "Tamibarotene extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "claim": "Tamibarotene extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "message": 0
+    },
+    {
+      "id": 12,
+      "title": "Bakuchiol extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "claim": "Bakuchiol extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "message": 0
+    },
+    {
+      "id": 13,
+      "title": "All-trans retinoic acid extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "claim": "All-trans retinoic acid extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "message": 0
+    },
+    {
+      "id": 14,
+      "title": "Berberine extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "claim": "Berberine extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "message": 0
+    },
+    {
+      "id": 15,
+      "title": "Fisetin extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "claim": "Fisetin extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "message": 0
+    },
+    {
+      "id": 16,
+      "title": "Propranolol extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "claim": "Propranolol extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "message": 0
+    },
+    {
+      "id": 17,
+      "title": "Ritonavir extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "claim": "Ritonavir extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "message": 0
+    },
+    {
+      "id": 18,
+      "title": "Aldosterone extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "claim": "Aldosterone extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "message": 0
+    },
+    {
+      "id": 19,
+      "title": "Arecoline extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "claim": "Arecoline extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "message": 0
+    },
+    {
+      "id": 20,
+      "title": "Bortezomib extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "claim": "Bortezomib extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "message": 0
+    },
+    {
+      "id": 21,
+      "title": "Dasatinib extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "claim": "Dasatinib extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "message": 0
+    },
+    {
+      "id": 22,
+      "title": "Decitabine extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "claim": "Decitabine extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "message": 0
+    },
+    {
+      "id": 23,
+      "title": "Dexamethasone extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "claim": "Dexamethasone extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "message": 0
+    },
+    {
+      "id": 24,
+      "title": "Erlotinib extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "claim": "Erlotinib extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "message": 0
+    },
+    {
+      "id": 25,
+      "title": "Everolimus extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "claim": "Everolimus extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "message": 0
+    },
+    {
+      "id": 26,
+      "title": "Gefitinib extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "claim": "Gefitinib extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "message": 0
+    },
+    {
+      "id": 27,
+      "title": "Temsirolimus extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "claim": "Temsirolimus extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "message": 0
+    },
+    {
+      "id": 28,
+      "title": "Thalidomide extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "claim": "Thalidomide extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "message": 0
+    },
+    {
+      "id": 29,
+      "title": "Levetiracetam extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "claim": "Levetiracetam extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "message": 0
+    },
+    {
+      "id": 30,
+      "title": "Cinnarizine (at lower doses) extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "claim": "Cinnarizine (at lower doses) extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "message": 0
+    },
+    {
+      "id": 31,
+      "title": "Cinnarizine (at higher doses) extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "claim": "Cinnarizine (at higher doses) extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "message": 0
+    },
+    {
+      "id": 32,
+      "title": "Meclizine (at lower doses) extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "claim": "Meclizine (at lower doses) extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "message": 0
+    },
+    {
+      "id": 33,
+      "title": "Meclizine (at higher doses) extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "claim": "Meclizine (at higher doses) extends the lifespan of Caenorhabditis nematodes across genetically diverse species and strains.",
+      "message": 0
+    }
+  ],
+  "assistant_notes": {}
+}
