@@ -1,6 +1,7 @@
 """Compound identifiers: a name → its PubChem parent compound (salts and hydrates collapse to the parent:
 "quercetin dihydrate" and "quercetin" are the same compound), with the preferred name, InChIKey, ChEBI id
-(from PubChem's synonyms), ChEMBL id, maximum clinical phase and first approval year (ChEMBL, by InChIKey) and the synonyms.
+(from PubChem's synonyms), ChEMBL id, maximum clinical phase, first approval year and mechanism targets (ChEMBL, by
+InChIKey) and the synonyms.
 
 Classes and mixtures ("senolytics", "omega-3 fatty acids") have no compound and stay unresolved: matching then
 falls back to names. Results, including "not found", are cached on disk (data/cache/compounds.json); network
@@ -39,6 +40,7 @@ class Compound:
     chembl: str = ""                           # "CHEMBL413"
     max_phase: Optional[int] = None            # ChEMBL max phase 0..4 (None: not in ChEMBL or no phase)
     first_approval: Optional[int] = None       # ChEMBL year of first approval (None: not approved or unknown)
+    targets: Optional[list[str]] = None        # ChEMBL mechanism targets (target ChEMBL ids); None: not fetched
     synonyms: list[str] = field(default_factory=list)
 
     @property
@@ -116,7 +118,16 @@ def _details(cid: int) -> Compound:
                     "&only=molecule_chembl_id,max_phase,first_approval") or {}).get("molecules") or []
         if mol:
             _chembl_fields(c, mol[0])
+            c.targets = _targets(c.chembl)
     return c
+
+
+def _targets(chembl: str) -> list[str]:
+    """Targets of a molecule's mechanisms of action in ChEMBL (rapamycin, everolimus, temsirolimus: FKBP1A)."""
+    if not chembl:
+        return []
+    data = _get(f"{CHEMBL}/mechanism.json?molecule_chembl_id={chembl}&only=target_chembl_id&limit=100") or {}
+    return sorted({m["target_chembl_id"] for m in data.get("mechanisms") or [] if m.get("target_chembl_id")})
 
 
 def _chembl_fields(c: Compound, mol: dict) -> None:
@@ -130,13 +141,15 @@ def _chembl_fields(c: Compound, mol: dict) -> None:
     c.first_approval = int(year) if isinstance(year, (int, float)) or (isinstance(year, str) and year.isdigit()) else None
 
 
-def _add_first_approval(hit: dict) -> dict:
-    """Cache entries written before `first_approval` existed: fetch it from ChEMBL once."""
+def _upgrade(hit: dict) -> dict:
+    """Cache entries written before `first_approval` or `targets` existed: fetch them from ChEMBL once."""
     c = Compound(**hit)
-    if c.chembl:
+    if c.chembl and "first_approval" not in hit:
         mol = (_get(f"{CHEMBL}/molecule/{c.chembl}.json?only=molecule_chembl_id,max_phase,first_approval") or {})
         if mol:
             _chembl_fields(c, mol)
+    if "targets" not in hit:
+        c.targets = _targets(c.chembl)
     return asdict(c)
 
 
@@ -159,9 +172,9 @@ def lookup(name: str) -> Optional[Compound]:
         return None
     with _lock:
         hit = _load().get(k, "missing")
-    if hit and "first_approval" not in hit:
+    if isinstance(hit, dict) and ("first_approval" not in hit or "targets" not in hit):
         try:
-            hit = _add_first_approval(hit)
+            hit = _upgrade(hit)
         except LookupError_:
             return Compound(**hit)
         with _lock:

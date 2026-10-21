@@ -11,7 +11,7 @@ def test_pipeline_fake(monkeypatch):
     monkeypatch.setattr(pubmed, "fetch", lambda ids: {"1": ABSTRACT})
     monkeypatch.setattr(verifier, "drugage_records", lambda claim, allowed=None, cid=None: ([], []))
     res = pipeline.run(["The fake compound extends the lifespan of mice.", "Another fake compound helps old mice."],
-                       fake=True, K=2000)
+                       fake=True, K=2000, dedup=False)        # the fake normalizer gives the same card twice
     assert [x["outcome"] for x in res["items"]] == ["ranked", "ranked"]
     assert set(res["ranking"]) == {"evidence_first", "cheap_feasible", "fundamental"}
     x = res["items"][0]
@@ -176,7 +176,7 @@ def test_pipeline_with_expert_layer(monkeypatch, tmp_path):
          "decision": "prefer H-0002", "profile": "evidence_first"}],
         hypotheses=["The expert compound extends the lifespan of mice."])
     res = pipeline.run(["The fake compound extends the lifespan of mice.", "Another fake compound helps old mice."],
-                       fake=True, K=2000, expert=path)
+                       fake=True, K=2000, expert=path, dedup=False)
     assert [x["origin"] for x in res["items"]] == ["external", "external", "expert"]
     assert any("23863708" in ids for ids in fetched)                         # the expert's source went to the verifier
     h1, h2 = res["items"][0], res["items"][1]
@@ -331,3 +331,17 @@ def test_unranked_lists_account_for_every_hypothesis():
     assert got["outcome_counts"]["ranked"] == 1 and got["outcome_shares"]["unparsed"] == 0.25
     with pytest.raises(ValueError):
         pipeline.unranked_lists(items + [{"id": "H-5", "card": None}])
+
+
+def test_pipeline_does_not_verify_a_duplicate_twice(monkeypatch):
+    monkeypatch.setattr(pubmed, "search", lambda q, retmax=8, as_of=None: ["1"])
+    monkeypatch.setattr(pubmed, "fetch", lambda ids: {"1": ABSTRACT})
+    monkeypatch.setattr(verifier, "drugage_records", lambda claim, allowed=None, cid=None: ([], []))
+    res = pipeline.run(["The fake compound extends the lifespan of mice.", "Another fake compound helps old mice."],
+                       fake=True, K=2000)
+    assert [x["outcome"] for x in res["items"]] == ["ranked", "duplicate"]
+    assert res["items"][1]["duplicate_of"] == "H-0001" and res["items"][1]["verification"] is None
+    assert res["duplicates"] == [{"id": "H-0002", "duplicate_of": "H-0001"}]
+    assert res["proximity"][0]["types"] == ["duplicate"]
+    ladder = pipeline.as_ladder_result(res, ["a", "b"])
+    assert ladder["hypotheses"]["b"]["combined"] == ladder["hypotheses"]["a"]["combined"]
