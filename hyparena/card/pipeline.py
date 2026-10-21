@@ -107,6 +107,9 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
     for x in items:
         if "outcome" not in x and x["card"].id in dup_of:
             x["outcome"], x["duplicate_of"] = "duplicate", dup_of[x["card"].id]
+    for x in items:              # collapsed before АСПИД: only the original is ranked; repeats are metadata, not merit
+        if x["card"] is not None:
+            x["repeats"] = sum(1 for h in dup_of.values() if h == x["card"].id)
     for x in items:
         if "outcome" in x:
             continue
@@ -157,7 +160,7 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
                      "indicators": [{"id": s.id, "kind": s.kind, "levels": list(s.levels), "bounds": list(s.bounds),
                                      "note": s.note} for s in ind.INDICATORS]},
             "items": [{"id": x["id"], "text": x["text"], "origin": x["origin"], "outcome": x["outcome"],
-                       "duplicate_of": x.get("duplicate_of"),
+                       "duplicate_of": x.get("duplicate_of"), "repeats": x.get("repeats", 0),
                        "problems": x["problems"], "expert": ex.opinions(layer, x["id"]),
                        "card": x["card"].model_dump(by_alias=True) if x["card"] else None,
                        "admission": x["admission"].model_dump() if x.get("admission") else None,

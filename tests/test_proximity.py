@@ -68,7 +68,7 @@ def test_mechanistic_competitors_explain_the_same_effect_differently():
     assert types(a, b) == ["competitor"]
 
 
-def test_analog_by_shared_target():
+def test_analog_needs_a_shared_target_and_atc_class():
     a = card("ex1_rapamycin_healthspan", "H-A")
     b = card("ex1_rapamycin_healthspan", "H-B")
     b.pico.intervention[0].label, b.pico.intervention[0].id = "everolimus", None
@@ -77,6 +77,7 @@ def test_analog_by_shared_target():
     resolve_card(b)
     r = px.relate(px.signature(a, px.analog_keys), px.signature(b, px.analog_keys))
     assert "analog" in r.types and r.details["shared_targets"] == ["CHEMBL1902"]
+    assert r.details["shared_atc4"] == ["L01EG", "L04AH"]
     assert r.details["shared_classes"] == ["CHEBI:145565 macrolide lactam"]
     assert "mechanism_neighbour" in r.types and "mtorc1" in r.details["shared_nodes"]   # both inhibit mTORC1
 
@@ -143,11 +144,23 @@ def _with_intervention(name, cid, label):
     return c
 
 
-def test_analog_by_a_narrow_chebi_class_only():
-    a = _with_intervention("ex5_resveratrol_endpoint", "H-A", "quercetin")
-    b = _with_intervention("ex5_resveratrol_endpoint", "H-B", "fisetin")
+def _types(x, y):
+    a = _with_intervention("ex5_resveratrol_endpoint", "H-A", x)
+    b = _with_intervention("ex5_resveratrol_endpoint", "H-B", y)
     r = px.relate(px.signature(a, px.analog_keys), px.signature(b, px.analog_keys))
-    assert r.types == ["analog"] and r.details == {"shared_classes": ["CHEBI:52267 7-hydroxyflavonol"]}
+    return [t for t in (r.types if r else []) if t.startswith("analog")]
+
+
+def test_fkbp1a_binders_that_inhibit_calcineurin_are_not_analogs_of_sirolimus():
+    assert _types("sirolimus", "everolimus") == ["analog"]
+    assert _types("sirolimus", "temsirolimus") == ["analog"]                 # L01EG shared
+    assert _types("sirolimus", "tacrolimus") == []                           # FKBP1A, but L04AD / D11AH
+    assert _types("sirolimus", "pimecrolimus") == []
+    assert _types("sirolimus", "FKBP binder X") == ["analog_weak"]           # shared target, no ATC on one side
+
+
+def test_a_chebi_class_alone_makes_no_analog():
+    assert _types("quercetin", "fisetin") == []                              # 7-hydroxyflavonol, no shared target
 
 
 class FakeEmbedder:

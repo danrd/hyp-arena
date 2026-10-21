@@ -7,7 +7,8 @@ claims in the closed relation vocabulary; the output is a relation type, not one
 | variant | as duplicate, but the context differs (sex, age at start, strain, dose or regimen, route, comparator, measure), or only one of the two states a mechanism |
 | competitor | same intervention and effect, both state mechanisms, the mechanisms differ |
 | contradiction | the same claim triple (subject, relation family, object, species) with opposite direction, in any claims of the two cards |
-| analog | different interventions sharing a ChEMBL mechanism target (rapamycin, everolimus, temsirolimus: FKBP1A) or a narrow ChEBI class (macrolide lactam; 7-hydroxyflavonol: quercetin, fisetin, kaempferol) |
+| analog | different interventions sharing a ChEMBL mechanism target and an ATC level-4 class (sirolimus, everolimus, temsirolimus: FKBP1A + L04AH / L01EG); not tacrolimus or pimecrolimus, which bind FKBP1A too but inhibit calcineurin (L04AD, D11AH) |
+| analog_weak | a shared mechanism target, and one of the two has no ATC code |
 | mechanism_neighbour | different interventions whose own claims act on the same hallmark or the same molecular node |
 
 A pair can carry several types (a competitor in another context is also a variant). Pairs are found through
@@ -46,7 +47,7 @@ ORGANISM = {"extends_lifespan_in", "shortens_lifespan_in", "no_lifespan_effect_i
 MOLECULAR = {"inhibits", "activates", "increases_expression", "decreases_expression", "part_of", "affects_hallmark"}
 NEGATED = {"no_effect", "none", "no", "not", "no effect"}
 DOWN = {"decrease", "down", "lower", "reduce", "reduces", "decreases"}
-TYPES = ("duplicate", "contradiction", "competitor", "variant", "analog", "mechanism_neighbour")
+TYPES = ("duplicate", "contradiction", "competitor", "variant", "analog", "analog_weak", "mechanism_neighbour")
 ALIAS_THRESHOLD = 0.80                       # cosine for merging unresolved names (SapBERT; see name_aliases)
 
 
@@ -121,7 +122,7 @@ class Signature:
     explanation: frozenset                   # mechanism claims (for a mechanistic card: its outcome and mechanisms)
     context: tuple
     triples: dict = field(default_factory=dict)    # triple → (claim id, direction)
-    targets: frozenset = frozenset()         # analog keys: "target:<ChEMBL id>", "class:<ChEBI id>|<label>"
+    targets: frozenset = frozenset()         # analog keys: "target:<ChEMBL id>", "atc4:<code>", "class:<ChEBI id>|<label>"
     nodes: frozenset = frozenset()           # hallmarks and molecular objects of the intervention's own claims
     merged: dict = field(default_factory=dict)     # canonical name key → the card's own names merged into it
 
@@ -192,6 +193,18 @@ def _strip(effect: frozenset) -> frozenset:
     return frozenset(t for t, _ in effect)
 
 
+def _analog(a: frozenset, b: frozenset) -> str:
+    """analog: a shared mechanism target and a shared ATC level-4 class; analog_weak: a shared target and one side
+    without ATC; "" otherwise (ATC alone never makes an analog: some level-4 groups name an indication, D11AH).
+    Shared ChEBI classes are reported with an analog, they do not make one."""
+    if not any(k.startswith("target:") for k in a & b):
+        return ""
+    atc_a, atc_b = {k for k in a if k.startswith("atc4:")}, {k for k in b if k.startswith("atc4:")}
+    if not atc_a or not atc_b:
+        return "analog_weak"
+    return "analog" if atc_a & atc_b else ""
+
+
 def relate(x: Signature, y: Signature) -> Optional[Relation]:
     types, details = [], {}
     # claim-level contradictions: the same triple, opposite direction
@@ -211,12 +224,14 @@ def relate(x: Signature, y: Signature) -> Optional[Relation]:
         if not types:
             types.append("duplicate")
     if x.intervention != y.intervention:
-        shared = sorted(x.targets & y.targets)
-        if shared:
-            types.append("analog")
-            tg = [k.split(":", 1)[1] for k in shared if k.startswith("target:")]
+        kind = _analog(x.targets, y.targets)
+        if kind:
+            types.append(kind)
+            shared = sorted(x.targets & y.targets)
+            details["shared_targets"] = [k.split(":", 1)[1] for k in shared if k.startswith("target:")]
+            atc = [k.split(":", 1)[1] for k in shared if k.startswith("atc4:")]
             cl = [k.split(":", 1)[1].replace("|", " ") for k in shared if k.startswith("class:")]
-            details.update({"shared_targets": tg} if tg else {})
+            details.update({"shared_atc4": atc} if atc else {})
             details.update({"shared_classes": cl} if cl else {})
         nodes = x.nodes & y.nodes
         if nodes:
@@ -243,7 +258,8 @@ def relations(cards: list[HypothesisCard], targets: Optional[Callable] = None, e
         for t in s.triples:
             buckets[("t", t)].add(s.id)
         for t in s.targets:
-            buckets[("g", t)].add(s.id)
+            if t.startswith("target:"):                   # only a shared target can make an analog
+                buckets[("g", t)].add(s.id)
         for n in s.nodes:
             buckets[("n", n)].add(s.id)
     pairs = {tuple(sorted(p)) for ids in buckets.values() if len(ids) > 1 for p in combinations(ids, 2)}
@@ -256,8 +272,8 @@ def relations(cards: list[HypothesisCard], targets: Optional[Callable] = None, e
 
 
 def analog_keys(card: HypothesisCard) -> list[str]:
-    """ChEMBL mechanism targets and narrow ChEBI classes of the card's compound interventions (union for a
-    combination)."""
+    """ChEMBL mechanism targets, ATC level-4 classes and narrow ChEBI classes of the card's compound
+    interventions (union for a combination)."""
     from hyparena.tools import chebi
     out = set()
     for i in card.pico.intervention:
@@ -265,6 +281,7 @@ def analog_keys(card: HypothesisCard) -> list[str]:
         if c is None:
             continue
         out |= {f"target:{t}" for t in c.targets or []}
+        out |= {f"atc4:{code[:5]}" for code in c.atc or [] if len(code) >= 5}
         out |= {f"class:{cid}|{label}" for cid, label in chebi.classes(c.chebi)}
     return sorted(out)
 

@@ -6,10 +6,12 @@ from hyparena.card import lifespan
 from hyparena.card.models import HypothesisCard
 from tests.test_card_rules import load
 
-TABLE = {"medians": [{"species": "mouse", "median_days": 800},
-                     {"species": "mouse", "strain": "UM-HET3", "sex": "female", "median_days": 900},
-                     {"species": "mouse", "strain": "UM-HET3", "median_days": 850}],
-         "verbal_ages": {"mouse": [{"terms": ["middle age", "middle-aged"], "fraction": [0.4, 0.6]}]}}
+
+
+def _card(age, strain="unknown", sex="unknown", name="ex5_resveratrol_endpoint"):
+    card = HypothesisCard.model_validate(load(name)["card"])
+    card.pico.population.age_at_start, card.pico.population.strain, card.pico.population.sex = age, strain, sex
+    return card
 
 
 def test_age_parsing():
@@ -21,27 +23,36 @@ def test_age_parsing():
     assert lifespan.age_days("middle age") is None
 
 
-def test_median_lookup_most_specific_first():
-    assert lifespan.median_days("mouse", "UM-HET3", "female", TABLE) == 900
-    assert lifespan.median_days("mouse", "UM-HET3", "male", TABLE) == 850
-    assert lifespan.median_days("mouse", "C57BL/6J", "", TABLE) == 800
-    assert lifespan.median_days("worm", "", "", TABLE) is None
+def test_median_lookup_rule():
+    assert lifespan.median_interval("mouse", "UM-HET3", "female") == (887, 887)
+    assert lifespan.median_interval("mouse", "UM-HET3") == (803, 887)              # sex unknown: both sexes
+    assert lifespan.median_interval("mouse") == (803, 901)                         # strain unknown: all strains
+    assert lifespan.median_interval("mouse", "BALB/c") is None                     # strain not in the table
+    assert lifespan.median_interval("fly", "", "male") is None                     # only Dahomey females
+    assert lifespan.median_interval("fly") == (63, 70)
+    assert lifespan.median_interval("human")[0] == 83.9 * 365.25                   # the "both" row, high-income
+    assert lifespan.median_interval("human", population="older adults in a middle-income country")[0] == 79.5 * 365.25
 
 
-def _card(age, strain="unknown", sex="unknown"):
-    card = HypothesisCard.model_validate(load("ex5_resveratrol_endpoint")["card"])
-    card.pico.population.age_at_start, card.pico.population.strain, card.pico.population.sex = age, strain, sex
-    return card
+def test_values_of_data_sources_19():
+    """The fractions printed in Data_Sources 19.2 come out of the tables."""
+    assert lifespan.late_start(_card("middle age")) == (0.3378, 0.5686)            # 0.34-0.57
+    assert lifespan.late_start(_card("old")) == (0.6081, 0.9098)                   # 0.61-0.91
+    assert lifespan.late_start(_card("old", "UM-HET3", "female")) == (0.6177, 0.8236)   # 0.62-0.82
+    assert lifespan.late_start(_card("very old")) == (0.8108, 1.0)
+    assert lifespan.late_start(_card("late middle age")) == (0.3378, 0.9098)       # JAX gap: union
+    assert lifespan.late_start(_card("600 days", "UM-HET3", "female")) == round(600 / 887, 4)
+    assert lifespan.late_start(_card("1200 days", "UM-HET3", "female")) == 1.0     # capped
+    human = _card("older adults, healthy", name="ex1_rapamycin_healthspan")
+    assert lifespan.late_start(human) == (0.7747, 1.0)                             # >= 65 years / 83.9
+    assert lifespan.late_start(_card("young")) is None                             # not in the table
+    assert lifespan.late_start(_card("unknown")) is None
 
 
-def test_late_start_number_interval_unknown():
-    assert lifespan.late_start(_card("400 days"), TABLE) == 0.5
-    assert lifespan.late_start(_card("900 days", "UM-HET3", "female"), TABLE) == 1.0
-    assert lifespan.late_start(_card("1200 days"), TABLE) == 1.0                 # capped
-    assert lifespan.late_start(_card("middle age"), TABLE) == (0.4, 0.6)
-    assert lifespan.late_start(_card("old"), TABLE) is None                       # not in the table: unknown
-    assert lifespan.late_start(_card("unknown"), TABLE) is None
-    assert lifespan.late_start(_card("400 days"), {"medians": [], "verbal_ages": {}}) is None
+def test_middle_aged_is_not_read_as_aged():
+    assert lifespan.verbal_age_days("mouse", "middle-aged") == (10 * 30.44, 15 * 30.44)
+    assert lifespan.verbal_age_days("human", "older adults") == (65 * 365.25, None)
+    assert lifespan.verbal_age_days("worm", "old") is None
 
 
 def test_interval_is_drawn_within_its_bounds():

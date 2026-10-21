@@ -159,3 +159,37 @@ def test_curated_intervention_match_by_route_and_regimen(monkeypatch):
     assert sources.curated_intervention_match(card, rec) == "regimen_differs"
     rec.dose = "2 mg/kg"                                                               # route not stated: no grade
     assert sources.curated_intervention_match(card, rec) == "exact"
+
+
+def test_real_lookup_reads_the_cache_and_upgrades_old_entries(monkeypatch, tmp_path):
+    """The real cp.lookup, not the offline stand-in: a name missing from the cache must not crash (it did once:
+    the "missing" marker was read as an entry), and an entry from an older fetch is completed once."""
+    import json
+    from tests.conftest import REAL_LOOKUP
+    current = {"cid": 1, "name": "Done", "chembl": "CHEMBL1", "first_approval": None, "targets": ["T1"], "atc": [],
+               "chembl_rev": cp.CHEMBL_REV}
+    old = {"cid": 2, "name": "Old", "chembl": "CHEMBL2", "max_phase": 4, "targets": []}      # before first_approval / rev 2
+    monkeypatch.setattr(cp, "CACHE", tmp_path / "compounds.json")
+    monkeypatch.setattr(cp, "_cache", {"done": current, "notacompound": None, "old": old})
+    calls = []
+
+    def fake_get(url):
+        calls.append(url)
+        if "mechanism.json" in url:
+            return {"mechanisms": [{"target_chembl_id": "CHEMBL1902"}]}
+        if "molecule_form.json" in url:
+            return {"molecule_forms": [{"molecule_chembl_id": "CHEMBL2"}, {"molecule_chembl_id": "CHEMBL22"}]}
+        if "atc_classifications" in url:
+            return {"atc_classifications": ["L04AH01"] if "CHEMBL22" in url else []}
+        return {"molecule_chembl_id": "CHEMBL2", "max_phase": "4.0", "first_approval": 1999}
+    monkeypatch.setattr(cp, "_get", fake_get)
+
+    def no_network(name):
+        raise cp.LookupError_(name)
+    monkeypatch.setattr(cp, "parent_cid", no_network)
+    assert REAL_LOOKUP("Done").targets == ["T1"] and calls == []             # current entry: no network
+    assert REAL_LOOKUP("notacompound") is None and calls == []                # cached "not found"
+    assert REAL_LOOKUP("never seen") is None                                  # not in the cache, network down
+    up = REAL_LOOKUP("old")
+    assert (up.first_approval, up.targets, up.atc, up.chembl_rev) == (1999, ["CHEMBL1902"], ["L04AH01"], cp.CHEMBL_REV)
+    assert json.loads((tmp_path / "compounds.json").read_text())["old"]["chembl_rev"] == cp.CHEMBL_REV
