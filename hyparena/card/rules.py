@@ -207,15 +207,15 @@ def admit(card: HypothesisCard) -> Admission:
     specificity = sum([has_population, _known(p.population.sex),
                        _known(p.population.age_at_start),
                        any(_known(i.regimen) for i in p.intervention), _known(p.comparator.type)])
-    if not missing:
-        flags = ["unmapped_relation"] if outcome is not None and outcome.relation == "other" else []
-        return Admission(raw_id=card.raw_id, decision="accepted", context_specificity=specificity, flags=flags)
     nothing_measurable = (not p.intervention and not has_endpoint
                           and (outcome is None or outcome.relation in ("other", "associated_with")))
-    if nothing_measurable:
+    if nothing_measurable:          # also when the type's fields look complete ("Senescent cells are bad for health")
         return Admission(raw_id=card.raw_id, decision="not_a_hypothesis", missing_critical=missing,
                          context_specificity=specificity,
                          reason="no intervention and no measurable outcome: stored as a direction, not ranked")
+    if not missing:
+        flags = ["unmapped_relation"] if outcome is not None and outcome.relation == "other" else []
+        return Admission(raw_id=card.raw_id, decision="accepted", context_specificity=specificity, flags=flags)
     return Admission(raw_id=card.raw_id, decision="needs_refinement", missing_critical=missing,
                      context_specificity=specificity)
 
@@ -404,7 +404,7 @@ def mark_inherited(card: HypothesisCard) -> HypothesisCard:
         elif species_key(species):
             current = c.qualifiers.get("species", "")
             if not _known(current) or same_value("species", current, species):
-                c.qualifiers["species"] = species
+                c.qualifiers["species"] = species_key(species)       # clean value: "human", not "healthy older adults"
                 if "species" not in c.inherited_from_pico:
                     c.inherited_from_pico.append("species")
                 if c.relation in ORGANISM_RELATIONS and _species_rung(c.object.label) is None:
