@@ -381,3 +381,20 @@ def test_generic_heterogeneous_strain_matches_um_het3():
     assert strain_match(claim, rec) == "yes"
     rec.strain = ""
     assert strain_match(claim, rec) is None
+
+
+def test_stage1_findings():
+    """Normalizer outputs seen on real models (2026-10-21): an inherited species written as the population label,
+    and a mechanistic parse of "Senescent cells are bad for health" with an `other` outcome."""
+    from hyparena.card.rules import mark_inherited
+    d = load("ex1_rapamycin_healthspan")
+    card = HypothesisCard.model_validate(d["card"])
+    card.pico.population.label = "healthy older adults"
+    card.claims[1].qualifiers["species"] = "healthy older adults"
+    assert mark_inherited(card).claims[1].qualifiers["species"] == "human"
+    r5 = HypothesisCard.model_validate({
+        "id": "H-5", "raw_id": "R-0005", "hypothesis_type": "mechanistic", "claim_plain": "x",
+        "pico": {"population": {"label": "unknown"}, "intervention": [], "outcome": {"endpoint": "unknown"}},
+        "claims": [{"id": "c1", "subject": {"label": "senescent cells"}, "relation": "other", "note": "bad for",
+                    "object": {"label": "health"}, "role": "outcome", "source_span": "Senescent cells are bad for health."}]})
+    assert admit(r5).decision == "not_a_hypothesis"
