@@ -208,7 +208,8 @@ def admit(card: HypothesisCard) -> Admission:
                        _known(p.population.age_at_start),
                        any(_known(i.regimen) for i in p.intervention), _known(p.comparator.type)])
     if not missing:
-        return Admission(raw_id=card.raw_id, decision="accepted", context_specificity=specificity)
+        flags = ["unmapped_relation"] if outcome is not None and outcome.relation == "other" else []
+        return Admission(raw_id=card.raw_id, decision="accepted", context_specificity=specificity, flags=flags)
     nothing_measurable = (not p.intervention and not has_endpoint
                           and (outcome is None or outcome.relation in ("other", "associated_with")))
     if nothing_measurable:

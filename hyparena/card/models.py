@@ -194,6 +194,7 @@ class Admission(BaseModel):
     context_specificity: int = 0
     known_result: Optional[bool] = None          # set after verification (spec 4a)
     reason: str = ""
+    flags: list[str] = Field(default_factory=list)   # unmapped_relation: the outcome claim is still `other` (spec 5)
 
 
 # ---- verified layer ----

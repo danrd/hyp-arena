@@ -53,7 +53,7 @@ def test_type_rules():
 
 def test_declared_row_carries_the_claim_status():
     _, ver = _case("ex3_rapamycin_mechanism")
-    assert [(a.id, a.source, a.status) for a in ver.alternatives] == [("a1", "declared", "supported")]
+    assert [(a.id, a.source, a.status) for a in ver.alternatives] == [("a1", "declared", "contested")]
 
 
 ABSTRACT = {"pmid": "9", "year": "2015", "title": "Resveratrol and food intake.",

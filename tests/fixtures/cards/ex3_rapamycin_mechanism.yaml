@@ -1,5 +1,7 @@
 # Card spec, Example 3: the contrast fixture "mainly X, not Y" (spec 6, 7). X (c2) is the outcome; Y (a1) is a
-# rejected declared alternative, checked like a claim and supported by PMID 22587563 → c2 refuted → gate.
+# rejected declared alternative, checked like a claim. Since 2026-10-21 Y is split in the literature: supported by
+# PMID 22587563 (Wilkinson 2012), largely rejected by PMID 23863708 (Neff 2013) → a1 contested → c2 contested,
+# gate pass. The row "Y supported → outcome refuted" is a synthetic test (tests/test_card_rules.py).
 raw: "Rapamycin extends mouse lifespan mainly by postponing death from cancer, not by slowing aging itself."
 card:
   id: H-0003
@@ -35,12 +37,17 @@ verification:
         - {source: PubMed, record_id: "PMID:22587563", epistemic_type: A_text, species: mouse, quote_role: finding,
            quote: "suggesting strongly that rapamycin retards multiple aspects of aging in mice, in addition to any beneficial effects it may have on neoplastic disease",
            qualifiers_match: {species: "yes", intervention_match: exact}}
+      counterevidence:
+        - {source: PubMed, record_id: "PMID:23863708", epistemic_type: A_text, species: mouse, strain: C57BL/6J, sex: male, quote_role: finding,
+           quote: "Therefore, our data largely dissociate rapamycin's longevity effects from effects on aging itself.",
+           qualifiers_match: {species: "yes", sex: n/a, intervention_match: exact},
+           notes: "Lifespan was extended, but few aging phenotypes improved; several traits rescued in old mice changed similarly in young ones."}
 expected:
-  statuses: {c1: supported, c2: refuted, a1: supported}
-  contrast: {c2: {alternative: a1, x_status: unverified, y_status: supported}}
-  alternatives: [{id: a1, source: declared, status: supported}]   # the prediction table comes at stage C
+  statuses: {c1: supported, c2: contested, a1: contested}
+  contrast: {c2: {alternative: a1, x_status: unverified, y_status: contested}}
+  alternatives: [{id: a1, source: declared, status: contested}]   # the prediction table comes at stage C
   profile:
-    gate: filtered
-    gate_reason: "contrast rule: a1 supported (PMID:22587563)"
+    gate: pass                    # outcome contested, not refuted
+    gate_reason: ""
   known_result: false
   admission: accepted

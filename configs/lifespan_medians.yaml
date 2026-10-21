@@ -1,0 +1,15 @@
+# Inputs of the `late_start` indicator (card spec 8a, agreed 2026-10-21). Values are to be filled from sources:
+# every entry needs a source with a PMID (or a life table for humans). Until an entry exists, late_start stays
+# unknown for that species (drawn over [0, 1]).
+#
+# medians: median lifespan of control groups, per species and, where it matters, strain and sex. Lookup order:
+#   species + strain + sex, species + strain, species + sex, species. AnAge is not used (maximum longevity only).
+#   - {species: mouse, strain: UM-HET3, sex: female, median_days: ..., source: "PMID:...", note: "ITP controls"}
+medians: []
+#
+# verbal_ages: verbal age at start → interval of the fraction of the median lifespan, per species, with a
+# source (a published life-phase classification for mice, accepted thresholds for humans). Keys are matched
+# after lower-casing; give the synonyms a card may use ("old", "aged", "late life", "late_life").
+#   mouse:
+#     - {terms: ["middle age", "middle-aged"], fraction: [lo, hi], source: "PMID:..."}
+verbal_ages: {}
