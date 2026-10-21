@@ -304,3 +304,32 @@ Two data problems found:
 - **strain is not checked:** every pool hypothesis names UM-HET3 mice (the normalizer puts it into qualifiers), but the DrugAge rule checks only the species and the verifier's prompt has no strain field. Earlier positive studies in other strains (2,4-dinitrophenol 2008, green tea extract 2007, metformin in SHR and HER2/neu mice) made three later ITP negatives known results. Whether evidence in another strain of the same species should count for a strain-specific claim, or only as an analog, is a specification question.
 
 Status 2026-10-20: the strain question is decided (strain rule above); translational distance is replaced by `path_to_human` computed as of T; the pool is rebuilt (one test per compound and regimen, 70 tests, three labels). The backtest has not been re-run.
+
+## Stage 4, historical backtest T = 2010-12-31, dev half (2026-10-21)
+
+`backtest v2 --split dev` on the rebuilt pool (34 tests: 13 positive, 21 no effect), verifier DeepSeek V4.1 Flash,
+normalizer Gemini, profile evidence_first; runs/stage4/itp2010_dev.json. 110 calls, no failures, 18 min. Date audit:
+27 PubMed records, none after T. Outcomes: 31 ranked, 2 known results (rapamycin 4.7 and 42 ppm from 9 months:
+the 2009 ITP paper), 1 filtered (resveratrol 300 ppm by its 2010 ITP paper, PMID 20974732).
+
+| Cut | AUC | positives / negatives |
+|---|---|---|
+| all items (known results at the top) | 0.83 [0.67, 0.94] | 13 / 21 |
+| known results left out | 0.80 | 11 / 21 |
+| per compound (mean score), all | 0.83 | 7 / 21 |
+| per compound, known results left out | 0.80 | 6 / 21 |
+
+Precision in the top quarter 0.75 against a base rate of 0.38.
+
+Per axis (dev, `backtest axes`): path_to_human 0.74 [0.62, 0.86], late_start 0.64 [0.44, 0.82], multi_site_positive
+0.59, effect_level 0.54; robustness and mechanism take one value for every item, novelty 0.50.
+
+Reading:
+- The literature before 2010 is thin for these compounds (27 records for 34 tests): evidence moves only
+  nordihydroguaiaretic acid (mammals, from the 2008 ITP paper) and rapamycin (known result). The ranking comes
+  mostly from the priors `path_to_human` and `late_start`.
+- `late_start` may carry the ITP's later design: the late-start regimens (17α-estradiol from 20 months, acarbose
+  and canagliflozin from 16 months) are retests that the ITP chose after these compounds had worked from an
+  early start, after T. The start age is in the hypothesis text, so the indicator can read that decision.
+- Known results at the top of the ranking are not predictions; whether they stay in the metric is open.
+- Several regimens of one compound are correlated items; the per-compound cut gives the same AUC here.
