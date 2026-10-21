@@ -18,6 +18,7 @@ from hyparena.card.sources import curated_intervention_match, drugage_records, l
 from hyparena.tools import pubmed
 
 TEMPLATE = ("verify_claim", "v5")
+ALTERNATIVE_RETMAX = 12
 REL_WORDS = {"extends_lifespan_in": "lifespan", "shortens_lifespan_in": "lifespan", "no_lifespan_effect_in": "lifespan",
              "slows_aging_in": "slows aging",
              "improves_healthspan_in": "healthspan OR physical function", "changes_biomarker": "", "predicts": "predicts",
@@ -49,7 +50,8 @@ def _core(label: str, card: HypothesisCard) -> str:
 
 def queries(claim, card: HypothesisCard) -> list[str]:
     """Search terms: entity, relation word, object; the organism as a search word. When the object is not an
-    organism, also the relation alone ("rapamycin slows aging mice"): long object phrases often match nothing."""
+    organism, also the relation alone ("rapamycin slows aging mice"): long object phrases often match nothing.
+    When it is, the claim's `measure`. The first query excludes reviews."""
     subject = _core(claim.subject.label, card)
     obj = claim.object.label
     organism = SPECIES_WORDS.get(obj.strip().lower()) or SPECIES_WORDS.get(claim.qualifiers.get("species", "").strip().lower(), "")
@@ -59,11 +61,16 @@ def queries(claim, card: HypothesisCard) -> list[str]:
     def q(*words):
         return " ".join(_clean(w) for w in words if w and w != UNKNOWN)
 
+    measure = claim.qualifiers.get("measure", "") if not obj_term else ""
     q1 = q(subject, rel, obj_term, organism)
     q_rel = q(subject, rel, organism) if rel and obj_term and organism else ""
     q2 = q(subject, obj_term or organism)
     q3 = q(subject, obj_term, organism, "lifespan" if "lifespan" not in q1 else "")
-    return list(dict.fromkeys([x for x in (q1, q_rel, q2, q3) if x]))
+    q_measure = q(subject, measure, organism) if measure else ""
+    # primary research first: reviews only give background (never a status) and push findings out of the top
+    # results; without them the first page holds the studies on both sides (Example 3: Wilkinson 2012 and Neff 2013)
+    q_primary = f"{q1} NOT review[pt]" if q1 else ""
+    return list(dict.fromkeys([x for x in (q_primary, q1, q_rel, q2, q3, q_measure) if x]))
 
 
 def names_intervention(claim, card: HypothesisCard, text: str) -> bool:
@@ -172,6 +179,8 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
     """`fallback`: the family asked when `family`'s reply is cut off with no complete record (gemini stops in
     the middle of verbatim quotes, most likely its recitation filter)."""
     cv = ClaimVerification(id=claim.id)
+    if claim.role == "alternative":
+        retmax = max(retmax, ALTERNATIVE_RETMAX)          # Y decides a contrast: search it wider (spec 7, 2026-10-21)
     support, against = curated(claim, card, as_of)
     cv.evidence += support
     cv.counterevidence += against

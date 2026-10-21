@@ -19,6 +19,7 @@ from hyparena.card import expert as ex
 from hyparena.card import indicators as ind
 from hyparena.card.models import HypothesisCard, Verification
 from hyparena.card.normalizer import normalize
+from hyparena.card.lifespan import late_start
 from hyparena.card.rank import rank
 from hyparena.card.rules import STRAIN_ANALOG, add_strain_analogs, admit, finalize
 from hyparena.card.verifier import verify
@@ -36,9 +37,15 @@ def _client(config: str, fake: bool, max_calls: int):
 
 def _extra(card: HypothesisCard, as_of: Optional[str] = None) -> dict:
     """Values from other components: human safety data of the interventions (ChEMBL phase and first approval,
-    ClinicalTrials.gov as of T) for path_to_human."""
+    ClinicalTrials.gov as of T) for path_to_human; late_start from the age at start and the median table."""
+    out = {}
     safety = entities.human_safety(card, as_of)
-    return {"human_safety": safety} if safety is not None else {}
+    if safety is not None:
+        out["human_safety"] = safety
+    start = late_start(card)
+    if start is not None:
+        out["late_start"] = list(start) if isinstance(start, tuple) else start
+    return out
 
 
 def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yaml", fake: bool = False,
@@ -87,6 +94,9 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
         x["admission"] = adm
         if adm.decision != "accepted":
             x["outcome"] = adm.decision
+            continue
+        if "unmapped_relation" in adm.flags:                 # outcome still `other` after the re-parse (spec 5)
+            x["outcome"] = "unparsed"
             continue
         ver = verify(client, verifiers or families, writer, card, as_of=as_of, log=log, map_fn=pool.map,
                      expert_sources=ex.sources(layer, card.id))
@@ -139,10 +149,42 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
                        "indicators": x.get("indicators"), "extra": x.get("extra"),
                        "unresolved_compounds": x.get("unresolved_compounds", [])} for x in items],
             "ranking": profiles, "robust": ranking.robust if ranking else [],
+            **unranked_lists(items),
             "ranking_autonomous": autonomous, "criterion_gap": gap,
             "expert_skipped": [vars(c) for c in ranking.expert_skipped] if ranking else [],
             "filtered": ranking.filtered if ranking else {}, "known_results": ranking.known_results if ranking else [],
             "calls": log}
+
+
+OUTCOMES = ("ranked", "filtered", "known_result", "needs_refinement", "not_a_hypothesis", "unparsed",
+            "normalization_failed")
+
+
+def unranked_lists(items: list[dict]) -> dict:
+    """No hypothesis disappears silently (spec 10): every input has exactly one outcome; those not ranked are
+    listed with the reason, and the counts and shares are reported."""
+    bad = [x["id"] for x in items if x.get("outcome") not in OUTCOMES]
+    if bad:
+        raise ValueError(f"hypotheses without an outcome: {bad}")
+    card = lambda x: x["card"] if isinstance(x["card"], dict) else (x["card"].model_dump(by_alias=True) if x["card"] else {})
+    adm = lambda x: x["admission"] if isinstance(x.get("admission"), dict) else (x["admission"].model_dump() if x.get("admission") else {})
+
+    def outcome_claim(x):
+        return next((c for c in card(x).get("claims", []) if c.get("role") == "outcome"), {})
+    counts = {o: sum(x["outcome"] == o for x in items) for o in OUTCOMES}
+    return {
+        "awaiting_refinement": [{"id": x["id"], "missing_critical": adm(x).get("missing_critical", [])}
+                                for x in items if x["outcome"] == "needs_refinement"],
+        "unparsed": [{"id": x["id"], "flag": "unmapped_relation", "note": outcome_claim(x).get("note", ""),
+                      "source_span": outcome_claim(x).get("source_span", "")}
+                     for x in items if x["outcome"] == "unparsed"],
+        "directions": [{"id": x["id"], "reason": adm(x).get("reason", "")}
+                       for x in items if x["outcome"] == "not_a_hypothesis"],
+        "normalization_failed": [{"id": x["id"], "problems": x.get("problems", [])}
+                                 for x in items if x["outcome"] == "normalization_failed"],
+        "outcome_counts": counts,
+        "outcome_shares": {o: round(n / len(items), 3) for o, n in counts.items()} if items else {},
+    }
 
 
 def refresh_curated(res: dict, K: int = 10000, k_top: int = 3) -> dict:
@@ -188,12 +230,13 @@ def refresh_curated(res: dict, K: int = 10000, k_top: int = 3) -> dict:
     res["robust"] = ranking.robust if ranking else []
     res["filtered"] = ranking.filtered if ranking else {}
     res["known_results"] = ranking.known_results if ranking else []
+    res.update(unranked_lists(res["items"]))
     res["meta"]["refreshed"] = time.strftime("%Y-%m-%dT%H:%M:%S")
     return res
 
 
 OUTCOME_SCORE = {"known_result": 3.0, "ranked": 2.0, "needs_refinement": 1.0, "not_a_hypothesis": 1.0,
-                 "normalization_failed": 1.0, "filtered": 0.0}
+                 "unparsed": 1.0, "normalization_failed": 1.0, "filtered": 0.0}
 
 
 def as_ladder_result(res: dict, ids: list[str], profile: str = "evidence_first", step: str = "v2") -> dict:

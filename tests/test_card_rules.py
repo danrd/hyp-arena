@@ -98,9 +98,11 @@ def test_contrast_rule_table(x, y, expected):
 
 
 def _contrast_case():
+    """Synthetic (spec 7, 2026-10-21): Example 3 without Neff 2013, so Y is supported, and X pretended supported."""
     d = load("ex3_rapamycin_mechanism")
     card = HypothesisCard.model_validate(d["card"])
     ver = Verification.model_validate(d["verification"])
+    next(cv for cv in ver.claims if cv.id == "a1").counterevidence = []
     x = next(cv for cv in ver.claims if cv.id == "c2")
     x.evidence[0].quote_role = "finding"         # pretend X were supported
     return card, ver
@@ -111,6 +113,16 @@ def test_contrast_supported_y_refutes_supported_x():
     ver = finalize(card, ver)
     assert {cv.id: cv.status for cv in ver.claims}["c2"] == "refuted"
     assert ver.evidence_profile.gate == "filtered"
+    assert ver.evidence_profile.gate_reason == "contrast rule: a1 supported (PMID:22587563)"
+
+
+def test_contrast_split_y_makes_the_outcome_contested():
+    d = load("ex3_rapamycin_mechanism")
+    card = HypothesisCard.model_validate(d["card"])
+    ver = finalize(card, Verification.model_validate(d["verification"]))
+    c2 = next(cv for cv in ver.claims if cv.id == "c2")
+    assert c2.status == "contested" and c2.contrast["y_status"] == "contested"
+    assert ver.evidence_profile.gate == "pass"
 
 
 def test_contrast_unchecked_y_gives_no_support_for_free():

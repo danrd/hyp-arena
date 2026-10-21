@@ -17,6 +17,7 @@ def test_pipeline_fake(monkeypatch):
     x = res["items"][0]
     assert x["card"]["claims"][0]["source_span"] in x["text"]
     assert x["extra"] == {"human_safety": True} and x["indicators"]["path_to_human"] in ("0", "1")
+    assert res["outcome_counts"]["ranked"] == 2 and res["awaiting_refinement"] == [] and res["unparsed"] == []
     assert any(c["kind"] == "search" for c in res["calls"]) and any(c.get("role") == "normalize_card" for c in res["calls"])
 
 
@@ -50,7 +51,13 @@ def _record(**kw):
 
 def test_rejected_alternative_is_verified(monkeypatch):
     card = _fixture_card("ex3_rapamycin_mechanism")
-    assert "rapamycin slows aging mice" in verifier.queries(card.declared_alternatives[0], card)
+    qs = verifier.queries(card.declared_alternatives[0], card)
+    assert qs[0] == "rapamycin slows aging mice NOT review[pt]" and "rapamycin slows aging mice" in qs
+    asked = []
+    monkeypatch.setattr(pubmed, "search", lambda q, retmax=8, as_of=None: (asked.append(retmax), [])[1])
+    monkeypatch.setattr(verifier, "drugage_records", lambda claim, allowed=None, cid=None: ([], []))
+    verifier.verify_claim(None, "google", frozenset(), card.declared_alternatives[0], card)
+    assert set(asked) == {verifier.ALTERNATIVE_RETMAX}           # Y is searched wider (spec 7, 2026-10-21)
     _stub(monkeypatch, [])
     ver = verifier.verify(None, ["google"], "openai", card)
     assert [cv.id for cv in ver.claims] == ["c1", "c2", "a1"]
@@ -267,3 +274,60 @@ def test_a_combination_needs_every_component_named(monkeypatch):
     assert verifier.names_intervention(c4, card, "Dasatinib plus quercetin improved function")
     assert not verifier.names_intervention(c4, card, "Dasatinib alone improved function")
     assert verifier.names_intervention(c4, card, "Sprycel and sophoretin")           # synonyms
+
+
+# ---- nothing disappears silently (spec 5, 4a, 10; 2026-10-21) ----
+
+def _other_outcome(card):
+    out = card.outcome_claim
+    out.relation, out.note = "other", "makes mice stay youthful"
+    return card
+
+
+def test_outcome_other_is_flagged_by_admission():
+    from hyparena.card.rules import admit
+    card = _fixture_card("ex5_resveratrol_endpoint")
+    assert admit(card).flags == []
+    assert admit(_other_outcome(card)).flags == ["unmapped_relation"]
+
+
+def test_normalizer_reparses_an_other_outcome_once(monkeypatch):
+    from hyparena.card import normalizer
+    raw = "Resveratrol started in middle age extends the lifespan of mice."
+    card = _fixture_card("ex5_resveratrol_endpoint")
+    first = _other_outcome(card.model_copy(deep=True)).model_dump(by_alias=True, exclude={"id", "raw_id"})
+    mapped = card.model_dump(by_alias=True, exclude={"id", "raw_id"})
+    hints = []
+
+    def fake(replies):
+        it = iter(replies)
+        return lambda *a, **k: (hints.append(k["variables"]["hint"]), (next(it), "google"))[1]
+    monkeypatch.setattr(normalizer, "ask", fake([first, mapped]))
+    got, _ = normalizer.normalize(None, "google", raw, "H-0006")
+    assert got.outcome_claim.relation == "extends_lifespan_in"
+    assert hints[0] == "" and "extends_lifespan_in" in hints[1] and len(hints) == 2
+    hints.clear()
+    monkeypatch.setattr(normalizer, "ask", fake([first, first]))
+    got, _ = normalizer.normalize(None, "google", raw, "H-0006")
+    assert got.outcome_claim.relation == "other" and len(hints) == 2      # one re-parse only
+
+
+def test_nearest_relations():
+    from hyparena.card.normalizer import nearest_relations
+    assert nearest_relations("increases lifespan of mice")[0] == "extends_lifespan_in"
+    assert nearest_relations("improves grip strength and frailty")[0] == "improves_healthspan_in"
+
+
+def test_unranked_lists_account_for_every_hypothesis():
+    import pytest
+    items = [{"id": "H-1", "outcome": "ranked", "card": None},
+             {"id": "H-2", "outcome": "needs_refinement", "card": None,
+              "admission": {"missing_critical": ["pico.population"]}},
+             {"id": "H-3", "outcome": "unparsed", "card": {"claims": [{"role": "outcome", "note": "n", "source_span": "s"}]}},
+             {"id": "H-4", "outcome": "not_a_hypothesis", "card": None, "admission": {"reason": "no outcome"}}]
+    got = pipeline.unranked_lists(items)
+    assert got["awaiting_refinement"] == [{"id": "H-2", "missing_critical": ["pico.population"]}]
+    assert got["unparsed"] == [{"id": "H-3", "flag": "unmapped_relation", "note": "n", "source_span": "s"}]
+    assert got["outcome_counts"]["ranked"] == 1 and got["outcome_shares"]["unparsed"] == 0.25
+    with pytest.raises(ValueError):
+        pipeline.unranked_lists(items + [{"id": "H-5", "card": None}])

@@ -327,6 +327,7 @@ def axes(labels_path: str, v2_path: str, split: str = "all") -> dict:
     """Card spec 8 validation: does each axis of the evidence profile (and each indicator) separate the later
     ITP positives from the negatives? AUC per axis over the items of the split; hypotheses filtered by the gate
     take the lowest value of every axis, items not admitted are left out."""
+    from hyparena.aspid import cardinal_range
     from hyparena.card import indicators as ind
     labels = json.loads(Path(labels_path).read_text())
     items = _items(labels, split, set())
@@ -350,7 +351,7 @@ def axes(labels_path: str, v2_path: str, split: str = "all") -> dict:
                 raw = (x.get("indicators") or {}).get(sid)
                 if raw is None:
                     continue
-                v = spec.levels.index(raw) if spec.kind == "ordinal" else spec.scale(float(raw))
+                v = spec.levels.index(raw) if spec.kind == "ordinal" else sum(cardinal_range(spec, raw)) / 2
             values[sid][h] = v
         values["gate_pass"][h] = 0.0 if x["outcome"] == "filtered" else 1.0
     for sid, vals in values.items():

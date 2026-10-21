@@ -6,7 +6,7 @@ Population: {{ population }}. Intervention: {{ intervention }}. Comparator: {{ c
 Claim {{ claim.id }} ({{ claim.role }}): {{ claim.subject.label }} — {{ claim.relation }} — {{ claim.object.label }}
 Qualifiers stated by the hypothesis: {{ qualifiers or "none" }}
 {% if alternative %}
-This is an alternative explanation that the hypothesis REJECTS. Check it as a claim on its own: a finding that {{ claim.subject.label }} does {{ claim.relation }} {{ claim.object.label }} is stance "supports" (even though it goes against the hypothesis).
+This is an alternative explanation that the hypothesis REJECTS. Check it as a claim on its own, in both directions: a finding that {{ claim.subject.label }} does {{ claim.relation }} {{ claim.object.label }} is stance "supports" (even though it goes against the hypothesis); a finding that it does not (e.g. the effect is dissociated from it, or absent) is stance "refutes". Report every such finding from every abstract, not only the first one.
 {% endif %}
 {% if contrast %}
 The hypothesis asserts this claim as the main explanation, in contrast to "{{ contrast }}" (checked separately). Judge only this claim; a sentence that only lists both explanations as possibilities is speculation.

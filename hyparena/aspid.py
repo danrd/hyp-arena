@@ -217,15 +217,29 @@ def _interior_point(A: np.ndarray, size: np.ndarray) -> np.ndarray:
     return np.maximum(res.x[:p], 0.0)
 
 
+def cardinal_range(spec: IndicatorSpec, value) -> tuple[float, float]:
+    """A cardinal value as an interval on the [0, 1] scale: a number gives a point, an interval (lo, hi) of raw
+    values its scaled interval (e.g. late_start from a verbal age, Aggregation_Spec 2), unknown [0, 1]."""
+    if value is None:
+        return 0.0, 1.0
+    if isinstance(value, (tuple, list)):
+        a, b = spec.scale(float(value[0])), spec.scale(float(value[1]))
+        return min(a, b), max(a, b)
+    x = spec.scale(float(value))
+    return x, x
+
+
 def expected_value(spec: IndicatorSpec, value) -> tuple[float, bool]:
-    """(expected mapped value, approximate): an unknown gives the middle of its range (approximate); an ordinal
-    level gives the mean of the SMAA-O mapping, which equals the equal-step value."""
+    """(expected mapped value, approximate): an unknown gives the middle of its range and an interval its
+    midpoint (approximate); an ordinal level gives the mean of the SMAA-O mapping, which equals the equal-step
+    value."""
     if value is None:
         return 0.5, True
     if spec.kind == "ordinal":
         m = len(spec.levels)
         return (spec.levels.index(value) / (m - 1) if m > 1 else 1.0), False
-    return spec.scale(float(value)), False
+    lo, hi = cardinal_range(spec, value)
+    return (lo + hi) / 2, hi > lo
 
 
 def preference_rows(prefer: list[Prefer], values: dict, indicators: list[IndicatorSpec]) -> list[tuple[Prefer, np.ndarray]]:
@@ -337,7 +351,8 @@ def _ordinal_mapping(m: int, kind: str, k: int, rng: np.random.Generator) -> np.
 def aggregate(values: dict[str, dict[str, object]], indicators: list[IndicatorSpec], profile: Optional[Profile],
               K: int = 10000, seed: int = 0, k_top: int = 5, pairwise_max: int = 50, chunk: int = 1000,
               confidence_draws: int = 2000) -> AggregationResult:
-    """`values[h][indicator]`: an ordinal level name, a raw cardinal number, or None (unknown)."""
+    """`values[h][indicator]`: an ordinal level name, a raw cardinal number, an interval (lo, hi) of raw
+    cardinal values (drawn uniformly within it), or None (unknown: drawn over the whole range)."""
     ids = list(values)
     m, n = len(ids), len(indicators)
     rng = np.random.default_rng(seed)
@@ -349,7 +364,7 @@ def aggregate(values: dict[str, dict[str, object]], indicators: list[IndicatorSp
     sampler = WeightSampler([s.id for s in indicators], profile, extra=[g for _, g in prefs])
     W = sampler.sample(K, rng)                                      # drawn first: common to any pool
     # per-indicator data: known ordinal index / known cardinal value / unknown mask
-    known_lvl, known_val, unknown = {}, {}, {}
+    known_lvl, card_lo, card_hi, unknown = {}, {}, {}, {}
     for j, s in enumerate(indicators):
         col = [values[h].get(s.id) for h in ids]
         unknown[j] = np.array([v is None for v in col])
@@ -360,7 +375,9 @@ def aggregate(values: dict[str, dict[str, object]], indicators: list[IndicatorSp
                 raise ValueError(f"{s.id}: unknown levels {bad}")
             known_lvl[j] = np.array(idx)
         else:
-            known_val[j] = np.array([s.scale(float(v)) if v is not None else 0.0 for v in col])
+            rng_j = [cardinal_range(s, v) for v in col]
+            card_lo[j], card_hi[j] = np.array([a for a, _ in rng_j]), np.array([b for _, b in rng_j])
+            unknown[j] = card_hi[j] > card_lo[j]                    # unknown or an interval: drawn per iteration
     U = np.empty((K, m), dtype=np.float64)
     data_rng = np.random.default_rng(seed + 1)                      # data draws separate from weights
     for start in range(0, K, chunk):
@@ -375,9 +392,10 @@ def aggregate(values: dict[str, dict[str, object]], indicators: list[IndicatorSp
                     lvl = np.where(unknown[j][None, :], draw, lvl)
                 Q[:, :, j] = np.take_along_axis(mapping, lvl, axis=1)
             else:
-                val = np.tile(known_val[j], (b, 1))
+                val = np.tile(card_lo[j], (b, 1))
                 if unknown[j].any():
-                    val = np.where(unknown[j][None, :], data_rng.random((b, m)), val)
+                    span = (card_hi[j] - card_lo[j])[None, :]
+                    val = np.where(unknown[j][None, :], card_lo[j][None, :] + span * data_rng.random((b, m)), val)
                 Q[:, :, j] = val
         U[start:start + b] = np.einsum("bmn,bn->bm", Q, W[start:start + b])
     expected, std = U.mean(0), U.std(0)
@@ -442,8 +460,11 @@ def _data_only(values, ids, indicators, w, K, seed) -> np.ndarray:
                 lvl = np.where(unk[None, :], rng.integers(0, len(s.levels), (K, m)), lvl)
             Q[:, :, j] = np.take_along_axis(mapping, lvl, axis=1)
         else:
-            val = np.tile([s.scale(float(v)) if v is not None else 0.0 for v in col], (K, 1))
+            lo = np.array([cardinal_range(s, v)[0] for v in col])
+            hi = np.array([cardinal_range(s, v)[1] for v in col])
+            unk = hi > lo
+            val = np.tile(lo, (K, 1))
             if unk.any():
-                val = np.where(unk[None, :], rng.random((K, m)), val)
+                val = np.where(unk[None, :], lo[None, :] + (hi - lo)[None, :] * rng.random((K, m)), val)
             Q[:, :, j] = val
     return Q @ w

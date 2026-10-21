@@ -3,7 +3,7 @@ verified layer. Every value is a fact derived from the card or `None` (unknown);
 by the aggregation, never replaced by a default.
 
 Not computable yet (left unknown until their inputs exist): informativeness (prediction table, spec 8c, stage
-C), late start (species median lifespan table). Novelty uses the verified claims only, not yet the knowledge
+C); late start needs the median and verbal-age tables (configs/lifespan_medians.yaml, values not filled yet). Novelty uses the verified claims only, not yet the knowledge
 graph. Cost, time and translational distance were replaced by the ordinal `path_to_human` (2026-10-20);
 `next_step` is shown outside the ranking."""
 from __future__ import annotations
@@ -25,7 +25,7 @@ INDICATORS: list[IndicatorSpec] = [
                   note="preliminary steps before a human trial: safety package without human safety data, "
                        "mouse study without a supported mammalian effect; fewer is better"),
     IndicatorSpec("late_start", "cardinal", bounds=(0.0, 1.0),
-                  note="age at start / species median lifespan, capped at 1"),
+                  note="age at start / species median lifespan, capped at 1; a verbal age gives an interval"),
     IndicatorSpec("both_sexes", "ordinal", levels=("one", "both")),
     IndicatorSpec("effect_size", "cardinal", bounds=(0.0, 30.0),
                   note="% change of lifespan at the effect level; cap 30% is a draft (spec 12)"),
@@ -55,7 +55,7 @@ def compute(card: HypothesisCard, ver: Verification, extra: Optional[dict] = Non
         "mechanism": prof.mechanism if prof.mechanism != "refuted" else "unverified",
         "novelty": novelty(card, ver),
         "path_to_human": path_to_human(prof.effect_level, extra.get("human_safety")),
-        "late_start": extra.get("late_start"),
+        "late_start": tuple(extra["late_start"]) if isinstance(extra.get("late_start"), list) else extra.get("late_start"),
         "both_sexes": ("both" if "both" in sexes or {"male", "female"} <= sexes else "one") if sexes else None,
         "effect_size": max(sizes) if sizes else None,
         "informativeness": extra.get("informativeness"),

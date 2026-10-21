@@ -22,10 +22,10 @@ def items():
 
 def test_rank_examples():
     r = rank(items(), K=4000, k_top=1)
-    assert set(r.filtered) == {"H-0003", "H-0006"}
+    assert set(r.filtered) == {"H-0006"}         # H-0003: contrast on a split literature → contested, not filtered
     assert r.known_results == ["H-0004a"]
     assert set(r.not_admitted) == {"H-0004", "H-0005"}
-    assert set(r.ranked) == {"H-0001", "H-0002"}
+    assert set(r.ranked) == {"H-0001", "H-0002", "H-0003"}
     v1, v2 = r.values["H-0001"], r.values["H-0002"]
     assert (v1["effect_level"], v1["robustness"], v1["multi_site_positive"]) == ("mammals", "replicated", "positive")
     assert (v2["effect_level"], v2["robustness"], v2["multi_site_positive"]) == ("mammals", "single", "no")
