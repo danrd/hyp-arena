@@ -19,7 +19,7 @@ import httpx
 ROOT = Path(__file__).resolve().parents[2]
 CACHE = ROOT / "data" / "cache" / "chebi.json"
 OLS = "https://www.ebi.ac.uk/ols4/api/v2/ontologies/chebi/classes/"
-MAX_DESCENDANTS = 50                 # the class-size cap; chosen on the backtest pool (docs/rules-method.md)
+MAX_DESCENDANTS = 100                # the class-size cap, chosen on the backtest pool (docs/rules-method.md)
 
 _lock = threading.Lock()
 _cache: Optional[dict] = None

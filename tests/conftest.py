@@ -49,6 +49,6 @@ CHEBI_CLASSES = {      # narrow is_a ancestors (id, label, size), from OLS4 on 2
 @pytest.fixture(autouse=True)
 def offline_compounds(monkeypatch):
     monkeypatch.setenv("HYPARENA_EMBEDDER", "none")             # no model download in tests
-    monkeypatch.setattr(chebi, "classes", lambda cid, max_descendants=50: [c for c in CHEBI_CLASSES.get(cid, []) if c[2] <= max_descendants])
+    monkeypatch.setattr(chebi, "classes", lambda cid, max_descendants=100: [c for c in CHEBI_CLASSES.get(cid, []) if c[2] <= max_descendants])
     monkeypatch.setattr(cp, "lookup", lambda name: OFFLINE.get(cp.key(name)))
     monkeypatch.setattr(trials, "first_trial_start", lambda name: TRIALS.get(name.strip().lower(), ""))
