@@ -3,7 +3,8 @@
 #
 # Lookup (Data_Sources 19): species + strain + sex. Strain unknown → all rows of the species (for humans: of the
 # setting); sex unknown → the "both" row if there is one, else all sexes; a species, strain or sex not in the
-# table → unknown. With medians [m_lo, m_hi] the fraction is [age / m_hi, min(1, age / m_lo)].
+# table → unknown. `conditions`: a row applies when the card states nothing about them (unstated = n/a, a match),
+# not when it states other ones (another temperature, no FUdR). With medians [m_lo, m_hi] the fraction is [age / m_hi, min(1, age / m_lo)].
 medians:
   - {species: mouse, strain: UM-HET3, sex: female, median_days: 887, source: "PMID:30801953",
      note: "ITP controls pooled over 3 sites and 6 cohorts (Cheng et al. 2019), 95% CI 879-898"}
@@ -12,9 +13,9 @@ medians:
   - {species: mouse, strain: C57BL/6J, sex: female, median_days: 866, source: "PMID:19627267",
      note: "JAX lifespan study of 31 inbred strains, interim, first cohort of 32 per sex (Yuan et al. 2009)"}
   - {species: mouse, strain: C57BL/6J, sex: male, median_days: 901, source: "PMID:19627267", note: "as above"}
-  - {species: worm, strain: N2, sex: hermaphrodite, median_days: 19, source: "PMID:28220799",
+  - {species: worm, strain: N2, sex: hermaphrodite, median_days: 19, source: "PMID:28220799", conditions: {temperature_c: 20, fudr: true},
      note: "CITP, 20 C, 51 uM FUdR, days of adulthood (L4 = day 0); median of 28 trial medians (range 16-23); other temperatures or no FUdR do not transfer"}
-  - {species: fly, strain: Dahomey, sex: female, median_days: [63, 70], source: "PMID:17921418",
+  - {species: fly, strain: Dahomey, sex: female, median_days: [63, 70], source: "PMID:17921418", conditions: {temperature_c: 25},
      note: "mated females, 25 C, SY food 1.0 (peak over food concentrations; a standard diet gives a shorter median); males, other strains or temperatures: unknown"}
   - {species: human, strain: high-income countries, sex: both, median_years: 83.9, source: "WHO GHO LIFE_0000000031 WB_HI 2023",
      note: "age where l(x) = 50,000 of 100,000, linear interpolation; the default for human hypotheses"}

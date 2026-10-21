@@ -64,3 +64,20 @@ def test_interval_is_drawn_within_its_bounds():
     assert 0.4 <= res.quantiles["a"][0] and res.quantiles["a"][2] <= 0.6
     assert res.std["b"] < 1e-12 and res.std["c"] > res.std["a"] > 0.01                # interval narrows the spread
     assert abs(res.expected["a"] - 0.5) < 0.01
+
+
+def test_conditions_apply_when_unstated_and_block_when_different():
+    worm = _card("10 days")
+    worm.pico.population.label, worm.pico.population.taxon = "C. elegans", "NCBITaxon:6239"
+    assert lifespan.late_start(worm) == round(10 / 19, 4)                 # nothing stated: the 20 °C row applies
+    worm.claim_plain += " at 25 °C"
+    assert lifespan.late_start(worm) is None                              # another temperature stated
+    worm.claim_plain = "Compound X started on day 10 extends lifespan at 20°C without FUdR."
+    assert lifespan.late_start(worm) is None                              # no FUdR stated
+    worm.claim_plain = "Compound X started on day 10 extends lifespan at 20 degrees C with FUdR."
+    assert lifespan.late_start(worm) == round(10 / 19, 4)
+    fly = _card("30 days", sex="male")
+    fly.pico.population.label = "Drosophila"
+    assert lifespan.late_start(fly) is None                               # males: not in the table
+    fly.pico.population.sex = "unknown"
+    assert lifespan.late_start(fly) == (round(30 / 70, 4), round(30 / 63, 4))

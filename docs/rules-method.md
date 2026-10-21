@@ -84,10 +84,15 @@ on metformin hydrochloride (before this, metformin had no targets). Older cache 
 
 **Duplicates** (2026-10-21): only the original enters АСПИД, so copies do not take several top-k places; the
 original's item carries `repeats` (metadata, not merit); in the ladder format a duplicate gets the original's
-score. Approximate duplicates (resting on merged names) are not collapsed.
+score. Approximate duplicates (resting on merged names) are not collapsed: their type is `duplicate_approx`,
+visible to the expert and judges, and they are ranked separately (embeddings do not separate opposite claims).
 
-**ChEBI classes** (`hyparena/tools/chebi.py`, OLS4, cached; since 2026-10-21 they are reported with an analog,
-they do not make one): the direct is_a parents of the compound's ChEBI entry with at most 50 descendants. "macrolide lactam" (10) joins rapamycin and everolimus,
+**ChEBI classes** (`hyparena/tools/chebi.py`, OLS4, cached; spec 8b, second round of 2026-10-21): a shared narrow
+class gives `analog_weak` only when at least one of the two compounds has no ChEMBL mechanism target (then the
+class is the only information); when both have targets, target and ATC decide (sirolimus and tacrolimus share
+macrolide lactam and are not analogs). "Narrow" = the most specific common is_a ancestor with at most
+`chebi.MAX_DESCENDANTS` descendants (the class size); the cap is chosen on the backtest pool (below). Earlier
+version, kept for the record: the direct is_a parents with at most 50 descendants. "macrolide lactam" (10) joins rapamycin and everolimus,
 "7-hydroxyflavonol" (41) quercetin, fisetin and kaempferol; "ether" (9,036) or "polyphenol" (885) are too broad.
 Roles (has_role) are not used: "geroprotector" is a role of rapamycin, quercetin, resveratrol, metformin and
 dasatinib alike, so it would make most pairs analogs.
@@ -120,7 +125,7 @@ exchange apart.
 - **Searching Y in both directions.** The first query of every claim excludes reviews (`... NOT review[pt]`): reviews only give background, never a status, and push findings out of the first page. PubMed's relevance order drifts: on 2026-10-19 "rapamycin slows aging mice" returned Neff 2013 in the top 8, on 2026-10-21 only in the top 20; without reviews both studies are in the top 8. A rejected alternative is searched with 12 abstracts instead of 8, and the verifier prompt asks for findings on both sides, from every abstract. When the object of a claim is an organism, its `measure` is also a query. `verify_claim/v5` was amended in place (it had not run on a model).
 - **`other` on the outcome claim.** The normalizer re-parses once with a hint naming the nearest vocabulary relations (word overlap of the claim's note and span with cue words per relation); still `other` → admission flag `unmapped_relation`, outcome `unparsed`, listed in `unparsed` with the note. `normalize_card/v4` gained the hint block (it had not run on a model either).
 - **Nothing disappears silently.** Every input ends with exactly one outcome (ranked, filtered, known_result, needs_refinement, not_a_hypothesis, unparsed, normalization_failed); the result lists `awaiting_refinement` (with `missing_critical`), `unparsed`, `directions`, `normalization_failed`, and reports `outcome_counts` and `outcome_shares`. Refined variants are not generated yet.
-- **`late_start`** (`hyparena/card/lifespan.py`, tables in `configs/lifespan_medians.yaml` from Data_Sources 19): control medians for UM-HET3 and C57BL/6J by sex, C. elegans N2 (20 °C, FUdR), Dahomey females (25 °C), humans (WHO life tables, high-income default, world for low- and middle-income settings); verbal ages from the JAX mouse life phases and MeSH age groups. Lookup: species + strain + sex; strain unknown → all strains of the species; sex unknown → the "both" row if there is one (humans), else all sexes; anything not in the table → unknown. With medians [m_lo, m_hi] and ages [a_lo, a_hi] the value is [a_lo / m_hi, min(1, a_hi / m_lo)] (a number for point inputs), e.g. "middle age" in mice 0.34–0.57, "older adults" 0.77–1. The aggregation draws an interval uniformly (`aspid.cardinal_range`); an expert choice takes its midpoint and is marked approximate. The worm and fly rows are applied although cards do not state temperature or FUdR.
+- **`late_start`** (`hyparena/card/lifespan.py`, tables in `configs/lifespan_medians.yaml` from Data_Sources 19): control medians for UM-HET3 and C57BL/6J by sex, C. elegans N2 (20 °C, FUdR), Dahomey females (25 °C), humans (WHO life tables, high-income default, world for low- and middle-income settings); verbal ages from the JAX mouse life phases and MeSH age groups. Lookup: species + strain + sex; strain unknown → all strains of the species; sex unknown → the "both" row if there is one (humans), else all sexes; anything not in the table → unknown. With medians [m_lo, m_hi] and ages [a_lo, a_hi] the value is [a_lo / m_hi, min(1, a_hi / m_lo)] (a number for point inputs), e.g. "middle age" in mice 0.34–0.57, "older adults" 0.77–1. The aggregation draws an interval uniformly (`aspid.cardinal_range`); an expert choice takes its midpoint and is marked approximate. Assay conditions (worms 20 °C with FUdR, flies 25 °C): a row applies when the card states none (unstated = n/a, a match); when the card states another temperature or no FUdR anywhere in its text, the value is unknown.
 
 ## Lifespan stance by code, context flags (2026-10-20)
 
