@@ -15,7 +15,7 @@ The hypothesis asserts this claim as the main explanation, in contrast to "{{ co
 This claim is NEGATIVE: it says {{ claim.subject.label }} does NOT {{ claim.relation }} {{ claim.object.label }}. A finding that it does is stance "refutes"; a finding of no effect is stance "supports".
 {% endif %}
 {% if endpoint %}
-This claim is about {{ endpoint }}. A finding on another endpoint (e.g. healthspan or a marker for a lifespan claim) neither supports nor refutes it: give it stance "neither" and the endpoint it measures.
+This claim is about {{ endpoint }}. A finding on another endpoint (e.g. healthspan or a marker for a lifespan claim) neither supports nor refutes it: give it stance "neither" and the endpoint it measures.{% if human_healthspan %} Exception: in humans, a finding on a laboratory or instrumental marker (blood markers, body composition, imaging, ageing clocks) counts for this claim; give it stance "supports" or "refutes" as for any finding, endpoint "biomarker" and human_rungs ["human_markers"]. A null primary outcome on such a marker is stance "refutes".{% endif %}
 {% endif %}
 
 Abstracts:
