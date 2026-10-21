@@ -67,7 +67,7 @@ hallmarks and molecular objects of the intervention's own claims.
 | variant | same core, other context, or a mechanism stated in only one of the two |
 | competitor | same core, both state mechanisms, the mechanisms differ (a mechanistic hypothesis: the same premise explained differently) |
 | contradiction | a claim triple of one card with the opposite direction in the other |
-| analog | other interventions with a shared mechanism target (rapamycin, everolimus, temsirolimus: FKBP1A) |
+| analog | other interventions with a shared mechanism target **and** a shared ATC level-4 class (sirolimus, everolimus, temsirolimus: FKBP1A + L04AH / L01EG); `analog_weak` when one of the two has no ATC code (agreed 2026-10-21). Tacrolimus and pimecrolimus bind FKBP1A too but inhibit calcineurin (L04AD, D11AH): not analogs of sirolimus |
 | mechanism_neighbour | other interventions acting on the same hallmark or molecular node (both "inhibit mTORC1") |
 
 A pair can carry several types (a competitor in another context is also a variant; opposite mechanism claims
@@ -78,8 +78,16 @@ in the ladder format (`dedup=False` turns this off); competitors are added to ea
 (`source: proximity`, `ref`); the result lists all relations (`proximity`) and the groups of variants.
 Not done: refinement siblings (`parent_id`), novelty against a knowledge graph.
 
-**ChEBI classes for `analog`** (`hyparena/tools/chebi.py`, OLS4, cached): the direct is_a parents of the
-compound's ChEBI entry with at most 50 descendants. "macrolide lactam" (10) joins rapamycin and everolimus,
+**Mechanism targets and ATC codes** are read over the parent molecule and all its salt and hydrate forms in
+ChEMBL (`compounds.CHEMBL_REV` 2): tacrolimus's ATC codes sit on tacrolimus monohydrate, metformin's mechanisms
+on metformin hydrochloride (before this, metformin had no targets). Older cache entries are refetched once.
+
+**Duplicates** (2026-10-21): only the original enters АСПИД, so copies do not take several top-k places; the
+original's item carries `repeats` (metadata, not merit); in the ladder format a duplicate gets the original's
+score. Approximate duplicates (resting on merged names) are not collapsed.
+
+**ChEBI classes** (`hyparena/tools/chebi.py`, OLS4, cached; since 2026-10-21 they are reported with an analog,
+they do not make one): the direct is_a parents of the compound's ChEBI entry with at most 50 descendants. "macrolide lactam" (10) joins rapamycin and everolimus,
 "7-hydroxyflavonol" (41) quercetin, fisetin and kaempferol; "ether" (9,036) or "polyphenol" (885) are too broad.
 Roles (has_role) are not used: "geroprotector" is a role of rapamycin, quercetin, resveratrol, metformin and
 dasatinib alike, so it would make most pairs analogs.
@@ -112,7 +120,7 @@ exchange apart.
 - **Searching Y in both directions.** The first query of every claim excludes reviews (`... NOT review[pt]`): reviews only give background, never a status, and push findings out of the first page. PubMed's relevance order drifts: on 2026-10-19 "rapamycin slows aging mice" returned Neff 2013 in the top 8, on 2026-10-21 only in the top 20; without reviews both studies are in the top 8. A rejected alternative is searched with 12 abstracts instead of 8, and the verifier prompt asks for findings on both sides, from every abstract. When the object of a claim is an organism, its `measure` is also a query. `verify_claim/v5` was amended in place (it had not run on a model).
 - **`other` on the outcome claim.** The normalizer re-parses once with a hint naming the nearest vocabulary relations (word overlap of the claim's note and span with cue words per relation); still `other` → admission flag `unmapped_relation`, outcome `unparsed`, listed in `unparsed` with the note. `normalize_card/v4` gained the hint block (it had not run on a model either).
 - **Nothing disappears silently.** Every input ends with exactly one outcome (ranked, filtered, known_result, needs_refinement, not_a_hypothesis, unparsed, normalization_failed); the result lists `awaiting_refinement` (with `missing_critical`), `unparsed`, `directions`, `normalization_failed`, and reports `outcome_counts` and `outcome_shares`. Refined variants are not generated yet.
-- **`late_start`** (`hyparena/card/lifespan.py`): an exact age ("600 days", "20 months", "18-20 months") over the median lifespan of the species (most specific entry: species + strain + sex, + strain, + sex, species), capped at 1; a verbal age gives an interval from a per-species table; otherwise unknown. The aggregation draws an interval uniformly within it (`aspid.cardinal_range`); an expert choice takes its midpoint and is marked approximate. The tables (`configs/lifespan_medians.yaml`) have no values yet, so late_start is still unknown everywhere.
+- **`late_start`** (`hyparena/card/lifespan.py`, tables in `configs/lifespan_medians.yaml` from Data_Sources 19): control medians for UM-HET3 and C57BL/6J by sex, C. elegans N2 (20 °C, FUdR), Dahomey females (25 °C), humans (WHO life tables, high-income default, world for low- and middle-income settings); verbal ages from the JAX mouse life phases and MeSH age groups. Lookup: species + strain + sex; strain unknown → all strains of the species; sex unknown → the "both" row if there is one (humans), else all sexes; anything not in the table → unknown. With medians [m_lo, m_hi] and ages [a_lo, a_hi] the value is [a_lo / m_hi, min(1, a_hi / m_lo)] (a number for point inputs), e.g. "middle age" in mice 0.34–0.57, "older adults" 0.77–1. The aggregation draws an interval uniformly (`aspid.cardinal_range`); an expert choice takes its midpoint and is marked approximate. The worm and fly rows are applied although cards do not state temperature or FUdR.
 
 ## Lifespan stance by code, context flags (2026-10-20)
 

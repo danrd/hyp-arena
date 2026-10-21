@@ -1,7 +1,7 @@
 """Compound identifiers: a name → its PubChem parent compound (salts and hydrates collapse to the parent:
 "quercetin dihydrate" and "quercetin" are the same compound), with the preferred name, InChIKey, ChEBI id
-(from PubChem's synonyms), ChEMBL id, maximum clinical phase, first approval year and mechanism targets (ChEMBL, by
-InChIKey) and the synonyms.
+(from PubChem's synonyms), ChEMBL id, maximum clinical phase, first approval year, mechanism targets and ATC codes
+(ChEMBL, by InChIKey; targets and ATC over the molecule's salt and hydrate forms) and the synonyms.
 
 Classes and mixtures ("senolytics", "omega-3 fatty acids") have no compound and stay unresolved: matching then
 falls back to names. Results, including "not found", are cached on disk (data/cache/compounds.json); network
@@ -41,6 +41,8 @@ class Compound:
     max_phase: Optional[int] = None            # ChEMBL max phase 0..4 (None: not in ChEMBL or no phase)
     first_approval: Optional[int] = None       # ChEMBL year of first approval (None: not approved or unknown)
     targets: Optional[list[str]] = None        # ChEMBL mechanism targets (target ChEMBL ids); None: not fetched
+    atc: Optional[list[str]] = None            # ATC codes (level 5) of the molecule and its salt / hydrate forms
+    chembl_rev: int = 0                        # how the ChEMBL fields were fetched (CHEMBL_REV); older entries are refetched
     synonyms: list[str] = field(default_factory=list)
 
     @property
@@ -118,16 +120,32 @@ def _details(cid: int) -> Compound:
                     "&only=molecule_chembl_id,max_phase,first_approval") or {}).get("molecules") or []
         if mol:
             _chembl_fields(c, mol[0])
-            c.targets = _targets(c.chembl)
+            c.targets, c.atc, c.chembl_rev = _targets(c.chembl), _atc(c.chembl), CHEMBL_REV
     return c
 
 
+CHEMBL_REV = 2       # 2: mechanisms and ATC over the parent and all its forms (metformin's are on its salt)
+
+
 def _targets(chembl: str) -> list[str]:
-    """Targets of a molecule's mechanisms of action in ChEMBL (rapamycin, everolimus, temsirolimus: FKBP1A)."""
+    """Targets of the mechanisms of action of a parent molecule and its salt / hydrate forms in ChEMBL
+    (rapamycin, everolimus, temsirolimus: FKBP1A; metformin's sit on metformin hydrochloride)."""
     if not chembl:
         return []
-    data = _get(f"{CHEMBL}/mechanism.json?molecule_chembl_id={chembl}&only=target_chembl_id&limit=100") or {}
+    data = _get(f"{CHEMBL}/mechanism.json?parent_molecule_chembl_id={chembl}&only=target_chembl_id&limit=100") or {}
     return sorted({m["target_chembl_id"] for m in data.get("mechanisms") or [] if m.get("target_chembl_id")})
+
+
+def _atc(chembl: str) -> list[str]:
+    """ATC codes of a parent molecule and its forms (tacrolimus's are on tacrolimus monohydrate)."""
+    if not chembl:
+        return []
+    forms = (_get(f"{CHEMBL}/molecule_form.json?parent_chembl_id={chembl}&limit=100") or {}).get("molecule_forms") or []
+    ids = sorted({chembl} | {f["molecule_chembl_id"] for f in forms if f.get("molecule_chembl_id")})
+    codes = set()
+    for m in ids:
+        codes |= set((_get(f"{CHEMBL}/molecule/{m}.json?only=atc_classifications") or {}).get("atc_classifications") or [])
+    return sorted(codes)
 
 
 def _chembl_fields(c: Compound, mol: dict) -> None:
@@ -142,14 +160,15 @@ def _chembl_fields(c: Compound, mol: dict) -> None:
 
 
 def _upgrade(hit: dict) -> dict:
-    """Cache entries written before `first_approval` or `targets` existed: fetch them from ChEMBL once."""
+    """Cache entries written before `first_approval`, or before the current way of fetching targets and ATC
+    codes (CHEMBL_REV): fetch them from ChEMBL once."""
     c = Compound(**hit)
     if c.chembl and "first_approval" not in hit:
         mol = (_get(f"{CHEMBL}/molecule/{c.chembl}.json?only=molecule_chembl_id,max_phase,first_approval") or {})
         if mol:
             _chembl_fields(c, mol)
-    if "targets" not in hit:
-        c.targets = _targets(c.chembl)
+    if hit.get("chembl_rev", 0) < CHEMBL_REV:
+        c.targets, c.atc, c.chembl_rev = _targets(c.chembl), _atc(c.chembl), CHEMBL_REV
     return asdict(c)
 
 
@@ -172,7 +191,7 @@ def lookup(name: str) -> Optional[Compound]:
         return None
     with _lock:
         hit = _load().get(k, "missing")
-    if isinstance(hit, dict) and ("first_approval" not in hit or "targets" not in hit):
+    if isinstance(hit, dict) and ("first_approval" not in hit or hit.get("chembl_rev", 0) < CHEMBL_REV):
         try:
             hit = _upgrade(hit)
         except LookupError_:

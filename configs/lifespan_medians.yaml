@@ -1,15 +1,49 @@
-# Inputs of the `late_start` indicator (card spec 8a, agreed 2026-10-21). Values are to be filled from sources:
-# every entry needs a source with a PMID (or a life table for humans). Until an entry exists, late_start stays
-# unknown for that species (drawn over [0, 1]).
+# Inputs of the `late_start` indicator (card spec 8a). Values and sources: Data_Sources section 19 (collected
+# 2026-10-21 from PubMed / PMC / WHO GHO / MeSH; nothing from memory).
 #
-# medians: median lifespan of control groups, per species and, where it matters, strain and sex. Lookup order:
-#   species + strain + sex, species + strain, species + sex, species. AnAge is not used (maximum longevity only).
-#   - {species: mouse, strain: UM-HET3, sex: female, median_days: ..., source: "PMID:...", note: "ITP controls"}
-medians: []
-#
-# verbal_ages: verbal age at start → interval of the fraction of the median lifespan, per species, with a
-# source (a published life-phase classification for mice, accepted thresholds for humans). Keys are matched
-# after lower-casing; give the synonyms a card may use ("old", "aged", "late life", "late_life").
-#   mouse:
-#     - {terms: ["middle age", "middle-aged"], fraction: [lo, hi], source: "PMID:..."}
-verbal_ages: {}
+# Lookup (Data_Sources 19): species + strain + sex. Strain unknown → all rows of the species (for humans: of the
+# setting); sex unknown → the "both" row if there is one, else all sexes; a species, strain or sex not in the
+# table → unknown. With medians [m_lo, m_hi] the fraction is [age / m_hi, min(1, age / m_lo)].
+medians:
+  - {species: mouse, strain: UM-HET3, sex: female, median_days: 887, source: "PMID:30801953",
+     note: "ITP controls pooled over 3 sites and 6 cohorts (Cheng et al. 2019), 95% CI 879-898"}
+  - {species: mouse, strain: UM-HET3, sex: male, median_days: 803, source: "PMID:30801953",
+     note: "as above, 95% CI 791-815"}
+  - {species: mouse, strain: C57BL/6J, sex: female, median_days: 866, source: "PMID:19627267",
+     note: "JAX lifespan study of 31 inbred strains, interim, first cohort of 32 per sex (Yuan et al. 2009)"}
+  - {species: mouse, strain: C57BL/6J, sex: male, median_days: 901, source: "PMID:19627267", note: "as above"}
+  - {species: worm, strain: N2, sex: hermaphrodite, median_days: 19, source: "PMID:28220799",
+     note: "CITP, 20 C, 51 uM FUdR, days of adulthood (L4 = day 0); median of 28 trial medians (range 16-23); other temperatures or no FUdR do not transfer"}
+  - {species: fly, strain: Dahomey, sex: female, median_days: [63, 70], source: "PMID:17921418",
+     note: "mated females, 25 C, SY food 1.0 (peak over food concentrations; a standard diet gives a shorter median); males, other strains or temperatures: unknown"}
+  - {species: human, strain: high-income countries, sex: both, median_years: 83.9, source: "WHO GHO LIFE_0000000031 WB_HI 2023",
+     note: "age where l(x) = 50,000 of 100,000, linear interpolation; the default for human hypotheses"}
+  - {species: human, strain: high-income countries, sex: male, median_years: 81.1, source: "WHO GHO LIFE_0000000031 WB_HI 2023"}
+  - {species: human, strain: high-income countries, sex: female, median_years: 85.7, source: "WHO GHO LIFE_0000000031/35 WB_HI 2023",
+     note: "median in the open 85+ group, exponential tail with e(85) = 6.63"}
+  - {species: human, strain: world, sex: both, median_years: 79.5, source: "WHO GHO LIFE_0000000031 GLOBAL 2023",
+     note: "when the population names a low- or middle-income setting"}
+  - {species: human, strain: world, sex: female, median_years: 82.1, source: "WHO GHO LIFE_0000000031 GLOBAL 2023"}
+  - {species: human, strain: world, sex: male, median_years: 76.6, source: "WHO GHO LIFE_0000000031 GLOBAL 2023"}
+
+# Verbal ages → age intervals (upper bound null = open). Mouse: JAX, "When are mice considered old?" (2017), after
+# Flurkey, Currer & Harrison 2007; human: MeSH age groups (the groups of PubMed's age filters). Worms and flies:
+# none (papers state days). Terms are matched longest first, so "middle-aged" is not read as "aged".
+verbal_ages:
+  mouse:
+    unit: months
+    rows:
+      - {terms: ["young adult", "mature adult"], age: [3, 6]}
+      - {terms: ["adult"], age: [3, 15], note: "our choice: mature adult to end of middle age"}
+      - {terms: ["middle-aged", "middle aged", "middle age", "middle-age"], age: [10, 15]}
+      - {terms: ["late middle age", "late middle-aged", "late middle aged"], age: [10, 24], note: "JAX gap: union of the neighbouring rows"}
+      - {terms: ["old", "aged", "late life", "late-life", "elderly", "older"], age: [18, 24]}
+      - {terms: ["very old", "oldest old", "very aged"], age: [24, null]}
+  human:
+    unit: years
+    rows:
+      - {terms: ["young adult", "young adults"], age: [19, 24]}
+      - {terms: ["adult", "adults"], age: [19, 44]}
+      - {terms: ["middle-aged", "middle aged", "middle age", "middle-age"], age: [45, 64]}
+      - {terms: ["old", "aged", "older adults", "older adult", "older people", "elderly", "late life", "late-life", "older"], age: [65, null]}
+      - {terms: ["very old", "oldest old", "aged 80 and over", "octogenarians", "nonagenarians"], age: [80, null]}

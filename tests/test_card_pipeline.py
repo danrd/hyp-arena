@@ -343,5 +343,7 @@ def test_pipeline_does_not_verify_a_duplicate_twice(monkeypatch):
     assert res["items"][1]["duplicate_of"] == "H-0001" and res["items"][1]["verification"] is None
     assert res["duplicates"] == [{"id": "H-0002", "duplicate_of": "H-0001"}]
     assert res["proximity"][0]["types"] == ["duplicate"]
+    assert res["items"][0]["repeats"] == 1                                   # metadata only
+    assert all("H-0002" not in r["expected"] for r in res["ranking"].values())   # one entry in АСПИД
     ladder = pipeline.as_ladder_result(res, ["a", "b"])
     assert ladder["hypotheses"]["b"]["combined"] == ladder["hypotheses"]["a"]["combined"]
