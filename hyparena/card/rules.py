@@ -246,6 +246,8 @@ def admissible(record: EvidenceRecord, claim: Claim) -> bool:
     if record.qualifiers_match.get("intervention_match") in ("related_compound", "class"):
         return False                                     # spec 8: related compounds and classes count only as analogs
     need = claim_endpoint(claim)
+    if need == "healthspan" and record.endpoint == "biomarker" and species_key(record.species) == "human":
+        return True                                      # a human healthspan claim counts markers at its markers rung
     return not (need and record.endpoint not in ("unknown", need))
 
 

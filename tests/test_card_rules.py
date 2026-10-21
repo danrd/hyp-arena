@@ -410,3 +410,13 @@ def test_gate_reason_of_a_curated_record_is_its_pmid():
         linked_pmid="20974732", species="mouse", endpoint="lifespan", quote_role="finding", program={"name": "ITP"},
         qualifiers_match={"species": "yes", "intervention_match": "exact"})]
     assert finalize(card, ver).evidence_profile.gate_reason == "PMID:20974732"
+
+
+def test_human_marker_record_counts_for_a_human_healthspan_claim():
+    from hyparena.card.models import EvidenceRecord
+    from hyparena.card.rules import admissible
+    claim = HypothesisCard.model_validate(load("ex1_rapamycin_healthspan")["card"]).claims[3]   # healthspan, human
+    rec = lambda species: EvidenceRecord(source="PubMed", record_id="PMID:1", epistemic_type="A_text", species=species,
+                                         endpoint="biomarker", quote_role="finding", qualifiers_match={"species": "yes"})
+    assert admissible(rec("human"), claim)                  # PEARL's null primary outcome (visceral adiposity)
+    assert not admissible(rec("mouse"), claim)
