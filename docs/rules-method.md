@@ -119,6 +119,15 @@ study as support. c1 is contested and supported against the reference's unverifi
 "Rapamycin is widely used as a complete inhibitor of the mTORC1 ..." as a finding, where the reference calls such
 sentences background; c2 as before.
 
+**Stage 3, negative-sampling regression (2026-10-21; runs/neg_v2/v2-evidence_first-stage3).** The same six groups
+on the cards of 2026-10-20 (`--cards-from runs/neg_v2/v2-evidence_first-flash`), so only the verifier, rules,
+proximity and aggregation differ; verifier DeepSeek V4.1 Flash. 169 calls, no failures. Against the refreshed run of
+2026-10-20: hit@1 0.50 → 0.50, MRR 0.60 → 0.63, mean rank 3.0 → 2.7, AUC 0.78 [0.59, 0.94] → 0.81 [0.63, 0.96]; the
+finding is ranked in every group; nothing collapsed as a duplicate and nothing rejected at admission. Two negatives
+changed outcome: Lovaza "via SIRT1" in mice became a known result and oridonin "via mTOR activation" was filtered
+(PMID 25075795). No regression; the gain is within the interval. Estimated tokens per group rose from 62k to 415k
+(20 abstracts per claim instead of 8).
+
 ## Typed proximity (2026-10-21)
 
 `hyparena/card/proximity.py` compares cards by keys, not by text. Keys: the intervention (identifiers of
