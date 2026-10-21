@@ -1,6 +1,24 @@
 # hyp-arena
 
-An approach to ranking thousands of scientific hypotheses (biology, ageing) by promise and feasibility, based on ideas from Google's Co-Scientist.
+A research prototype for ranking hypotheses about ageing and healthy lifespan. Each hypothesis is turned into a
+structured card of claims; the claims are checked against PubMed abstracts and DrugAge with verbatim quotes; rules
+compute indicators from the checked evidence (effect level, robustness, path to humans, novelty and others); the
+hypotheses are then ranked under explicit preference profiles with SMAA, which gives each one an interval and a
+probability of being in the top k rather than a single score. A Co-Scientist-style tournament (Elo) is included as
+a baseline.
+
+Status: work in progress. The method is evaluated on worked examples, a negative-sampling test and a historical
+backtest against the Interventions Testing Program; the samples are small and the results are reported with their
+intervals in [`docs/rules-method.md`](docs/rules-method.md). The rankings are research output, not medical advice.
+
+Quick start: `pip install -e . pytest && python -m pytest tests/`. Runs that call models need an API key in the
+environment and `ALLOW_PAID=1` (see [`configs/`](configs/)). A one-page viewer of a run is in
+[`docs/site/index.html`](docs/site/index.html) (`python -m hyparena.site export`).
+
+Data sources: PubMed (NCBI E-utilities), DrugAge (HAGR, CC BY 3.0; de Magalhães et al. 2024), ChEMBL, ChEBI (OLS4),
+ClinicalTrials.gov. Code under the MIT licence ([`LICENSE`](LICENSE)).
+
+## Documentation and tools
 
 - Approach: [`docs/approach.md`](docs/approach.md)
 - **Method v2 (2026-10-19): verified card → rule-based indicators → aggregation under preference profiles**: [`docs/rules-method.md`](docs/rules-method.md); specifications in [`docs/spec/`](docs/spec/); tests: `pip install pytest && python -m pytest tests/`

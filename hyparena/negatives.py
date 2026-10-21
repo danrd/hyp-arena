@@ -221,7 +221,9 @@ def build(args) -> None:
         report.append(f"{gid} {pos['compound']} / {pos['species']} as of {as_of}: {dict(kinds)}; "
                       f"variants per cluster: {k}; candidates not used: {len(true_syn['dropped'])} (rejected by the verifier or surplus)")
     (out / "labels.json").write_text(json.dumps(labels, ensure_ascii=False, indent=2))
-    (out / "build.json").write_text(json.dumps({"args": {k: v for k, v in vars(args).items() if k != "func"},
+    rel = lambda v: str(Path(v).resolve().relative_to(ROOT)) if isinstance(v, str) and Path(v).is_absolute() \
+        and Path(v).resolve().is_relative_to(ROOT) else v     # no local paths in the committed record
+    (out / "build.json").write_text(json.dumps({"args": {k: rel(v) for k, v in vars(args).items() if k != "func"},
                                                 "calls": client.calls, "report": report}, indent=2))
     print("\n".join(report))
     print(f"groups written: {len(labels)} of {len(groups)}; calls: {client.calls} (failures: {client.failures}; "
