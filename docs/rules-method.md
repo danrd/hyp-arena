@@ -355,3 +355,27 @@ full ranking with `late_start` is reported for reference only. Run: `backtest v2
 verifier and profile as the dev half. On the dev half the primary metric is 0.53 [0.29, 0.77] (6 positive, 21
 negative compounds), per regimen 0.57 [0.35, 0.76]. Outside the backtest `late_start` stays: in fresh hypotheses
 the start age is the author's choice, not the ITP's later one.
+
+**Test half (2026-10-21; runs/stage4/itp2010_test.json).** 36 tests, 126 calls, no failures, 23 min; date audit:
+47 PubMed records, none after T. Outcomes: 34 ranked, 2 known results (rapamycin), nothing filtered.
+
+| Metric | Test half | Dev half |
+|---|---|---|
+| **primary: per compound, without late_start, known results apart** | **0.73 [0.53, 0.89]** (10 / 22) | 0.53 [0.29, 0.77] (6 / 21) |
+| per regimen, same ranking | 0.70 [0.52, 0.86] (12 / 22) | 0.57 [0.35, 0.76] |
+| reference: full ranking with late_start and known results | 0.77 [0.60, 0.91] | 0.83 [0.67, 0.94] |
+
+Where the test-half AUC comes from (per compound, without late_start):
+- the top: rapamycin (one regimen ranked, replicated mammalian evidence before T) and nordihydroguaiaretic acid
+  (the 2008 ITP paper), both positive; metformin third (mammalian evidence before T), negative;
+- the bottom: five compounds with no path to humans (`path_to_human` level 2: β-guanidinopropionic acid, MIF098,
+  ursolic acid, syringaresinol, fisetin) and four with novelty "analog", all negative;
+- the 23 compounds between are tied within the Monte Carlo error of the expected value (half-width 0.01): their
+  order is noise.
+
+Reading: the signal is real but small and unstable between the halves (0.53 and 0.73, intervals overlapping
+widely); it comes from pre-T evidence for two or three compounds and from the prior that compounds without a
+path to humans fail more often. The halves are split by regimen, so compounds tested in several regimens
+(acarbose, rapamycin, 17α-estradiol, canagliflozin, nordihydroguaiaretic acid) appear in both; only the metric
+was chosen on the dev half. `both_sexes` (AUC 1.00) and `effect_size` (0.00) have a value for one positive and one
+negative only.
