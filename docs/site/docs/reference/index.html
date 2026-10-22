@@ -338,6 +338,37 @@ details.fold[open] > summary { margin-bottom: 8px; }
   .tabs button[aria-selected="true"] { background: var(--accent); }
   .tabs button:last-child:nth-child(odd) { grid-column: 1 / -1; }
   }
+.lab { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: var(--step--1); white-space: nowrap; }
+.lab-supports { background: var(--lab-a-soft); color: var(--lab-a); }
+.lab-no_effect { background: var(--idle-soft); color: var(--muted); }
+.lab-harmful { background: var(--lab-c-soft); color: var(--lab-c); }
+:root { --lab-a: #2c5f99; --lab-a-soft: #e2ebf6; --lab-c: #6a4c97; --lab-c-soft: #ece6f4; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --lab-a: #8fb6e8; --lab-a-soft: #1d2d42; --lab-c: #b7a0e0; --lab-c-soft: #2c2340; } }
+:root[data-theme="dark"] { --lab-a: #8fb6e8; --lab-a-soft: #1d2d42; --lab-c: #b7a0e0; --lab-c-soft: #2c2340; }
+table.rank .after { min-width: 170px; font-size: var(--step--1); white-space: normal; }
+table.rank:not(.show-after) .after { display: none; }
+table.rank.show-after .pb { display: none; }
+.after-inline { display: none; margin-top: 6px; font-size: var(--step--1); font-weight: 400; }
+.after-inline .sub { display: block; color: var(--muted); margin-top: 2px; }
+@media (max-width: 700px) { table.rank.show-after .after { display: none; } table.rank.show-after .after-inline { display: block; } }
+table.rank .after .sub { display: block; color: var(--muted); margin-top: 2px; }
+tr.foldrow td { text-align: left; background: var(--paper); }
+tr.foldrow button { font-size: var(--step--1); }
+.showcase { display: grid; gap: 10px; width: 100%; }
+.showcase .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.showcase .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 4px; text-align: left; }
+.showcase .stat b { font-family: var(--display); font-size: var(--step-3); line-height: 1.05; color: var(--accent); }
+.showcase .stat span { font-size: var(--step--1); color: var(--muted); }
+.showcase .caption { margin: 0; font-size: var(--step--1); color: var(--muted); text-align: left; }
+@media (max-width: 700px) { .showcase .stats { grid-template-columns: minmax(0, 1fr); } }
+.examples { display: grid; gap: 12px; }
+.examples h3 { margin: 0; font-size: var(--step-1); }
+.excases { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 12px; }
+.excase { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 6px; align-content: start; text-align: left; min-width: 0; }
+.excase .kind { font-size: var(--step--1); text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); }
+.excase button.title { all: unset; cursor: pointer; font-weight: 600; color: var(--ink); text-decoration: underline; text-decoration-color: var(--line); }
+.excase p { margin: 0; font-size: var(--step--1); }
+.excase .muted { color: var(--muted); }
 </style>
 <style>
 .skip { position: absolute; left: -999px; top: 0; background: var(--accent); color: var(--accent-ink); padding: 8px 12px; z-index: 30; }

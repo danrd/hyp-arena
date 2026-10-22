@@ -92,3 +92,26 @@ def test_build_writes_the_pages_and_a_redirect(tmp_path):
         assert 'id="docDrawer"' in s and 'id="docAside"' in s and 'class="pager"' in s
     red = (tmp_path / "docs" / "index.html").read_text()
     assert "location.replace" in red and '"card-layers": "method"' in red and '"docs-run": "start"' in red and 'const slug = map[h] || "method"' in red
+
+
+def test_regimen_title_reads_from_the_label():
+    lab = {"compound": "Rapamycin", "dose": "14 ppm food", "age_at_start": "9 months"}
+    assert site._regimen_title(lab) == "Rapamycin, 14 ppm food, старт 9 мес"
+    assert site._regimen_title({"compound": "X", "dose": "", "age_at_start": ""}) == "X"
+
+
+def test_itp_bundle_from_the_saved_runs():
+    import pytest
+    from pathlib import Path
+    dev, test = Path("runs/stage4/itp2010_dev.json"), Path("runs/stage4/itp2010_test.json")
+    labels = Path("data/backtest/itp_2010-12-31_labels.json")
+    if not (dev.exists() and test.exists() and labels.exists()):
+        pytest.skip("the saved backtest runs are local (runs/ is not tracked)")
+    b = site.export_itp(str(dev), str(test), str(labels))
+    s = b["summary"]
+    assert len(b["hypotheses"]) == s["n_tests"] == 70 and s["n_ranked"] + s["n_known"] + s["n_filtered"] == 70
+    assert all(h["after"]["label"] in ("supports", "no_effect", "harmful") and h["after"]["pmids"] for h in b["hypotheses"])
+    assert "late_start" not in [i["id"] for i in b["meta"]["indicators"]]
+    assert set(b["profiles"]) == {"evidence_first", "cheap_feasible", "fundamental"}
+    assert 0.6 < s["auc"]["per_regimen"]["auc"] < 0.9 and s["bottom"]["hits"] == 0
+    assert {e["kind"] for e in b["showcase"]["examples"]} >= {"hit", "miss", "known", "filtered"}

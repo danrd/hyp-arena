@@ -137,6 +137,169 @@ def export(v2_path: str, elo_path: Optional[str] = None, pool_path: Optional[str
     return bundle_from_result(res, ids, elo, title or Path(v2_path).stem)
 
 
+# ---- the historical ITP check: one ranking at T and what the ITP published later ----
+
+ITP_DROP = ["late_start"]            # as in the backtest's primary metric (hyparena.backtest.PRIMARY_DROP)
+ITP_TITLE = "Историческая проверка ITP (на конец 2010 г.)"
+ITP_RECORDS = 5                      # records per claim and side kept in the ITP bundle
+LABEL_RU = {"supports": "продлило", "no_effect": "нет эффекта", "harmful": "вред"}
+
+
+def _regimen_title(lab: dict) -> str:
+    age = (lab.get("age_at_start") or "").replace("months", "мес").replace("month", "мес").replace("days", "сут")
+    return ", ".join(x for x in (lab["compound"], lab.get("dose") or "", f"старт {age}" if age else "") if x)
+
+
+def _reaggregate(res: dict, drop: list[str], k_top: int = 3, K: int = 10000) -> dict:
+    """The ranking of a result's ranked items under every profile without the indicators `drop` (no model calls);
+    the same aggregation as `hyparena.backtest.ablate`, with the full output the page needs."""
+    from dataclasses import replace
+
+    from hyparena.aspid import aggregate, load_profiles
+    from hyparena.card import indicators as ind
+    specs = [sp for sp in ind.INDICATORS if sp.id not in drop]
+    keep = {sp.id for sp in specs}
+    values = {x["id"]: {k: v for k, v in (x.get("indicators") or {}).items() if k in keep}
+              for x in res["items"] if x["outcome"] == "ranked"}
+    out = {}
+    for name, prof in load_profiles().items():
+        tiers = [t if isinstance(t, str) else [i for i in t if i in keep] for t in prof.tiers]
+        prof = replace(prof, tiers=[t for t in tiers if t])
+        r = aggregate(values, specs, prof, K=K, k_top=k_top)
+        out[name] = {"order": r.order, "expected": r.expected, "std": r.std, "quantiles": r.quantiles, "p_topk": r.p_topk,
+                     "p_best": r.p_best, "pairwise": r.pairwise, "meta": r.meta}
+    return out
+
+
+def _merge_runs(runs: list[dict]) -> dict:
+    """Several v2 runs over disjoint parts of one pool as one result: item ids H-0001.. in order, pool ids in meta."""
+    import copy
+    items, pool_ids = [], []
+    for run in runs:
+        for pid, x in zip(run["meta"]["ids"], run["items"]):
+            x = copy.deepcopy(x)
+            x["id"] = f"H-{len(items) + 1:04d}"
+            items.append(x)
+            pool_ids.append(pid)
+    res = copy.deepcopy(runs[0])
+    res["items"], res["meta"]["ids"] = items, pool_ids
+    res["meta"]["calls"] = sum(r["meta"]["calls"] for r in runs)
+    res["meta"]["created"] = max(r["meta"]["created"] for r in runs)
+    to_new = {pid: x["id"] for pid, x in zip(pool_ids, items)}
+    res["filtered"] = {to_new[pid]: reason for run in runs for pid, (old, reason) in
+                       ((pid, (o, run["filtered"].get(o))) for pid, o in zip(run["meta"]["ids"], [x["id"] for x in run["items"]]))
+                       if reason}
+    res["known_results"] = [to_new[pid] for run in runs for pid, o in zip(run["meta"]["ids"], [x["id"] for x in run["items"]])
+                            if o in (run.get("known_results") or [])]
+    res["outcome_counts"] = {o: sum(1 for x in items if x["outcome"] == o) for o in
+                             ("ranked", "filtered", "known_result", "duplicate", "needs_refinement", "not_a_hypothesis")}
+    return res
+
+
+def _pmid_link(p: str) -> str:
+    return f"PMID:{p}"
+
+
+def _itp_examples(bundle: dict, labels: dict) -> list[dict]:
+    """Four to five worked cases chosen by rule from the data: the top-ranked positive, a positive with evidence
+    found before T, the top-ranked negative, a known result, a hypothesis filtered at T."""
+    P = bundle["profiles"]["evidence_first"]
+    place = {h: i + 1 for i, h in enumerate(P["order"])}
+    n = len(P["order"])
+    hyp = {h["id"]: h for h in bundle["hypotheses"]}
+    pre = lambda h: sum(len(cv["evidence"]["items"]) + len(cv["counter"]["items"])
+                        for cv in (hyp[h]["verification"] or {"claims": []})["claims"] if cv.get("claim") and cv["claim"]["role"] == "outcome")
+    ranked_pos = [h for h in P["order"] if labels[h]["label"] == 1]
+    ranked_neg = [h for h in P["order"] if labels[h]["label"] == 0]
+    picks = []
+    if ranked_pos:
+        picks.append(("hit", ranked_pos[0]))
+    ev = [h for h in ranked_pos if pre(h) and h != (ranked_pos[0] if ranked_pos else None) and
+          labels[h]["compound"] != labels[ranked_pos[0]]["compound"]]
+    if ev:
+        picks.append(("evidence", ev[0]))
+    if ranked_neg:
+        picks.append(("miss", ranked_neg[0]))
+    known = [h["id"] for h in bundle["hypotheses"] if h["outcome"] == "known_result"]
+    if known:
+        picks.append(("known", known[0]))
+    filt = [h["id"] for h in bundle["hypotheses"] if h["outcome"] == "filtered"]
+    if filt:
+        picks.append(("filtered", filt[0]))
+    kinds = {"hit": "Совпало", "evidence": "Совпало: помогли данные до 2010 года", "miss": "Не совпало",
+             "known": "Результат был известен до 2010 года", "filtered": "Отсеяно проверкой на конец 2010 года"}
+    out = []
+    for kind, h in picks:
+        hy, lab = hyp[h], labels[h]
+        main = next((cv for cv in (hy["verification"] or {"claims": []})["claims"] if cv.get("claim") and cv["claim"]["role"] == "outcome"), None)
+        pmids = sorted({(r.get("linked_pmid") or r.get("record_id", "")).replace("PMID:", "") for side in ("evidence", "counter")
+                        for r in (main or {}).get(side, {"items": []})["items"]} - {""})
+        pmids = [p for p in pmids if p.isdigit()]
+        out.append({"id": h, "kind": kind, "heading": kinds[kind], "title": hy["title"],
+                    "at_T": {"place": place.get(h), "of": n, "status": main["status"] if main else None,
+                             "outcome": hy["outcome"], "pmids": pmids[:3],
+                             "level": (hy["verification"] or {}).get("profile", {}).get("effect_level") if hy["verification"] else None},
+                    "after": hy["after"]})
+    return out
+
+
+def export_itp(dev_path: str, test_path: str, labels_path: str, title: str = ITP_TITLE) -> dict:
+    """The site bundle of the historical ITP check: the dev and test runs of one pool joined into one result (the
+    saved cards, verification and indicators), the ranking at T re-aggregated without `late_start` under every
+    profile, the labels of what the ITP published later, a summary computed with `hyparena.backtest.primary`
+    and `ablate`, and worked examples. No model calls."""
+    import tempfile
+
+    from hyparena import backtest
+    labels = json.loads(Path(labels_path).read_text())
+    res = _merge_runs([json.loads(Path(p).read_text()) for p in (dev_path, test_path)])
+    res["ranking"] = _reaggregate(res, ITP_DROP)
+    res["meta"]["indicators"] = [i for i in res["meta"]["indicators"] if i["id"] not in ITP_DROP]
+    res["meta"]["profiles"] = {n: {**p, "tiers": [t if isinstance(t, str) else [i for i in t if i not in ITP_DROP] for t in p["tiers"]]}
+                               for n, p in res["meta"]["profiles"].items()}
+    res["meta"]["k_top"] = 3
+    pool_ids = res["meta"]["ids"]
+    bundle = bundle_from_result(res, pool_ids, None, title)
+    for h in bundle["hypotheses"]:
+        lab = labels[h["id"]]
+        h["title"] = _regimen_title(lab)
+        h["after"] = {"label": lab["outcome"], "effect_percent": lab.get("effect"), "by_sex": lab.get("by_sex") or {},
+                      "date": lab["first_itp_publication"], "year": int(lab["first_itp_publication"][:4]), "pmids": lab.get("pmids") or []}
+    with tempfile.TemporaryDirectory() as d:
+        merged = Path(d) / "merged.json"
+        merged.write_text(json.dumps(res))
+        prim = backtest.primary(labels_path, str(merged), split="all")
+        hyps = backtest.ablate(str(merged), ITP_DROP)["hypotheses"]
+    ranked = sorted((h for h, v in hyps.items() if v["status"] == "ranked"),
+                    key=lambda h: hyps[h]["combined"], reverse=True)
+    pool_of = dict(zip([x["id"] for x in res["items"]], pool_ids))
+    ranked = [pool_of.get(h, h) for h in ranked]
+    pos = sum(labels[h]["label"] for h in ranked)
+    base = pos / len(ranked)
+    top = {str(k): {"k": k, "hits": sum(labels[h]["label"] for h in ranked[:k]),
+                    "compounds": len({labels[h]["compound"] for h in ranked[:k]})} for k in (3, 5)}
+    bottom = {"k": 15, "hits": sum(labels[h]["label"] for h in ranked[-15:])}
+    for h in bundle["hypotheses"]:                       # 70 cards: keep the page light, the counts stay
+        for cv in (h["verification"] or {"claims": []})["claims"]:
+            for side in ("evidence", "counter"):
+                r = cv[side]
+                r["more"] += max(0, len(r["items"]) - ITP_RECORDS)
+                r["items"] = r["items"][:ITP_RECORDS]
+    for P in bundle["profiles"].values():                # the matrix on the page shows the first 12
+        top12 = P["order"][:12]
+        P["pairwise"] = {a: {b: v for b, v in row.items() if b in top12} for a, row in P["pairwise"].items() if a in top12}
+    bundle["meta"]["badge"] = "Историческая проверка"
+    bundle["summary"] = {
+        "kind": "itp_backtest", "as_of": res["meta"]["as_of"], "profile": "evidence_first", "dropped": ITP_DROP,
+        "n_tests": len(labels), "n_compounds": len({v["compound"] for v in labels.values()}),
+        "n_ranked": len(ranked), "n_known": res["outcome_counts"]["known_result"], "n_filtered": res["outcome_counts"]["filtered"],
+        "positives_all": sum(v["label"] for v in labels.values()), "positives_ranked": pos, "base_rate": base,
+        "auc": {"per_regimen": prim["per_regimen"], "per_compound": prim["per_compound"]},
+        "top": top, "bottom": {**bottom, "expected": bottom["k"] * base}}
+    bundle["showcase"] = {"examples": _itp_examples(bundle, labels)}
+    return bundle
+
+
 def embed(bundle_path: str, page: Path = PAGE, key: str = "sample") -> None:
     """Replace a built-in bundle of the page: `sample` (the example run) or `examples` (the worked cards)."""
     s = page.read_text(encoding="utf-8")
@@ -631,16 +794,25 @@ def main() -> None:
     e.add_argument("--pool", default=None, help="the input file of both runs")
     e.add_argument("--title", default="")
     e.add_argument("--out", required=True)
+    t = sub.add_parser("export-itp", help="bundle of the historical ITP check (saved dev and test runs, no model calls)")
+    t.add_argument("--dev", default="runs/stage4/itp2010_dev.json")
+    t.add_argument("--test", default="runs/stage4/itp2010_test.json")
+    t.add_argument("--labels", default="data/backtest/itp_2010-12-31_labels.json")
+    t.add_argument("--out", required=True)
     x = sub.add_parser("examples", help="bundle of the worked cards of the documentation")
     x.add_argument("--out", required=True)
     m = sub.add_parser("embed")
     m.add_argument("--bundle", required=True)
-    m.add_argument("--key", default="sample", choices=["sample", "examples"])
+    m.add_argument("--key", default="sample", choices=["sample", "examples", "itp"])
     sub.add_parser("build", help="render docs/site/content/<page>/*.md into docs/site/docs/<page>/index.html")
     a = ap.parse_args()
     if a.cmd == "export":
         Path(a.out).parent.mkdir(parents=True, exist_ok=True)
         Path(a.out).write_text(json.dumps(export(a.v2, a.elo, a.pool, a.title), ensure_ascii=False, indent=1))
+        print(a.out)
+    elif a.cmd == "export-itp":
+        Path(a.out).parent.mkdir(parents=True, exist_ok=True)
+        Path(a.out).write_text(json.dumps(export_itp(a.dev, a.test, a.labels), ensure_ascii=False, indent=1))
         print(a.out)
     elif a.cmd == "examples":
         Path(a.out).parent.mkdir(parents=True, exist_ok=True)
