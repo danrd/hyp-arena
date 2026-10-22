@@ -11,8 +11,9 @@ Status: work in progress. The method is evaluated on worked examples, a negative
 backtest against the Interventions Testing Program; the samples are small and the results are reported with their
 intervals in [`docs/rules-method.md`](docs/rules-method.md). The rankings are research output, not medical advice.
 
-Quick start: `pip install -e . pytest && python -m pytest tests/`. Runs that call models need an API key in the
-environment and `ALLOW_PAID=1` (see [`configs/`](configs/)). The site
+Quick start: `pip install -e . pytest && python -m pytest tests/`. Runs that call models need `ALLOW_PAID=1` and an
+API key of OpenAI, Anthropic, Google Gemini, DeepSeek, xAI or Mistral ([`configs/v2-direct.yaml`](configs/v2-direct.yaml):
+families whose key is not set are skipped), or of the aggregators CometAPI or OpenRouter (see [`configs/`](configs/)). The site
 <https://danrd.github.io/hyp-arena/site/> shows an example run (Elo tournament next to the ranking under preference
 profiles, the verified card of each hypothesis), lets you download the results as JSON or CSV, opens your own runs,
 and explains how to rank your own hypotheses with your own API key (source: [`docs/site/index.html`](docs/site/index.html)).

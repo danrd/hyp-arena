@@ -1,7 +1,11 @@
 """Build the LLM client and judge pool from configs/models.yaml.
 
-Free models go through OpenRouter, paid ones through CometAPI. Paid specs are refused unless the
-environment variable ALLOW_PAID=1 is set, so tests cannot spend money by accident."""
+Providers: the aggregators OpenRouter (free models) and CometAPI, and direct APIs: OpenAI, Anthropic
+(official SDK, hyparena/llm/anthropic_runner.py), Google Gemini, DeepSeek, xAI and Mistral (their
+OpenAI-compatible endpoints). Each provider reads its key from its usual environment variable unless the
+spec names another (`api_key_env`); `base_url` reaches any other OpenAI-compatible service. With
+`skip_missing_keys: true` a config lists several providers and uses those whose key is set. Paid specs are
+refused unless the environment variable ALLOW_PAID=1 is set, so tests cannot spend money by accident."""
 from __future__ import annotations
 
 import os
@@ -61,13 +65,28 @@ class CallCapExceeded(RuntimeError):
     pass
 
 
+#: Direct providers with an OpenAI-compatible chat endpoint: provider -> (base URL, key variable).
+OPENAI_COMPATIBLE = {
+    "openai": ("https://api.openai.com/v1", "OPENAI_API_KEY"),
+    "google": ("https://generativelanguage.googleapis.com/v1beta/openai/", "GEMINI_API_KEY"),
+    "deepseek": ("https://api.deepseek.com/v1", "DEEPSEEK_API_KEY"),
+    "xai": ("https://api.x.ai/v1", "XAI_API_KEY"),
+    "mistral": ("https://api.mistral.ai/v1", "MISTRAL_API_KEY"),
+}
+#: Key variable of every provider when the spec names none.
+KEY_ENV = {"openrouter": "OPENROUTER_API_KEY", "cometapi": "COMETAPI_KEY", "anthropic": "ANTHROPIC_API_KEY",
+           **{p: env for p, (_, env) in OPENAI_COMPATIBLE.items()}}
+Provider = Literal["openrouter", "cometapi", "openai", "anthropic", "google", "deepseek", "xai", "mistral"]
+
+
 class ModelSpec(BaseModel):
     family: str
-    provider: Literal["openrouter", "cometapi"]
+    provider: Provider
     model: str
     tier: Literal["free", "paid"]
     enabled: bool = True
     api_key_env: Optional[str] = None
+    base_url: Optional[str] = None        # another OpenAI-compatible endpoint (not for anthropic)
     generation: Optional[dict] = None     # overrides the global generation settings; a null value removes a key
 
 
@@ -77,6 +96,7 @@ class ProvidersConfig(BaseModel):
     max_retries: int = 1          # retries inside the OpenAI client, per request
     deadline: float = 150         # wall-clock seconds allowed per attempt
     concurrency: int = 4          # requests in flight at once, across all providers
+    skip_missing_keys: bool = False   # use only the specs whose key variable is set (at least one)
     generation: dict = {"temperature": 0.7, "max_tokens": 2048}
     models: list[ModelSpec]
 
@@ -94,6 +114,12 @@ def active_specs(cfg: ProvidersConfig, allow_paid: Optional[bool] = None) -> lis
     so a mistake in the config is visible."""
     allow_paid = paid_allowed() if allow_paid is None else allow_paid
     specs = [s for s in cfg.models if s.enabled]
+    if cfg.skip_missing_keys:
+        keyed = [s for s in specs if os.environ.get(key_env(s))]
+        if not keyed:
+            raise ValueError("No API key is set for any model of this config; set one of: "
+                             + ", ".join(sorted({key_env(s) for s in specs})))
+        specs = keyed
     for s in specs:
         if s.tier == "paid" and not allow_paid:
             raise PaidModelBlocked(f"{s.family}: {s.model!r} is a paid model; set {ALLOW_PAID_ENV}=1 to use it.")
@@ -103,6 +129,10 @@ def active_specs(cfg: ProvidersConfig, allow_paid: Optional[bool] = None) -> lis
     if len(set(families)) != len(families):
         raise ValueError("Several enabled models share a family; the pool holds one model per family.")
     return specs
+
+
+def key_env(spec: ModelSpec) -> str:
+    return spec.api_key_env or KEY_ENV[spec.provider]
 
 
 #: Roles whose family must not change: a judge's identity is what the independence rule is about.
@@ -190,16 +220,26 @@ class GuardedClient:
         return Reply(text="", family=family, model_id="", error=error)
 
 
+def build_runner(s: ModelSpec, cfg: ProvidersConfig):
+    """The runner of one spec: llm_kit's hosted runners for the OpenAI-compatible services, the Anthropic
+    SDK for Claude."""
+    gen = {k: v for k, v in {**cfg.generation, **(s.generation or {})}.items() if v is not None}
+    common = dict(models=[s.model], generation_kwargs=gen, max_retries=cfg.max_retries, timeout=cfg.timeout)
+    if s.provider == "anthropic":
+        if s.base_url:
+            raise ValueError(f"{s.family}: base_url is not used for anthropic")
+        from hyparena.llm.anthropic_runner import AnthropicRunner      # lazy: needs the `anthropic` package
+        return AnthropicRunner(**common, api_key_env=key_env(s))
+    from llm_kit.llm_runtime import CometApiRunner, HostedRunner, OpenRouterRunner   # lazy: needs `openai`
+    if s.provider in ("openrouter", "cometapi") and not s.base_url:
+        cls = OpenRouterRunner if s.provider == "openrouter" else CometApiRunner
+        return cls(**common, api_key_env=s.api_key_env)
+    base_url = s.base_url or OPENAI_COMPATIBLE[s.provider][0]
+    return HostedRunner(**common, base_url=base_url, api_key_env=key_env(s))
+
+
 def build_runners(specs: list[ModelSpec], cfg: ProvidersConfig) -> dict[str, tuple[str, object]]:
-    from llm_kit.llm_runtime import CometApiRunner, OpenRouterRunner   # lazy: needs the `openai` package
-    classes = {"openrouter": OpenRouterRunner, "cometapi": CometApiRunner}
-    runners = {}
-    for s in specs:
-        gen = {k: v for k, v in {**cfg.generation, **(s.generation or {})}.items() if v is not None}
-        runner = classes[s.provider](models=[s.model], generation_kwargs=gen,
-                                     max_retries=cfg.max_retries, timeout=cfg.timeout, api_key_env=s.api_key_env)
-        runners[s.family] = (s.model, runner)
-    return runners
+    return {s.family: (s.model, build_runner(s, cfg)) for s in specs}
 
 
 def build_client(config_path: str | Path = DEFAULT_CONFIG, *, max_calls: Optional[int] = None,

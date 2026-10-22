@@ -383,14 +383,16 @@ footer { padding-block: 28px 40px; border-top: 1px solid var(--line); color: var
         <pre class="cmd" data-copy>git clone https://github.com/danrd/hyp-arena
 cd hyp-arena
 pip install -e .</pre></li>
-      <li><p><b>Задать ключ.</b> По умолчанию модели вызываются через CometAPI (<code>configs/v2.yaml</code>); платные вызовы включаются только явно.</p>
-        <pre class="cmd" data-copy>export COMET_API_KEY=ваш-ключ
+      <li><p><b>Задать ключ</b> хотя бы одного провайдера и разрешить платные вызовы. Подойдёт любой из ключей ниже; семейства без ключа пропускаются, с несколькими ключами проверку делают разные модели.</p>
+        <pre class="cmd" data-copy>export OPENAI_API_KEY=...      # OpenAI
+export ANTHROPIC_API_KEY=...   # Anthropic (Claude)
+export GEMINI_API_KEY=...      # Google (Gemini)
 export ALLOW_PAID=1</pre>
-        <span class="muted">Бесплатные модели OpenRouter: ключ в <code>OPENROUTER_API_KEY</code> и <code>--config configs/models.yaml</code>. Качество ниже, а бесплатные эндпоинты могут сохранять запросы, поэтому неопубликованные гипотезы через них не отправляйте.</span></li>
+        <span class="muted">Модели и ключи задаёт <code>configs/v2-direct.yaml</code>; там же можно включить DeepSeek, xAI и Mistral (<code>DEEPSEEK_API_KEY</code>, <code>XAI_API_KEY</code>, <code>MISTRAL_API_KEY</code>) или указать <code>base_url</code> любого OpenAI-совместимого сервиса. Агрегаторы: CometAPI (<code>configs/v2.yaml</code>, ключ <code>COMET_API_KEY</code>) и бесплатные модели OpenRouter (<code>configs/models.yaml</code>, ключ <code>OPENROUTER_API_KEY</code>; качество ниже, а бесплатные эндпоинты могут сохранять запросы, поэтому неопубликованные гипотезы через них не отправляйте).</span></li>
       <li><p><b>Записать гипотезы</b> в текстовый файл, по одной на абзац (абзацы разделены пустой строкой) или нумерованным списком. Лучше всего ранжируются гипотезы о вмешательствах и механизмах старения: что, кому, в какой дозе и с каким исходом.</p></li>
       <li><p><b>Запустить проверку и рейтинг.</b> Несколько вызовов модели на гипотезу и несколько минут на десяток гипотез; <code>--max-calls</code> ограничивает расход.</p>
         <pre class="cmd" data-copy>python -m hyparena.card.pipeline --paste мои_гипотезы.txt \
-    --max-calls 200 --out runs/mine.v2.json</pre></li>
+    --config configs/v2-direct.yaml --max-calls 200 --out runs/mine.v2.json</pre></li>
       <li><p><b>Собрать файл для этой страницы</b> и открыть его кнопкой «Открыть свой прогон».</p>
         <pre class="cmd" data-copy>python -m hyparena.site export --v2 runs/mine.v2.json \
     --title "Мои гипотезы" --out runs/site/mine.json</pre>
