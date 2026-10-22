@@ -643,6 +643,8 @@ table.doctable tr:last-child td { border-bottom: 0; }
 </ul>
 <p><strong>Контраст «в основном X, а не Y».</strong> Смысл такой гипотезы — в сравнении двух объяснений. Исходное утверждение — X (заявленное объяснение), с уточнением <code>contrast</code>, которое указывает на Y. Y записывается как отвергаемая альтернатива со своим дословным фрагментом, а объясняемый эффект — как посылка.</p>
 <p>Пример: <em>«Rapamycin extends mouse lifespan mainly by postponing death from cancer, not by slowing aging itself.»</em> Посылка: rapamycin <code>extends_lifespan_in</code> mouse. Исход (X): rapamycin <code>suppresses</code> cancer mortality. Отвергаемая альтернатива (Y): rapamycin <code>slows_aging_in</code> mouse, «not by slowing aging itself». Как статус исхода зависит от Y, описано в разделе <a href="../method/#statuses-contrast">«Статусы»</a>.</p>
+<h3 id="card-scope">Охват утверждения по полу <a class="anchor" href="#card-scope" aria-label="Ссылка на раздел">#</a></h3>
+<p>Поле утверждения <code>sex_scope</code> принимает значения <code>any</code> и <code>unspecified</code> (по умолчанию). <code>any</code> нормализатор записывает, когда сам текст гипотезы говорит «хотя бы у одного пола» (или «у любого пола»); если модель поле пропустила, код выставляет его по этим словам в тексте. Как поле влияет на статус, описано в разделе <a href="../method/#statuses-sex">«Охват по полу»</a>.</p>
 <h3 id="card-evidence">Запись-доказательство <a class="anchor" href="#card-evidence" aria-label="Ссылка на раздел">#</a></h3>
 <p>Каждая цитата, на которой держится статус, хранится как запись.</p>
 <div class="tablewrap"><table class="doctable">
@@ -713,6 +715,11 @@ table.doctable tr:last-child td { border-bottom: 0; }
 <td><code>flags</code></td>
 <td>предупреждения: <code>retracted</code>, <code>preprint</code>, <code>conflict_of_interest</code>, <code>small_n</code>, <code>open_label</code>, <code>subgroup_only</code>, <code>short_lived_controls</code></td>
 <td><code>[subgroup_only]</code></td>
+</tr>
+<tr>
+<td><code>strata</code></td>
+<td>страты, заданные протоколом заранее (для работ ITP и CITP: <code>sex</code>); результат в такой страте не считается апостериорной подгруппой</td>
+<td><code>[sex]</code></td>
 </tr>
 <tr>
 <td><code>linked_pmid</code>, <code>fields</code></td>

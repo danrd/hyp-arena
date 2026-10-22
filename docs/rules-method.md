@@ -379,3 +379,28 @@ path to humans fail more often. The halves are split by regimen, so compounds te
 (acarbose, rapamycin, 17α-estradiol, canagliflozin, nordihydroguaiaretic acid) appear in both; only the metric
 was chosen on the dev half. `both_sexes` (AUC 1.00) and `effect_size` (0.00) have a value for one positive and one
 negative only.
+
+## Охват по полу и страты протокола (2026-10-22, после первого прогона бэктеста)
+
+Дефект, найденный на карточке NDGA: гипотеза шаблона «extends the median lifespan … of at least one sex» была «оспорена»
+нулевым результатом у самок (ITP 2010), хотя у самцов эффект подтверждён (ITP 2008). Правило не вшито в проверку, а
+вынесено в поле карточки:
+
+- `Claim.sex_scope` (`any` | `unspecified`): нормализатор (шаблон `normalize_card/v5`) записывает `any` из слов текста
+  «at least one sex» / «either sex»; код выставляет его так же, если модель поле пропустила (`rules.set_sex_scope`).
+- `rules.scoped_against`: при `any` нулевой результат у одного пола не считается «против», если у этого пола нет поддержки
+  и нулевые результаты не покрывают оба пола; снижение продолжительности жизни, нулевой результат у того же пола и
+  нулевой результат в целой выборке считаются. Запись остаётся в карточке (флаг `other_sex_null`), учитывается
+  `both_sexes` и альтернативой `sex_specific`. Без `sex_scope` статус не меняется; причина `sex_conflict`.
+- `EvidenceRecord.strata`: пол в ITP и CITP задан протоколом заранее; `rules.mark_strata` ставит `strata: [sex]` на строки
+  DrugAge программы и записи PubMed тех же работ, берёт неизвестный пол записи из курируемой строки той же работы,
+  `subgroup_only` для таких записей не ставится (апостериорные подгруппы остаются `subgroup_only`).
+- Пересчёт сохранённых прогонов: `python -m hyparena.backtest reapply --v2 … --out …` (`--legacy` воспроизводит прежний
+  прогон; тест `test_reapplying_the_old_rules_reproduces_a_saved_run`). Модели не вызываются.
+
+Результат на ITP 2010 (подробно в «Справочнике → Данные и источники»): статус изменился у четырёх режимов (аспирин
+200 ppm, NDGA 800, 2500 и 5000 ppm: оспорено → подтверждено → известный результат, вне рейтинга); AUC с ничьёй по
+рейтингам половин: dev 0.68 → 0.62, test 0.74 → 0.72. Попутно найдено: AUC без ничьей зависит от seed (внутри группы
+«на равных» порядок случаен), поэтому добавлены `backtest.tied_auc` и `primary_tied`. Открыто: дозы курируемых
+записей не сравниваются с дозой гипотезы (NDGA 800 и 5000 ppm стали «известными» из работы при 2500 ppm). По этой
+выборке правила больше не менять.
