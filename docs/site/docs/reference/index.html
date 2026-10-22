@@ -1,0 +1,955 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Справочник: формат карточки и показатели · Документация · Арена гипотез</title>
+<meta name="description" content="Структура карточки и полные определения показателей с таблицами значений.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Справочник: формат карточки и показатели · Документация · Арена гипотез о старении">
+<meta property="og:description" content="Структура карточки и полные определения показателей с таблицами значений.">
+<meta property="og:url" content="https://danrd.github.io/hyp-arena/site/docs/reference/">
+<meta property="og:locale" content="ru_RU">
+<meta name="twitter:card" content="summary">
+<meta name="hyparena-version" content="0.1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a lab notebook — narrow reading column for prose, a wide instrument panel for the ranking and the card. */
+:root {
+  --paper: #f4f6f3; --surface: #ffffff; --ink: #15201c; --muted: #5a6964; --line: #d9dfdb;
+  --accent: #12695a; --accent-soft: #dcede7; --accent-ink: #ffffff; --mid: #e3e8e5; --strong-ink: #ffffff;
+  --ok: #2c7a4c; --bad: #b0402c; --warn: #a8740f; --idle: #7a8682; --ok-soft: #e1f0e6; --bad-soft: #f6e2dd; --warn-soft: #f5ead2; --idle-soft: #eaedeb;
+  --display: "Literata", Georgia, "Times New Roman", serif;
+  --body: "Onest", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --step--1: 0.8125rem; --step-0: 0.9375rem; --step-1: 1.125rem; --step-2: 1.5rem; --step-3: 2.25rem;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #0f1514; --surface: #162020; --ink: #e4ebe8; --muted: #98a6a1; --line: #2a3633;
+  --accent: #4db6a2; --accent-soft: #1b3430; --accent-ink: #0f1514; --mid: #34413e; --strong-ink: #0f1514;
+  --ok: #5dbd84; --bad: #e07a62; --warn: #d8a43f; --idle: #8b9893; --ok-soft: #173126; --bad-soft: #3a211b; --warn-soft: #362a12; --idle-soft: #212b29;
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #0f1514; --surface: #162020; --ink: #e4ebe8; --muted: #98a6a1; --line: #2a3633;
+  --accent: #4db6a2; --accent-soft: #1b3430; --accent-ink: #0f1514; --mid: #34413e; --strong-ink: #0f1514;
+  --ok: #5dbd84; --bad: #e07a62; --warn: #d8a43f; --idle: #8b9893; --ok-soft: #173126; --bad-soft: #3a211b; --warn-soft: #362a12; --idle-soft: #212b29;
+  color-scheme: dark }
+
+* { box-sizing: border-box; }
+html { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: var(--step-0); line-height: 1.55; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+a { color: var(--accent); }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; text-wrap: balance; line-height: 1.2; margin: 0; }
+h2 { font-size: var(--step-2); }
+h3 { font-size: var(--step-1); }
+p { margin: 0; }
+.mono, code { font-family: var(--mono); font-size: 0.86em; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.prose { max-width: 66ch; }
+.muted { color: var(--muted); }
+.eyebrow { font-size: var(--step--1); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* header */
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; background: var(--surface); border-bottom: 1px solid var(--line); }
+header.top .wrap { display: flex; align-items: center; justify-content: center; gap: 8px 24px; padding-block: 10px; flex-wrap: wrap; }
+.brand { font-family: var(--display); font-weight: 600; font-size: var(--step-1); text-decoration: none; color: var(--ink); white-space: nowrap; }
+nav.sections { display: flex; gap: 4px 16px; flex-wrap: wrap; justify-content: center; font-size: var(--step--1); }
+nav.sections a { color: var(--muted); text-decoration: none; padding: 2px 0; border-bottom: 1px solid transparent; }
+nav.sections a:hover { color: var(--ink); border-bottom-color: var(--line); }
+@media (max-width: 640px) {
+  header.top .wrap { flex-wrap: nowrap; justify-content: flex-start; gap: 14px; padding-block: 8px; }
+  .brand { font-size: var(--step-0); }
+  nav.sections { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); }
+  nav.sections::-webkit-scrollbar { display: none; }
+  nav.sections a { white-space: nowrap; }
+}
+
+/* hero */
+.hero { padding-block: 48px 28px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; justify-items: center; text-align: center; }
+.hero .pipeline { width: 100%; text-align: left; }
+.hero h1 { font-size: var(--step-3); max-width: 24ch; }
+.hero .lead { font-size: var(--step-1); max-width: 60ch; color: var(--muted); }
+.pipeline { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 6px; background: var(--surface); overflow: hidden; }
+.pipeline li { list-style: none; padding: 12px 14px; border-left: 1px solid var(--line); min-width: 0; }
+.pipeline li:first-child { border-left: 0; }
+.pipeline b { display: block; font-weight: 600; }
+.pipeline span { font-size: var(--step--1); color: var(--muted); }
+.pipeline .n { font-family: var(--mono); font-size: var(--step--1); color: var(--accent); }
+ol.pipeline { margin: 0; padding: 0; }
+@media (max-width: 760px) { .pipeline { grid-template-columns: minmax(0, 1fr); } .pipeline li { border-left: 0; border-top: 1px solid var(--line); } .pipeline li:first-child { border-top: 0; } }
+
+section.block { padding-block: 36px; border-top: 1px solid var(--line); display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+.head { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; }
+.head .prose { display: grid; gap: 6px; justify-items: center; min-width: 0; }
+.head > * { min-width: 0; }
+.tabs button { flex: 1 1 auto; }
+
+/* data bar */
+.databar { justify-content: center; display: flex; gap: 10px 16px; align-items: center; flex-wrap: wrap; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; font-size: var(--step--1); }
+.databar .name { font-weight: 600; font-size: var(--step-0); }
+.badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: var(--step--1); font-weight: 500; white-space: nowrap; }
+.badge.example { background: var(--warn-soft); color: var(--warn); }
+.databar .spacer { flex: 0 0 8px; }
+button, .btn { font: inherit; font-size: var(--step--1); border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 6px 12px; border-radius: 5px; cursor: pointer; }
+button:hover, .btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+input[type=file] { display: none; }
+.drop { outline: 2px dashed var(--accent); outline-offset: 4px; }
+.err { color: var(--bad); }
+
+/* tabs */
+.tabs { display: flex; gap: 0; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; width: fit-content; max-width: 100%; flex-wrap: wrap; background: var(--surface); }
+.tabs button { border: 0; border-radius: 0; border-left: 1px solid var(--line); padding: 8px 14px; background: transparent; }
+.tabs button:first-child { border-left: 0; }
+.tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+.tabs button small { display: block; font-family: var(--mono); font-size: 0.72rem; opacity: 0.75; }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+.panel-note { padding: 12px 16px; border-bottom: 1px solid var(--line); font-size: var(--step--1); color: var(--muted); display: grid; gap: 4px; }
+.scroll { overflow-x: auto; }
+table.rank { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+table.rank th { text-align: left; font-weight: 500; font-size: var(--step--1); color: var(--muted); padding: 8px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+table.rank td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+table.rank tr:last-child td { border-bottom: 0; }
+table.rank tbody tr { cursor: pointer; }
+table.rank tbody tr:hover td { background: var(--accent-soft); }
+table.rank tr.sep td { background: var(--paper); color: var(--muted); font-size: var(--step--1); cursor: default; padding-block: 6px; }
+table.rank tr.off td { color: var(--muted); }
+.pos { font-family: var(--mono); color: var(--muted); width: 2.5em; }
+.htitle { min-width: 16ch; }
+.htitle .id { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); margin-right: 6px; }
+.num { font-family: var(--mono); text-align: right; white-space: nowrap; }
+.bar { position: relative; height: 14px; min-width: 160px; }
+.bar .track { position: absolute; inset: 6px 0 auto; height: 2px; background: var(--line); }
+.bar .range { position: absolute; top: 3px; height: 8px; background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 2px; }
+.bar .dot { position: absolute; top: 2px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: var(--accent); }
+.bar .fill { position: absolute; top: 3px; height: 8px; background: var(--accent); border-radius: 2px; }
+.bar .zero { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--muted); }
+
+.pill { display: inline-block; padding: 1px 8px; border-radius: 4px; font-size: var(--step--1); font-weight: 500; white-space: nowrap; }
+.st-supported { background: var(--ok-soft); color: var(--ok); }
+.st-refuted { background: var(--bad-soft); color: var(--bad); }
+.st-contested { background: var(--warn-soft); color: var(--warn); }
+.st-unverified, .st-unresolved, .st-open { background: var(--idle-soft); color: var(--idle); }
+.oc-ranked { background: var(--accent-soft); color: var(--accent); }
+.oc-filtered { background: var(--bad-soft); color: var(--bad); }
+.oc-known_result { background: var(--ok-soft); color: var(--ok); }
+.oc-other { background: var(--idle-soft); color: var(--idle); }
+
+/* heatmap and slope chart */
+.twocol { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+@media (max-width: 880px) { .twocol { grid-template-columns: minmax(0, 1fr); } }
+.figure { padding: 14px 16px; display: grid; gap: 10px; align-content: start; }
+.figure svg text { fill: var(--ink); font-family: var(--mono); font-size: 11px; }
+.figure svg .mutedtext { fill: var(--muted); }
+table.heat { border-collapse: separate; border-spacing: 2px; font-family: var(--mono); font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+table.heat th { font-weight: 500; color: var(--muted); padding: 2px 6px; white-space: nowrap; }
+table.heat thead th { text-align: center; }
+table.heat tbody th { text-align: right; }
+table.heat td { min-width: 36px; height: 30px; text-align: center; border-radius: 3px; color: var(--ink); }
+table.heat td.self { background: repeating-linear-gradient(135deg, var(--line) 0 2px, transparent 2px 6px); color: var(--muted); }
+.heat-note { font-size: var(--step--1); color: var(--muted); }
+.heat-key { font-size: var(--step--1); }
+.heat-key summary { cursor: pointer; color: var(--accent); }
+.heat-key ol { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
+.heat-key .mono { display: inline-block; min-width: 2.2em; color: var(--muted); }
+.scale { display: grid; gap: 4px; max-width: 360px; font-size: var(--step--1); color: var(--muted); }
+.scale .bar { height: 10px; min-width: 0; border-radius: 3px; background: linear-gradient(90deg, var(--bad), var(--mid) 50%, var(--accent)); }
+.scale .ticks { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+.scale .ticks span:nth-child(2) { text-align: center; }
+.scale .ticks span:nth-child(3) { text-align: right; }
+
+/* card */
+.cardgrid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 880px) { .cardgrid { grid-template-columns: minmax(0, 1fr); } }
+.cardhead { padding: 16px; display: grid; gap: 10px; border-bottom: 1px solid var(--line); }
+.cardhead h3 { font-size: var(--step-2); }
+.cardhead .plain { font-family: var(--display); font-size: var(--step-1); }
+select { font: inherit; font-size: var(--step--1); padding: 6px 8px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface); color: var(--ink); width: 100%; max-width: 42ch; min-width: 0; }
+dl.pico { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 14px; margin: 0; padding: 14px 16px; border-bottom: 1px solid var(--line); font-size: var(--step--1); }
+dl.pico dt { color: var(--muted); }
+dl.pico dd { margin: 0; }
+.claims { display: grid; }
+details.claim { border-bottom: 1px solid var(--line); }
+details.claim:last-child { border-bottom: 0; }
+details.claim > summary { list-style: none; cursor: pointer; padding: 12px 16px; display: grid; grid-template-columns: 3.2em minmax(0, 1fr) auto; gap: 4px 12px; align-items: start; }
+details.claim > summary::-webkit-details-marker { display: none; }
+details.claim[open] > summary { background: var(--paper); }
+.cid { font-family: var(--mono); font-size: var(--step--1); color: var(--muted); padding-top: 2px; }
+.triple { display: grid; gap: 4px; min-width: 0; }
+.triple .t { overflow-wrap: anywhere; }
+.rel { font-family: var(--mono); font-size: 0.8rem; color: var(--accent); padding: 0 4px; }
+.role { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.quals { display: flex; gap: 4px 6px; flex-wrap: wrap; font-size: 0.78rem; }
+.qual { padding: 0 6px; border-radius: 3px; background: var(--idle-soft); color: var(--ink); }
+.qual.inh { background: transparent; border: 1px dashed var(--idle); color: var(--muted); }
+.rungs { display: flex; gap: 4px; flex-wrap: wrap; justify-content: end; }
+.claimbody { padding: 4px 16px 16px 16px; display: grid; gap: 12px; }
+.recs { display: grid; gap: 8px; }
+.recs h4 { margin: 0; font-size: var(--step--1); font-weight: 600; }
+.rec { border-left: 3px solid var(--line); padding: 4px 0 4px 10px; display: grid; gap: 3px; font-size: var(--step--1); }
+.rec.for { border-left-color: var(--ok); }
+.rec.against { border-left-color: var(--bad); }
+.rec.refusal { border-left-color: var(--idle); }
+.rec q { font-family: var(--display); font-size: var(--step-0); quotes: "«" "»"; }
+.rec .meta { color: var(--muted); display: flex; gap: 4px 10px; flex-wrap: wrap; }
+.flags { display: flex; gap: 4px; flex-wrap: wrap; }
+.flag { font-family: var(--mono); font-size: 0.72rem; padding: 0 5px; border-radius: 3px; background: var(--warn-soft); color: var(--warn); }
+
+.side { display: grid; gap: 18px; }
+.side .panel > h3 { padding: 12px 16px; border-bottom: 1px solid var(--line); font-size: var(--step-0); font-family: var(--body); }
+.ladder { display: grid; padding: 12px 16px; gap: 3px; }
+.ladder .step { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 5px 10px; border-radius: 4px; font-size: var(--step--1); background: var(--paper); color: var(--muted); }
+.ladder .step.on { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.ladder .step.below { background: var(--accent-soft); color: var(--ink); }
+.ladder .step.cont { box-shadow: inset 0 0 0 1px var(--warn); }
+dl.kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; margin: 0; padding: 12px 16px; font-size: var(--step--1); }
+dl.kv dt { color: var(--muted); }
+dl.kv dd { margin: 0; overflow-wrap: anywhere; }
+.levels { display: flex; gap: 3px; align-items: center; flex-wrap: wrap; }
+.levels i { width: 10px; height: 10px; border-radius: 2px; background: var(--line); display: inline-block; }
+.levels i.on { background: var(--accent); }
+.levels i.unk { background: repeating-linear-gradient(45deg, var(--line) 0 2px, transparent 2px 4px); }
+ul.alts { list-style: none; margin: 0; padding: 8px 16px 14px; display: grid; gap: 8px; font-size: var(--step--1); }
+ul.alts li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; }
+ul.alts .design { grid-column: 1 / -1; color: var(--muted); }
+
+/* out of ranking */
+.outgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.outgroup { padding: 14px 16px; display: grid; gap: 8px; align-content: start; }
+.outgroup ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: var(--step--1); }
+.outgroup li button { all: unset; cursor: pointer; color: var(--accent); }
+.outgroup li button:focus-visible { outline: 2px solid var(--accent); }
+.count { font-family: var(--mono); color: var(--muted); }
+
+/* method */
+.cols3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.box { padding: 16px; display: grid; gap: 8px; align-content: start; }
+.box ul { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
+.tiers { display: grid; gap: 0; font-size: var(--step--1); }
+.tier { display: grid; grid-template-columns: 2em minmax(0, 1fr); gap: 10px; position: relative; padding-bottom: 14px; }
+.tier:last-child { padding-bottom: 0; }
+.tier::before { content: ""; position: absolute; left: calc(1em - 1px); top: 2em; bottom: 2px; width: 2px; background: var(--line); }
+.tier:last-child::before { display: none; }
+.tier .n { width: 2em; height: 2em; border-radius: 50%; display: grid; place-items: center; font-family: var(--mono); font-weight: 600; background: var(--accent); color: var(--accent-ink); position: relative; }
+.tier.free .n { background: var(--idle-soft); color: var(--idle); }
+.tier .body { display: grid; gap: 6px; min-width: 0; padding-top: 3px; }
+.tier .label { color: var(--muted); }
+.tier .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.tiers-note { font-size: var(--step--1); color: var(--muted); }
+.chip { font-family: var(--mono); font-size: 0.75rem; padding: 1px 6px; border-radius: 3px; background: var(--accent-soft); color: var(--ink); }
+table.defs { border-collapse: collapse; width: 100%; font-size: var(--step--1); }
+table.defs td, table.defs th { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+table.defs th { color: var(--muted); font-weight: 500; }
+.big { font-family: var(--display); font-size: var(--step-3); line-height: 1; font-variant-numeric: tabular-nums; }
+.ci { font-family: var(--mono); font-size: var(--step--1); color: var(--muted); }
+ol.steps { margin: 0 auto; padding: 0; list-style: none; counter-reset: step; display: grid; gap: 16px; max-width: 760px; width: 100%; }
+ol.steps li { display: grid; gap: 8px; padding-left: 2.2em; position: relative; text-align: left; min-width: 0; counter-increment: step; }
+ol.steps li::before { content: counter(step); position: absolute; left: 0; top: 0; font-family: var(--mono); font-size: var(--step--1); color: var(--accent); line-height: 1.9; }
+ol.steps li > span { font-size: var(--step--1); }
+ol.steps li > p { margin: 0; }
+pre.cmd[data-copy] { cursor: copy; }
+pre.cmd { margin: 0; padding: 12px 14px; background: var(--paper); border: 1px solid var(--line); border-radius: 5px; overflow-x: auto; font-family: var(--mono); font-size: 0.8rem; line-height: 1.5; }
+footer { padding-block: 28px 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: var(--step--1); }
+@media (prefers-reduced-motion: no-preference) { table.rank tbody tr td { transition: background 120ms; } }
+
+/* anchors under the sticky header */
+[id] { scroll-margin-top: 74px; }
+
+/* profiles */
+.badge.draft { background: var(--idle-soft); color: var(--muted); font-weight: 500; }
+.pname { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+.pdesc { margin: 0; }
+.profile-defs { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+.profile-defs > div { display: grid; gap: 8px; align-content: start; min-width: 0; }
+.profile-intro { margin: 0; max-width: 72ch; }
+
+/* ranking table */
+tr.tie td { background: color-mix(in srgb, var(--accent-soft) 45%, transparent); }
+tr.tie td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+.pos .rng { display: block; font-size: 0.68rem; color: var(--accent); font-family: var(--body); white-space: nowrap; }
+.pos { min-width: 3.2em; }
+.table-note { padding: 10px 16px; border-top: 1px solid var(--line); font-size: var(--step--1); color: var(--muted); }
+td.stat { white-space: nowrap; }
+
+/* method */
+.msub { padding: 16px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+.msub-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.msub-head h3 { font-size: var(--step-1); }
+a.more { font-size: var(--step--1); white-space: nowrap; }
+ul.rules { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
+.aspid-def { display: grid; gap: 8px; max-width: 76ch; }
+.aspid-def p, .aspid-def ul { margin: 0; }
+.aspid-def ul { padding-left: 1.2em; display: grid; gap: 3px; }
+.tablewrap { overflow-x: auto; max-width: 100%; }
+.jsel { display: grid; gap: 4px; font-size: var(--step--1); max-width: 56ch; }
+ol.journey { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; counter-reset: j; }
+ol.journey > li { display: grid; grid-template-columns: 2em minmax(0, 1fr); gap: 12px; position: relative; padding-bottom: 18px; counter-increment: j; }
+ol.journey > li:last-child { padding-bottom: 0; }
+ol.journey > li::before { content: ""; position: absolute; left: calc(1em - 1px); top: 2.2em; bottom: 4px; width: 2px; background: var(--line); }
+ol.journey > li:last-child::before { display: none; }
+ol.journey .n { width: 2em; height: 2em; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); font-family: var(--mono); font-weight: 600; }
+ol.journey .jb { display: grid; gap: 6px; min-width: 0; }
+ol.journey .jb > b { font-family: var(--display); font-size: var(--step-1); font-weight: 600; }
+.jq { margin: 0; padding: 8px 12px; border-left: 3px solid var(--line); background: var(--paper); font-family: var(--display); font-size: var(--step-0); overflow-wrap: anywhere; }
+.jclaims { display: grid; gap: 4px; font-size: var(--step--1); }
+.jclaims > div { display: grid; grid-template-columns: 2.2em minmax(0, 1fr) auto; gap: 8px; align-items: baseline; }
+.jclaims .t { overflow-wrap: anywhere; }
+.jplaces { display: flex; gap: 8px 14px; flex-wrap: wrap; font-size: var(--step--1); }
+.jplaces > span { padding: 6px 10px; background: var(--paper); border-radius: 5px; }
+.jplaces b { font-weight: 600; }
+.proof { margin: 0; padding-top: 8px; border-top: 1px solid var(--line); font-size: var(--step--1); }
+table.defs td.src { white-space: nowrap; }
+
+/* data bar */
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; flex-wrap: wrap; }
+.seg button { border: 0; border-radius: 0; border-left: 1px solid var(--line); background: transparent; }
+.seg button:first-child { border-left: 0; }
+.seg button[aria-pressed="true"] { background: var(--accent-soft); font-weight: 600; }
+
+/* footer */
+.foot { display: grid; gap: 12px; }
+.foot p { margin: 0; max-width: 80ch; }
+dl.footmeta { display: flex; flex-wrap: wrap; gap: 4px 22px; margin: 0; font-size: var(--step--1); }
+dl.footmeta > div { display: flex; gap: 6px; }
+dl.footmeta dt { color: var(--muted); }
+dl.footmeta dd { margin: 0; font-family: var(--mono); }
+nav.sections a.try { color: var(--accent); font-weight: 600; border-bottom-color: var(--accent); }
+.cta { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.cta .btn { text-decoration: none; padding: 10px 20px; font-size: var(--step-0); }
+.trycmds { display: grid; gap: 10px; max-width: 760px; width: 100%; margin-inline: auto; }
+.trycmds pre.cmd { margin: 0; }
+.more-line { text-align: center; font-size: var(--step--1); margin: 0; }
+.footlinks { margin: 8px 0 0; font-size: var(--step--1); }
+details.fold { border-top: 1px solid var(--line); padding-top: 8px; }
+details.fold > summary { cursor: pointer; font-weight: 600; font-size: var(--step--1); color: var(--muted); }
+details.fold[open] > summary { margin-bottom: 8px; }
+.rng[title] { cursor: help; border-bottom: 1px dotted var(--muted); }
+@media (max-width: 640px) {
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; width: 100%; gap: 1px; background: var(--line); }
+  .tabs button { border-left: 0; background: var(--surface); }
+  .tabs button[aria-selected="true"] { background: var(--accent); }
+  .tabs button:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  }
+</style>
+<style>
+.skip { position: absolute; left: -999px; top: 0; background: var(--accent); color: var(--accent-ink); padding: 8px 12px; z-index: 30; }
+.skip:focus { left: 8px; top: 8px; }
+nav.sections a[aria-current="page"] { color: var(--accent); font-weight: 600; border-bottom-color: var(--accent); }
+.docs-wrap { max-width: 1240px; padding-block: 18px 40px; }
+.docs-shell { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 36px; align-items: start; }
+.doc-aside { display: none; }
+@media (min-width: 1200px) { .docs-shell { grid-template-columns: 250px minmax(0, 1fr) 210px; } .doc-aside { display: block; } }
+.doc-side, .doc-aside { position: sticky; top: calc(var(--hdr, 52px) + 16px); max-height: calc(100vh - var(--hdr, 52px) - 32px); overflow-y: auto; font-size: var(--step--1); overscroll-behavior: contain; scrollbar-width: thin; }
+.doc-aside h2 { font-family: var(--body); font-size: var(--step--1); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0 0 8px; }
+.doc-aside ol { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--line); display: grid; gap: 2px; }
+.doc-aside a, .tree a { color: var(--muted); text-decoration: none; display: block; padding: 4px 10px; border-radius: 4px; }
+.doc-aside a { border-left: 2px solid transparent; margin-left: -1px; border-radius: 0; }
+.doc-aside a:hover, .tree a:hover { color: var(--ink); }
+.doc-aside a[aria-current], .tree ul a[aria-current] { color: var(--accent); font-weight: 600; }
+.doc-aside a[aria-current] { border-left-color: var(--accent); }
+.tree, .tree ul { list-style: none; margin: 0; padding: 0; }
+.tree .grp { text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.72rem; color: var(--muted); padding: 14px 10px 4px; }
+.tree > li > a { color: var(--ink); font-weight: 600; padding: 6px 10px; }
+.tree > li.current > a { background: var(--accent-soft); color: var(--accent); }
+.tree ul { margin: 2px 0 8px 10px; border-left: 1px solid var(--line); }
+.tree ul a[aria-current] { background: var(--accent-soft); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.doc-main { min-width: 0; max-width: 80ch; outline: none; }
+.crumbs ol { list-style: none; margin: 0 0 6px; padding: 0; display: flex; flex-wrap: wrap; gap: 4px; font-size: var(--step--1); color: var(--muted); }
+.crumbs li + li::before { content: "›"; margin-right: 4px; }
+.crumbs a { color: var(--muted); }
+.doc-page-head { padding: 4px 0 20px; display: grid; gap: 6px; }
+.doc-page-head h1 { font-size: var(--step-3); }
+.doc-page-head .lead { color: var(--muted); margin: 0; }
+.docs-content { display: grid; gap: 48px; min-width: 0; }
+.docs-content .doc.flat { display: grid; gap: 14px; }
+article.doc { display: grid; gap: 14px; min-width: 0; }
+article.doc, .doc.flat h2[data-sec], article.doc h3 { scroll-margin-top: calc(var(--hdr, 52px) + var(--bar, 0px) + 14px); }
+.doc-head h2, .doc.flat h2 { font-size: var(--step-2); margin: 0; }
+.doc.flat h2 { margin-top: 18px; }
+.doc .lead { color: var(--muted); font-size: var(--step-0); margin: 6px 0 0; }
+article.doc h3 { font-family: var(--display); font-size: var(--step-1); font-weight: 600; margin: 14px 0 -4px; }
+.doc .anchor { color: var(--line); text-decoration: none; margin-left: 4px; font-family: var(--body); font-weight: 400; font-size: 0.8em; }
+.doc :is(h2, h3):hover .anchor, .doc .anchor:focus { color: var(--accent); }
+.doc p { margin: 0; }
+.doc ul, .doc ol { margin: 0; padding-left: 1.3em; display: grid; gap: 4px; }
+.doc code { background: var(--idle-soft); padding: 0 4px; border-radius: 3px; }
+.doc .tablewrap { border: 1px solid var(--line); border-radius: 6px; overflow-x: auto; }
+table.doctable { border-collapse: collapse; width: 100%; font-size: var(--step--1); }
+table.doctable th { text-align: left; font-weight: 600; background: var(--paper); color: var(--muted); }
+table.doctable th, table.doctable td { padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.doctable tr:last-child td { border-bottom: 0; }
+.codewrap { position: relative; }
+.doc pre { margin: 0; padding: 40px 14px 12px; background: var(--paper); border: 1px solid var(--line); border-radius: 5px; overflow-x: auto; font-family: var(--mono); font-size: var(--step--1); scrollbar-width: thin; }
+.doc pre code { background: none; padding: 0; }
+.codewrap .copy { position: absolute; top: 6px; right: 6px; font-size: 0.72rem; padding: 3px 9px; }
+.pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); }
+.pager a { display: grid; gap: 2px; text-decoration: none; color: var(--ink); font-weight: 600; padding: 10px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); min-width: 0; }
+.pager a[rel="next"] { text-align: right; margin-left: auto; }
+.pager a:hover { border-color: var(--accent); }
+.pager small { color: var(--muted); font-weight: 400; }
+.docbar, .drawer, .scrim { display: none; }
+.totop { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: max(16px, env(safe-area-inset-bottom, 0px)); width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 1.2rem; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.18); z-index: 12; }
+.totop[hidden] { display: none; }
+@media (max-width: 900px) {
+  .docs-shell { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .doc-side { display: none; }
+  .docbar { display: block; position: sticky; top: var(--hdr, 52px); z-index: 8; background: var(--surface); border-bottom: 1px solid var(--line); }
+  .docbar button { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 11px max(16px, env(safe-area-inset-left, 0px)); border: 0; border-radius: 0; background: transparent; font-weight: 600; text-align: left; }
+  .docbar-t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .docbar button[aria-expanded="true"] span[aria-hidden] { transform: rotate(180deg); }
+  .scrim:not([hidden]) { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 20; }
+  .drawer:not([hidden]) { display: block; position: fixed; z-index: 21; left: 0; right: 0; top: calc(var(--hdr, 52px) + var(--bar, 0px)); max-height: calc(100vh - var(--hdr, 52px) - var(--bar, 0px) - 24px); overflow-y: auto; background: var(--surface); border-bottom: 1px solid var(--line); box-shadow: 0 8px 24px rgba(0,0,0,0.25); padding: 8px max(16px, env(safe-area-inset-left, 0px)) 16px; }
+  .drawer-close { margin: 4px 0 8px auto; display: block; font-size: var(--step--1); }
+  .tree a { padding: 9px 10px; }
+  .doc pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .doc-page-head h1 { font-size: var(--step-2); }
+  .pager { flex-direction: column; }
+  .pager a[rel="next"] { text-align: left; margin-left: 0; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#docMain">К содержанию</a>
+<header class="top" id="topbar">
+  <div class="wrap">
+    <a class="brand" href="../../">Арена гипотез</a>
+    <nav class="sections" aria-label="Документация">
+      <a href="../../">На главную</a><a href="../start/">Начало работы</a><a href="../method/">Как это работает</a><a href="../reference/" aria-current="page">Справочник</a><a href="https://github.com/danrd/hyp-arena" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
+  </div>
+</header>
+<div class="docbar" id="docBar">
+  <button type="button" id="docBarBtn" aria-expanded="false" aria-controls="docDrawer"><span class="docbar-t" id="docBarTitle">Справочник: формат карточки и показатели</span><span aria-hidden="true">▾</span></button>
+</div>
+<div class="scrim" id="docScrim" hidden></div>
+<div class="drawer" id="docDrawer" role="dialog" aria-modal="true" aria-label="Навигация по документации" hidden>
+  <button type="button" class="drawer-close" id="docClose">Закрыть</button>
+  <nav aria-label="Разделы документации"><ul class="tree"><li><a href="../start/">Начало работы</a></li><li class="grp">Как это работает</li><li><a href="../method/">Карточка и проверка</a></li><li><a href="../method/ranking/">Показатели и рейтинг</a></li><li class="grp">Справочник</li><li class="current"><a href="./" aria-current="page">Формат карточки и показатели</a><ul><li><a href="#docs-cardformat" data-spy="docs-cardformat">Формат карточки</a></li><li><a href="#docs-indref" data-spy="docs-indref">Показатели</a></li></ul></li><li><a href="aggregation/">Агрегация и данные</a></li><li><a href="examples/">Примеры</a></li></ul></nav>
+</div>
+<main class="wrap docs-wrap" id="top">
+  <div class="docs-shell">
+    <aside class="doc-side" id="docSide" aria-label="Разделы документации"><nav><ul class="tree"><li><a href="../start/">Начало работы</a></li><li class="grp">Как это работает</li><li><a href="../method/">Карточка и проверка</a></li><li><a href="../method/ranking/">Показатели и рейтинг</a></li><li class="grp">Справочник</li><li class="current"><a href="./" aria-current="page">Формат карточки и показатели</a><ul><li><a href="#docs-cardformat" data-spy="docs-cardformat">Формат карточки</a></li><li><a href="#docs-indref" data-spy="docs-indref">Показатели</a></li></ul></li><li><a href="aggregation/">Агрегация и данные</a></li><li><a href="examples/">Примеры</a></li></ul></nav></aside>
+    <div class="doc-main" id="docMain" tabindex="-1">
+      <nav class="crumbs" aria-label="Хлебные крошки"><ol>
+        <li><a href="../start/">Документация</a></li><li><a href="./">Справочник</a></li><li><a href="./">Формат карточки и показатели</a></li><li id="crumbCur" hidden></li>
+      </ol></nav>
+      <header class="doc-page-head"><h1>Справочник: формат карточки и показатели</h1><p class="lead">Структура карточки и полные определения показателей с таблицами значений.</p></header>
+      <div class="docs-content"><article class="doc" id="docs-cardformat" data-sec><header class="doc-head"><h2>Формат карточки <a class="anchor" href="#docs-cardformat" aria-label="Ссылка на раздел">#</a></h2><p class="lead">Структура карточки: PICO, словарь отношений, деление текста на утверждения, запись-доказательство.</p></header>
+<h3 id="card-pico">PICO <a class="anchor" href="#card-pico" aria-label="Ссылка на раздел">#</a></h3>
+<p>PICO описывает исследование целиком. Каждое поле либо взято из текста, либо <code>unknown</code>.</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Поле</th>
+<th>Что значит</th>
+<th>Пример</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>population.taxon</code>, <code>label</code></td>
+<td>организм или популяция</td>
+<td><code>NCBITaxon:9606</code>, <code>human</code></td>
+</tr>
+<tr>
+<td><code>population.strain</code></td>
+<td>линия животных</td>
+<td><code>UM-HET3</code></td>
+</tr>
+<tr>
+<td><code>population.sex</code></td>
+<td>пол</td>
+<td><code>female</code></td>
+</tr>
+<tr>
+<td><code>population.age_at_start</code></td>
+<td>возраст популяции в начале вмешательства: метка или число</td>
+<td><code>older adults</code>, <code>600 days</code></td>
+</tr>
+<tr>
+<td><code>intervention[]</code></td>
+<td>вмешательство; для комбинации несколько. Тип: <code>compound</code>, <code>gene</code>, <code>diet</code>, <code>procedure</code></td>
+<td><code>{type: compound, label: rapamycin, id: CHEBI:9168}</code></td>
+</tr>
+<tr>
+<td><code>intervention.regimen</code></td>
+<td>режим так, как он назван в тексте</td>
+<td><code>weekly, low-dose, intermittent</code></td>
+</tr>
+<tr>
+<td><code>intervention.route</code></td>
+<td>как вводится: <code>diet</code>, <code>water</code>, <code>oral</code>, <code>injection</code>, <code>topical</code>, <code>other</code>, <code>unknown</code></td>
+<td><code>diet</code> (в корме)</td>
+</tr>
+<tr>
+<td><code>comparator</code></td>
+<td>с чем сравнивают: <code>placebo</code>, <code>untreated</code>, <code>standard_care</code>, <code>wild_type</code>, <code>monotherapy</code>, <code>active_drug</code>, <code>chronological_age</code>, <code>other</code></td>
+<td><code>placebo</code></td>
+</tr>
+<tr>
+<td><code>outcome.endpoint</code></td>
+<td>что измеряется: <code>lifespan</code>, <code>healthspan</code>, <code>biomarker</code>, <code>disease</code>, <code>mechanism</code></td>
+<td><code>healthspan</code></td>
+</tr>
+<tr>
+<td><code>outcome.metric</code></td>
+<td>чем измеряется</td>
+<td><code>physical function</code></td>
+</tr>
+<tr>
+<td><code>time</code></td>
+<td>срок</td>
+<td><code>unknown</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Недостающее поле не достраивается из общих знаний. Если в тексте нет сравнения, в карточке <code>comparator: unknown</code>, а не «обычная диета».</p>
+<h3 id="card-relations">Словарь отношений <a class="anchor" href="#card-relations" aria-label="Ссылка на раздел">#</a></h3>
+<p>Словарь закрытый: нормализатор выбирает отношение из списка. Если ничего не подходит, ставится <code>other</code> с короткой пометкой.</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Отношение</th>
+<th>Субъект → объект</th>
+<th>Что значит</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>extends_lifespan_in</code></td>
+<td>вмешательство → организм</td>
+<td>увеличивает среднюю, медианную или максимальную продолжительность жизни</td>
+</tr>
+<tr>
+<td><code>shortens_lifespan_in</code></td>
+<td>вмешательство → организм</td>
+<td>уменьшает продолжительность жизни</td>
+</tr>
+<tr>
+<td><code>no_lifespan_effect_in</code></td>
+<td>вмешательство → организм</td>
+<td>проверено, значимого эффекта нет</td>
+</tr>
+<tr>
+<td><code>slows_aging_in</code></td>
+<td>вмешательство → организм</td>
+<td>замедляет возрастные изменения, не связанные с одной болезнью; что именно измерено, записывается в <code>qualifiers.measure</code></td>
+</tr>
+<tr>
+<td><code>improves_healthspan_in</code></td>
+<td>вмешательство → организм</td>
+<td>улучшает показатель здоровой продолжительности жизни</td>
+</tr>
+<tr>
+<td><code>changes_biomarker</code></td>
+<td>вмешательство → маркер</td>
+<td>меняет маркер; направление в уточнениях</td>
+</tr>
+<tr>
+<td><code>predicts</code></td>
+<td>маркер → исход</td>
+<td>значение маркера предсказывает исход (гипотезы о маркерах)</td>
+</tr>
+<tr>
+<td><code>inhibits</code>, <code>activates</code></td>
+<td>вещество → молекулярная мишень</td>
+<td>прямое воздействие на мишень</td>
+</tr>
+<tr>
+<td><code>increases_expression</code>, <code>decreases_expression</code></td>
+<td>вещество → ген или белок</td>
+<td>изменение экспрессии</td>
+</tr>
+<tr>
+<td><code>promotes</code>, <code>suppresses</code></td>
+<td>вещество или процесс → процесс или фенотип</td>
+<td>причинное усиление или подавление</td>
+</tr>
+<tr>
+<td><code>part_of</code></td>
+<td>сущность → путь или процесс</td>
+<td>принадлежность</td>
+</tr>
+<tr>
+<td><code>associated_with</code></td>
+<td>любое → любое</td>
+<td>связь без утверждения о причине</td>
+</tr>
+<tr>
+<td><code>affects_hallmark</code></td>
+<td>сущность или процесс → примета старения</td>
+<td>одна из 12 примет старения; направление в уточнениях</td>
+</tr>
+<tr>
+<td><code>translates_to</code></td>
+<td>находка у вида A → вид B</td>
+<td>явный перенос между видами (связь с низким доверием)</td>
+</tr>
+<tr>
+<td><code>other</code></td>
+<td>любое → любое</td>
+<td>помечается и не участвует в проверках</td>
+</tr>
+</tbody>
+</table></div>
+<p>Если <code>other</code> оказался у исходного утверждения, нормализатор перечитывает текст ещё раз, получив подсказку с ближайшими отношениями словаря. Если и после этого <code>other</code>, гипотеза получает флаг <code>unmapped_relation</code>, не ранжируется и попадает в список «не разобраны»: её содержание может быть в порядке, а пробел — в словаре.</p>
+<h3 id="card-atomicity">Как делить текст на утверждения <a class="anchor" href="#card-atomicity" aria-label="Ссылка на раздел">#</a></h3>
+<ul>
+<li>Одно отношение на утверждение: «рапамицин ингибирует mTORC1 и снижает старение клеток» — два утверждения.</li>
+<li>Один контекст на утверждение: «продлевает жизнь мышей и мух» — два утверждения.</li>
+<li>Цепочки механизма — отдельные утверждения со связью <code>requires</code>.</li>
+<li>Пол, доза и возраст остаются в одном утверждении, если текст не приписывает им разные эффекты.</li>
+<li>Комбинация: все компоненты перечисляются в <code>intervention</code>; утверждение о синергии («лучше каждого по отдельности») — отдельное, с <code>comparator: monotherapy</code>.</li>
+</ul>
+<p><strong>Контраст «в основном X, а не Y».</strong> Смысл такой гипотезы — в сравнении двух объяснений. Исходное утверждение — X (заявленное объяснение), с уточнением <code>contrast</code>, которое указывает на Y. Y записывается как отвергаемая альтернатива со своим дословным фрагментом, а объясняемый эффект — как посылка.</p>
+<p>Пример: <em>«Rapamycin extends mouse lifespan mainly by postponing death from cancer, not by slowing aging itself.»</em> Посылка: rapamycin <code>extends_lifespan_in</code> mouse. Исход (X): rapamycin <code>suppresses</code> cancer mortality. Отвергаемая альтернатива (Y): rapamycin <code>slows_aging_in</code> mouse, «not by slowing aging itself». Как статус исхода зависит от Y, описано в разделе <a href="../method/#statuses-contrast">«Статусы»</a>.</p>
+<h3 id="card-evidence">Запись-доказательство <a class="anchor" href="#card-evidence" aria-label="Ссылка на раздел">#</a></h3>
+<p>Каждая цитата, на которой держится статус, хранится как запись.</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Поле</th>
+<th>Что значит</th>
+<th>Пример</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>source</code>, <code>record_id</code></td>
+<td>где найдено и под каким номером</td>
+<td><code>PubMed</code>, <code>PMID:19587680</code></td>
+</tr>
+<tr>
+<td><code>epistemic_type</code></td>
+<td>что источник способен утверждать: <code>A_text</code> (первичный текст), <code>B_curated</code> (курируемая запись базы), <code>C_measurement</code> (выполненное измерение). Машинные выводы, метаданные качества и планы статус не задают</td>
+<td><code>A_text</code></td>
+</tr>
+<tr>
+<td><code>study_type</code></td>
+<td>вид исследования</td>
+<td><code>rct</code></td>
+</tr>
+<tr>
+<td><code>lab_or_cohort</code></td>
+<td>группа, когорта или испытание; независимость повторов считается по этому полю</td>
+<td><code>PMID:40188830</code></td>
+</tr>
+<tr>
+<td><code>derived_from</code></td>
+<td>если запись — обзор или повторный анализ тех же данных; она устойчивости не добавляет</td>
+<td><code>review</code></td>
+</tr>
+<tr>
+<td><code>species</code>, <code>strain</code>, <code>sex</code>, <code>dose</code>, <code>age_at_start</code></td>
+<td>контекст находки так, как он дан в источнике</td>
+<td><code>mouse</code>, <code>UM-HET3</code>, <code>female</code>, <code>14 ppm in food</code>, <code>600 days</code></td>
+</tr>
+<tr>
+<td><code>human_rungs</code></td>
+<td>только у людей: <code>human_markers</code> (лабораторные и инструментальные измерения) и (или) <code>human_clinical</code> (самочувствие, функция, болезни, смертность)</td>
+<td><code>[human_markers]</code> для массы мышечной ткани</td>
+</tr>
+<tr>
+<td><code>quote</code></td>
+<td>дословный фрагмент источника</td>
+<td>«Lean tissue mass (ηp2 = 0.202, p = 0.013) … improved significantly for women using 10 mg rapamycin.»</td>
+</tr>
+<tr>
+<td><code>quote_role</code></td>
+<td><code>finding</code> (результат этой работы), <code>background</code> (известное, цитируется), <code>speculation</code> («возможно», «предполагаем»). Статус меняет только <code>finding</code></td>
+<td><code>finding</code></td>
+</tr>
+<tr>
+<td><code>qualifiers_match</code></td>
+<td>совпадает ли контекст находки с утверждением: <code>yes</code>, <code>no</code> или <code>n/a</code> по виду, линии, полу, возрасту, дозе, сравнению; отдельно <code>intervention_match</code>: <code>exact</code>, <code>dose_differs</code>, <code>regimen_differs</code>, <code>related_compound</code>, <code>class</code></td>
+<td><code>{species: yes, sex: n/a}</code></td>
+</tr>
+<tr>
+<td><code>marker_validation</code></td>
+<td>для маркеров у человека: <code>validated_surrogate</code> или <code>exploratory</code></td>
+<td><code>exploratory</code></td>
+</tr>
+<tr>
+<td><code>flags</code></td>
+<td>предупреждения: <code>retracted</code>, <code>preprint</code>, <code>conflict_of_interest</code>, <code>small_n</code>, <code>open_label</code>, <code>subgroup_only</code>, <code>short_lived_controls</code></td>
+<td><code>[subgroup_only]</code></td>
+</tr>
+<tr>
+<td><code>linked_pmid</code>, <code>fields</code></td>
+<td>только у курируемых записей: работа, из которой взята строка, и поля самой строки</td>
+<td><code>19587680</code>; <code>avg_lifespan_change_percent: 13</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Флаги видны читателю и судьям и статус сами не меняют. Исключения: запись с флагом <code>retracted</code> не учитывается, а <code>subgroup_only</code> участвует в <a href="../method/#statuses-subgroup">правиле подгруппы</a>.</p>
+</article><article class="doc" id="docs-indref" data-sec><header class="doc-head"><h2>Показатели <a class="anchor" href="#docs-indref" aria-label="Ссылка на раздел">#</a></h2><p class="lead">Полные определения, таблицы значений, path_to_human и late_start.</p></header>
+<h3 id="ind-profile-ref">Профиль доказательности <a class="anchor" href="#ind-profile-ref" aria-label="Ссылка на раздел">#</a></h3>
+<p>Из статусов утверждений считается профиль доказательности. Это факты, а не оценки: одна ось не обменивается на другую, а то, насколько важна каждая, решает профиль приоритетов при агрегации.</p>
+<p><strong>Фильтр.</strong> Если опровергнуто исходное утверждение, механизм или посылка, гипотеза отсеивается с указанием опровергающей записи. «Оспорено» не отсеивает.</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Ось</th>
+<th>Значения</th>
+<th>Откуда</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>effect_level</code></td>
+<td>none · cells · invertebrates · mammals · human_markers · human_clinical</td>
+<td>высшая ступень, на которой подтверждено исходное утверждение или утверждение-аналог <strong>с тем же вмешательством</strong>; родственные вещества и классы считаются только аналогами. Оспоренная более высокая ступень указывается рядом</td>
+</tr>
+<tr>
+<td><code>robustness</code></td>
+<td>single · replicated</td>
+<td>на этой ступени одна работа или не менее двух независимых (разные <code>lab_or_cohort</code>; обзоры и повторные анализы не считаются). Эффект на двух и более площадках многоцентровой программы тоже считается повтором</td>
+</tr>
+<tr>
+<td><code>mechanism</code></td>
+<td>unverified · partial · supported</td>
+<td>подтверждены ли утверждения-механизмы и посылки: ни одно · часть · все</td>
+</tr>
+</tbody>
+</table></div>
+<p>Отдельно отмечаются:</p>
+<ul>
+<li><strong>многоцентровая программа</strong> (<code>multi_site_program</code>): вмешательство проверено на этой ступени в стандартизованной программе с публикацией отрицательных результатов (ITP для мышей, CITP для червей); исход программы положительный или отрицательный. Это не уровень устойчивости: многоцентровость проверяет воспроизводимость в одном протоколе, независимый повтор проверяет обобщаемость, и между ними порядок не вводится;</li>
+<li><strong>конфликты</strong> (<code>conflicts</code>): на каком уровне какие записи за и какие против; кто побеждает, правило не решает;</li>
+<li><strong>ступени у человека</strong> определяются по исходу записи. <code>human_markers</code>: лабораторные и инструментальные измерения (маркеры крови, эпигенетические часы, состав тела, жёсткость артерий, давление). <code>human_clinical</code>: то, что человек чувствует и что определяет его жизнь (функция, слабость, боль, заболеваемость, госпитализации, смертность). Утверждение считается по ступеням раздельно, поэтому у одного испытания может быть «оспорено» на обеих;</li>
+<li><strong>дизайн исследования у человека</strong>: если все записи на ступени наблюдательные, это указывается («human_clinical, только наблюдательные данные»).</li>
+</ul>
+<p>Что делать дальше (<code>next_step</code>) показывается рядом, но в рейтинг не входит: повторить на той же ступени, подняться на следующую или разрешить спор на оспоренной.</p>
+<h3 id="ind-table">Показатели для агрегации <a class="anchor" href="#ind-table" aria-label="Ссылка на раздел">#</a></h3>
+<p>Показатель считается один раз, по правилам, из проверенной карточки. Языковая модель в расчёте показателей не участвует. Неизвестное значение остаётся неизвестным (ниже).</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Показатель</th>
+<th>Что измеряет</th>
+<th>Откуда считается</th>
+<th>Значения</th>
+<th>Что лучше</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>effect_level</code></td>
+<td>как далеко подтверждён эффект</td>
+<td>из проверенных утверждений</td>
+<td>none · cells · invertebrates · mammals · human_markers · human_clinical</td>
+<td>выше</td>
+</tr>
+<tr>
+<td><code>robustness</code></td>
+<td>воспроизведён ли эффект независимо</td>
+<td>из проверенных утверждений</td>
+<td>single · replicated</td>
+<td>выше</td>
+</tr>
+<tr>
+<td><code>multi_site_positive</code></td>
+<td>положительный результат многоцентровой программы</td>
+<td>из проверенных утверждений и базы (признак ITP/CITP у записи)</td>
+<td>no · positive</td>
+<td>положительный</td>
+</tr>
+<tr>
+<td><code>mechanism</code></td>
+<td>подтверждены ли звенья объяснения</td>
+<td>из проверенных утверждений</td>
+<td>unverified · partial · supported</td>
+<td>выше</td>
+</tr>
+<tr>
+<td><code>novelty</code></td>
+<td>насколько результат нов для литературы</td>
+<td>из проверенных утверждений и правил (граф знаний пока не используется)</td>
+<td>new_context &lt; translation &lt; analog &lt; new_link</td>
+<td>выше</td>
+</tr>
+<tr>
+<td><code>path_to_human</code></td>
+<td>сколько предварительных шагов до испытания на человеке</td>
+<td>из правил; данные из базы (ChEMBL, ClinicalTrials.gov)</td>
+<td>2 · 1 · 0 шагов</td>
+<td>меньше шагов</td>
+</tr>
+<tr>
+<td><code>late_start</code></td>
+<td>какую долю медианной продолжительности жизни составляет возраст начала вмешательства</td>
+<td>из правил; возраст из карточки, медианы из таблицы</td>
+<td>число или интервал от 0 до 1</td>
+<td>выше</td>
+</tr>
+<tr>
+<td><code>both_sexes</code></td>
+<td>показан ли эффект у обоих полов</td>
+<td>из проверенных утверждений</td>
+<td>one · both</td>
+<td>оба</td>
+</tr>
+<tr>
+<td><code>effect_size</code></td>
+<td>размер эффекта на найденной ступени</td>
+<td>из проверенных утверждений (метрика записей)</td>
+<td>% изменения медианы, шкала 0–30%, значения выше 30% приравниваются к 30%</td>
+<td>больше</td>
+</tr>
+<tr>
+<td><code>informativeness</code></td>
+<td>сколько альтернативных объяснений различает решающий эксперимент</td>
+<td>из правил по таблице предсказаний</td>
+<td>число от 0 до 4</td>
+<td>больше</td>
+</tr>
+</tbody>
+</table></div>
+<p>Подробности:</p>
+<ul>
+<li><strong><code>novelty</code>.</strong> <code>new_context</code>: то же вмешательство и вид уже работают, но в другой линии, при другом поле, дозе или возрасте начала. <code>translation</code>: известная находка переносится на новый вид. <code>analog</code>: известное родственное вмешательство. <code>new_link</code>: новая связь вмешательства и исхода. Известный результат в рейтинг не входит и этих уровней не получает.</li>
+<li><strong><code>mechanism</code></strong> считается по утверждениям с ролями «механизм» и «посылка»: все подтверждены, часть, ни одно.</li>
+<li><strong><code>informativeness</code></strong> в текущей версии не считается: таблица предсказаний строится на этапе дебатов, пока значение неизвестно.</li>
+<li><strong>Шкала <code>effect_size</code></strong> (0–30%) — черновое допущение.</li>
+</ul>
+<h3 id="ind-path">path_to_human <a class="anchor" href="#ind-path" aria-label="Ссылка на раздел">#</a></h3>
+<p>Показатель считает число предварительных шагов, которые нужны, прежде чем можно проводить испытание на человеке с маркерами или функцией в качестве исхода.</p>
+<ul>
+<li>Нет данных о безопасности для человека: нужен пакет доклинической безопасности (+1 шаг). Данные о безопасности есть у одобренного препарата, у вещества на клинической стадии и у диеты.</li>
+<li>Нет подтверждённого эффекта у млекопитающих: нужно исследование на мышах (+1 шаг).</li>
+</ul>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Значение</th>
+<th>Что значит</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>безопасность для человека известна и эффект у млекопитающих подтверждён: можно сразу идти к человеку</td>
+</tr>
+<tr>
+<td>1</td>
+<td>не хватает одного шага</td>
+</tr>
+<tr>
+<td>2</td>
+<td>не хватает обоих</td>
+</tr>
+</tbody>
+</table></div>
+<p>Если данных о безопасности не определить (ген-мишень без препарата, нераспознанное вещество), значение неизвестно.</p>
+<p><strong>«На момент T» в бэктесте.</strong> Вещество считается одобренным, если год первого одобрения в ChEMBL не позже года T; веществом на клинической стадии — если в ClinicalTrials.gov есть испытание с ним, начатое до T. Вопрос об эффекте у млекопитающих уже учитывает только записи, датированные не позже T.</p>
+<p>Показатель задаёт порядок «ближе к человеку»; оценок стоимости и сроков в долларах и месяцах система не даёт.</p>
+<h3 id="ind-unknown">Неизвестное остаётся неизвестным <a class="anchor" href="#ind-unknown" aria-label="Ссылка на раздел">#</a></h3>
+<p>Если значение показателя определить нельзя, оно не заменяется средним или типичным. В каждом розыгрыше агрегации оно берётся случайно из допустимого диапазона: для порядкового показателя равномерно по уровням, для числового по всей шкале. Неопределённость данных и неопределённость весов складываются в разброс оценки гипотезы: у гипотезы с большим числом неизвестных полоса шире.</p>
+<h3 id="ind-latestart">late_start <a class="anchor" href="#ind-latestart" aria-label="Ссылка на раздел">#</a></h3>
+<p>Показатель — возраст начала вмешательства как доля медианной продолжительности жизни контрольных животных (не больше 1). Чем позже начато вмешательство, тем выше значение: эффект, полученный при позднем старте, считается более ценным.</p>
+<ul>
+<li><strong>Точный возраст</strong> («600 days», «20 months», «65 years») делится на медиану.</li>
+<li><strong>Словесный возраст</strong> («middle-aged», «old») даёт интервал: каждому слову соответствует возрастной промежуток своего вида (таблица в <a href="aggregation/#data-latestart">разделе о данных</a>).</li>
+<li><strong>Медиана</strong> берётся для вида, линии и пола из карточки. Не указана линия — интервал по всем линиям вида; не указан пол — строка «оба», если она есть, иначе интервал по полам; вида нет в таблице — значение неизвестно.</li>
+<li>С интервалом медиан [m₁, m₂] и возрастом a доля равна [a / m₂, min(1, a / m₁)]. Узкая или широкая полоса отражает неопределённость.</li>
+</ul>
+<p>Пример: самки мышей UM-HET3 (медиана 887 суток), «old» (18–24 месяца, 548–731 сутки): доля 0,62–0,82.</p>
+</article></div>
+      <nav class="pager" aria-label="Соседние страницы"><a rel="prev" href="../method/ranking/"><small>Назад</small> Как это работает: показатели и рейтинг</a><a rel="next" href="aggregation/"><small>Дальше</small> Справочник: агрегация и данные</a></nav>
+    </div>
+    <aside class="doc-aside" id="docAside" aria-labelledby="asideH"><h2 id="asideH">На этой странице</h2><ol><li><a href="#docs-cardformat" data-spy="docs-cardformat">Формат карточки</a></li><li><a href="#docs-indref" data-spy="docs-indref">Показатели</a></li></ol></aside>
+  </div>
+</main>
+<footer>
+  <div class="wrap foot">
+    <p><b>hyp-arena</b> · исследовательский прототип; рейтинги — результат исследования, а не медицинская рекомендация.</p>
+    <dl class="footmeta"><div><dt>Версия кода</dt><dd>v0.1.0</dd></div><div><dt>Лицензия</dt><dd>MIT</dd></div></dl>
+    <p class="footlinks"><a href="../../">На главную</a> · <a href="https://github.com/danrd/hyp-arena" target="_blank" rel="noopener">GitHub</a></p>
+  </div>
+</footer>
+<button type="button" class="totop" id="toTop" hidden aria-label="Наверх">↑</button>
+<script>
+(() => {
+  const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+  const top = $("#topbar"), bar = $("#docBar");
+  const setVars = () => {
+    document.documentElement.style.setProperty("--hdr", top.offsetHeight + "px");
+    document.documentElement.style.setProperty("--bar", (getComputedStyle(bar).display === "none" ? 0 : bar.offsetHeight) + "px");
+  };
+  setVars(); addEventListener("resize", setVars);
+
+  /* the section in view: the last section heading above the reading line */
+  const secs = $$("[data-sec]");
+  const links = $$("[data-spy]");
+  const crumb = $("#crumbCur"), barTitle = $("#docBarTitle"), pageTitle = barTitle.textContent;
+  const titleOf = el => (el.querySelector("h2") || el).firstChild.textContent.trim();
+  let active = null;
+  const reveal = (a) => {                     // keep the active item visible inside a scrolling panel
+    const box = a.closest(".doc-side, .doc-aside"); if (!box || box.offsetParent === null) return;
+    const r = a.getBoundingClientRect(), b = box.getBoundingClientRect();
+    if (r.top < b.top + 8) box.scrollTop -= b.top + 8 - r.top; else if (r.bottom > b.bottom - 8) box.scrollTop += r.bottom - b.bottom + 8;
+  };
+  const spy = () => {
+    const line = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--hdr")) + (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--bar")) || 0) + 40;
+    let cur = null;
+    for (const s of secs) { if (s.getBoundingClientRect().top <= line) cur = s; else break; }
+    if (cur === active) return; active = cur;
+    links.forEach(a => { const on = cur && a.dataset.spy === cur.id; if (on) { a.setAttribute("aria-current", "location"); reveal(a); } else a.removeAttribute("aria-current"); });
+    const t = cur ? titleOf(cur) : "";
+    crumb.hidden = !t; crumb.textContent = t;
+    barTitle.textContent = t || pageTitle;
+  };
+  let tick = false;
+  addEventListener("scroll", () => { if (!tick) { tick = true; requestAnimationFrame(() => { tick = false; spy(); toggleTop(); }); } }, {passive: true});
+  addEventListener("hashchange", () => setTimeout(spy, 60));
+
+  /* mobile drawer */
+  const btn = $("#docBarBtn"), drawer = $("#docDrawer"), scrim = $("#docScrim");
+  const open = () => { drawer.hidden = false; scrim.hidden = false; btn.setAttribute("aria-expanded", "true"); (drawer.querySelector("a[aria-current]") || drawer.querySelector("a") || drawer).focus(); };
+  const close = (back = true) => { drawer.hidden = true; scrim.hidden = true; btn.setAttribute("aria-expanded", "false"); if (back) btn.focus(); };
+  btn.addEventListener("click", () => drawer.hidden ? open() : close());
+  scrim.addEventListener("click", () => close());
+  $("#docClose").addEventListener("click", () => close());
+  drawer.addEventListener("click", e => { if (e.target.closest("a")) close(false); });
+  document.addEventListener("keydown", e => {
+    if (drawer.hidden) return;
+    if (e.key === "Escape") { e.preventDefault(); close(); return; }
+    if (e.key === "Tab") {                    // keep focus inside the open panel
+      const f = [...drawer.querySelectorAll("a, button")]; if (!f.length) return;
+      const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  });
+  matchMedia("(min-width: 901px)").addEventListener?.("change", e => { if (e.matches) close(false); });
+
+  /* back to top after a couple of screens */
+  const totop = $("#toTop");
+  const toggleTop = () => { totop.hidden = scrollY < innerHeight * 2; };
+  totop.addEventListener("click", () => { scrollTo({top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"}); });
+
+  /* copy buttons on command blocks */
+  $$(".doc pre").forEach(pre => {
+    const wrap = document.createElement("div"); wrap.className = "codewrap";
+    pre.replaceWith(wrap); wrap.appendChild(pre);
+    const b = document.createElement("button"); b.type = "button"; b.className = "copy"; b.textContent = "Копировать";
+    b.addEventListener("click", () => {
+      const done = ok => { b.textContent = ok ? "Скопировано" : "Выделите вручную"; setTimeout(() => { b.textContent = "Копировать"; }, 1800); };
+      try { navigator.clipboard.writeText(pre.textContent).then(() => done(true), () => done(false)); } catch { done(false); }
+    });
+    wrap.appendChild(b);
+  });
+  spy(); toggleTop();
+})();
+</script>
+</body>
+</html>

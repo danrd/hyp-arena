@@ -315,39 +315,6 @@ table.defs td.src { white-space: nowrap; }
 .seg button:first-child { border-left: 0; }
 .seg button[aria-pressed="true"] { background: var(--accent-soft); font-weight: 600; }
 
-/* documentation */
-.docs-layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 28px; align-items: start; }
-.doc-toc-wrap { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 66px); max-height: calc(100vh - 90px); overflow-y: auto; font-size: var(--step--1); border: 1px solid var(--line); border-radius: 6px; background: var(--surface); padding: 10px 14px; }
-.doc-toc-wrap > summary { cursor: pointer; font-weight: 600; list-style: none; }
-.doc-toc-wrap > summary::-webkit-details-marker { display: none; }
-.doc-toc-wrap > summary::after { content: " ▾"; color: var(--muted); }
-.doc-toc ol { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 10px; }
-.doc-toc ul { list-style: none; margin: 4px 0 0; padding: 0 0 0 10px; border-left: 1px solid var(--line); display: grid; gap: 2px; }
-.doc-toc a { color: var(--muted); text-decoration: none; display: block; padding: 1px 0; }
-.doc-toc > ol > li > a { color: var(--ink); font-weight: 600; }
-.doc-toc a:hover, .doc-toc a[aria-current="true"] { color: var(--accent); }
-.doc-toc a[aria-current="true"] { font-weight: 600; }
-.docs-content { display: grid; gap: 44px; min-width: 0; }
-article.doc { min-width: 0; display: grid; gap: 14px; max-width: 78ch; }
-article.doc .doc-head h3 { font-size: var(--step-2); }
-article.doc .lead { color: var(--muted); font-size: var(--step-0); margin: 6px 0 0; }
-article.doc h4 { font-family: var(--display); font-size: var(--step-1); font-weight: 600; margin: 14px 0 -4px; }
-article.doc h4 .anchor { color: var(--line); text-decoration: none; margin-left: 4px; font-family: var(--body); font-weight: 400; }
-article.doc h4:hover .anchor { color: var(--accent); }
-article.doc p { margin: 0; }
-article.doc ul, article.doc ol { margin: 0; padding-left: 1.3em; display: grid; gap: 4px; }
-article.doc code { background: var(--idle-soft); padding: 0 4px; border-radius: 3px; }
-article.doc .tablewrap { border: 1px solid var(--line); border-radius: 6px; }
-table.doctable { border-collapse: collapse; width: 100%; font-size: var(--step--1); }
-table.doctable th { text-align: left; font-weight: 600; background: var(--paper); color: var(--muted); }
-table.doctable th, table.doctable td { padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
-table.doctable tr:last-child td { border-bottom: 0; }
-@media (max-width: 900px) {
-  .docs-layout { grid-template-columns: minmax(0, 1fr); gap: 16px; }
-  .doc-toc-wrap { position: static; max-height: none; }
-  .doc-toc-wrap:not([open]) .doc-toc { display: none; }
-}
-
 /* footer */
 .foot { display: grid; gap: 12px; }
 .foot p { margin: 0; max-width: 80ch; }
@@ -366,20 +333,12 @@ details.fold { border-top: 1px solid var(--line); padding-top: 8px; }
 details.fold > summary { cursor: pointer; font-weight: 600; font-size: var(--step--1); color: var(--muted); }
 details.fold[open] > summary { margin-bottom: 8px; }
 .rng[title] { cursor: help; border-bottom: 1px dotted var(--muted); }
-article.doc, article.doc h4 { scroll-margin-top: 70px; }
-article.doc pre { margin: 0; padding: 12px 14px; background: var(--paper); border: 1px solid var(--line); border-radius: 5px; overflow-x: auto; font-family: var(--mono); font-size: var(--step--1); cursor: copy; }
-article.doc pre code { background: none; padding: 0; }
-.doc-page-head { padding-block: 28px 8px; display: grid; gap: 6px; justify-items: center; text-align: center; }
 @media (max-width: 640px) {
   .tabs { display: grid; grid-template-columns: 1fr 1fr; width: 100%; gap: 1px; background: var(--line); }
   .tabs button { border-left: 0; background: var(--surface); }
   .tabs button[aria-selected="true"] { background: var(--accent); }
   .tabs button:last-child:nth-child(odd) { grid-column: 1 / -1; }
-  article.doc pre { white-space: pre-wrap; overflow-wrap: anywhere; }
-}
-.codewrap { position: relative; }
-article.doc .codewrap pre { padding: 40px 14px 12px; scrollbar-width: thin; }
-.codewrap .copy { position: absolute; top: 6px; right: 6px; font-size: 0.72rem; padding: 3px 9px; }
+  }
 </style>
 </head>
 <body>
@@ -388,7 +347,7 @@ article.doc .codewrap pre { padding: 40px 14px 12px; scrollbar-width: thin; }
   <div class="wrap">
     <a class="brand" href="#top">Арена гипотез</a>
     <nav class="sections" aria-label="Разделы">
-      <a href="#ranking">Рейтинг</a><a href="#card">Карточка</a><a href="#outside">Вне рейтинга</a><a href="#validation">Проверка метода</a><a href="docs/">Документация</a><a href="https://github.com/danrd/hyp-arena" target="_blank" rel="noopener">GitHub ↗</a>
+      <a href="#ranking">Рейтинг</a><a href="#card">Карточка</a><a href="#outside">Вне рейтинга</a><a href="#validation">Проверка метода</a><a href="docs/start/">Документация</a><a href="https://github.com/danrd/hyp-arena" target="_blank" rel="noopener">GitHub ↗</a>
     </nav>
   </div>
 </header>
@@ -398,7 +357,7 @@ article.doc .codewrap pre { padding: 40px 14px 12px; scrollbar-width: thin; }
     <p class="eyebrow">hyp-arena</p>
     <h1>Ранжирование гипотез о старении по проверенным фактам</h1>
     <p class="lead">Гипотеза превращается в карточку утверждений, утверждения проверяются по PubMed и DrugAge с дословными цитатами, а рейтинг строится при явно заданных приоритетах.</p>
-    <div class="cta"><a class="btn primary" href="docs/#docs-run">Попробовать у себя</a><a class="btn" href="docs/">Документация</a></div>
+    <div class="cta"><a class="btn primary" href="docs/start/">Попробовать у себя</a><a class="btn" href="docs/start/">Документация</a></div>
   </div>
 
   <div class="wrap">
@@ -423,7 +382,7 @@ article.doc .codewrap pre { padding: 40px 14px 12px; scrollbar-width: thin; }
       <div class="prose">
         <p class="eyebrow">Рейтинг</p>
         <h2>Одни и те же гипотезы, три способа упорядочить</h2>
-        <p class="muted" id="profileIntro">Профиль — порядок важности показателей, а не оценка гипотез; ниже три примера, правильного среди них нет. <a href="docs/#docs-profiles">Подробнее</a></p>
+        <p class="muted" id="profileIntro">Профиль — порядок важности показателей, а не оценка гипотез; ниже три примера, правильного среди них нет. <a href="docs/method/ranking/#docs-profiles">Подробнее</a></p>
       </div>
       <div class="tabs" role="tablist" id="rankTabs"></div>
     </div>
@@ -436,7 +395,7 @@ article.doc .codewrap pre { padding: 40px 14px 12px; scrollbar-width: thin; }
       <div class="prose">
         <p class="eyebrow">Карточка</p>
         <h2>Что утверждает гипотеза и что нашлось в литературе</h2>
-        <p class="muted">Цитаты за и против, отказы с причинами; пунктиром отмечено унаследованное из PICO. <a href="docs/#card-layers">Подробнее</a></p>
+        <p class="muted">Цитаты за и против, отказы с причинами; пунктиром отмечено унаследованное из PICO. <a href="docs/method/#card-layers">Подробнее</a></p>
       </div>
       <label class="muted" for="cardSelect" style="display:grid;gap:4px;font-size:var(--step--1);width:100%;max-width:42ch;text-align:left">Гипотеза
         <select id="cardSelect"></select>
@@ -450,7 +409,7 @@ article.doc .codewrap pre { padding: 40px 14px 12px; scrollbar-width: thin; }
       <div class="prose">
         <p class="eyebrow">Вне рейтинга</p>
         <h2>Ни одна гипотеза не исчезает молча</h2>
-        <p class="muted">Каждая гипотеза вне рейтинга — с причиной. <a href="docs/#statuses-gate">Подробнее</a></p>
+        <p class="muted">Каждая гипотеза вне рейтинга — с причиной. <a href="docs/method/#statuses-gate">Подробнее</a></p>
       </div>
     </div>
     <div class="outgrid" id="outsideView"></div>
@@ -489,7 +448,7 @@ article.doc .codewrap pre { padding: 40px 14px 12px; scrollbar-width: thin; }
         <p class="proof"><b>Доказывает:</b> на гипотезах с неизвестным в 2010 году исходом рейтинг даёт сигнал выше случайного: 0.73 на тестовой половине. <b>Не доказывает:</b> устойчивую предсказательную силу: на dev-половине 0.53, выборка маленькая (10 положительных соединений на тесте), интервал широкий.</p>
       </div>
     </div>
-    <p class="muted more-line">Границы применимости и открытые вопросы: <a href="docs/#docs-limits">в документации</a>.</p>
+    <p class="muted more-line">Границы применимости и открытые вопросы: <a href="docs/method/ranking/#docs-limits">в документации</a>.</p>
   </section>
 
 </main>
@@ -498,7 +457,7 @@ article.doc .codewrap pre { padding: 40px 14px 12px; scrollbar-width: thin; }
   <div class="wrap foot">
     <p><b>hyp-arena</b> · исследовательский прототип; рейтинги — результат исследования, а не медицинская рекомендация. Проверка опирается на PubMed (NCBI) и DrugAge (HAGR); цитаты приводятся дословно со ссылкой на источник.</p>
     <dl class="footmeta" id="footMeta"></dl>
-    <p class="footlinks"><a href="docs/">Документация</a> · <a href="https://github.com/danrd/hyp-arena" target="_blank" rel="noopener">GitHub</a></p>
+    <p class="footlinks"><a href="docs/start/">Документация</a> · <a href="https://github.com/danrd/hyp-arena" target="_blank" rel="noopener">GitHub</a></p>
   </div>
 </footer>
 

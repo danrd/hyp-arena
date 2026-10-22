@@ -43,18 +43,52 @@ def test_export_carries_monte_carlo_error():
     assert "std" in inspect.getsource(site.bundle_from_result) and "\"K\"" in inspect.getsource(site.bundle_from_result)
 
 
-def test_docs_render_with_unique_anchors_and_no_vault_links():
-    html = site.render_docs()
-    assert html.count('<article class="doc"') == 8 and 'id="docToc"' in html
+PAGES = ["start", "method", "method/ranking", "reference", "reference/aggregation", "reference/examples"]
+
+
+def test_docs_pages_have_unique_anchors_and_no_vault_links():
+    pages = site.load_pages()
+    assert [p["slug"] for p in pages] == PAGES
+    html = "".join(sec["html"] for p in pages for sec in p["sections"])
     assert "[[" not in html and "Working_Notes" not in html and "Open_Longevity" not in html
     for ex in ("ex1", "ex2", "ex3", "ex4", "ex5"):
-        assert f'href="../?example={ex}#card"' in html
+        assert f'href="../../../?example={ex}#card"' in html
 
 
-def test_build_writes_the_standalone_docs_page(tmp_path):
+def _built(tmp_path):
     page = tmp_path / "index.html"
     page.write_text('<meta name="hyparena-version" content="0"><link rel="stylesheet" href="x.css"><style>b{}</style>')
     site.build(page)
-    s = (tmp_path / "docs" / "index.html").read_text()
-    assert 'class="docs-layout"' in s and f'content="{site.code_version()}"' in s and 'href="../"' in s and "<style>b{}</style>" in s
-    assert f'content="{site.code_version()}"' in page.read_text()
+    return {slug: (tmp_path / "docs" / slug / "index.html").read_text() for slug in PAGES}
+
+
+def test_every_docs_link_resolves(tmp_path):
+    import posixpath
+    import re
+    built = _built(tmp_path)
+    ids = {slug: set(re.findall(r'\sid="([^"]+)"', text)) for slug, text in built.items()}
+    for slug, text in built.items():
+        for target in re.findall(r'<a [^>]*?href="([^"]*)"', text):
+            if target.startswith(("http", "mailto")) or target == "":
+                continue
+            path, _, frag = target.partition("#")
+            if not path:
+                assert frag in ids[slug], (slug, target)
+                continue
+            if "?" in path:
+                continue
+            dest = posixpath.normpath(posixpath.join(slug, path))
+            if dest.startswith(".."):
+                continue                              # the home page
+            assert dest in ids, (slug, target)
+            if frag:
+                assert frag in ids[dest], (slug, target)
+
+
+def test_build_writes_the_pages_and_a_redirect(tmp_path):
+    built = _built(tmp_path)
+    for slug, s in built.items():
+        assert f'content="{site.code_version()}"' in s and "<style>b{}</style>" in s and 'class="crumbs"' in s and 'aria-current="page"' in s
+        assert 'id="docDrawer"' in s and 'id="docAside"' in s and 'class="pager"' in s
+    red = (tmp_path / "docs" / "index.html").read_text()
+    assert "location.replace" in red and '"card-layers": "method"' in red and '"docs-run": "start"' in red
