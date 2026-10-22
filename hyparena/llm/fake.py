@@ -148,6 +148,20 @@ class FakeLLMClient:
     def _verify_claim(self, rng, prompt, n):
         return json.dumps({"records": []})
 
+    def _informativeness(self, rng, prompt, n):
+        m = re.search(r"<<<TEXT\n(.*?)\nTEXT>>>", prompt, flags=re.S)
+        text = (m.group(1) if m else "").strip()
+        ids = list(dict.fromkeys(re.findall(r"^- (alt\d+):", prompt, flags=re.M)))
+        return json.dumps({"discriminated": [{"id": ids[0], "how": text[:30]}] if ids and len(text) >= 30 else []})
+
+    def _evolve_hypothesis(self, rng, prompt, n):
+        m = re.search(r"Parent hypothesis:\n(.*?)\n\nVerified", prompt, flags=re.S)
+        parent = (m.group(1) if m else "a fake hypothesis").strip().splitlines()[0]
+        k = int(re.search(r"exactly (\d+) child", prompt).group(1)) if re.search(r"exactly (\d+) child", prompt) else 1
+        return json.dumps({"children": [{"text": f"{parent} (refined {i + 1})\n\nHypothesis: refined variant {i + 1} of {parent} with the fake compound.\n\n"
+                                                 f"Decisive experiment: a pair-fed control and a food intake measurement.",
+                                         "kind": "test_alternative", "change": f"fake refinement {i + 1}"} for i in range(k)]})
+
     def _check_alternatives(self, rng, prompt, n):
         ids = list(dict.fromkeys(re.findall(r"^- (alt\d+):", prompt, flags=re.M)))
         return json.dumps({"alternatives": [{"id": i, "found": "absent", "pmid": "", "quote": ""} for i in ids]})
