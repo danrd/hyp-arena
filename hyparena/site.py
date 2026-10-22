@@ -15,6 +15,7 @@ markdown pages of the documentation into the page between the markers `<!--docs:
 from __future__ import annotations
 
 import argparse
+import posixpath
 import html
 import json
 import re
@@ -225,11 +226,19 @@ def examples_bundle(k_top: int = 2, K: int = 10000) -> dict:
 
 
 # ---- documentation pages ----
+#
+# A directory of docs/site/content/ with a `_page.md` is one documentation page (its path is the address): `_page.md`
+# holds title, label (short name for the tree), group, lead and order; every other `*.md` of that directory is one
+# section in file order. A section is an <h2> whose `##` headings become <h3>;
+# a section with `flat: true` has no title of its own and its `##` headings are the page's <h2>.
+
+PAGE_BASE = "docs"
+
 
 def _front(text: str) -> tuple[dict, str]:
-    m = re.match(r"---\n(.*?)\n---\n+", text, re.S)
+    m = re.match(r"---\n(.*?)\n---\n*", text, re.S)
     if not m:
-        raise ValueError("a documentation page starts with a front matter block (id, title, lead)")
+        raise ValueError("a documentation file starts with a front matter block (title, lead; sections also id)")
     meta = {}
     for line in m.group(1).splitlines():
         k, _, v = line.partition(":")
@@ -237,38 +246,200 @@ def _front(text: str) -> tuple[dict, str]:
     return meta, text[m.end():]
 
 
-def _render_page(meta: dict, body: str) -> tuple[str, list[tuple[str, str]]]:
-    """The HTML of one documentation page and its second-level headings [(id, text)]."""
+def _anchor(i: str) -> str:
+    return f'<a class="anchor" href="#{i}" aria-label="Ссылка на раздел">#</a>'
+
+
+def _render_section(meta: dict, body: str, root: str) -> dict:
+    """One section: its HTML, the id and title that go into the navigation."""
     import markdown
-    md = markdown.Markdown(extensions=["tables", "attr_list", "sane_lists", "fenced_code"])
-    out = md.convert(body)
-    heads = [(m.group(1), re.sub(r"<[^>]+>", "", m.group(2))) for m in re.finditer(r'<h2 id="([^"]+)">(.*?)</h2>', out)]
+    flat = meta.get("flat") == "true"
+    body = body.replace("{ROOT}", root)
+    out = markdown.Markdown(extensions=["tables", "attr_list", "sane_lists", "fenced_code"]).convert(body)
+    level = 2 if flat else 3
     out = re.sub(r'<h2 id="([^"]+)">(.*?)</h2>',
-                 lambda m: f'<h4 id="{m.group(1)}">{m.group(2)} <a class="anchor" href="#{m.group(1)}" aria-label="Ссылка на раздел">#</a></h4>', out)
-    out = re.sub(r"<table>", '<div class="tablewrap"><table class="doctable">', out)
-    out = out.replace("</table>", "</table></div>")
+                 lambda m: f'<h{level} id="{m.group(1)}"{" data-sec" if flat else ""}>{m.group(2)} {_anchor(m.group(1))}</h{level}>', out)
+    out = out.replace("<table>", '<div class="tablewrap"><table class="doctable">').replace("</table>", "</table></div>")
     out = re.sub(r'<a href="(https?://[^"]+)"', r'<a href="\1" target="_blank" rel="noopener"', out)
-    page = (f'<article class="doc" id="docs-{meta["id"]}"><header class="doc-head"><h3>{html.escape(meta["title"])}</h3>'
-            f'<p class="lead">{html.escape(meta.get("lead", ""))}</p></header>\n{out}\n</article>')
-    return page, heads
+    if flat:
+        heads = [(m.group(1), re.sub(r"<[^>]+>", "", m.group(2)).replace(" #", "").strip())
+                 for m in re.finditer(r'<h2 id="([^"]+)" data-sec>(.*?)</h2>', out)]
+        return {"flat": True, "html": f'<div class="doc flat">{out}</div>', "nav": heads}
+    sid = f'docs-{meta["id"]}'
+    html_ = (f'<article class="doc" id="{sid}" data-sec><header class="doc-head"><h2>{html.escape(meta["title"])} {_anchor(sid)}</h2>'
+             f'<p class="lead">{html.escape(meta.get("lead", ""))}</p></header>\n{out}\n</article>')
+    return {"flat": False, "html": html_, "nav": [(sid, meta["title"])]}
 
 
-def render_docs(content: Path = CONTENT) -> str:
-    """The documentation section body: a table of contents and every page of `content/*.md`, in file order."""
-    pages, toc = [], []
-    for f in sorted(Path(content).glob("*.md")):
-        meta, body = _front(f.read_text(encoding="utf-8"))
-        page, heads = _render_page(meta, body)
-        pages.append(page)
-        toc.append(f'<li><a href="#docs-{meta["id"]}">{html.escape(meta["title"])}</a><ul>'
-                   + "".join(f'<li><a href="#{i}">{html.escape(t)}</a></li>' for i, t in heads) + "</ul></li>")
-    ids = re.findall(r'\sid="([^"]+)"', "".join(pages))
+def load_pages(content: Path = CONTENT) -> list[dict]:
+    """Every documentation page in order, with its rendered sections."""
+    content = Path(content)
+    pages = []
+    for pf in content.rglob("_page.md"):
+        d = pf.parent
+        slug = d.relative_to(content).as_posix()
+        meta, _ = _front(pf.read_text(encoding="utf-8"))
+        root = "../" * (len(slug.split("/")) + 1)         # from docs/<slug>/ to the home page
+        secs = []
+        for f in sorted(d.glob("*.md")):
+            if f.name.startswith("_"):
+                continue
+            smeta, body = _front(f.read_text(encoding="utf-8"))
+            secs.append(_render_section(smeta, body, root))
+        pages.append({"slug": slug, "title": meta["title"], "label": meta.get("label", meta["title"]),
+                      "group": meta.get("group", meta["title"]), "lead": meta.get("lead", ""), "order": int(meta.get("order", 99)),
+                      "sections": secs, "nav": [n for sec in secs for n in sec["nav"]]})
+    pages.sort(key=lambda p: p["order"])
+    ids = re.findall(r'\sid="([^"]+)"', "".join(sec["html"] for p in pages for sec in p["sections"]))
     dup = sorted({i for i in ids if ids.count(i) > 1})
     if dup:
         raise ValueError(f"duplicate anchors in the documentation: {', '.join(dup)}")
-    return ('<div class="docs-layout"><details class="doc-toc-wrap" id="docToc"><summary>Оглавление</summary>'
-            f'<nav class="doc-toc" aria-label="Оглавление документации"><ol>{"".join(toc)}</ol></nav></details>'
-            f'<div class="docs-content">{"".join(pages)}</div></div>')
+    return pages
+
+
+def link_targets(pages: list[dict]) -> dict[str, str]:
+    """Anchor id -> the page that holds it."""
+    return {i: p["slug"] for p in pages for sec in p["sections"] for i in re.findall(r'\sid="([^"]+)"', sec["html"])}
+
+
+LEGACY_IDS = {"docs-run": "start"}   # anchors of the one-page documentation that no longer exist as elements
+
+
+def _rel(frm: str, to: str) -> str:
+    """Relative address of page `to` as seen from page `frm` (both are slugs under docs/)."""
+    r = posixpath.relpath(to, start=frm)
+    return "./" if r == "." else r + "/"
+
+
+def _tree(pages: list[dict], cur: int) -> str:
+    items, last = [], None
+    cs = pages[cur]["slug"]
+    for i, p in enumerate(pages):
+        multi = sum(q["group"] == p["group"] for q in pages) > 1
+        if multi and p["group"] != last:
+            items.append(f'<li class="grp">{html.escape(p["group"])}</li>')
+        last = p["group"]
+        href = _rel(cs, p["slug"])
+        if i == cur:
+            subs = "".join(f'<li><a href="#{sid}" data-spy="{sid}">{html.escape(t)}</a></li>' for sid, t in p["nav"])
+            items.append(f'<li class="current"><a href="{href}" aria-current="page">{html.escape(p["label"])}</a><ul>{subs}</ul></li>')
+        else:
+            items.append(f'<li><a href="{href}">{html.escape(p["label"])}</a></li>')
+    return f'<ul class="tree">{"".join(items)}</ul>'
+
+
+def render_page(pages: list[dict], cur: int, version: str, index_html: str, targets: dict[str, str]) -> str:
+    """One standalone documentation page: the style of the home page, the navigation and the sections."""
+    p = pages[cur]
+    here = {i for sec in p["sections"] for i in re.findall(r'\sid="([^"]+)"', sec["html"])}
+    body = "".join(sec["html"] for sec in p["sections"])
+    cs = p["slug"]
+    body = re.sub(r'href="#([^"]+)"', lambda m: m.group(0) if m.group(1) in here or m.group(1) not in targets
+                  else f'href="{_rel(cs, targets[m.group(1)])}#{m.group(1)}"', body)
+    up = "../" * (len(cs.split("/")) + 1)                    # to the home page
+    docs_up = "../" * len(cs.split("/"))                     # to docs/
+    groups = []
+    for q in pages:
+        if q["group"] not in [g[0] for g in groups]:
+            groups.append((q["group"], q["slug"]))
+    links = "\n".join(re.findall(r"<link [^>]*>", index_html))
+    style = re.search(r"<style>.*?</style>", index_html, re.S).group(0)
+    top = "".join(f'<a href="{docs_up}{slug}/"{" aria-current=\"page\"" if g == p["group"] else ""}>{html.escape(g)}</a>' for g, slug in groups)
+    prev = (f'<a rel="prev" href="{_rel(cs, pages[cur - 1]["slug"])}"><small>Назад</small> {html.escape(pages[cur - 1]["title"])}</a>' if cur > 0
+            else f'<a rel="prev" href="{up}"><small>Назад</small> На главную</a>')
+    nxt = (f'<a rel="next" href="{_rel(cs, pages[cur + 1]["slug"])}"><small>Дальше</small> {html.escape(pages[cur + 1]["title"])}</a>' if cur + 1 < len(pages)
+           else f'<a rel="next" href="{up}"><small>Дальше</small> На главную</a>')
+    first = groups[0][1]
+    gfirst = next(slug for g, slug in groups if g == p["group"])
+    crumbs = f'<li><a href="{_rel(cs, first)}">Документация</a></li>'
+    if p["group"] != p["label"]:
+        crumbs += f'<li><a href="{_rel(cs, gfirst)}">{html.escape(p["group"])}</a></li>'
+    crumbs += f'<li><a href="./">{html.escape(p["label"])}</a></li>'
+    aside = "".join(f'<li><a href="#{sid}" data-spy="{sid}">{html.escape(t)}</a></li>' for sid, t in p["nav"])
+    tree = _tree(pages, cur)
+    return f"""<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{html.escape(p["title"])} · Документация · Арена гипотез</title>
+<meta name="description" content="{html.escape(p["lead"])}">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{html.escape(p["title"])} · Документация · Арена гипотез о старении">
+<meta property="og:description" content="{html.escape(p["lead"])}">
+<meta property="og:url" content="https://danrd.github.io/hyp-arena/site/{PAGE_BASE}/{p["slug"]}/">
+<meta property="og:locale" content="ru_RU">
+<meta name="twitter:card" content="summary">
+<meta name="hyparena-version" content="{version}">
+{links}
+{style}
+<style>{DOCS_CSS}</style>
+</head>
+<body>
+<a class="skip" href="#docMain">К содержанию</a>
+<header class="top" id="topbar">
+  <div class="wrap">
+    <a class="brand" href="{up}">Арена гипотез</a>
+    <nav class="sections" aria-label="Документация">
+      <a href="{up}">На главную</a>{top}<a href="https://github.com/danrd/hyp-arena" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
+  </div>
+</header>
+<div class="docbar" id="docBar">
+  <button type="button" id="docBarBtn" aria-expanded="false" aria-controls="docDrawer"><span class="docbar-t" id="docBarTitle">{html.escape(p["title"])}</span><span aria-hidden="true">▾</span></button>
+</div>
+<div class="scrim" id="docScrim" hidden></div>
+<div class="drawer" id="docDrawer" role="dialog" aria-modal="true" aria-label="Навигация по документации" hidden>
+  <button type="button" class="drawer-close" id="docClose">Закрыть</button>
+  <nav aria-label="Разделы документации">{tree}</nav>
+</div>
+<main class="wrap docs-wrap" id="top">
+  <div class="docs-shell">
+    <aside class="doc-side" id="docSide" aria-label="Разделы документации"><nav>{tree}</nav></aside>
+    <div class="doc-main" id="docMain" tabindex="-1">
+      <nav class="crumbs" aria-label="Хлебные крошки"><ol>
+        {crumbs}<li id="crumbCur" hidden></li>
+      </ol></nav>
+      <header class="doc-page-head"><h1>{html.escape(p["title"])}</h1><p class="lead">{html.escape(p["lead"])}</p></header>
+      <div class="docs-content">{body}</div>
+      <nav class="pager" aria-label="Соседние страницы">{prev}{nxt}</nav>
+    </div>
+    <aside class="doc-aside" id="docAside" aria-labelledby="asideH"><h2 id="asideH">На этой странице</h2><ol>{aside}</ol></aside>
+  </div>
+</main>
+<footer>
+  <div class="wrap foot">
+    <p><b>hyp-arena</b> · исследовательский прототип; рейтинги — результат исследования, а не медицинская рекомендация.</p>
+    <dl class="footmeta"><div><dt>Версия кода</dt><dd>v{version}</dd></div><div><dt>Лицензия</dt><dd>MIT</dd></div></dl>
+    <p class="footlinks"><a href="{up}">На главную</a> · <a href="https://github.com/danrd/hyp-arena" target="_blank" rel="noopener">GitHub</a></p>
+  </div>
+</footer>
+<button type="button" class="totop" id="toTop" hidden aria-label="Наверх">↑</button>
+<script>{DOCS_SCRIPT}</script>
+</body>
+</html>
+"""
+
+
+def redirect_page(pages: list[dict], targets: dict[str, str]) -> str:
+    """docs/index.html of the one-page documentation: sends the old address and its anchors to the right page."""
+    mapping = {**targets, **LEGACY_IDS}
+    first = pages[0]["slug"]
+    return f"""<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Документация · Арена гипотез</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<noscript><meta http-equiv="refresh" content="0; url={first}/"></noscript>
+<script>
+(() => {{
+  const map = {json.dumps(mapping, ensure_ascii=False)};
+  const legacy = {json.dumps(list(LEGACY_IDS))};
+  const h = decodeURIComponent(location.hash.slice(1));
+  const slug = map[h] || "{first}";
+  location.replace(slug + "/" + (h && map[h] && !legacy.includes(h) ? "#" + h : ""));
+}})();
+</script></head>
+<body><p><a href="{first}/">Документация</a></p></body></html>
+"""
 
 
 def code_version() -> str:
@@ -276,98 +447,176 @@ def code_version() -> str:
     return tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
 
 
-DOCS_SCRIPT = """
+DOCS_CSS = r"""
+.skip { position: absolute; left: -999px; top: 0; background: var(--accent); color: var(--accent-ink); padding: 8px 12px; z-index: 30; }
+.skip:focus { left: 8px; top: 8px; }
+nav.sections a[aria-current="page"] { color: var(--accent); font-weight: 600; border-bottom-color: var(--accent); }
+.docs-wrap { max-width: 1240px; padding-block: 18px 40px; }
+.docs-shell { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 36px; align-items: start; }
+.doc-aside { display: none; }
+@media (min-width: 1200px) { .docs-shell { grid-template-columns: 250px minmax(0, 1fr) 210px; } .doc-aside { display: block; } }
+.doc-side, .doc-aside { position: sticky; top: calc(var(--hdr, 52px) + 16px); max-height: calc(100vh - var(--hdr, 52px) - 32px); overflow-y: auto; font-size: var(--step--1); overscroll-behavior: contain; scrollbar-width: thin; }
+.doc-aside h2 { font-family: var(--body); font-size: var(--step--1); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0 0 8px; }
+.doc-aside ol { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--line); display: grid; gap: 2px; }
+.doc-aside a, .tree a { color: var(--muted); text-decoration: none; display: block; padding: 4px 10px; border-radius: 4px; }
+.doc-aside a { border-left: 2px solid transparent; margin-left: -1px; border-radius: 0; }
+.doc-aside a:hover, .tree a:hover { color: var(--ink); }
+.doc-aside a[aria-current], .tree ul a[aria-current] { color: var(--accent); font-weight: 600; }
+.doc-aside a[aria-current] { border-left-color: var(--accent); }
+.tree, .tree ul { list-style: none; margin: 0; padding: 0; }
+.tree .grp { text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.72rem; color: var(--muted); padding: 14px 10px 4px; }
+.tree > li > a { color: var(--ink); font-weight: 600; padding: 6px 10px; }
+.tree > li.current > a { background: var(--accent-soft); color: var(--accent); }
+.tree ul { margin: 2px 0 8px 10px; border-left: 1px solid var(--line); }
+.tree ul a[aria-current] { background: var(--accent-soft); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.doc-main { min-width: 0; max-width: 80ch; outline: none; }
+.crumbs ol { list-style: none; margin: 0 0 6px; padding: 0; display: flex; flex-wrap: wrap; gap: 4px; font-size: var(--step--1); color: var(--muted); }
+.crumbs li + li::before { content: "›"; margin-right: 4px; }
+.crumbs a { color: var(--muted); }
+.doc-page-head { padding: 4px 0 20px; display: grid; gap: 6px; }
+.doc-page-head h1 { font-size: var(--step-3); }
+.doc-page-head .lead { color: var(--muted); margin: 0; }
+.docs-content { display: grid; gap: 48px; min-width: 0; }
+.docs-content .doc.flat { display: grid; gap: 14px; }
+article.doc { display: grid; gap: 14px; min-width: 0; }
+article.doc, .doc.flat h2[data-sec], article.doc h3 { scroll-margin-top: calc(var(--hdr, 52px) + var(--bar, 0px) + 14px); }
+.doc-head h2, .doc.flat h2 { font-size: var(--step-2); margin: 0; }
+.doc.flat h2 { margin-top: 18px; }
+.doc .lead { color: var(--muted); font-size: var(--step-0); margin: 6px 0 0; }
+article.doc h3 { font-family: var(--display); font-size: var(--step-1); font-weight: 600; margin: 14px 0 -4px; }
+.doc .anchor { color: var(--line); text-decoration: none; margin-left: 4px; font-family: var(--body); font-weight: 400; font-size: 0.8em; }
+.doc :is(h2, h3):hover .anchor, .doc .anchor:focus { color: var(--accent); }
+.doc p { margin: 0; }
+.doc ul, .doc ol { margin: 0; padding-left: 1.3em; display: grid; gap: 4px; }
+.doc code { background: var(--idle-soft); padding: 0 4px; border-radius: 3px; }
+.doc .tablewrap { border: 1px solid var(--line); border-radius: 6px; overflow-x: auto; }
+table.doctable { border-collapse: collapse; width: 100%; font-size: var(--step--1); }
+table.doctable th { text-align: left; font-weight: 600; background: var(--paper); color: var(--muted); }
+table.doctable th, table.doctable td { padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.doctable tr:last-child td { border-bottom: 0; }
+.codewrap { position: relative; }
+.doc pre { margin: 0; padding: 40px 14px 12px; background: var(--paper); border: 1px solid var(--line); border-radius: 5px; overflow-x: auto; font-family: var(--mono); font-size: var(--step--1); scrollbar-width: thin; }
+.doc pre code { background: none; padding: 0; }
+.codewrap .copy { position: absolute; top: 6px; right: 6px; font-size: 0.72rem; padding: 3px 9px; }
+.pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); }
+.pager a { display: grid; gap: 2px; text-decoration: none; color: var(--ink); font-weight: 600; padding: 10px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); min-width: 0; }
+.pager a[rel="next"] { text-align: right; margin-left: auto; }
+.pager a:hover { border-color: var(--accent); }
+.pager small { color: var(--muted); font-weight: 400; }
+.docbar, .drawer, .scrim { display: none; }
+.totop { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: max(16px, env(safe-area-inset-bottom, 0px)); width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 1.2rem; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.18); z-index: 12; }
+.totop[hidden] { display: none; }
+@media (max-width: 900px) {
+  .docs-shell { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .doc-side { display: none; }
+  .docbar { display: block; position: sticky; top: var(--hdr, 52px); z-index: 8; background: var(--surface); border-bottom: 1px solid var(--line); }
+  .docbar button { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 11px max(16px, env(safe-area-inset-left, 0px)); border: 0; border-radius: 0; background: transparent; font-weight: 600; text-align: left; }
+  .docbar-t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .docbar button[aria-expanded="true"] span[aria-hidden] { transform: rotate(180deg); }
+  .scrim:not([hidden]) { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 20; }
+  .drawer:not([hidden]) { display: block; position: fixed; z-index: 21; left: 0; right: 0; top: calc(var(--hdr, 52px) + var(--bar, 0px)); max-height: calc(100vh - var(--hdr, 52px) - var(--bar, 0px) - 24px); overflow-y: auto; background: var(--surface); border-bottom: 1px solid var(--line); box-shadow: 0 8px 24px rgba(0,0,0,0.25); padding: 8px max(16px, env(safe-area-inset-left, 0px)) 16px; }
+  .drawer-close { margin: 4px 0 8px auto; display: block; font-size: var(--step--1); }
+  .tree a { padding: 9px 10px; }
+  .doc pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .doc-page-head h1 { font-size: var(--step-2); }
+  .pager { flex-direction: column; }
+  .pager a[rel="next"] { text-align: left; margin-left: 0; }
+}
+"""
+
+DOCS_SCRIPT = r"""
 (() => {
-  const toc = document.getElementById("docToc");
-  const wide = matchMedia("(min-width: 901px)");
-  const setOpen = () => { toc.open = wide.matches; };
-  setOpen(); wide.addEventListener?.("change", setOpen);
-  toc.addEventListener("click", e => { if (e.target.closest("a") && !wide.matches) toc.open = false; });
-  const links = new Map([...toc.querySelectorAll("a[href^='#']")].map(a => [a.getAttribute("href").slice(1), a]));
-  const targets = [...document.querySelectorAll("article.doc, article.doc h4[id]")];
-  const mark = id => links.forEach((a, k) => k === id ? a.setAttribute("aria-current", "true") : a.removeAttribute("aria-current"));
-  if ("IntersectionObserver" in window) {
-    const seen = new Set();
-    const io = new IntersectionObserver(es => {
-      es.forEach(en => en.isIntersecting ? seen.add(en.target) : seen.delete(en.target));
-      const first = targets.find(t => seen.has(t) && t.tagName === "H4") || targets.find(t => seen.has(t));
-      mark(first ? first.id : null);
-    }, {rootMargin: "-70px 0px -65% 0px"});
-    targets.forEach(t => io.observe(t));
-  }
-  document.querySelectorAll("article.doc pre").forEach(pre => {
+  const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+  const top = $("#topbar"), bar = $("#docBar");
+  const setVars = () => {
+    document.documentElement.style.setProperty("--hdr", top.offsetHeight + "px");
+    document.documentElement.style.setProperty("--bar", (getComputedStyle(bar).display === "none" ? 0 : bar.offsetHeight) + "px");
+  };
+  setVars(); addEventListener("resize", setVars);
+
+  /* the section in view: the last section heading above the reading line */
+  const secs = $$("[data-sec]");
+  const links = $$("[data-spy]");
+  const crumb = $("#crumbCur"), barTitle = $("#docBarTitle"), pageTitle = barTitle.textContent;
+  const titleOf = el => (el.querySelector("h2") || el).firstChild.textContent.trim();
+  let active = null;
+  const reveal = (a) => {                     // keep the active item visible inside a scrolling panel
+    const box = a.closest(".doc-side, .doc-aside"); if (!box || box.offsetParent === null) return;
+    const r = a.getBoundingClientRect(), b = box.getBoundingClientRect();
+    if (r.top < b.top + 8) box.scrollTop -= b.top + 8 - r.top; else if (r.bottom > b.bottom - 8) box.scrollTop += r.bottom - b.bottom + 8;
+  };
+  const spy = () => {
+    const line = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--hdr")) + (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--bar")) || 0) + 40;
+    let cur = null;
+    for (const s of secs) { if (s.getBoundingClientRect().top <= line) cur = s; else break; }
+    if (cur === active) return; active = cur;
+    links.forEach(a => { const on = cur && a.dataset.spy === cur.id; if (on) { a.setAttribute("aria-current", "location"); reveal(a); } else a.removeAttribute("aria-current"); });
+    const t = cur ? titleOf(cur) : "";
+    crumb.hidden = !t; crumb.textContent = t;
+    barTitle.textContent = t || pageTitle;
+  };
+  let tick = false;
+  addEventListener("scroll", () => { if (!tick) { tick = true; requestAnimationFrame(() => { tick = false; spy(); toggleTop(); }); } }, {passive: true});
+  addEventListener("hashchange", () => setTimeout(spy, 60));
+
+  /* mobile drawer */
+  const btn = $("#docBarBtn"), drawer = $("#docDrawer"), scrim = $("#docScrim");
+  const open = () => { drawer.hidden = false; scrim.hidden = false; btn.setAttribute("aria-expanded", "true"); (drawer.querySelector("a[aria-current]") || drawer.querySelector("a") || drawer).focus(); };
+  const close = (back = true) => { drawer.hidden = true; scrim.hidden = true; btn.setAttribute("aria-expanded", "false"); if (back) btn.focus(); };
+  btn.addEventListener("click", () => drawer.hidden ? open() : close());
+  scrim.addEventListener("click", () => close());
+  $("#docClose").addEventListener("click", () => close());
+  drawer.addEventListener("click", e => { if (e.target.closest("a")) close(false); });
+  document.addEventListener("keydown", e => {
+    if (drawer.hidden) return;
+    if (e.key === "Escape") { e.preventDefault(); close(); return; }
+    if (e.key === "Tab") {                    // keep focus inside the open panel
+      const f = [...drawer.querySelectorAll("a, button")]; if (!f.length) return;
+      const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  });
+  matchMedia("(min-width: 901px)").addEventListener?.("change", e => { if (e.matches) close(false); });
+
+  /* back to top after a couple of screens */
+  const totop = $("#toTop");
+  const toggleTop = () => { totop.hidden = scrollY < innerHeight * 2; };
+  totop.addEventListener("click", () => { scrollTo({top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"}); });
+
+  /* copy buttons on command blocks */
+  $$(".doc pre").forEach(pre => {
     const wrap = document.createElement("div"); wrap.className = "codewrap";
     pre.replaceWith(wrap); wrap.appendChild(pre);
-    const btn = document.createElement("button"); btn.type = "button"; btn.className = "copy"; btn.textContent = "Копировать";
-    btn.addEventListener("click", () => {
-      const done = ok => { btn.textContent = ok ? "Скопировано" : "Выделите вручную"; setTimeout(() => { btn.textContent = "Копировать"; }, 1800); };
+    const b = document.createElement("button"); b.type = "button"; b.className = "copy"; b.textContent = "Копировать";
+    b.addEventListener("click", () => {
+      const done = ok => { b.textContent = ok ? "Скопировано" : "Выделите вручную"; setTimeout(() => { b.textContent = "Копировать"; }, 1800); };
       try { navigator.clipboard.writeText(pre.textContent).then(() => done(true), () => done(false)); } catch { done(false); }
     });
-    wrap.appendChild(btn);
+    wrap.appendChild(b);
   });
+  spy(); toggleTop();
 })();
 """
 
 
-def docs_page(index_html: str, docs: str, version: str) -> str:
-    """The standalone documentation page: the style sheet and fonts of the home page, the pages of `content/`."""
-    links = "\n".join(re.findall(r"<link [^>]*>", index_html))
-    style = re.search(r"<style>.*?</style>", index_html, re.S).group(0)
-    return f"""<!doctype html>
-<html lang="ru">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Документация · Арена гипотез</title>
-<meta name="description" content="Карточка гипотезы, статусы и правила проверки, показатели, профили и АСПИД, данные, примеры, запуск и границы применимости.">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Документация · Арена гипотез о старении">
-<meta property="og:description" content="Как гипотеза превращается в карточку, как проверяются утверждения и как считается рейтинг.">
-<meta property="og:url" content="https://danrd.github.io/hyp-arena/site/docs/">
-<meta property="og:locale" content="ru_RU">
-<meta name="twitter:card" content="summary">
-<meta name="hyparena-version" content="{version}">
-{links}
-{style}
-</head>
-<body>
-<header class="top">
-  <div class="wrap">
-    <a class="brand" href="../">Арена гипотез</a>
-    <nav class="sections" aria-label="Разделы">
-      <a href="../">На главную</a><a href="https://github.com/danrd/hyp-arena" target="_blank" rel="noopener">GitHub ↗</a>
-    </nav>
-  </div>
-</header>
-<main class="wrap" id="top">
-  <div class="doc-page-head"><p class="eyebrow">hyp-arena</p><h1>Документация</h1>
-    <p class="muted"><a href="../">На главную</a></p></div>
-  <section class="block" id="docs">{docs}</section>
-</main>
-<footer>
-  <div class="wrap foot">
-    <p><b>hyp-arena</b> · исследовательский прототип; рейтинги — результат исследования, а не медицинская рекомендация.</p>
-    <dl class="footmeta"><div><dt>Версия кода</dt><dd>v{version}</dd></div><div><dt>Лицензия</dt><dd>MIT</dd></div></dl>
-    <p class="footlinks"><a href="../">На главную</a> · <a href="https://github.com/danrd/hyp-arena" target="_blank" rel="noopener">GitHub</a></p>
-  </div>
-</footer>
-<script>{DOCS_SCRIPT}</script>
-</body>
-</html>
-"""
-
-
 def build(page: Path = PAGE, content: Path = CONTENT, out: Path | None = None) -> None:
-    """Render docs/site/content/*.md into the standalone documentation page and stamp the code version on both pages."""
-    out = out or page.parent / "docs" / "index.html"
+    """Render docs/site/content/<page>/*.md into docs/site/docs/<page>/index.html, the redirect at docs/index.html,
+    and stamp the code version on the home page."""
+    out = out or page.parent / PAGE_BASE
     s = page.read_text(encoding="utf-8")
     version = code_version()
     s, n = re.subn(r'(<meta name="hyparena-version" content=")[^"]*(")', lambda m: m.group(1) + version + m.group(2), s, count=1)
     if n != 1:
         raise ValueError('the page has no <meta name="hyparena-version"> tag')
     page.write_text(s, encoding="utf-8")
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(docs_page(s, render_docs(content), version), encoding="utf-8")
+    pages = load_pages(content)
+    targets = link_targets(pages)
+    for i, p in enumerate(pages):
+        (out / p["slug"]).mkdir(parents=True, exist_ok=True)
+        (out / p["slug"] / "index.html").write_text(render_page(pages, i, version, s, targets), encoding="utf-8")
+    (out / "index.html").write_text(redirect_page(pages, targets), encoding="utf-8")
 
 
 def main() -> None:
@@ -384,7 +633,7 @@ def main() -> None:
     m = sub.add_parser("embed")
     m.add_argument("--bundle", required=True)
     m.add_argument("--key", default="sample", choices=["sample", "examples"])
-    sub.add_parser("build", help="render docs/site/content/*.md into docs/site/docs/index.html")
+    sub.add_parser("build", help="render docs/site/content/<page>/*.md into docs/site/docs/<page>/index.html")
     a = ap.parse_args()
     if a.cmd == "export":
         Path(a.out).parent.mkdir(parents=True, exist_ok=True)

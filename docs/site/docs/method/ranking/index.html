@@ -1,0 +1,681 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Как это работает: показатели и рейтинг · Документация · Арена гипотез</title>
+<meta name="description" content="Какие свойства гипотезы считаются, как порядок важности даёт рейтинг и где проходят границы метода.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Как это работает: показатели и рейтинг · Документация · Арена гипотез о старении">
+<meta property="og:description" content="Какие свойства гипотезы считаются, как порядок важности даёт рейтинг и где проходят границы метода.">
+<meta property="og:url" content="https://danrd.github.io/hyp-arena/site/docs/method/ranking/">
+<meta property="og:locale" content="ru_RU">
+<meta name="twitter:card" content="summary">
+<meta name="hyparena-version" content="0.1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a lab notebook — narrow reading column for prose, a wide instrument panel for the ranking and the card. */
+:root {
+  --paper: #f4f6f3; --surface: #ffffff; --ink: #15201c; --muted: #5a6964; --line: #d9dfdb;
+  --accent: #12695a; --accent-soft: #dcede7; --accent-ink: #ffffff; --mid: #e3e8e5; --strong-ink: #ffffff;
+  --ok: #2c7a4c; --bad: #b0402c; --warn: #a8740f; --idle: #7a8682; --ok-soft: #e1f0e6; --bad-soft: #f6e2dd; --warn-soft: #f5ead2; --idle-soft: #eaedeb;
+  --display: "Literata", Georgia, "Times New Roman", serif;
+  --body: "Onest", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --step--1: 0.8125rem; --step-0: 0.9375rem; --step-1: 1.125rem; --step-2: 1.5rem; --step-3: 2.25rem;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #0f1514; --surface: #162020; --ink: #e4ebe8; --muted: #98a6a1; --line: #2a3633;
+  --accent: #4db6a2; --accent-soft: #1b3430; --accent-ink: #0f1514; --mid: #34413e; --strong-ink: #0f1514;
+  --ok: #5dbd84; --bad: #e07a62; --warn: #d8a43f; --idle: #8b9893; --ok-soft: #173126; --bad-soft: #3a211b; --warn-soft: #362a12; --idle-soft: #212b29;
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #0f1514; --surface: #162020; --ink: #e4ebe8; --muted: #98a6a1; --line: #2a3633;
+  --accent: #4db6a2; --accent-soft: #1b3430; --accent-ink: #0f1514; --mid: #34413e; --strong-ink: #0f1514;
+  --ok: #5dbd84; --bad: #e07a62; --warn: #d8a43f; --idle: #8b9893; --ok-soft: #173126; --bad-soft: #3a211b; --warn-soft: #362a12; --idle-soft: #212b29;
+  color-scheme: dark }
+
+* { box-sizing: border-box; }
+html { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: var(--step-0); line-height: 1.55; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+a { color: var(--accent); }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; text-wrap: balance; line-height: 1.2; margin: 0; }
+h2 { font-size: var(--step-2); }
+h3 { font-size: var(--step-1); }
+p { margin: 0; }
+.mono, code { font-family: var(--mono); font-size: 0.86em; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.prose { max-width: 66ch; }
+.muted { color: var(--muted); }
+.eyebrow { font-size: var(--step--1); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* header */
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; background: var(--surface); border-bottom: 1px solid var(--line); }
+header.top .wrap { display: flex; align-items: center; justify-content: center; gap: 8px 24px; padding-block: 10px; flex-wrap: wrap; }
+.brand { font-family: var(--display); font-weight: 600; font-size: var(--step-1); text-decoration: none; color: var(--ink); white-space: nowrap; }
+nav.sections { display: flex; gap: 4px 16px; flex-wrap: wrap; justify-content: center; font-size: var(--step--1); }
+nav.sections a { color: var(--muted); text-decoration: none; padding: 2px 0; border-bottom: 1px solid transparent; }
+nav.sections a:hover { color: var(--ink); border-bottom-color: var(--line); }
+@media (max-width: 640px) {
+  header.top .wrap { flex-wrap: nowrap; justify-content: flex-start; gap: 14px; padding-block: 8px; }
+  .brand { font-size: var(--step-0); }
+  nav.sections { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); }
+  nav.sections::-webkit-scrollbar { display: none; }
+  nav.sections a { white-space: nowrap; }
+}
+
+/* hero */
+.hero { padding-block: 48px 28px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; justify-items: center; text-align: center; }
+.hero .pipeline { width: 100%; text-align: left; }
+.hero h1 { font-size: var(--step-3); max-width: 24ch; }
+.hero .lead { font-size: var(--step-1); max-width: 60ch; color: var(--muted); }
+.pipeline { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 6px; background: var(--surface); overflow: hidden; }
+.pipeline li { list-style: none; padding: 12px 14px; border-left: 1px solid var(--line); min-width: 0; }
+.pipeline li:first-child { border-left: 0; }
+.pipeline b { display: block; font-weight: 600; }
+.pipeline span { font-size: var(--step--1); color: var(--muted); }
+.pipeline .n { font-family: var(--mono); font-size: var(--step--1); color: var(--accent); }
+ol.pipeline { margin: 0; padding: 0; }
+@media (max-width: 760px) { .pipeline { grid-template-columns: minmax(0, 1fr); } .pipeline li { border-left: 0; border-top: 1px solid var(--line); } .pipeline li:first-child { border-top: 0; } }
+
+section.block { padding-block: 36px; border-top: 1px solid var(--line); display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+.head { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; }
+.head .prose { display: grid; gap: 6px; justify-items: center; min-width: 0; }
+.head > * { min-width: 0; }
+.tabs button { flex: 1 1 auto; }
+
+/* data bar */
+.databar { justify-content: center; display: flex; gap: 10px 16px; align-items: center; flex-wrap: wrap; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; font-size: var(--step--1); }
+.databar .name { font-weight: 600; font-size: var(--step-0); }
+.badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: var(--step--1); font-weight: 500; white-space: nowrap; }
+.badge.example { background: var(--warn-soft); color: var(--warn); }
+.databar .spacer { flex: 0 0 8px; }
+button, .btn { font: inherit; font-size: var(--step--1); border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 6px 12px; border-radius: 5px; cursor: pointer; }
+button:hover, .btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+input[type=file] { display: none; }
+.drop { outline: 2px dashed var(--accent); outline-offset: 4px; }
+.err { color: var(--bad); }
+
+/* tabs */
+.tabs { display: flex; gap: 0; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; width: fit-content; max-width: 100%; flex-wrap: wrap; background: var(--surface); }
+.tabs button { border: 0; border-radius: 0; border-left: 1px solid var(--line); padding: 8px 14px; background: transparent; }
+.tabs button:first-child { border-left: 0; }
+.tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+.tabs button small { display: block; font-family: var(--mono); font-size: 0.72rem; opacity: 0.75; }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+.panel-note { padding: 12px 16px; border-bottom: 1px solid var(--line); font-size: var(--step--1); color: var(--muted); display: grid; gap: 4px; }
+.scroll { overflow-x: auto; }
+table.rank { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+table.rank th { text-align: left; font-weight: 500; font-size: var(--step--1); color: var(--muted); padding: 8px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+table.rank td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+table.rank tr:last-child td { border-bottom: 0; }
+table.rank tbody tr { cursor: pointer; }
+table.rank tbody tr:hover td { background: var(--accent-soft); }
+table.rank tr.sep td { background: var(--paper); color: var(--muted); font-size: var(--step--1); cursor: default; padding-block: 6px; }
+table.rank tr.off td { color: var(--muted); }
+.pos { font-family: var(--mono); color: var(--muted); width: 2.5em; }
+.htitle { min-width: 16ch; }
+.htitle .id { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); margin-right: 6px; }
+.num { font-family: var(--mono); text-align: right; white-space: nowrap; }
+.bar { position: relative; height: 14px; min-width: 160px; }
+.bar .track { position: absolute; inset: 6px 0 auto; height: 2px; background: var(--line); }
+.bar .range { position: absolute; top: 3px; height: 8px; background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 2px; }
+.bar .dot { position: absolute; top: 2px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: var(--accent); }
+.bar .fill { position: absolute; top: 3px; height: 8px; background: var(--accent); border-radius: 2px; }
+.bar .zero { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--muted); }
+
+.pill { display: inline-block; padding: 1px 8px; border-radius: 4px; font-size: var(--step--1); font-weight: 500; white-space: nowrap; }
+.st-supported { background: var(--ok-soft); color: var(--ok); }
+.st-refuted { background: var(--bad-soft); color: var(--bad); }
+.st-contested { background: var(--warn-soft); color: var(--warn); }
+.st-unverified, .st-unresolved, .st-open { background: var(--idle-soft); color: var(--idle); }
+.oc-ranked { background: var(--accent-soft); color: var(--accent); }
+.oc-filtered { background: var(--bad-soft); color: var(--bad); }
+.oc-known_result { background: var(--ok-soft); color: var(--ok); }
+.oc-other { background: var(--idle-soft); color: var(--idle); }
+
+/* heatmap and slope chart */
+.twocol { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+@media (max-width: 880px) { .twocol { grid-template-columns: minmax(0, 1fr); } }
+.figure { padding: 14px 16px; display: grid; gap: 10px; align-content: start; }
+.figure svg text { fill: var(--ink); font-family: var(--mono); font-size: 11px; }
+.figure svg .mutedtext { fill: var(--muted); }
+table.heat { border-collapse: separate; border-spacing: 2px; font-family: var(--mono); font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+table.heat th { font-weight: 500; color: var(--muted); padding: 2px 6px; white-space: nowrap; }
+table.heat thead th { text-align: center; }
+table.heat tbody th { text-align: right; }
+table.heat td { min-width: 36px; height: 30px; text-align: center; border-radius: 3px; color: var(--ink); }
+table.heat td.self { background: repeating-linear-gradient(135deg, var(--line) 0 2px, transparent 2px 6px); color: var(--muted); }
+.heat-note { font-size: var(--step--1); color: var(--muted); }
+.heat-key { font-size: var(--step--1); }
+.heat-key summary { cursor: pointer; color: var(--accent); }
+.heat-key ol { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
+.heat-key .mono { display: inline-block; min-width: 2.2em; color: var(--muted); }
+.scale { display: grid; gap: 4px; max-width: 360px; font-size: var(--step--1); color: var(--muted); }
+.scale .bar { height: 10px; min-width: 0; border-radius: 3px; background: linear-gradient(90deg, var(--bad), var(--mid) 50%, var(--accent)); }
+.scale .ticks { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+.scale .ticks span:nth-child(2) { text-align: center; }
+.scale .ticks span:nth-child(3) { text-align: right; }
+
+/* card */
+.cardgrid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 880px) { .cardgrid { grid-template-columns: minmax(0, 1fr); } }
+.cardhead { padding: 16px; display: grid; gap: 10px; border-bottom: 1px solid var(--line); }
+.cardhead h3 { font-size: var(--step-2); }
+.cardhead .plain { font-family: var(--display); font-size: var(--step-1); }
+select { font: inherit; font-size: var(--step--1); padding: 6px 8px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface); color: var(--ink); width: 100%; max-width: 42ch; min-width: 0; }
+dl.pico { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 14px; margin: 0; padding: 14px 16px; border-bottom: 1px solid var(--line); font-size: var(--step--1); }
+dl.pico dt { color: var(--muted); }
+dl.pico dd { margin: 0; }
+.claims { display: grid; }
+details.claim { border-bottom: 1px solid var(--line); }
+details.claim:last-child { border-bottom: 0; }
+details.claim > summary { list-style: none; cursor: pointer; padding: 12px 16px; display: grid; grid-template-columns: 3.2em minmax(0, 1fr) auto; gap: 4px 12px; align-items: start; }
+details.claim > summary::-webkit-details-marker { display: none; }
+details.claim[open] > summary { background: var(--paper); }
+.cid { font-family: var(--mono); font-size: var(--step--1); color: var(--muted); padding-top: 2px; }
+.triple { display: grid; gap: 4px; min-width: 0; }
+.triple .t { overflow-wrap: anywhere; }
+.rel { font-family: var(--mono); font-size: 0.8rem; color: var(--accent); padding: 0 4px; }
+.role { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.quals { display: flex; gap: 4px 6px; flex-wrap: wrap; font-size: 0.78rem; }
+.qual { padding: 0 6px; border-radius: 3px; background: var(--idle-soft); color: var(--ink); }
+.qual.inh { background: transparent; border: 1px dashed var(--idle); color: var(--muted); }
+.rungs { display: flex; gap: 4px; flex-wrap: wrap; justify-content: end; }
+.claimbody { padding: 4px 16px 16px 16px; display: grid; gap: 12px; }
+.recs { display: grid; gap: 8px; }
+.recs h4 { margin: 0; font-size: var(--step--1); font-weight: 600; }
+.rec { border-left: 3px solid var(--line); padding: 4px 0 4px 10px; display: grid; gap: 3px; font-size: var(--step--1); }
+.rec.for { border-left-color: var(--ok); }
+.rec.against { border-left-color: var(--bad); }
+.rec.refusal { border-left-color: var(--idle); }
+.rec q { font-family: var(--display); font-size: var(--step-0); quotes: "«" "»"; }
+.rec .meta { color: var(--muted); display: flex; gap: 4px 10px; flex-wrap: wrap; }
+.flags { display: flex; gap: 4px; flex-wrap: wrap; }
+.flag { font-family: var(--mono); font-size: 0.72rem; padding: 0 5px; border-radius: 3px; background: var(--warn-soft); color: var(--warn); }
+
+.side { display: grid; gap: 18px; }
+.side .panel > h3 { padding: 12px 16px; border-bottom: 1px solid var(--line); font-size: var(--step-0); font-family: var(--body); }
+.ladder { display: grid; padding: 12px 16px; gap: 3px; }
+.ladder .step { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 5px 10px; border-radius: 4px; font-size: var(--step--1); background: var(--paper); color: var(--muted); }
+.ladder .step.on { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.ladder .step.below { background: var(--accent-soft); color: var(--ink); }
+.ladder .step.cont { box-shadow: inset 0 0 0 1px var(--warn); }
+dl.kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; margin: 0; padding: 12px 16px; font-size: var(--step--1); }
+dl.kv dt { color: var(--muted); }
+dl.kv dd { margin: 0; overflow-wrap: anywhere; }
+.levels { display: flex; gap: 3px; align-items: center; flex-wrap: wrap; }
+.levels i { width: 10px; height: 10px; border-radius: 2px; background: var(--line); display: inline-block; }
+.levels i.on { background: var(--accent); }
+.levels i.unk { background: repeating-linear-gradient(45deg, var(--line) 0 2px, transparent 2px 4px); }
+ul.alts { list-style: none; margin: 0; padding: 8px 16px 14px; display: grid; gap: 8px; font-size: var(--step--1); }
+ul.alts li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; }
+ul.alts .design { grid-column: 1 / -1; color: var(--muted); }
+
+/* out of ranking */
+.outgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.outgroup { padding: 14px 16px; display: grid; gap: 8px; align-content: start; }
+.outgroup ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: var(--step--1); }
+.outgroup li button { all: unset; cursor: pointer; color: var(--accent); }
+.outgroup li button:focus-visible { outline: 2px solid var(--accent); }
+.count { font-family: var(--mono); color: var(--muted); }
+
+/* method */
+.cols3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.box { padding: 16px; display: grid; gap: 8px; align-content: start; }
+.box ul { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
+.tiers { display: grid; gap: 0; font-size: var(--step--1); }
+.tier { display: grid; grid-template-columns: 2em minmax(0, 1fr); gap: 10px; position: relative; padding-bottom: 14px; }
+.tier:last-child { padding-bottom: 0; }
+.tier::before { content: ""; position: absolute; left: calc(1em - 1px); top: 2em; bottom: 2px; width: 2px; background: var(--line); }
+.tier:last-child::before { display: none; }
+.tier .n { width: 2em; height: 2em; border-radius: 50%; display: grid; place-items: center; font-family: var(--mono); font-weight: 600; background: var(--accent); color: var(--accent-ink); position: relative; }
+.tier.free .n { background: var(--idle-soft); color: var(--idle); }
+.tier .body { display: grid; gap: 6px; min-width: 0; padding-top: 3px; }
+.tier .label { color: var(--muted); }
+.tier .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.tiers-note { font-size: var(--step--1); color: var(--muted); }
+.chip { font-family: var(--mono); font-size: 0.75rem; padding: 1px 6px; border-radius: 3px; background: var(--accent-soft); color: var(--ink); }
+table.defs { border-collapse: collapse; width: 100%; font-size: var(--step--1); }
+table.defs td, table.defs th { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+table.defs th { color: var(--muted); font-weight: 500; }
+.big { font-family: var(--display); font-size: var(--step-3); line-height: 1; font-variant-numeric: tabular-nums; }
+.ci { font-family: var(--mono); font-size: var(--step--1); color: var(--muted); }
+ol.steps { margin: 0 auto; padding: 0; list-style: none; counter-reset: step; display: grid; gap: 16px; max-width: 760px; width: 100%; }
+ol.steps li { display: grid; gap: 8px; padding-left: 2.2em; position: relative; text-align: left; min-width: 0; counter-increment: step; }
+ol.steps li::before { content: counter(step); position: absolute; left: 0; top: 0; font-family: var(--mono); font-size: var(--step--1); color: var(--accent); line-height: 1.9; }
+ol.steps li > span { font-size: var(--step--1); }
+ol.steps li > p { margin: 0; }
+pre.cmd[data-copy] { cursor: copy; }
+pre.cmd { margin: 0; padding: 12px 14px; background: var(--paper); border: 1px solid var(--line); border-radius: 5px; overflow-x: auto; font-family: var(--mono); font-size: 0.8rem; line-height: 1.5; }
+footer { padding-block: 28px 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: var(--step--1); }
+@media (prefers-reduced-motion: no-preference) { table.rank tbody tr td { transition: background 120ms; } }
+
+/* anchors under the sticky header */
+[id] { scroll-margin-top: 74px; }
+
+/* profiles */
+.badge.draft { background: var(--idle-soft); color: var(--muted); font-weight: 500; }
+.pname { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+.pdesc { margin: 0; }
+.profile-defs { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+.profile-defs > div { display: grid; gap: 8px; align-content: start; min-width: 0; }
+.profile-intro { margin: 0; max-width: 72ch; }
+
+/* ranking table */
+tr.tie td { background: color-mix(in srgb, var(--accent-soft) 45%, transparent); }
+tr.tie td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+.pos .rng { display: block; font-size: 0.68rem; color: var(--accent); font-family: var(--body); white-space: nowrap; }
+.pos { min-width: 3.2em; }
+.table-note { padding: 10px 16px; border-top: 1px solid var(--line); font-size: var(--step--1); color: var(--muted); }
+td.stat { white-space: nowrap; }
+
+/* method */
+.msub { padding: 16px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+.msub-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.msub-head h3 { font-size: var(--step-1); }
+a.more { font-size: var(--step--1); white-space: nowrap; }
+ul.rules { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
+.aspid-def { display: grid; gap: 8px; max-width: 76ch; }
+.aspid-def p, .aspid-def ul { margin: 0; }
+.aspid-def ul { padding-left: 1.2em; display: grid; gap: 3px; }
+.tablewrap { overflow-x: auto; max-width: 100%; }
+.jsel { display: grid; gap: 4px; font-size: var(--step--1); max-width: 56ch; }
+ol.journey { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; counter-reset: j; }
+ol.journey > li { display: grid; grid-template-columns: 2em minmax(0, 1fr); gap: 12px; position: relative; padding-bottom: 18px; counter-increment: j; }
+ol.journey > li:last-child { padding-bottom: 0; }
+ol.journey > li::before { content: ""; position: absolute; left: calc(1em - 1px); top: 2.2em; bottom: 4px; width: 2px; background: var(--line); }
+ol.journey > li:last-child::before { display: none; }
+ol.journey .n { width: 2em; height: 2em; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); font-family: var(--mono); font-weight: 600; }
+ol.journey .jb { display: grid; gap: 6px; min-width: 0; }
+ol.journey .jb > b { font-family: var(--display); font-size: var(--step-1); font-weight: 600; }
+.jq { margin: 0; padding: 8px 12px; border-left: 3px solid var(--line); background: var(--paper); font-family: var(--display); font-size: var(--step-0); overflow-wrap: anywhere; }
+.jclaims { display: grid; gap: 4px; font-size: var(--step--1); }
+.jclaims > div { display: grid; grid-template-columns: 2.2em minmax(0, 1fr) auto; gap: 8px; align-items: baseline; }
+.jclaims .t { overflow-wrap: anywhere; }
+.jplaces { display: flex; gap: 8px 14px; flex-wrap: wrap; font-size: var(--step--1); }
+.jplaces > span { padding: 6px 10px; background: var(--paper); border-radius: 5px; }
+.jplaces b { font-weight: 600; }
+.proof { margin: 0; padding-top: 8px; border-top: 1px solid var(--line); font-size: var(--step--1); }
+table.defs td.src { white-space: nowrap; }
+
+/* data bar */
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; flex-wrap: wrap; }
+.seg button { border: 0; border-radius: 0; border-left: 1px solid var(--line); background: transparent; }
+.seg button:first-child { border-left: 0; }
+.seg button[aria-pressed="true"] { background: var(--accent-soft); font-weight: 600; }
+
+/* footer */
+.foot { display: grid; gap: 12px; }
+.foot p { margin: 0; max-width: 80ch; }
+dl.footmeta { display: flex; flex-wrap: wrap; gap: 4px 22px; margin: 0; font-size: var(--step--1); }
+dl.footmeta > div { display: flex; gap: 6px; }
+dl.footmeta dt { color: var(--muted); }
+dl.footmeta dd { margin: 0; font-family: var(--mono); }
+nav.sections a.try { color: var(--accent); font-weight: 600; border-bottom-color: var(--accent); }
+.cta { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.cta .btn { text-decoration: none; padding: 10px 20px; font-size: var(--step-0); }
+.trycmds { display: grid; gap: 10px; max-width: 760px; width: 100%; margin-inline: auto; }
+.trycmds pre.cmd { margin: 0; }
+.more-line { text-align: center; font-size: var(--step--1); margin: 0; }
+.footlinks { margin: 8px 0 0; font-size: var(--step--1); }
+details.fold { border-top: 1px solid var(--line); padding-top: 8px; }
+details.fold > summary { cursor: pointer; font-weight: 600; font-size: var(--step--1); color: var(--muted); }
+details.fold[open] > summary { margin-bottom: 8px; }
+.rng[title] { cursor: help; border-bottom: 1px dotted var(--muted); }
+@media (max-width: 640px) {
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; width: 100%; gap: 1px; background: var(--line); }
+  .tabs button { border-left: 0; background: var(--surface); }
+  .tabs button[aria-selected="true"] { background: var(--accent); }
+  .tabs button:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  }
+</style>
+<style>
+.skip { position: absolute; left: -999px; top: 0; background: var(--accent); color: var(--accent-ink); padding: 8px 12px; z-index: 30; }
+.skip:focus { left: 8px; top: 8px; }
+nav.sections a[aria-current="page"] { color: var(--accent); font-weight: 600; border-bottom-color: var(--accent); }
+.docs-wrap { max-width: 1240px; padding-block: 18px 40px; }
+.docs-shell { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 36px; align-items: start; }
+.doc-aside { display: none; }
+@media (min-width: 1200px) { .docs-shell { grid-template-columns: 250px minmax(0, 1fr) 210px; } .doc-aside { display: block; } }
+.doc-side, .doc-aside { position: sticky; top: calc(var(--hdr, 52px) + 16px); max-height: calc(100vh - var(--hdr, 52px) - 32px); overflow-y: auto; font-size: var(--step--1); overscroll-behavior: contain; scrollbar-width: thin; }
+.doc-aside h2 { font-family: var(--body); font-size: var(--step--1); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0 0 8px; }
+.doc-aside ol { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--line); display: grid; gap: 2px; }
+.doc-aside a, .tree a { color: var(--muted); text-decoration: none; display: block; padding: 4px 10px; border-radius: 4px; }
+.doc-aside a { border-left: 2px solid transparent; margin-left: -1px; border-radius: 0; }
+.doc-aside a:hover, .tree a:hover { color: var(--ink); }
+.doc-aside a[aria-current], .tree ul a[aria-current] { color: var(--accent); font-weight: 600; }
+.doc-aside a[aria-current] { border-left-color: var(--accent); }
+.tree, .tree ul { list-style: none; margin: 0; padding: 0; }
+.tree .grp { text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.72rem; color: var(--muted); padding: 14px 10px 4px; }
+.tree > li > a { color: var(--ink); font-weight: 600; padding: 6px 10px; }
+.tree > li.current > a { background: var(--accent-soft); color: var(--accent); }
+.tree ul { margin: 2px 0 8px 10px; border-left: 1px solid var(--line); }
+.tree ul a[aria-current] { background: var(--accent-soft); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.doc-main { min-width: 0; max-width: 80ch; outline: none; }
+.crumbs ol { list-style: none; margin: 0 0 6px; padding: 0; display: flex; flex-wrap: wrap; gap: 4px; font-size: var(--step--1); color: var(--muted); }
+.crumbs li + li::before { content: "›"; margin-right: 4px; }
+.crumbs a { color: var(--muted); }
+.doc-page-head { padding: 4px 0 20px; display: grid; gap: 6px; }
+.doc-page-head h1 { font-size: var(--step-3); }
+.doc-page-head .lead { color: var(--muted); margin: 0; }
+.docs-content { display: grid; gap: 48px; min-width: 0; }
+.docs-content .doc.flat { display: grid; gap: 14px; }
+article.doc { display: grid; gap: 14px; min-width: 0; }
+article.doc, .doc.flat h2[data-sec], article.doc h3 { scroll-margin-top: calc(var(--hdr, 52px) + var(--bar, 0px) + 14px); }
+.doc-head h2, .doc.flat h2 { font-size: var(--step-2); margin: 0; }
+.doc.flat h2 { margin-top: 18px; }
+.doc .lead { color: var(--muted); font-size: var(--step-0); margin: 6px 0 0; }
+article.doc h3 { font-family: var(--display); font-size: var(--step-1); font-weight: 600; margin: 14px 0 -4px; }
+.doc .anchor { color: var(--line); text-decoration: none; margin-left: 4px; font-family: var(--body); font-weight: 400; font-size: 0.8em; }
+.doc :is(h2, h3):hover .anchor, .doc .anchor:focus { color: var(--accent); }
+.doc p { margin: 0; }
+.doc ul, .doc ol { margin: 0; padding-left: 1.3em; display: grid; gap: 4px; }
+.doc code { background: var(--idle-soft); padding: 0 4px; border-radius: 3px; }
+.doc .tablewrap { border: 1px solid var(--line); border-radius: 6px; overflow-x: auto; }
+table.doctable { border-collapse: collapse; width: 100%; font-size: var(--step--1); }
+table.doctable th { text-align: left; font-weight: 600; background: var(--paper); color: var(--muted); }
+table.doctable th, table.doctable td { padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.doctable tr:last-child td { border-bottom: 0; }
+.codewrap { position: relative; }
+.doc pre { margin: 0; padding: 40px 14px 12px; background: var(--paper); border: 1px solid var(--line); border-radius: 5px; overflow-x: auto; font-family: var(--mono); font-size: var(--step--1); scrollbar-width: thin; }
+.doc pre code { background: none; padding: 0; }
+.codewrap .copy { position: absolute; top: 6px; right: 6px; font-size: 0.72rem; padding: 3px 9px; }
+.pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); }
+.pager a { display: grid; gap: 2px; text-decoration: none; color: var(--ink); font-weight: 600; padding: 10px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); min-width: 0; }
+.pager a[rel="next"] { text-align: right; margin-left: auto; }
+.pager a:hover { border-color: var(--accent); }
+.pager small { color: var(--muted); font-weight: 400; }
+.docbar, .drawer, .scrim { display: none; }
+.totop { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: max(16px, env(safe-area-inset-bottom, 0px)); width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 1.2rem; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.18); z-index: 12; }
+.totop[hidden] { display: none; }
+@media (max-width: 900px) {
+  .docs-shell { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .doc-side { display: none; }
+  .docbar { display: block; position: sticky; top: var(--hdr, 52px); z-index: 8; background: var(--surface); border-bottom: 1px solid var(--line); }
+  .docbar button { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 11px max(16px, env(safe-area-inset-left, 0px)); border: 0; border-radius: 0; background: transparent; font-weight: 600; text-align: left; }
+  .docbar-t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .docbar button[aria-expanded="true"] span[aria-hidden] { transform: rotate(180deg); }
+  .scrim:not([hidden]) { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 20; }
+  .drawer:not([hidden]) { display: block; position: fixed; z-index: 21; left: 0; right: 0; top: calc(var(--hdr, 52px) + var(--bar, 0px)); max-height: calc(100vh - var(--hdr, 52px) - var(--bar, 0px) - 24px); overflow-y: auto; background: var(--surface); border-bottom: 1px solid var(--line); box-shadow: 0 8px 24px rgba(0,0,0,0.25); padding: 8px max(16px, env(safe-area-inset-left, 0px)) 16px; }
+  .drawer-close { margin: 4px 0 8px auto; display: block; font-size: var(--step--1); }
+  .tree a { padding: 9px 10px; }
+  .doc pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .doc-page-head h1 { font-size: var(--step-2); }
+  .pager { flex-direction: column; }
+  .pager a[rel="next"] { text-align: left; margin-left: 0; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#docMain">К содержанию</a>
+<header class="top" id="topbar">
+  <div class="wrap">
+    <a class="brand" href="../../../">Арена гипотез</a>
+    <nav class="sections" aria-label="Документация">
+      <a href="../../../">На главную</a><a href="../../start/">Начало работы</a><a href="../../method/" aria-current="page">Как это работает</a><a href="../../reference/">Справочник</a><a href="https://github.com/danrd/hyp-arena" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
+  </div>
+</header>
+<div class="docbar" id="docBar">
+  <button type="button" id="docBarBtn" aria-expanded="false" aria-controls="docDrawer"><span class="docbar-t" id="docBarTitle">Как это работает: показатели и рейтинг</span><span aria-hidden="true">▾</span></button>
+</div>
+<div class="scrim" id="docScrim" hidden></div>
+<div class="drawer" id="docDrawer" role="dialog" aria-modal="true" aria-label="Навигация по документации" hidden>
+  <button type="button" class="drawer-close" id="docClose">Закрыть</button>
+  <nav aria-label="Разделы документации"><ul class="tree"><li><a href="../../start/">Начало работы</a></li><li class="grp">Как это работает</li><li><a href="../">Карточка и проверка</a></li><li class="current"><a href="./" aria-current="page">Показатели и рейтинг</a><ul><li><a href="#docs-indicators" data-spy="docs-indicators">Показатели</a></li><li><a href="#docs-profiles" data-spy="docs-profiles">Профили и АСПИД</a></li><li><a href="#docs-limits" data-spy="docs-limits">Границы применимости и открытые вопросы</a></li></ul></li><li class="grp">Справочник</li><li><a href="../../reference/">Формат карточки и показатели</a></li><li><a href="../../reference/aggregation/">Агрегация и данные</a></li><li><a href="../../reference/examples/">Примеры</a></li></ul></nav>
+</div>
+<main class="wrap docs-wrap" id="top">
+  <div class="docs-shell">
+    <aside class="doc-side" id="docSide" aria-label="Разделы документации"><nav><ul class="tree"><li><a href="../../start/">Начало работы</a></li><li class="grp">Как это работает</li><li><a href="../">Карточка и проверка</a></li><li class="current"><a href="./" aria-current="page">Показатели и рейтинг</a><ul><li><a href="#docs-indicators" data-spy="docs-indicators">Показатели</a></li><li><a href="#docs-profiles" data-spy="docs-profiles">Профили и АСПИД</a></li><li><a href="#docs-limits" data-spy="docs-limits">Границы применимости и открытые вопросы</a></li></ul></li><li class="grp">Справочник</li><li><a href="../../reference/">Формат карточки и показатели</a></li><li><a href="../../reference/aggregation/">Агрегация и данные</a></li><li><a href="../../reference/examples/">Примеры</a></li></ul></nav></aside>
+    <div class="doc-main" id="docMain" tabindex="-1">
+      <nav class="crumbs" aria-label="Хлебные крошки"><ol>
+        <li><a href="../../start/">Документация</a></li><li><a href="../">Как это работает</a></li><li><a href="./">Показатели и рейтинг</a></li><li id="crumbCur" hidden></li>
+      </ol></nav>
+      <header class="doc-page-head"><h1>Как это работает: показатели и рейтинг</h1><p class="lead">Какие свойства гипотезы считаются, как порядок важности даёт рейтинг и где проходят границы метода.</p></header>
+      <div class="docs-content"><article class="doc" id="docs-indicators" data-sec><header class="doc-head"><h2>Показатели <a class="anchor" href="#docs-indicators" aria-label="Ссылка на раздел">#</a></h2><p class="lead">Какие свойства гипотезы считаются из проверенной карточки и зачем.</p></header>
+<h3 id="ind-what">Что считается <a class="anchor" href="#ind-what" aria-label="Ссылка на раздел">#</a></h3>
+<p>Из проверенной карточки по правилам считаются показатели: каждый отвечает на один вопрос о гипотезе. Языковая модель в расчёте не участвует. Если данных не хватает, значение остаётся неизвестным и ничем не заменяется.</p>
+<ul>
+<li><strong>Уровень эффекта:</strong> как далеко подтверждён эффект: в клетках, у беспозвоночных, у млекопитающих или у человека.</li>
+<li><strong>Устойчивость:</strong> повторён ли эффект независимо.</li>
+<li><strong>Многоцентровой результат:</strong> подтверждён ли эффект в стандартизованной программе, где публикуют и отрицательные результаты.</li>
+<li><strong>Механизм:</strong> подтверждены ли звенья объяснения.</li>
+<li><strong>Новизна:</strong> насколько результат нов для литературы.</li>
+<li><strong>Путь к человеку:</strong> сколько предварительных шагов остаётся до испытания на человеке.</li>
+<li><strong>Поздний старт:</strong> на какой доле жизни вида начато вмешательство.</li>
+<li><strong>Оба пола:</strong> показан ли эффект у обоих полов.</li>
+<li><strong>Размер эффекта:</strong> на сколько процентов изменилась медианная продолжительность жизни.</li>
+<li><strong>Информативность:</strong> сколько альтернативных объяснений различает решающий эксперимент (пока не считается).</li>
+</ul>
+<p>Какое значение лучше, определяет сам показатель; насколько важен каждый показатель, определяет профиль. Полные определения, значения и таблицы: <a href="../../reference/#ind-table">справочник по показателям</a>.</p>
+<h3 id="ind-profile">Профиль доказательности <a class="anchor" href="#ind-profile" aria-label="Ссылка на раздел">#</a></h3>
+<p>Из статусов утверждений считается профиль доказательности: на какой ступени подтверждён эффект, повторён ли он и подтверждён ли механизм. Это факты, а не оценки. Если опровергнуто исходное утверждение, механизм или посылка, гипотеза отсеивается с указанием опровергающей записи; «оспорено» не отсеивает. Подробности: <a href="../../reference/#ind-profile-ref">справочник</a>.</p>
+</article><article class="doc" id="docs-profiles" data-sec><header class="doc-head"><h2>Профили и АСПИД <a class="anchor" href="#docs-profiles" aria-label="Ссылка на раздел">#</a></h2><p class="lead">Как порядок важности показателей превращается в рейтинг без заданных весов и как читать его числа.</p></header>
+<h3 id="agg-def">Определение <a class="anchor" href="#agg-def" aria-label="Ссылка на раздел">#</a></h3>
+<p>Рейтинг строится без заданных весов. Профиль задаёт только порядок важности: показатель выше по списку весит не меньше любого ниже. Веса внутри порядка много раз выбираются случайно (метод АСПИД, близкий к SMAA), и для каждой гипотезы считаются:</p>
+<ul>
+<li><strong>ожидание</strong> — средняя оценка по розыгрышам весов;</li>
+<li><strong>P(топ-3)</strong> — доля розыгрышей, в которых гипотеза входит в первые три;</li>
+<li><strong>P(лучшая)</strong> — доля розыгрышей, в которых она первая;</li>
+<li><strong>полоса</strong> — 5–95% оценки.</li>
+</ul>
+<p>Узкая полоса и высокая P(топ-k) означают, что место устойчиво к выбору весов; широкая — что оно зависит от приоритетов. Профиль — порядок важности показателей, а не оценка гипотез: разным задачам нужны разные порядки, и выбирает его тот, кто решает, что проверять.</p>
+<h3 id="agg-idea">Идея <a class="anchor" href="#agg-idea" aria-label="Ссылка на раздел">#</a></h3>
+<p>АСПИД (анализ и синтез показателей при информационном дефиците) — семейство методов Н. В. Хованова: вместо одного набора весов задаются только порядок важности показателей и неопределённость данных, а веса много раз выбираются случайно. Реализация на этом сайте следует SMAA-2 (Lahdelma, Salminen), которая по постановке близка: оценка гипотезы аддитивная, веса равномерно распределены по допустимому набору, моделирование идёт по весам и по неизвестным значениям показателей.</p>
+<p>Почему так. Веса показателей спорны, а порядок важности («проверенные данные важнее новизны») эксперт назвать может. Метод показывает, что следует из порядка при любых допустимых весах, и сколько в результате решают именно приоритеты.</p>
+<h3 id="agg-weights">Профили <a class="anchor" href="#agg-weights" aria-label="Ссылка на раздел">#</a></h3>
+<p>Профиль задаёт порядок важности показателей, а не их веса: показатель ступени выше весит не меньше любого показателя ступени ниже. Как ограничиваются и выбираются веса, описано в <a href="../../reference/aggregation/#agg-weights-ref">справочнике</a>.</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Профиль</th>
+<th>Порядок важности (версия <code>draft-2</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Приоритет: проверенные данные (<code>evidence_first</code>)</td>
+<td>1: уровень эффекта, устойчивость, механизм · 2: все остальные</td>
+</tr>
+<tr>
+<td>Приоритет: осуществимость (<code>cheap_feasible</code>)</td>
+<td>1: путь к человеку · 2: новизна · 3: уровень эффекта · остальные порядком не заданы</td>
+</tr>
+<tr>
+<td>Приоритет: понимание механизма (<code>fundamental</code>)</td>
+<td>1: механизм, информативность, новизна · 2: путь к человеку · остальные порядком не заданы</td>
+</tr>
+</tbody>
+</table></div>
+<p>Профили — примеры, а не рекомендации; с экспертами они не согласованы. Рейтинг считается отдельно для каждого профиля, и результаты всегда показываются вместе с версией профиля.</p>
+<h3 id="agg-outputs">Что считается <a class="anchor" href="#agg-outputs" aria-label="Ссылка на раздел">#</a></h3>
+<p>Все числа получены за один проход по K розыгрышам (10 000 по умолчанию). Для всех гипотез используются одни и те же розыгрыши, поэтому разности согласованы.</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Величина</th>
+<th>Определение</th>
+<th>Как читать</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ожидание</td>
+<td>средняя оценка по розыгрышам</td>
+<td>чем выше, тем лучше при «типичных» весах</td>
+</tr>
+<tr>
+<td>Полоса</td>
+<td>5–95% оценки по розыгрышам</td>
+<td>узкая: оценка почти не зависит от весов и данных; широкая: зависит</td>
+</tr>
+<tr>
+<td>P(топ-k)</td>
+<td>доля розыгрышей, в которых гипотеза среди первых k</td>
+<td>устойчивость места; по умолчанию k = 3</td>
+</tr>
+<tr>
+<td>P(лучшая)</td>
+<td>доля розыгрышей, в которых гипотеза первая</td>
+<td></td>
+</tr>
+<tr>
+<td>P(A выше B)</td>
+<td>доля розыгрышей, в которых оценка A больше оценки B</td>
+<td>матрица на странице «Рейтинг»</td>
+</tr>
+<tr>
+<td>Распределение мест</td>
+<td>доля розыгрышей для каждого места</td>
+<td>в данных прогона</td>
+</tr>
+<tr>
+<td>Центральные веса</td>
+<td>средний вектор весов, при которых гипотеза первая</td>
+<td>какие приоритеты её выдвигают</td>
+</tr>
+<tr>
+<td>Фактор уверенности</td>
+<td>вероятность быть первой при фиксированных центральных весах, когда меняются только данные</td>
+<td>хватает ли данных, чтобы отличить гипотезу от остальных</td>
+</tr>
+</tbody>
+</table></div>
+<p>Гипотеза с узкой полосой и высокой P(топ-k) занимает устойчивое место при любых допустимых весах. Широкая полоса означает, что место зависит от приоритетов или от неизвестных значений. Если P(топ-k) высока в каждом профиле, гипотеза — надёжный кандидат; различия между профилями показывают, что выберет каждая цель.</p>
+</article><article class="doc" id="docs-limits" data-sec><header class="doc-head"><h2>Границы применимости и открытые вопросы <a class="anchor" href="#docs-limits" aria-label="Ссылка на раздел">#</a></h2><p class="lead">На что рассчитан рейтинг и какие вопросы остаются открытыми.</p></header>
+<h3 id="limits-list">Границы применимости <a class="anchor" href="#limits-list" aria-label="Ссылка на раздел">#</a></h3>
+<ul>
+<li>Проверка идёт по аннотациям статей; полные тексты пока не используются.</li>
+<li>В этом прогоне источники — PubMed и DrugAge. Другие базы описаны в разделе <a href="../../reference/aggregation/#data-checks">«Данные и проверки»</a> как возможные, а не подключённые.</li>
+<li>Дословность цитат проверяется программно, уместность цитаты (о том ли она, подтверждает ли утверждение, в каком контексте) оценивает языковая модель. Два прогона могут немного различаться: PubMed возвращает выдачу не детерминированно, поэтому по каждому утверждению читаются 20 аннотаций.</li>
+<li>Рейтинг упорядочивает гипотезы по проверенным данным при выбранных приоритетах; это не прогноз результата эксперимента.</li>
+<li>Отрицательные результаты в литературе представлены реже; это стоит иметь в виду при чтении оценок. Многоцентровые программы (ITP, CITP) публикуют и отрицательные результаты, это самые чистые данные.</li>
+<li>Профили приоритетов — примеры; содержание порядка задаёт пользователь.</li>
+<li>Лучше всего подходят гипотезы о вмешательствах и механизмах старения (что, кому, в какой дозе, с каким исходом). Гипотезы без измеримого исхода уходят в списки «ждут уточнения» и «не разобраны».</li>
+<li>Флаг <code>retracted</code> в схеме есть и исключает запись, но автоматически его в этой версии не выставляют.</li>
+<li>Модели могли знать исходы исторического бэктеста (T = 2010), поэтому он используется только для оценки самой системы, а не для сравнения с другими.</li>
+</ul>
+<h3 id="limits-open">Открытые вопросы <a class="anchor" href="#limits-open" aria-label="Ссылка на раздел">#</a></h3>
+<p><strong>Шкалы и пороги.</strong></p>
+<ul>
+<li>Границы фиксированных шкал для числовых показателей (30% для размера эффекта; насыщение для информативности) — рабочие допущения. Порог размера эффекта в критериях решения: по умолчанию заявленный в гипотезе, иначе «любой значимый эффект»; взять его из эталонного класса (например, типичные +10–20% к медиане жизни в ITP) предстоит решить.</li>
+<li>Показатель <code>path_to_human</code> трёхуровневый. Оценки стоимости и сроков (классы в долларах, длительность по виду исхода) нужны только при спросе на них.</li>
+</ul>
+<p><strong>Показатели.</strong></p>
+<ul>
+<li>Показатели, выводимые из одних данных (уровень эффекта и устойчивость), при суммировании считаются дважды. Нужно проверить корреляции на реальных карточках и при необходимости объединить показатели или ограничить веса.</li>
+<li>Новизна считается по проверенным утверждениям; сопоставление с графом знаний ещё не реализовано.</li>
+<li>Информативность определена, но пока не считается: таблица предсказаний строится вместе с дебатами.</li>
+<li>Ограничение «A не хуже B» от эксперта при неизвестных значениях использует их ожидания и помечается как приближённое; точная обработка не решена.</li>
+</ul>
+<p><strong>Карточка и словарь.</strong></p>
+<ul>
+<li>Для комплексов (например, mTORC1) предлагается брать идентификатор Complex Portal для вида, если он есть, иначе термин GO о клеточном компоненте (mTORC1: GO:0031931).</li>
+<li>Список альтернативных объяснений расширяется по мере появления новых типов ошибок.</li>
+<li>Частые пометки <code>other</code> в списке «не разобраны» — кандидаты на расширение словаря отношений.</li>
+</ul>
+<p><strong>Данные.</strong></p>
+<ul>
+<li>Проверки на открытых данных (раздел <a href="../../reference/aggregation/#data-checks">«Данные и проверки»</a>) пока не реализованы, а условия доступа к источникам нужно перепроверять.</li>
+</ul>
+</article></div>
+      <nav class="pager" aria-label="Соседние страницы"><a rel="prev" href="../"><small>Назад</small> Как это работает: карточка и проверка</a><a rel="next" href="../../reference/"><small>Дальше</small> Справочник: формат карточки и показатели</a></nav>
+    </div>
+    <aside class="doc-aside" id="docAside" aria-labelledby="asideH"><h2 id="asideH">На этой странице</h2><ol><li><a href="#docs-indicators" data-spy="docs-indicators">Показатели</a></li><li><a href="#docs-profiles" data-spy="docs-profiles">Профили и АСПИД</a></li><li><a href="#docs-limits" data-spy="docs-limits">Границы применимости и открытые вопросы</a></li></ol></aside>
+  </div>
+</main>
+<footer>
+  <div class="wrap foot">
+    <p><b>hyp-arena</b> · исследовательский прототип; рейтинги — результат исследования, а не медицинская рекомендация.</p>
+    <dl class="footmeta"><div><dt>Версия кода</dt><dd>v0.1.0</dd></div><div><dt>Лицензия</dt><dd>MIT</dd></div></dl>
+    <p class="footlinks"><a href="../../../">На главную</a> · <a href="https://github.com/danrd/hyp-arena" target="_blank" rel="noopener">GitHub</a></p>
+  </div>
+</footer>
+<button type="button" class="totop" id="toTop" hidden aria-label="Наверх">↑</button>
+<script>
+(() => {
+  const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+  const top = $("#topbar"), bar = $("#docBar");
+  const setVars = () => {
+    document.documentElement.style.setProperty("--hdr", top.offsetHeight + "px");
+    document.documentElement.style.setProperty("--bar", (getComputedStyle(bar).display === "none" ? 0 : bar.offsetHeight) + "px");
+  };
+  setVars(); addEventListener("resize", setVars);
+
+  /* the section in view: the last section heading above the reading line */
+  const secs = $$("[data-sec]");
+  const links = $$("[data-spy]");
+  const crumb = $("#crumbCur"), barTitle = $("#docBarTitle"), pageTitle = barTitle.textContent;
+  const titleOf = el => (el.querySelector("h2") || el).firstChild.textContent.trim();
+  let active = null;
+  const reveal = (a) => {                     // keep the active item visible inside a scrolling panel
+    const box = a.closest(".doc-side, .doc-aside"); if (!box || box.offsetParent === null) return;
+    const r = a.getBoundingClientRect(), b = box.getBoundingClientRect();
+    if (r.top < b.top + 8) box.scrollTop -= b.top + 8 - r.top; else if (r.bottom > b.bottom - 8) box.scrollTop += r.bottom - b.bottom + 8;
+  };
+  const spy = () => {
+    const line = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--hdr")) + (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--bar")) || 0) + 40;
+    let cur = null;
+    for (const s of secs) { if (s.getBoundingClientRect().top <= line) cur = s; else break; }
+    if (cur === active) return; active = cur;
+    links.forEach(a => { const on = cur && a.dataset.spy === cur.id; if (on) { a.setAttribute("aria-current", "location"); reveal(a); } else a.removeAttribute("aria-current"); });
+    const t = cur ? titleOf(cur) : "";
+    crumb.hidden = !t; crumb.textContent = t;
+    barTitle.textContent = t || pageTitle;
+  };
+  let tick = false;
+  addEventListener("scroll", () => { if (!tick) { tick = true; requestAnimationFrame(() => { tick = false; spy(); toggleTop(); }); } }, {passive: true});
+  addEventListener("hashchange", () => setTimeout(spy, 60));
+
+  /* mobile drawer */
+  const btn = $("#docBarBtn"), drawer = $("#docDrawer"), scrim = $("#docScrim");
+  const open = () => { drawer.hidden = false; scrim.hidden = false; btn.setAttribute("aria-expanded", "true"); (drawer.querySelector("a[aria-current]") || drawer.querySelector("a") || drawer).focus(); };
+  const close = (back = true) => { drawer.hidden = true; scrim.hidden = true; btn.setAttribute("aria-expanded", "false"); if (back) btn.focus(); };
+  btn.addEventListener("click", () => drawer.hidden ? open() : close());
+  scrim.addEventListener("click", () => close());
+  $("#docClose").addEventListener("click", () => close());
+  drawer.addEventListener("click", e => { if (e.target.closest("a")) close(false); });
+  document.addEventListener("keydown", e => {
+    if (drawer.hidden) return;
+    if (e.key === "Escape") { e.preventDefault(); close(); return; }
+    if (e.key === "Tab") {                    // keep focus inside the open panel
+      const f = [...drawer.querySelectorAll("a, button")]; if (!f.length) return;
+      const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  });
+  matchMedia("(min-width: 901px)").addEventListener?.("change", e => { if (e.matches) close(false); });
+
+  /* back to top after a couple of screens */
+  const totop = $("#toTop");
+  const toggleTop = () => { totop.hidden = scrollY < innerHeight * 2; };
+  totop.addEventListener("click", () => { scrollTo({top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"}); });
+
+  /* copy buttons on command blocks */
+  $$(".doc pre").forEach(pre => {
+    const wrap = document.createElement("div"); wrap.className = "codewrap";
+    pre.replaceWith(wrap); wrap.appendChild(pre);
+    const b = document.createElement("button"); b.type = "button"; b.className = "copy"; b.textContent = "Копировать";
+    b.addEventListener("click", () => {
+      const done = ok => { b.textContent = ok ? "Скопировано" : "Выделите вручную"; setTimeout(() => { b.textContent = "Копировать"; }, 1800); };
+      try { navigator.clipboard.writeText(pre.textContent).then(() => done(true), () => done(false)); } catch { done(false); }
+    });
+    wrap.appendChild(b);
+  });
+  spy(); toggleTop();
+})();
+</script>
+</body>
+</html>

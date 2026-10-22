@@ -1,0 +1,881 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Справочник: агрегация и данные · Документация · Арена гипотез</title>
+<meta name="description" content="Модель оценки, выбор весов, точность, источники метода и правила работы с данными.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Справочник: агрегация и данные · Документация · Арена гипотез о старении">
+<meta property="og:description" content="Модель оценки, выбор весов, точность, источники метода и правила работы с данными.">
+<meta property="og:url" content="https://danrd.github.io/hyp-arena/site/docs/reference/aggregation/">
+<meta property="og:locale" content="ru_RU">
+<meta name="twitter:card" content="summary">
+<meta name="hyparena-version" content="0.1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a lab notebook — narrow reading column for prose, a wide instrument panel for the ranking and the card. */
+:root {
+  --paper: #f4f6f3; --surface: #ffffff; --ink: #15201c; --muted: #5a6964; --line: #d9dfdb;
+  --accent: #12695a; --accent-soft: #dcede7; --accent-ink: #ffffff; --mid: #e3e8e5; --strong-ink: #ffffff;
+  --ok: #2c7a4c; --bad: #b0402c; --warn: #a8740f; --idle: #7a8682; --ok-soft: #e1f0e6; --bad-soft: #f6e2dd; --warn-soft: #f5ead2; --idle-soft: #eaedeb;
+  --display: "Literata", Georgia, "Times New Roman", serif;
+  --body: "Onest", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --step--1: 0.8125rem; --step-0: 0.9375rem; --step-1: 1.125rem; --step-2: 1.5rem; --step-3: 2.25rem;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #0f1514; --surface: #162020; --ink: #e4ebe8; --muted: #98a6a1; --line: #2a3633;
+  --accent: #4db6a2; --accent-soft: #1b3430; --accent-ink: #0f1514; --mid: #34413e; --strong-ink: #0f1514;
+  --ok: #5dbd84; --bad: #e07a62; --warn: #d8a43f; --idle: #8b9893; --ok-soft: #173126; --bad-soft: #3a211b; --warn-soft: #362a12; --idle-soft: #212b29;
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #0f1514; --surface: #162020; --ink: #e4ebe8; --muted: #98a6a1; --line: #2a3633;
+  --accent: #4db6a2; --accent-soft: #1b3430; --accent-ink: #0f1514; --mid: #34413e; --strong-ink: #0f1514;
+  --ok: #5dbd84; --bad: #e07a62; --warn: #d8a43f; --idle: #8b9893; --ok-soft: #173126; --bad-soft: #3a211b; --warn-soft: #362a12; --idle-soft: #212b29;
+  color-scheme: dark }
+
+* { box-sizing: border-box; }
+html { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: var(--step-0); line-height: 1.55; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+a { color: var(--accent); }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; text-wrap: balance; line-height: 1.2; margin: 0; }
+h2 { font-size: var(--step-2); }
+h3 { font-size: var(--step-1); }
+p { margin: 0; }
+.mono, code { font-family: var(--mono); font-size: 0.86em; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.prose { max-width: 66ch; }
+.muted { color: var(--muted); }
+.eyebrow { font-size: var(--step--1); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* header */
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; background: var(--surface); border-bottom: 1px solid var(--line); }
+header.top .wrap { display: flex; align-items: center; justify-content: center; gap: 8px 24px; padding-block: 10px; flex-wrap: wrap; }
+.brand { font-family: var(--display); font-weight: 600; font-size: var(--step-1); text-decoration: none; color: var(--ink); white-space: nowrap; }
+nav.sections { display: flex; gap: 4px 16px; flex-wrap: wrap; justify-content: center; font-size: var(--step--1); }
+nav.sections a { color: var(--muted); text-decoration: none; padding: 2px 0; border-bottom: 1px solid transparent; }
+nav.sections a:hover { color: var(--ink); border-bottom-color: var(--line); }
+@media (max-width: 640px) {
+  header.top .wrap { flex-wrap: nowrap; justify-content: flex-start; gap: 14px; padding-block: 8px; }
+  .brand { font-size: var(--step-0); }
+  nav.sections { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); }
+  nav.sections::-webkit-scrollbar { display: none; }
+  nav.sections a { white-space: nowrap; }
+}
+
+/* hero */
+.hero { padding-block: 48px 28px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; justify-items: center; text-align: center; }
+.hero .pipeline { width: 100%; text-align: left; }
+.hero h1 { font-size: var(--step-3); max-width: 24ch; }
+.hero .lead { font-size: var(--step-1); max-width: 60ch; color: var(--muted); }
+.pipeline { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 6px; background: var(--surface); overflow: hidden; }
+.pipeline li { list-style: none; padding: 12px 14px; border-left: 1px solid var(--line); min-width: 0; }
+.pipeline li:first-child { border-left: 0; }
+.pipeline b { display: block; font-weight: 600; }
+.pipeline span { font-size: var(--step--1); color: var(--muted); }
+.pipeline .n { font-family: var(--mono); font-size: var(--step--1); color: var(--accent); }
+ol.pipeline { margin: 0; padding: 0; }
+@media (max-width: 760px) { .pipeline { grid-template-columns: minmax(0, 1fr); } .pipeline li { border-left: 0; border-top: 1px solid var(--line); } .pipeline li:first-child { border-top: 0; } }
+
+section.block { padding-block: 36px; border-top: 1px solid var(--line); display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+.head { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; }
+.head .prose { display: grid; gap: 6px; justify-items: center; min-width: 0; }
+.head > * { min-width: 0; }
+.tabs button { flex: 1 1 auto; }
+
+/* data bar */
+.databar { justify-content: center; display: flex; gap: 10px 16px; align-items: center; flex-wrap: wrap; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; font-size: var(--step--1); }
+.databar .name { font-weight: 600; font-size: var(--step-0); }
+.badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: var(--step--1); font-weight: 500; white-space: nowrap; }
+.badge.example { background: var(--warn-soft); color: var(--warn); }
+.databar .spacer { flex: 0 0 8px; }
+button, .btn { font: inherit; font-size: var(--step--1); border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 6px 12px; border-radius: 5px; cursor: pointer; }
+button:hover, .btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+input[type=file] { display: none; }
+.drop { outline: 2px dashed var(--accent); outline-offset: 4px; }
+.err { color: var(--bad); }
+
+/* tabs */
+.tabs { display: flex; gap: 0; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; width: fit-content; max-width: 100%; flex-wrap: wrap; background: var(--surface); }
+.tabs button { border: 0; border-radius: 0; border-left: 1px solid var(--line); padding: 8px 14px; background: transparent; }
+.tabs button:first-child { border-left: 0; }
+.tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+.tabs button small { display: block; font-family: var(--mono); font-size: 0.72rem; opacity: 0.75; }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+.panel-note { padding: 12px 16px; border-bottom: 1px solid var(--line); font-size: var(--step--1); color: var(--muted); display: grid; gap: 4px; }
+.scroll { overflow-x: auto; }
+table.rank { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+table.rank th { text-align: left; font-weight: 500; font-size: var(--step--1); color: var(--muted); padding: 8px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+table.rank td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+table.rank tr:last-child td { border-bottom: 0; }
+table.rank tbody tr { cursor: pointer; }
+table.rank tbody tr:hover td { background: var(--accent-soft); }
+table.rank tr.sep td { background: var(--paper); color: var(--muted); font-size: var(--step--1); cursor: default; padding-block: 6px; }
+table.rank tr.off td { color: var(--muted); }
+.pos { font-family: var(--mono); color: var(--muted); width: 2.5em; }
+.htitle { min-width: 16ch; }
+.htitle .id { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); margin-right: 6px; }
+.num { font-family: var(--mono); text-align: right; white-space: nowrap; }
+.bar { position: relative; height: 14px; min-width: 160px; }
+.bar .track { position: absolute; inset: 6px 0 auto; height: 2px; background: var(--line); }
+.bar .range { position: absolute; top: 3px; height: 8px; background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 2px; }
+.bar .dot { position: absolute; top: 2px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: var(--accent); }
+.bar .fill { position: absolute; top: 3px; height: 8px; background: var(--accent); border-radius: 2px; }
+.bar .zero { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--muted); }
+
+.pill { display: inline-block; padding: 1px 8px; border-radius: 4px; font-size: var(--step--1); font-weight: 500; white-space: nowrap; }
+.st-supported { background: var(--ok-soft); color: var(--ok); }
+.st-refuted { background: var(--bad-soft); color: var(--bad); }
+.st-contested { background: var(--warn-soft); color: var(--warn); }
+.st-unverified, .st-unresolved, .st-open { background: var(--idle-soft); color: var(--idle); }
+.oc-ranked { background: var(--accent-soft); color: var(--accent); }
+.oc-filtered { background: var(--bad-soft); color: var(--bad); }
+.oc-known_result { background: var(--ok-soft); color: var(--ok); }
+.oc-other { background: var(--idle-soft); color: var(--idle); }
+
+/* heatmap and slope chart */
+.twocol { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+@media (max-width: 880px) { .twocol { grid-template-columns: minmax(0, 1fr); } }
+.figure { padding: 14px 16px; display: grid; gap: 10px; align-content: start; }
+.figure svg text { fill: var(--ink); font-family: var(--mono); font-size: 11px; }
+.figure svg .mutedtext { fill: var(--muted); }
+table.heat { border-collapse: separate; border-spacing: 2px; font-family: var(--mono); font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+table.heat th { font-weight: 500; color: var(--muted); padding: 2px 6px; white-space: nowrap; }
+table.heat thead th { text-align: center; }
+table.heat tbody th { text-align: right; }
+table.heat td { min-width: 36px; height: 30px; text-align: center; border-radius: 3px; color: var(--ink); }
+table.heat td.self { background: repeating-linear-gradient(135deg, var(--line) 0 2px, transparent 2px 6px); color: var(--muted); }
+.heat-note { font-size: var(--step--1); color: var(--muted); }
+.heat-key { font-size: var(--step--1); }
+.heat-key summary { cursor: pointer; color: var(--accent); }
+.heat-key ol { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
+.heat-key .mono { display: inline-block; min-width: 2.2em; color: var(--muted); }
+.scale { display: grid; gap: 4px; max-width: 360px; font-size: var(--step--1); color: var(--muted); }
+.scale .bar { height: 10px; min-width: 0; border-radius: 3px; background: linear-gradient(90deg, var(--bad), var(--mid) 50%, var(--accent)); }
+.scale .ticks { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+.scale .ticks span:nth-child(2) { text-align: center; }
+.scale .ticks span:nth-child(3) { text-align: right; }
+
+/* card */
+.cardgrid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 880px) { .cardgrid { grid-template-columns: minmax(0, 1fr); } }
+.cardhead { padding: 16px; display: grid; gap: 10px; border-bottom: 1px solid var(--line); }
+.cardhead h3 { font-size: var(--step-2); }
+.cardhead .plain { font-family: var(--display); font-size: var(--step-1); }
+select { font: inherit; font-size: var(--step--1); padding: 6px 8px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface); color: var(--ink); width: 100%; max-width: 42ch; min-width: 0; }
+dl.pico { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 14px; margin: 0; padding: 14px 16px; border-bottom: 1px solid var(--line); font-size: var(--step--1); }
+dl.pico dt { color: var(--muted); }
+dl.pico dd { margin: 0; }
+.claims { display: grid; }
+details.claim { border-bottom: 1px solid var(--line); }
+details.claim:last-child { border-bottom: 0; }
+details.claim > summary { list-style: none; cursor: pointer; padding: 12px 16px; display: grid; grid-template-columns: 3.2em minmax(0, 1fr) auto; gap: 4px 12px; align-items: start; }
+details.claim > summary::-webkit-details-marker { display: none; }
+details.claim[open] > summary { background: var(--paper); }
+.cid { font-family: var(--mono); font-size: var(--step--1); color: var(--muted); padding-top: 2px; }
+.triple { display: grid; gap: 4px; min-width: 0; }
+.triple .t { overflow-wrap: anywhere; }
+.rel { font-family: var(--mono); font-size: 0.8rem; color: var(--accent); padding: 0 4px; }
+.role { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.quals { display: flex; gap: 4px 6px; flex-wrap: wrap; font-size: 0.78rem; }
+.qual { padding: 0 6px; border-radius: 3px; background: var(--idle-soft); color: var(--ink); }
+.qual.inh { background: transparent; border: 1px dashed var(--idle); color: var(--muted); }
+.rungs { display: flex; gap: 4px; flex-wrap: wrap; justify-content: end; }
+.claimbody { padding: 4px 16px 16px 16px; display: grid; gap: 12px; }
+.recs { display: grid; gap: 8px; }
+.recs h4 { margin: 0; font-size: var(--step--1); font-weight: 600; }
+.rec { border-left: 3px solid var(--line); padding: 4px 0 4px 10px; display: grid; gap: 3px; font-size: var(--step--1); }
+.rec.for { border-left-color: var(--ok); }
+.rec.against { border-left-color: var(--bad); }
+.rec.refusal { border-left-color: var(--idle); }
+.rec q { font-family: var(--display); font-size: var(--step-0); quotes: "«" "»"; }
+.rec .meta { color: var(--muted); display: flex; gap: 4px 10px; flex-wrap: wrap; }
+.flags { display: flex; gap: 4px; flex-wrap: wrap; }
+.flag { font-family: var(--mono); font-size: 0.72rem; padding: 0 5px; border-radius: 3px; background: var(--warn-soft); color: var(--warn); }
+
+.side { display: grid; gap: 18px; }
+.side .panel > h3 { padding: 12px 16px; border-bottom: 1px solid var(--line); font-size: var(--step-0); font-family: var(--body); }
+.ladder { display: grid; padding: 12px 16px; gap: 3px; }
+.ladder .step { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 5px 10px; border-radius: 4px; font-size: var(--step--1); background: var(--paper); color: var(--muted); }
+.ladder .step.on { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.ladder .step.below { background: var(--accent-soft); color: var(--ink); }
+.ladder .step.cont { box-shadow: inset 0 0 0 1px var(--warn); }
+dl.kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; margin: 0; padding: 12px 16px; font-size: var(--step--1); }
+dl.kv dt { color: var(--muted); }
+dl.kv dd { margin: 0; overflow-wrap: anywhere; }
+.levels { display: flex; gap: 3px; align-items: center; flex-wrap: wrap; }
+.levels i { width: 10px; height: 10px; border-radius: 2px; background: var(--line); display: inline-block; }
+.levels i.on { background: var(--accent); }
+.levels i.unk { background: repeating-linear-gradient(45deg, var(--line) 0 2px, transparent 2px 4px); }
+ul.alts { list-style: none; margin: 0; padding: 8px 16px 14px; display: grid; gap: 8px; font-size: var(--step--1); }
+ul.alts li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; }
+ul.alts .design { grid-column: 1 / -1; color: var(--muted); }
+
+/* out of ranking */
+.outgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.outgroup { padding: 14px 16px; display: grid; gap: 8px; align-content: start; }
+.outgroup ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: var(--step--1); }
+.outgroup li button { all: unset; cursor: pointer; color: var(--accent); }
+.outgroup li button:focus-visible { outline: 2px solid var(--accent); }
+.count { font-family: var(--mono); color: var(--muted); }
+
+/* method */
+.cols3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.box { padding: 16px; display: grid; gap: 8px; align-content: start; }
+.box ul { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
+.tiers { display: grid; gap: 0; font-size: var(--step--1); }
+.tier { display: grid; grid-template-columns: 2em minmax(0, 1fr); gap: 10px; position: relative; padding-bottom: 14px; }
+.tier:last-child { padding-bottom: 0; }
+.tier::before { content: ""; position: absolute; left: calc(1em - 1px); top: 2em; bottom: 2px; width: 2px; background: var(--line); }
+.tier:last-child::before { display: none; }
+.tier .n { width: 2em; height: 2em; border-radius: 50%; display: grid; place-items: center; font-family: var(--mono); font-weight: 600; background: var(--accent); color: var(--accent-ink); position: relative; }
+.tier.free .n { background: var(--idle-soft); color: var(--idle); }
+.tier .body { display: grid; gap: 6px; min-width: 0; padding-top: 3px; }
+.tier .label { color: var(--muted); }
+.tier .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.tiers-note { font-size: var(--step--1); color: var(--muted); }
+.chip { font-family: var(--mono); font-size: 0.75rem; padding: 1px 6px; border-radius: 3px; background: var(--accent-soft); color: var(--ink); }
+table.defs { border-collapse: collapse; width: 100%; font-size: var(--step--1); }
+table.defs td, table.defs th { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+table.defs th { color: var(--muted); font-weight: 500; }
+.big { font-family: var(--display); font-size: var(--step-3); line-height: 1; font-variant-numeric: tabular-nums; }
+.ci { font-family: var(--mono); font-size: var(--step--1); color: var(--muted); }
+ol.steps { margin: 0 auto; padding: 0; list-style: none; counter-reset: step; display: grid; gap: 16px; max-width: 760px; width: 100%; }
+ol.steps li { display: grid; gap: 8px; padding-left: 2.2em; position: relative; text-align: left; min-width: 0; counter-increment: step; }
+ol.steps li::before { content: counter(step); position: absolute; left: 0; top: 0; font-family: var(--mono); font-size: var(--step--1); color: var(--accent); line-height: 1.9; }
+ol.steps li > span { font-size: var(--step--1); }
+ol.steps li > p { margin: 0; }
+pre.cmd[data-copy] { cursor: copy; }
+pre.cmd { margin: 0; padding: 12px 14px; background: var(--paper); border: 1px solid var(--line); border-radius: 5px; overflow-x: auto; font-family: var(--mono); font-size: 0.8rem; line-height: 1.5; }
+footer { padding-block: 28px 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: var(--step--1); }
+@media (prefers-reduced-motion: no-preference) { table.rank tbody tr td { transition: background 120ms; } }
+
+/* anchors under the sticky header */
+[id] { scroll-margin-top: 74px; }
+
+/* profiles */
+.badge.draft { background: var(--idle-soft); color: var(--muted); font-weight: 500; }
+.pname { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+.pdesc { margin: 0; }
+.profile-defs { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+.profile-defs > div { display: grid; gap: 8px; align-content: start; min-width: 0; }
+.profile-intro { margin: 0; max-width: 72ch; }
+
+/* ranking table */
+tr.tie td { background: color-mix(in srgb, var(--accent-soft) 45%, transparent); }
+tr.tie td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+.pos .rng { display: block; font-size: 0.68rem; color: var(--accent); font-family: var(--body); white-space: nowrap; }
+.pos { min-width: 3.2em; }
+.table-note { padding: 10px 16px; border-top: 1px solid var(--line); font-size: var(--step--1); color: var(--muted); }
+td.stat { white-space: nowrap; }
+
+/* method */
+.msub { padding: 16px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+.msub-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.msub-head h3 { font-size: var(--step-1); }
+a.more { font-size: var(--step--1); white-space: nowrap; }
+ul.rules { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
+.aspid-def { display: grid; gap: 8px; max-width: 76ch; }
+.aspid-def p, .aspid-def ul { margin: 0; }
+.aspid-def ul { padding-left: 1.2em; display: grid; gap: 3px; }
+.tablewrap { overflow-x: auto; max-width: 100%; }
+.jsel { display: grid; gap: 4px; font-size: var(--step--1); max-width: 56ch; }
+ol.journey { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; counter-reset: j; }
+ol.journey > li { display: grid; grid-template-columns: 2em minmax(0, 1fr); gap: 12px; position: relative; padding-bottom: 18px; counter-increment: j; }
+ol.journey > li:last-child { padding-bottom: 0; }
+ol.journey > li::before { content: ""; position: absolute; left: calc(1em - 1px); top: 2.2em; bottom: 4px; width: 2px; background: var(--line); }
+ol.journey > li:last-child::before { display: none; }
+ol.journey .n { width: 2em; height: 2em; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); font-family: var(--mono); font-weight: 600; }
+ol.journey .jb { display: grid; gap: 6px; min-width: 0; }
+ol.journey .jb > b { font-family: var(--display); font-size: var(--step-1); font-weight: 600; }
+.jq { margin: 0; padding: 8px 12px; border-left: 3px solid var(--line); background: var(--paper); font-family: var(--display); font-size: var(--step-0); overflow-wrap: anywhere; }
+.jclaims { display: grid; gap: 4px; font-size: var(--step--1); }
+.jclaims > div { display: grid; grid-template-columns: 2.2em minmax(0, 1fr) auto; gap: 8px; align-items: baseline; }
+.jclaims .t { overflow-wrap: anywhere; }
+.jplaces { display: flex; gap: 8px 14px; flex-wrap: wrap; font-size: var(--step--1); }
+.jplaces > span { padding: 6px 10px; background: var(--paper); border-radius: 5px; }
+.jplaces b { font-weight: 600; }
+.proof { margin: 0; padding-top: 8px; border-top: 1px solid var(--line); font-size: var(--step--1); }
+table.defs td.src { white-space: nowrap; }
+
+/* data bar */
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; flex-wrap: wrap; }
+.seg button { border: 0; border-radius: 0; border-left: 1px solid var(--line); background: transparent; }
+.seg button:first-child { border-left: 0; }
+.seg button[aria-pressed="true"] { background: var(--accent-soft); font-weight: 600; }
+
+/* footer */
+.foot { display: grid; gap: 12px; }
+.foot p { margin: 0; max-width: 80ch; }
+dl.footmeta { display: flex; flex-wrap: wrap; gap: 4px 22px; margin: 0; font-size: var(--step--1); }
+dl.footmeta > div { display: flex; gap: 6px; }
+dl.footmeta dt { color: var(--muted); }
+dl.footmeta dd { margin: 0; font-family: var(--mono); }
+nav.sections a.try { color: var(--accent); font-weight: 600; border-bottom-color: var(--accent); }
+.cta { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.cta .btn { text-decoration: none; padding: 10px 20px; font-size: var(--step-0); }
+.trycmds { display: grid; gap: 10px; max-width: 760px; width: 100%; margin-inline: auto; }
+.trycmds pre.cmd { margin: 0; }
+.more-line { text-align: center; font-size: var(--step--1); margin: 0; }
+.footlinks { margin: 8px 0 0; font-size: var(--step--1); }
+details.fold { border-top: 1px solid var(--line); padding-top: 8px; }
+details.fold > summary { cursor: pointer; font-weight: 600; font-size: var(--step--1); color: var(--muted); }
+details.fold[open] > summary { margin-bottom: 8px; }
+.rng[title] { cursor: help; border-bottom: 1px dotted var(--muted); }
+@media (max-width: 640px) {
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; width: 100%; gap: 1px; background: var(--line); }
+  .tabs button { border-left: 0; background: var(--surface); }
+  .tabs button[aria-selected="true"] { background: var(--accent); }
+  .tabs button:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  }
+</style>
+<style>
+.skip { position: absolute; left: -999px; top: 0; background: var(--accent); color: var(--accent-ink); padding: 8px 12px; z-index: 30; }
+.skip:focus { left: 8px; top: 8px; }
+nav.sections a[aria-current="page"] { color: var(--accent); font-weight: 600; border-bottom-color: var(--accent); }
+.docs-wrap { max-width: 1240px; padding-block: 18px 40px; }
+.docs-shell { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 36px; align-items: start; }
+.doc-aside { display: none; }
+@media (min-width: 1200px) { .docs-shell { grid-template-columns: 250px minmax(0, 1fr) 210px; } .doc-aside { display: block; } }
+.doc-side, .doc-aside { position: sticky; top: calc(var(--hdr, 52px) + 16px); max-height: calc(100vh - var(--hdr, 52px) - 32px); overflow-y: auto; font-size: var(--step--1); overscroll-behavior: contain; scrollbar-width: thin; }
+.doc-aside h2 { font-family: var(--body); font-size: var(--step--1); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0 0 8px; }
+.doc-aside ol { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--line); display: grid; gap: 2px; }
+.doc-aside a, .tree a { color: var(--muted); text-decoration: none; display: block; padding: 4px 10px; border-radius: 4px; }
+.doc-aside a { border-left: 2px solid transparent; margin-left: -1px; border-radius: 0; }
+.doc-aside a:hover, .tree a:hover { color: var(--ink); }
+.doc-aside a[aria-current], .tree ul a[aria-current] { color: var(--accent); font-weight: 600; }
+.doc-aside a[aria-current] { border-left-color: var(--accent); }
+.tree, .tree ul { list-style: none; margin: 0; padding: 0; }
+.tree .grp { text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.72rem; color: var(--muted); padding: 14px 10px 4px; }
+.tree > li > a { color: var(--ink); font-weight: 600; padding: 6px 10px; }
+.tree > li.current > a { background: var(--accent-soft); color: var(--accent); }
+.tree ul { margin: 2px 0 8px 10px; border-left: 1px solid var(--line); }
+.tree ul a[aria-current] { background: var(--accent-soft); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.doc-main { min-width: 0; max-width: 80ch; outline: none; }
+.crumbs ol { list-style: none; margin: 0 0 6px; padding: 0; display: flex; flex-wrap: wrap; gap: 4px; font-size: var(--step--1); color: var(--muted); }
+.crumbs li + li::before { content: "›"; margin-right: 4px; }
+.crumbs a { color: var(--muted); }
+.doc-page-head { padding: 4px 0 20px; display: grid; gap: 6px; }
+.doc-page-head h1 { font-size: var(--step-3); }
+.doc-page-head .lead { color: var(--muted); margin: 0; }
+.docs-content { display: grid; gap: 48px; min-width: 0; }
+.docs-content .doc.flat { display: grid; gap: 14px; }
+article.doc { display: grid; gap: 14px; min-width: 0; }
+article.doc, .doc.flat h2[data-sec], article.doc h3 { scroll-margin-top: calc(var(--hdr, 52px) + var(--bar, 0px) + 14px); }
+.doc-head h2, .doc.flat h2 { font-size: var(--step-2); margin: 0; }
+.doc.flat h2 { margin-top: 18px; }
+.doc .lead { color: var(--muted); font-size: var(--step-0); margin: 6px 0 0; }
+article.doc h3 { font-family: var(--display); font-size: var(--step-1); font-weight: 600; margin: 14px 0 -4px; }
+.doc .anchor { color: var(--line); text-decoration: none; margin-left: 4px; font-family: var(--body); font-weight: 400; font-size: 0.8em; }
+.doc :is(h2, h3):hover .anchor, .doc .anchor:focus { color: var(--accent); }
+.doc p { margin: 0; }
+.doc ul, .doc ol { margin: 0; padding-left: 1.3em; display: grid; gap: 4px; }
+.doc code { background: var(--idle-soft); padding: 0 4px; border-radius: 3px; }
+.doc .tablewrap { border: 1px solid var(--line); border-radius: 6px; overflow-x: auto; }
+table.doctable { border-collapse: collapse; width: 100%; font-size: var(--step--1); }
+table.doctable th { text-align: left; font-weight: 600; background: var(--paper); color: var(--muted); }
+table.doctable th, table.doctable td { padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.doctable tr:last-child td { border-bottom: 0; }
+.codewrap { position: relative; }
+.doc pre { margin: 0; padding: 40px 14px 12px; background: var(--paper); border: 1px solid var(--line); border-radius: 5px; overflow-x: auto; font-family: var(--mono); font-size: var(--step--1); scrollbar-width: thin; }
+.doc pre code { background: none; padding: 0; }
+.codewrap .copy { position: absolute; top: 6px; right: 6px; font-size: 0.72rem; padding: 3px 9px; }
+.pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); }
+.pager a { display: grid; gap: 2px; text-decoration: none; color: var(--ink); font-weight: 600; padding: 10px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); min-width: 0; }
+.pager a[rel="next"] { text-align: right; margin-left: auto; }
+.pager a:hover { border-color: var(--accent); }
+.pager small { color: var(--muted); font-weight: 400; }
+.docbar, .drawer, .scrim { display: none; }
+.totop { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: max(16px, env(safe-area-inset-bottom, 0px)); width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 1.2rem; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.18); z-index: 12; }
+.totop[hidden] { display: none; }
+@media (max-width: 900px) {
+  .docs-shell { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .doc-side { display: none; }
+  .docbar { display: block; position: sticky; top: var(--hdr, 52px); z-index: 8; background: var(--surface); border-bottom: 1px solid var(--line); }
+  .docbar button { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 11px max(16px, env(safe-area-inset-left, 0px)); border: 0; border-radius: 0; background: transparent; font-weight: 600; text-align: left; }
+  .docbar-t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .docbar button[aria-expanded="true"] span[aria-hidden] { transform: rotate(180deg); }
+  .scrim:not([hidden]) { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 20; }
+  .drawer:not([hidden]) { display: block; position: fixed; z-index: 21; left: 0; right: 0; top: calc(var(--hdr, 52px) + var(--bar, 0px)); max-height: calc(100vh - var(--hdr, 52px) - var(--bar, 0px) - 24px); overflow-y: auto; background: var(--surface); border-bottom: 1px solid var(--line); box-shadow: 0 8px 24px rgba(0,0,0,0.25); padding: 8px max(16px, env(safe-area-inset-left, 0px)) 16px; }
+  .drawer-close { margin: 4px 0 8px auto; display: block; font-size: var(--step--1); }
+  .tree a { padding: 9px 10px; }
+  .doc pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .doc-page-head h1 { font-size: var(--step-2); }
+  .pager { flex-direction: column; }
+  .pager a[rel="next"] { text-align: left; margin-left: 0; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#docMain">К содержанию</a>
+<header class="top" id="topbar">
+  <div class="wrap">
+    <a class="brand" href="../../../">Арена гипотез</a>
+    <nav class="sections" aria-label="Документация">
+      <a href="../../../">На главную</a><a href="../../start/">Начало работы</a><a href="../../method/">Как это работает</a><a href="../../reference/" aria-current="page">Справочник</a><a href="https://github.com/danrd/hyp-arena" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
+  </div>
+</header>
+<div class="docbar" id="docBar">
+  <button type="button" id="docBarBtn" aria-expanded="false" aria-controls="docDrawer"><span class="docbar-t" id="docBarTitle">Справочник: агрегация и данные</span><span aria-hidden="true">▾</span></button>
+</div>
+<div class="scrim" id="docScrim" hidden></div>
+<div class="drawer" id="docDrawer" role="dialog" aria-modal="true" aria-label="Навигация по документации" hidden>
+  <button type="button" class="drawer-close" id="docClose">Закрыть</button>
+  <nav aria-label="Разделы документации"><ul class="tree"><li><a href="../../start/">Начало работы</a></li><li class="grp">Как это работает</li><li><a href="../../method/">Карточка и проверка</a></li><li><a href="../../method/ranking/">Показатели и рейтинг</a></li><li class="grp">Справочник</li><li><a href="../">Формат карточки и показатели</a></li><li class="current"><a href="./" aria-current="page">Агрегация и данные</a><ul><li><a href="#docs-aggregation" data-spy="docs-aggregation">Агрегация</a></li><li><a href="#docs-data" data-spy="docs-data">Данные и источники</a></li></ul></li><li><a href="../examples/">Примеры</a></li></ul></nav>
+</div>
+<main class="wrap docs-wrap" id="top">
+  <div class="docs-shell">
+    <aside class="doc-side" id="docSide" aria-label="Разделы документации"><nav><ul class="tree"><li><a href="../../start/">Начало работы</a></li><li class="grp">Как это работает</li><li><a href="../../method/">Карточка и проверка</a></li><li><a href="../../method/ranking/">Показатели и рейтинг</a></li><li class="grp">Справочник</li><li><a href="../">Формат карточки и показатели</a></li><li class="current"><a href="./" aria-current="page">Агрегация и данные</a><ul><li><a href="#docs-aggregation" data-spy="docs-aggregation">Агрегация</a></li><li><a href="#docs-data" data-spy="docs-data">Данные и источники</a></li></ul></li><li><a href="../examples/">Примеры</a></li></ul></nav></aside>
+    <div class="doc-main" id="docMain" tabindex="-1">
+      <nav class="crumbs" aria-label="Хлебные крошки"><ol>
+        <li><a href="../../start/">Документация</a></li><li><a href="../">Справочник</a></li><li><a href="./">Агрегация и данные</a></li><li id="crumbCur" hidden></li>
+      </ol></nav>
+      <header class="doc-page-head"><h1>Справочник: агрегация и данные</h1><p class="lead">Модель оценки, выбор весов, точность, источники метода и правила работы с данными.</p></header>
+      <div class="docs-content"><article class="doc" id="docs-aggregation" data-sec><header class="doc-head"><h2>Агрегация <a class="anchor" href="#docs-aggregation" aria-label="Ссылка на раздел">#</a></h2><p class="lead">Модель оценки, выбор весов, точность, ограничения «A не хуже B» и источники метода.</p></header>
+<h3 id="agg-model">Модель <a class="anchor" href="#agg-model" aria-label="Ссылка на раздел">#</a></h3>
+<p>У каждой гипотезы i есть значения показателей q<sub>ij</sub> от 0 до 1, где больше — лучше (показатели вроде <code>path_to_human</code> переворачиваются). Оценка:</p>
+<p>u(i, w) = Σ<sub>j</sub> w<sub>j</sub> · q<sub>ij</sub></p>
+<ul>
+<li><strong>Числовые показатели</strong> (<code>late_start</code>, <code>effect_size</code>, <code>informativeness</code>) переводятся в [0, 1] по <strong>фиксированным шкалам</strong>, а не по минимуму и максимуму текущего набора. Поэтому значение гипотезы и вероятность «A выше B» не зависят от того, какие ещё гипотезы в наборе; места, конечно, зависят.</li>
+<li><strong>Порядковые показатели</strong> (<code>effect_level</code>, <code>robustness</code>, <code>multi_site_positive</code>, <code>mechanism</code>, <code>novelty</code>, <code>path_to_human</code>, <code>both_sexes</code>): в каждом розыгрыше уровни получают случайные числа, возрастающие вместе с уровнем (отображение SMAA-O). Так не нужно выбирать, что «mammals» вдвое лучше «invertebrates»; равные шаги можно включить для проверки чувствительности.</li>
+<li><strong>Неизвестные значения</strong> разыгрываются по допустимому диапазону (<a href="../#ind-unknown">см. «Показатели»</a>).</li>
+<li>Оценка <strong>компенсаторная</strong>: высокое значение по одному показателю может покрыть низкое по другому. Отсев опровергнутых гипотез происходит до агрегации (фильтр).</li>
+</ul>
+<h3 id="agg-weights-ref">Допустимые веса и их выбор <a class="anchor" href="#agg-weights-ref" aria-label="Ссылка на раздел">#</a></h3>
+<p>Допустимые веса — неотрицательные, сумма равна 1. Профиль приоритетов ограничивает их линейно: показатель ступени выше весит не меньше любого показателя ступени ниже; показатели одной ступени равноправны и разыгрываются случайно. Показатели, которых в профиле нет, порядком не заданы (если нет ступени «остальные»).</p>
+<p><strong>Как выбираются веса.</strong> Когда порядок задан для всех показателей, веса выбираются точно: отсортированный равномерный набор, самые большие значения достаются первой ступени. Для остальных профилей и для ограничений другого вида используется метод hit-and-run: случайное блуждание, равномерное по допустимому многограннику (Tervonen et al. 2013).</p>
+<h3 id="agg-accuracy">Точность <a class="anchor" href="#agg-accuracy" aria-label="Ссылка на раздел">#</a></h3>
+<p>У моделирования есть собственная погрешность, и она разная для разных чисел.</p>
+<ul>
+<li><strong>Вероятности</strong> (P(топ-k), P(лучшая), P(A выше B)) — доли розыгрышей. С доверием 95% их погрешность равна 1,96·√(p(1−p)/K); в худшем случае (p = 0,5) для K = 10 000 она составляет ±0,0098, а чтобы получить ±0,01, нужно K = 1,96² / (4·0,01²) ≈ 9 604 розыгрыша.</li>
+<li><strong>Ожидание</strong> — среднее по розыгрышам; его погрешность равна 1,96·σ/√K, где σ — разброс оценки гипотезы. Типичный разброс 0,05–0,10 даёт ±0,001–0,002 при K = 10 000.</li>
+</ul>
+<p>Если оценки двух гипотез различаются меньше этой погрешности (для пары: 1,96·√((σ<sub>A</sub>² + σ<sub>B</sub>²)/K)), они считаются равными, и таблица рейтинга объединяет их в одно место «на равных». «На равных» означает лишь, что различие не отличимо от шума моделирования, а не что гипотезы похожи по смыслу. Насколько места зависят от весов и данных, показывают полоса и матрица P(A выше B), а не погрешность.</p>
+<p>Вместе с результатом сохраняются K, зерно случайных чисел, версия профиля и тип отображения порядковых уровней.</p>
+<h3 id="agg-prefer">Ограничения вида «A не хуже B» <a class="anchor" href="#agg-prefer" aria-label="Ссылка на раздел">#</a></h3>
+<p>Эксперт может выбрать из пары гипотез «A не хуже B» при данном профиле. Выбор превращается в линейное ограничение на веса: Σ<sub>j</sub> w<sub>j</sub> (q<sub>Aj</sub> − q<sub>Bj</sub>) ≥ 0. Профиль получает новую версию, а веса выбираются методом hit-and-run.</p>
+<ul>
+<li>Если у A или B есть неизвестные значения, они заменяются ожидаемыми, а ограничение помечается как приближённое.</li>
+<li>Если ограничения противоречат друг другу, допустимых весов нет. Система показывает минимальный набор противоречащих выборов и никогда не отбрасывает ответ молча.</li>
+<li>Результаты всегда доступны и с выборами эксперта, и без них.</li>
+<li>Следующую пару для вопроса выбирают среди лучших гипотез: пара, для которой P(A выше B) ближе всего к 0,5.</li>
+</ul>
+<h3 id="agg-limits">Ограничения метода <a class="anchor" href="#agg-limits" aria-label="Ссылка на раздел">#</a></h3>
+<ul>
+<li><strong>Коррелированные показатели считаются дважды.</strong> Уровень эффекта и устойчивость выводятся из одних и тех же данных, поэтому аддитивная оценка может завышать их суммарный вес.</li>
+<li><strong>Шкалы линейные.</strong> Нелинейные функции нормировки из работ Хованова не используются; границы шкал (например, 30% для размера эффекта) — рабочие допущения.</li>
+<li><strong>Зависимые неопределённости</strong> между показателями не моделируются: разыгрываются независимо.</li>
+<li>Рейтинг зависит от выбранного профиля. Это свойство метода, а не недостаток: профиль и есть заданная цель.</li>
+</ul>
+<h3 id="agg-sources">Источники <a class="anchor" href="#agg-sources" aria-label="Ссылка на раздел">#</a></h3>
+<ol>
+<li>Lahdelma R., Hokkanen J., Salminen P. SMAA — Stochastic multiobjective acceptability analysis. <em>European Journal of Operational Research</em> 106(1), 1998, 137–143. <a href="https://doi.org/10.1016/S0377-2217(97)00163-X" target="_blank" rel="noopener">doi:10.1016/S0377-2217(97)00163-X</a></li>
+<li>Lahdelma R., Salminen P. SMAA-2: Stochastic multicriteria acceptability analysis for group decision making. <em>Operations Research</em> 49(3), 2001, 444–454. <a href="https://doi.org/10.1287/opre.49.3.444.11220" target="_blank" rel="noopener">doi:10.1287/opre.49.3.444.11220</a></li>
+<li>Lahdelma R., Miettinen K., Salminen P. Ordinal criteria in stochastic multicriteria acceptability analysis (SMAA). <em>European Journal of Operational Research</em> 147(1), 2003, 117–127. <a href="https://doi.org/10.1016/S0377-2217(02)00267-9" target="_blank" rel="noopener">doi:10.1016/S0377-2217(02)00267-9</a></li>
+<li>Tervonen T., Lahdelma R. Implementing stochastic multicriteria acceptability analysis. <em>European Journal of Operational Research</em> 178(2), 2007, 500–513. <a href="https://doi.org/10.1016/j.ejor.2005.12.037" target="_blank" rel="noopener">doi:10.1016/j.ejor.2005.12.037</a></li>
+<li>Tervonen T., van Valkenhoef G., Baştürk N., Postmus D. Hit-and-run enables efficient weight generation for simulation-based multiple criteria decision analysis. <em>European Journal of Operational Research</em> 224(3), 2013, 552–559. <a href="https://doi.org/10.1016/j.ejor.2012.08.026" target="_blank" rel="noopener">doi:10.1016/j.ejor.2012.08.026</a></li>
+<li>van Valkenhoef G., Tervonen T., Postmus D. Notes on «Hit-and-run enables efficient weight generation for simulation-based multiple criteria decision analysis». <em>European Journal of Operational Research</em> 239(3), 2014, 865–867. <a href="https://doi.org/10.1016/j.ejor.2014.06.036" target="_blank" rel="noopener">doi:10.1016/j.ejor.2014.06.036</a></li>
+<li>Hovanov N., Kolari J., Sokolov M. Deriving weights from general pairwise comparison matrices. <em>Mathematical Social Sciences</em> 55(2), 2008, 205–220. <a href="https://doi.org/10.1016/j.mathsocsci.2007.07.006" target="_blank" rel="noopener">doi:10.1016/j.mathsocsci.2007.07.006</a></li>
+<li>Hovanov N., Yudaeva M., Hovanov K. Multicriteria estimation of probabilities on basis of expert non-numeric, non-exact and non-complete knowledge. <em>European Journal of Operational Research</em> 195(3), 2009, 857–863. <a href="https://doi.org/10.1016/j.ejor.2007.11.018" target="_blank" rel="noopener">doi:10.1016/j.ejor.2007.11.018</a></li>
+</ol>
+<p>Реализации-образцы: пакеты R <code>smaa</code> и <code>hitandrun</code> (van Valkenhoef, Tervonen).</p>
+</article><article class="doc" id="docs-data" data-sec><header class="doc-head"><h2>Данные и источники <a class="anchor" href="#docs-data" aria-label="Ссылка на раздел">#</a></h2><p class="lead">Какие источники используются, что каждый из них вправе утверждать и как соблюдается правило «на момент T».</p></header>
+<h3 id="data-types">Типы источников <a class="anchor" href="#data-types" aria-label="Ссылка на раздел">#</a></h3>
+<p>Для проверки важнее не формат источника, а то, что он может утверждать. Каждая запись помечается типом.</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Тип</th>
+<th>Примеры</th>
+<th>Может задать статус утверждения?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A. Первичный текст</td>
+<td>PubMed, Europe PMC, bioRxiv</td>
+<td>да, только с дословной цитатой роли <code>finding</code></td>
+</tr>
+<tr>
+<td>B. Курируемые записи</td>
+<td>DrugAge, Open Genes</td>
+<td>да, вместе с цитатой из связанной работы; само включение записи — сигнал, а не доказательство</td>
+</tr>
+<tr>
+<td>C. Измерения</td>
+<td>GTEx, GEO, IMPC, результаты на ClinicalTrials.gov</td>
+<td>да, только через выполненную проверку с записанным результатом</td>
+</tr>
+<tr>
+<td>D. Машинные выводы</td>
+<td>PubTator, аннотации Europe PMC, баллы Open Targets</td>
+<td>нет: подсказки для поиска</td>
+</tr>
+<tr>
+<td>E. Метаданные качества</td>
+<td>Crossref, Retraction Watch, OpenCitations</td>
+<td>нет: флаги на других записях</td>
+</tr>
+<tr>
+<td>F. Планы и деньги</td>
+<td>даты и набор на ClinicalTrials.gov, гранты NIH RePORTER</td>
+<td>нет: входы для оценки сроков</td>
+</tr>
+</tbody>
+</table></div>
+<p>Пример типа D: PubTator вывел связь «Sirolimus — Negative_Correlation — Neoplasms» из аннотации работы Harrison et al. 2009, где сказано лишь, что рапамицин «may extend lifespan by postponing death from cancer». Это предположение авторов, и статуса оно не задаёт.</p>
+<h3 id="data-used">Что используется сейчас <a class="anchor" href="#data-used" aria-label="Ссылка на раздел">#</a></h3>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Источник</th>
+<th>Зачем</th>
+<th>Условия</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PubMed (NCBI E-utilities)</td>
+<td>аннотации и даты публикаций; основной поиск доказательств, 20 аннотаций на утверждение</td>
+<td>открытый доступ</td>
+</tr>
+<tr>
+<td>DrugAge (HAGR)</td>
+<td>курируемые записи о влиянии веществ на продолжительность жизни; одна запись на работу и вид</td>
+<td>CC BY 3.0; при публикациях цитировать de Magalhães et al. 2024</td>
+</tr>
+<tr>
+<td>PubChem</td>
+<td>сведение названий вещества (соли и гидраты) к исходному соединению, идентификаторы</td>
+<td>открытый доступ</td>
+</tr>
+<tr>
+<td>ChEMBL</td>
+<td>мишени механизма действия, коды ATC, год первого одобрения</td>
+<td>открытый доступ</td>
+</tr>
+<tr>
+<td>ChEBI (OLS4)</td>
+<td>классы веществ для слабого сходства</td>
+<td>открытый доступ</td>
+</tr>
+<tr>
+<td>ClinicalTrials.gov (API v2)</td>
+<td>начало испытаний вещества (для <code>path_to_human</code>); запись регистра при проверке первичного исхода</td>
+<td>открытый доступ</td>
+</tr>
+</tbody>
+</table></div>
+<p>В DrugAge нет колонки с датой записи: для бэктеста дата берётся по PMID работы. Обработка ограничена аннотациями, полные тексты не читаются.</p>
+<h3 id="data-asof">Правило «на момент T» <a class="anchor" href="#data-asof" aria-label="Ссылка на раздел">#</a></h3>
+<p>Бэктест оценивает рейтинг так, как если бы сегодня была дата T, а результаты стали известны позже. Чтобы будущее не просочилось в рейтинг:</p>
+<ul>
+<li>у каждой записи есть дата: для PubMed это самая ранняя публичная дата (электронная публикация, печатная, попадание в PubMed); для испытаний — дата начала; для DrugAge — дата работы по PMID;</li>
+<li>поиск ограничен датой: учитываются только работы, опубликованные не позже T;</li>
+<li>для каждого прогона бэктеста выполняется аудит дат: ни одна запись с датой позже T не должна попасть ни в один компонент (проверенные утверждения, альтернативы, отказы);</li>
+<li>знания языковой модели датой не ограничиваются. Устройство проверки уменьшает утечку: текст разбирается без внешних фактов, а статус требует дословной цитаты из работы, опубликованной до T. Полностью утечку это не исключает, поэтому наборов два: <strong>чистый</strong> (исходы появились после даты отсечки знаний используемой модели; на нём системы сравниваются) и <strong>исторический</strong> (T = 2010; модели могли знать исходы, поэтому на нём оценивается только эта система).</li>
+</ul>
+<p>Показатель <code>path_to_human</code> в бэктесте тоже считается «на момент T» (год первого одобрения, начало испытаний; см. «Показатели»).</p>
+<h3 id="data-latestart">Таблицы для <code>late_start</code> <a class="anchor" href="#data-latestart" aria-label="Ссылка на раздел">#</a></h3>
+<p>Показатель <code>late_start</code> делит возраст начала вмешательства на медиану продолжительности жизни контрольных групп. Медианы взяты из публикаций и официальных таблиц.</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Вид</th>
+<th>Линия или популяция</th>
+<th>Пол</th>
+<th>Медиана</th>
+<th>Условия и источник</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>мышь</td>
+<td>UM-HET3</td>
+<td>самки</td>
+<td>887 суток (95% ДИ 879–898)</td>
+<td>контроли ITP, три площадки, шесть когорт; Cheng et al. 2019, PMID 30801953</td>
+</tr>
+<tr>
+<td>мышь</td>
+<td>UM-HET3</td>
+<td>самцы</td>
+<td>803 суток (791–815)</td>
+<td>то же</td>
+</tr>
+<tr>
+<td>мышь</td>
+<td>C57BL/6J</td>
+<td>самки</td>
+<td>866 суток</td>
+<td>The Jackson Laboratory, 31 инбредная линия, предварительный отчёт; Yuan et al. 2009, PMID 19627267</td>
+</tr>
+<tr>
+<td>мышь</td>
+<td>C57BL/6J</td>
+<td>самцы</td>
+<td>901 сутки</td>
+<td>то же</td>
+</tr>
+<tr>
+<td>червь</td>
+<td><em>C. elegans</em> N2</td>
+<td>гермафродиты</td>
+<td>19 суток (медианы отдельных испытаний 16–23)</td>
+<td>CITP, 20 °C, 51 мкМ FUdR, возраст в сутках взрослой жизни; Lucanic et al. 2017, PMID 28220799</td>
+</tr>
+<tr>
+<td>муха</td>
+<td><em>D. melanogaster</em> Dahomey</td>
+<td>самки</td>
+<td>63–70 суток</td>
+<td>25 °C, среда SY 1,0; пик по концентрациям корма, на стандартной диете медиана короче; Bass et al. 2007, PMID 17921418</td>
+</tr>
+<tr>
+<td>человек</td>
+<td>страны с высоким доходом (по умолчанию)</td>
+<td>оба · мужчины · женщины</td>
+<td>83,9 · 81,1 · ≈85,7 года</td>
+<td>таблица смертности ВОЗ 2023: возраст, до которого доживает 50 000 из 100 000</td>
+</tr>
+<tr>
+<td>человек</td>
+<td>весь мир (если популяция из стран с низким или средним доходом)</td>
+<td>оба · мужчины · женщины</td>
+<td>79,5 · 76,6 · 82,1 года</td>
+<td>то же</td>
+</tr>
+</tbody>
+</table></div>
+<p>Правила подбора строки:</p>
+<ul>
+<li>нет линии: интервал по всем линиям вида; нет пола: строка «оба», если она есть, иначе интервал по полам; вида нет в таблице: значение неизвестно;</li>
+<li>черви и мухи: если карточка не называет условия опыта, строка подходит; если называет другие (другая температура, нет FUdR, другая линия мух, самцы), значение неизвестно, потому что медиана на них не переносится;</li>
+<li>максимальная продолжительность жизни из AnAge не используется: она шумная и зависит от размера выборки.</li>
+</ul>
+<p>Словесный возраст превращается в интервал:</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Метка</th>
+<th>Мышь, месяцев</th>
+<th>Человек, лет</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>young adult, mature adult</td>
+<td>3–6</td>
+<td>19–24</td>
+</tr>
+<tr>
+<td>adult</td>
+<td>3–15</td>
+<td>19–44</td>
+</tr>
+<tr>
+<td>middle-aged</td>
+<td>10–15</td>
+<td>45–64</td>
+</tr>
+<tr>
+<td>old, aged, late life, older adults, elderly</td>
+<td>18–24</td>
+<td>65 и старше</td>
+</tr>
+<tr>
+<td>very old, oldest old</td>
+<td>старше 24</td>
+<td>80 и старше</td>
+</tr>
+</tbody>
+</table></div>
+<p>Границы для мышей взяты из статьи The Jackson Laboratory «When are mice considered old?» (2017), для людей — из возрастных групп MeSH, которыми пользуется фильтр возраста PubMed. Пробелы в классификации (6–10 и 15–18 месяцев у мышей) заполняются объединением соседних строк. Для червей и мух словесные метки не определены: в работах возраст дан в сутках. Метка вне таблицы даёт неизвестное значение.</p>
+<h3 id="data-checks">Какие проверки возможны на открытых данных <a class="anchor" href="#data-checks" aria-label="Ссылка на раздел">#</a></h3>
+<p>Гипотезу можно проверять не только литературой: многие её следствия проверяются открытыми данными (идея в духе проверки следствий по Попперу). Сначала тест записывается до просмотра данных (набор данных, переменная, сравнение, направление, статистика, порог), затем выполняется, а результат хранится как запись типа C. <strong>В текущей версии системы эти проверки не реализованы</strong>; ниже то, что они позволят проверить.</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Следствие гипотезы</th>
+<th>Сильнейшая проверка на открытых данных</th>
+<th>Сила</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>«X продлевает жизнь мышей»</td>
+<td>данные по отдельным животным ITP: эффект по полу, площадке, когорте; поздние когорты как отложенная проверка</td>
+<td>прямая, если X был в ITP</td>
+</tr>
+<tr>
+<td>«X продлевает жизнь червей (устойчиво)»</td>
+<td>данные по отдельным червям CITP: линии, виды, лаборатории</td>
+<td>прямая</td>
+</tr>
+<tr>
+<td>«Результат на червях или мухах перенесётся на мышей»</td>
+<td>базовые частоты переноса по DrugAge и ITP</td>
+<td>косвенная (априорная)</td>
+</tr>
+<tr>
+<td>«X замедляет старение, а не одну болезнь»</td>
+<td>молекулярные оценки по данным печени ITP (GSE292884) против исходов ITP; направление возрастных изменений по Tabula Muris Senis; эпигенетические часы</td>
+<td>косвенная</td>
+</tr>
+<tr>
+<td>«X действует как известные геропротекторы»</td>
+<td>связность профилей экспрессии (LINCS L1000) с сигнатурами продления жизни</td>
+<td>косвенная</td>
+</tr>
+<tr>
+<td>«Мишень T важна для продолжительности жизни человека»</td>
+<td>менделевская рандомизация по мишеням: GWAS продолжительности жизни родителей, инструменты pQTL и eQTL</td>
+<td>квазипричинная</td>
+</tr>
+<tr>
+<td>«X снижает смертность или улучшает функцию у людей»</td>
+<td>сравнение с активным препаратом по NHANES со связью со смертностью; результаты ClinicalTrials.gov; CALERIE для ограничения калорий</td>
+<td>наблюдательная или РКИ по суррогатам</td>
+</tr>
+<tr>
+<td>«X безопасен при длительном приёме»</td>
+<td>диспропорциональность сообщений FAERS, ограничения по эволюционной консервативности (gnomAD), нежелательные явления в испытаниях</td>
+<td>только опровержение</td>
+</tr>
+</tbody>
+</table></div>
+<p>Основные группы источников:</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Группа</th>
+<th>Источники</th>
+<th>Ограничения</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Животные, исходы вмешательств</td>
+<td>ITP через Mouse Phenome Database, CITP, DrugAge, Open Genes, RAID, SynergyAge</td>
+<td>ITP и CITP публикуют отрицательные результаты; DrugAge и Open Genes курируются, RAID содержит только значимые эффекты</td>
+</tr>
+<tr>
+<td>Молекулярные данные</td>
+<td>GEO (GSE292884), LINCS L1000, Tabula Muris Senis, наборы генов клеточного старения (SenMayo, CellAge), Biolearn (эпигенетические часы), GTEx</td>
+<td>разные ткани, линии клеток, схемы; сигнатуры и часы обучены на данных, которые могут пересекаться с проверочными</td>
+</tr>
+<tr>
+<td>Люди</td>
+<td>NHANES со связанной смертностью, ClinicalTrials.gov, CALERIE, openFDA FAERS</td>
+<td>наблюдательные данные подвержены смещению по показанию; FAERS не знает знаменателя</td>
+</tr>
+<tr>
+<td>Генетика человека</td>
+<td>GWAS продолжительности жизни родителей (Timmers et al. 2019), составной показатель старения mvAge (Rosoff et al. 2023), UKB-PPP pQTL, OpenGWAS, eQTL</td>
+<td>слабые инструменты для многих мишеней; перекрытие выборок экспозиции и исхода</td>
+</tr>
+</tbody>
+</table></div>
+<p>Правило отложенной выборки: до того как называть проверку независимой, выясняется, на каких данных обучена сигнатура или часы, и эти данные исключаются из проверки. Условия доступа и лицензии меняются; перед использованием источника их нужно перепроверять.</p>
+</article></div>
+      <nav class="pager" aria-label="Соседние страницы"><a rel="prev" href="../"><small>Назад</small> Справочник: формат карточки и показатели</a><a rel="next" href="../examples/"><small>Дальше</small> Справочник: примеры</a></nav>
+    </div>
+    <aside class="doc-aside" id="docAside" aria-labelledby="asideH"><h2 id="asideH">На этой странице</h2><ol><li><a href="#docs-aggregation" data-spy="docs-aggregation">Агрегация</a></li><li><a href="#docs-data" data-spy="docs-data">Данные и источники</a></li></ol></aside>
+  </div>
+</main>
+<footer>
+  <div class="wrap foot">
+    <p><b>hyp-arena</b> · исследовательский прототип; рейтинги — результат исследования, а не медицинская рекомендация.</p>
+    <dl class="footmeta"><div><dt>Версия кода</dt><dd>v0.1.0</dd></div><div><dt>Лицензия</dt><dd>MIT</dd></div></dl>
+    <p class="footlinks"><a href="../../../">На главную</a> · <a href="https://github.com/danrd/hyp-arena" target="_blank" rel="noopener">GitHub</a></p>
+  </div>
+</footer>
+<button type="button" class="totop" id="toTop" hidden aria-label="Наверх">↑</button>
+<script>
+(() => {
+  const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+  const top = $("#topbar"), bar = $("#docBar");
+  const setVars = () => {
+    document.documentElement.style.setProperty("--hdr", top.offsetHeight + "px");
+    document.documentElement.style.setProperty("--bar", (getComputedStyle(bar).display === "none" ? 0 : bar.offsetHeight) + "px");
+  };
+  setVars(); addEventListener("resize", setVars);
+
+  /* the section in view: the last section heading above the reading line */
+  const secs = $$("[data-sec]");
+  const links = $$("[data-spy]");
+  const crumb = $("#crumbCur"), barTitle = $("#docBarTitle"), pageTitle = barTitle.textContent;
+  const titleOf = el => (el.querySelector("h2") || el).firstChild.textContent.trim();
+  let active = null;
+  const reveal = (a) => {                     // keep the active item visible inside a scrolling panel
+    const box = a.closest(".doc-side, .doc-aside"); if (!box || box.offsetParent === null) return;
+    const r = a.getBoundingClientRect(), b = box.getBoundingClientRect();
+    if (r.top < b.top + 8) box.scrollTop -= b.top + 8 - r.top; else if (r.bottom > b.bottom - 8) box.scrollTop += r.bottom - b.bottom + 8;
+  };
+  const spy = () => {
+    const line = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--hdr")) + (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--bar")) || 0) + 40;
+    let cur = null;
+    for (const s of secs) { if (s.getBoundingClientRect().top <= line) cur = s; else break; }
+    if (cur === active) return; active = cur;
+    links.forEach(a => { const on = cur && a.dataset.spy === cur.id; if (on) { a.setAttribute("aria-current", "location"); reveal(a); } else a.removeAttribute("aria-current"); });
+    const t = cur ? titleOf(cur) : "";
+    crumb.hidden = !t; crumb.textContent = t;
+    barTitle.textContent = t || pageTitle;
+  };
+  let tick = false;
+  addEventListener("scroll", () => { if (!tick) { tick = true; requestAnimationFrame(() => { tick = false; spy(); toggleTop(); }); } }, {passive: true});
+  addEventListener("hashchange", () => setTimeout(spy, 60));
+
+  /* mobile drawer */
+  const btn = $("#docBarBtn"), drawer = $("#docDrawer"), scrim = $("#docScrim");
+  const open = () => { drawer.hidden = false; scrim.hidden = false; btn.setAttribute("aria-expanded", "true"); (drawer.querySelector("a[aria-current]") || drawer.querySelector("a") || drawer).focus(); };
+  const close = (back = true) => { drawer.hidden = true; scrim.hidden = true; btn.setAttribute("aria-expanded", "false"); if (back) btn.focus(); };
+  btn.addEventListener("click", () => drawer.hidden ? open() : close());
+  scrim.addEventListener("click", () => close());
+  $("#docClose").addEventListener("click", () => close());
+  drawer.addEventListener("click", e => { if (e.target.closest("a")) close(false); });
+  document.addEventListener("keydown", e => {
+    if (drawer.hidden) return;
+    if (e.key === "Escape") { e.preventDefault(); close(); return; }
+    if (e.key === "Tab") {                    // keep focus inside the open panel
+      const f = [...drawer.querySelectorAll("a, button")]; if (!f.length) return;
+      const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  });
+  matchMedia("(min-width: 901px)").addEventListener?.("change", e => { if (e.matches) close(false); });
+
+  /* back to top after a couple of screens */
+  const totop = $("#toTop");
+  const toggleTop = () => { totop.hidden = scrollY < innerHeight * 2; };
+  totop.addEventListener("click", () => { scrollTo({top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"}); });
+
+  /* copy buttons on command blocks */
+  $$(".doc pre").forEach(pre => {
+    const wrap = document.createElement("div"); wrap.className = "codewrap";
+    pre.replaceWith(wrap); wrap.appendChild(pre);
+    const b = document.createElement("button"); b.type = "button"; b.className = "copy"; b.textContent = "Копировать";
+    b.addEventListener("click", () => {
+      const done = ok => { b.textContent = ok ? "Скопировано" : "Выделите вручную"; setTimeout(() => { b.textContent = "Копировать"; }, 1800); };
+      try { navigator.clipboard.writeText(pre.textContent).then(() => done(true), () => done(false)); } catch { done(false); }
+    });
+    wrap.appendChild(b);
+  });
+  spy(); toggleTop();
+})();
+</script>
+</body>
+</html>
