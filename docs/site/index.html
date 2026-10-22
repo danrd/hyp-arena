@@ -1,4 +1,10 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Арена гипотез о старении</title>
+<meta name="description" content="Ранжирование гипотез о старении по проверенным фактам: карточки утверждений, цитаты из PubMed и DrugAge, рейтинг по профилям приоритетов и турнир Elo для сравнения.">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,6 +32,10 @@
   color-scheme: dark }
 
 * { box-sizing: border-box; }
+html { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
 body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: var(--step-0); line-height: 1.55; }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
 a { color: var(--accent); }
@@ -42,15 +52,16 @@ p { margin: 0; }
 
 /* header */
 header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; background: var(--surface); border-bottom: 1px solid var(--line); }
-header.top .wrap { display: flex; align-items: center; gap: 20px; padding-block: 10px; flex-wrap: wrap; }
+header.top .wrap { display: flex; align-items: center; justify-content: center; gap: 8px 24px; padding-block: 10px; flex-wrap: wrap; }
 .brand { font-family: var(--display); font-weight: 600; font-size: var(--step-1); text-decoration: none; color: var(--ink); white-space: nowrap; }
-nav.sections { display: flex; gap: 4px 16px; flex-wrap: wrap; font-size: var(--step--1); }
+nav.sections { display: flex; gap: 4px 16px; flex-wrap: wrap; justify-content: center; font-size: var(--step--1); }
 nav.sections a { color: var(--muted); text-decoration: none; padding: 2px 0; border-bottom: 1px solid transparent; }
 nav.sections a:hover { color: var(--ink); border-bottom-color: var(--line); }
 
 /* hero */
-.hero { padding-block: 40px 28px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
-.hero h1 { font-size: var(--step-3); max-width: 22ch; }
+.hero { padding-block: 48px 28px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; justify-items: center; text-align: center; }
+.hero .pipeline { width: 100%; text-align: left; }
+.hero h1 { font-size: var(--step-3); max-width: 24ch; }
 .hero .lead { font-size: var(--step-1); max-width: 60ch; color: var(--muted); }
 .pipeline { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 6px; background: var(--surface); overflow: hidden; }
 .pipeline li { list-style: none; padding: 12px 14px; border-left: 1px solid var(--line); min-width: 0; }
@@ -62,17 +73,17 @@ ol.pipeline { margin: 0; padding: 0; }
 @media (max-width: 760px) { .pipeline { grid-template-columns: minmax(0, 1fr); } .pipeline li { border-left: 0; border-top: 1px solid var(--line); } .pipeline li:first-child { border-top: 0; } }
 
 section.block { padding-block: 36px; border-top: 1px solid var(--line); display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
-.head { display: flex; justify-content: space-between; align-items: end; gap: 12px 24px; flex-wrap: wrap; }
-.head .prose { display: grid; gap: 6px; flex: 1 1 320px; min-width: 0; }
+.head { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; }
+.head .prose { display: grid; gap: 6px; justify-items: center; min-width: 0; }
 .head > * { min-width: 0; }
 .tabs button { flex: 1 1 auto; }
 
 /* data bar */
-.databar { display: flex; gap: 10px 16px; align-items: center; flex-wrap: wrap; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; font-size: var(--step--1); }
+.databar { justify-content: center; display: flex; gap: 10px 16px; align-items: center; flex-wrap: wrap; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; font-size: var(--step--1); }
 .databar .name { font-weight: 600; font-size: var(--step-0); }
 .badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: var(--step--1); font-weight: 500; white-space: nowrap; }
 .badge.example { background: var(--warn-soft); color: var(--warn); }
-.databar .spacer { flex: 1; }
+.databar .spacer { flex: 0 0 8px; }
 button, .btn { font: inherit; font-size: var(--step--1); border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 6px 12px; border-radius: 5px; cursor: pointer; }
 button:hover, .btn:hover { border-color: var(--accent); }
 .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
@@ -207,16 +218,24 @@ table.defs td, table.defs th { padding: 7px 10px; border-bottom: 1px solid var(-
 table.defs th { color: var(--muted); font-weight: 500; }
 .big { font-family: var(--display); font-size: var(--step-3); line-height: 1; font-variant-numeric: tabular-nums; }
 .ci { font-family: var(--mono); font-size: var(--step--1); color: var(--muted); }
+ol.steps { margin: 0 auto; padding: 0; list-style: none; counter-reset: step; display: grid; gap: 16px; max-width: 760px; width: 100%; }
+ol.steps li { display: grid; gap: 8px; padding-left: 2.2em; position: relative; text-align: left; min-width: 0; counter-increment: step; }
+ol.steps li::before { content: counter(step); position: absolute; left: 0; top: 0; font-family: var(--mono); font-size: var(--step--1); color: var(--accent); line-height: 1.9; }
+ol.steps li > span { font-size: var(--step--1); }
+ol.steps li > p { margin: 0; }
+pre.cmd[data-copy] { cursor: copy; }
 pre.cmd { margin: 0; padding: 12px 14px; background: var(--paper); border: 1px solid var(--line); border-radius: 5px; overflow-x: auto; font-family: var(--mono); font-size: 0.8rem; line-height: 1.5; }
 footer { padding-block: 28px 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: var(--step--1); }
 @media (prefers-reduced-motion: no-preference) { table.rank tbody tr td { transition: background 120ms; } }
 </style>
+</head>
+<body>
 
 <header class="top">
   <div class="wrap">
     <a class="brand" href="#top">Арена гипотез</a>
     <nav class="sections" aria-label="Разделы">
-      <a href="#ranking">Рейтинг</a><a href="#card">Карточка</a><a href="#outside">Вне рейтинга</a><a href="#method">Как устроено</a><a href="#validation">Проверка метода</a><a href="#data">Свои данные</a>
+      <a href="#ranking">Рейтинг</a><a href="#card">Карточка</a><a href="#outside">Вне рейтинга</a><a href="#method">Как устроено</a><a href="#validation">Проверка метода</a><a href="#data">Запустить у себя</a>
     </nav>
   </div>
 </header>
@@ -245,6 +264,8 @@ footer { padding-block: 28px 40px; border-top: 1px solid var(--line); color: var
       <label class="btn primary" for="fileInput">Открыть свой прогон</label>
       <input type="file" id="fileInput" accept="application/json,.json">
       <button type="button" id="resetBtn" hidden>Вернуть пример</button>
+      <button type="button" id="dlJson">Скачать JSON</button>
+      <button type="button" id="dlCsv">Скачать рейтинг (CSV)</button>
     </div>
   </div>
 
@@ -268,7 +289,7 @@ footer { padding-block: 28px 40px; border-top: 1px solid var(--line); color: var
         <h2>Что именно утверждает гипотеза и что нашлось в литературе</h2>
         <p class="muted">Каждое утверждение раскрывается: цитаты за и против, отказы с причинами. Пунктиром отмечены значения, унаследованные из PICO, а не сказанные в самом утверждении.</p>
       </div>
-      <label class="muted" for="cardSelect" style="display:grid;gap:4px;font-size:var(--step--1);flex:1 1 260px;max-width:42ch">Гипотеза
+      <label class="muted" for="cardSelect" style="display:grid;gap:4px;font-size:var(--step--1);width:100%;max-width:42ch;text-align:left">Гипотеза
         <select id="cardSelect"></select>
       </label>
     </div>
@@ -352,17 +373,30 @@ footer { padding-block: 28px 40px; border-top: 1px solid var(--line); color: var
   <section class="block wrap" id="data">
     <div class="head">
       <div class="prose">
-        <p class="eyebrow">Свои данные</p>
-        <h2>Как показать здесь свой прогон</h2>
-        <p class="muted">Страница читает один JSON-файл. Его собирает команда из репозитория по результату конвейера v2 и, если есть, турнира на тех же текстах. Файл открывается кнопкой «Открыть свой прогон» или перетаскиванием на страницу и никуда не отправляется.</p>
+        <p class="eyebrow">Запустить у себя</p>
+        <h2>Проверить свои гипотезы со своим ключом</h2>
+        <p class="muted">Прогон идёт на вашем компьютере: гипотезы и ключ никуда, кроме выбранного провайдера моделей, PubMed и открытых баз, не уходят. Результат открывается здесь кнопкой «Открыть свой прогон» или перетаскиванием файла; страница его никуда не отправляет.</p>
       </div>
     </div>
-    <div style="display:grid;gap:8px">
-      <pre class="cmd" id="cmdText">python -m hyparena.site export --v2 runs/&lt;прогон&gt;.v2.json \
-    --elo runs/neg/L0_s0/&lt;группа&gt;.json --pool data/&lt;входной файл&gt;.json \
-    --title "Название набора" --out runs/site/набор.json</pre>
-      <div><button type="button" id="copyCmd">Скопировать команду</button> <span class="muted" id="copyNote" style="font-size:var(--step--1)"></span></div>
-    </div>
+    <ol class="steps">
+      <li><p><b>Установить</b> (Python 3.11 или новее).</p>
+        <pre class="cmd" data-copy>git clone https://github.com/danrd/hyp-arena
+cd hyp-arena
+pip install -e .</pre></li>
+      <li><p><b>Задать ключ.</b> По умолчанию модели вызываются через CometAPI (<code>configs/v2.yaml</code>); платные вызовы включаются только явно.</p>
+        <pre class="cmd" data-copy>export COMET_API_KEY=ваш-ключ
+export ALLOW_PAID=1</pre>
+        <span class="muted">Бесплатные модели OpenRouter: ключ в <code>OPENROUTER_API_KEY</code> и <code>--config configs/models.yaml</code>. Качество ниже, а бесплатные эндпоинты могут сохранять запросы, поэтому неопубликованные гипотезы через них не отправляйте.</span></li>
+      <li><p><b>Записать гипотезы</b> в текстовый файл, по одной на абзац (абзацы разделены пустой строкой) или нумерованным списком. Лучше всего ранжируются гипотезы о вмешательствах и механизмах старения: что, кому, в какой дозе и с каким исходом.</p></li>
+      <li><p><b>Запустить проверку и рейтинг.</b> Несколько вызовов модели на гипотезу и несколько минут на десяток гипотез; <code>--max-calls</code> ограничивает расход.</p>
+        <pre class="cmd" data-copy>python -m hyparena.card.pipeline --paste мои_гипотезы.txt \
+    --max-calls 200 --out runs/mine.v2.json</pre></li>
+      <li><p><b>Собрать файл для этой страницы</b> и открыть его кнопкой «Открыть свой прогон».</p>
+        <pre class="cmd" data-copy>python -m hyparena.site export --v2 runs/mine.v2.json \
+    --title "Мои гипотезы" --out runs/site/mine.json</pre>
+        <span class="muted">Чтобы рядом был рейтинг Elo, прогоните те же тексты турниром (<code>python -m hyparena.live run --import-file …</code>) и добавьте <code>--elo</code> и <code>--pool</code>.</span></li>
+    </ol>
+    <p class="muted" style="font-size:var(--step--1);text-align:center"><span id="copyNote"></span></p>
   </section>
 </main>
 
@@ -648,15 +682,39 @@ footer { padding-block: 28px 40px; border-top: 1px solid var(--line); color: var
   document.addEventListener("dragover", e => { e.preventDefault(); document.body.classList.add("drop"); });
   document.addEventListener("dragleave", e => { if (!e.relatedTarget) document.body.classList.remove("drop"); });
   document.addEventListener("drop", e => { e.preventDefault(); document.body.classList.remove("drop"); const f = e.dataTransfer.files[0]; if (f) readFile(f); });
-  $("#copyCmd").addEventListener("click", () => {
-    const text = $("#cmdText").textContent;
-    const done = ok => { $("#copyNote").textContent = ok ? "Скопировано" : "Выделите текст и скопируйте вручную"; };
-    try { navigator.clipboard.writeText(text).then(() => done(true), () => { selectCmd(); done(false); }); } catch { selectCmd(); done(false); }
+  document.querySelectorAll("pre[data-copy]").forEach(pre => {
+    pre.title = "Нажмите, чтобы скопировать";
+    pre.addEventListener("click", () => {
+      const done = ok => { $("#copyNote").textContent = ok ? "Команда скопирована" : "Выделите текст и скопируйте вручную"; };
+      const select = () => { const sel = getSelection(), r = document.createRange(); r.selectNodeContents(pre); sel.removeAllRanges(); sel.addRange(r); };
+      try { navigator.clipboard.writeText(pre.textContent).then(() => done(true), () => { select(); done(false); }); } catch { select(); done(false); }
+    });
   });
-  function selectCmd() { const s = getSelection(), r = document.createRange(); r.selectNodeContents($("#cmdText")); s.removeAllRanges(); s.addRange(r); }
+
+  function download(name, text, type) {
+    try {
+      const url = URL.createObjectURL(new Blob([text], {type}));
+      const a = Object.assign(document.createElement("a"), {href: url, download: name});
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch { $("#loadError").textContent = "Браузер не дал скачать файл."; $("#loadError").hidden = false; }
+  }
+  const slug = () => (B.title || "run").toLowerCase().replace(/[^a-zа-яё0-9]+/gi, "-").replace(/^-|-$/g, "").slice(0, 60) || "run";
+  $("#dlJson").addEventListener("click", () => download(slug() + ".json", JSON.stringify(B, null, 1), "application/json"));
+  $("#dlCsv").addEventListener("click", () => {
+    const cols = ["id", "title", "outcome", "reason", "elo"], profs = Object.keys(B.profiles || {});
+    for (const p of profs) cols.push(p + "_rank", p + "_expected", p + "_q05", p + "_q95", p + "_p_topk");
+    const q = v => { const t = String(v ?? ""); return /[",\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+    const rows = B.hypotheses.map(h => { const r = [h.id, shortTitle(h), h.outcome, reason(h), B.elo?.ratings?.[h.id]?.rating ?? ""];
+      for (const p of profs) { const P = B.profiles[p], i = P.order.indexOf(h.id);
+        r.push(i >= 0 ? i + 1 : "", P.expected[h.id] ?? "", P.quantiles[h.id]?.[0] ?? "", P.quantiles[h.id]?.[2] ?? "", P.p_topk[h.id] ?? ""); }
+      return r.map(q).join(","); });
+    download(slug() + ".csv", "\ufeff" + [cols.join(","), ...rows].join("\n"), "text/csv");
+  });
 
   let SAMPLE = {};
   try { SAMPLE = JSON.parse($("#sample").textContent); } catch { SAMPLE = {}; }
   try { load(SAMPLE, true); } catch (e) { $("#loadError").textContent = "Встроенный пример не загрузился: " + e.message; $("#loadError").hidden = false; }
 })();
 </script>
+</body>
+</html>
