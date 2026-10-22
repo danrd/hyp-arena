@@ -25,6 +25,7 @@ dependencies = [
 [project.optional-dependencies]
 demo = ["gradio>=5"]
 embed = ["onnxruntime", "tokenizers", "huggingface_hub"]
+site = ["markdown"]
 test = ["pytest"]
 
 [tool.hatch.metadata]
