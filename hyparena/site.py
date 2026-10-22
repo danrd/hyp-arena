@@ -18,8 +18,10 @@ import argparse
 import posixpath
 import html
 import json
+import math
 import re
 import time
+from collections import Counter
 from pathlib import Path
 from typing import Optional
 
@@ -340,13 +342,28 @@ def export_evolution(v2_path: str, pool_path: str, title: str = EVO_TITLE) -> di
         r["informativeness"] = (by[r["id"]].get("informativeness") or {}).get("n")
         r["status"] = next((cv["status"] for cv in (by[r["id"]]["verification"] or {"claims": []})["claims"]
                             if cv.get("claim") and cv["claim"]["role"] == "outcome"), None)
+    P = (res.get("ranking") or {}).get(crit["profile"], {})
+    E, S, K = P.get("expected", {}), P.get("std", {}), (P.get("meta") or {}).get("K") or 1
+    ranked_children = sorted([r for r in rows if r["place"]], key=lambda r: r["place"])
+    best = ranked_children[0] if ranked_children else None
+    ids_by_h = {x["id"]: to_pid[x["id"]] for x in res["items"]}
+    tied = []
+    if best:
+        bh = next(h for h, pid in ids_by_h.items() if pid == best["id"])
+        tied = [ids_by_h[h] for h in P.get("order", []) if h != bh and abs(E[h] - E[bh]) < 1.96 * math.sqrt((S[h] ** 2 + S[bh] ** 2) / K)]
+    parents_top = [{"id": ids_by_h[h], "p_topk": P["p_topk"][h], "title": by[ids_by_h[h]]["title"]}
+                   for h in P.get("order", []) if res["items"][[x["id"] for x in res["items"]].index(h)].get("origin") != "evolved"][:2]
     bundle["meta"]["badge"] = "Эволюция"
     bundle["summary"] = {"kind": "evolution", "rounds": [{**r, "parents": [to_pid.get(p, p) for p in r["parents"]],
                                                            "children": [to_pid.get(c, c) for c in r["children"]]} for r in evo["rounds"]],
                          "calls": evo["calls"], "max_calls": evo["max_calls"], "profile": crit["profile"], "k": crit["k"],
                          "success": crit["success"], "children_in_top_k": crit["children_in_top_k"], "n_children": crit["n_children"],
                          "n_parents": sum(1 for x in res["items"] if x.get("origin") != "evolved"), "children": rows,
-                         "writer": evo["writer"], "verifiers": evo["verifiers"], "as_of": evo["as_of"]}
+                         "writer": evo["writer"], "verifiers": evo["verifiers"], "as_of": evo["as_of"],
+                         "tied_with_best": tied, "mc_halfwidth": (P.get("meta") or {}).get("mc_halfwidth_max"),
+                         "parents_top": parents_top, "tokens": evo.get("tokens"),
+                         "kinds": dict(Counter(r["kind"] for r in rows)), "failed": sum(1 for r in rows if r["outcome"] in ("filtered", "normalization_failed")),
+                         "compounds": dict(Counter(r["title"].split(" ")[0] for r in rows).most_common(4))}
     return bundle
 
 

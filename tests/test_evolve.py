@@ -85,3 +85,18 @@ def test_one_round_of_evolution_with_the_fake_client_ranks_the_child_with_its_pa
     assert kids[0]["id"] in res["ranking"]["evidence_first"]["order"]
     c = res["meta"]["evolution"]["criterion"]
     assert c["n_children"] == 1 and c["children"][0]["place"] is not None
+
+
+def test_the_evolution_bundle_carries_the_lineage_and_the_honest_facts(tmp_path):
+    import json
+    from hyparena import site
+    parent = run([TEXT, TEXT.replace("Resveratrol", "Metformin")], config="configs/v2-flash.yaml", fake=True, dedup=False)
+    res = evolve.evolve(parent, "configs/v2-flash.yaml", rounds=1, parents=1, children=1, writer="google", verifiers=["deepseek"],
+                        max_calls=400, fake=True)
+    f = tmp_path / "evo.json"
+    f.write_text(json.dumps(res, default=str))
+    b = site.export_evolution(str(f), "data/negatives/drugage/g003.json")
+    s = b["summary"]
+    assert s["kind"] == "evolution" and s["n_children"] == 1 and s["n_parents"] == 2 and "tied_with_best" in s and s["parents_top"]
+    kid = next(h for h in b["hypotheses"] if h.get("parent"))
+    assert kid["id"].startswith("ev") and kid["parent"].startswith("imp") and kid["kind"] == "test_alternative"
