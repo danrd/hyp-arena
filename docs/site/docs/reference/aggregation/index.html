@@ -338,6 +338,37 @@ details.fold[open] > summary { margin-bottom: 8px; }
   .tabs button[aria-selected="true"] { background: var(--accent); }
   .tabs button:last-child:nth-child(odd) { grid-column: 1 / -1; }
   }
+.lab { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: var(--step--1); white-space: nowrap; }
+.lab-supports { background: var(--lab-a-soft); color: var(--lab-a); }
+.lab-no_effect { background: var(--idle-soft); color: var(--muted); }
+.lab-harmful { background: var(--lab-c-soft); color: var(--lab-c); }
+:root { --lab-a: #2c5f99; --lab-a-soft: #e2ebf6; --lab-c: #6a4c97; --lab-c-soft: #ece6f4; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --lab-a: #8fb6e8; --lab-a-soft: #1d2d42; --lab-c: #b7a0e0; --lab-c-soft: #2c2340; } }
+:root[data-theme="dark"] { --lab-a: #8fb6e8; --lab-a-soft: #1d2d42; --lab-c: #b7a0e0; --lab-c-soft: #2c2340; }
+table.rank .after { min-width: 170px; font-size: var(--step--1); white-space: normal; }
+table.rank:not(.show-after) .after { display: none; }
+table.rank.show-after .pb { display: none; }
+.after-inline { display: none; margin-top: 6px; font-size: var(--step--1); font-weight: 400; }
+.after-inline .sub { display: block; color: var(--muted); margin-top: 2px; }
+@media (max-width: 700px) { table.rank.show-after .after { display: none; } table.rank.show-after .after-inline { display: block; } }
+table.rank .after .sub { display: block; color: var(--muted); margin-top: 2px; }
+tr.foldrow td { text-align: left; background: var(--paper); }
+tr.foldrow button { font-size: var(--step--1); }
+.showcase { display: grid; gap: 10px; width: 100%; }
+.showcase .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.showcase .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 4px; text-align: left; }
+.showcase .stat b { font-family: var(--display); font-size: var(--step-3); line-height: 1.05; color: var(--accent); }
+.showcase .stat span { font-size: var(--step--1); color: var(--muted); }
+.showcase .caption { margin: 0; font-size: var(--step--1); color: var(--muted); text-align: left; }
+@media (max-width: 700px) { .showcase .stats { grid-template-columns: minmax(0, 1fr); } }
+.examples { display: grid; gap: 12px; }
+.examples h3 { margin: 0; font-size: var(--step-1); }
+.excases { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 12px; }
+.excase { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 6px; align-content: start; text-align: left; min-width: 0; }
+.excase .kind { font-size: var(--step--1); text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); }
+.excase button.title { all: unset; cursor: pointer; font-weight: 600; color: var(--ink); text-decoration: underline; text-decoration-color: var(--line); }
+.excase p { margin: 0; font-size: var(--step--1); }
+.excase .muted { color: var(--muted); }
 </style>
 <style>
 .skip { position: absolute; left: -999px; top: 0; background: var(--accent); color: var(--accent-ink); padding: 8px 12px; z-index: 30; }
@@ -789,6 +820,17 @@ table.doctable tr:last-child td { border-bottom: 0; }
 </tbody>
 </table></div>
 <p>Правило отложенной выборки: до того как называть проверку независимой, выясняется, на каких данных обучена сигнатура или часы, и эти данные исключаются из проверки. Условия доступа и лицензии меняются; перед использованием источника их нужно перепроверять.</p>
+<h3 id="data-itp">Историческая проверка ITP <a class="anchor" href="#data-itp" aria-label="Ссылка на раздел">#</a></h3>
+<p>Проверка отвечает на вопрос: что показал бы рейтинг, если бы сегодня был конец 2010 года, и что программа ITP опубликовала позже. Слово «предсказание» здесь не используется: это рейтинг на дату T и то, что опубликовано после неё.</p>
+<ul>
+<li><strong>Пул.</strong> T = 2010-12-31. Тесты Interventions Testing Program из DrugAge (строки с пометкой ITP): один тест на соединение, дозу и возраст начала приёма. В пул входит тест, первая публикация которого вышла после T. Всего 70 тестов (49 соединений; одно соединение может быть несколькими тестами, «режимами»). Текст гипотезы называет вмешательство и заявленный эффект, но не результат.</li>
+<li><strong>Что видит система.</strong> Работы PubMed и записи DrugAge не позже T; для каждого прогона выполнен аудит дат (ни одна запись позже T не попала в расчёт). Знания языковых моделей датой не ограничены, поэтому модели могли знать более поздние работы: это историческая проверка, а не чистая.</li>
+<li><strong>Метки.</strong> Лежат в отдельном файле, который система не читает. «Продлило» — значимое увеличение средней продолжительности жизни хотя бы у одного пола; «вред» — только значимые снижения; иначе «нет эффекта». Вместе с меткой хранятся результат по полу, наибольший эффект (% изменения средней продолжительности жизни), дата и PMID первой публикации ITP. Распределение: 27 продлило, 40 нет эффекта, 3 вред.</li>
+<li><strong>Разбиение.</strong> Пул поделён на две половины (dev и test) детерминированно: по хешу названия соединения, по меткам поровну; 11 соединений встречаются в обеих половинах. Правило основной метрики выбрано на dev до прогона test, а test прогнан один раз. Каждая половина ранжировалась отдельным прогоном (проверку делала одна модель, DeepSeek V4.1 Flash; карточки собирал Gemini; 110 и 126 вызовов, без ошибок).</li>
+<li><strong>Основная метрика.</strong> AUC по соединениям в рейтинге без <code>late_start</code>, известные результаты отдельно: dev 0.53 [0.29, 0.77] (6 положительных, 21 отрицательное), test 0.73 [0.53, 0.89] (10 и 22). Показатель <code>late_start</code> исключён, потому что ITP выбирала поздний старт для соединений, уже сработавших раньше, и показатель мог читать это более позднее решение. С ним полный рейтинг даёт 0.83 на dev и 0.77 на test; эти числа приведены справочно.</li>
+<li><strong>Вид на странице.</strong> Для наглядности страница показывает один общий рейтинг всех 70 тестов. Он посчитан по сохранённым показателям тем же расчётом (без вызовов моделей, без <code>late_start</code>), метрики считаются теми же функциями, что основная метрика. Этот общий вид посчитан после обеих половин и заранее не объявлялся. AUC по режимам 0.74 [0.61, 0.86] (23 положительных, 43 отрицательных), по соединениям 0.69 [0.52, 0.83]; в верхней тройке рейтинга продлили все три режима (два соединения), среди 15 последних из 65 продлений не было. Эти числа относятся к рейтингу «Приоритет: проверенные данные»; для двух других профилей места показаны, а AUC не считался.</li>
+<li><strong>Что не показано.</strong> Сравнение с рейтингом Elo и одиночным судьёй на этом пуле не посчитано. Режимы одного соединения коррелируют, а 27 положительных тестов — небольшая выборка, поэтому интервалы широкие. Группы «на равных» в таблице различаются меньше погрешности моделирования, их порядок внутри группы случаен.</li>
+</ul>
 </article></div>
       <nav class="pager" aria-label="Соседние страницы"><a rel="prev" href="../"><small>Назад</small> Справочник: формат карточки и показатели</a><a rel="next" href="../examples/"><small>Дальше</small> Справочник: примеры</a></nav>
     </div>
