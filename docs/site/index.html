@@ -92,6 +92,25 @@ section.block { padding-block: 36px; border-top: 1px solid var(--line); display:
 .head > * { min-width: 0; }
 .tabs button { flex: 1 1 auto; }
 
+/* run switcher */
+.runlabel { margin: 18px 0 8px; text-align: center; }
+.runcards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
+.runcards[hidden] { display: none; }
+.runcards button { display: grid; gap: 4px; align-content: start; text-align: left; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); cursor: pointer; }
+.runcards button b { font-size: var(--step-0); }
+.runcards button span { font-size: var(--step--1); color: var(--muted); font-weight: 400; }
+.runcards button:hover { border-color: var(--accent); }
+.runcards button[aria-pressed="true"] { border-color: var(--accent); border-width: 2px; padding: 11px 13px; background: var(--accent-soft); }
+.runcards button[aria-pressed="true"] b { color: var(--accent); }
+.runcards button[aria-pressed="true"] b::before { content: "● "; }
+@media (max-width: 900px) { .runcards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .runcards { grid-template-columns: minmax(0, 1fr); } .runcards button span { display: none; } .runcards button[aria-pressed="true"] span { display: block; } }
+details.more { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }
+details.more > summary { cursor: pointer; font-weight: 600; font-size: var(--step--1); }
+details.more[open] > summary { margin-bottom: 8px; }
+details.more.big { margin-top: 10px; }
+#showcaseSummary { margin-top: 14px; }
+
 /* data bar */
 .databar { justify-content: center; display: flex; gap: 10px 16px; align-items: center; flex-wrap: wrap; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; font-size: var(--step--1); }
 .databar .name { font-weight: 600; font-size: var(--step-0); }
@@ -394,11 +413,20 @@ tr.foldrow button { font-size: var(--step--1); }
     <div class="cta"><a class="btn primary" href="docs/start/">Попробовать у себя</a><a class="btn" href="docs/method/">Документация</a></div>
   </div>
 
+  <div class="wrap" id="runPicker">
+    <p class="eyebrow runlabel">Что смотреть · четыре готовых прогона, выберите любой</p>
+    <div class="runcards" id="sampleSwitch" role="group" aria-label="Какой прогон показать">
+      <button type="button" data-sample="run"><b>Прогон на мышах</b><span>Основной пример: гипотезы о продлении жизни мышей, весь путь от карточки до рейтинга</span></button>
+      <button type="button" data-sample="examples"><b>Примеры из документации</b><span>По одному случаю на каждый статус: поддержано, оспорено, опровергнуто</span></button>
+      <button type="button" data-sample="itp"><b>Историческая проверка ITP</b><span>Рейтинг на конец 2010 года против того, что ITP опубликовала позже</span></button>
+      <button type="button" data-sample="evolution"><b>Эволюция гипотез</b><span>Могут ли потомки, написанные по результатам проверки, подняться в рейтинге</span></button>
+    </div>
+  </div>
+
   <div class="wrap">
     <div class="databar" id="databar" aria-live="polite">
       <span class="badge example" id="exampleBadge">Пример</span>
       <span class="name" id="bundleTitle"></span>
-      <span class="seg" id="sampleSwitch" role="group" aria-label="Какой пример показать"><button type="button" data-sample="run">Прогон на мышах</button><button type="button" data-sample="examples">Примеры из документации</button><button type="button" data-sample="itp">Историческая проверка ITP (на конец 2010 г.)</button><button type="button" data-sample="evolution">Эволюция гипотез</button></span>
       <span class="muted" id="bundleMeta"></span>
       <span class="spacer"></span>
       <span class="err" id="loadError" hidden></span>
@@ -418,11 +446,11 @@ tr.foldrow button { font-size: var(--step--1); }
         <h2>Одни и те же гипотезы, три способа упорядочить</h2>
         <p class="muted" id="profileIntro">Профиль — порядок важности показателей, а не оценка гипотез; ниже три примера, правильного среди них нет. <a href="docs/method/ranking/#docs-profiles">Подробнее</a></p>
       </div>
-      <div id="showcaseSummary" hidden></div>
       <div class="tabs" role="tablist" id="rankTabs"></div>
     </div>
     <div class="panel" id="rankPanel"></div>
     <div class="twocol" id="rankFigures"></div>
+    <div id="showcaseSummary" hidden></div>
     <div id="showcaseExamples" hidden></div>
   </section>
 
@@ -546,7 +574,7 @@ tr.foldrow button { font-size: var(--step--1); }
     if (example) sampleKey = key || sampleKey; else userBundle = bundle;
     $("#exampleBadge").hidden = !example;
     $("#exampleBadge").textContent = B.meta?.badge || "Пример";
-    $("#sampleSwitch").hidden = !(example && Object.keys(SAMPLES).length > 1);
+    $("#runPicker").hidden = !(example && Object.keys(SAMPLES).length > 1);
     showAfter = false; showMid = false;
     $("#sampleSwitch").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.sample === sampleKey)));
     $("#resetBtn").hidden = example;
@@ -734,8 +762,8 @@ tr.foldrow button { font-size: var(--step--1); }
         <div class="stat"><b>${fmt(a.auc)}</b><span>AUC по режимам ${ci(a.auc_95ci)}: ${a.n_pos} с продлением и ${a.n_neg} без. По соединениям ${fmt(c.auc)} ${ci(c.auc_95ci)}. Случайный порядок даёт 0.50; режимы «на равных» считаются ничьёй.</span></div>
         <div class="stat"><b>${S.n_known}</b><span>Режимов, результат которых был известен до 2010 года (${esc(known.join(", "))}): система не ранжирует их, а отделяет в «вне рейтинга».</span></div>
       </div>
-      <p class="caption"><b>Рейтинг на конец 2010 года и то, что опубликовано позже.</b> На момент T система видела литературу только до 2010 г., но модели-верификаторы могли знать более поздние работы. Поэтому это историческая проверка на небольшой выборке, а не чистая; интервалы широкие.</p>
-      <p class="caption">Тестов: ${S.n_tests} (режим = соединение, доза и возраст начала); известный до 2010 года результат и отсеянные проверкой стоят в списке «вне рейтинга». Возраст начала приёма из рейтинга исключён: поздний старт ITP выбирала для соединений, уже сработавших раньше.</p></div>`;
+      <details class="more"><summary>Как читать и ограничения</summary><p class="caption"><b>Рейтинг на конец 2010 года и то, что опубликовано позже.</b> На момент T система видела литературу только до 2010 г., но модели-верификаторы могли знать более поздние работы. Поэтому это историческая проверка на небольшой выборке, а не чистая; интервалы широкие.</p>
+      <p class="caption">Тестов: ${S.n_tests} (режим = соединение, доза и возраст начала); известный до 2010 года результат и отсеянные проверкой стоят в списке «вне рейтинга». Возраст начала приёма из рейтинга исключён: поздний старт ITP выбирала для соединений, уже сработавших раньше.</p></details></div>`;
     const cases = (B.showcase?.examples || []).map(e => {
       const hy = H(e.id), t = e.at_T, af = e.after;
       const where = t.place ? `место ${t.place} из ${t.of}; основное утверждение — ${STATUS[t.status] || t.status || "—"}` : `вне рейтинга: ${reason(hy) || OUTCOME[t.outcome] || ""}`;
@@ -746,7 +774,7 @@ tr.foldrow button { font-size: var(--step--1); }
         <p><b>На конец 2010 года:</b> ${esc(where)}. ${found}${(t.flags || []).includes("other_sex_null") ? " Нулевой результат у другого пола не считается «против»: гипотеза говорит «хотя бы у одного пола»." : ""}</p>
         <p><b>Опубликовано позже:</b> <span class="lab lab-${esc(af.label)}">${esc(LAB_RU[af.label] || af.label)}</span> ${esc(eff)}${links} (${esc(af.year)})</p></div>`;
     }).join("");
-    ex.innerHTML = cases ? `<div class="examples"><h3>Разобранные случаи</h3><div class="excases">${cases}</div></div>` : "";
+    ex.innerHTML = cases ? `<details class="more big"><summary>Разобранные случаи · ${(B.showcase?.examples || []).length}</summary><div class="excases">${cases}</div></details>` : "";
   }
   function renderEvolution(S, box, ex) {
     const kids = S.children, win = kids.find(r => r.wins), best = kids.filter(r => r.place).sort((a, b) => a.place - b.place)[0];
@@ -759,11 +787,11 @@ tr.foldrow button { font-size: var(--step--1); }
         <div class="stat"><b>${(S.parents_top || []).map(r => pct(r.p_topk)).join(" и ")}</b><span>P(топ-${S.k}) у двух первых мест: они остались у родителей. У лучших потомков около ${best ? pct(best.p_topk) : "—"}.</span></div>
         <div class="stat"><b>${infos} из ${S.n_children}</b><span>Потомков, у которых решающий эксперимент различает хотя бы одну альтернативу (у всех ${S.n_parents} родителей их ноль). Основное утверждение подтверждено или оспорено только у ${ok}: новых данных по исходу потомки не получили.</span></div>
       </div>
-      <p class="caption"><b>Как это получено.</b> ${S.rounds.length} раунда: лучшие гипотезы по текущему рейтингу порождали потомков по результатам их проверки. Потомки проходят ту же проверку и ранжируются вместе с родителями; литература до ${esc(S.as_of)}; ${S.calls} вызовов моделей из ${S.max_calls}, около ${Math.round((S.tokens?.in || 0) / 1e5) / 10} млн входных токенов. Типы потомков: ${Object.entries(S.kinds || {}).map(([k, v]) => `${esc(KIND_RU[k] || k)} ${v}`).join(", ")}; соединения: ${comp}; не прошли проверку или разбор: ${S.failed}.</p>
-      <p class="caption">Потомки пишутся по результатам проверки и ранжируются тем же методом, а показатель информативности вознаграждает контроль, записанный в эксперименте: рост оценок потомков держится на нём. Это проверка того, поднимают ли подсказки проверки оценки, а не того, что потомки верны. Внешней проверки в этом прогоне нет.</p></div>`;
-    ex.innerHTML = `<div class="examples"><h3>Родословная</h3><div class="scroll"><table class="rank lineage-table"><thead><tr><th>Потомок</th><th>Родитель</th><th>Что изменили</th><th class="num">Место (родитель)</th><th class="num">P(топ-${S.k})</th></tr></thead><tbody>
+      <details class="more"><summary>Как это получено и ограничения</summary><p class="caption"><b>Как это получено.</b> ${S.rounds.length} раунда: лучшие гипотезы по текущему рейтингу порождали потомков по результатам их проверки. Потомки проходят ту же проверку и ранжируются вместе с родителями; литература до ${esc(S.as_of)}; ${S.calls} вызовов моделей из ${S.max_calls}, около ${Math.round((S.tokens?.in || 0) / 1e5) / 10} млн входных токенов. Типы потомков: ${Object.entries(S.kinds || {}).map(([k, v]) => `${esc(KIND_RU[k] || k)} ${v}`).join(", ")}; соединения: ${comp}; не прошли проверку или разбор: ${S.failed}.</p>
+      <p class="caption">Потомки пишутся по результатам проверки и ранжируются тем же методом, а показатель информативности вознаграждает контроль, записанный в эксперименте: рост оценок потомков держится на нём. Это проверка того, поднимают ли подсказки проверки оценки, а не того, что потомки верны. Внешней проверки в этом прогоне нет.</p></details></div>`;
+    ex.innerHTML = `<details class="more big"><summary>Родословная · ${kids.length} потомков</summary><div class="scroll"><table class="rank lineage-table"><thead><tr><th>Потомок</th><th>Родитель</th><th>Что изменили</th><th class="num">Место (родитель)</th><th class="num">P(топ-${S.k})</th></tr></thead><tbody>
       ${kids.map(r => `<tr data-id="${esc(r.id)}"><td class="htitle"><span class="id">${esc(r.id)}</span>${esc(r.title)}<span class="lineage">раунд ${esc(r.round)} · ${esc(KIND_RU[r.kind] || r.kind)}</span></td><td>${esc(r.parent)}</td><td>${esc(r.change)}</td><td class="num">${r.place ?? "—"} (${r.parent_place ?? "—"})</td><td class="num">${pct(r.p_topk)}</td></tr>`).join("")}
-      </tbody></table></div></div>`;
+      </tbody></table></div></details>`;
   }
   $("#showcaseExamples").addEventListener("click", e => { const tr = e.target.closest("tr[data-id]"); if (tr) openCard(tr.dataset.id); });
   $("#showcaseExamples").addEventListener("click", e => { const b = e.target.closest("button[data-open-card]"); if (b) openCard(b.dataset.openCard); });
@@ -923,7 +951,7 @@ tr.foldrow button { font-size: var(--step--1); }
   }
   if (SAMPLES.run) loadSample("run"); else if (SAMPLES.examples) loadSample("examples");
   else { $("#loadError").textContent = "Встроенный пример не загрузился."; $("#loadError").hidden = false; }
-  $("#sampleSwitch").hidden = !(isExample && Object.keys(SAMPLES).length > 1);
+  $("#runPicker").hidden = !(isExample && Object.keys(SAMPLES).length > 1);
 
   /* docs/ links "../?example=ex1#card": show that worked card */
   const ex = new URLSearchParams(location.search).get("example");
