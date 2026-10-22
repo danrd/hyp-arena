@@ -3,8 +3,9 @@
 # MISTRAL_API_KEY for the commented specs). Families whose key is not set are skipped (`skip_missing_keys`).
 # With one key, one family normalizes and verifies; with several, the verifier rotates over them and the
 # normalizer runs on google when its key is set, else on the first family listed.
-# Model ids change: check each provider's model list. The Claude model may be switched to claude-sonnet-5-5 or
-# claude-haiku-5-5 for lower cost; Claude takes no temperature, and its depth is set by `effort`.
+# Model ids change: check each provider's model list. Claude runs on claude-sonnet-5-5 ($2 / $10 per million
+# tokens in / out); claude-opus-5-5 is stronger, claude-haiku-5-5 cheaper. Claude takes no temperature, and its
+# depth is set by `effort`.
 rpm: 30
 concurrency: 4
 skip_missing_keys: true
@@ -17,7 +18,7 @@ deadline: 300
 models:
   - {family: google,    provider: google,    model: "gemini-3.5-flash", tier: paid}
   - {family: openai,    provider: openai,    model: "gpt-5-mini",       tier: paid, generation: {temperature: null, max_tokens: null, max_completion_tokens: 6000, reasoning_effort: low}}
-  - {family: anthropic, provider: anthropic, model: "claude-opus-5-5",  tier: paid, generation: {max_tokens: 16000, effort: low}}
+  - {family: anthropic, provider: anthropic, model: "claude-sonnet-5-5", tier: paid, generation: {max_tokens: 16000, effort: low}}
   # - {family: deepseek, provider: deepseek, model: "<model id>", tier: paid}
   # - {family: xai,      provider: xai,      model: "<model id>", tier: paid}
   # - {family: mistral,  provider: mistral,  model: "<model id>", tier: paid}
