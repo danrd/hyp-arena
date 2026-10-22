@@ -13,7 +13,7 @@
 /* Layout: a lab notebook — narrow reading column for prose, a wide instrument panel for the ranking and the card. */
 :root {
   --paper: #f4f6f3; --surface: #ffffff; --ink: #15201c; --muted: #5a6964; --line: #d9dfdb;
-  --accent: #12695a; --accent-soft: #dcede7; --accent-ink: #ffffff;
+  --accent: #12695a; --accent-soft: #dcede7; --accent-ink: #ffffff; --mid: #e3e8e5; --strong-ink: #ffffff;
   --ok: #2c7a4c; --bad: #b0402c; --warn: #a8740f; --idle: #7a8682; --ok-soft: #e1f0e6; --bad-soft: #f6e2dd; --warn-soft: #f5ead2; --idle-soft: #eaedeb;
   --display: "Literata", Georgia, "Times New Roman", serif;
   --body: "Onest", "Segoe UI", system-ui, sans-serif;
@@ -22,12 +22,12 @@
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --paper: #0f1514; --surface: #162020; --ink: #e4ebe8; --muted: #98a6a1; --line: #2a3633;
-  --accent: #4db6a2; --accent-soft: #1b3430; --accent-ink: #0f1514;
+  --accent: #4db6a2; --accent-soft: #1b3430; --accent-ink: #0f1514; --mid: #34413e; --strong-ink: #0f1514;
   --ok: #5dbd84; --bad: #e07a62; --warn: #d8a43f; --idle: #8b9893; --ok-soft: #173126; --bad-soft: #3a211b; --warn-soft: #362a12; --idle-soft: #212b29;
   color-scheme: dark } }
 :root[data-theme="dark"] {
   --paper: #0f1514; --surface: #162020; --ink: #e4ebe8; --muted: #98a6a1; --line: #2a3633;
-  --accent: #4db6a2; --accent-soft: #1b3430; --accent-ink: #0f1514;
+  --accent: #4db6a2; --accent-soft: #1b3430; --accent-ink: #0f1514; --mid: #34413e; --strong-ink: #0f1514;
   --ok: #5dbd84; --bad: #e07a62; --warn: #d8a43f; --idle: #8b9893; --ok-soft: #173126; --bad-soft: #3a211b; --warn-soft: #362a12; --idle-soft: #212b29;
   color-scheme: dark }
 
@@ -57,6 +57,13 @@ header.top .wrap { display: flex; align-items: center; justify-content: center; 
 nav.sections { display: flex; gap: 4px 16px; flex-wrap: wrap; justify-content: center; font-size: var(--step--1); }
 nav.sections a { color: var(--muted); text-decoration: none; padding: 2px 0; border-bottom: 1px solid transparent; }
 nav.sections a:hover { color: var(--ink); border-bottom-color: var(--line); }
+@media (max-width: 640px) {
+  header.top .wrap { flex-wrap: nowrap; justify-content: flex-start; gap: 14px; padding-block: 8px; }
+  .brand { font-size: var(--step-0); }
+  nav.sections { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); }
+  nav.sections::-webkit-scrollbar { display: none; }
+  nav.sections a { white-space: nowrap; }
+}
 
 /* hero */
 .hero { padding-block: 48px 28px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; justify-items: center; text-align: center; }
@@ -133,14 +140,25 @@ table.rank tr.off td { color: var(--muted); }
 /* heatmap and slope chart */
 .twocol { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
 @media (max-width: 880px) { .twocol { grid-template-columns: minmax(0, 1fr); } }
-.figure { padding: 14px 16px; display: grid; gap: 10px; }
+.figure { padding: 14px 16px; display: grid; gap: 10px; align-content: start; }
 .figure svg text { fill: var(--ink); font-family: var(--mono); font-size: 11px; }
 .figure svg .mutedtext { fill: var(--muted); }
-table.heat { border-collapse: collapse; font-family: var(--mono); font-size: 0.72rem; font-variant-numeric: tabular-nums; }
-table.heat th { font-weight: 400; color: var(--muted); padding: 3px 5px; white-space: nowrap; }
-table.heat td { width: 38px; height: 28px; text-align: center; border: 1px solid var(--surface); }
-.legend { display: flex; gap: 6px; align-items: center; font-size: var(--step--1); color: var(--muted); flex-wrap: wrap; }
-.legend i { display: inline-block; width: 18px; height: 10px; border-radius: 2px; }
+table.heat { border-collapse: separate; border-spacing: 2px; font-family: var(--mono); font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+table.heat th { font-weight: 500; color: var(--muted); padding: 2px 6px; white-space: nowrap; }
+table.heat thead th { text-align: center; }
+table.heat tbody th { text-align: right; }
+table.heat td { min-width: 36px; height: 30px; text-align: center; border-radius: 3px; color: var(--ink); }
+table.heat td.self { background: repeating-linear-gradient(135deg, var(--line) 0 2px, transparent 2px 6px); color: var(--muted); }
+.heat-note { font-size: var(--step--1); color: var(--muted); }
+.heat-key { font-size: var(--step--1); }
+.heat-key summary { cursor: pointer; color: var(--accent); }
+.heat-key ol { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
+.heat-key .mono { display: inline-block; min-width: 2.2em; color: var(--muted); }
+.scale { display: grid; gap: 4px; max-width: 360px; font-size: var(--step--1); color: var(--muted); }
+.scale .bar { height: 10px; min-width: 0; border-radius: 3px; background: linear-gradient(90deg, var(--bad), var(--mid) 50%, var(--accent)); }
+.scale .ticks { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+.scale .ticks span:nth-child(2) { text-align: center; }
+.scale .ticks span:nth-child(3) { text-align: right; }
 
 /* card */
 .cardgrid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 18px; align-items: start; }
@@ -209,9 +227,17 @@ ul.alts .design { grid-column: 1 / -1; color: var(--muted); }
 .cols3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
 .box { padding: 16px; display: grid; gap: 8px; align-content: start; }
 .box ul { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
-.tiers { display: grid; gap: 4px; font-size: var(--step--1); }
-.tier { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-.tier .gt { color: var(--muted); font-family: var(--mono); }
+.tiers { display: grid; gap: 0; font-size: var(--step--1); }
+.tier { display: grid; grid-template-columns: 2em minmax(0, 1fr); gap: 10px; position: relative; padding-bottom: 14px; }
+.tier:last-child { padding-bottom: 0; }
+.tier::before { content: ""; position: absolute; left: calc(1em - 1px); top: 2em; bottom: 2px; width: 2px; background: var(--line); }
+.tier:last-child::before { display: none; }
+.tier .n { width: 2em; height: 2em; border-radius: 50%; display: grid; place-items: center; font-family: var(--mono); font-weight: 600; background: var(--accent); color: var(--accent-ink); position: relative; }
+.tier.free .n { background: var(--idle-soft); color: var(--idle); }
+.tier .body { display: grid; gap: 6px; min-width: 0; padding-top: 3px; }
+.tier .label { color: var(--muted); }
+.tier .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.tiers-note { font-size: var(--step--1); color: var(--muted); }
 .chip { font-family: var(--mono); font-size: 0.75rem; padding: 1px 6px; border-radius: 3px; background: var(--accent-soft); color: var(--ink); }
 table.defs { border-collapse: collapse; width: 100%; font-size: var(--step--1); }
 table.defs td, table.defs th { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
@@ -327,7 +353,7 @@ footer { padding-block: 28px 40px; border-top: 1px solid var(--line); color: var
       </div>
       <div class="panel box">
         <h3>Профили приоритетов</h3>
-        <div id="profileDefs" class="tiers"></div>
+        <div id="profileDefs"></div>
         <p class="muted" style="font-size:var(--step--1)">Внутри профиля задан только порядок: показатель выше по списку весит не меньше любого ниже. Конкретные веса перебираются, и рейтинг показывает, насколько он устойчив к их выбору.</p>
       </div>
       <div class="panel box">
@@ -540,24 +566,36 @@ export ALLOW_PAID=1</pre>
   }
 
   function heatmap(P) {
-    const ids = P.order;
-    const cell = p => { const d = p - 0.5, a = Math.min(1, Math.abs(d) * 2.2);
-      return `background: color-mix(in srgb, var(${d >= 0 ? "--accent" : "--bad"}) ${Math.round(a * 85)}%, var(--surface))`; };
-    return `<h3>Вероятность, что гипотеза в строке выше гипотезы в столбце</h3>
-      <div class="scroll"><table class="heat"><thead><tr><th></th>${ids.map(id => `<th>${esc(id.replace(/^imp0*/, ""))}</th>`).join("")}</tr></thead><tbody>
-      ${ids.map(a => `<tr><th>${esc(a)}</th>${ids.map(b => a === b ? `<td style="background:var(--paper)"></td>` :
-        `<td style="${cell(P.pairwise[a]?.[b] ?? 0.5)}" title="P(${esc(a)} > ${esc(b)}) = ${fmt(P.pairwise[a]?.[b], 2)}">${Math.round((P.pairwise[a]?.[b] ?? 0.5) * 100)}</td>`).join("")}</tr>`).join("")}
+    const ids = P.order, num = id => esc(String(id).replace(/^(imp|H-)0*/, ""));
+    const cell = p => { const d = p - 0.5, a = Math.min(1, Math.abs(d) * 2), strong = a > 0.6;
+      return `background: color-mix(in srgb, var(${d >= 0 ? "--accent" : "--bad"}) ${Math.round(a * 100)}%, var(--mid));` +
+        (strong ? " color: var(--strong-ink); font-weight: 600" : ""); };
+    return `<h3>Кто кого обходит</h3>
+      <p class="heat-note">Число в клетке — вероятность (в %), что гипотеза строки стоит выше гипотезы столбца при случайных весах профиля. Номера — как в таблице выше; названия под матрицей.</p>
+      <div class="scroll"><table class="heat"><thead><tr><th></th>${ids.map(id => `<th title="${esc(shortTitle(H(id)))}">${num(id)}</th>`).join("")}</tr></thead><tbody>
+      ${ids.map(a => `<tr><th title="${esc(shortTitle(H(a)))}">${num(a)}</th>${ids.map(b => { const p = P.pairwise[a]?.[b] ?? 0.5;
+        return a === b ? `<td class="self" aria-label="та же гипотеза">–</td>` :
+          `<td style="${cell(p)}" title="${num(a)} выше ${num(b)}: ${Math.round(p * 100)}% · ${esc(shortTitle(H(a)))} / ${esc(shortTitle(H(b)))}">${Math.round(p * 100)}</td>`; }).join("")}</tr>`).join("")}
       </tbody></table></div>
-      <div class="legend"><i style="background:var(--bad)"></i>ниже наверняка <i style="background:var(--surface);border:1px solid var(--line)"></i>50/50 <i style="background:var(--accent)"></i>выше наверняка</div>`;
+      <div class="scale" aria-hidden="true"><div class="bar"></div><div class="ticks"><span>0 · ниже</span><span>50 · на равных</span><span>выше · 100</span></div></div>
+      <details class="heat-key"><summary>Названия гипотез по номерам</summary><ol>${ids.map(id => `<li><span class="mono">${num(id)}</span> ${esc(shortTitle(H(id)))}</li>`).join("")}</ol></details>`;
   }
   function profileTiers(name) {
     const p = B.meta?.profiles?.[name];
     if (!p) return "";
-    return `<h3>Порядок важности: ${esc(PROFILE[name] || name)}</h3><div class="tiers">${tiersHtml(p.tiers)}</div>
-      <p class="muted" style="font-size:var(--step--1)">Версия профиля ${esc(p.version || "")}. «Остальные» — все показатели, не названные выше.</p>`;
+    return `<h3>Порядок важности: ${esc(PROFILE[name] || name)}</h3>${tiersHtml(p.tiers)}
+      <p class="tiers-note">Каждый показатель ступени выше весит не меньше любого показателя ступени ниже; внутри ступени веса перебираются случайно. Версия профиля ${esc(p.version || "")}.</p>`;
   }
   function tiersHtml(tiers) {
-    return (tiers || []).map((t, i) => `<div class="tier">${i ? '<span class="gt">≥</span>' : ""}${(t === "rest" ? ["остальные"] : t).map(x => `<span class="chip">${esc(IND[x]?.[0] || x)}</span>`).join("")}</div>`).join("");
+    const all = (B.meta?.indicators || []).map(s => s.id);
+    const named = new Set((tiers || []).filter(t => t !== "rest").flat());
+    const rest = all.filter(x => !named.has(x));
+    const rows = (tiers || []).map(t => t === "rest" ? rest : t).filter(t => t.length);
+    const free = (tiers || []).includes("rest") ? [] : rest;
+    const chips = xs => `<div class="chips">${xs.map(x => `<span class="chip" title="${esc(IND[x]?.[1] || "")}">${esc(IND[x]?.[0] || x)}</span>`).join("")}</div>`;
+    const label = i => i === 0 ? "важнее всего" : "не важнее ступени выше";
+    return `<div class="tiers">${rows.map((t, i) => `<div class="tier"><span class="n">${i + 1}</span><div class="body"><span class="label">${label(i)}</span>${chips(t)}</div></div>`).join("")}
+      ${free.length ? `<div class="tier free"><span class="n">·</span><div class="body"><span class="label">порядок не задан: вес любой</span>${chips(free)}</div></div>` : ""}</div>`;
   }
 
   $("#rankPanel").addEventListener("click", e => { const tr = e.target.closest("tr[data-id]"); if (tr) openCard(tr.dataset.id); });
@@ -666,7 +704,7 @@ export ALLOW_PAID=1</pre>
   /* ---------- method ---------- */
   function renderMethod() {
     const P = B.meta?.profiles || {};
-    $("#profileDefs").innerHTML = Object.entries(P).map(([n, p]) => `<div style="display:grid;gap:4px;padding-bottom:8px"><b>${esc(PROFILE[n] || n)}</b> <span class="mono muted" style="font-size:0.75rem">${esc(n)}</span>${tiersHtml(p.tiers)}</div>`).join("") || `<p class="muted">В прогоне нет профилей.</p>`;
+    $("#profileDefs").innerHTML = Object.entries(P).map(([n, p]) => `<div style="display:grid;gap:8px;padding-bottom:14px"><div><b>${esc(PROFILE[n] || n)}</b> <span class="mono muted" style="font-size:0.75rem">${esc(n)}</span></div>${tiersHtml(p.tiers)}</div>`).join("") || `<p class="muted">В прогоне нет профилей.</p>`;
     $("#rungDefs").innerHTML = RUNGS.slice().reverse().map(r => `<div class="step"><span>${esc(RUNG[r])}</span><span class="mono">${esc(r)}</span></div>`).join("");
     const specs = B.meta?.indicators || [];
     $("#indicatorDefs").innerHTML = `<thead><tr><th>Показатель</th><th>Что измеряет</th><th>Значения</th></tr></thead><tbody>${specs.map(s =>
