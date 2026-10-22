@@ -159,7 +159,7 @@ def evolve(res: dict, config: str, rounds: int = 3, parents: int = 4, children: 
            on_stage=lambda m: None, snapshot=None) -> dict:
     """Run the rounds on a saved v2 result; the budget `max_calls` is shared by the proposals and the verification."""
     from hyparena.card.pipeline import _client, reapply_rules, run
-    started, spent = time.time(), 0
+    started, spent, child_calls = time.time(), 0, 0          # spent: proposals + verification of the children
     res = copy.deepcopy(res)
     as_of = as_of or res["meta"].get("as_of")
     client, _ = _client(config, fake, max_calls)
@@ -180,14 +180,15 @@ def evolve(res: dict, config: str, rounds: int = 3, parents: int = 4, children: 
                     continue
                 texts.append(c["text"])
                 lineage.append({"parent": pid, "kind": c["kind"], "change": c["change"]})
-        spent = client.calls
+        spent = client.calls + child_calls
         on_stage(f"раунд {r}: родители {picked}; потомков {len(texts)}; вызовов {spent}")
         if not texts:
             rounds_log.append({"round": r, "parents": picked, "children": [], "calls": spent})
             continue
         child = run(texts, writer=writer, config=config, fake=fake, as_of=as_of, max_calls=max(1, max_calls - spent),
                     verifiers=verifiers, check_alternatives=True, dedup=False, informativeness=True)
-        spent += child["meta"]["calls"]
+        child_calls += child["meta"]["calls"]
+        spent = client.calls + child_calls
         new_ids = append_children(res, child, lineage, r)
         res = reapply_rules(res)
         rounds_log.append({"round": r, "parents": picked, "children": new_ids, "calls": spent,
