@@ -698,7 +698,8 @@ export ALLOW_PAID=1</pre>
       document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch { $("#loadError").textContent = "Браузер не дал скачать файл."; $("#loadError").hidden = false; }
   }
-  const slug = () => (B.title || "run").toLowerCase().replace(/[^a-zа-яё0-9]+/gi, "-").replace(/^-|-$/g, "").slice(0, 60) || "run";
+  const slug = () => { const ascii = (B.title || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
+    return "hyp-arena-" + (/[a-z]/.test(ascii) ? ascii : (isExample ? "example" : "run")); };   // ASCII only: some browsers drop non-ASCII names
   $("#dlJson").addEventListener("click", () => download(slug() + ".json", JSON.stringify(B, null, 1), "application/json"));
   $("#dlCsv").addEventListener("click", () => {
     const cols = ["id", "title", "outcome", "reason", "elo"], profs = Object.keys(B.profiles || {});
