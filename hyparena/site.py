@@ -150,7 +150,7 @@ def _regimen_title(lab: dict) -> str:
     return ", ".join(x for x in (lab["compound"], lab.get("dose") or "", f"старт {age}" if age else "") if x)
 
 
-def _reaggregate(res: dict, drop: list[str], k_top: int = 3, K: int = 10000) -> dict:
+def _reaggregate(res: dict, drop: list[str], k_top: int = 3, K: int = 10000, seed: int = 0) -> dict:
     """The ranking of a result's ranked items under every profile without the indicators `drop` (no model calls);
     the same aggregation as `hyparena.backtest.ablate`, with the full output the page needs."""
     from dataclasses import replace
@@ -165,7 +165,7 @@ def _reaggregate(res: dict, drop: list[str], k_top: int = 3, K: int = 10000) -> 
     for name, prof in load_profiles().items():
         tiers = [t if isinstance(t, str) else [i for i in t if i in keep] for t in prof.tiers]
         prof = replace(prof, tiers=[t for t in tiers if t])
-        r = aggregate(values, specs, prof, K=K, k_top=k_top)
+        r = aggregate(values, specs, prof, K=K, k_top=k_top, seed=seed)
         out[name] = {"order": r.order, "expected": r.expected, "std": r.std, "quantiles": r.quantiles, "p_topk": r.p_topk,
                      "p_best": r.p_best, "pairwise": r.pairwise, "meta": r.meta}
     return out
@@ -200,6 +200,11 @@ def _pmid_link(p: str) -> str:
     return f"PMID:{p}"
 
 
+def _main_flags(h: dict) -> list[str]:
+    cv = next((c for c in (h["verification"] or {"claims": []})["claims"] if c.get("claim") and c["claim"]["role"] == "outcome"), None)
+    return (cv or {}).get("flags") or []
+
+
 def _itp_examples(bundle: dict, labels: dict) -> list[dict]:
     """Four to five worked cases chosen by rule from the data: the top-ranked positive, a positive with evidence
     found before T, the top-ranked negative, a known result, a hypothesis filtered at T."""
@@ -221,8 +226,9 @@ def _itp_examples(bundle: dict, labels: dict) -> list[dict]:
     if ranked_neg:
         picks.append(("miss", ranked_neg[0]))
     known = [h["id"] for h in bundle["hypotheses"] if h["outcome"] == "known_result"]
-    if known:
-        picks.append(("known", known[0]))
+    flagged = [h for h in known if "other_sex_null" in _main_flags(hyp[h])]
+    for h in (flagged or known)[:2]:
+        picks.append(("known", h))
     filt = [h["id"] for h in bundle["hypotheses"] if h["outcome"] == "filtered"]
     if filt:
         picks.append(("filtered", filt[0]))
@@ -236,14 +242,14 @@ def _itp_examples(bundle: dict, labels: dict) -> list[dict]:
                         for r in (main or {}).get(side, {"items": []})["items"]} - {""})
         pmids = [p for p in pmids if p.isdigit()]
         out.append({"id": h, "kind": kind, "heading": kinds[kind], "title": hy["title"],
-                    "at_T": {"place": place.get(h), "of": n, "status": main["status"] if main else None,
+                    "at_T": {"place": place.get(h), "of": n, "status": main["status"] if main else None, "flags": _main_flags(hy),
                              "outcome": hy["outcome"], "pmids": pmids[:3],
                              "level": (hy["verification"] or {}).get("profile", {}).get("effect_level") if hy["verification"] else None},
                     "after": hy["after"]})
     return out
 
 
-def export_itp(dev_path: str, test_path: str, labels_path: str, title: str = ITP_TITLE) -> dict:
+def export_itp(dev_path: str, test_path: str, labels_path: str, title: str = ITP_TITLE) -> dict:   # the runs after `backtest reapply`
     """The site bundle of the historical ITP check: the dev and test runs of one pool joined into one result (the
     saved cards, verification and indicators), the ranking at T re-aggregated without `late_start` under every
     profile, the labels of what the ITP published later, a summary computed with `hyparena.backtest.primary`
@@ -268,7 +274,8 @@ def export_itp(dev_path: str, test_path: str, labels_path: str, title: str = ITP
     with tempfile.TemporaryDirectory() as d:
         merged = Path(d) / "merged.json"
         merged.write_text(json.dumps(res))
-        prim = backtest.primary(labels_path, str(merged), split="all")
+        prim = backtest.primary_tied(labels_path, str(merged), split="all")
+        legacy = backtest.primary(labels_path, str(merged), split="all")
         hyps = backtest.ablate(str(merged), ITP_DROP)["hypotheses"]
     ranked = sorted((h for h, v in hyps.items() if v["status"] == "ranked"),
                     key=lambda h: hyps[h]["combined"], reverse=True)
@@ -295,6 +302,7 @@ def export_itp(dev_path: str, test_path: str, labels_path: str, title: str = ITP
         "n_ranked": len(ranked), "n_known": res["outcome_counts"]["known_result"], "n_filtered": res["outcome_counts"]["filtered"],
         "positives_all": sum(v["label"] for v in labels.values()), "positives_ranked": pos, "base_rate": base,
         "auc": {"per_regimen": prim["per_regimen"], "per_compound": prim["per_compound"]},
+        "auc_seed0": {"per_regimen": legacy["per_regimen"], "per_compound": legacy["per_compound"]},
         "top": top, "bottom": {**bottom, "expected": bottom["k"] * base}}
     bundle["showcase"] = {"examples": _itp_examples(bundle, labels)}
     return bundle
@@ -795,8 +803,8 @@ def main() -> None:
     e.add_argument("--title", default="")
     e.add_argument("--out", required=True)
     t = sub.add_parser("export-itp", help="bundle of the historical ITP check (saved dev and test runs, no model calls)")
-    t.add_argument("--dev", default="runs/stage4/itp2010_dev.json")
-    t.add_argument("--test", default="runs/stage4/itp2010_test.json")
+    t.add_argument("--dev", default="runs/stage4/itp2010_dev.sexscope.json")
+    t.add_argument("--test", default="runs/stage4/itp2010_test.sexscope.json")
     t.add_argument("--labels", default="data/backtest/itp_2010-12-31_labels.json")
     t.add_argument("--out", required=True)
     x = sub.add_parser("examples", help="bundle of the worked cards of the documentation")

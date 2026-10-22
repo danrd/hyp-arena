@@ -11,9 +11,9 @@ from pydantic import ValidationError
 
 from hyparena.card.llm import ask
 from hyparena.card.models import Hallmark, HypothesisCard, Relation
-from hyparena.card.rules import mark_inherited, validate_card
+from hyparena.card.rules import mark_inherited, set_sex_scope, validate_card
 
-TEMPLATE = ("normalize_card", "v4")
+TEMPLATE = ("normalize_card", "v5")
 
 # relations an outcome claim can take, with the words that point to them (for the re-parse hint, spec 5)
 OUTCOME_RELATIONS = {
@@ -43,6 +43,7 @@ def _problems(value: dict, raw_text: str, card_id: str) -> tuple[Optional[Hypoth
         card = HypothesisCard.model_validate({**value, "id": card_id, "raw_id": card_id})
     except ValidationError as e:
         return None, [f"{'.'.join(map(str, err['loc']))}: {err['msg']}" for err in e.errors()[:12]]
+    set_sex_scope(card, raw_text)                       # `any` from the words "at least one sex" when the model left it out
     return mark_inherited(card), validate_card(card, raw_text)
 
 

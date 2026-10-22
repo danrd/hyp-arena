@@ -61,6 +61,7 @@ class Claim(BaseModel):
     role: Role
     source_span: str = ""                        # verbatim fragment of the hypothesis text (empty only for verifier-added claims)
     note: str = ""                               # e.g. why `other` was used
+    sex_scope: Literal["any", "unspecified"] = "unspecified"   # `any`: the text claims the effect in at least one sex (an effect in one sex is enough)
 
 
 class DeclaredAlternative(BaseModel):
@@ -230,6 +231,7 @@ class EvidenceRecord(BaseModel):
     qualifiers_match: dict[str, str] = Field(default_factory=dict)   # species/sex/age_at_start/dose/comparator: yes|no|n/a; intervention_match
     marker_validation: Literal["validated_surrogate", "exploratory", "n/a"] = "n/a"
     program: Optional[ProgramInfo] = None
+    strata: list[str] = Field(default_factory=list)  # strata the protocol fixed in advance (`sex` in ITP and CITP): a result in one of them is not a post hoc subgroup
     flags: list[str] = Field(default_factory=list)   # retracted, preprint, conflict_of_interest, small_n, open_label, subgroup_only, short_lived_controls, disease_model, special_diet
     fields: dict[str, Union[str, float, int]] = Field(default_factory=dict)   # curated-record fields (e.g. DrugAge row)
     retrieved_at: str = ""

@@ -1,0 +1,71 @@
+half,id,compound,dose,start,later_label,later_effect_pct,main_status_before,main_status_after,outcome_before,outcome_after,place_before,place_after,expected_before,expected_after
+dev,imp003,17-dimethylaminoethylamino-17-demethoxygeldanamycin hydrochloride,30 ppm food,6 months,no_effect,0.0,unverified,unverified,ranked,ranked,8-49,5-45,0.167,0.166
+dev,imp004,17‐alpha‐estradiol,14.4 ppm food,10 months,supports,19.0,unverified,unverified,ranked,ranked,8-49,5-45,0.167,0.166
+dev,imp006,17‐alpha‐estradiol,14.4 ppm food,20 months,supports,11.0,unverified,unverified,ranked,ranked,8-49,5-45,0.166,0.167
+dev,imp008,"2,4-dinitrophenol",3 ppm food,6 months,no_effect,0.0,supported,supported,ranked,ranked,6,3,0.203,0.203
+dev,imp009,2-(2-hydroxyphenyl)benzothiazole,1 ppm food,15 months,no_effect,0.0,unverified,unverified,ranked,ranked,56-61,52-61,0.139,0.139
+dev,imp011,Acarbose,1000 ppm food,16 months,supports,6.0,unverified,unverified,ranked,ranked,8-49,5-45,0.167,0.166
+dev,imp013,Acarbose,1000 ppm food,8 months,supports,17.0,unverified,unverified,ranked,ranked,8-49,5-45,0.168,0.167
+dev,imp015,Acarbose,400 ppm food,8 months,supports,11.0,unverified,unverified,ranked,ranked,8-49,5-45,0.166,0.166
+dev,imp017,Aspirin,200 ppm food,11 months,no_effect,0.0,contested,supported,ranked,known_result,8-49,—,0.167,
+dev,imp021,Canagliflozin,180 ppm food,16 months,supports,14.0,unverified,unverified,ranked,ranked,8-49,5-45,0.167,0.166
+dev,imp023,Canagliflozin,180 ppm food (30 ppm bodyweight),7 months,supports,14.0,unverified,unverified,ranked,ranked,8-49,5-45,0.167,0.167
+dev,imp028,Dimethyl fumarate,120 ppm food,16 months,no_effect,0.0,unverified,unverified,ranked,ranked,8-49,5-45,0.167,0.166
+dev,imp029,Fisetin,600 ppm food fed continuously,20 months,no_effect,0.0,unverified,unverified,ranked,ranked,56-61,52-61,0.14,0.139
+dev,imp031,Fish oil,15000 ppm food,9 months,no_effect,0.0,unverified,unverified,ranked,ranked,51-55,47-51,0.148,0.149
+dev,imp033,Geranylgeranylacetone,600 ppm food,9 months,no_effect,0.0,unverified,unverified,ranked,ranked,8-49,5-45,0.166,0.167
+dev,imp035,Green tea extract,2000 ppm food,4 months,no_effect,0.0,unverified,unverified,ranked,ranked,7,4,0.201,0.2
+dev,imp037,Hydralazine,30 ppm food,6 months,no_effect,0.0,unverified,unverified,ranked,ranked,8-49,5-45,0.167,0.167
+dev,imp038,INT-767d (FXR/TGR5 agonist),180 ppm food,10 months,no_effect,0.0,unverified,unverified,ranked,ranked,8-49,46,0.167,0.166
+dev,imp039,Inulin,600 ppm food,11 months,no_effect,0.0,unverified,unverified,ranked,ranked,8-49,5-45,0.166,0.166
+dev,imp042,Meclizine,800 ppm food,12 months,supports,8.0,unverified,unverified,ranked,ranked,8-49,5-45,0.167,0.167
+dev,imp043,Medium-chain triglyceride oil,60000 ppm food,4 months,no_effect,0.0,unverified,unverified,ranked,ranked,8-49,5-45,0.167,0.167
+dev,imp047,MitoQ,100 ppm food,7 months,no_effect,0.0,unverified,unverified,ranked,ranked,8-49,5-45,0.167,0.167
+dev,imp050,Nicotinamide riboside,1000 ppm food,8 months,no_effect,0.0,unverified,unverified,ranked,ranked,62-65,52-61,0.138,0.139
+dev,imp051,Nordihydroguaiaretic acid,2500 ppm food,6 months,supports,10.0,contested,supported,ranked,known_result,2-3,—,0.329,
+dev,imp053,Nordihydroguaiaretic acid,800 ppm food,6 months,supports,6.0,contested,supported,ranked,known_result,2-3,—,0.329,
+dev,imp054,Oxaloacetate,2200 ppm food,4 months,no_effect,0.0,unverified,unverified,ranked,ranked,62-65,52-61,0.139,0.139
+dev,imp055,"PB125 (carnosol, withaferin A and luteolin)","4.7 ppm carnosol, 9 ppm luteolin, and 0.47 ppm withaferin A food",5 months,no_effect,0.0,unverified,unverified,ranked,ranked,8-49,5-45,0.167,0.167
+dev,imp056,Protandim,"600 ppm food 10-17 months, 1200 ppm food (17 months-death)",10 months,supports,7.0,unverified,unverified,ranked,ranked,8-49,5-45,0.167,0.167
+dev,imp058,Rapamycin,4.7 ppm food,9 months,supports,16.0,supported,supported,known_result,known_result,—,—,,
+dev,imp060,Rapamycin,42 ppm food,9 months,supports,26.0,supported,supported,known_result,known_result,—,—,,
+dev,imp062,Resveratrol,300 ppm food,4 months,no_effect,0.0,refuted,refuted,filtered,filtered,—,—,,
+dev,imp063,SG1002 (hydrogen sulfide donor),240 ppm food,16 months,no_effect,0.0,unverified,unverified,ranked,ranked,50,5-45,0.166,0.167
+dev,imp066,Sulindac,5 ppm food,5 months,no_effect,0.0,unverified,unverified,ranked,ranked,8-49,5-45,0.167,0.166
+dev,imp068,TM5441 (PAI-1 inhibitor),60 ppm food,11 months,no_effect,0.0,unverified,unverified,ranked,ranked,56-61,52-61,0.139,0.139
+test,imp001,"(R/S)-1,3-butanediol",100000 ppm food,6 months,supports,1.0,unverified,unverified,ranked,ranked,8-49,5-45,0.166,0.168
+test,imp002,16-alpha-hydroxyestradiol,5 ppm food,12 months,supports,15.0,unverified,unverified,ranked,ranked,8-49,5-45,0.167,0.167
+test,imp005,17‐alpha‐estradiol,14.4 ppm food,16 months,supports,19.0,unverified,unverified,ranked,ranked,8-49,5-45,0.167,0.167
+test,imp007,17‐alpha‐estradiol,4.8 ppm food,10 months,supports,12.0,unverified,unverified,ranked,ranked,8-49,5-45,0.167,0.167
+test,imp010,4-phenylbutyrate,1000 ppm food,9 months,harmful,-2.0,unverified,unverified,ranked,ranked,8-49,5-45,0.167,0.166
+test,imp012,Acarbose,1000 ppm food,4 months,supports,22.0,unverified,unverified,ranked,ranked,8-49,5-45,0.168,0.167
+test,imp014,Acarbose,2500 ppm food,8 months,supports,16.0,unverified,unverified,ranked,ranked,8-49,5-45,0.166,0.167
+test,imp016,Alpha-ketoglutarate,20000 ppm food,18 months,no_effect,0.0,unverified,unverified,ranked,ranked,8-49,5-45,0.167,0.167
+test,imp018,Aspirin,60 ppm food,11 months,no_effect,0.0,contested,contested,ranked,ranked,8-49,5-45,0.167,0.166
+test,imp019,Astaxanthin,4000 ppm food,12 months,supports,12.0,unverified,unverified,ranked,ranked,8-49,5-45,0.166,0.167
+test,imp020,Beta-guanidinopropionic acid,3300 ppm food,6 months,no_effect,0.0,unverified,unverified,ranked,ranked,62-65,52-61,0.139,0.139
+test,imp022,Canagliflozin,180 ppm food,6 months,supports,9.0,unverified,unverified,ranked,ranked,8-49,5-45,0.167,0.167
+test,imp024,Candesartan cilexetil,30 ppm food,8 months,no_effect,0.0,unverified,unverified,ranked,ranked,8-49,5-45,0.167,0.166
+test,imp025,Captopril,180 ppm food,5 months,supports,14.0,unverified,unverified,ranked,ranked,8-49,5-45,0.168,0.167
+test,imp026,Curcumin,2000 ppm food,4 months,no_effect,0.0,unverified,unverified,ranked,ranked,51-55,47-51,0.148,0.148
+test,imp027,Dimethyl fumarate,120 ppm food,10 months,no_effect,0.0,unverified,unverified,ranked,ranked,8-49,5-45,0.167,0.167
+test,imp030,Fisetin,600 ppm food fed on a repeated cycle of 3 days on and 11 days off,20 months,no_effect,0.0,unverified,unverified,ranked,ranked,56-61,52-61,0.139,0.139
+test,imp032,Fish oil,50000 ppm food,9 months,no_effect,0.0,unverified,unverified,ranked,ranked,51-55,47-51,0.148,0.149
+test,imp034,Glycine,80000 ppm food,9 months,supports,6.0,unverified,unverified,ranked,ranked,8-49,5-45,0.166,0.168
+test,imp036,Hydralazine,30 ppm food,16 months,no_effect,0.0,unverified,unverified,ranked,ranked,8-49,5-45,0.167,0.167
+test,imp040,Leucine,40000 ppm food,5 months,no_effect,0.0,unverified,unverified,ranked,ranked,8-49,5-45,0.167,0.167
+test,imp041,MIF098 (CD74 antagonist),240 ppm food,8 months,no_effect,0.0,unverified,unverified,ranked,ranked,56-61,52-61,0.139,0.139
+test,imp044,Metformin,1000 ppm food,9 months,no_effect,0.0,unverified,unverified,ranked,ranked,4-5,2,0.273,0.273
+test,imp045,Methylene blue,27 ppm food,4 months,no_effect,0.0,unverified,unverified,ranked,ranked,8-49,5-45,0.167,0.166
+test,imp046,Minocycline,300 ppm food,6 months,no_effect,0.0,unverified,unverified,ranked,ranked,51-55,47-51,0.149,0.149
+test,imp048,Mycophenolic acid,6.7 ppm food,9 months,harmful,-1.0,unverified,unverified,ranked,ranked,51-55,47-51,0.149,0.148
+test,imp049,Nebivolol,60 ppm food,6 months,harmful,-5.0,unverified,unverified,ranked,ranked,8-49,5-45,0.167,0.167
+test,imp052,Nordihydroguaiaretic acid,5000 ppm food,6 months,supports,9.0,contested,supported,ranked,known_result,4-5,—,0.273,
+test,imp057,Rapamycin,14 ppm food,9 months,supports,21.0,supported,supported,known_result,known_result,—,—,,
+test,imp059,Rapamycin,42 ppm food,20 months,supports,15.0,supported,supported,known_result,known_result,—,—,,
+test,imp061,Rapamycin,42 ppm food every other month,20 months,supports,9.0,supported,supported,ranked,ranked,1,1,0.583,0.583
+test,imp064,SG1002 (hydrogen sulfide donor),240 ppm food,5-9 months,no_effect,0.0,unverified,unverified,ranked,ranked,8-49,5-45,0.166,0.167
+test,imp065,Sodium thiosulfate,10000 ppm food,6 months,no_effect,0.0,unverified,unverified,ranked,ranked,8-49,5-45,0.167,0.167
+test,imp067,Syringaresinol,300 ppm food,5 months,no_effect,0.0,unverified,unverified,ranked,ranked,62-65,52-61,0.139,0.139
+test,imp069,Ursodeoxycholic acid,5000 ppm food,5 months,no_effect,0.0,unverified,unverified,ranked,ranked,8-49,5-45,0.167,0.167
+test,imp070,Ursolic  acid,2000 ppm food,10 months,no_effect,0.0,unverified,unverified,ranked,ranked,56-61,52-61,0.141,0.139

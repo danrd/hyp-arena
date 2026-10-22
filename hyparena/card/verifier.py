@@ -10,7 +10,8 @@ from hyparena.card.llm import ask, parse_objects
 from hyparena.card.models import (UNKNOWN, Claim, ClaimVerification, Entity, EvidenceRecord,
                                   HypothesisCard, ProgramInfo, Refusal, Verification)
 from hyparena.card.rules import (HUMAN_RUNGS, ORGANISM_PATTERNS, add_strain_analogs, admissible, claim_organism,
-                                 claim_endpoint, pico_value, quote_organisms, species_key, subgroup_only)
+                                 claim_endpoint, mark_strata, pico_value, prespecified_sex, quote_organisms, species_key,
+                                 subgroup_only)
 from hyparena.card import contexts
 from hyparena.card.entities import subject_compounds
 from hyparena.tools.compounds import split as split_label
@@ -107,11 +108,12 @@ def names_in_source(claim, card: HypothesisCard, title: str, abstract: str, quot
 
 def mark_subgroup(evidence: list[EvidenceRecord], counter: list[EvidenceRecord]) -> None:
     """A trial result in one sex only, from a paper whose other result for the same claim is null or negative,
-    is a subgroup result (PEARL: "improved significantly for women using 10 mg", primary outcome null). Set by
-    code when the extractor left the flag out."""
+    is a post hoc subgroup result (PEARL: "improved significantly for women using 10 mg", primary outcome null). Set by
+    code when the extractor left the flag out. Not for a protocol that fixed sex as a stratum in advance (ITP, CITP)."""
+    mark_strata(evidence + counter)                       # ITP and CITP fix sex as a stratum in advance
     against = {r.record_id for r in counter if r.record_id.startswith("PMID:")}
     for r in evidence:
-        if r.record_id in against and r.sex in ("male", "female") and "subgroup_only" not in r.flags:
+        if r.record_id in against and r.sex in ("male", "female") and "subgroup_only" not in r.flags and not prespecified_sex(r):
             r.flags.append("subgroup_only")
             r.notes += "; subgroup_only set by code: one sex, and a null result for the claim in the same paper"
 

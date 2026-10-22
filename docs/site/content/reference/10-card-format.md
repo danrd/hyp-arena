@@ -60,6 +60,10 @@ PICO описывает исследование целиком. Каждое п
 
 Пример: *«Rapamycin extends mouse lifespan mainly by postponing death from cancer, not by slowing aging itself.»* Посылка: rapamycin `extends_lifespan_in` mouse. Исход (X): rapamycin `suppresses` cancer mortality. Отвергаемая альтернатива (Y): rapamycin `slows_aging_in` mouse, «not by slowing aging itself». Как статус исхода зависит от Y, описано в разделе [«Статусы»](#statuses-contrast).
 
+## Охват утверждения по полу {#card-scope}
+
+Поле утверждения `sex_scope` принимает значения `any` и `unspecified` (по умолчанию). `any` нормализатор записывает, когда сам текст гипотезы говорит «хотя бы у одного пола» (или «у любого пола»); если модель поле пропустила, код выставляет его по этим словам в тексте. Как поле влияет на статус, описано в разделе [«Охват по полу»](#statuses-sex).
+
 ## Запись-доказательство {#card-evidence}
 
 Каждая цитата, на которой держится статус, хранится как запись.
@@ -78,6 +82,7 @@ PICO описывает исследование целиком. Каждое п
 | `qualifiers_match` | совпадает ли контекст находки с утверждением: `yes`, `no` или `n/a` по виду, линии, полу, возрасту, дозе, сравнению; отдельно `intervention_match`: `exact`, `dose_differs`, `regimen_differs`, `related_compound`, `class` | `{species: yes, sex: n/a}` |
 | `marker_validation` | для маркеров у человека: `validated_surrogate` или `exploratory` | `exploratory` |
 | `flags` | предупреждения: `retracted`, `preprint`, `conflict_of_interest`, `small_n`, `open_label`, `subgroup_only`, `short_lived_controls` | `[subgroup_only]` |
+| `strata` | страты, заданные протоколом заранее (для работ ITP и CITP: `sex`); результат в такой страте не считается апостериорной подгруппой | `[sex]` |
 | `linked_pmid`, `fields` | только у курируемых записей: работа, из которой взята строка, и поля самой строки | `19587680`; `avg_lifespan_change_percent: 13` |
 
 Флаги видны читателю и судьям и статус сами не меняют. Исключения: запись с флагом `retracted` не учитывается, а `subgroup_only` участвует в [правиле подгруппы](#statuses-subgroup).

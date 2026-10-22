@@ -28,6 +28,7 @@ import argparse
 import csv
 import glob
 import hashlib
+import math
 import io
 import json
 import random
@@ -405,6 +406,62 @@ def primary(labels_path: str, v2_path: str, split: str = "all", K: int = 10000) 
     return out
 
 
+def tied_auc(pos: list[tuple[float, float]], neg: list[tuple[float, float]], K: int = 10000) -> float:
+    """AUC over (expected score, standard deviation) pairs in which two items whose expected scores differ by less than
+    the Monte Carlo error of the difference, 1.96 sqrt((sa^2 + sb^2) / K), tie and count half: the order inside such
+    a group is noise (the same rule as the "on equal terms" groups of the site). Not sensitive to the seed."""
+    if not pos or not neg:
+        return float("nan")
+    def credit(a, b):
+        tol = 1.96 * math.sqrt((a[1] ** 2 + b[1] ** 2) / K)
+        d = a[0] - b[0]
+        return 1.0 if d > tol else 0.0 if d < -tol else 0.5
+    return sum(credit(p, q) for p in pos for q in neg) / (len(pos) * len(neg))
+
+
+def bootstrap_tied_auc(pos, neg, K: int = 10000, n: int = 2000, seed: int = 0) -> tuple[float, float]:
+    rng = random.Random(seed)
+    vals = sorted(tied_auc([rng.choice(pos) for _ in pos], [rng.choice(neg) for _ in neg], K) for _ in range(n))
+    return vals[int(0.025 * n)], vals[int(0.975 * n) - 1]
+
+
+def primary_tied(labels_path: str, v2_path: str, split: str = "all", K: int = 10000) -> dict:
+    """`primary` with the seed-free tie rule of `tied_auc`: the same ranking (without `late_start`), known results left
+    out and listed apart, filtered items at the bottom, one score per compound (the mean over its regimens)."""
+    from hyparena.aspid import aggregate, load_profiles
+    from hyparena.card import indicators as ind
+    labels = json.loads(Path(labels_path).read_text())
+    res = json.loads(Path(v2_path).read_text())
+    ids = res["meta"].get("ids") or [f"imp{i:03d}" for i in range(1, len(res["items"]) + 1)]
+    specs = [sp for sp in ind.INDICATORS if sp.id not in PRIMARY_DROP]
+    keep = {sp.id for sp in specs}
+    values = {x["id"]: {k: v for k, v in (x.get("indicators") or {}).items() if k in keep}
+              for x in res["items"] if x["outcome"] == "ranked"}
+    prof = load_profiles()["evidence_first"]
+    prof = replace(prof, tiers=[t for t in [t if isinstance(t, str) else [i for i in t if i in keep] for t in prof.tiers] if t])
+    agg = aggregate(values, specs, prof, K=K) if values else None
+    score = {}
+    for pid, x in zip(ids, res["items"]):
+        if pid not in labels or (split != "all" and labels[pid].get("split") != split):
+            continue
+        if x["outcome"] == "ranked":
+            score[pid] = (agg.expected[x["id"]], agg.std[x["id"]])
+        elif x["outcome"] == "filtered":
+            score[pid] = (-1.0, 0.0)
+    out = {"split": split, "tie_rule": "1.96*sqrt((sa^2+sb^2)/K)"}
+    by_compound = defaultdict(list)
+    for pid, sc in score.items():
+        by_compound[labels[pid]["compound"]].append((sc, labels[pid]["label"]))
+    comp = [((sum(a[0] for a, _ in xs) / len(xs), math.sqrt(sum(a[1] ** 2 for a, _ in xs)) / len(xs)), max(y for _, y in xs))
+            for xs in by_compound.values()]
+    for name, pairs in (("per_compound", comp), ("per_regimen", [(sc, labels[pid]["label"]) for pid, sc in score.items()])):
+        pos, neg = [s for s, y in pairs if y == 1], [s for s, y in pairs if y == 0]
+        if pos and neg:
+            lo, hi = bootstrap_tied_auc(pos, neg, K)
+            out[name] = {"auc": tied_auc(pos, neg, K), "auc_95ci": [lo, hi], "n_pos": len(pos), "n_neg": len(neg)}
+    return out
+
+
 def axes(labels_path: str, v2_path: str, split: str = "all") -> dict:
     """Card spec 8 validation: does each axis of the evidence profile (and each indicator) separate the later
     ITP positives from the negatives? AUC per axis over the items of the split; hypotheses filtered by the gate
@@ -481,6 +538,14 @@ def main() -> None:
     pm.add_argument("--labels", required=True)
     pm.add_argument("--v2", required=True)
     pm.add_argument("--split", choices=["dev", "test", "all"], default="all")
+    pt = sub.add_parser("primary-tied", help="the primary metric with the seed-free tie rule (see tied_auc)")
+    pt.add_argument("--labels", required=True)
+    pt.add_argument("--v2", required=True)
+    pt.add_argument("--split", choices=["dev", "test", "all"], default="all")
+    ra = sub.add_parser("reapply", help="a saved v2 run with the rules applied again (sex_scope, strata); no model calls")
+    ra.add_argument("--v2", required=True)
+    ra.add_argument("--out", required=True)
+    ra.add_argument("--legacy", action="store_true", help="without the scope and the strata: reproduces the saved run")
     ab = sub.add_parser("ablate", help="re-aggregate a saved v2 run without some indicators (no model calls)")
     ab.add_argument("--v2", required=True)
     ab.add_argument("--drop", required=True, help="comma-separated indicator ids")
@@ -501,6 +566,16 @@ def main() -> None:
         return
     if args.cmd == "primary":
         print(json.dumps(primary(args.labels, args.v2, args.split), indent=2))
+        return
+    if args.cmd == "primary-tied":
+        print(json.dumps(primary_tied(args.labels, args.v2, args.split), indent=2))
+        return
+    if args.cmd == "reapply":
+        from hyparena.card.pipeline import reapply_rules
+        out = reapply_rules(json.loads(Path(args.v2).read_text()), new_rules=not args.legacy)
+        Path(args.out).parent.mkdir(parents=True, exist_ok=True)
+        Path(args.out).write_text(json.dumps(out, ensure_ascii=False, indent=1, default=str))
+        print(args.out, {k: v for k, v in out["outcome_counts"].items() if v})
         return
     if args.cmd == "ablate":
         out = ablate(args.v2, args.drop.split(","), args.profile)

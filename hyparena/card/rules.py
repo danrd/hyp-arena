@@ -261,11 +261,90 @@ def claim_status(cv: ClaimVerification, claim: Claim) -> str:
 
 
 SUBGROUP_FLAGS = ("subgroup_only", "secondary_outcome")
+SEX_STRATA_PROGRAMS = ("ITP", "CITP")                    # protocols that fix sex as a stratum in advance
+SEX_SCOPE_ANY = re.compile(r"\b(?:at least one sex|either sex|any sex|one or both sexes|one or both of the sexes)\b", re.I)
+
+
+def sex_scope_from_text(text: str) -> str:
+    """`any` when the text itself says the effect holds "in at least one sex" (also "either sex"), else `unspecified`."""
+    return "any" if SEX_SCOPE_ANY.search(text or "") else "unspecified"
+
+
+def set_sex_scope(card: HypothesisCard, raw_text: str) -> None:
+    """Fill `sex_scope` of the claims the text states with that scope: the claim's own span, or, for the outcome
+    claim, the hypothesis text. A value the normalizer wrote stays."""
+    for c in card.claims:
+        if c.sex_scope == "unspecified" and (sex_scope_from_text(c.source_span) == "any" or
+                                              (c.role == "outcome" and sex_scope_from_text(raw_text) == "any")):
+            c.sex_scope = "any"
+
+
+def prespecified_sex(r: EvidenceRecord) -> bool:
+    """A one-sex result of a protocol that fixed sex as a stratum in advance: not a post hoc subgroup."""
+    return r.sex in ("male", "female") and "sex" in r.strata
+
+
+def mark_strata(records: list[EvidenceRecord]) -> None:
+    """Mark the records of ITP and CITP papers (the curated rows and the PubMed records of the same papers) with the
+    stratum `sex`, and give a PubMed record with unknown sex the sex of the paper's curated rows when they all agree
+    on one. Idempotent."""
+    papers: dict[str, set[str]] = {}
+    for r in records:
+        if r.program and r.program.name in SEX_STRATA_PROGRAMS and r.linked_pmid:
+            papers.setdefault(r.linked_pmid, set()).add(r.sex)
+    for r in records:
+        pmid = r.linked_pmid or (r.record_id[5:] if r.record_id.startswith("PMID:") else "")
+        if (r.program and r.program.name in SEX_STRATA_PROGRAMS) or pmid in papers:
+            if "sex" not in r.strata:
+                r.strata.append("sex")
+            if "subgroup_only" in r.flags and "subgroup_only set by code" in r.notes:
+                r.flags.remove("subgroup_only")           # a flag the code set before the stratum was known
+            sexes = papers.get(pmid, set())
+            if r.sex == "unknown" and len(sexes) == 1 and next(iter(sexes)) in ("male", "female"):
+                r.sex = next(iter(sexes))
+                r.notes += "; sex taken from the curated row of the same ITP/CITP paper"
+
+
+def _subgroup_record(r: EvidenceRecord) -> bool:
+    return any(f in r.flags for f in SUBGROUP_FLAGS) and not prespecified_sex(r)
 
 
 def subgroup_only(support: list[EvidenceRecord]) -> bool:
-    """All the support is from a subgroup or a secondary outcome (spec 7, "Subgroup-only support")."""
-    return bool(support) and all(any(f in r.flags for f in SUBGROUP_FLAGS) for r in support)
+    """All the support is from a post hoc subgroup or a secondary outcome (spec 7, "Subgroup-only support"). A
+    one-sex result of a protocol that fixed sex in advance (ITP, CITP) is not one."""
+    return bool(support) and all(_subgroup_record(r) for r in support)
+
+
+def _single_sex_null(r: EvidenceRecord) -> bool:
+    return r.sex in ("male", "female") and r.effect != "decrease"
+
+
+def scoped_against(claim, support: list[EvidenceRecord], against: list[EvidenceRecord]) -> list[EvidenceRecord]:
+    """The records against a claim that count. Under `sex_scope: any` a null result in one sex is not against "an
+    effect in at least one sex": it counts only for a sex that has support too, or when both sexes are null
+    (a decrease in a sex always counts). Without the scope nothing changes."""
+    if getattr(claim, "sex_scope", "unspecified") != "any":
+        return against
+    if any(r.sex not in ("male", "female", "both") for r in support):
+        return against                                    # support of unknown sex may be the same sex
+    support_sexes = {x for r in support for x in (("male", "female") if r.sex == "both" else (r.sex,))}
+    nulls = {r.sex for r in against if _single_sex_null(r)}
+    if nulls >= {"male", "female"}:
+        return against
+    return [r for r in against if not (_single_sex_null(r) and r.sex not in support_sexes)]
+
+
+def sex_conflict(cv: ClaimVerification, claim) -> bool:
+    """Without `sex_scope: any` the claim is contested only because the support and every record against come from
+    different single sexes (an effect in males, none in females)."""
+    if getattr(claim, "sex_scope", "unspecified") == "any":
+        return False
+    support = [r for r in cv.evidence if admissible(r, claim)]
+    against = [r for r in cv.counterevidence if admissible(r, claim)]
+    if not support or not against:
+        return False
+    sup = {r.sex for r in support}
+    return all(s in ("male", "female") for s in sup) and all(r.sex in ("male", "female") and r.sex not in sup for r in against)
 
 
 def _status_of(cv: ClaimVerification, claim, evidence, counter) -> str:
@@ -276,7 +355,7 @@ def _status_of(cv: ClaimVerification, claim, evidence, counter) -> str:
     if cv.unresolved or claim.relation == "other":       # `other` is ignored by symbolic checks (spec 5)
         return "unresolved"
     support = [r for r in evidence if admissible(r, claim)]
-    against = [r for r in counter if admissible(r, claim)]
+    against = scoped_against(claim, support, [r for r in counter if admissible(r, claim)])
     if support and against:
         return "contested"
     if support:
@@ -359,8 +438,12 @@ def statuses(card: HypothesisCard, ver: Verification) -> dict[str, str]:
         claim = claim_of(card, cv)
         if claim is not None:
             out[cv.id] = claim_status(cv, claim)
-            cv.flags = [f for f in cv.flags if f != "subgroup_unchecked"] + \
-                (["subgroup_unchecked"] if subgroup_unchecked(cv, claim) else [])
+            ignored = getattr(claim, "sex_scope", "unspecified") == "any" and len(scoped_against(
+                claim, [r for r in cv.evidence if admissible(r, claim)], [r for r in cv.counterevidence if admissible(r, claim)])) < \
+                len([r for r in cv.counterevidence if admissible(r, claim)])
+            cv.flags = [f for f in cv.flags if f not in ("subgroup_unchecked", "sex_conflict", "other_sex_null")] + \
+                (["subgroup_unchecked"] if subgroup_unchecked(cv, claim) else []) + \
+                (["sex_conflict"] if sex_conflict(cv, claim) else []) + (["other_sex_null"] if ignored else [])
     alternatives = {a.id: a for a in card.declared_alternatives}
     for cv in ver.claims:
         claim = claim_of(card, cv)

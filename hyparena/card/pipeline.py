@@ -35,6 +35,47 @@ def _client(config: str, fake: bool, max_calls: int):
     return client, [j.family for j in pool]
 
 
+def reapply_rules(res: dict, K: int = 10000, k_top: int = 3, new_rules: bool = True) -> dict:
+    """A saved v2 result with the rules applied again, without model calls and without touching the sources: the
+    records, the cards and the saved `extra` stay as they were; `sex_scope` is read from the hypothesis text, the
+    protocol strata are marked, statuses, profiles, indicators and the ranking are recomputed. `new_rules=False`
+    leaves out the scope and the strata: it reproduces a run made before them (a check of this function)."""
+    import copy
+    from hyparena.card.rules import mark_strata, set_sex_scope
+    res = copy.deepcopy(res)
+    triples = []
+    for x in res["items"]:
+        if not x.get("verification"):
+            continue
+        card = HypothesisCard.model_validate(x["card"])
+        ver = Verification.model_validate(x["verification"])
+        if new_rules:
+            set_sex_scope(card, x["text"])
+            for cv in ver.claims:
+                mark_strata(cv.evidence + cv.counterevidence)
+        ver = finalize(card, ver)
+        x["card"], x["verification"] = card.model_dump(by_alias=True), ver.model_dump(by_alias=True)
+        triples.append((card, ver, x.get("extra") or {}))
+    ranking = rank(triples, K=K, k_top=k_top) if triples else None
+    for x in res["items"]:
+        if not x.get("verification") or ranking is None:
+            continue
+        cid = x["card"]["id"]
+        x["outcome"] = ("filtered" if cid in ranking.filtered else "known_result" if cid in ranking.known_results else "ranked")
+        x["indicators"] = ranking.values.get(cid)
+    view = lambda r: {"order": r.order, "expected": r.expected, "std": r.std, "quantiles": r.quantiles,
+                      "p_topk": r.p_topk, "p_best": r.p_best, "pairwise": r.pairwise,
+                      "rank_acceptability": r.rank_acceptability, "central_weights": r.central_weights,
+                      "confidence": r.confidence, "meta": r.meta}
+    res["ranking"] = {n: view(r) for n, r in ranking.by_profile.items()} if ranking else {}
+    res["robust"] = ranking.robust if ranking else []
+    res["filtered"] = ranking.filtered if ranking else {}
+    res["known_results"] = ranking.known_results if ranking else []
+    res.update(unranked_lists(res["items"]))
+    res["meta"]["reapplied"] = {"at": time.strftime("%Y-%m-%dT%H:%M:%S"), "new_rules": new_rules}
+    return res
+
+
 def _extra(card: HypothesisCard, as_of: Optional[str] = None) -> dict:
     """Values from other components: human safety data of the interventions (ChEMBL phase and first approval,
     ClinicalTrials.gov as of T) for path_to_human; late_start from the age at start and the median table."""
