@@ -43,7 +43,7 @@ def test_export_carries_monte_carlo_error():
     assert "std" in inspect.getsource(site.bundle_from_result) and "\"K\"" in inspect.getsource(site.bundle_from_result)
 
 
-PAGES = ["start", "method", "method/ranking", "reference", "reference/aggregation", "reference/examples"]
+PAGES = ["method", "method/ranking", "reference", "reference/aggregation", "reference/examples", "start"]
 
 
 def test_docs_pages_have_unique_anchors_and_no_vault_links():
@@ -91,4 +91,4 @@ def test_build_writes_the_pages_and_a_redirect(tmp_path):
         assert f'content="{site.code_version()}"' in s and "<style>b{}</style>" in s and 'class="crumbs"' in s and 'aria-current="page"' in s
         assert 'id="docDrawer"' in s and 'id="docAside"' in s and 'class="pager"' in s
     red = (tmp_path / "docs" / "index.html").read_text()
-    assert "location.replace" in red and '"card-layers": "method"' in red and '"docs-run": "start"' in red
+    assert "location.replace" in red and '"card-layers": "method"' in red and '"docs-run": "start"' in red and 'const slug = map[h] || "method"' in red

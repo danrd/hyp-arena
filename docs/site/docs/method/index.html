@@ -423,7 +423,7 @@ table.doctable tr:last-child td { border-bottom: 0; }
   <div class="wrap">
     <a class="brand" href="../../">Арена гипотез</a>
     <nav class="sections" aria-label="Документация">
-      <a href="../../">На главную</a><a href="../start/">Начало работы</a><a href="../method/" aria-current="page">Как это работает</a><a href="../reference/">Справочник</a><a href="https://github.com/danrd/hyp-arena" target="_blank" rel="noopener">GitHub ↗</a>
+      <a href="../../">На главную</a><a href="../method/" aria-current="page">Как это работает</a><a href="../reference/">Справочник</a><a href="../start/">Попробовать у себя</a><a href="https://github.com/danrd/hyp-arena" target="_blank" rel="noopener">GitHub ↗</a>
     </nav>
   </div>
 </header>
@@ -433,14 +433,14 @@ table.doctable tr:last-child td { border-bottom: 0; }
 <div class="scrim" id="docScrim" hidden></div>
 <div class="drawer" id="docDrawer" role="dialog" aria-modal="true" aria-label="Навигация по документации" hidden>
   <button type="button" class="drawer-close" id="docClose">Закрыть</button>
-  <nav aria-label="Разделы документации"><ul class="tree"><li><a href="../start/">Начало работы</a></li><li class="grp">Как это работает</li><li class="current"><a href="./" aria-current="page">Карточка и проверка</a><ul><li><a href="#docs-card" data-spy="docs-card">Карточка гипотезы</a></li><li><a href="#docs-statuses" data-spy="docs-statuses">Статусы и правила проверки</a></li></ul></li><li><a href="ranking/">Показатели и рейтинг</a></li><li class="grp">Справочник</li><li><a href="../reference/">Формат карточки и показатели</a></li><li><a href="../reference/aggregation/">Агрегация и данные</a></li><li><a href="../reference/examples/">Примеры</a></li></ul></nav>
+  <nav aria-label="Разделы документации"><ul class="tree"><li class="grp">Как это работает</li><li class="current"><a href="./" aria-current="page">Карточка и проверка</a><ul><li><a href="#docs-card" data-spy="docs-card">Карточка гипотезы</a></li><li><a href="#docs-statuses" data-spy="docs-statuses">Статусы и правила проверки</a></li></ul></li><li><a href="ranking/">Показатели и рейтинг</a></li><li class="grp">Справочник</li><li><a href="../reference/">Формат карточки и показатели</a></li><li><a href="../reference/aggregation/">Агрегация и данные</a></li><li><a href="../reference/examples/">Примеры</a></li><li class="grp">Попробовать у себя</li><li><a href="../start/">Начало работы</a></li></ul></nav>
 </div>
 <main class="wrap docs-wrap" id="top">
   <div class="docs-shell">
-    <aside class="doc-side" id="docSide" aria-label="Разделы документации"><nav><ul class="tree"><li><a href="../start/">Начало работы</a></li><li class="grp">Как это работает</li><li class="current"><a href="./" aria-current="page">Карточка и проверка</a><ul><li><a href="#docs-card" data-spy="docs-card">Карточка гипотезы</a></li><li><a href="#docs-statuses" data-spy="docs-statuses">Статусы и правила проверки</a></li></ul></li><li><a href="ranking/">Показатели и рейтинг</a></li><li class="grp">Справочник</li><li><a href="../reference/">Формат карточки и показатели</a></li><li><a href="../reference/aggregation/">Агрегация и данные</a></li><li><a href="../reference/examples/">Примеры</a></li></ul></nav></aside>
+    <aside class="doc-side" id="docSide" aria-label="Разделы документации"><nav><ul class="tree"><li class="grp">Как это работает</li><li class="current"><a href="./" aria-current="page">Карточка и проверка</a><ul><li><a href="#docs-card" data-spy="docs-card">Карточка гипотезы</a></li><li><a href="#docs-statuses" data-spy="docs-statuses">Статусы и правила проверки</a></li></ul></li><li><a href="ranking/">Показатели и рейтинг</a></li><li class="grp">Справочник</li><li><a href="../reference/">Формат карточки и показатели</a></li><li><a href="../reference/aggregation/">Агрегация и данные</a></li><li><a href="../reference/examples/">Примеры</a></li><li class="grp">Попробовать у себя</li><li><a href="../start/">Начало работы</a></li></ul></nav></aside>
     <div class="doc-main" id="docMain" tabindex="-1">
       <nav class="crumbs" aria-label="Хлебные крошки"><ol>
-        <li><a href="../start/">Документация</a></li><li><a href="./">Как это работает</a></li><li><a href="./">Карточка и проверка</a></li><li id="crumbCur" hidden></li>
+        <li><a href="./">Документация</a></li><li><a href="./">Как это работает</a></li><li><a href="./">Карточка и проверка</a></li><li id="crumbCur" hidden></li>
       </ol></nav>
       <header class="doc-page-head"><h1>Как это работает: карточка и проверка</h1><p class="lead">Как текст гипотезы превращается в карточку и как проверяются её утверждения.</p></header>
       <div class="docs-content"><article class="doc" id="docs-card" data-sec><header class="doc-head"><h2>Карточка гипотезы <a class="anchor" href="#docs-card" aria-label="Ссылка на раздел">#</a></h2><p class="lead">Как текст гипотезы превращается в структуру, которую можно проверять по частям.</p></header>
@@ -811,7 +811,7 @@ table.doctable tr:last-child td { border-bottom: 0; }
 <p>Если исходное утверждение, утверждение-механизм или посылка опровергнуты, гипотеза отсеивается, причина — опровергающая запись. «Оспорено» не отсеивает: гипотеза остаётся и показывает спор.</p>
 <p>Если исходное утверждение уже подтверждено в том же контексте, это известный результат: в рейтинг он не входит.</p>
 </article></div>
-      <nav class="pager" aria-label="Соседние страницы"><a rel="prev" href="../start/"><small>Назад</small> Начало работы</a><a rel="next" href="ranking/"><small>Дальше</small> Как это работает: показатели и рейтинг</a></nav>
+      <nav class="pager" aria-label="Соседние страницы"><a rel="prev" href="../../"><small>Назад</small> На главную</a><a rel="next" href="ranking/"><small>Дальше</small> Как это работает: показатели и рейтинг</a></nav>
     </div>
     <aside class="doc-aside" id="docAside" aria-labelledby="asideH"><h2 id="asideH">На этой странице</h2><ol><li><a href="#docs-card" data-spy="docs-card">Карточка гипотезы</a></li><li><a href="#docs-statuses" data-spy="docs-statuses">Статусы и правила проверки</a></li></ol></aside>
   </div>
