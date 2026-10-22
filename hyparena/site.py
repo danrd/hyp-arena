@@ -302,6 +302,7 @@ def link_targets(pages: list[dict]) -> dict[str, str]:
     return {i: p["slug"] for p in pages for sec in p["sections"] for i in re.findall(r'\sid="([^"]+)"', sec["html"])}
 
 
+START_GROUP = "Попробовать у себя"   # the page of commands stands apart from the explanation and the reference
 LEGACY_IDS = {"docs-run": "start"}   # anchors of the one-page documentation that no longer exist as elements
 
 
@@ -315,8 +316,7 @@ def _tree(pages: list[dict], cur: int) -> str:
     items, last = [], None
     cs = pages[cur]["slug"]
     for i, p in enumerate(pages):
-        multi = sum(q["group"] == p["group"] for q in pages) > 1
-        if multi and p["group"] != last:
+        if p["group"] != last:
             items.append(f'<li class="grp">{html.escape(p["group"])}</li>')
         last = p["group"]
         href = _rel(cs, p["slug"])
@@ -351,10 +351,13 @@ def render_page(pages: list[dict], cur: int, version: str, index_html: str, targ
            else f'<a rel="next" href="{up}"><small>Дальше</small> На главную</a>')
     first = groups[0][1]
     gfirst = next(slug for g, slug in groups if g == p["group"])
-    crumbs = f'<li><a href="{_rel(cs, first)}">Документация</a></li>'
-    if p["group"] != p["label"]:
-        crumbs += f'<li><a href="{_rel(cs, gfirst)}">{html.escape(p["group"])}</a></li>'
-    crumbs += f'<li><a href="./">{html.escape(p["label"])}</a></li>'
+    if p["group"] == START_GROUP:
+        crumbs = f'<li><a href="{_rel(cs, p["slug"])}">{html.escape(p["group"])}</a></li>'
+    else:
+        crumbs = f'<li><a href="{_rel(cs, first)}">Документация</a></li>'
+        if p["group"] != p["label"]:
+            crumbs += f'<li><a href="{_rel(cs, gfirst)}">{html.escape(p["group"])}</a></li>'
+        crumbs += f'<li><a href="./">{html.escape(p["label"])}</a></li>'
     aside = "".join(f'<li><a href="#{sid}" data-spy="{sid}">{html.escape(t)}</a></li>' for sid, t in p["nav"])
     tree = _tree(pages, cur)
     return f"""<!doctype html>

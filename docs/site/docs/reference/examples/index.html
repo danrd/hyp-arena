@@ -423,7 +423,7 @@ table.doctable tr:last-child td { border-bottom: 0; }
   <div class="wrap">
     <a class="brand" href="../../../">Арена гипотез</a>
     <nav class="sections" aria-label="Документация">
-      <a href="../../../">На главную</a><a href="../../start/">Начало работы</a><a href="../../method/">Как это работает</a><a href="../../reference/" aria-current="page">Справочник</a><a href="https://github.com/danrd/hyp-arena" target="_blank" rel="noopener">GitHub ↗</a>
+      <a href="../../../">На главную</a><a href="../../method/">Как это работает</a><a href="../../reference/" aria-current="page">Справочник</a><a href="../../start/">Попробовать у себя</a><a href="https://github.com/danrd/hyp-arena" target="_blank" rel="noopener">GitHub ↗</a>
     </nav>
   </div>
 </header>
@@ -433,14 +433,14 @@ table.doctable tr:last-child td { border-bottom: 0; }
 <div class="scrim" id="docScrim" hidden></div>
 <div class="drawer" id="docDrawer" role="dialog" aria-modal="true" aria-label="Навигация по документации" hidden>
   <button type="button" class="drawer-close" id="docClose">Закрыть</button>
-  <nav aria-label="Разделы документации"><ul class="tree"><li><a href="../../start/">Начало работы</a></li><li class="grp">Как это работает</li><li><a href="../../method/">Карточка и проверка</a></li><li><a href="../../method/ranking/">Показатели и рейтинг</a></li><li class="grp">Справочник</li><li><a href="../">Формат карточки и показатели</a></li><li><a href="../aggregation/">Агрегация и данные</a></li><li class="current"><a href="./" aria-current="page">Примеры</a><ul><li><a href="#docs-examples" data-spy="docs-examples">Примеры</a></li></ul></li></ul></nav>
+  <nav aria-label="Разделы документации"><ul class="tree"><li class="grp">Как это работает</li><li><a href="../../method/">Карточка и проверка</a></li><li><a href="../../method/ranking/">Показатели и рейтинг</a></li><li class="grp">Справочник</li><li><a href="../">Формат карточки и показатели</a></li><li><a href="../aggregation/">Агрегация и данные</a></li><li class="current"><a href="./" aria-current="page">Примеры</a><ul><li><a href="#docs-examples" data-spy="docs-examples">Примеры</a></li></ul></li><li class="grp">Попробовать у себя</li><li><a href="../../start/">Начало работы</a></li></ul></nav>
 </div>
 <main class="wrap docs-wrap" id="top">
   <div class="docs-shell">
-    <aside class="doc-side" id="docSide" aria-label="Разделы документации"><nav><ul class="tree"><li><a href="../../start/">Начало работы</a></li><li class="grp">Как это работает</li><li><a href="../../method/">Карточка и проверка</a></li><li><a href="../../method/ranking/">Показатели и рейтинг</a></li><li class="grp">Справочник</li><li><a href="../">Формат карточки и показатели</a></li><li><a href="../aggregation/">Агрегация и данные</a></li><li class="current"><a href="./" aria-current="page">Примеры</a><ul><li><a href="#docs-examples" data-spy="docs-examples">Примеры</a></li></ul></li></ul></nav></aside>
+    <aside class="doc-side" id="docSide" aria-label="Разделы документации"><nav><ul class="tree"><li class="grp">Как это работает</li><li><a href="../../method/">Карточка и проверка</a></li><li><a href="../../method/ranking/">Показатели и рейтинг</a></li><li class="grp">Справочник</li><li><a href="../">Формат карточки и показатели</a></li><li><a href="../aggregation/">Агрегация и данные</a></li><li class="current"><a href="./" aria-current="page">Примеры</a><ul><li><a href="#docs-examples" data-spy="docs-examples">Примеры</a></li></ul></li><li class="grp">Попробовать у себя</li><li><a href="../../start/">Начало работы</a></li></ul></nav></aside>
     <div class="doc-main" id="docMain" tabindex="-1">
       <nav class="crumbs" aria-label="Хлебные крошки"><ol>
-        <li><a href="../../start/">Документация</a></li><li><a href="../">Справочник</a></li><li><a href="./">Примеры</a></li><li id="crumbCur" hidden></li>
+        <li><a href="../../method/">Документация</a></li><li><a href="../">Справочник</a></li><li><a href="./">Примеры</a></li><li id="crumbCur" hidden></li>
       </ol></nav>
       <header class="doc-page-head"><h1>Справочник: примеры</h1><p class="lead">Пять разобранных вручную карточек. Каждая показывает одно правило проверки.</p></header>
       <div class="docs-content"><article class="doc" id="docs-examples" data-sec><header class="doc-head"><h2>Примеры <a class="anchor" href="#docs-examples" aria-label="Ссылка на раздел">#</a></h2><p class="lead">Пять разобранных вручную карточек. Каждая показывает одно правило проверки на реальной литературе.</p></header>
@@ -466,7 +466,7 @@ table.doctable tr:last-child td { border-bottom: 0; }
 <p><strong>Чему учит: исход должен совпадать.</strong> Одна и та же аннотация сообщает о заметном улучшении возрастных показателей и об отсутствии продления жизни. Проверка, которая сверяет только вид, вещество и возраст, отметила бы утверждение о продолжительности жизни как подтверждённое. Здесь предложение о здоровье уходит в отказы с типом <code>endpoint_mismatch</code>, а результат ITP («did not have significant effects on survival») опровергает утверждение, и гипотеза отсеивается фильтром.</p>
 <p><a href="../../../?example=ex5#card">Открыть карточку</a></p>
 </article></div>
-      <nav class="pager" aria-label="Соседние страницы"><a rel="prev" href="../aggregation/"><small>Назад</small> Справочник: агрегация и данные</a><a rel="next" href="../../../"><small>Дальше</small> На главную</a></nav>
+      <nav class="pager" aria-label="Соседние страницы"><a rel="prev" href="../aggregation/"><small>Назад</small> Справочник: агрегация и данные</a><a rel="next" href="../../start/"><small>Дальше</small> Начало работы</a></nav>
     </div>
     <aside class="doc-aside" id="docAside" aria-labelledby="asideH"><h2 id="asideH">На этой странице</h2><ol><li><a href="#docs-examples" data-spy="docs-examples">Примеры</a></li></ol></aside>
   </div>
