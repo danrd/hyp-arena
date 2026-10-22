@@ -84,7 +84,9 @@ def _item(x: dict, pid: str) -> dict:
                                                                      "discriminating_design", "record_id", "quote")}
                                               for a in ver.get("alternatives", [])],
                              "searched": len(ver.get("searched_pmids") or [])} if ver else None,
-            "indicators": x.get("indicators")}
+            "indicators": x.get("indicators"),
+            **({k: x[k] for k in ("origin", "round", "parent", "kind", "change") if x.get(k) is not None} if x.get("origin") == "evolved" else {}),
+            **({"informativeness": x["extra"]["informativeness_detail"]} if (x.get("extra") or {}).get("informativeness_detail") else {})}
 
 
 def bundle_from_result(res: dict, ids: list[str], elo: Optional[dict] = None, title: str = "") -> dict:
@@ -95,6 +97,8 @@ def bundle_from_result(res: dict, ids: list[str], elo: Optional[dict] = None, ti
     for it in items:
         if it["duplicate_of"]:
             it["duplicate_of"] = to_pid.get(it["duplicate_of"], it["duplicate_of"])
+        if it.get("parent"):
+            it["parent"] = to_pid.get(it["parent"], it["parent"])
     profiles = {}
     for name, r in (res.get("ranking") or {}).items():
         profiles[name] = {"order": [to_pid[h] for h in r["order"]],
@@ -305,6 +309,44 @@ def export_itp(dev_path: str, test_path: str, labels_path: str, title: str = ITP
         "auc_seed0": {"per_regimen": legacy["per_regimen"], "per_compound": legacy["per_compound"]},
         "top": top, "bottom": {**bottom, "expected": bottom["k"] * base}}
     bundle["showcase"] = {"examples": _itp_examples(bundle, labels)}
+    return bundle
+
+
+EVO_TITLE = "Эволюция гипотез: три раунда по результатам проверки"
+
+
+def export_evolution(v2_path: str, pool_path: str, title: str = EVO_TITLE) -> dict:
+    """The site bundle of an evolution run (hyparena.card.evolve): the parents keep their pool ids, the children are
+    `ev011`, ...; the summary carries the criterion declared in advance and the lineage of every child."""
+    from hyparena.data import load_imported
+    res = json.loads(Path(v2_path).read_text())
+    pool = [h.id for h in load_imported(pool_path)]
+    ids, kids = [], 0
+    for x in res["items"]:
+        if x.get("origin") == "evolved":
+            kids += 1
+            ids.append(f"ev{len(pool) + kids:03d}")
+        else:
+            ids.append(pool[len(ids)])
+    bundle = bundle_from_result(res, ids, None, title)
+    to_pid = dict(zip([x["id"] for x in res["items"]], ids))
+    evo = res["meta"]["evolution"]
+    crit = evo["criterion"]
+    rows = [{**r, "id": to_pid[r["id"]], "parent": to_pid.get(r["parent"], r["parent"])} for r in crit["children"]]
+    by = {h["id"]: h for h in bundle["hypotheses"]}
+    for r in rows:
+        r["change"] = by[r["id"]].get("change", "")
+        r["title"] = by[r["id"]]["title"]
+        r["informativeness"] = (by[r["id"]].get("informativeness") or {}).get("n")
+        r["status"] = next((cv["status"] for cv in (by[r["id"]]["verification"] or {"claims": []})["claims"]
+                            if cv.get("claim") and cv["claim"]["role"] == "outcome"), None)
+    bundle["meta"]["badge"] = "Эволюция"
+    bundle["summary"] = {"kind": "evolution", "rounds": [{**r, "parents": [to_pid.get(p, p) for p in r["parents"]],
+                                                           "children": [to_pid.get(c, c) for c in r["children"]]} for r in evo["rounds"]],
+                         "calls": evo["calls"], "max_calls": evo["max_calls"], "profile": crit["profile"], "k": crit["k"],
+                         "success": crit["success"], "children_in_top_k": crit["children_in_top_k"], "n_children": crit["n_children"],
+                         "n_parents": sum(1 for x in res["items"] if x.get("origin") != "evolved"), "children": rows,
+                         "writer": evo["writer"], "verifiers": evo["verifiers"], "as_of": evo["as_of"]}
     return bundle
 
 
@@ -807,11 +849,15 @@ def main() -> None:
     t.add_argument("--test", default="runs/stage4/itp2010_test.reapplied.json")
     t.add_argument("--labels", default="data/backtest/itp_2010-12-31_labels.json")
     t.add_argument("--out", required=True)
+    ev = sub.add_parser("export-evolution", help="bundle of an evolution run (hyparena.card.evolve)")
+    ev.add_argument("--v2", default="runs/evolution/g003_evo.json")
+    ev.add_argument("--pool", default="data/negatives/drugage/g003.json")
+    ev.add_argument("--out", required=True)
     x = sub.add_parser("examples", help="bundle of the worked cards of the documentation")
     x.add_argument("--out", required=True)
     m = sub.add_parser("embed")
     m.add_argument("--bundle", required=True)
-    m.add_argument("--key", default="sample", choices=["sample", "examples", "itp"])
+    m.add_argument("--key", default="sample", choices=["sample", "examples", "itp", "evolution"])
     sub.add_parser("build", help="render docs/site/content/<page>/*.md into docs/site/docs/<page>/index.html")
     a = ap.parse_args()
     if a.cmd == "export":
@@ -821,6 +867,10 @@ def main() -> None:
     elif a.cmd == "export-itp":
         Path(a.out).parent.mkdir(parents=True, exist_ok=True)
         Path(a.out).write_text(json.dumps(export_itp(a.dev, a.test, a.labels), ensure_ascii=False, indent=1))
+        print(a.out)
+    elif a.cmd == "export-evolution":
+        Path(a.out).parent.mkdir(parents=True, exist_ok=True)
+        Path(a.out).write_text(json.dumps(export_evolution(a.v2, a.pool), ensure_ascii=False, indent=1))
         print(a.out)
     elif a.cmd == "examples":
         Path(a.out).parent.mkdir(parents=True, exist_ok=True)
