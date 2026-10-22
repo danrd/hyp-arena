@@ -12,7 +12,8 @@ from typing import Optional
 
 from hyparena.aspid import IndicatorSpec
 from hyparena.card.models import RUNGS, HypothesisCard, Verification
-from hyparena.card.rules import STRAIN_ANALOG, _all_claims, admissible, claim_rung, claim_status, same_intervention
+from hyparena.card.rules import (STRAIN_ANALOG, _all_claims, admissible, claim_rung, claim_status, is_disease_analog,
+                                 same_intervention)
 
 INDICATORS: list[IndicatorSpec] = [
     IndicatorSpec("effect_level", "ordinal", levels=RUNGS),
@@ -78,7 +79,7 @@ def novelty(card: HypothesisCard, ver: Verification) -> str:
     """new context (the same intervention and species already work in another strain, sex, dose or start age)
     · translation of a known finding to a new species · analog of a known intervention · new link (a known
     result is ranked separately and never reaches this point)."""
-    pairs = _all_claims(card, ver)
+    pairs = [(c, cv) for c, cv in _all_claims(card, ver) if not is_disease_analog(c)]   # disease models: not counted
     for c, cv in pairs:
         if c.note.startswith(STRAIN_ANALOG) and claim_status(cv, c) == "supported":
             return "new_context"

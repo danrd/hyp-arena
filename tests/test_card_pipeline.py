@@ -241,17 +241,22 @@ def test_lifespan_stance_comes_from_the_effect_direction(monkeypatch):
     assert "disease_model" in rec.flags and "NZB/W F1" in rec.notes  # a lupus-prone strain named in the abstract
 
 
-def test_effect_level_on_disease_models_only_is_noted(monkeypatch):
+def test_disease_model_records_do_not_set_the_effect_level(monkeypatch):
+    """Context rule (2026-10-22): a lupus-prone strain named in the abstract is a disease model; for a claim about
+    lifespan in mice without a stated disease the record moves to an analog and does not enter the effect level."""
     from hyparena.card.models import Verification
-    from hyparena.card.rules import finalize
+    from hyparena.card.rules import add_disease_analogs, finalize
     card = _lovaza_card("extends_lifespan_in")
     quote = "4% Lovaza significantly extends both the median and maximal life span of (NZBxNZW)F1 mice."
     _stub(monkeypatch, [_record(quote=quote, effect="increase", qualifiers_match={"species": "yes"})])
     monkeypatch.setattr(pubmed, "fetch", lambda ids: {"1": LOVAZA})
     cv = verifier.verify_claim(None, "google", frozenset(), card.claims[0], card)
-    ver = finalize(card, Verification(card_id="H-1", claims=[cv]))
-    assert ver.claims[0].status == "supported"                        # flags do not change a status (spec 7)
-    assert ver.evidence_profile.effect_level_note == "mammals (disease models or special conditions only)"
+    rec = cv.evidence[0]
+    assert rec.model_type == "disease_model" and rec.disease and rec.disease_evidence
+    ver = finalize(card, add_disease_analogs(card, Verification(card_id="H-1", claims=[cv])))
+    assert ver.claims[0].status == "unverified" and ver.claims[0].refusals[0].type == "population_mismatch"
+    assert ver.claims[1].id == "an1" and ver.claims[1].claim.role == "analog"
+    assert ver.evidence_profile.effect_level == "none" and ver.evidence_profile.disease_models == 1
 
 
 def test_a_quote_about_another_compound_does_not_count(monkeypatch):

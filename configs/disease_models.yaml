@@ -11,6 +11,7 @@ models:
   - {pattern: "New Zealand Black|NZB mice", strains: [New Zealand Black, NZB], name: NZB, category: disease_model, note: autoimmune haemolytic anaemia, lupus-like}
   - {pattern: "MRL/lpr|MRL-lpr|MRL/MpJ-Fas", name: MRL/lpr, category: disease_model, note: lupus-prone}
   - {pattern: "BXSB", name: BXSB, category: disease_model, note: lupus-prone (males)}
+  - {pattern: "gld/gld|GLD (?:mice|mouse)", name: GLD, category: disease_model, disease: autoimmune lymphoproliferative disease, note: autoimmune lymphoproliferative disease (Fas ligand mutant)}
   # cancer-prone
   - {pattern: "AKR(?:/J)? (?:mice|mouse|strain)|AKR/J", strains: [AKR, AKR/J], name: AKR, category: disease_model, note: spontaneous leukaemia, short-lived}
   - {pattern: "C3H(?:/Sn|/HeJ|/He)?", strains: [C3H, C3H/Sn, C3H/HeJ, C3H/He], name: C3H, category: disease_model, note: high incidence of mammary tumours (MMTV)}
@@ -29,9 +30,11 @@ models:
   - {pattern: "spontaneously hypertensive rats?|SHRSP|stroke-prone", name: SHR rat, category: disease_model, note: hypertensive}
   # neurodegeneration and muscle
   - {pattern: "SOD1[- ]?G93A|G93A", name: SOD1 G93A, category: disease_model, note: ALS}
+  - {pattern: "SOD1 ?\\(?G(?:37R|85R|86R|59S)\\)?|mutant (?:human )?SOD1|SOD1 transgenic", name: SOD1 mutant, category: disease_model, disease: ALS, note: ALS}
   - {pattern: "APP/PS1|APPswe|3xTg|5xFAD|Tg2576", name: Alzheimer's model, category: disease_model, note: amyloid pathology}
   - {pattern: "R6/2|Huntington(?:'s)? disease (?:model|mice)", name: Huntington's model, category: disease_model, note: Huntington's disease}
   - {pattern: "mdx mice|mdx\\b", name: mdx, category: disease_model, note: muscular dystrophy}
+  - {pattern: "laminin[- ]?(?:alpha|α) ?2[- ](?:null|deficient)|merosin[- ]deficient|dy2J|dy/dy", name: laminin-α2 deficient, category: disease_model, disease: congenital muscular dystrophy, note: congenital muscular dystrophy}
   # progeroid and accelerated ageing
   - {pattern: "SAMP ?\\d+|senescence[- ]accelerated mice|senescence[- ]accelerated mouse|SAM-?P", name: SAMP, category: accelerated_aging, note: senescence-accelerated, short-lived}
   - {pattern: "Ercc1 ?(?:-/Δ|-/-|-/delta)|Ercc1-deficient", name: Ercc1-deficient, category: progeroid, note: DNA repair deficient}

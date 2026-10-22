@@ -13,13 +13,13 @@ prediction table and informativeness come at stage C with debates; until then in
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Callable, Optional
 
 from hyparena.card.llm import ask
 from hyparena.card.models import Alternative, EvidenceRecord, HypothesisCard, Verification
-from hyparena.card.rules import (HETEROGENEOUS, _all_claims, admissible, same_intervention, species_key, statuses,
-                                 strain_key)
+from hyparena.card.rules import (HETEROGENEOUS, _all_claims, admissible, is_disease_analog, same_intervention, species_key,
+                                 statuses, strain_key)
 from hyparena.tools import pubmed
 
 TEMPLATE = ("check_alternatives", "v1")
@@ -46,20 +46,22 @@ class Fields:
     support: list[EvidenceRecord]               # admissible support of the outcome and same-intervention analogs
     engagement: list[EvidenceRecord]            # admissible support of inhibits/activates claims
     has_target_claim: bool
+    disease_models: list[EvidenceRecord] = field(default_factory=list)   # records of disease models (analogs, not counted)
 
 
 def fields(card: HypothesisCard, ver: Verification) -> Fields:
     pairs = _all_claims(card, ver)
-    support = [r for c, cv in pairs
+    support = [r for c, cv in pairs if not is_disease_analog(c)
                if c.role == "outcome" or (c.role in ("analog", "translation") and same_intervention(c, card))
                for r in cv.evidence if admissible(r, c)]
+    models = [r for c, cv in pairs if is_disease_analog(c) for r in cv.evidence + cv.counterevidence]
     target = [(c, cv) for c, cv in pairs if c.relation in ("inhibits", "activates")]
     pop = card.pico.population
     return Fields(type=card.hypothesis_type, species=species_key(pop.label) or species_key(pop.taxon or ""),
                   endpoint=card.pico.outcome.endpoint, intervention_types={i.type for i in card.pico.intervention},
                   routes={i.route for i in card.pico.intervention},
                   support=support, engagement=[r for c, cv in target for r in cv.evidence if admissible(r, c)],
-                  has_target_claim=bool(target))
+                  has_target_claim=bool(target), disease_models=models)
 
 
 def _given(v: str) -> str:
@@ -108,7 +110,7 @@ CHECKLIST: list[Row] = [
         lambda f: "gene" in f.intervention_types or _one_inbred_strain(f)),
     Row("disease_specific", "effect through one disease (e.g. cancer), not through aging",
         "cause of death and pathology; censoring disease deaths", ("cause of death", "pathology", "cancer"),
-        lambda f: f.species == "mouse" and f.endpoint == "lifespan"),
+        lambda f: (f.species == "mouse" and f.endpoint == "lifespan") or bool(f.disease_models)),
     Row("sex_specific", "effect in one sex only", "both sexes", ("sex differences", "male", "female"), _one_sex),
     Row("dose_regimen", "effect only at this dose or start age", "several doses and start ages",
         ("dose-response", "doses", "late-life"), _one_dose_and_age),
@@ -126,7 +128,7 @@ CHECKLIST: list[Row] = [
     Row("age_proxy", "the marker only reflects chronological age", "prediction beyond chronological age",
         ("chronological age", "independent of age"), lambda f: f.type == "biomarker"),
     Row("disease_proxy", "the marker reflects disease, not aging", "exclude people with the disease; independent cohort",
-        ("healthy", "independent cohort"), lambda f: f.type == "biomarker"),
+        ("healthy", "independent cohort"), lambda f: f.type == "biomarker" or (bool(f.disease_models) and f.endpoint != "lifespan")),
 ]
 BY_ID = {r.id: r for r in CHECKLIST}
 
@@ -145,7 +147,11 @@ def rows(card: HypothesisCard, ver: Verification) -> list[Alternative]:
     for r in CHECKLIST:
         if not r.include(f):
             continue
-        alt = Alternative(id="", type=r.id, source="checklist", explanation=r.explanation,
+        expl = r.explanation
+        if r.id in ("disease_specific", "disease_proxy") and f.disease_models:
+            names = sorted({m.disease for m in f.disease_models if m.disease})
+            expl += f"; records from disease models: {len({m.record_id for m in f.disease_models})} ({', '.join(names)})"
+        alt = Alternative(id="", type=r.id, source="checklist", explanation=expl,
                           discriminating_design=r.design)
         if r.id in checked:                                # a result of an earlier check stays
             old = checked[r.id]

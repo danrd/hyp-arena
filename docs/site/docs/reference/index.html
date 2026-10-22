@@ -644,6 +644,7 @@ table.doctable tr:last-child td { border-bottom: 0; }
 <p><strong>Контраст «в основном X, а не Y».</strong> Смысл такой гипотезы — в сравнении двух объяснений. Исходное утверждение — X (заявленное объяснение), с уточнением <code>contrast</code>, которое указывает на Y. Y записывается как отвергаемая альтернатива со своим дословным фрагментом, а объясняемый эффект — как посылка.</p>
 <p>Пример: <em>«Rapamycin extends mouse lifespan mainly by postponing death from cancer, not by slowing aging itself.»</em> Посылка: rapamycin <code>extends_lifespan_in</code> mouse. Исход (X): rapamycin <code>suppresses</code> cancer mortality. Отвергаемая альтернатива (Y): rapamycin <code>slows_aging_in</code> mouse, «not by slowing aging itself». Как статус исхода зависит от Y, описано в разделе <a href="../method/#statuses-contrast">«Статусы»</a>.</p>
 <h3 id="card-scope">Охват утверждения по полу <a class="anchor" href="#card-scope" aria-label="Ссылка на раздел">#</a></h3>
+<p>У утверждения про животных может быть уточнение <code>disease</code> (болезнь, названная в тексте: «мыши с БАС»). Без него утверждение считается утверждением про животных без болезни (раздел <a href="../method/#statuses-disease">«Контекст: модели болезней»</a>).</p>
 <p>Поле утверждения <code>sex_scope</code> принимает значения <code>any</code> и <code>unspecified</code> (по умолчанию). <code>any</code> нормализатор записывает, когда сам текст гипотезы говорит «хотя бы у одного пола» (или «у любого пола»); если модель поле пропустила, код выставляет его по этим словам в тексте. Как поле влияет на статус, описано в разделе <a href="../method/#statuses-sex">«Охват по полу»</a>.</p>
 <h3 id="card-evidence">Запись-доказательство <a class="anchor" href="#card-evidence" aria-label="Ссылка на раздел">#</a></h3>
 <p>Каждая цитата, на которой держится статус, хранится как запись.</p>
@@ -717,6 +718,11 @@ table.doctable tr:last-child td { border-bottom: 0; }
 <td><code>[subgroup_only]</code></td>
 </tr>
 <tr>
+<td><code>model_type</code>, <code>disease</code>, <code>disease_evidence</code></td>
+<td>запись получена на модели болезни (<code>disease_model</code>) или ускоренного старения (<code>aging_model</code>): название болезни или модели и место, где оно названо (предложение аннотации или поле штамма). Без названия и места метка не действует</td>
+<td><code>ALS</code>, «Mice carrying 23 copies of the human SOD1(G93A) transgene…»</td>
+</tr>
+<tr>
 <td><code>strata</code></td>
 <td>страты, заданные протоколом заранее (для работ ITP и CITP: <code>sex</code>); результат в такой страте не считается апостериорной подгруппой</td>
 <td><code>[sex]</code></td>
@@ -732,6 +738,7 @@ table.doctable tr:last-child td { border-bottom: 0; }
 </article><article class="doc" id="docs-indref" data-sec><header class="doc-head"><h2>Показатели <a class="anchor" href="#docs-indref" aria-label="Ссылка на раздел">#</a></h2><p class="lead">Полные определения, таблицы значений, path_to_human и late_start.</p></header>
 <h3 id="ind-profile-ref">Профиль доказательности <a class="anchor" href="#ind-profile-ref" aria-label="Ссылка на раздел">#</a></h3>
 <p>Из статусов утверждений считается профиль доказательности. Это факты, а не оценки: одна ось не обменивается на другую, а то, насколько важна каждая, решает профиль приоритетов при агрегации.</p>
+<p><strong>Модели болезней.</strong> Записи, полученные на моделях болезней, при утверждении про животных без указанной болезни не входят ни в одну ось профиля (в <code>effect_level</code>, <code>robustness</code>, <code>multi_site_positive</code>) и не дают шага «подтверждённый эффект у млекопитающих» в <code>path_to_human</code>. В профиле они показываются отдельной строкой «модели болезней: N записей» и питают альтернативы <code>disease_specific</code> и <code>disease_proxy</code>. Модели ускоренного старения (<code>aging_model</code>) пока не учитываются.</p>
 <p><strong>Фильтр.</strong> Если опровергнуто исходное утверждение, механизм или посылка, гипотеза отсеивается с указанием опровергающей записи. «Оспорено» не отсеивает.</p>
 <div class="tablewrap"><table class="doctable">
 <thead>

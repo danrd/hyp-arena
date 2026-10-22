@@ -3,6 +3,8 @@ layers. What each decision does:
 - with a `source` on a claim (or a rejected alternative): the source goes through the verifier like any other
   record, so it can change the claim's status only through the usual rules;
 - without a source: stays in this layer and is shown as "expert opinion", never as a fact;
+- `disease_context` (decision `restore`, target a record id): a record from a disease model counts for a claim about
+  animals without a stated disease although the context rule moved it to an analog (it stays visible in refusals);
 - `pairwise` ("prefer H-A" on targets [H-A, H-B]): a weight constraint Prefer(H-A >= H-B) in the named profile
   (or every profile); rankings are reported with and without these constraints;
 - `portfolio` and `pairwise` are also validation labels; hypotheses the expert writes go through the same
@@ -54,6 +56,13 @@ def sources(layer: ExpertLayer, hypothesis: str) -> dict[str, list[tuple[str, st
         if d.hypothesis == hypothesis and isinstance(d.target, str) and pmid:
             out.setdefault(d.target, []).append((pmid, d.id))
     return out
+
+
+def restored_records(layer: ExpertLayer, hypothesis: str) -> frozenset:
+    """Record ids an expert restored to a claim about animals without a stated disease (point `disease_context`,
+    decision `restore`, target the record id): the record then counts although it comes from a disease model."""
+    return frozenset(d.target for d in layer.decisions if d.point == "disease_context" and d.hypothesis == hypothesis
+                     and d.decision == "restore" and isinstance(d.target, str))
 
 
 def opinions(layer: ExpertLayer, hypothesis: str) -> list[dict]:
