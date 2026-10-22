@@ -102,7 +102,7 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
         as_of: Optional[str] = None, K: int = 10000, k_top: int = 3, max_calls: int = 400, workers: int = 4,
         normalizer_family: str = "google", on_stage=lambda msg: None, expert=None,
         verifiers: Optional[list[str]] = None, cards: Optional[list[Optional[dict]]] = None,
-        check_alternatives: bool = True, dedup: bool = True) -> dict:
+        check_alternatives: bool = True, dedup: bool = True, informativeness: bool = False) -> dict:
     """`expert`: path to an expert file (hyparena/card/expert.py) or an ExpertLayer. `verifiers`: the families
     that verify (default: every family of the config). `cards`: declared cards from an earlier run, one per
     text (None where normalization failed); the normalizer is then skipped, so a change of the verifier is
@@ -173,6 +173,11 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
         if check_alternatives and x["verification"].evidence_profile.gate == "pass":
             alternatives.check(client, checker, card, x["verification"], avoid=frozenset({writer}), log=log)
         x["extra"] = _extra(card, as_of)
+        if informativeness and x["verification"].evidence_profile.gate == "pass":      # one call: alternatives the experiment discriminates
+            from hyparena.card.informativeness import discriminated
+            info = discriminated(client, checker, x["text"], card, x["verification"], avoid=frozenset({writer}), log=log)
+            if info is not None:
+                x["extra"].update({"informativeness": info["n"], "informativeness_detail": info})
         triples.append((card, x["verification"], x["extra"]))
         on_stage(f"{card.id} проверена; вызовов: {client.calls}")
     pool.shutdown()
@@ -366,12 +371,13 @@ def main() -> None:
     ap.add_argument("--expert", default=None, help="expert file (YAML, see hyparena/card/expert.py)")
     ap.add_argument("--verifiers", default=None, help="comma-separated families that verify (default: all)")
     ap.add_argument("--cards-from", default=None, help="an earlier v2 result whose cards are reused (no normalizer)")
+    ap.add_argument("--informativeness", action="store_true", help="one call per hypothesis: alternatives the decisive experiment discriminates")
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
     texts = split_hypotheses(Path(args.paste).read_text(encoding="utf-8"))
     res = run(texts, args.writer, args.config, args.fake, args.as_of, args.K, args.k_top, args.max_calls,
               normalizer_family=args.normalizer_family, on_stage=lambda m: print(m, flush=True), expert=args.expert,
-              verifiers=args.verifiers.split(",") if args.verifiers else None,
+              verifiers=args.verifiers.split(",") if args.verifiers else None, informativeness=args.informativeness,
               cards=[x["card"] for x in json.loads(Path(args.cards_from).read_text())["items"]] if args.cards_from else None)
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     Path(args.out).write_text(json.dumps(res, ensure_ascii=False, indent=1, default=str))

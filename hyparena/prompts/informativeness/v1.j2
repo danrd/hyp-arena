@@ -1,0 +1,18 @@
+You judge the design of the decisive experiment written in a hypothesis, not the hypothesis. Code counts what you report, so be literal and conservative.
+
+Hypothesis, as written:
+<<<TEXT
+{{ text }}
+TEXT>>>
+
+Alternative explanations that are still open, each with the control or measurement that would discriminate it from the hypothesis:
+{% for a in alternatives %}
+- {{ a.id }}: {{ a.explanation }}. Discriminating control: {{ a.design }}.
+{% endfor %}
+
+For each alternative decide whether the experiment exactly as written in the text above already contains that control or measurement, so that its readout would come out differently if the alternative were true. Credit only what the text states: not what the experiment could be extended with, and not what the usual design of such an experiment includes. A plain survival comparison of treated and control animals discriminates none of these alternatives.
+
+Return only the alternatives that are discriminated, each with "how": one phrase copied exactly, character for character, from the hypothesis text above, that states the control or measurement. If none is discriminated, return an empty list.
+
+Reply with a single JSON object and nothing else:
+{"discriminated": [{"id": "", "how": ""}]}

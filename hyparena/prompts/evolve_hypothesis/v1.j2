@@ -1,0 +1,41 @@
+You refine a research hypothesis about ageing using what a verification found. You do not judge the hypothesis and you do not add facts: use only the verified facts below. Code checks the format and rejects children that copy the parent.
+
+Parent hypothesis:
+{{ text }}
+
+Verified facts about the parent (from PubMed abstracts up to the cut-off date):
+- Main claim ("{{ main_claim }}"): {{ main_status }}; {{ n_for }} records for, {{ n_against }} against.
+{% for r in evidence %}
+- {{ r.side }} [{{ r.pmid }}]: {{ r.quote }}
+{% endfor %}
+{% if contexts %}
+- Support exists only in other contexts (not counted for the main claim): {{ contexts }}.
+{% endif %}
+- Mechanism and premise claims: {{ mechanism }}.
+{% if alternatives %}
+Open alternative explanations, each with the control that would discriminate it:
+{% for a in alternatives %}
+- {{ a.id }}: {{ a.explanation }}. Control: {{ a.design }}.
+{% endfor %}
+{% endif %}
+
+Write exactly {{ k }} child hypotheses. Each child must be a refinement driven by one fact above, of one kind:
+- narrow_context: restrict the claim to a strain, sex, dose or start age where the verified records show an effect;
+- resolve_conflict: separate the conditions in which the records for and against differ, and claim only one of them;
+- add_mechanism: state the mechanism that the verified premise records support, as a claim that can fail on its own;
+- test_alternative: keep the claim and write a decisive experiment that includes the control of one open alternative above.
+Rules: keep the same intervention (the compound or treatment of the parent, named in the title and the hypothesis); never state a result as established; the decisive experiment must state its controls and readouts in words, because it will be graded on them; children differ from the parent and from each other; at most 140 words per child.
+
+Each child text has this layout (the title line names intervention, effect and animals, like the parent's):
+<Title line>
+
+Hypothesis: ...
+
+Rationale: ...
+
+Decisive experiment: ...
+
+Specific prediction: ...
+
+Reply with a single JSON object and nothing else:
+{"children": [{"text": "", "kind": "narrow_context", "change": "one sentence: which fact drove the change and what changed"}]}
