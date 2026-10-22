@@ -44,6 +44,7 @@ class RunnerLLMClient:
         model_version, runner = self.runners[family]
         started = time.perf_counter()
         text = runner.generate(prompt) or ""      # reasoning models can return no content
+        model_version = getattr(runner, "last_model", None) or model_version   # e.g. a server-side fallback
         return Reply(text=text, family=family, model_id=model_version,
                      tokens_in=estimate_tokens(prompt), tokens_out=estimate_tokens(text),
                      seconds=time.perf_counter() - started)
