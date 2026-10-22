@@ -32,3 +32,14 @@ calls per round; the lineage on the site.
   raises the scores, not whether the children are true. There is no external validation in this run.
 - Informativeness is graded on what the text of the child states; a child that names a control it never states gets no credit.
 - Nothing is changed after the result: no other seed, no hand selection of children, no change of rules or of the criterion.
+
+## Result (added after the run, the protocol above is unchanged)
+
+One run, 24 children over three rounds, 168 model calls of the 200 allowed (counted from the log: the in-run counter of that
+version dropped the children's verification calls from round 2 on; fixed in `hyparena/card/evolve.py`), about 1.0 M input
+tokens, 12 minutes. Primary criterion: formally met by one child (place 3, P(top-3) 0.155 against 0.149 of its parent),
+but both differences are within the Monte Carlo error (±0.01) and three more children share the place (expected scores
+0.1851 to 0.1855); the first two places stay with the parents (P(top-3) 0.62 and 0.53). The scores of the children rose
+because of the informativeness indicator (19 of 24 children have it at 1 or more, all parents 0); the main claim is
+supported or contested for one child, unverified for 19; four children did not reach the ranking (2 filtered, 2 card
+failures). Details: reference, "Эволюция гипотез и информативность".
