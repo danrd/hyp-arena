@@ -45,15 +45,16 @@ def test_export_carries_monte_carlo_error():
 
 def test_docs_render_with_unique_anchors_and_no_vault_links():
     html = site.render_docs()
-    assert html.count('<article class="doc"') == 7 and 'id="docToc"' in html
+    assert html.count('<article class="doc"') == 8 and 'id="docToc"' in html
     assert "[[" not in html and "Working_Notes" not in html and "Open_Longevity" not in html
     for ex in ("ex1", "ex2", "ex3", "ex4", "ex5"):
-        assert f'data-example="{ex}"' in html
+        assert f'href="../?example={ex}#card"' in html
 
 
-def test_build_fills_the_docs_block(tmp_path):
+def test_build_writes_the_standalone_docs_page(tmp_path):
     page = tmp_path / "index.html"
-    page.write_text('<meta name="hyparena-version" content="0"><!--docs:begin--><!--docs:end-->')
+    page.write_text('<meta name="hyparena-version" content="0"><link rel="stylesheet" href="x.css"><style>b{}</style>')
     site.build(page)
-    s = page.read_text()
-    assert 'class="docs-layout"' in s and f'content="{site.code_version()}"' in s
+    s = (tmp_path / "docs" / "index.html").read_text()
+    assert 'class="docs-layout"' in s and f'content="{site.code_version()}"' in s and 'href="../"' in s and "<style>b{}</style>" in s
+    assert f'content="{site.code_version()}"' in page.read_text()

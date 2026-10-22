@@ -240,7 +240,7 @@ def _front(text: str) -> tuple[dict, str]:
 def _render_page(meta: dict, body: str) -> tuple[str, list[tuple[str, str]]]:
     """The HTML of one documentation page and its second-level headings [(id, text)]."""
     import markdown
-    md = markdown.Markdown(extensions=["tables", "attr_list", "sane_lists"])
+    md = markdown.Markdown(extensions=["tables", "attr_list", "sane_lists", "fenced_code"])
     out = md.convert(body)
     heads = [(m.group(1), re.sub(r"<[^>]+>", "", m.group(2))) for m in re.finditer(r'<h2 id="([^"]+)">(.*?)</h2>', out)]
     out = re.sub(r'<h2 id="([^"]+)">(.*?)</h2>',
@@ -276,17 +276,92 @@ def code_version() -> str:
     return tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
 
 
-def build(page: Path = PAGE, content: Path = CONTENT) -> None:
-    """Put the rendered documentation and the code version into the page."""
+DOCS_SCRIPT = """
+(() => {
+  const toc = document.getElementById("docToc");
+  const wide = matchMedia("(min-width: 901px)");
+  const setOpen = () => { toc.open = wide.matches; };
+  setOpen(); wide.addEventListener?.("change", setOpen);
+  toc.addEventListener("click", e => { if (e.target.closest("a") && !wide.matches) toc.open = false; });
+  const links = new Map([...toc.querySelectorAll("a[href^='#']")].map(a => [a.getAttribute("href").slice(1), a]));
+  const targets = [...document.querySelectorAll("article.doc, article.doc h4[id]")];
+  const mark = id => links.forEach((a, k) => k === id ? a.setAttribute("aria-current", "true") : a.removeAttribute("aria-current"));
+  if ("IntersectionObserver" in window) {
+    const seen = new Set();
+    const io = new IntersectionObserver(es => {
+      es.forEach(en => en.isIntersecting ? seen.add(en.target) : seen.delete(en.target));
+      const first = targets.find(t => seen.has(t) && t.tagName === "H4") || targets.find(t => seen.has(t));
+      mark(first ? first.id : null);
+    }, {rootMargin: "-70px 0px -65% 0px"});
+    targets.forEach(t => io.observe(t));
+  }
+  document.querySelectorAll("article.doc pre").forEach(pre => {
+    pre.title = "Нажмите, чтобы скопировать";
+    pre.addEventListener("click", () => { try { navigator.clipboard.writeText(pre.textContent); } catch { /* selection stays available */ } });
+  });
+})();
+"""
+
+
+def docs_page(index_html: str, docs: str, version: str) -> str:
+    """The standalone documentation page: the style sheet and fonts of the home page, the pages of `content/`."""
+    links = "\n".join(re.findall(r"<link [^>]*>", index_html))
+    style = re.search(r"<style>.*?</style>", index_html, re.S).group(0)
+    return f"""<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Документация · Арена гипотез</title>
+<meta name="description" content="Карточка гипотезы, статусы и правила проверки, показатели, профили и АСПИД, данные, примеры, запуск и границы применимости.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Документация · Арена гипотез о старении">
+<meta property="og:description" content="Как гипотеза превращается в карточку, как проверяются утверждения и как считается рейтинг.">
+<meta property="og:url" content="https://danrd.github.io/hyp-arena/site/docs/">
+<meta property="og:locale" content="ru_RU">
+<meta name="twitter:card" content="summary">
+<meta name="hyparena-version" content="{version}">
+{links}
+{style}
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="../">Арена гипотез</a>
+    <nav class="sections" aria-label="Разделы">
+      <a href="../">На главную</a><a href="https://github.com/danrd/hyp-arena" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
+  </div>
+</header>
+<main class="wrap" id="top">
+  <div class="doc-page-head"><p class="eyebrow">Документация</p><h1>Как это устроено</h1>
+    <p class="muted"><a href="../">На главную</a></p></div>
+  <section class="block" id="docs">{docs}</section>
+</main>
+<footer>
+  <div class="wrap foot">
+    <p><b>hyp-arena</b> · исследовательский прототип; рейтинги — результат исследования, а не медицинская рекомендация.</p>
+    <dl class="footmeta"><div><dt>Версия кода</dt><dd>v{version}</dd></div><div><dt>Лицензия</dt><dd>MIT</dd></div></dl>
+    <p class="footlinks"><a href="../">На главную</a> · <a href="https://github.com/danrd/hyp-arena" target="_blank" rel="noopener">GitHub</a></p>
+  </div>
+</footer>
+<script>{DOCS_SCRIPT}</script>
+</body>
+</html>
+"""
+
+
+def build(page: Path = PAGE, content: Path = CONTENT, out: Path | None = None) -> None:
+    """Render docs/site/content/*.md into the standalone documentation page and stamp the code version on both pages."""
+    out = out or page.parent / "docs" / "index.html"
     s = page.read_text(encoding="utf-8")
-    docs = render_docs(content)
-    s, n = re.subn(r"(<!--docs:begin-->).*?(<!--docs:end-->)", lambda m: m.group(1) + docs + m.group(2), s, count=1, flags=re.S)
-    if n != 1:
-        raise ValueError("the page has no <!--docs:begin--> ... <!--docs:end--> block")
-    s, n = re.subn(r'(<meta name="hyparena-version" content=")[^"]*(")', lambda m: m.group(1) + code_version() + m.group(2), s, count=1)
+    version = code_version()
+    s, n = re.subn(r'(<meta name="hyparena-version" content=")[^"]*(")', lambda m: m.group(1) + version + m.group(2), s, count=1)
     if n != 1:
         raise ValueError('the page has no <meta name="hyparena-version"> tag')
     page.write_text(s, encoding="utf-8")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(docs_page(s, render_docs(content), version), encoding="utf-8")
 
 
 def main() -> None:
@@ -303,7 +378,7 @@ def main() -> None:
     m = sub.add_parser("embed")
     m.add_argument("--bundle", required=True)
     m.add_argument("--key", default="sample", choices=["sample", "examples"])
-    sub.add_parser("build", help="render docs/site/content/*.md into the page")
+    sub.add_parser("build", help="render docs/site/content/*.md into docs/site/docs/index.html")
     a = ap.parse_args()
     if a.cmd == "export":
         Path(a.out).parent.mkdir(parents=True, exist_ok=True)

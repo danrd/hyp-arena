@@ -1,0 +1,1733 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Документация · Арена гипотез</title>
+<meta name="description" content="Карточка гипотезы, статусы и правила проверки, показатели, профили и АСПИД, данные, примеры, запуск и границы применимости.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Документация · Арена гипотез о старении">
+<meta property="og:description" content="Как гипотеза превращается в карточку, как проверяются утверждения и как считается рейтинг.">
+<meta property="og:url" content="https://danrd.github.io/hyp-arena/site/docs/">
+<meta property="og:locale" content="ru_RU">
+<meta name="twitter:card" content="summary">
+<meta name="hyparena-version" content="0.1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a lab notebook — narrow reading column for prose, a wide instrument panel for the ranking and the card. */
+:root {
+  --paper: #f4f6f3; --surface: #ffffff; --ink: #15201c; --muted: #5a6964; --line: #d9dfdb;
+  --accent: #12695a; --accent-soft: #dcede7; --accent-ink: #ffffff; --mid: #e3e8e5; --strong-ink: #ffffff;
+  --ok: #2c7a4c; --bad: #b0402c; --warn: #a8740f; --idle: #7a8682; --ok-soft: #e1f0e6; --bad-soft: #f6e2dd; --warn-soft: #f5ead2; --idle-soft: #eaedeb;
+  --display: "Literata", Georgia, "Times New Roman", serif;
+  --body: "Onest", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --step--1: 0.8125rem; --step-0: 0.9375rem; --step-1: 1.125rem; --step-2: 1.5rem; --step-3: 2.25rem;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #0f1514; --surface: #162020; --ink: #e4ebe8; --muted: #98a6a1; --line: #2a3633;
+  --accent: #4db6a2; --accent-soft: #1b3430; --accent-ink: #0f1514; --mid: #34413e; --strong-ink: #0f1514;
+  --ok: #5dbd84; --bad: #e07a62; --warn: #d8a43f; --idle: #8b9893; --ok-soft: #173126; --bad-soft: #3a211b; --warn-soft: #362a12; --idle-soft: #212b29;
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #0f1514; --surface: #162020; --ink: #e4ebe8; --muted: #98a6a1; --line: #2a3633;
+  --accent: #4db6a2; --accent-soft: #1b3430; --accent-ink: #0f1514; --mid: #34413e; --strong-ink: #0f1514;
+  --ok: #5dbd84; --bad: #e07a62; --warn: #d8a43f; --idle: #8b9893; --ok-soft: #173126; --bad-soft: #3a211b; --warn-soft: #362a12; --idle-soft: #212b29;
+  color-scheme: dark }
+
+* { box-sizing: border-box; }
+html { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: var(--step-0); line-height: 1.55; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+a { color: var(--accent); }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; text-wrap: balance; line-height: 1.2; margin: 0; }
+h2 { font-size: var(--step-2); }
+h3 { font-size: var(--step-1); }
+p { margin: 0; }
+.mono, code { font-family: var(--mono); font-size: 0.86em; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.prose { max-width: 66ch; }
+.muted { color: var(--muted); }
+.eyebrow { font-size: var(--step--1); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* header */
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; background: var(--surface); border-bottom: 1px solid var(--line); }
+header.top .wrap { display: flex; align-items: center; justify-content: center; gap: 8px 24px; padding-block: 10px; flex-wrap: wrap; }
+.brand { font-family: var(--display); font-weight: 600; font-size: var(--step-1); text-decoration: none; color: var(--ink); white-space: nowrap; }
+nav.sections { display: flex; gap: 4px 16px; flex-wrap: wrap; justify-content: center; font-size: var(--step--1); }
+nav.sections a { color: var(--muted); text-decoration: none; padding: 2px 0; border-bottom: 1px solid transparent; }
+nav.sections a:hover { color: var(--ink); border-bottom-color: var(--line); }
+@media (max-width: 640px) {
+  header.top .wrap { flex-wrap: nowrap; justify-content: flex-start; gap: 14px; padding-block: 8px; }
+  .brand { font-size: var(--step-0); }
+  nav.sections { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); }
+  nav.sections::-webkit-scrollbar { display: none; }
+  nav.sections a { white-space: nowrap; }
+}
+
+/* hero */
+.hero { padding-block: 48px 28px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; justify-items: center; text-align: center; }
+.hero .pipeline { width: 100%; text-align: left; }
+.hero h1 { font-size: var(--step-3); max-width: 24ch; }
+.hero .lead { font-size: var(--step-1); max-width: 60ch; color: var(--muted); }
+.pipeline { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 6px; background: var(--surface); overflow: hidden; }
+.pipeline li { list-style: none; padding: 12px 14px; border-left: 1px solid var(--line); min-width: 0; }
+.pipeline li:first-child { border-left: 0; }
+.pipeline b { display: block; font-weight: 600; }
+.pipeline span { font-size: var(--step--1); color: var(--muted); }
+.pipeline .n { font-family: var(--mono); font-size: var(--step--1); color: var(--accent); }
+ol.pipeline { margin: 0; padding: 0; }
+@media (max-width: 760px) { .pipeline { grid-template-columns: minmax(0, 1fr); } .pipeline li { border-left: 0; border-top: 1px solid var(--line); } .pipeline li:first-child { border-top: 0; } }
+
+section.block { padding-block: 36px; border-top: 1px solid var(--line); display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+.head { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; }
+.head .prose { display: grid; gap: 6px; justify-items: center; min-width: 0; }
+.head > * { min-width: 0; }
+.tabs button { flex: 1 1 auto; }
+
+/* data bar */
+.databar { justify-content: center; display: flex; gap: 10px 16px; align-items: center; flex-wrap: wrap; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; font-size: var(--step--1); }
+.databar .name { font-weight: 600; font-size: var(--step-0); }
+.badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: var(--step--1); font-weight: 500; white-space: nowrap; }
+.badge.example { background: var(--warn-soft); color: var(--warn); }
+.databar .spacer { flex: 0 0 8px; }
+button, .btn { font: inherit; font-size: var(--step--1); border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 6px 12px; border-radius: 5px; cursor: pointer; }
+button:hover, .btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+input[type=file] { display: none; }
+.drop { outline: 2px dashed var(--accent); outline-offset: 4px; }
+.err { color: var(--bad); }
+
+/* tabs */
+.tabs { display: flex; gap: 0; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; width: fit-content; max-width: 100%; flex-wrap: wrap; background: var(--surface); }
+.tabs button { border: 0; border-radius: 0; border-left: 1px solid var(--line); padding: 8px 14px; background: transparent; }
+.tabs button:first-child { border-left: 0; }
+.tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+.tabs button small { display: block; font-family: var(--mono); font-size: 0.72rem; opacity: 0.75; }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+.panel-note { padding: 12px 16px; border-bottom: 1px solid var(--line); font-size: var(--step--1); color: var(--muted); display: grid; gap: 4px; }
+.scroll { overflow-x: auto; }
+table.rank { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+table.rank th { text-align: left; font-weight: 500; font-size: var(--step--1); color: var(--muted); padding: 8px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+table.rank td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+table.rank tr:last-child td { border-bottom: 0; }
+table.rank tbody tr { cursor: pointer; }
+table.rank tbody tr:hover td { background: var(--accent-soft); }
+table.rank tr.sep td { background: var(--paper); color: var(--muted); font-size: var(--step--1); cursor: default; padding-block: 6px; }
+table.rank tr.off td { color: var(--muted); }
+.pos { font-family: var(--mono); color: var(--muted); width: 2.5em; }
+.htitle { min-width: 16ch; }
+.htitle .id { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); margin-right: 6px; }
+.num { font-family: var(--mono); text-align: right; white-space: nowrap; }
+.bar { position: relative; height: 14px; min-width: 160px; }
+.bar .track { position: absolute; inset: 6px 0 auto; height: 2px; background: var(--line); }
+.bar .range { position: absolute; top: 3px; height: 8px; background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 2px; }
+.bar .dot { position: absolute; top: 2px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: var(--accent); }
+.bar .fill { position: absolute; top: 3px; height: 8px; background: var(--accent); border-radius: 2px; }
+.bar .zero { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--muted); }
+
+.pill { display: inline-block; padding: 1px 8px; border-radius: 4px; font-size: var(--step--1); font-weight: 500; white-space: nowrap; }
+.st-supported { background: var(--ok-soft); color: var(--ok); }
+.st-refuted { background: var(--bad-soft); color: var(--bad); }
+.st-contested { background: var(--warn-soft); color: var(--warn); }
+.st-unverified, .st-unresolved, .st-open { background: var(--idle-soft); color: var(--idle); }
+.oc-ranked { background: var(--accent-soft); color: var(--accent); }
+.oc-filtered { background: var(--bad-soft); color: var(--bad); }
+.oc-known_result { background: var(--ok-soft); color: var(--ok); }
+.oc-other { background: var(--idle-soft); color: var(--idle); }
+
+/* heatmap and slope chart */
+.twocol { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+@media (max-width: 880px) { .twocol { grid-template-columns: minmax(0, 1fr); } }
+.figure { padding: 14px 16px; display: grid; gap: 10px; align-content: start; }
+.figure svg text { fill: var(--ink); font-family: var(--mono); font-size: 11px; }
+.figure svg .mutedtext { fill: var(--muted); }
+table.heat { border-collapse: separate; border-spacing: 2px; font-family: var(--mono); font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+table.heat th { font-weight: 500; color: var(--muted); padding: 2px 6px; white-space: nowrap; }
+table.heat thead th { text-align: center; }
+table.heat tbody th { text-align: right; }
+table.heat td { min-width: 36px; height: 30px; text-align: center; border-radius: 3px; color: var(--ink); }
+table.heat td.self { background: repeating-linear-gradient(135deg, var(--line) 0 2px, transparent 2px 6px); color: var(--muted); }
+.heat-note { font-size: var(--step--1); color: var(--muted); }
+.heat-key { font-size: var(--step--1); }
+.heat-key summary { cursor: pointer; color: var(--accent); }
+.heat-key ol { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
+.heat-key .mono { display: inline-block; min-width: 2.2em; color: var(--muted); }
+.scale { display: grid; gap: 4px; max-width: 360px; font-size: var(--step--1); color: var(--muted); }
+.scale .bar { height: 10px; min-width: 0; border-radius: 3px; background: linear-gradient(90deg, var(--bad), var(--mid) 50%, var(--accent)); }
+.scale .ticks { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+.scale .ticks span:nth-child(2) { text-align: center; }
+.scale .ticks span:nth-child(3) { text-align: right; }
+
+/* card */
+.cardgrid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 880px) { .cardgrid { grid-template-columns: minmax(0, 1fr); } }
+.cardhead { padding: 16px; display: grid; gap: 10px; border-bottom: 1px solid var(--line); }
+.cardhead h3 { font-size: var(--step-2); }
+.cardhead .plain { font-family: var(--display); font-size: var(--step-1); }
+select { font: inherit; font-size: var(--step--1); padding: 6px 8px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface); color: var(--ink); width: 100%; max-width: 42ch; min-width: 0; }
+dl.pico { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 14px; margin: 0; padding: 14px 16px; border-bottom: 1px solid var(--line); font-size: var(--step--1); }
+dl.pico dt { color: var(--muted); }
+dl.pico dd { margin: 0; }
+.claims { display: grid; }
+details.claim { border-bottom: 1px solid var(--line); }
+details.claim:last-child { border-bottom: 0; }
+details.claim > summary { list-style: none; cursor: pointer; padding: 12px 16px; display: grid; grid-template-columns: 3.2em minmax(0, 1fr) auto; gap: 4px 12px; align-items: start; }
+details.claim > summary::-webkit-details-marker { display: none; }
+details.claim[open] > summary { background: var(--paper); }
+.cid { font-family: var(--mono); font-size: var(--step--1); color: var(--muted); padding-top: 2px; }
+.triple { display: grid; gap: 4px; min-width: 0; }
+.triple .t { overflow-wrap: anywhere; }
+.rel { font-family: var(--mono); font-size: 0.8rem; color: var(--accent); padding: 0 4px; }
+.role { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.quals { display: flex; gap: 4px 6px; flex-wrap: wrap; font-size: 0.78rem; }
+.qual { padding: 0 6px; border-radius: 3px; background: var(--idle-soft); color: var(--ink); }
+.qual.inh { background: transparent; border: 1px dashed var(--idle); color: var(--muted); }
+.rungs { display: flex; gap: 4px; flex-wrap: wrap; justify-content: end; }
+.claimbody { padding: 4px 16px 16px 16px; display: grid; gap: 12px; }
+.recs { display: grid; gap: 8px; }
+.recs h4 { margin: 0; font-size: var(--step--1); font-weight: 600; }
+.rec { border-left: 3px solid var(--line); padding: 4px 0 4px 10px; display: grid; gap: 3px; font-size: var(--step--1); }
+.rec.for { border-left-color: var(--ok); }
+.rec.against { border-left-color: var(--bad); }
+.rec.refusal { border-left-color: var(--idle); }
+.rec q { font-family: var(--display); font-size: var(--step-0); quotes: "«" "»"; }
+.rec .meta { color: var(--muted); display: flex; gap: 4px 10px; flex-wrap: wrap; }
+.flags { display: flex; gap: 4px; flex-wrap: wrap; }
+.flag { font-family: var(--mono); font-size: 0.72rem; padding: 0 5px; border-radius: 3px; background: var(--warn-soft); color: var(--warn); }
+
+.side { display: grid; gap: 18px; }
+.side .panel > h3 { padding: 12px 16px; border-bottom: 1px solid var(--line); font-size: var(--step-0); font-family: var(--body); }
+.ladder { display: grid; padding: 12px 16px; gap: 3px; }
+.ladder .step { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 5px 10px; border-radius: 4px; font-size: var(--step--1); background: var(--paper); color: var(--muted); }
+.ladder .step.on { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.ladder .step.below { background: var(--accent-soft); color: var(--ink); }
+.ladder .step.cont { box-shadow: inset 0 0 0 1px var(--warn); }
+dl.kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; margin: 0; padding: 12px 16px; font-size: var(--step--1); }
+dl.kv dt { color: var(--muted); }
+dl.kv dd { margin: 0; overflow-wrap: anywhere; }
+.levels { display: flex; gap: 3px; align-items: center; flex-wrap: wrap; }
+.levels i { width: 10px; height: 10px; border-radius: 2px; background: var(--line); display: inline-block; }
+.levels i.on { background: var(--accent); }
+.levels i.unk { background: repeating-linear-gradient(45deg, var(--line) 0 2px, transparent 2px 4px); }
+ul.alts { list-style: none; margin: 0; padding: 8px 16px 14px; display: grid; gap: 8px; font-size: var(--step--1); }
+ul.alts li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; }
+ul.alts .design { grid-column: 1 / -1; color: var(--muted); }
+
+/* out of ranking */
+.outgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.outgroup { padding: 14px 16px; display: grid; gap: 8px; align-content: start; }
+.outgroup ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: var(--step--1); }
+.outgroup li button { all: unset; cursor: pointer; color: var(--accent); }
+.outgroup li button:focus-visible { outline: 2px solid var(--accent); }
+.count { font-family: var(--mono); color: var(--muted); }
+
+/* method */
+.cols3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.box { padding: 16px; display: grid; gap: 8px; align-content: start; }
+.box ul { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
+.tiers { display: grid; gap: 0; font-size: var(--step--1); }
+.tier { display: grid; grid-template-columns: 2em minmax(0, 1fr); gap: 10px; position: relative; padding-bottom: 14px; }
+.tier:last-child { padding-bottom: 0; }
+.tier::before { content: ""; position: absolute; left: calc(1em - 1px); top: 2em; bottom: 2px; width: 2px; background: var(--line); }
+.tier:last-child::before { display: none; }
+.tier .n { width: 2em; height: 2em; border-radius: 50%; display: grid; place-items: center; font-family: var(--mono); font-weight: 600; background: var(--accent); color: var(--accent-ink); position: relative; }
+.tier.free .n { background: var(--idle-soft); color: var(--idle); }
+.tier .body { display: grid; gap: 6px; min-width: 0; padding-top: 3px; }
+.tier .label { color: var(--muted); }
+.tier .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.tiers-note { font-size: var(--step--1); color: var(--muted); }
+.chip { font-family: var(--mono); font-size: 0.75rem; padding: 1px 6px; border-radius: 3px; background: var(--accent-soft); color: var(--ink); }
+table.defs { border-collapse: collapse; width: 100%; font-size: var(--step--1); }
+table.defs td, table.defs th { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+table.defs th { color: var(--muted); font-weight: 500; }
+.big { font-family: var(--display); font-size: var(--step-3); line-height: 1; font-variant-numeric: tabular-nums; }
+.ci { font-family: var(--mono); font-size: var(--step--1); color: var(--muted); }
+ol.steps { margin: 0 auto; padding: 0; list-style: none; counter-reset: step; display: grid; gap: 16px; max-width: 760px; width: 100%; }
+ol.steps li { display: grid; gap: 8px; padding-left: 2.2em; position: relative; text-align: left; min-width: 0; counter-increment: step; }
+ol.steps li::before { content: counter(step); position: absolute; left: 0; top: 0; font-family: var(--mono); font-size: var(--step--1); color: var(--accent); line-height: 1.9; }
+ol.steps li > span { font-size: var(--step--1); }
+ol.steps li > p { margin: 0; }
+pre.cmd[data-copy] { cursor: copy; }
+pre.cmd { margin: 0; padding: 12px 14px; background: var(--paper); border: 1px solid var(--line); border-radius: 5px; overflow-x: auto; font-family: var(--mono); font-size: 0.8rem; line-height: 1.5; }
+footer { padding-block: 28px 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: var(--step--1); }
+@media (prefers-reduced-motion: no-preference) { table.rank tbody tr td { transition: background 120ms; } }
+
+/* anchors under the sticky header */
+[id] { scroll-margin-top: 74px; }
+
+/* profiles */
+.badge.draft { background: var(--idle-soft); color: var(--muted); font-weight: 500; }
+.tabs button.main { box-shadow: inset 0 -3px 0 var(--accent); font-weight: 600; }
+.tabs button.main[aria-selected="true"] { box-shadow: inset 0 -3px 0 var(--accent-ink); }
+.tabs button .tag { display: block; font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+.tabs button.main[aria-selected="true"] .tag { color: var(--accent-ink); }
+.pname { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+.pdesc { margin: 0; }
+.profile-defs { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+.profile-defs > div { display: grid; gap: 8px; align-content: start; min-width: 0; }
+.profile-intro { margin: 0; max-width: 72ch; }
+
+/* ranking table */
+tr.tie td { background: color-mix(in srgb, var(--accent-soft) 45%, transparent); }
+tr.tie td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+.pos .rng { display: block; font-size: 0.68rem; color: var(--accent); font-family: var(--body); white-space: nowrap; }
+.pos { min-width: 3.2em; }
+.table-note { padding: 10px 16px; border-top: 1px solid var(--line); font-size: var(--step--1); color: var(--muted); }
+td.stat { white-space: nowrap; }
+
+/* method */
+.msub { padding: 16px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+.msub-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.msub-head h3 { font-size: var(--step-1); }
+a.more { font-size: var(--step--1); white-space: nowrap; }
+ul.rules { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
+.aspid-def { display: grid; gap: 8px; max-width: 76ch; }
+.aspid-def p, .aspid-def ul { margin: 0; }
+.aspid-def ul { padding-left: 1.2em; display: grid; gap: 3px; }
+.tablewrap { overflow-x: auto; max-width: 100%; }
+.jsel { display: grid; gap: 4px; font-size: var(--step--1); max-width: 56ch; }
+ol.journey { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; counter-reset: j; }
+ol.journey > li { display: grid; grid-template-columns: 2em minmax(0, 1fr); gap: 12px; position: relative; padding-bottom: 18px; counter-increment: j; }
+ol.journey > li:last-child { padding-bottom: 0; }
+ol.journey > li::before { content: ""; position: absolute; left: calc(1em - 1px); top: 2.2em; bottom: 4px; width: 2px; background: var(--line); }
+ol.journey > li:last-child::before { display: none; }
+ol.journey .n { width: 2em; height: 2em; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); font-family: var(--mono); font-weight: 600; }
+ol.journey .jb { display: grid; gap: 6px; min-width: 0; }
+ol.journey .jb > b { font-family: var(--display); font-size: var(--step-1); font-weight: 600; }
+.jq { margin: 0; padding: 8px 12px; border-left: 3px solid var(--line); background: var(--paper); font-family: var(--display); font-size: var(--step-0); overflow-wrap: anywhere; }
+.jclaims { display: grid; gap: 4px; font-size: var(--step--1); }
+.jclaims > div { display: grid; grid-template-columns: 2.2em minmax(0, 1fr) auto; gap: 8px; align-items: baseline; }
+.jclaims .t { overflow-wrap: anywhere; }
+.jplaces { display: flex; gap: 8px 14px; flex-wrap: wrap; font-size: var(--step--1); }
+.jplaces > span { padding: 6px 10px; background: var(--paper); border-radius: 5px; }
+.jplaces b { font-weight: 600; }
+.proof { margin: 0; padding-top: 8px; border-top: 1px solid var(--line); font-size: var(--step--1); }
+table.defs td.src { white-space: nowrap; }
+
+/* data bar */
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; flex-wrap: wrap; }
+.seg button { border: 0; border-radius: 0; border-left: 1px solid var(--line); background: transparent; }
+.seg button:first-child { border-left: 0; }
+.seg button[aria-pressed="true"] { background: var(--accent-soft); font-weight: 600; }
+
+/* documentation */
+.docs-layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 28px; align-items: start; }
+.doc-toc-wrap { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 66px); max-height: calc(100vh - 90px); overflow-y: auto; font-size: var(--step--1); border: 1px solid var(--line); border-radius: 6px; background: var(--surface); padding: 10px 14px; }
+.doc-toc-wrap > summary { cursor: pointer; font-weight: 600; list-style: none; }
+.doc-toc-wrap > summary::-webkit-details-marker { display: none; }
+.doc-toc-wrap > summary::after { content: " ▾"; color: var(--muted); }
+.doc-toc ol { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 10px; }
+.doc-toc ul { list-style: none; margin: 4px 0 0; padding: 0 0 0 10px; border-left: 1px solid var(--line); display: grid; gap: 2px; }
+.doc-toc a { color: var(--muted); text-decoration: none; display: block; padding: 1px 0; }
+.doc-toc > ol > li > a { color: var(--ink); font-weight: 600; }
+.doc-toc a:hover, .doc-toc a[aria-current="true"] { color: var(--accent); }
+.doc-toc a[aria-current="true"] { font-weight: 600; }
+.docs-content { display: grid; gap: 44px; min-width: 0; }
+article.doc { min-width: 0; display: grid; gap: 14px; max-width: 78ch; }
+article.doc .doc-head h3 { font-size: var(--step-2); }
+article.doc .lead { color: var(--muted); font-size: var(--step-0); margin: 6px 0 0; }
+article.doc h4 { font-family: var(--display); font-size: var(--step-1); font-weight: 600; margin: 14px 0 -4px; }
+article.doc h4 .anchor { color: var(--line); text-decoration: none; margin-left: 4px; font-family: var(--body); font-weight: 400; }
+article.doc h4:hover .anchor { color: var(--accent); }
+article.doc p { margin: 0; }
+article.doc ul, article.doc ol { margin: 0; padding-left: 1.3em; display: grid; gap: 4px; }
+article.doc code { background: var(--idle-soft); padding: 0 4px; border-radius: 3px; }
+article.doc .tablewrap { border: 1px solid var(--line); border-radius: 6px; }
+table.doctable { border-collapse: collapse; width: 100%; font-size: var(--step--1); }
+table.doctable th { text-align: left; font-weight: 600; background: var(--paper); color: var(--muted); }
+table.doctable th, table.doctable td { padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.doctable tr:last-child td { border-bottom: 0; }
+@media (max-width: 900px) {
+  .docs-layout { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .doc-toc-wrap { position: static; max-height: none; }
+  .doc-toc-wrap:not([open]) .doc-toc { display: none; }
+}
+
+/* footer */
+.foot { display: grid; gap: 12px; }
+.foot p { margin: 0; max-width: 80ch; }
+dl.footmeta { display: flex; flex-wrap: wrap; gap: 4px 22px; margin: 0; font-size: var(--step--1); }
+dl.footmeta > div { display: flex; gap: 6px; }
+dl.footmeta dt { color: var(--muted); }
+dl.footmeta dd { margin: 0; font-family: var(--mono); }
+nav.sections a.try { color: var(--accent); font-weight: 600; border-bottom-color: var(--accent); }
+.cta { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.cta .btn { text-decoration: none; padding: 10px 20px; font-size: var(--step-0); }
+.trycmds { display: grid; gap: 10px; max-width: 760px; width: 100%; margin-inline: auto; }
+.trycmds pre.cmd { margin: 0; }
+.more-line { text-align: center; font-size: var(--step--1); margin: 0; }
+.footlinks { margin: 8px 0 0; font-size: var(--step--1); }
+details.fold { border-top: 1px solid var(--line); padding-top: 8px; }
+details.fold > summary { cursor: pointer; font-weight: 600; font-size: var(--step--1); color: var(--muted); }
+details.fold[open] > summary { margin-bottom: 8px; }
+.rng[title] { cursor: help; border-bottom: 1px dotted var(--muted); }
+article.doc, article.doc h4 { scroll-margin-top: 70px; }
+article.doc pre { margin: 0; padding: 12px 14px; background: var(--paper); border: 1px solid var(--line); border-radius: 5px; overflow-x: auto; font-family: var(--mono); font-size: var(--step--1); cursor: copy; }
+article.doc pre code { background: none; padding: 0; }
+.doc-page-head { padding-block: 28px 8px; display: grid; gap: 6px; justify-items: center; text-align: center; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="../">Арена гипотез</a>
+    <nav class="sections" aria-label="Разделы">
+      <a href="../">На главную</a><a href="https://github.com/danrd/hyp-arena" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
+  </div>
+</header>
+<main class="wrap" id="top">
+  <div class="doc-page-head"><p class="eyebrow">Документация</p><h1>Как это устроено</h1>
+    <p class="muted"><a href="../">На главную</a></p></div>
+  <section class="block" id="docs"><div class="docs-layout"><details class="doc-toc-wrap" id="docToc"><summary>Оглавление</summary><nav class="doc-toc" aria-label="Оглавление документации"><ol><li><a href="#docs-card">Карточка гипотезы</a><ul><li><a href="#card-layers">Слои</a></li><li><a href="#card-admission">Допуск</a></li><li><a href="#card-pico">PICO</a></li><li><a href="#card-claims">Утверждения</a></li><li><a href="#card-roles">Роли</a></li><li><a href="#card-relations">Словарь отношений</a></li><li><a href="#card-atomicity">Как делить текст на утверждения</a></li><li><a href="#card-evidence">Запись-доказательство</a></li></ul></li><li><a href="#docs-statuses">Статусы и правила проверки</a><ul><li><a href="#statuses-table">Пять статусов</a></li><li><a href="#statuses-admissible">Что считается находкой</a></li><li><a href="#statuses-endpoint">Исход должен совпадать</a></li><li><a href="#statuses-context">Совпадение контекста</a></li><li><a href="#statuses-inherit">Наследование из PICO</a></li><li><a href="#statuses-contrast">Контраст «X, а не Y»</a></li><li><a href="#statuses-subgroup">Только подгруппа</a></li><li><a href="#statuses-refusals">Отказы</a></li><li><a href="#statuses-gate">Фильтр и известный результат</a></li></ul></li><li><a href="#docs-indicators">Показатели</a><ul><li><a href="#ind-profile">Профиль доказательности</a></li><li><a href="#ind-table">Показатели для агрегации</a></li><li><a href="#ind-path">path_to_human</a></li><li><a href="#ind-unknown">Неизвестное остаётся неизвестным</a></li><li><a href="#ind-latestart">late_start</a></li></ul></li><li><a href="#docs-profiles">Профили и АСПИД</a><ul><li><a href="#agg-def">Определение</a></li><li><a href="#agg-idea">Идея</a></li><li><a href="#agg-model">Модель</a></li><li><a href="#agg-weights">Веса и профили</a></li><li><a href="#agg-outputs">Что считается</a></li><li><a href="#agg-accuracy">Точность</a></li><li><a href="#agg-prefer">Ограничения вида «A не хуже B»</a></li><li><a href="#agg-limits">Ограничения метода</a></li><li><a href="#agg-sources">Источники</a></li></ul></li><li><a href="#docs-data">Данные и проверки</a><ul><li><a href="#data-types">Типы источников</a></li><li><a href="#data-used">Что используется сейчас</a></li><li><a href="#data-asof">Правило «на момент T»</a></li><li><a href="#data-latestart">Таблицы для late_start</a></li><li><a href="#data-checks">Какие проверки возможны на открытых данных</a></li></ul></li><li><a href="#docs-examples">Примеры</a><ul><li><a href="#ex-1">Пример 1. Рапамицин и здоровая продолжительность жизни у людей</a></li><li><a href="#ex-2">Пример 2. Сенолитики и физическая функция</a></li><li><a href="#ex-3">Пример 3. Почему рапамицин продлевает жизнь</a></li><li><a href="#ex-4">Пример 4. Допуск: расплывчатая гипотеза</a></li><li><a href="#ex-5">Пример 5. Несовпадение исхода: ресвератрол и продолжительность жизни мышей</a></li></ul></li><li><a href="#docs-run">Запуск</a><ul><li><a href="#run-install">1. Установить</a></li><li><a href="#run-key">2. Задать ключ</a></li><li><a href="#run-hypotheses">3. Записать гипотезы</a></li><li><a href="#run-go">4. Запустить проверку и рейтинг</a></li><li><a href="#run-export">5. Собрать файл для страницы</a></li></ul></li><li><a href="#docs-limits">Границы применимости</a><ul><li><a href="#limits-list">Границы применимости</a></li><li><a href="#limits-open">Открытые вопросы</a></li></ul></li></ol></nav></details><div class="docs-content"><article class="doc" id="docs-card"><header class="doc-head"><h3>Карточка гипотезы</h3><p class="lead">Как текст гипотезы превращается в структуру, которую можно проверять по частям.</p></header>
+<h4 id="card-layers">Слои <a class="anchor" href="#card-layers" aria-label="Ссылка на раздел">#</a></h4>
+<p>Карточка строится в четыре шага. Слои не смешиваются: рейтинг читает только проверенный слой.</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Слой</th>
+<th>Кто пишет</th>
+<th>Что внутри</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Текст</td>
+<td>автор или модель</td>
+<td>гипотеза как есть</td>
+</tr>
+<tr>
+<td>Допуск</td>
+<td>программа</td>
+<td><code>accepted</code>, <code>needs_refinement</code> или <code>not_a_hypothesis</code></td>
+</tr>
+<tr>
+<td>Заявленный слой</td>
+<td>нормализатор (языковая модель)</td>
+<td>PICO и утверждения только из текста, без статусов и цитат</td>
+</tr>
+<tr>
+<td>Проверенный слой</td>
+<td>верификатор (языковая модель) и правила</td>
+<td>для каждого утверждения цитаты за и против, отказы и статус; профиль доказательности</td>
+</tr>
+</tbody>
+</table></div>
+<p>Три принципа:</p>
+<ul>
+<li>неустановленное остаётся <code>unknown</code>, значений по умолчанию нет;</li>
+<li>любой статус, кроме «не проверено» и «не распознано», держится хотя бы на одной цитате, дословно найденной в источнике;</li>
+<li>проверки необходимых условий могут только отказать, подтвердить утверждение они не могут.</li>
+</ul>
+<h4 id="card-admission">Допуск <a class="anchor" href="#card-admission" aria-label="Ссылка на раздел">#</a></h4>
+<p>Гипотеза — это утверждение, для которого можно задать решающий эксперимент: систему, исход и класс длительности. Всё остальное — «направление» (например, «мишень X стоит изучать»). Направление хранится, но не ранжируется.</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Тип</th>
+<th>Обязательно</th>
+<th>Желательно (не блокирует)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>interventional</code></td>
+<td>вмешательство, вид или популяция, исход</td>
+<td>доза и режим, пол, возраст начала, сравнение</td>
+</tr>
+<tr>
+<td><code>mechanistic</code></td>
+<td>вещество или вмешательство, объясняемый эффект, хотя бы одно утверждение-механизм или исход с контрастом</td>
+<td>как у вмешательства</td>
+</tr>
+<tr>
+<td><code>biomarker</code></td>
+<td>маркер, предсказываемый исход, популяция</td>
+<td>сравнение (обычно хронологический возраст)</td>
+</tr>
+<tr>
+<td><code>observational</code></td>
+<td>воздействие или вариант, исход, популяция</td>
+<td>дизайн, когорта</td>
+</tr>
+</tbody>
+</table></div>
+<p>Три исхода допуска:</p>
+<ul>
+<li><code>accepted</code>: все обязательные поля есть, гипотеза идёт в проверку и ранжирование;</li>
+<li><code>needs_refinement</code>: поля не хватает, но высказывание можно уточнить. Гипотеза попадает в список «ждут уточнения» с перечнем недостающих полей и не пропадает молча;</li>
+<li><code>not_a_hypothesis</code>: исход нельзя измерить или утверждение нельзя опровергнуть. Текст хранится как направление с причиной.</li>
+</ul>
+<p>Примеры: «Senolytics slow aging» получает <code>needs_refinement</code> (класс препаратов вместо вещества, нет вида, нет измеримого исхода). «Senescent cells are bad for health» получает <code>not_a_hypothesis</code> (нет вмешательства и измеримого исхода).</p>
+<p>Если основное утверждение уже подтверждено в том же контексте (то же вмешательство, вид, пол, возраст, доза), гипотеза помечается как известный результат: новизны у неё нет, и в рейтинг она не входит, а показывается отдельно.</p>
+<h4 id="card-pico">PICO <a class="anchor" href="#card-pico" aria-label="Ссылка на раздел">#</a></h4>
+<p>PICO описывает исследование целиком. Каждое поле либо взято из текста, либо <code>unknown</code>.</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Поле</th>
+<th>Что значит</th>
+<th>Пример</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>population.taxon</code>, <code>label</code></td>
+<td>организм или популяция</td>
+<td><code>NCBITaxon:9606</code>, <code>human</code></td>
+</tr>
+<tr>
+<td><code>population.strain</code></td>
+<td>линия животных</td>
+<td><code>UM-HET3</code></td>
+</tr>
+<tr>
+<td><code>population.sex</code></td>
+<td>пол</td>
+<td><code>female</code></td>
+</tr>
+<tr>
+<td><code>population.age_at_start</code></td>
+<td>возраст популяции в начале вмешательства: метка или число</td>
+<td><code>older adults</code>, <code>600 days</code></td>
+</tr>
+<tr>
+<td><code>intervention[]</code></td>
+<td>вмешательство; для комбинации несколько. Тип: <code>compound</code>, <code>gene</code>, <code>diet</code>, <code>procedure</code></td>
+<td><code>{type: compound, label: rapamycin, id: CHEBI:9168}</code></td>
+</tr>
+<tr>
+<td><code>intervention.regimen</code></td>
+<td>режим так, как он назван в тексте</td>
+<td><code>weekly, low-dose, intermittent</code></td>
+</tr>
+<tr>
+<td><code>intervention.route</code></td>
+<td>как вводится: <code>diet</code>, <code>water</code>, <code>oral</code>, <code>injection</code>, <code>topical</code>, <code>other</code>, <code>unknown</code></td>
+<td><code>diet</code> (в корме)</td>
+</tr>
+<tr>
+<td><code>comparator</code></td>
+<td>с чем сравнивают: <code>placebo</code>, <code>untreated</code>, <code>standard_care</code>, <code>wild_type</code>, <code>monotherapy</code>, <code>active_drug</code>, <code>chronological_age</code>, <code>other</code></td>
+<td><code>placebo</code></td>
+</tr>
+<tr>
+<td><code>outcome.endpoint</code></td>
+<td>что измеряется: <code>lifespan</code>, <code>healthspan</code>, <code>biomarker</code>, <code>disease</code>, <code>mechanism</code></td>
+<td><code>healthspan</code></td>
+</tr>
+<tr>
+<td><code>outcome.metric</code></td>
+<td>чем измеряется</td>
+<td><code>physical function</code></td>
+</tr>
+<tr>
+<td><code>time</code></td>
+<td>срок</td>
+<td><code>unknown</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Недостающее поле не достраивается из общих знаний. Если в тексте нет сравнения, в карточке <code>comparator: unknown</code>, а не «обычная диета».</p>
+<h4 id="card-claims">Утверждения <a class="anchor" href="#card-claims" aria-label="Ссылка на раздел">#</a></h4>
+<p>Утверждение — одна связь «субъект — отношение — объект» в одном контексте, которую можно проверить источником одного типа.</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Поле</th>
+<th>Что значит</th>
+<th>Пример</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>номер внутри карточки</td>
+<td><code>c1</code></td>
+</tr>
+<tr>
+<td><code>subject</code></td>
+<td>что действует</td>
+<td><code>rapamycin</code></td>
+</tr>
+<tr>
+<td><code>relation</code></td>
+<td>отношение из закрытого словаря (ниже)</td>
+<td><code>inhibits</code></td>
+</tr>
+<tr>
+<td><code>object</code></td>
+<td>на что направлено</td>
+<td><code>mTORC1</code></td>
+</tr>
+<tr>
+<td><code>qualifiers</code></td>
+<td>уточнения контекста: <code>species</code>, <code>strain</code>, <code>sex</code>, <code>tissue</code>, <code>dose</code>, <code>age_at_start</code>, <code>comparator</code>, <code>direction</code>, <code>measure</code>, <code>contrast</code></td>
+<td><code>{species: human}</code></td>
+</tr>
+<tr>
+<td><code>inherited_from_pico</code></td>
+<td>какие уточнения взяты из PICO, а не из слов утверждения (только <code>species</code> и <code>strain</code>)</td>
+<td><code>[species]</code></td>
+</tr>
+<tr>
+<td><code>role</code></td>
+<td>роль в гипотезе (ниже)</td>
+<td><code>outcome</code></td>
+</tr>
+<tr>
+<td><code>source_span</code></td>
+<td>дословный фрагмент текста, из которого утверждение взято</td>
+<td>«by inhibiting mTORC1»</td>
+</tr>
+</tbody>
+</table></div>
+<p>Правила: в карточке ровно одно утверждение с ролью <code>outcome</code>; утверждений не больше восьми; у каждого есть <code>source_span</code>. Утверждение, которого нет в тексте, в заявленный слой попасть не может (аналоги позже добавляет верификатор в своём слое).</p>
+<p>Пример. Текст: <em>«Weekly low-dose intermittent rapamycin, by inhibiting mTORC1, slows multiple aspects of aging and can improve healthspan in healthy older adults, as it does in mice where it extends lifespan even when started late in life.»</em> Нормализатор разбирает его на четыре утверждения:</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>id</th>
+<th>Роль</th>
+<th>Утверждение</th>
+<th>Фрагмент текста</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>c1</td>
+<td>посылка</td>
+<td>rapamycin <code>inhibits</code> mTORC1</td>
+<td>«by inhibiting mTORC1»</td>
+</tr>
+<tr>
+<td>c2</td>
+<td>механизм</td>
+<td>rapamycin <code>slows_aging_in</code> human</td>
+<td>«slows multiple aspects of aging»</td>
+</tr>
+<tr>
+<td>c3</td>
+<td>аналог</td>
+<td>rapamycin <code>extends_lifespan_in</code> mouse</td>
+<td>«in mice where it extends lifespan even when started late in life»</td>
+</tr>
+<tr>
+<td>c4</td>
+<td>исход</td>
+<td>rapamycin <code>improves_healthspan_in</code> human</td>
+<td>«can improve healthspan in healthy older adults»</td>
+</tr>
+</tbody>
+</table></div>
+<h4 id="card-roles">Роли <a class="anchor" href="#card-roles" aria-label="Ссылка на раздел">#</a></h4>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Роль</th>
+<th>Что значит</th>
+<th>Пример (выше)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>outcome</code></td>
+<td>корневое утверждение гипотезы; ровно одно</td>
+<td>c4</td>
+</tr>
+<tr>
+<td><code>premise</code></td>
+<td>то, на что гипотеза опирается как на данность, или то, что она объясняет</td>
+<td>c1</td>
+</tr>
+<tr>
+<td><code>mechanism</code></td>
+<td>звено объяснения</td>
+<td>c2</td>
+</tr>
+<tr>
+<td><code>analog</code></td>
+<td>то же вмешательство в другом организме, поддерживающее исход</td>
+<td>c3</td>
+</tr>
+<tr>
+<td><code>translation</code></td>
+<td>явный перенос находки с одного вида на другой</td>
+<td>«то, что работает у мышей, должно работать у людей»</td>
+</tr>
+</tbody>
+</table></div>
+<p>Связи между утверждениями: <code>requires</code> (c1 верно, только если верно c2), <code>supports_if_true</code>, <code>analog_of</code>, <code>contradicts</code>.</p>
+<h4 id="card-relations">Словарь отношений <a class="anchor" href="#card-relations" aria-label="Ссылка на раздел">#</a></h4>
+<p>Словарь закрытый: нормализатор выбирает отношение из списка. Если ничего не подходит, ставится <code>other</code> с короткой пометкой.</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Отношение</th>
+<th>Субъект → объект</th>
+<th>Что значит</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>extends_lifespan_in</code></td>
+<td>вмешательство → организм</td>
+<td>увеличивает среднюю, медианную или максимальную продолжительность жизни</td>
+</tr>
+<tr>
+<td><code>shortens_lifespan_in</code></td>
+<td>вмешательство → организм</td>
+<td>уменьшает продолжительность жизни</td>
+</tr>
+<tr>
+<td><code>no_lifespan_effect_in</code></td>
+<td>вмешательство → организм</td>
+<td>проверено, значимого эффекта нет</td>
+</tr>
+<tr>
+<td><code>slows_aging_in</code></td>
+<td>вмешательство → организм</td>
+<td>замедляет возрастные изменения, не связанные с одной болезнью; что именно измерено, записывается в <code>qualifiers.measure</code></td>
+</tr>
+<tr>
+<td><code>improves_healthspan_in</code></td>
+<td>вмешательство → организм</td>
+<td>улучшает показатель здоровой продолжительности жизни</td>
+</tr>
+<tr>
+<td><code>changes_biomarker</code></td>
+<td>вмешательство → маркер</td>
+<td>меняет маркер; направление в уточнениях</td>
+</tr>
+<tr>
+<td><code>predicts</code></td>
+<td>маркер → исход</td>
+<td>значение маркера предсказывает исход (гипотезы о маркерах)</td>
+</tr>
+<tr>
+<td><code>inhibits</code>, <code>activates</code></td>
+<td>вещество → молекулярная мишень</td>
+<td>прямое воздействие на мишень</td>
+</tr>
+<tr>
+<td><code>increases_expression</code>, <code>decreases_expression</code></td>
+<td>вещество → ген или белок</td>
+<td>изменение экспрессии</td>
+</tr>
+<tr>
+<td><code>promotes</code>, <code>suppresses</code></td>
+<td>вещество или процесс → процесс или фенотип</td>
+<td>причинное усиление или подавление</td>
+</tr>
+<tr>
+<td><code>part_of</code></td>
+<td>сущность → путь или процесс</td>
+<td>принадлежность</td>
+</tr>
+<tr>
+<td><code>associated_with</code></td>
+<td>любое → любое</td>
+<td>связь без утверждения о причине</td>
+</tr>
+<tr>
+<td><code>affects_hallmark</code></td>
+<td>сущность или процесс → примета старения</td>
+<td>одна из 12 примет старения; направление в уточнениях</td>
+</tr>
+<tr>
+<td><code>translates_to</code></td>
+<td>находка у вида A → вид B</td>
+<td>явный перенос между видами (связь с низким доверием)</td>
+</tr>
+<tr>
+<td><code>other</code></td>
+<td>любое → любое</td>
+<td>помечается и не участвует в проверках</td>
+</tr>
+</tbody>
+</table></div>
+<p>Если <code>other</code> оказался у исходного утверждения, нормализатор перечитывает текст ещё раз, получив подсказку с ближайшими отношениями словаря. Если и после этого <code>other</code>, гипотеза получает флаг <code>unmapped_relation</code>, не ранжируется и попадает в список «не разобраны»: её содержание может быть в порядке, а пробел — в словаре.</p>
+<h4 id="card-atomicity">Как делить текст на утверждения <a class="anchor" href="#card-atomicity" aria-label="Ссылка на раздел">#</a></h4>
+<ul>
+<li>Одно отношение на утверждение: «рапамицин ингибирует mTORC1 и снижает старение клеток» — два утверждения.</li>
+<li>Один контекст на утверждение: «продлевает жизнь мышей и мух» — два утверждения.</li>
+<li>Цепочки механизма — отдельные утверждения со связью <code>requires</code>.</li>
+<li>Пол, доза и возраст остаются в одном утверждении, если текст не приписывает им разные эффекты.</li>
+<li>Комбинация: все компоненты перечисляются в <code>intervention</code>; утверждение о синергии («лучше каждого по отдельности») — отдельное, с <code>comparator: monotherapy</code>.</li>
+</ul>
+<p><strong>Контраст «в основном X, а не Y».</strong> Смысл такой гипотезы — в сравнении двух объяснений. Исходное утверждение — X (заявленное объяснение), с уточнением <code>contrast</code>, которое указывает на Y. Y записывается как отвергаемая альтернатива со своим дословным фрагментом, а объясняемый эффект — как посылка.</p>
+<p>Пример: <em>«Rapamycin extends mouse lifespan mainly by postponing death from cancer, not by slowing aging itself.»</em> Посылка: rapamycin <code>extends_lifespan_in</code> mouse. Исход (X): rapamycin <code>suppresses</code> cancer mortality. Отвергаемая альтернатива (Y): rapamycin <code>slows_aging_in</code> mouse, «not by slowing aging itself». Как статус исхода зависит от Y, описано в разделе <a href="#statuses-contrast">«Статусы»</a>.</p>
+<h4 id="card-evidence">Запись-доказательство <a class="anchor" href="#card-evidence" aria-label="Ссылка на раздел">#</a></h4>
+<p>Каждая цитата, на которой держится статус, хранится как запись.</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Поле</th>
+<th>Что значит</th>
+<th>Пример</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>source</code>, <code>record_id</code></td>
+<td>где найдено и под каким номером</td>
+<td><code>PubMed</code>, <code>PMID:19587680</code></td>
+</tr>
+<tr>
+<td><code>epistemic_type</code></td>
+<td>что источник способен утверждать: <code>A_text</code> (первичный текст), <code>B_curated</code> (курируемая запись базы), <code>C_measurement</code> (выполненное измерение). Машинные выводы, метаданные качества и планы статус не задают</td>
+<td><code>A_text</code></td>
+</tr>
+<tr>
+<td><code>study_type</code></td>
+<td>вид исследования</td>
+<td><code>rct</code></td>
+</tr>
+<tr>
+<td><code>lab_or_cohort</code></td>
+<td>группа, когорта или испытание; независимость повторов считается по этому полю</td>
+<td><code>PMID:40188830</code></td>
+</tr>
+<tr>
+<td><code>derived_from</code></td>
+<td>если запись — обзор или повторный анализ тех же данных; она устойчивости не добавляет</td>
+<td><code>review</code></td>
+</tr>
+<tr>
+<td><code>species</code>, <code>strain</code>, <code>sex</code>, <code>dose</code>, <code>age_at_start</code></td>
+<td>контекст находки так, как он дан в источнике</td>
+<td><code>mouse</code>, <code>UM-HET3</code>, <code>female</code>, <code>14 ppm in food</code>, <code>600 days</code></td>
+</tr>
+<tr>
+<td><code>human_rungs</code></td>
+<td>только у людей: <code>human_markers</code> (лабораторные и инструментальные измерения) и (или) <code>human_clinical</code> (самочувствие, функция, болезни, смертность)</td>
+<td><code>[human_markers]</code> для массы мышечной ткани</td>
+</tr>
+<tr>
+<td><code>quote</code></td>
+<td>дословный фрагмент источника</td>
+<td>«Lean tissue mass (ηp2 = 0.202, p = 0.013) … improved significantly for women using 10 mg rapamycin.»</td>
+</tr>
+<tr>
+<td><code>quote_role</code></td>
+<td><code>finding</code> (результат этой работы), <code>background</code> (известное, цитируется), <code>speculation</code> («возможно», «предполагаем»). Статус меняет только <code>finding</code></td>
+<td><code>finding</code></td>
+</tr>
+<tr>
+<td><code>qualifiers_match</code></td>
+<td>совпадает ли контекст находки с утверждением: <code>yes</code>, <code>no</code> или <code>n/a</code> по виду, линии, полу, возрасту, дозе, сравнению; отдельно <code>intervention_match</code>: <code>exact</code>, <code>dose_differs</code>, <code>regimen_differs</code>, <code>related_compound</code>, <code>class</code></td>
+<td><code>{species: yes, sex: n/a}</code></td>
+</tr>
+<tr>
+<td><code>marker_validation</code></td>
+<td>для маркеров у человека: <code>validated_surrogate</code> или <code>exploratory</code></td>
+<td><code>exploratory</code></td>
+</tr>
+<tr>
+<td><code>flags</code></td>
+<td>предупреждения: <code>retracted</code>, <code>preprint</code>, <code>conflict_of_interest</code>, <code>small_n</code>, <code>open_label</code>, <code>subgroup_only</code>, <code>short_lived_controls</code></td>
+<td><code>[subgroup_only]</code></td>
+</tr>
+<tr>
+<td><code>linked_pmid</code>, <code>fields</code></td>
+<td>только у курируемых записей: работа, из которой взята строка, и поля самой строки</td>
+<td><code>19587680</code>; <code>avg_lifespan_change_percent: 13</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Флаги видны читателю и судьям и статус сами не меняют. Исключения: запись с флагом <code>retracted</code> не учитывается, а <code>subgroup_only</code> участвует в <a href="#statuses-subgroup">правиле подгруппы</a>.</p>
+</article><article class="doc" id="docs-statuses"><header class="doc-head"><h3>Статусы и правила проверки</h3><p class="lead">Как найденные цитаты превращаются в статус утверждения.</p></header>
+<h4 id="statuses-table">Пять статусов <a class="anchor" href="#statuses-table" aria-label="Ссылка на раздел">#</a></h4>
+<p>Статус считает программа по найденным записям. Языковая модель только извлекает цитаты и их признаки, а решает правило.</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Статус</th>
+<th>Когда</th>
+<th>Пример</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>подтверждено (<code>supported</code>)</td>
+<td>есть хотя бы одна находка «за» (<code>finding</code>) в совпадающем контексте и нет подходящих находок «против»</td>
+<td>«rapamycin extends lifespan in mouse»: Harrison et al. 2009 (PMID 19587680) и записи DrugAge</td>
+</tr>
+<tr>
+<td>оспорено (<code>contested</code>)</td>
+<td>есть находки и «за», и «против» в совпадающем контексте; либо единственная поддержка — подгруппа или вторичный исход при нулевом первичном</td>
+<td>«rapamycin improves healthspan in older adults»: в испытании PEARL положительны подгруппа женщин и вторичные исходы, первичный исход нулевой</td>
+</tr>
+<tr>
+<td>опровергнуто (<code>refuted</code>)</td>
+<td>есть находки «против» и нет «за»</td>
+<td>«resveratrol extends lifespan in mice»: две работы не нашли эффекта (PMID 18599363, PMID 20974732)</td>
+</tr>
+<tr>
+<td>не проверено (<code>unverified</code>)</td>
+<td>подходящих находок нет; фон и предположения не считаются</td>
+<td>«rapamycin inhibits mTORC1»: найдена только фраза-фон «an inhibitor of the mTOR pathway»</td>
+</tr>
+<tr>
+<td>не распознано (<code>unresolved</code>)</td>
+<td>сущности не удалось сопоставить с идентификаторами или отношение <code>other</code>, проверить утверждение нельзя</td>
+<td>вещество, которого нет в справочниках</td>
+</tr>
+</tbody>
+</table></div>
+<p>«Оспорено» означает, что находки есть и по ним спорят. Отсутствие находок — это «не проверено», и такое утверждение в споры о противоречивых данных не попадает.</p>
+<h4 id="statuses-admissible">Что считается находкой <a class="anchor" href="#statuses-admissible" aria-label="Ссылка на раздел">#</a></h4>
+<p>Запись влияет на статус, только если выполнены все условия:</p>
+<ol>
+<li><code>quote_role: finding</code>: это результат работы, а не фон и не предположение;</li>
+<li>тип источника <code>A_text</code>, <code>B_curated</code> или <code>C_measurement</code>;</li>
+<li>ни одно уточнение контекста не отмечено как несовпадение (<code>no</code>);</li>
+<li>запись о том же веществе: родственные вещества и классы считаются только аналогами;</li>
+<li>запись не отозвана и не из пробирки или экспланта, если утверждение об организме;</li>
+<li>исход записи совпадает с исходом утверждения.</li>
+</ol>
+<p>Цитата засчитывается только дословная: каждая цитата проверяется программой как точная подстрока текста аннотации, остальные отбрасываются.</p>
+<h4 id="statuses-endpoint">Исход должен совпадать <a class="anchor" href="#statuses-endpoint" aria-label="Ссылка на раздел">#</a></h4>
+<p>Находка подтверждает или опровергает утверждение, только если измеряет то же самое. Улучшение здоровья не доказывает продление жизни, а маркер не доказывает ни то ни другое. Такие записи уходят в отказы с типом <code>endpoint_mismatch</code> и остаются видны.</p>
+<p>Пример: <em>«Resveratrol started in middle age extends the lifespan of mice.»</em> Аннотация PMID 18599363 сообщает «resveratrol-fed elderly mice show a marked reduction in signs of aging» (здоровье) и «mice fed a standard diet did not live longer» (жизнь). Первая фраза уходит в отказы, вторая опровергает утверждение.</p>
+<p>Исключение: для утверждения о здоровой продолжительности жизни у человека маркерные находки засчитываются на ступени «человек: маркеры».</p>
+<h4 id="statuses-context">Совпадение контекста <a class="anchor" href="#statuses-context" aria-label="Ссылка на раздел">#</a></h4>
+<ul>
+<li>Если уточнение в карточке <code>unknown</code>, то в <code>qualifiers_match</code> стоит <code>n/a</code>, а не <code>no</code>: неизвестное сравнение, пол или возраст несовпадением не становится. <code>n/a</code> считается совпадением.</li>
+<li>Если источник уточнение не сообщает, оно просто не записывается и ничего не блокирует.</li>
+<li>Доза, заданная словами («низкая доза»), не считается несовпадением с числовой дозой в источнике.</li>
+<li>Линия. Если линия в карточке не указана, подходит любая линия вида. Если указана и находка получена в другой линии, запись напрямую не засчитывается: верификатор добавляет утверждение-аналог (то же вмешательство, тот же вид, другая линия). Аналог влияет на уровень эффекта, но не делает гипотезу известным результатом.</li>
+<li>Для курируемых записей <code>intervention_match</code> ставится по полям: способ введения в карточке и в записи различаются (ppm в корме и режим «раз в неделю») — <code>regimen_differs</code>.</li>
+<li>Сравнение важно: данные против нелеченого контроля не подтверждают утверждение о превосходстве над монотерапией. Короткоживущий контроль — известный источник ложных эффектов, он помечается флагом <code>short_lived_controls</code>.</li>
+</ul>
+<h4 id="statuses-inherit">Наследование из PICO <a class="anchor" href="#statuses-inherit" aria-label="Ссылка на раздел">#</a></h4>
+<p>Если утверждение о самом вмешательстве не называет вид или линию, они берутся из PICO и перечисляются в <code>inherited_from_pico</code>. Условия жёсткие и поэтому результат однозначный:</p>
+<ul>
+<li>наследуются только <code>species</code> и <code>strain</code>;</li>
+<li>только в утверждения, субъект которых — вмешательство (и в отвергаемые альтернативы);</li>
+<li>только если фрагмент текста сам их не называет (организм в объекте, например «in mice», считается названным видом);</li>
+<li>никогда в молекулярные отношения (<code>inhibits</code>, <code>activates</code>, <code>increases_expression</code>, <code>decreases_expression</code>, <code>part_of</code>) и в общие утверждения о механизме;</li>
+<li>значение записывается чистым: <code>species: human</code>, а не «human (из PICO)».</li>
+</ul>
+<p>Унаследованное значение не было сказано в тексте, поэтому его несовпадение — мягкий отказ <code>inherited_mismatch</code>: запись видна, но статус не меняет.</p>
+<p>Пример: <em>«rapamycin … slows multiple aspects of aging … in healthy older adults»</em>. Вид «человек» унаследован из PICO. Работа Wilkinson et al. 2012 (PMID 22587563) показывает замедление старения у мышей. Это отказ <code>inherited_mismatch</code>, утверждение остаётся «не проверено».</p>
+<h4 id="statuses-contrast">Контраст «X, а не Y» <a class="anchor" href="#statuses-contrast" aria-label="Ссылка на раздел">#</a></h4>
+<p>Верификатор проверяет отвергаемую альтернативу Y как обычное утверждение, в обоих направлениях: ищет и подтверждения, и опровержения, и не останавливается на первой подходящей находке. «Тот же контекст» означает тот же вид и ту же линию, если обе указаны.</p>
+<p>Статус исхода X по порядку правил:</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>X (заявленное)</th>
+<th>Y (отвергаемое)</th>
+<th>Исход</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>опровергнуто</td>
+<td>любой</td>
+<td>опровергнуто</td>
+</tr>
+<tr>
+<td>любой</td>
+<td>подтверждено</td>
+<td>опровергнуто (даже если X подтверждено)</td>
+</tr>
+<tr>
+<td>любой другой</td>
+<td>оспорено</td>
+<td>оспорено</td>
+</tr>
+<tr>
+<td>любой другой</td>
+<td>опровергнуто</td>
+<td>статус X</td>
+</tr>
+<tr>
+<td>подтверждено</td>
+<td>не проверено или не распознано</td>
+<td>не проверено, флаг <code>contrast_unchecked</code></td>
+</tr>
+<tr>
+<td>любой другой</td>
+<td>не проверено или не распознано</td>
+<td>статус X</td>
+</tr>
+</tbody>
+</table></div>
+<p>Поддержка «в подарок» не даётся: пока Y не проверено, подтверждённое X остаётся «не проверено» с флагом, а записи в пользу X остаются видны. «Оспорено» — это находки и за, и против, а при непроверенном Y противоречащих находок нет.</p>
+<p>Пример: <em>«Rapamycin extends mouse lifespan mainly by postponing death from cancer, not by slowing aging itself.»</em> Y — «rapamycin slows aging in mice». Wilkinson et al. 2012 («rapamycin retards multiple aspects of aging in mice») за Y, Neff et al. 2013 (PMID 23863708, «our data largely dissociate rapamycin's longevity effects from effects on aging itself») против. Y оспорено, значит исход оспорен, и гипотеза остаётся в рейтинге.</p>
+<h4 id="statuses-subgroup">Только подгруппа <a class="anchor" href="#statuses-subgroup" aria-label="Ссылка на раздел">#</a></h4>
+<p>Положительный результат в подгруппе или по вторичному исходу (запись с флагом <code>subgroup_only</code>) сам по себе никогда не даёт «подтверждено».</p>
+<ol>
+<li>Если результат по всей выборке или по первичному исходу той же работы не найден, верификатор делает один прицельный запрос: аннотация работы и, если испытание зарегистрировано, запись в ClinicalTrials.gov.</li>
+<li>Первичный исход нулевой или отрицательный: «оспорено». Положительный: «подтверждено».</li>
+<li>Ничего не найдено: «не проверено» и флаг <code>subgroup_unchecked</code>. Запись по подгруппе остаётся видна судьям и эксперту.</li>
+</ol>
+<p>Нулевой исход, который не удалось найти, — не находка, поэтому «не проверено», а не «оспорено» (так же, как с <code>contrast_unchecked</code>).</p>
+<p>Пример: в испытании PEARL (PMID 40188830) масса мышечной ткани и боль улучшились «for women using 10 mg rapamycin» (подгруппа), а первичный исход «Visceral adiposity did not change significantly». Это «оспорено» на обеих ступенях, «маркеры» и «клиника».</p>
+<h4 id="statuses-refusals">Отказы <a class="anchor" href="#statuses-refusals" aria-label="Ссылка на раздел">#</a></h4>
+<p>Запись, которая выглядит подходящей, но не может влиять на статус, уходит в отказы с причиной и остаётся видна читателю и судьям.</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Тип</th>
+<th>Когда</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>endpoint_mismatch</code></td>
+<td>находка измеряет другой исход, чем утверждение</td>
+</tr>
+<tr>
+<td><code>inherited_mismatch</code></td>
+<td>несовпадение по значению, унаследованному из PICO (например, находка у мыши при унаследованном виде «человек»)</td>
+</tr>
+<tr>
+<td><code>type_mismatch</code>, <code>direction_mismatch</code>, <code>species_mismatch</code></td>
+<td>предусмотрены схемой (тип источника, направление эффекта, вид); текущая версия верификатора их не выставляет; несовпадение вида просто делает запись неподходящей (<code>species: no</code>)</td>
+</tr>
+</tbody>
+</table></div>
+<h4 id="statuses-gate">Фильтр и известный результат <a class="anchor" href="#statuses-gate" aria-label="Ссылка на раздел">#</a></h4>
+<p>Если исходное утверждение, утверждение-механизм или посылка опровергнуты, гипотеза отсеивается, причина — опровергающая запись. «Оспорено» не отсеивает: гипотеза остаётся и показывает спор.</p>
+<p>Если исходное утверждение уже подтверждено в том же контексте, это известный результат: в рейтинг он не входит.</p>
+</article><article class="doc" id="docs-indicators"><header class="doc-head"><h3>Показатели</h3><p class="lead">Какие числа и уровни считаются из проверенной карточки и что означает каждый.</p></header>
+<h4 id="ind-profile">Профиль доказательности <a class="anchor" href="#ind-profile" aria-label="Ссылка на раздел">#</a></h4>
+<p>Из статусов утверждений считается профиль доказательности. Это факты, а не оценки: одна ось не обменивается на другую, а то, насколько важна каждая, решает профиль приоритетов при агрегации.</p>
+<p><strong>Фильтр.</strong> Если опровергнуто исходное утверждение, механизм или посылка, гипотеза отсеивается с указанием опровергающей записи. «Оспорено» не отсеивает.</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Ось</th>
+<th>Значения</th>
+<th>Откуда</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>effect_level</code></td>
+<td>none · cells · invertebrates · mammals · human_markers · human_clinical</td>
+<td>высшая ступень, на которой подтверждено исходное утверждение или утверждение-аналог <strong>с тем же вмешательством</strong>; родственные вещества и классы считаются только аналогами. Оспоренная более высокая ступень указывается рядом</td>
+</tr>
+<tr>
+<td><code>robustness</code></td>
+<td>single · replicated</td>
+<td>на этой ступени одна работа или не менее двух независимых (разные <code>lab_or_cohort</code>; обзоры и повторные анализы не считаются). Эффект на двух и более площадках многоцентровой программы тоже считается повтором</td>
+</tr>
+<tr>
+<td><code>mechanism</code></td>
+<td>unverified · partial · supported</td>
+<td>подтверждены ли утверждения-механизмы и посылки: ни одно · часть · все</td>
+</tr>
+</tbody>
+</table></div>
+<p>Отдельно отмечаются:</p>
+<ul>
+<li><strong>многоцентровая программа</strong> (<code>multi_site_program</code>): вмешательство проверено на этой ступени в стандартизованной программе с публикацией отрицательных результатов (ITP для мышей, CITP для червей); исход программы положительный или отрицательный. Это не уровень устойчивости: многоцентровость проверяет воспроизводимость в одном протоколе, независимый повтор проверяет обобщаемость, и между ними порядок не вводится;</li>
+<li><strong>конфликты</strong> (<code>conflicts</code>): на каком уровне какие записи за и какие против; кто побеждает, правило не решает;</li>
+<li><strong>ступени у человека</strong> определяются по исходу записи. <code>human_markers</code>: лабораторные и инструментальные измерения (маркеры крови, эпигенетические часы, состав тела, жёсткость артерий, давление). <code>human_clinical</code>: то, что человек чувствует и что определяет его жизнь (функция, слабость, боль, заболеваемость, госпитализации, смертность). Утверждение считается по ступеням раздельно, поэтому у одного испытания может быть «оспорено» на обеих;</li>
+<li><strong>дизайн исследования у человека</strong>: если все записи на ступени наблюдательные, это указывается («human_clinical, только наблюдательные данные»).</li>
+</ul>
+<p>Что делать дальше (<code>next_step</code>) показывается рядом, но в рейтинг не входит: повторить на той же ступени, подняться на следующую или разрешить спор на оспоренной.</p>
+<h4 id="ind-table">Показатели для агрегации <a class="anchor" href="#ind-table" aria-label="Ссылка на раздел">#</a></h4>
+<p>Показатель считается один раз, по правилам, из проверенной карточки. Языковая модель в расчёте показателей не участвует. Неизвестное значение остаётся неизвестным (ниже).</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Показатель</th>
+<th>Что измеряет</th>
+<th>Откуда считается</th>
+<th>Значения</th>
+<th>Что лучше</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>effect_level</code></td>
+<td>как далеко подтверждён эффект</td>
+<td>из проверенных утверждений</td>
+<td>none · cells · invertebrates · mammals · human_markers · human_clinical</td>
+<td>выше</td>
+</tr>
+<tr>
+<td><code>robustness</code></td>
+<td>воспроизведён ли эффект независимо</td>
+<td>из проверенных утверждений</td>
+<td>single · replicated</td>
+<td>выше</td>
+</tr>
+<tr>
+<td><code>multi_site_positive</code></td>
+<td>положительный результат многоцентровой программы</td>
+<td>из проверенных утверждений и базы (признак ITP/CITP у записи)</td>
+<td>no · positive</td>
+<td>положительный</td>
+</tr>
+<tr>
+<td><code>mechanism</code></td>
+<td>подтверждены ли звенья объяснения</td>
+<td>из проверенных утверждений</td>
+<td>unverified · partial · supported</td>
+<td>выше</td>
+</tr>
+<tr>
+<td><code>novelty</code></td>
+<td>насколько результат нов для литературы</td>
+<td>из проверенных утверждений и правил (граф знаний пока не используется)</td>
+<td>new_context &lt; translation &lt; analog &lt; new_link</td>
+<td>выше</td>
+</tr>
+<tr>
+<td><code>path_to_human</code></td>
+<td>сколько предварительных шагов до испытания на человеке</td>
+<td>из правил; данные из базы (ChEMBL, ClinicalTrials.gov)</td>
+<td>2 · 1 · 0 шагов</td>
+<td>меньше шагов</td>
+</tr>
+<tr>
+<td><code>late_start</code></td>
+<td>какую долю медианной продолжительности жизни составляет возраст начала вмешательства</td>
+<td>из правил; возраст из карточки, медианы из таблицы</td>
+<td>число или интервал от 0 до 1</td>
+<td>выше</td>
+</tr>
+<tr>
+<td><code>both_sexes</code></td>
+<td>показан ли эффект у обоих полов</td>
+<td>из проверенных утверждений</td>
+<td>one · both</td>
+<td>оба</td>
+</tr>
+<tr>
+<td><code>effect_size</code></td>
+<td>размер эффекта на найденной ступени</td>
+<td>из проверенных утверждений (метрика записей)</td>
+<td>% изменения медианы, шкала 0–30%, значения выше 30% приравниваются к 30%</td>
+<td>больше</td>
+</tr>
+<tr>
+<td><code>informativeness</code></td>
+<td>сколько альтернативных объяснений различает решающий эксперимент</td>
+<td>из правил по таблице предсказаний</td>
+<td>число от 0 до 4</td>
+<td>больше</td>
+</tr>
+</tbody>
+</table></div>
+<p>Подробности:</p>
+<ul>
+<li><strong><code>novelty</code>.</strong> <code>new_context</code>: то же вмешательство и вид уже работают, но в другой линии, при другом поле, дозе или возрасте начала. <code>translation</code>: известная находка переносится на новый вид. <code>analog</code>: известное родственное вмешательство. <code>new_link</code>: новая связь вмешательства и исхода. Известный результат в рейтинг не входит и этих уровней не получает.</li>
+<li><strong><code>mechanism</code></strong> считается по утверждениям с ролями «механизм» и «посылка»: все подтверждены, часть, ни одно.</li>
+<li><strong><code>informativeness</code></strong> в текущей версии не считается: таблица предсказаний строится на этапе дебатов, пока значение неизвестно.</li>
+<li><strong>Шкала <code>effect_size</code></strong> (0–30%) — черновое допущение.</li>
+</ul>
+<h4 id="ind-path">path_to_human <a class="anchor" href="#ind-path" aria-label="Ссылка на раздел">#</a></h4>
+<p>Показатель считает число предварительных шагов, которые нужны, прежде чем можно проводить испытание на человеке с маркерами или функцией в качестве исхода.</p>
+<ul>
+<li>Нет данных о безопасности для человека: нужен пакет доклинической безопасности (+1 шаг). Данные о безопасности есть у одобренного препарата, у вещества на клинической стадии и у диеты.</li>
+<li>Нет подтверждённого эффекта у млекопитающих: нужно исследование на мышах (+1 шаг).</li>
+</ul>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Значение</th>
+<th>Что значит</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>безопасность для человека известна и эффект у млекопитающих подтверждён: можно сразу идти к человеку</td>
+</tr>
+<tr>
+<td>1</td>
+<td>не хватает одного шага</td>
+</tr>
+<tr>
+<td>2</td>
+<td>не хватает обоих</td>
+</tr>
+</tbody>
+</table></div>
+<p>Если данных о безопасности не определить (ген-мишень без препарата, нераспознанное вещество), значение неизвестно.</p>
+<p><strong>«На момент T» в бэктесте.</strong> Вещество считается одобренным, если год первого одобрения в ChEMBL не позже года T; веществом на клинической стадии — если в ClinicalTrials.gov есть испытание с ним, начатое до T. Вопрос об эффекте у млекопитающих уже учитывает только записи, датированные не позже T.</p>
+<p>Показатель задаёт порядок «ближе к человеку»; оценок стоимости и сроков в долларах и месяцах система не даёт.</p>
+<h4 id="ind-unknown">Неизвестное остаётся неизвестным <a class="anchor" href="#ind-unknown" aria-label="Ссылка на раздел">#</a></h4>
+<p>Если значение показателя определить нельзя, оно не заменяется средним или типичным. В каждом розыгрыше агрегации оно берётся случайно из допустимого диапазона: для порядкового показателя равномерно по уровням, для числового по всей шкале. Неопределённость данных и неопределённость весов складываются в разброс оценки гипотезы: у гипотезы с большим числом неизвестных полоса шире.</p>
+<h4 id="ind-latestart">late_start <a class="anchor" href="#ind-latestart" aria-label="Ссылка на раздел">#</a></h4>
+<p>Показатель — возраст начала вмешательства как доля медианной продолжительности жизни контрольных животных (не больше 1). Чем позже начато вмешательство, тем выше значение: эффект, полученный при позднем старте, считается более ценным.</p>
+<ul>
+<li><strong>Точный возраст</strong> («600 days», «20 months», «65 years») делится на медиану.</li>
+<li><strong>Словесный возраст</strong> («middle-aged», «old») даёт интервал: каждому слову соответствует возрастной промежуток своего вида (таблица в <a href="#data-latestart">разделе о данных</a>).</li>
+<li><strong>Медиана</strong> берётся для вида, линии и пола из карточки. Не указана линия — интервал по всем линиям вида; не указан пол — строка «оба», если она есть, иначе интервал по полам; вида нет в таблице — значение неизвестно.</li>
+<li>С интервалом медиан [m₁, m₂] и возрастом a доля равна [a / m₂, min(1, a / m₁)]. Узкая или широкая полоса отражает неопределённость.</li>
+</ul>
+<p>Пример: самки мышей UM-HET3 (медиана 887 суток), «old» (18–24 месяца, 548–731 сутки): доля 0,62–0,82.</p>
+</article><article class="doc" id="docs-profiles"><header class="doc-head"><h3>Профили и АСПИД</h3><p class="lead">Как порядок важности показателей превращается в рейтинг без заданных весов и что означают его числа.</p></header>
+<h4 id="agg-def">Определение <a class="anchor" href="#agg-def" aria-label="Ссылка на раздел">#</a></h4>
+<p>Рейтинг строится без заданных весов. Профиль задаёт только порядок важности: показатель выше по списку весит не меньше любого ниже. Веса внутри порядка много раз выбираются случайно (метод АСПИД, близкий к SMAA), и для каждой гипотезы считаются:</p>
+<ul>
+<li><strong>ожидание</strong> — средняя оценка по розыгрышам весов;</li>
+<li><strong>P(топ-3)</strong> — доля розыгрышей, в которых гипотеза входит в первые три;</li>
+<li><strong>P(лучшая)</strong> — доля розыгрышей, в которых она первая;</li>
+<li><strong>полоса</strong> — 5–95% оценки.</li>
+</ul>
+<p>Узкая полоса и высокая P(топ-k) означают, что место устойчиво к выбору весов; широкая — что оно зависит от приоритетов. Профиль — порядок важности показателей, а не оценка гипотез: разным задачам нужны разные порядки, и выбирает его тот, кто решает, что проверять.</p>
+<h4 id="agg-idea">Идея <a class="anchor" href="#agg-idea" aria-label="Ссылка на раздел">#</a></h4>
+<p>АСПИД (анализ и синтез показателей при информационном дефиците) — семейство методов Н. В. Хованова: вместо одного набора весов задаются только порядок важности показателей и неопределённость данных, а веса много раз выбираются случайно. Реализация на этом сайте следует SMAA-2 (Lahdelma, Salminen), которая по постановке близка: оценка гипотезы аддитивная, веса равномерно распределены по допустимому набору, моделирование идёт по весам и по неизвестным значениям показателей.</p>
+<p>Почему так. Веса показателей спорны, а порядок важности («проверенные данные важнее новизны») эксперт назвать может. Метод показывает, что следует из порядка при любых допустимых весах, и сколько в результате решают именно приоритеты.</p>
+<h4 id="agg-model">Модель <a class="anchor" href="#agg-model" aria-label="Ссылка на раздел">#</a></h4>
+<p>У каждой гипотезы i есть значения показателей q<sub>ij</sub> от 0 до 1, где больше — лучше (показатели вроде <code>path_to_human</code> переворачиваются). Оценка:</p>
+<p>u(i, w) = Σ<sub>j</sub> w<sub>j</sub> · q<sub>ij</sub></p>
+<ul>
+<li><strong>Числовые показатели</strong> (<code>late_start</code>, <code>effect_size</code>, <code>informativeness</code>) переводятся в [0, 1] по <strong>фиксированным шкалам</strong>, а не по минимуму и максимуму текущего набора. Поэтому значение гипотезы и вероятность «A выше B» не зависят от того, какие ещё гипотезы в наборе; места, конечно, зависят.</li>
+<li><strong>Порядковые показатели</strong> (<code>effect_level</code>, <code>robustness</code>, <code>multi_site_positive</code>, <code>mechanism</code>, <code>novelty</code>, <code>path_to_human</code>, <code>both_sexes</code>): в каждом розыгрыше уровни получают случайные числа, возрастающие вместе с уровнем (отображение SMAA-O). Так не нужно выбирать, что «mammals» вдвое лучше «invertebrates»; равные шаги можно включить для проверки чувствительности.</li>
+<li><strong>Неизвестные значения</strong> разыгрываются по допустимому диапазону (<a href="#ind-unknown">см. «Показатели»</a>).</li>
+<li>Оценка <strong>компенсаторная</strong>: высокое значение по одному показателю может покрыть низкое по другому. Отсев опровергнутых гипотез происходит до агрегации (фильтр).</li>
+</ul>
+<h4 id="agg-weights">Веса и профили <a class="anchor" href="#agg-weights" aria-label="Ссылка на раздел">#</a></h4>
+<p>Допустимые веса — неотрицательные, сумма равна 1. Профиль приоритетов ограничивает их линейно: показатель ступени выше весит не меньше любого показателя ступени ниже; показатели одной ступени равноправны и разыгрываются случайно. Показатели, которых в профиле нет, порядком не заданы (если нет ступени «остальные»).</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Профиль</th>
+<th>Порядок важности (версия <code>draft-2</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Приоритет: проверенные данные (<code>evidence_first</code>)</td>
+<td>1: уровень эффекта, устойчивость, механизм · 2: все остальные</td>
+</tr>
+<tr>
+<td>Приоритет: осуществимость (<code>cheap_feasible</code>)</td>
+<td>1: путь к человеку · 2: новизна · 3: уровень эффекта · остальные порядком не заданы</td>
+</tr>
+<tr>
+<td>Приоритет: понимание механизма (<code>fundamental</code>)</td>
+<td>1: механизм, информативность, новизна · 2: путь к человеку · остальные порядком не заданы</td>
+</tr>
+</tbody>
+</table></div>
+<p>Профили — примеры, а не рекомендации; с экспертами они не согласованы. Рейтинг считается отдельно для каждого профиля, и результаты всегда показываются вместе с версией профиля.</p>
+<p><strong>Как выбираются веса.</strong> Когда порядок задан для всех показателей, веса выбираются точно: отсортированный равномерный набор, самые большие значения достаются первой ступени. Для остальных профилей и для ограничений другого вида используется метод hit-and-run: случайное блуждание, равномерное по допустимому многограннику (Tervonen et al. 2013).</p>
+<h4 id="agg-outputs">Что считается <a class="anchor" href="#agg-outputs" aria-label="Ссылка на раздел">#</a></h4>
+<p>Все числа получены за один проход по K розыгрышам (10 000 по умолчанию). Для всех гипотез используются одни и те же розыгрыши, поэтому разности согласованы.</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Величина</th>
+<th>Определение</th>
+<th>Как читать</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ожидание</td>
+<td>средняя оценка по розыгрышам</td>
+<td>чем выше, тем лучше при «типичных» весах</td>
+</tr>
+<tr>
+<td>Полоса</td>
+<td>5–95% оценки по розыгрышам</td>
+<td>узкая: оценка почти не зависит от весов и данных; широкая: зависит</td>
+</tr>
+<tr>
+<td>P(топ-k)</td>
+<td>доля розыгрышей, в которых гипотеза среди первых k</td>
+<td>устойчивость места; по умолчанию k = 3</td>
+</tr>
+<tr>
+<td>P(лучшая)</td>
+<td>доля розыгрышей, в которых гипотеза первая</td>
+<td></td>
+</tr>
+<tr>
+<td>P(A выше B)</td>
+<td>доля розыгрышей, в которых оценка A больше оценки B</td>
+<td>матрица на странице «Рейтинг»</td>
+</tr>
+<tr>
+<td>Распределение мест</td>
+<td>доля розыгрышей для каждого места</td>
+<td>в данных прогона</td>
+</tr>
+<tr>
+<td>Центральные веса</td>
+<td>средний вектор весов, при которых гипотеза первая</td>
+<td>какие приоритеты её выдвигают</td>
+</tr>
+<tr>
+<td>Фактор уверенности</td>
+<td>вероятность быть первой при фиксированных центральных весах, когда меняются только данные</td>
+<td>хватает ли данных, чтобы отличить гипотезу от остальных</td>
+</tr>
+</tbody>
+</table></div>
+<p>Гипотеза с узкой полосой и высокой P(топ-k) занимает устойчивое место при любых допустимых весах. Широкая полоса означает, что место зависит от приоритетов или от неизвестных значений. Если P(топ-k) высока в каждом профиле, гипотеза — надёжный кандидат; различия между профилями показывают, что выберет каждая цель.</p>
+<h4 id="agg-accuracy">Точность <a class="anchor" href="#agg-accuracy" aria-label="Ссылка на раздел">#</a></h4>
+<p>У моделирования есть собственная погрешность, и она разная для разных чисел.</p>
+<ul>
+<li><strong>Вероятности</strong> (P(топ-k), P(лучшая), P(A выше B)) — доли розыгрышей. С доверием 95% их погрешность равна 1,96·√(p(1−p)/K); в худшем случае (p = 0,5) для K = 10 000 она составляет ±0,0098, а чтобы получить ±0,01, нужно K = 1,96² / (4·0,01²) ≈ 9 604 розыгрыша.</li>
+<li><strong>Ожидание</strong> — среднее по розыгрышам; его погрешность равна 1,96·σ/√K, где σ — разброс оценки гипотезы. Типичный разброс 0,05–0,10 даёт ±0,001–0,002 при K = 10 000.</li>
+</ul>
+<p>Если оценки двух гипотез различаются меньше этой погрешности (для пары: 1,96·√((σ<sub>A</sub>² + σ<sub>B</sub>²)/K)), они считаются равными, и таблица рейтинга объединяет их в одно место «на равных». «На равных» означает лишь, что различие не отличимо от шума моделирования, а не что гипотезы похожи по смыслу. Насколько места зависят от весов и данных, показывают полоса и матрица P(A выше B), а не погрешность.</p>
+<p>Вместе с результатом сохраняются K, зерно случайных чисел, версия профиля и тип отображения порядковых уровней.</p>
+<h4 id="agg-prefer">Ограничения вида «A не хуже B» <a class="anchor" href="#agg-prefer" aria-label="Ссылка на раздел">#</a></h4>
+<p>Эксперт может выбрать из пары гипотез «A не хуже B» при данном профиле. Выбор превращается в линейное ограничение на веса: Σ<sub>j</sub> w<sub>j</sub> (q<sub>Aj</sub> − q<sub>Bj</sub>) ≥ 0. Профиль получает новую версию, а веса выбираются методом hit-and-run.</p>
+<ul>
+<li>Если у A или B есть неизвестные значения, они заменяются ожидаемыми, а ограничение помечается как приближённое.</li>
+<li>Если ограничения противоречат друг другу, допустимых весов нет. Система показывает минимальный набор противоречащих выборов и никогда не отбрасывает ответ молча.</li>
+<li>Результаты всегда доступны и с выборами эксперта, и без них.</li>
+<li>Следующую пару для вопроса выбирают среди лучших гипотез: пара, для которой P(A выше B) ближе всего к 0,5.</li>
+</ul>
+<h4 id="agg-limits">Ограничения метода <a class="anchor" href="#agg-limits" aria-label="Ссылка на раздел">#</a></h4>
+<ul>
+<li><strong>Коррелированные показатели считаются дважды.</strong> Уровень эффекта и устойчивость выводятся из одних и тех же данных, поэтому аддитивная оценка может завышать их суммарный вес.</li>
+<li><strong>Шкалы линейные.</strong> Нелинейные функции нормировки из работ Хованова не используются; границы шкал (например, 30% для размера эффекта) — рабочие допущения.</li>
+<li><strong>Зависимые неопределённости</strong> между показателями не моделируются: разыгрываются независимо.</li>
+<li>Рейтинг зависит от выбранного профиля. Это свойство метода, а не недостаток: профиль и есть заданная цель.</li>
+</ul>
+<h4 id="agg-sources">Источники <a class="anchor" href="#agg-sources" aria-label="Ссылка на раздел">#</a></h4>
+<ol>
+<li>Lahdelma R., Hokkanen J., Salminen P. SMAA — Stochastic multiobjective acceptability analysis. <em>European Journal of Operational Research</em> 106(1), 1998, 137–143. <a href="https://doi.org/10.1016/S0377-2217(97)00163-X" target="_blank" rel="noopener">doi:10.1016/S0377-2217(97)00163-X</a></li>
+<li>Lahdelma R., Salminen P. SMAA-2: Stochastic multicriteria acceptability analysis for group decision making. <em>Operations Research</em> 49(3), 2001, 444–454. <a href="https://doi.org/10.1287/opre.49.3.444.11220" target="_blank" rel="noopener">doi:10.1287/opre.49.3.444.11220</a></li>
+<li>Lahdelma R., Miettinen K., Salminen P. Ordinal criteria in stochastic multicriteria acceptability analysis (SMAA). <em>European Journal of Operational Research</em> 147(1), 2003, 117–127. <a href="https://doi.org/10.1016/S0377-2217(02)00267-9" target="_blank" rel="noopener">doi:10.1016/S0377-2217(02)00267-9</a></li>
+<li>Tervonen T., Lahdelma R. Implementing stochastic multicriteria acceptability analysis. <em>European Journal of Operational Research</em> 178(2), 2007, 500–513. <a href="https://doi.org/10.1016/j.ejor.2005.12.037" target="_blank" rel="noopener">doi:10.1016/j.ejor.2005.12.037</a></li>
+<li>Tervonen T., van Valkenhoef G., Baştürk N., Postmus D. Hit-and-run enables efficient weight generation for simulation-based multiple criteria decision analysis. <em>European Journal of Operational Research</em> 224(3), 2013, 552–559. <a href="https://doi.org/10.1016/j.ejor.2012.08.026" target="_blank" rel="noopener">doi:10.1016/j.ejor.2012.08.026</a></li>
+<li>van Valkenhoef G., Tervonen T., Postmus D. Notes on «Hit-and-run enables efficient weight generation for simulation-based multiple criteria decision analysis». <em>European Journal of Operational Research</em> 239(3), 2014, 865–867. <a href="https://doi.org/10.1016/j.ejor.2014.06.036" target="_blank" rel="noopener">doi:10.1016/j.ejor.2014.06.036</a></li>
+<li>Hovanov N., Kolari J., Sokolov M. Deriving weights from general pairwise comparison matrices. <em>Mathematical Social Sciences</em> 55(2), 2008, 205–220. <a href="https://doi.org/10.1016/j.mathsocsci.2007.07.006" target="_blank" rel="noopener">doi:10.1016/j.mathsocsci.2007.07.006</a></li>
+<li>Hovanov N., Yudaeva M., Hovanov K. Multicriteria estimation of probabilities on basis of expert non-numeric, non-exact and non-complete knowledge. <em>European Journal of Operational Research</em> 195(3), 2009, 857–863. <a href="https://doi.org/10.1016/j.ejor.2007.11.018" target="_blank" rel="noopener">doi:10.1016/j.ejor.2007.11.018</a></li>
+</ol>
+<p>Реализации-образцы: пакеты R <code>smaa</code> и <code>hitandrun</code> (van Valkenhoef, Tervonen).</p>
+</article><article class="doc" id="docs-data"><header class="doc-head"><h3>Данные и проверки</h3><p class="lead">Какие источники используются, что каждый из них вправе утверждать и как соблюдается правило «на момент T».</p></header>
+<h4 id="data-types">Типы источников <a class="anchor" href="#data-types" aria-label="Ссылка на раздел">#</a></h4>
+<p>Для проверки важнее не формат источника, а то, что он может утверждать. Каждая запись помечается типом.</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Тип</th>
+<th>Примеры</th>
+<th>Может задать статус утверждения?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A. Первичный текст</td>
+<td>PubMed, Europe PMC, bioRxiv</td>
+<td>да, только с дословной цитатой роли <code>finding</code></td>
+</tr>
+<tr>
+<td>B. Курируемые записи</td>
+<td>DrugAge, Open Genes</td>
+<td>да, вместе с цитатой из связанной работы; само включение записи — сигнал, а не доказательство</td>
+</tr>
+<tr>
+<td>C. Измерения</td>
+<td>GTEx, GEO, IMPC, результаты на ClinicalTrials.gov</td>
+<td>да, только через выполненную проверку с записанным результатом</td>
+</tr>
+<tr>
+<td>D. Машинные выводы</td>
+<td>PubTator, аннотации Europe PMC, баллы Open Targets</td>
+<td>нет: подсказки для поиска</td>
+</tr>
+<tr>
+<td>E. Метаданные качества</td>
+<td>Crossref, Retraction Watch, OpenCitations</td>
+<td>нет: флаги на других записях</td>
+</tr>
+<tr>
+<td>F. Планы и деньги</td>
+<td>даты и набор на ClinicalTrials.gov, гранты NIH RePORTER</td>
+<td>нет: входы для оценки сроков</td>
+</tr>
+</tbody>
+</table></div>
+<p>Пример типа D: PubTator вывел связь «Sirolimus — Negative_Correlation — Neoplasms» из аннотации работы Harrison et al. 2009, где сказано лишь, что рапамицин «may extend lifespan by postponing death from cancer». Это предположение авторов, и статуса оно не задаёт.</p>
+<h4 id="data-used">Что используется сейчас <a class="anchor" href="#data-used" aria-label="Ссылка на раздел">#</a></h4>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Источник</th>
+<th>Зачем</th>
+<th>Условия</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PubMed (NCBI E-utilities)</td>
+<td>аннотации и даты публикаций; основной поиск доказательств, 20 аннотаций на утверждение</td>
+<td>открытый доступ</td>
+</tr>
+<tr>
+<td>DrugAge (HAGR)</td>
+<td>курируемые записи о влиянии веществ на продолжительность жизни; одна запись на работу и вид</td>
+<td>CC BY 3.0; при публикациях цитировать de Magalhães et al. 2024</td>
+</tr>
+<tr>
+<td>PubChem</td>
+<td>сведение названий вещества (соли и гидраты) к исходному соединению, идентификаторы</td>
+<td>открытый доступ</td>
+</tr>
+<tr>
+<td>ChEMBL</td>
+<td>мишени механизма действия, коды ATC, год первого одобрения</td>
+<td>открытый доступ</td>
+</tr>
+<tr>
+<td>ChEBI (OLS4)</td>
+<td>классы веществ для слабого сходства</td>
+<td>открытый доступ</td>
+</tr>
+<tr>
+<td>ClinicalTrials.gov (API v2)</td>
+<td>начало испытаний вещества (для <code>path_to_human</code>); запись регистра при проверке первичного исхода</td>
+<td>открытый доступ</td>
+</tr>
+</tbody>
+</table></div>
+<p>В DrugAge нет колонки с датой записи: для бэктеста дата берётся по PMID работы. Обработка ограничена аннотациями, полные тексты не читаются.</p>
+<h4 id="data-asof">Правило «на момент T» <a class="anchor" href="#data-asof" aria-label="Ссылка на раздел">#</a></h4>
+<p>Бэктест оценивает рейтинг так, как если бы сегодня была дата T, а результаты стали известны позже. Чтобы будущее не просочилось в рейтинг:</p>
+<ul>
+<li>у каждой записи есть дата: для PubMed это самая ранняя публичная дата (электронная публикация, печатная, попадание в PubMed); для испытаний — дата начала; для DrugAge — дата работы по PMID;</li>
+<li>поиск ограничен датой: учитываются только работы, опубликованные не позже T;</li>
+<li>для каждого прогона бэктеста выполняется аудит дат: ни одна запись с датой позже T не должна попасть ни в один компонент (проверенные утверждения, альтернативы, отказы);</li>
+<li>знания языковой модели датой не ограничиваются. Устройство проверки уменьшает утечку: текст разбирается без внешних фактов, а статус требует дословной цитаты из работы, опубликованной до T. Полностью утечку это не исключает, поэтому наборов два: <strong>чистый</strong> (исходы появились после даты отсечки знаний используемой модели; на нём системы сравниваются) и <strong>исторический</strong> (T = 2010; модели могли знать исходы, поэтому на нём оценивается только эта система).</li>
+</ul>
+<p>Показатель <code>path_to_human</code> в бэктесте тоже считается «на момент T» (год первого одобрения, начало испытаний; см. «Показатели»).</p>
+<h4 id="data-latestart">Таблицы для <code>late_start</code> <a class="anchor" href="#data-latestart" aria-label="Ссылка на раздел">#</a></h4>
+<p>Показатель <code>late_start</code> делит возраст начала вмешательства на медиану продолжительности жизни контрольных групп. Медианы взяты из публикаций и официальных таблиц.</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Вид</th>
+<th>Линия или популяция</th>
+<th>Пол</th>
+<th>Медиана</th>
+<th>Условия и источник</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>мышь</td>
+<td>UM-HET3</td>
+<td>самки</td>
+<td>887 суток (95% ДИ 879–898)</td>
+<td>контроли ITP, три площадки, шесть когорт; Cheng et al. 2019, PMID 30801953</td>
+</tr>
+<tr>
+<td>мышь</td>
+<td>UM-HET3</td>
+<td>самцы</td>
+<td>803 суток (791–815)</td>
+<td>то же</td>
+</tr>
+<tr>
+<td>мышь</td>
+<td>C57BL/6J</td>
+<td>самки</td>
+<td>866 суток</td>
+<td>The Jackson Laboratory, 31 инбредная линия, предварительный отчёт; Yuan et al. 2009, PMID 19627267</td>
+</tr>
+<tr>
+<td>мышь</td>
+<td>C57BL/6J</td>
+<td>самцы</td>
+<td>901 сутки</td>
+<td>то же</td>
+</tr>
+<tr>
+<td>червь</td>
+<td><em>C. elegans</em> N2</td>
+<td>гермафродиты</td>
+<td>19 суток (медианы отдельных испытаний 16–23)</td>
+<td>CITP, 20 °C, 51 мкМ FUdR, возраст в сутках взрослой жизни; Lucanic et al. 2017, PMID 28220799</td>
+</tr>
+<tr>
+<td>муха</td>
+<td><em>D. melanogaster</em> Dahomey</td>
+<td>самки</td>
+<td>63–70 суток</td>
+<td>25 °C, среда SY 1,0; пик по концентрациям корма, на стандартной диете медиана короче; Bass et al. 2007, PMID 17921418</td>
+</tr>
+<tr>
+<td>человек</td>
+<td>страны с высоким доходом (по умолчанию)</td>
+<td>оба · мужчины · женщины</td>
+<td>83,9 · 81,1 · ≈85,7 года</td>
+<td>таблица смертности ВОЗ 2023: возраст, до которого доживает 50 000 из 100 000</td>
+</tr>
+<tr>
+<td>человек</td>
+<td>весь мир (если популяция из стран с низким или средним доходом)</td>
+<td>оба · мужчины · женщины</td>
+<td>79,5 · 76,6 · 82,1 года</td>
+<td>то же</td>
+</tr>
+</tbody>
+</table></div>
+<p>Правила подбора строки:</p>
+<ul>
+<li>нет линии: интервал по всем линиям вида; нет пола: строка «оба», если она есть, иначе интервал по полам; вида нет в таблице: значение неизвестно;</li>
+<li>черви и мухи: если карточка не называет условия опыта, строка подходит; если называет другие (другая температура, нет FUdR, другая линия мух, самцы), значение неизвестно, потому что медиана на них не переносится;</li>
+<li>максимальная продолжительность жизни из AnAge не используется: она шумная и зависит от размера выборки.</li>
+</ul>
+<p>Словесный возраст превращается в интервал:</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Метка</th>
+<th>Мышь, месяцев</th>
+<th>Человек, лет</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>young adult, mature adult</td>
+<td>3–6</td>
+<td>19–24</td>
+</tr>
+<tr>
+<td>adult</td>
+<td>3–15</td>
+<td>19–44</td>
+</tr>
+<tr>
+<td>middle-aged</td>
+<td>10–15</td>
+<td>45–64</td>
+</tr>
+<tr>
+<td>old, aged, late life, older adults, elderly</td>
+<td>18–24</td>
+<td>65 и старше</td>
+</tr>
+<tr>
+<td>very old, oldest old</td>
+<td>старше 24</td>
+<td>80 и старше</td>
+</tr>
+</tbody>
+</table></div>
+<p>Границы для мышей взяты из статьи The Jackson Laboratory «When are mice considered old?» (2017), для людей — из возрастных групп MeSH, которыми пользуется фильтр возраста PubMed. Пробелы в классификации (6–10 и 15–18 месяцев у мышей) заполняются объединением соседних строк. Для червей и мух словесные метки не определены: в работах возраст дан в сутках. Метка вне таблицы даёт неизвестное значение.</p>
+<h4 id="data-checks">Какие проверки возможны на открытых данных <a class="anchor" href="#data-checks" aria-label="Ссылка на раздел">#</a></h4>
+<p>Гипотезу можно проверять не только литературой: многие её следствия проверяются открытыми данными (идея в духе проверки следствий по Попперу). Сначала тест записывается до просмотра данных (набор данных, переменная, сравнение, направление, статистика, порог), затем выполняется, а результат хранится как запись типа C. <strong>В текущей версии системы эти проверки не реализованы</strong>; ниже то, что они позволят проверить.</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Следствие гипотезы</th>
+<th>Сильнейшая проверка на открытых данных</th>
+<th>Сила</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>«X продлевает жизнь мышей»</td>
+<td>данные по отдельным животным ITP: эффект по полу, площадке, когорте; поздние когорты как отложенная проверка</td>
+<td>прямая, если X был в ITP</td>
+</tr>
+<tr>
+<td>«X продлевает жизнь червей (устойчиво)»</td>
+<td>данные по отдельным червям CITP: линии, виды, лаборатории</td>
+<td>прямая</td>
+</tr>
+<tr>
+<td>«Результат на червях или мухах перенесётся на мышей»</td>
+<td>базовые частоты переноса по DrugAge и ITP</td>
+<td>косвенная (априорная)</td>
+</tr>
+<tr>
+<td>«X замедляет старение, а не одну болезнь»</td>
+<td>молекулярные оценки по данным печени ITP (GSE292884) против исходов ITP; направление возрастных изменений по Tabula Muris Senis; эпигенетические часы</td>
+<td>косвенная</td>
+</tr>
+<tr>
+<td>«X действует как известные геропротекторы»</td>
+<td>связность профилей экспрессии (LINCS L1000) с сигнатурами продления жизни</td>
+<td>косвенная</td>
+</tr>
+<tr>
+<td>«Мишень T важна для продолжительности жизни человека»</td>
+<td>менделевская рандомизация по мишеням: GWAS продолжительности жизни родителей, инструменты pQTL и eQTL</td>
+<td>квазипричинная</td>
+</tr>
+<tr>
+<td>«X снижает смертность или улучшает функцию у людей»</td>
+<td>сравнение с активным препаратом по NHANES со связью со смертностью; результаты ClinicalTrials.gov; CALERIE для ограничения калорий</td>
+<td>наблюдательная или РКИ по суррогатам</td>
+</tr>
+<tr>
+<td>«X безопасен при длительном приёме»</td>
+<td>диспропорциональность сообщений FAERS, ограничения по эволюционной консервативности (gnomAD), нежелательные явления в испытаниях</td>
+<td>только опровержение</td>
+</tr>
+</tbody>
+</table></div>
+<p>Основные группы источников:</p>
+<div class="tablewrap"><table class="doctable">
+<thead>
+<tr>
+<th>Группа</th>
+<th>Источники</th>
+<th>Ограничения</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Животные, исходы вмешательств</td>
+<td>ITP через Mouse Phenome Database, CITP, DrugAge, Open Genes, RAID, SynergyAge</td>
+<td>ITP и CITP публикуют отрицательные результаты; DrugAge и Open Genes курируются, RAID содержит только значимые эффекты</td>
+</tr>
+<tr>
+<td>Молекулярные данные</td>
+<td>GEO (GSE292884), LINCS L1000, Tabula Muris Senis, наборы генов клеточного старения (SenMayo, CellAge), Biolearn (эпигенетические часы), GTEx</td>
+<td>разные ткани, линии клеток, схемы; сигнатуры и часы обучены на данных, которые могут пересекаться с проверочными</td>
+</tr>
+<tr>
+<td>Люди</td>
+<td>NHANES со связанной смертностью, ClinicalTrials.gov, CALERIE, openFDA FAERS</td>
+<td>наблюдательные данные подвержены смещению по показанию; FAERS не знает знаменателя</td>
+</tr>
+<tr>
+<td>Генетика человека</td>
+<td>GWAS продолжительности жизни родителей (Timmers et al. 2019), составной показатель старения mvAge (Rosoff et al. 2023), UKB-PPP pQTL, OpenGWAS, eQTL</td>
+<td>слабые инструменты для многих мишеней; перекрытие выборок экспозиции и исхода</td>
+</tr>
+</tbody>
+</table></div>
+<p>Правило отложенной выборки: до того как называть проверку независимой, выясняется, на каких данных обучена сигнатура или часы, и эти данные исключаются из проверки. Условия доступа и лицензии меняются; перед использованием источника их нужно перепроверять.</p>
+</article><article class="doc" id="docs-examples"><header class="doc-head"><h3>Примеры</h3><p class="lead">Пять разобранных вручную карточек. Каждая показывает одно правило проверки на реальной литературе.</p></header>
+<p>Карточки построены вручную по описанному формату; цитаты дословно взяты из аннотаций PubMed. Они же служат проверочными примерами для нормализатора и верификатора. Кнопка «Открыть карточку» загружает набор примеров и показывает её в разделе «Карточка» на главной странице.</p>
+<h4 id="ex-1">Пример 1. Рапамицин и здоровая продолжительность жизни у людей <a class="anchor" href="#ex-1" aria-label="Ссылка на раздел">#</a></h4>
+<p><em>«Weekly low-dose intermittent rapamycin, by inhibiting mTORC1, slows multiple aspects of aging and can improve healthspan in healthy older adults, as it does in mice where it extends lifespan even when started late in life.»</em></p>
+<p><strong>Чему учит: подгруппа и несовпадение вида.</strong> Результат у мышей сильный и повторён на трёх площадках ITP, но у людей исход оспорен: в испытании PEARL положительны подгруппа женщин на 10 мг и вторичные исходы, а первичный исход нулевой. Утверждение «замедляет старение у человека» держится только на данных мышей, которые из-за унаследованного вида «человек» уходят в мягкий отказ. Посылка «рапамицин ингибирует mTORC1» известна, но в найденных аннотациях упомянута только как фон, поэтому «не проверена».</p>
+<p><a href="../?example=ex1#card">Открыть карточку</a></p>
+<h4 id="ex-2">Пример 2. Сенолитики и физическая функция <a class="anchor" href="#ex-2" aria-label="Ссылка на раздел">#</a></h4>
+<p><em>«Intermittent dasatinib plus quercetin improves physical function in older adults because it clears senescent cells and lowers their inflammatory secretions (SASP), which drive physical decline.»</em></p>
+<p><strong>Чему учит: строгое совпадение контекста.</strong> Данные на эксплантах человеческой жировой ткани — не то же, что приём людьми, а пилотное исследование на больных идиопатическим лёгочным фиброзом — не то же, что здоровые пожилые люди. Привлекательные, но не подходящие по контексту записи не завышают статус. Эффект у состарившихся мышей добавляет верификатор как утверждение-аналог в свой слой.</p>
+<p><a href="../?example=ex2#card">Открыть карточку</a></p>
+<h4 id="ex-3">Пример 3. Почему рапамицин продлевает жизнь <a class="anchor" href="#ex-3" aria-label="Ссылка на раздел">#</a></h4>
+<p><em>«Rapamycin extends mouse lifespan mainly by postponing death from cancer, not by slowing aging itself.»</em></p>
+<p><strong>Чему учит: контраст «X, а не Y».</strong> Исход — объяснение X, отвергаемое объяснение Y проверяется как отдельное утверждение. Для Y независимые работы расходятся (Wilkinson 2012 за, Neff 2013 против), поэтому Y и весь исход оспорены, а гипотеза остаётся в рейтинге и показывает спор. В одной аннотации различаются «может быть» (предположение) и результат.</p>
+<p><a href="../?example=ex3#card">Открыть карточку</a></p>
+<h4 id="ex-4">Пример 4. Допуск: расплывчатая гипотеза <a class="anchor" href="#ex-4" aria-label="Ссылка на раздел">#</a></h4>
+<p><em>«Senolytics slow aging.»</em></p>
+<p><strong>Чему учит: допуск и уточнение.</strong> В тексте нет вида, нет вещества (класс препаратов) и нет измеримого исхода, поэтому гипотеза идёт в список «ждут уточнения» с перечнем недостающих полей. Два уточнённых варианта показывают, зачем уточнение: один уже известен (нулевая новизна), другой открыт и проверяем. «Senescent cells are bad for health» не гипотеза: нет вмешательства и измеримого исхода, текст хранится как направление.</p>
+<p><a href="../?example=ex4#card">Открыть карточки</a></p>
+<h4 id="ex-5">Пример 5. Несовпадение исхода: ресвератрол и продолжительность жизни мышей <a class="anchor" href="#ex-5" aria-label="Ссылка на раздел">#</a></h4>
+<p><em>«Resveratrol started in middle age extends the lifespan of mice.»</em></p>
+<p><strong>Чему учит: исход должен совпадать.</strong> Одна и та же аннотация сообщает о заметном улучшении возрастных показателей и об отсутствии продления жизни. Проверка, которая сверяет только вид, вещество и возраст, отметила бы утверждение о продолжительности жизни как подтверждённое. Здесь предложение о здоровье уходит в отказы с типом <code>endpoint_mismatch</code>, а результат ITP («did not have significant effects on survival») опровергает утверждение, и гипотеза отсеивается фильтром.</p>
+<p><a href="../?example=ex5#card">Открыть карточку</a></p>
+</article><article class="doc" id="docs-run"><header class="doc-head"><h3>Запуск</h3><p class="lead">Как проверить свои гипотезы со своим ключом и открыть результат на главной странице.</p></header>
+<p>Прогон идёт на вашем компьютере: гипотезы и ключ никуда, кроме выбранного провайдера моделей, PubMed и открытых баз, не уходят. Результат открывается на главной странице кнопкой «Открыть свой прогон» или перетаскиванием файла; страница его никуда не отправляет.</p>
+<h4 id="run-install">1. Установить <a class="anchor" href="#run-install" aria-label="Ссылка на раздел">#</a></h4>
+<p>Нужен Python 3.11 или новее.</p>
+<pre><code>git clone https://github.com/danrd/hyp-arena
+cd hyp-arena
+pip install -e .
+</code></pre>
+<h4 id="run-key">2. Задать ключ <a class="anchor" href="#run-key" aria-label="Ссылка на раздел">#</a></h4>
+<p>Задайте ключ хотя бы одного провайдера и разрешите платные вызовы. Подойдёт любой из ключей ниже; семейства без ключа пропускаются, с несколькими ключами проверку делают разные модели.</p>
+<pre><code>export OPENAI_API_KEY=...      # OpenAI
+export ANTHROPIC_API_KEY=...   # Anthropic (Claude)
+export GEMINI_API_KEY=...      # Google (Gemini)
+export ALLOW_PAID=1
+</code></pre>
+<p>Модели и ключи задаёт <code>configs/v2-direct.yaml</code>; там же можно включить DeepSeek, xAI и Mistral (<code>DEEPSEEK_API_KEY</code>, <code>XAI_API_KEY</code>, <code>MISTRAL_API_KEY</code>) или указать <code>base_url</code> любого OpenAI-совместимого сервиса. Агрегаторы: CometAPI (<code>configs/v2.yaml</code>, ключ <code>COMET_API_KEY</code>) и бесплатные модели OpenRouter (<code>configs/models.yaml</code>, ключ <code>OPENROUTER_API_KEY</code>; качество ниже, а бесплатные эндпоинты могут сохранять запросы, поэтому неопубликованные гипотезы через них не отправляйте).</p>
+<h4 id="run-hypotheses">3. Записать гипотезы <a class="anchor" href="#run-hypotheses" aria-label="Ссылка на раздел">#</a></h4>
+<p>Запишите гипотезы в текстовый файл, по одной на абзац (абзацы разделены пустой строкой) или нумерованным списком. Лучше всего ранжируются гипотезы о вмешательствах и механизмах старения: что, кому, в какой дозе и с каким исходом.</p>
+<h4 id="run-go">4. Запустить проверку и рейтинг <a class="anchor" href="#run-go" aria-label="Ссылка на раздел">#</a></h4>
+<p>Несколько вызовов модели на гипотезу и несколько минут на десяток гипотез; <code>--max-calls</code> ограничивает расход.</p>
+<pre><code>python -m hyparena.card.pipeline --paste мои_гипотезы.txt \
+    --config configs/v2-direct.yaml --max-calls 200 --out runs/mine.v2.json
+</code></pre>
+<h4 id="run-export">5. Собрать файл для страницы <a class="anchor" href="#run-export" aria-label="Ссылка на раздел">#</a></h4>
+<p>Соберите файл и откройте его на главной странице кнопкой «Открыть свой прогон».</p>
+<pre><code>python -m hyparena.site export --v2 runs/mine.v2.json \
+    --title &quot;Мои гипотезы&quot; --out runs/site/mine.json
+</code></pre>
+<p>Чтобы рядом был рейтинг Elo, прогоните те же тексты турниром (<code>python -m hyparena.live run --import-file …</code>) и добавьте <code>--elo</code> и <code>--pool</code>.</p>
+</article><article class="doc" id="docs-limits"><header class="doc-head"><h3>Границы применимости</h3><p class="lead">На что рассчитан рейтинг и какие вопросы остаются открытыми.</p></header>
+<h4 id="limits-list">Границы применимости <a class="anchor" href="#limits-list" aria-label="Ссылка на раздел">#</a></h4>
+<ul>
+<li>Проверка идёт по аннотациям статей; полные тексты пока не используются.</li>
+<li>В этом прогоне источники — PubMed и DrugAge. Другие базы описаны в разделе <a href="#data-checks">«Данные и проверки»</a> как возможные, а не подключённые.</li>
+<li>Дословность цитат проверяется программно, уместность цитаты (о том ли она, подтверждает ли утверждение, в каком контексте) оценивает языковая модель. Два прогона могут немного различаться: PubMed возвращает выдачу не детерминированно, поэтому по каждому утверждению читаются 20 аннотаций.</li>
+<li>Рейтинг упорядочивает гипотезы по проверенным данным при выбранных приоритетах; это не прогноз результата эксперимента.</li>
+<li>Отрицательные результаты в литературе представлены реже; это стоит иметь в виду при чтении оценок. Многоцентровые программы (ITP, CITP) публикуют и отрицательные результаты, это самые чистые данные.</li>
+<li>Профили приоритетов — примеры; содержание порядка задаёт пользователь.</li>
+<li>Лучше всего подходят гипотезы о вмешательствах и механизмах старения (что, кому, в какой дозе, с каким исходом). Гипотезы без измеримого исхода уходят в списки «ждут уточнения» и «не разобраны».</li>
+<li>Флаг <code>retracted</code> в схеме есть и исключает запись, но автоматически его в этой версии не выставляют.</li>
+<li>Модели могли знать исходы исторического бэктеста (T = 2010), поэтому он используется только для оценки самой системы, а не для сравнения с другими.</li>
+</ul>
+<h4 id="limits-open">Открытые вопросы <a class="anchor" href="#limits-open" aria-label="Ссылка на раздел">#</a></h4>
+<p><strong>Шкалы и пороги.</strong></p>
+<ul>
+<li>Границы фиксированных шкал для числовых показателей (30% для размера эффекта; насыщение для информативности) — рабочие допущения. Порог размера эффекта в критериях решения: по умолчанию заявленный в гипотезе, иначе «любой значимый эффект»; взять его из эталонного класса (например, типичные +10–20% к медиане жизни в ITP) предстоит решить.</li>
+<li>Показатель <code>path_to_human</code> трёхуровневый. Оценки стоимости и сроков (классы в долларах, длительность по виду исхода) нужны только при спросе на них.</li>
+</ul>
+<p><strong>Показатели.</strong></p>
+<ul>
+<li>Показатели, выводимые из одних данных (уровень эффекта и устойчивость), при суммировании считаются дважды. Нужно проверить корреляции на реальных карточках и при необходимости объединить показатели или ограничить веса.</li>
+<li>Новизна считается по проверенным утверждениям; сопоставление с графом знаний ещё не реализовано.</li>
+<li>Информативность определена, но пока не считается: таблица предсказаний строится вместе с дебатами.</li>
+<li>Ограничение «A не хуже B» от эксперта при неизвестных значениях использует их ожидания и помечается как приближённое; точная обработка не решена.</li>
+</ul>
+<p><strong>Карточка и словарь.</strong></p>
+<ul>
+<li>Для комплексов (например, mTORC1) предлагается брать идентификатор Complex Portal для вида, если он есть, иначе термин GO о клеточном компоненте (mTORC1: GO:0031931).</li>
+<li>Список альтернативных объяснений расширяется по мере появления новых типов ошибок.</li>
+<li>Частые пометки <code>other</code> в списке «не разобраны» — кандидаты на расширение словаря отношений.</li>
+</ul>
+<p><strong>Данные.</strong></p>
+<ul>
+<li>Проверки на открытых данных (раздел <a href="#data-checks">«Данные и проверки»</a>) пока не реализованы, а условия доступа к источникам нужно перепроверять.</li>
+</ul>
+</article></div></div></section>
+</main>
+<footer>
+  <div class="wrap foot">
+    <p><b>hyp-arena</b> · исследовательский прототип; рейтинги — результат исследования, а не медицинская рекомендация.</p>
+    <dl class="footmeta"><div><dt>Версия кода</dt><dd>v0.1.0</dd></div><div><dt>Лицензия</dt><dd>MIT</dd></div></dl>
+    <p class="footlinks"><a href="../">На главную</a> · <a href="https://github.com/danrd/hyp-arena" target="_blank" rel="noopener">GitHub</a></p>
+  </div>
+</footer>
+<script>
+(() => {
+  const toc = document.getElementById("docToc");
+  const wide = matchMedia("(min-width: 901px)");
+  const setOpen = () => { toc.open = wide.matches; };
+  setOpen(); wide.addEventListener?.("change", setOpen);
+  toc.addEventListener("click", e => { if (e.target.closest("a") && !wide.matches) toc.open = false; });
+  const links = new Map([...toc.querySelectorAll("a[href^='#']")].map(a => [a.getAttribute("href").slice(1), a]));
+  const targets = [...document.querySelectorAll("article.doc, article.doc h4[id]")];
+  const mark = id => links.forEach((a, k) => k === id ? a.setAttribute("aria-current", "true") : a.removeAttribute("aria-current"));
+  if ("IntersectionObserver" in window) {
+    const seen = new Set();
+    const io = new IntersectionObserver(es => {
+      es.forEach(en => en.isIntersecting ? seen.add(en.target) : seen.delete(en.target));
+      const first = targets.find(t => seen.has(t) && t.tagName === "H4") || targets.find(t => seen.has(t));
+      mark(first ? first.id : null);
+    }, {rootMargin: "-70px 0px -65% 0px"});
+    targets.forEach(t => io.observe(t));
+  }
+  document.querySelectorAll("article.doc pre").forEach(pre => {
+    pre.title = "Нажмите, чтобы скопировать";
+    pre.addEventListener("click", () => { try { navigator.clipboard.writeText(pre.textContent); } catch { /* selection stays available */ } });
+  });
+})();
+</script>
+</body>
+</html>
