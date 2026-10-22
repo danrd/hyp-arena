@@ -265,10 +265,6 @@ footer { padding-block: 28px 40px; border-top: 1px solid var(--line); color: var
 
 /* profiles */
 .badge.draft { background: var(--idle-soft); color: var(--muted); font-weight: 500; }
-.tabs button.main { box-shadow: inset 0 -3px 0 var(--accent); font-weight: 600; }
-.tabs button.main[aria-selected="true"] { box-shadow: inset 0 -3px 0 var(--accent-ink); }
-.tabs button .tag { display: block; font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
-.tabs button.main[aria-selected="true"] .tag { color: var(--accent-ink); }
 .pname { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
 .pdesc { margin: 0; }
 .profile-defs { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
@@ -373,6 +369,16 @@ article.doc, article.doc h4 { scroll-margin-top: 70px; }
 article.doc pre { margin: 0; padding: 12px 14px; background: var(--paper); border: 1px solid var(--line); border-radius: 5px; overflow-x: auto; font-family: var(--mono); font-size: var(--step--1); cursor: copy; }
 article.doc pre code { background: none; padding: 0; }
 .doc-page-head { padding-block: 28px 8px; display: grid; gap: 6px; justify-items: center; text-align: center; }
+@media (max-width: 640px) {
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; width: 100%; gap: 1px; background: var(--line); }
+  .tabs button { border-left: 0; background: var(--surface); }
+  .tabs button[aria-selected="true"] { background: var(--accent); }
+  .tabs button:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  article.doc pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+}
+.codewrap { position: relative; }
+article.doc .codewrap pre { padding: 40px 14px 12px; scrollbar-width: thin; }
+.codewrap .copy { position: absolute; top: 6px; right: 6px; font-size: 0.72rem; padding: 3px 9px; }
 </style>
 </head>
 <body>
@@ -385,9 +391,69 @@ article.doc pre code { background: none; padding: 0; }
   </div>
 </header>
 <main class="wrap" id="top">
-  <div class="doc-page-head"><p class="eyebrow">Документация</p><h1>Как это устроено</h1>
+  <div class="doc-page-head"><p class="eyebrow">hyp-arena</p><h1>Документация</h1>
     <p class="muted"><a href="../">На главную</a></p></div>
-  <section class="block" id="docs"><div class="docs-layout"><details class="doc-toc-wrap" id="docToc"><summary>Оглавление</summary><nav class="doc-toc" aria-label="Оглавление документации"><ol><li><a href="#docs-card">Карточка гипотезы</a><ul><li><a href="#card-layers">Слои</a></li><li><a href="#card-admission">Допуск</a></li><li><a href="#card-pico">PICO</a></li><li><a href="#card-claims">Утверждения</a></li><li><a href="#card-roles">Роли</a></li><li><a href="#card-relations">Словарь отношений</a></li><li><a href="#card-atomicity">Как делить текст на утверждения</a></li><li><a href="#card-evidence">Запись-доказательство</a></li></ul></li><li><a href="#docs-statuses">Статусы и правила проверки</a><ul><li><a href="#statuses-table">Пять статусов</a></li><li><a href="#statuses-admissible">Что считается находкой</a></li><li><a href="#statuses-endpoint">Исход должен совпадать</a></li><li><a href="#statuses-context">Совпадение контекста</a></li><li><a href="#statuses-inherit">Наследование из PICO</a></li><li><a href="#statuses-contrast">Контраст «X, а не Y»</a></li><li><a href="#statuses-subgroup">Только подгруппа</a></li><li><a href="#statuses-refusals">Отказы</a></li><li><a href="#statuses-gate">Фильтр и известный результат</a></li></ul></li><li><a href="#docs-indicators">Показатели</a><ul><li><a href="#ind-profile">Профиль доказательности</a></li><li><a href="#ind-table">Показатели для агрегации</a></li><li><a href="#ind-path">path_to_human</a></li><li><a href="#ind-unknown">Неизвестное остаётся неизвестным</a></li><li><a href="#ind-latestart">late_start</a></li></ul></li><li><a href="#docs-profiles">Профили и АСПИД</a><ul><li><a href="#agg-def">Определение</a></li><li><a href="#agg-idea">Идея</a></li><li><a href="#agg-model">Модель</a></li><li><a href="#agg-weights">Веса и профили</a></li><li><a href="#agg-outputs">Что считается</a></li><li><a href="#agg-accuracy">Точность</a></li><li><a href="#agg-prefer">Ограничения вида «A не хуже B»</a></li><li><a href="#agg-limits">Ограничения метода</a></li><li><a href="#agg-sources">Источники</a></li></ul></li><li><a href="#docs-data">Данные и проверки</a><ul><li><a href="#data-types">Типы источников</a></li><li><a href="#data-used">Что используется сейчас</a></li><li><a href="#data-asof">Правило «на момент T»</a></li><li><a href="#data-latestart">Таблицы для late_start</a></li><li><a href="#data-checks">Какие проверки возможны на открытых данных</a></li></ul></li><li><a href="#docs-examples">Примеры</a><ul><li><a href="#ex-1">Пример 1. Рапамицин и здоровая продолжительность жизни у людей</a></li><li><a href="#ex-2">Пример 2. Сенолитики и физическая функция</a></li><li><a href="#ex-3">Пример 3. Почему рапамицин продлевает жизнь</a></li><li><a href="#ex-4">Пример 4. Допуск: расплывчатая гипотеза</a></li><li><a href="#ex-5">Пример 5. Несовпадение исхода: ресвератрол и продолжительность жизни мышей</a></li></ul></li><li><a href="#docs-run">Запуск</a><ul><li><a href="#run-install">1. Установить</a></li><li><a href="#run-key">2. Задать ключ</a></li><li><a href="#run-hypotheses">3. Записать гипотезы</a></li><li><a href="#run-go">4. Запустить проверку и рейтинг</a></li><li><a href="#run-export">5. Собрать файл для страницы</a></li></ul></li><li><a href="#docs-limits">Границы применимости</a><ul><li><a href="#limits-list">Границы применимости</a></li><li><a href="#limits-open">Открытые вопросы</a></li></ul></li></ol></nav></details><div class="docs-content"><article class="doc" id="docs-card"><header class="doc-head"><h3>Карточка гипотезы</h3><p class="lead">Как текст гипотезы превращается в структуру, которую можно проверять по частям.</p></header>
+  <section class="block" id="docs"><div class="docs-layout"><details class="doc-toc-wrap" id="docToc"><summary>Оглавление</summary><nav class="doc-toc" aria-label="Оглавление документации"><ol><li><a href="#docs-run">Запуск</a><ul><li><a href="#run-what">Что получится</a></li><li><a href="#run-need">Что понадобится</a></li><li><a href="#run-install">Шаг 1. Установить</a></li><li><a href="#run-key">Шаг 2. Задать ключ</a></li><li><a href="#run-hypotheses">Шаг 3. Записать гипотезы</a></li><li><a href="#run-go">Шаг 4. Запустить проверку и рейтинг</a></li><li><a href="#run-export">Шаг 5. Собрать файл для страницы</a></li><li><a href="#run-privacy">Конфиденциальность</a></li><li><a href="#run-trouble">Если что-то не работает</a></li><li><a href="#run-next">Дальше</a></li></ul></li><li><a href="#docs-card">Карточка гипотезы</a><ul><li><a href="#card-layers">Слои</a></li><li><a href="#card-admission">Допуск</a></li><li><a href="#card-pico">PICO</a></li><li><a href="#card-claims">Утверждения</a></li><li><a href="#card-roles">Роли</a></li><li><a href="#card-relations">Словарь отношений</a></li><li><a href="#card-atomicity">Как делить текст на утверждения</a></li><li><a href="#card-evidence">Запись-доказательство</a></li></ul></li><li><a href="#docs-statuses">Статусы и правила проверки</a><ul><li><a href="#statuses-table">Пять статусов</a></li><li><a href="#statuses-admissible">Что считается находкой</a></li><li><a href="#statuses-endpoint">Исход должен совпадать</a></li><li><a href="#statuses-context">Совпадение контекста</a></li><li><a href="#statuses-inherit">Наследование из PICO</a></li><li><a href="#statuses-contrast">Контраст «X, а не Y»</a></li><li><a href="#statuses-subgroup">Только подгруппа</a></li><li><a href="#statuses-refusals">Отказы</a></li><li><a href="#statuses-gate">Фильтр и известный результат</a></li></ul></li><li><a href="#docs-indicators">Показатели</a><ul><li><a href="#ind-profile">Профиль доказательности</a></li><li><a href="#ind-table">Показатели для агрегации</a></li><li><a href="#ind-path">path_to_human</a></li><li><a href="#ind-unknown">Неизвестное остаётся неизвестным</a></li><li><a href="#ind-latestart">late_start</a></li></ul></li><li><a href="#docs-profiles">Профили и АСПИД</a><ul><li><a href="#agg-def">Определение</a></li><li><a href="#agg-idea">Идея</a></li><li><a href="#agg-model">Модель</a></li><li><a href="#agg-weights">Веса и профили</a></li><li><a href="#agg-outputs">Что считается</a></li><li><a href="#agg-accuracy">Точность</a></li><li><a href="#agg-prefer">Ограничения вида «A не хуже B»</a></li><li><a href="#agg-limits">Ограничения метода</a></li><li><a href="#agg-sources">Источники</a></li></ul></li><li><a href="#docs-data">Данные и проверки</a><ul><li><a href="#data-types">Типы источников</a></li><li><a href="#data-used">Что используется сейчас</a></li><li><a href="#data-asof">Правило «на момент T»</a></li><li><a href="#data-latestart">Таблицы для late_start</a></li><li><a href="#data-checks">Какие проверки возможны на открытых данных</a></li></ul></li><li><a href="#docs-examples">Примеры</a><ul><li><a href="#ex-1">Пример 1. Рапамицин и здоровая продолжительность жизни у людей</a></li><li><a href="#ex-2">Пример 2. Сенолитики и физическая функция</a></li><li><a href="#ex-3">Пример 3. Почему рапамицин продлевает жизнь</a></li><li><a href="#ex-4">Пример 4. Допуск: расплывчатая гипотеза</a></li><li><a href="#ex-5">Пример 5. Несовпадение исхода: ресвератрол и продолжительность жизни мышей</a></li></ul></li><li><a href="#docs-limits">Границы применимости</a><ul><li><a href="#limits-list">Границы применимости</a></li><li><a href="#limits-open">Открытые вопросы</a></li></ul></li></ol></nav></details><div class="docs-content"><article class="doc" id="docs-run"><header class="doc-head"><h3>Запуск</h3><p class="lead">Как проверить свои гипотезы со своим ключом и посмотреть результат на главной странице.</p></header>
+<h4 id="run-what">Что получится <a class="anchor" href="#run-what" aria-label="Ссылка на раздел">#</a></h4>
+<p>Вы загружаете свои гипотезы и получаете рейтинг и карточки с цитатами из статей. Результат открывается на главной странице сайта, там же можно скачать таблицу. Всё считается на вашем компьютере.</p>
+<h4 id="run-need">Что понадобится <a class="anchor" href="#run-need" aria-label="Ссылка на раздел">#</a></h4>
+<ul>
+<li>Python 3.11 или новее.</li>
+<li>Ключ хотя бы одного провайдера языковых моделей: OpenAI, Anthropic или Google. Это платный доступ к модели, обычно его выдают в личном кабинете провайдера.</li>
+<li>Немного времени и денег. На одну гипотезу уходит несколько вызовов модели, на десяток гипотез — несколько минут (в примере на сайте 37 вызовов на десять гипотез). Сколько это стоит, зависит от провайдера и модели. Расход можно ограничить параметром <code>--max-calls</code>: когда лимит вызовов кончится, запуск остановится.</li>
+</ul>
+<h4 id="run-install">Шаг 1. Установить <a class="anchor" href="#run-install" aria-label="Ссылка на раздел">#</a></h4>
+<p>Откройте терминал и выполните:</p>
+<pre><code>git clone https://github.com/danrd/hyp-arena
+cd hyp-arena
+pip install -e .
+</code></pre>
+<p><strong>Что вы увидите, если всё хорошо.</strong> Последняя строка вывода начинается со слов «Successfully installed».</p>
+<h4 id="run-key">Шаг 2. Задать ключ <a class="anchor" href="#run-key" aria-label="Ссылка на раздел">#</a></h4>
+<p>Укажите ключ хотя бы одного провайдера и разрешите платные вызовы. Подойдёт любой из ключей; провайдеры без ключа пропускаются, а если ключей несколько, проверку делают разные модели.</p>
+<pre><code>export OPENAI_API_KEY=...      # OpenAI
+export ANTHROPIC_API_KEY=...   # Anthropic (Claude)
+export GEMINI_API_KEY=...      # Google (Gemini)
+export ALLOW_PAID=1
+</code></pre>
+<p>Команды написаны для bash и zsh. В PowerShell на Windows то же самое выглядит так: <code>$env:OPENAI_API_KEY="..."</code>. Переменные действуют только в том окне терминала, где вы их задали.</p>
+<p>Модели и ключи описаны в файле <code>configs/v2-direct.yaml</code>. В нём можно включить DeepSeek, xAI и Mistral (<code>DEEPSEEK_API_KEY</code>, <code>XAI_API_KEY</code>, <code>MISTRAL_API_KEY</code>) или указать <code>base_url</code> любого сервиса, совместимого с OpenAI. Агрегаторы: CometAPI (<code>configs/v2.yaml</code>, ключ <code>COMET_API_KEY</code>) и бесплатные модели OpenRouter (<code>configs/models.yaml</code>, ключ <code>OPENROUTER_API_KEY</code>). Качество у бесплатных моделей ниже; читайте предупреждение в разделе «Конфиденциальность».</p>
+<p><strong>Что вы увидите, если всё хорошо.</strong> Ничего: команды <code>export</code> молчат. Проверить можно так: <code>echo ${OPENAI_API_KEY:+ключ задан}</code> выведет «ключ задан».</p>
+<h4 id="run-hypotheses">Шаг 3. Записать гипотезы <a class="anchor" href="#run-hypotheses" aria-label="Ссылка на раздел">#</a></h4>
+<p>Создайте текстовый файл <code>мои_гипотезы.txt</code>. Пишите гипотезы по одной на абзац (между абзацами пустая строка) или нумерованным списком:</p>
+<pre><code>1. Метформин, который мыши получают с середины жизни, продлевает их жизнь.
+
+2. Рапамицин улучшает здоровую продолжительность жизни у пожилых людей.
+</code></pre>
+<p>Лучше всего работают гипотезы о вмешательствах и механизмах старения: что, кому, в какой дозе и с каким исходом.</p>
+<p><strong>Что вы увидите, если всё хорошо.</strong> Файл открывается в обычном текстовом редакторе, и в нём читаются ваши гипотезы. Отдельной проверки на этом шаге нет, формат проверится при запуске.</p>
+<h4 id="run-go">Шаг 4. Запустить проверку и рейтинг <a class="anchor" href="#run-go" aria-label="Ссылка на раздел">#</a></h4>
+<pre><code>python -m hyparena.card.pipeline --paste мои_гипотезы.txt \
+    --config configs/v2-direct.yaml --max-calls 200 --out runs/mine.v2.json
+</code></pre>
+<p><strong>Что вы увидите, если всё хорошо.</strong> Программа по ходу работы пишет, на каком этапе она находится. В конце выводит по строке на каждую гипотезу с её исходом («ranked» значит «в рейтинге»), рейтинг по каждому профилю и итог: число вызовов, время и имя файла <code>runs/mine.v2.json</code>.</p>
+<h4 id="run-export">Шаг 5. Собрать файл для страницы <a class="anchor" href="#run-export" aria-label="Ссылка на раздел">#</a></h4>
+<pre><code>python -m hyparena.site export --v2 runs/mine.v2.json \
+    --title &quot;Мои гипотезы&quot; --out runs/site/mine.json
+</code></pre>
+<p>Затем откройте главную страницу сайта, нажмите «Открыть свой прогон» и выберите файл <code>runs/site/mine.json</code>. Файл можно и перетащить на страницу.</p>
+<p>Чтобы рядом был рейтинг Elo (турнир, в котором модели спорят о гипотезах), прогоните те же тексты турниром командой <code>python -m hyparena.live run --import-file …</code> и добавьте в команду выше параметры <code>--elo</code> и <code>--pool</code>.</p>
+<p><strong>Что вы увидите, если всё хорошо.</strong> Команда печатает путь к созданному файлу. На главной странице вместо примера появляются ваши гипотезы: метка «Пример» исчезает, в полосе стоит название вашего прогона, а во вкладке «Сравнение» — ваш рейтинг.</p>
+<h4 id="run-privacy">Конфиденциальность <a class="anchor" href="#run-privacy" aria-label="Ссылка на раздел">#</a></h4>
+<p>Ваши гипотезы и ключ не уходят никуда, кроме выбранного провайдера моделей, PubMed и открытых баз. Страница результат никуда не отправляет: файл читается в вашем браузере.</p>
+<p>Бесплатные эндпоинты OpenRouter могут сохранять запросы, поэтому неопубликованные гипотезы через них не отправляйте.</p>
+<h4 id="run-trouble">Если что-то не работает <a class="anchor" href="#run-trouble" aria-label="Ссылка на раздел">#</a></h4>
+<p><strong>Запуск пишет «No API key is set for any model of this config».</strong> Ключ не задан в этом окне терминала. Выполните шаг 2 в том же окне, где запускаете программу. Если ключ задан, но провайдер отвечает ошибкой доступа, проверьте сам ключ и то, что у него есть доступ к модели из <code>configs/v2-direct.yaml</code>.</p>
+<p><strong>Запуск пишет «is a paid model; set ALLOW_PAID=1 to use it».</strong> Платные вызовы по умолчанию выключены. Выполните <code>export ALLOW_PAID=1</code>.</p>
+<p><strong>Запуск остановился с сообщением «call cap of … reached».</strong> Закончился лимит вызовов из параметра <code>--max-calls</code>. Увеличьте его (по умолчанию 400) и запустите снова; чем больше гипотез, тем больше вызовов нужно.</p>
+<p><strong>Программа прочитала весь файл как одну гипотезу.</strong> Гипотезы разделяются пустой строкой или нумерацией «1.», «2)»; нумерация засчитывается, если пунктов не меньше двух. Если всё написано подряд, строка за строкой, разделите их пустыми строками.</p>
+<p><strong>Страница пишет «Это не файл страницы».</strong> Вы выбрали не тот файл. Нужен результат шага 5 (<code>runs/site/mine.json</code>), а не файл <code>runs/mine.v2.json</code> из шага 4.</p>
+<h4 id="run-next">Дальше <a class="anchor" href="#run-next" aria-label="Ссылка на раздел">#</a></h4>
+<ul>
+<li><a href="#docs-card">Карточка гипотезы</a>: что именно программа вынимает из вашего текста и как это проверяется.</li>
+<li><a href="#docs-profiles">Профили и АСПИД</a>: как порядок важности показателей превращается в рейтинг. Профиль — это ваш выбор того, что для вас важнее: надёжность данных, осуществимость или понимание механизма.</li>
+</ul>
+</article><article class="doc" id="docs-card"><header class="doc-head"><h3>Карточка гипотезы</h3><p class="lead">Как текст гипотезы превращается в структуру, которую можно проверять по частям.</p></header>
 <h4 id="card-layers">Слои <a class="anchor" href="#card-layers" aria-label="Ссылка на раздел">#</a></h4>
 <p>Карточка строится в четыре шага. Слои не смешиваются: рейтинг читает только проверенный слой.</p>
 <div class="tablewrap"><table class="doctable">
@@ -1630,35 +1696,6 @@ article.doc pre code { background: none; padding: 0; }
 <p><em>«Resveratrol started in middle age extends the lifespan of mice.»</em></p>
 <p><strong>Чему учит: исход должен совпадать.</strong> Одна и та же аннотация сообщает о заметном улучшении возрастных показателей и об отсутствии продления жизни. Проверка, которая сверяет только вид, вещество и возраст, отметила бы утверждение о продолжительности жизни как подтверждённое. Здесь предложение о здоровье уходит в отказы с типом <code>endpoint_mismatch</code>, а результат ITP («did not have significant effects on survival») опровергает утверждение, и гипотеза отсеивается фильтром.</p>
 <p><a href="../?example=ex5#card">Открыть карточку</a></p>
-</article><article class="doc" id="docs-run"><header class="doc-head"><h3>Запуск</h3><p class="lead">Как проверить свои гипотезы со своим ключом и открыть результат на главной странице.</p></header>
-<p>Прогон идёт на вашем компьютере: гипотезы и ключ никуда, кроме выбранного провайдера моделей, PubMed и открытых баз, не уходят. Результат открывается на главной странице кнопкой «Открыть свой прогон» или перетаскиванием файла; страница его никуда не отправляет.</p>
-<h4 id="run-install">1. Установить <a class="anchor" href="#run-install" aria-label="Ссылка на раздел">#</a></h4>
-<p>Нужен Python 3.11 или новее.</p>
-<pre><code>git clone https://github.com/danrd/hyp-arena
-cd hyp-arena
-pip install -e .
-</code></pre>
-<h4 id="run-key">2. Задать ключ <a class="anchor" href="#run-key" aria-label="Ссылка на раздел">#</a></h4>
-<p>Задайте ключ хотя бы одного провайдера и разрешите платные вызовы. Подойдёт любой из ключей ниже; семейства без ключа пропускаются, с несколькими ключами проверку делают разные модели.</p>
-<pre><code>export OPENAI_API_KEY=...      # OpenAI
-export ANTHROPIC_API_KEY=...   # Anthropic (Claude)
-export GEMINI_API_KEY=...      # Google (Gemini)
-export ALLOW_PAID=1
-</code></pre>
-<p>Модели и ключи задаёт <code>configs/v2-direct.yaml</code>; там же можно включить DeepSeek, xAI и Mistral (<code>DEEPSEEK_API_KEY</code>, <code>XAI_API_KEY</code>, <code>MISTRAL_API_KEY</code>) или указать <code>base_url</code> любого OpenAI-совместимого сервиса. Агрегаторы: CometAPI (<code>configs/v2.yaml</code>, ключ <code>COMET_API_KEY</code>) и бесплатные модели OpenRouter (<code>configs/models.yaml</code>, ключ <code>OPENROUTER_API_KEY</code>; качество ниже, а бесплатные эндпоинты могут сохранять запросы, поэтому неопубликованные гипотезы через них не отправляйте).</p>
-<h4 id="run-hypotheses">3. Записать гипотезы <a class="anchor" href="#run-hypotheses" aria-label="Ссылка на раздел">#</a></h4>
-<p>Запишите гипотезы в текстовый файл, по одной на абзац (абзацы разделены пустой строкой) или нумерованным списком. Лучше всего ранжируются гипотезы о вмешательствах и механизмах старения: что, кому, в какой дозе и с каким исходом.</p>
-<h4 id="run-go">4. Запустить проверку и рейтинг <a class="anchor" href="#run-go" aria-label="Ссылка на раздел">#</a></h4>
-<p>Несколько вызовов модели на гипотезу и несколько минут на десяток гипотез; <code>--max-calls</code> ограничивает расход.</p>
-<pre><code>python -m hyparena.card.pipeline --paste мои_гипотезы.txt \
-    --config configs/v2-direct.yaml --max-calls 200 --out runs/mine.v2.json
-</code></pre>
-<h4 id="run-export">5. Собрать файл для страницы <a class="anchor" href="#run-export" aria-label="Ссылка на раздел">#</a></h4>
-<p>Соберите файл и откройте его на главной странице кнопкой «Открыть свой прогон».</p>
-<pre><code>python -m hyparena.site export --v2 runs/mine.v2.json \
-    --title &quot;Мои гипотезы&quot; --out runs/site/mine.json
-</code></pre>
-<p>Чтобы рядом был рейтинг Elo, прогоните те же тексты турниром (<code>python -m hyparena.live run --import-file …</code>) и добавьте <code>--elo</code> и <code>--pool</code>.</p>
 </article><article class="doc" id="docs-limits"><header class="doc-head"><h3>Границы применимости</h3><p class="lead">На что рассчитан рейтинг и какие вопросы остаются открытыми.</p></header>
 <h4 id="limits-list">Границы применимости <a class="anchor" href="#limits-list" aria-label="Ссылка на раздел">#</a></h4>
 <ul>
@@ -1724,8 +1761,14 @@ export ALLOW_PAID=1
     targets.forEach(t => io.observe(t));
   }
   document.querySelectorAll("article.doc pre").forEach(pre => {
-    pre.title = "Нажмите, чтобы скопировать";
-    pre.addEventListener("click", () => { try { navigator.clipboard.writeText(pre.textContent); } catch { /* selection stays available */ } });
+    const wrap = document.createElement("div"); wrap.className = "codewrap";
+    pre.replaceWith(wrap); wrap.appendChild(pre);
+    const btn = document.createElement("button"); btn.type = "button"; btn.className = "copy"; btn.textContent = "Копировать";
+    btn.addEventListener("click", () => {
+      const done = ok => { btn.textContent = ok ? "Скопировано" : "Выделите вручную"; setTimeout(() => { btn.textContent = "Копировать"; }, 1800); };
+      try { navigator.clipboard.writeText(pre.textContent).then(() => done(true), () => done(false)); } catch { done(false); }
+    });
+    wrap.appendChild(btn);
   });
 })();
 </script>
