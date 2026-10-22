@@ -369,6 +369,9 @@ tr.foldrow button { font-size: var(--step--1); }
 .excase button.title { all: unset; cursor: pointer; font-weight: 600; color: var(--ink); text-decoration: underline; text-decoration-color: var(--line); }
 .excase p { margin: 0; font-size: var(--step--1); }
 .excase .muted { color: var(--muted); }
+.lineage { display: block; font-size: var(--step--1); color: var(--accent); margin-top: 2px; }
+.linkbtn { all: unset; cursor: pointer; color: var(--accent); text-decoration: underline; }
+.lineage-table td:nth-child(3) { min-width: 220px; white-space: normal; }
 </style>
 <style>
 .skip { position: absolute; left: -999px; top: 0; background: var(--accent); color: var(--accent-ink); padding: 8px 12px; z-index: 30; }
@@ -853,7 +856,7 @@ table.doctable tr:last-child td { border-bottom: 0; }
 <tr>
 <td><code>informativeness</code></td>
 <td>сколько альтернативных объяснений различает решающий эксперимент</td>
-<td>из правил по таблице предсказаний</td>
+<td>из текста гипотезы и списка открытых альтернатив (один вызов модели; засчитывается альтернатива, чей контроль процитирован из текста дословно)</td>
 <td>число от 0 до 4</td>
 <td>больше</td>
 </tr>
@@ -863,7 +866,7 @@ table.doctable tr:last-child td { border-bottom: 0; }
 <ul>
 <li><strong><code>novelty</code>.</strong> <code>new_context</code>: то же вмешательство и вид уже работают, но в другой линии, при другом поле, дозе или возрасте начала. <code>translation</code>: известная находка переносится на новый вид. <code>analog</code>: известное родственное вмешательство. <code>new_link</code>: новая связь вмешательства и исхода. Известный результат в рейтинг не входит и этих уровней не получает.</li>
 <li><strong><code>mechanism</code></strong> считается по утверждениям с ролями «механизм» и «посылка»: все подтверждены, часть, ни одно.</li>
-<li><strong><code>informativeness</code></strong> в текущей версии не считается: таблица предсказаний строится на этапе дебатов, пока значение неизвестно.</li>
+<li><strong><code>informativeness</code></strong> считается при запуске с флагом <code>--informativeness</code> (<code>hyparena/card/informativeness.py</code>): модель получает текст гипотезы и открытые альтернативы (контрольный список и объявленные в карточке, кроме уже исключённых литературой) и называет те, чей контроль или измерение решающий эксперимент <strong>содержит в том виде, как он написан</strong>; код оставляет альтернативу, только если фраза скопирована из текста дословно; число обрезается до 4. Простое сравнение выживаемости не различает ни одной альтернативы, поэтому у шаблонных гипотез показатель равен нулю. В прогонах ITP показатель не считался (правила по этой выборке заморожены); без флага он остаётся неизвестным.</li>
 <li><strong>Шкала <code>effect_size</code></strong> (0–30%) — черновое допущение.</li>
 </ul>
 <h3 id="ind-path">path_to_human <a class="anchor" href="#ind-path" aria-label="Ссылка на раздел">#</a></h3>
