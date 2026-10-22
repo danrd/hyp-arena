@@ -266,10 +266,6 @@ footer { padding-block: 28px 40px; border-top: 1px solid var(--line); color: var
 
 /* profiles */
 .badge.draft { background: var(--idle-soft); color: var(--muted); font-weight: 500; }
-.tabs button.main { box-shadow: inset 0 -3px 0 var(--accent); font-weight: 600; }
-.tabs button.main[aria-selected="true"] { box-shadow: inset 0 -3px 0 var(--accent-ink); }
-.tabs button .tag { display: block; font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
-.tabs button.main[aria-selected="true"] .tag { color: var(--accent-ink); }
 .pname { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
 .pdesc { margin: 0; }
 .profile-defs { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
@@ -374,6 +370,16 @@ article.doc, article.doc h4 { scroll-margin-top: 70px; }
 article.doc pre { margin: 0; padding: 12px 14px; background: var(--paper); border: 1px solid var(--line); border-radius: 5px; overflow-x: auto; font-family: var(--mono); font-size: var(--step--1); cursor: copy; }
 article.doc pre code { background: none; padding: 0; }
 .doc-page-head { padding-block: 28px 8px; display: grid; gap: 6px; justify-items: center; text-align: center; }
+@media (max-width: 640px) {
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; width: 100%; gap: 1px; background: var(--line); }
+  .tabs button { border-left: 0; background: var(--surface); }
+  .tabs button[aria-selected="true"] { background: var(--accent); }
+  .tabs button:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  article.doc pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+}
+.codewrap { position: relative; }
+article.doc .codewrap pre { padding: 40px 14px 12px; scrollbar-width: thin; }
+.codewrap .copy { position: absolute; top: 6px; right: 6px; font-size: 0.72rem; padding: 3px 9px; }
 </style>
 </head>
 <body>
@@ -382,7 +388,7 @@ article.doc pre code { background: none; padding: 0; }
   <div class="wrap">
     <a class="brand" href="#top">Арена гипотез</a>
     <nav class="sections" aria-label="Разделы">
-      <a href="#ranking">Рейтинг</a><a class="try" href="#try">Попробовать у себя</a><a href="#card">Карточка</a><a href="#outside">Вне рейтинга</a><a href="#validation">Проверка метода</a><a href="docs/">Документация</a><a href="https://github.com/danrd/hyp-arena" target="_blank" rel="noopener">GitHub ↗</a>
+      <a href="#ranking">Рейтинг</a><a href="#card">Карточка</a><a href="#outside">Вне рейтинга</a><a href="#validation">Проверка метода</a><a href="docs/">Документация</a><a href="https://github.com/danrd/hyp-arena" target="_blank" rel="noopener">GitHub ↗</a>
     </nav>
   </div>
 </header>
@@ -392,7 +398,7 @@ article.doc pre code { background: none; padding: 0; }
     <p class="eyebrow">hyp-arena</p>
     <h1>Ранжирование гипотез о старении по проверенным фактам</h1>
     <p class="lead">Гипотеза превращается в карточку утверждений, утверждения проверяются по PubMed и DrugAge с дословными цитатами, а рейтинг строится при явно заданных приоритетах.</p>
-    <div class="cta"><a class="btn primary" href="#try">Попробовать у себя</a><a class="btn" href="docs/">Документация</a></div>
+    <div class="cta"><a class="btn primary" href="docs/#docs-run">Попробовать у себя</a><a class="btn" href="docs/">Документация</a></div>
   </div>
 
   <div class="wrap">
@@ -411,22 +417,6 @@ article.doc pre code { background: none; padding: 0; }
       <button type="button" id="dlCsv">Скачать рейтинг (CSV)</button>
     </div>
   </div>
-
-  <section class="block wrap" id="try">
-    <div class="head"><div class="prose">
-      <p class="eyebrow">Попробовать у себя</p>
-      <h2>Свои гипотезы со своим ключом</h2>
-      <p class="muted">Прогон идёт на вашем компьютере; результат открывается кнопкой «Открыть свой прогон».</p>
-    </div></div>
-    <div class="trycmds">
-      <pre class="cmd" data-copy>git clone https://github.com/danrd/hyp-arena && cd hyp-arena && pip install -e .</pre>
-      <pre class="cmd" data-copy>export OPENAI_API_KEY=...   # или ANTHROPIC_API_KEY, GEMINI_API_KEY
-export ALLOW_PAID=1</pre>
-      <pre class="cmd" data-copy>python -m hyparena.card.pipeline --paste мои_гипотезы.txt \
-    --config configs/v2-direct.yaml --max-calls 200 --out runs/mine.v2.json</pre>
-    </div>
-    <p class="muted more-line"><span id="copyNote">Нажмите на команду, чтобы скопировать.</span> Подробнее: <a href="docs/#docs-run">ключи, провайдеры, формат гипотез, сборка файла для страницы</a>.</p>
-  </section>
 
   <section class="block wrap" id="ranking">
     <div class="head">
@@ -537,7 +527,7 @@ export ALLOW_PAID=1</pre>
     late_start: ["Поздний старт", "возраст начала как доля медианной жизни"], both_sexes: ["Оба пола", "эффект показан у обоих полов"],
     effect_size: ["Размер эффекта", "% прироста медианы жизни"], informativeness: ["Информативность", "сколько различает решающий эксперимент"]};
 
-  let B = null, isExample = true, tab = "evidence_first", current = null, sampleKey = "run", userBundle = null;
+  let B = null, isExample = true, tab = "compare", current = null, sampleKey = "run", userBundle = null;
   const SAMPLES = {};
   const H = id => B.hypotheses.find(h => h.id === id);
   const shortTitle = h => h ? h.title.replace(/\s+/g, " ") : "";
@@ -563,7 +553,7 @@ export ALLOW_PAID=1</pre>
     const m = B.meta || {};
     $("#bundleMeta").textContent = [`${B.hypotheses.length} гипотез`, m.as_of ? `литература до ${m.as_of}` : "", m.calls ? `${m.calls} вызовов моделей` : ""].filter(Boolean).join(" · ");
     const profiles = Object.keys(B.profiles || {});
-    if (!(B.elo && tab === "elo") && !profiles.includes(tab) && tab !== "compare") tab = profiles.includes("evidence_first") ? "evidence_first" : profiles[0] || "elo";
+    tab = compareColumns().length > 1 ? "compare" : profiles.includes("evidence_first") ? "evidence_first" : profiles[0] || "elo";
     current = (B.hypotheses.find(h => h.outcome === "ranked") || B.hypotheses[0] || {}).id;
     renderTabs(); renderRanking(); renderCardSelect(); renderCard(); renderOutside(); renderFooter();
   }
@@ -573,10 +563,10 @@ export ALLOW_PAID=1</pre>
   function compareColumns() { return [...(B.elo ? ["elo"] : []), ...Object.keys(B.profiles || {})]; }
   function renderTabs() {
     const items = [];
-    if (B.elo) items.push(["elo", "Турнир Elo", B.elo.rating === "elo" ? "Co-Scientist" : B.elo.rating, ""]);
-    if (compareColumns().length > 1) items.push(["compare", "Сравнение", "места при смене профиля", "main"]);
-    for (const p of Object.keys(B.profiles || {})) items.push([p, pname(p), "", ""]);
-    $("#rankTabs").innerHTML = items.map(([k, t, sub, cls]) => `<button type="button" role="tab" class="${cls}" aria-selected="${k === tab}" data-tab="${esc(k)}" title="${esc(k)}">${cls ? '<span class="tag">главное</span>' : ""}${esc(t)}${sub ? `<small>${esc(sub)}</small>` : ""}</button>`).join("");
+    if (compareColumns().length > 1) items.push(["compare", "Сравнение", "места при смене профиля"]);
+    for (const p of Object.keys(B.profiles || {})) items.push([p, pname(p), ""]);
+    if (B.elo) items.push(["elo", "Турнир Elo", "для сравнения: " + (B.elo.rating === "elo" ? "Co-Scientist" : B.elo.rating)]);
+    $("#rankTabs").innerHTML = items.map(([k, t, sub]) => `<button type="button" role="tab" aria-selected="${k === tab}" data-tab="${esc(k)}"${k in (B.profiles || {}) ? ` title="${esc(k)}"` : ""}>${esc(t)}${sub ? `<small>${esc(sub)}</small>` : ""}</button>`).join("");
   }
   $("#rankTabs").addEventListener("click", e => { const b = e.target.closest("button[data-tab]"); if (!b) return; tab = b.dataset.tab; renderTabs(); renderRanking(); });
 
@@ -832,15 +822,6 @@ export ALLOW_PAID=1</pre>
   document.addEventListener("dragover", e => { e.preventDefault(); document.body.classList.add("drop"); });
   document.addEventListener("dragleave", e => { if (!e.relatedTarget) document.body.classList.remove("drop"); });
   document.addEventListener("drop", e => { e.preventDefault(); document.body.classList.remove("drop"); const f = e.dataTransfer.files[0]; if (f) readFile(f); });
-  document.querySelectorAll("pre[data-copy]").forEach(pre => {
-    pre.title = "Нажмите, чтобы скопировать";
-    pre.addEventListener("click", () => {
-      const done = ok => { $("#copyNote").textContent = ok ? "Команда скопирована" : "Выделите текст и скопируйте вручную"; };
-      const select = () => { const sel = getSelection(), r = document.createRange(); r.selectNodeContents(pre); sel.removeAllRanges(); sel.addRange(r); };
-      try { navigator.clipboard.writeText(pre.textContent).then(() => done(true), () => { select(); done(false); }); } catch { select(); done(false); }
-    });
-  });
-
   function download(name, text, type) {
     try {
       const url = URL.createObjectURL(new Blob([text], {type}));

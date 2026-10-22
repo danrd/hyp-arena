@@ -296,8 +296,14 @@ DOCS_SCRIPT = """
     targets.forEach(t => io.observe(t));
   }
   document.querySelectorAll("article.doc pre").forEach(pre => {
-    pre.title = "Нажмите, чтобы скопировать";
-    pre.addEventListener("click", () => { try { navigator.clipboard.writeText(pre.textContent); } catch { /* selection stays available */ } });
+    const wrap = document.createElement("div"); wrap.className = "codewrap";
+    pre.replaceWith(wrap); wrap.appendChild(pre);
+    const btn = document.createElement("button"); btn.type = "button"; btn.className = "copy"; btn.textContent = "Копировать";
+    btn.addEventListener("click", () => {
+      const done = ok => { btn.textContent = ok ? "Скопировано" : "Выделите вручную"; setTimeout(() => { btn.textContent = "Копировать"; }, 1800); };
+      try { navigator.clipboard.writeText(pre.textContent).then(() => done(true), () => done(false)); } catch { done(false); }
+    });
+    wrap.appendChild(btn);
   });
 })();
 """
@@ -334,7 +340,7 @@ def docs_page(index_html: str, docs: str, version: str) -> str:
   </div>
 </header>
 <main class="wrap" id="top">
-  <div class="doc-page-head"><p class="eyebrow">Документация</p><h1>Как это устроено</h1>
+  <div class="doc-page-head"><p class="eyebrow">hyp-arena</p><h1>Документация</h1>
     <p class="muted"><a href="../">На главную</a></p></div>
   <section class="block" id="docs">{docs}</section>
 </main>
