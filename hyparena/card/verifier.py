@@ -9,7 +9,7 @@ from typing import Optional
 from hyparena.card.llm import ask, parse_objects
 from hyparena.card.models import (UNKNOWN, Claim, ClaimVerification, Entity, EvidenceRecord,
                                   HypothesisCard, ProgramInfo, Refusal, Verification)
-from hyparena.card.rules import (HUMAN_RUNGS, ORGANISM_PATTERNS, add_strain_analogs, admissible, claim_organism,
+from hyparena.card.rules import (HUMAN_RUNGS, ORGANISM_PATTERNS, add_disease_analogs, add_strain_analogs, admissible, claim_organism,
                                  claim_endpoint, mark_strata, pico_value, prespecified_sex, quote_organisms, species_key,
                                  subgroup_only)
 from hyparena.card import contexts
@@ -438,7 +438,7 @@ def analog_probes(card: HypothesisCard) -> list[Claim]:
 def verify(client, families: list[str], writer: str, card: HypothesisCard, as_of: Optional[str] = None,
            log: Optional[list] = None, map_fn=map,
            expert_sources: Optional[dict[str, list[tuple[str, str]]]] = None,
-           fallback_families: Optional[list[str]] = None) -> Verification:
+           fallback_families: Optional[list[str]] = None, disease_restore: frozenset = frozenset()) -> Verification:
     """All declared claims, the rejected alternatives of a contrast (checked like claims, spec 7), plus analog
     probes; the verifier's family is never the writer's (its records feed the ranking)."""
     log = log if log is not None else []                  # its search entries give searched_pmids
@@ -462,4 +462,4 @@ def verify(client, families: list[str], writer: str, card: HypothesisCard, as_of
             cv.claim = c
     searched = [p for e in (log or []) if e.get("kind") == "search" for p in e.get("pmids", [])]
     ver = Verification(card_id=card.id, claims=cvs, searched_pmids=list(dict.fromkeys(searched)))
-    return add_strain_analogs(card, ver)
+    return add_strain_analogs(card, add_disease_analogs(card, ver, disease_restore))

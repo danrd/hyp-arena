@@ -628,7 +628,12 @@ def evidence_profile(card: HypothesisCard, ver: Verification) -> EvidenceProfile
     # claims that may set the effect level: the outcome claim, or analog / translation claims with the same
     # intervention; human claims count per rung
     qualifying = []                                       # (claim, rung, status at the rung, records for, against)
+    models = {"disease_model": set(), "aging_model": set()}
     for c, cv in pairs:
+        if is_disease_analog(c):                          # records from disease and ageing models: listed, not counted
+            for r in cv.evidence + cv.counterevidence:
+                models.get(r.model_type, set()).add(r.record_id)
+            continue
         if c.role == "outcome" or (c.role in ("analog", "translation") and same_intervention(c, card)):
             support = [r for r in cv.evidence if admissible(r, c)]
             if c.role != "outcome" and support and _grade(support) not in SAME_INTERVENTION:
@@ -651,12 +656,13 @@ def evidence_profile(card: HypothesisCard, ver: Verification) -> EvidenceProfile
         prof.robustness = "replicated" if _independent(records) >= 2 or any(
             r.program and (r.program.sites_with_effect or 0) >= 2 for r in records) else "single"
         if records and all(any(f in CONTEXT_FLAGS for f in r.flags) for r in records):
-            prof.effect_level_note = f"{prof.effect_level} (disease models or special conditions only)"
+            prof.effect_level_note = f"{prof.effect_level} (special diet only)"
         if prof.effect_level.startswith("human"):
             if records and all(r.study_type == "observational" for r in records):
                 prof.effect_level_note = f"{prof.effect_level} (observational only)"
             elif prof.effect_level == "human_markers" and records and all(r.marker_validation == "exploratory" for r in records):
                 prof.effect_level_note = "human_markers (exploratory only)"
+    prof.disease_models, prof.aging_models = len(models["disease_model"]), len(models["aging_model"])
     level = RUNGS.index(prof.effect_level)
     prof.effect_contested = sorted({q[1] for q in qualifying if q[2] == "contested" and RUNGS.index(q[1]) > level},
                                    key=RUNGS.index)
@@ -722,6 +728,48 @@ def next_step(prof: EvidenceProfile) -> str:
 HETEROGENEOUS = ("um-het3", "het3", "genetically heterogeneous", "outbred", "swiss", "cd-1", "nmri", "wistar",
                  "sprague", "long-evans", "diversity outbred")
 STRAIN_ANALOG = "same intervention and species, strain other than"
+DISEASE_ANALOG = "same intervention and species, animals with a disease or an ageing model:"
+OUTCOME_RELATIONS = LIFESPAN_RELATIONS | {"improves_healthspan_in", "slows_aging_in"}   # claims about lifespan, health and ageing
+
+
+def is_disease_analog(claim) -> bool:
+    return claim is not None and (claim.note or "").startswith(DISEASE_ANALOG)
+
+
+def valid_model_label(r: EvidenceRecord) -> bool:
+    """A disease or ageing model counts only with the name of the disease (or model) and the place where it is
+    named; the bare flag `disease_model` (set by an extractor) does not."""
+    return r.model_type in ("disease_model", "aging_model") and bool(r.disease.strip()) and bool(r.disease_evidence.strip())
+
+
+def claim_disease(claim, card: HypothesisCard) -> str:
+    """The disease a claim about animals is about: `qualifiers.disease`, else a known disease named in the
+    population, the strain or the qualifiers. Empty: the claim is about animals without a stated disease, which
+    for lifespan, health and ageing means animals that are not a disease model (a rule on the type of the
+    outcome, not a judgement of a model)."""
+    from hyparena.card.contexts import disease_in
+    named = claim.qualifiers.get("disease")
+    if _known(named):
+        return named
+    pop = card.pico.population
+    return disease_in(" ".join([pop.label, pop.strain, *(v for k, v in claim.qualifiers.items() if k != "contrast")]))
+
+
+def disease_match(claim, card: HypothesisCard, r: EvidenceRecord, restored: frozenset = frozenset()) -> Optional[str]:
+    """yes | no for a record against a claim about lifespan, health or ageing; None when the rule does not apply
+    (another kind of claim, or a record with no valid model label). A record from a disease model does not speak for
+    animals without a stated disease, and a record from another disease does not speak for a claim about a disease;
+    ageing models are not counted yet. An expert can restore a record (expert point `disease_context`)."""
+    from hyparena.card.contexts import same_disease
+    if claim.relation not in OUTCOME_RELATIONS or not valid_model_label(r):
+        return None
+    if r.record_id in restored:
+        return "yes"
+    if r.model_type == "aging_model":
+        return "no"
+    want = claim_disease(claim, card)
+    return "yes" if want and same_disease(want, r.disease) else "no"
+
 GENERIC_HETEROGENEOUS = {"geneticallyheterogeneous", "heterogeneous", "outbred"}
 
 
@@ -741,6 +789,76 @@ def strain_match(claim, record: EvidenceRecord) -> Optional[str]:
     if a in GENERIC_HETEROGENEOUS and any(strain_key(h) in b for h in HETEROGENEOUS):
         return "yes"                                  # "genetically heterogeneous mice" covers UM-HET3, outbred stocks
     return "yes" if a == b or a in b or b in a else "no"
+
+
+def undo_disease_analogs(ver: Verification) -> Verification:
+    """Put the records of the disease analogs back into the claims they came from (and drop the refusals):
+    the analogs are rebuilt by `add_disease_analogs`, so the step can be applied again."""
+    by_id = {cv.id: cv for cv in ver.claims}
+    for cv in [cv for cv in ver.claims if cv.claim is not None and is_disease_analog(cv.claim)]:
+        main = by_id.get(cv.notes.split("from ")[-1].split()[0]) if "from " in cv.notes else None
+        if main is not None:
+            main.evidence += cv.evidence
+            main.counterevidence += cv.counterevidence
+            main.refusals = [x for x in main.refusals if x.type != "population_mismatch"]
+        ver.claims.remove(cv)
+    for cv in ver.claims:
+        for r in cv.evidence + cv.counterevidence:
+            if r.qualifiers_match.get("disease") in ("no", "n/a"):
+                r.qualifiers_match.pop("disease", None)
+    return ver
+
+
+def add_disease_analogs(card: HypothesisCard, ver: Verification, restored: frozenset = frozenset()) -> Verification:
+    """Context rule for disease models (2026-10-22): for a claim about lifespan, health or ageing, a record from a
+    disease model (valid label: a disease name and where it is named) does not give or take away the status when the
+    claim names no such disease, or another one. It moves to an analog an<N> of type disease_model, which feeds the
+    alternatives and the line "disease models" of the profile but not the effect level; the claim keeps a refusal
+    `population_mismatch`. When the claim is about the disease, the records of that disease count. Records from
+    ageing models are not counted yet (decision postponed). The expert can restore a record."""
+    ver = undo_disease_analogs(ver)
+    by_id = {c.id: c for c in card.claims}
+    taken = {cv.id for cv in ver.claims}
+    added = []
+    for cv in list(ver.claims):
+        claim = by_id.get(cv.id)
+        if claim is None or cv.claim is not None or claim.relation not in OUTCOME_RELATIONS:
+            continue
+        moved = []
+        for side in ("evidence", "counterevidence"):
+            for r in getattr(cv, side):
+                m = disease_match(claim, card, r, restored)
+                if m is not None:
+                    r.qualifiers_match["disease"] = m
+                if m == "no":
+                    moved.append((side, r))
+        if not moved:
+            continue
+        for side, r in moved:
+            getattr(cv, side).remove(r)
+        names = sorted({r.disease for _, r in moved})
+        n = 1
+        while f"an{n}" in taken:
+            n += 1
+        taken.add(f"an{n}")
+        analog = Claim(id=f"an{n}", subject=claim.subject, relation=claim.relation, object=claim.object,
+                       qualifiers={k: v for k, v in claim.qualifiers.items() if k not in ("contrast", "disease")},
+                       role="analog", note=f"{DISEASE_ANALOG} {', '.join(names)} (added by the verifier)")
+        for _, r in moved:
+            cv.refusals.append(Refusal(type="population_mismatch", record_id=r.record_id, quote=r.quote,
+                                       notes=f"{r.model_type.replace('_', ' ')}: {r.disease}; "
+                                             f"the claim is about animals {'with ' + claim_disease(claim, card) if claim_disease(claim, card) else 'without a stated disease'}; counted for {analog.id}"))
+
+        def relabel(r):
+            r = r.model_copy(deep=True)
+            r.qualifiers_match["disease"] = "n/a"
+            return r
+        added.append(ClaimVerification(id=analog.id, claim=analog,
+                                       evidence=[relabel(r) for s, r in moved if s == "evidence"],
+                                       counterevidence=[relabel(r) for s, r in moved if s == "counterevidence"],
+                                       notes=f"records of disease or ageing models from {cv.id}"))
+    ver.claims += added
+    return ver
 
 
 def add_strain_analogs(card: HypothesisCard, ver: Verification) -> Verification:

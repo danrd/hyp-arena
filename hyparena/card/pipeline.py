@@ -21,7 +21,7 @@ from hyparena.card.models import HypothesisCard, Verification
 from hyparena.card.normalizer import normalize
 from hyparena.card.lifespan import late_start
 from hyparena.card.rank import rank
-from hyparena.card.rules import STRAIN_ANALOG, add_strain_analogs, admit, finalize
+from hyparena.card.rules import STRAIN_ANALOG, add_disease_analogs, add_strain_analogs, admit, finalize
 from hyparena.card.verifier import verify
 from hyparena.llm.fake import FakeLLMClient
 from hyparena.llm.providers import DEFAULT_CONFIG, GuardedClient, build_client, load_config
@@ -35,14 +35,17 @@ def _client(config: str, fake: bool, max_calls: int):
     return client, [j.family for j in pool]
 
 
-def reapply_rules(res: dict, K: int = 10000, k_top: int = 3, new_rules: bool = True) -> dict:
+def reapply_rules(res: dict, K: int = 10000, k_top: int = 3, new_rules: bool = True, ex_restore: Optional[dict] = None) -> dict:
     """A saved v2 result with the rules applied again, without model calls and without touching the sources: the
     records, the cards and the saved `extra` stay as they were; `sex_scope` is read from the hypothesis text, the
     protocol strata are marked, statuses, profiles, indicators and the ranking are recomputed. `new_rules=False`
     leaves out the scope and the strata: it reproduces a run made before them (a check of this function)."""
     import copy
+    from hyparena.card import contexts
     from hyparena.card.rules import mark_strata, set_sex_scope
+    from hyparena.tools import pubmed
     res = copy.deepcopy(res)
+    ex_restore = ex_restore or {}
     triples = []
     for x in res["items"]:
         if not x.get("verification"):
@@ -53,6 +56,12 @@ def reapply_rules(res: dict, K: int = 10000, k_top: int = 3, new_rules: bool = T
             set_sex_scope(card, x["text"])
             for cv in ver.claims:
                 mark_strata(cv.evidence + cv.counterevidence)
+                for r in cv.evidence + cv.counterevidence:      # the context labels again, abstracts from the cache
+                    pm = r.record_id.replace("PMID:", "") if r.record_id.startswith("PMID:") else ""
+                    f = pubmed.CACHE / f"{pm}.json"
+                    a = json.loads(f.read_text()) if pm and f.exists() else {}
+                    contexts.flag(r, (a.get("title", "") + " " + a.get("abstract", "")).strip(), r.strain if r.source != "PubMed" else "")
+            ver = add_disease_analogs(card, ver, ex_restore.get(card.id, frozenset()))
         ver = finalize(card, ver)
         x["card"], x["verification"] = card.model_dump(by_alias=True), ver.model_dump(by_alias=True)
         triples.append((card, ver, x.get("extra") or {}))
@@ -156,7 +165,8 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
             continue
         card = x["card"]
         ver = verify(client, verifiers or families, writer, card, as_of=as_of, log=log, map_fn=pool.map,
-                     expert_sources=ex.sources(layer, card.id), fallback_families=families)
+                     expert_sources=ex.sources(layer, card.id), fallback_families=families,
+                     disease_restore=ex.restored_records(layer, card.id))
         ver.alternatives += alternatives.competitor_rows(
             [by_card[h] for h in rivals.get(card.id, []) if h not in dup_of])
         x["verification"] = finalize(card, ver)
@@ -281,7 +291,7 @@ def refresh_curated(res: dict, K: int = 10000, k_top: int = 3) -> dict:
                                            [r for r in cv.counterevidence if r.source == "PubMed"])
             cv.evidence = [r for r in cv.evidence if r.source not in ("DrugAge", "PubMed")] + pub_for + support
             cv.counterevidence = [r for r in cv.counterevidence if r.source not in ("DrugAge", "PubMed")] + pub_against + against
-        ver = finalize(card, add_strain_analogs(card, ver))
+        ver = finalize(card, add_strain_analogs(card, add_disease_analogs(card, ver)))
         x["verification"] = ver.model_dump(by_alias=True)
         x["extra"] = _extra(card, as_of)                      # path_to_human inputs as of the run's date
         triples.append((card, ver, x["extra"]))

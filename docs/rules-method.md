@@ -222,7 +222,7 @@ exchange apart.
 
 Two error types seen in the negative-sampling run (`docs/negative-sampling.md`, section 6):
 - **Stance of lifespan findings.** The verifier (`verify_claim/v4`) extracts the direction of a lifespan finding (increase, decrease, no effect); code sets the stance from it, as for DrugAge: a finding supports the claim whose direction it matches (extends ↔ increase, shortens ↔ decrease, no effect or a negated "extends" ↔ no effect) and counts against the others. When the extractor's own stance differs, the record notes it. Before, gpt-5-nano took "Lovaza extends life span" as support for "Lovaza shortens lifespan".
-- **Disease models and special conditions** (`configs/disease_models.yaml`, `hyparena/card/contexts.py`): which strain or diet a study used is in the text; what it means is a lookup. A seed table of about 30 models (lupus-prone, cancer-prone, metabolic, neurodegeneration, progeroid and senescence-accelerated strains, short-lived worm mutants, high-calorie diets) is matched against the record's abstract and DrugAge's strain field; a match adds the flag `disease_model`, `short_lived_controls` or `special_diet` with the model's name. Flags do not change a status (spec 7); the profile reports e.g. "mammals (disease models or special conditions only)" when every record at the effect level is flagged. The table is a stand-in until a strain ontology is part of the knowledge graph.
+- **Disease models and special conditions** (`configs/disease_models.yaml`, `hyparena/card/contexts.py`): which strain or diet a study used is in the text; what it means is a lookup. A seed table of about 30 models (lupus-prone, cancer-prone, metabolic, neurodegeneration, progeroid and senescence-accelerated strains, short-lived worm mutants, high-calorie diets) is matched against the record's abstract and DrugAge's strain field; a match adds the flag `disease_model`, `short_lived_controls` or `special_diet` with the model's name. Flags alone do not change a status (spec 7); since 2026-10-22 a disease-model label with a disease name and its place changes the context (see below); the profile used to report "mammals (disease models or special conditions only)" when every record at the effect level is flagged. The table is a stand-in until a strain ontology is part of the knowledge graph.
 
 Both reduce errors, they do not remove them: the extractor can still misread the direction, and a model the table does not know, or a strain named only in the full text, goes unflagged.
 
@@ -404,3 +404,28 @@ negative only.
 «на равных» порядок случаен), поэтому добавлены `backtest.tied_auc` и `primary_tied`. Открыто: дозы курируемых
 записей не сравниваются с дозой гипотезы (NDGA 800 и 5000 ppm стали «известными» из работы при 2500 ppm). По этой
 выборке правила больше не менять.
+
+## Контекст «модель болезни» (2026-10-22, после первого прогона бэктеста)
+
+Дефект, найденный на Minocycline: пять записей из моделей БАС и мышечной дистрофии задавали статус «оспорено» утверждению про
+обычных мышей, а записи Lovaza на линии NZB/W F1 (волчаночная) давали «известный результат». Исправлено через соответствие
+контекста, а не флагом доверия:
+
+- `rules.claim_disease`: для утверждений о продолжительности жизни, здоровье и старении неуказанная болезнь значит «не
+  модель болезни» (правило по типу исхода, не по модели); болезнь утверждения: `qualifiers.disease` или болезнь, названная в
+  описании популяции.
+- `rules.disease_match` и `rules.add_disease_analogs`: запись из модели болезни (валидная метка: название болезни и место, где
+  оно названо) не задаёт статус; уходит в аналог `an<N>` («модели болезней»), у утверждения отказ `population_mismatch`.
+  Утверждение про болезнь: болезнь должна совпасть (`contexts.same_disease`). `aging_model`: пока не засчитывается.
+  Эксперт возвращает запись решением `disease_context`/`restore`. Шаг обратим (`undo_disease_analogs`).
+- Профиль: записи моделей болезней не входят в `effect_level` и `path_to_human` (поле профиля `disease_models`, строка «модели
+  болезней: N записей» вместо подписи «только модели болезней»); питают `disease_specific` и `disease_proxy`.
+  Аналоги моделей болезней не дают и новизну `analog` / `translation`.
+- `contexts.flag`: метка `disease_model` ставится вместе с `disease` и `disease_evidence`; в таблицу добавлены мутанты SOD1
+  (G37R, G85R, …), нокаут ламинина-α2, GLD. Флаг без названия болезни не действует.
+- Пересчёт сохранённых прогонов: `backtest reapply` (карточки, записи и модели не трогаются; аннотации из кэша PubMed).
+
+На ITP 2010 правило не изменило ни одного статуса и ни одного исхода (аналог получили 11 режимов, статусы держались на записях
+об обычных мышах); у двух режимов половины test (Minocycline 300 ppm, микофеноловая кислота) новизна `analog` стала `new_link`,
+потому что их «аналог» состоял из записей моделей болезней. В примере на мышах: Minocycline «оспорено» → «не проверено»,
+оба Lovaza «известный результат» → в рейтинге. Таблица по каждому режиму: `docs/itp_2010_changes_after_first_run.csv`.

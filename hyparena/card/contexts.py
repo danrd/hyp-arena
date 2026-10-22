@@ -37,17 +37,78 @@ def find_strain(strain: str) -> list[dict]:
     return [m for _, m in _models() if s and (s in {x.lower() for x in m.get("strains", [])})] or (find(strain) if s else [])
 
 
+AGING = {"progeroid", "accelerated_aging"}
+ALIASES = {"als": ("als", "amyotrophic lateral sclerosis", "motor neuron disease"),
+           "huntington": ("huntington",), "alzheimer": ("alzheimer", "amyloid pathology"),
+           "muscular dystrophy": ("muscular dystrophy", "dystrophy"),
+           "lupus": ("lupus",), "cancer": ("cancer", "tumour", "tumor", "leukaemia", "leukemia", "carcinoma", "mammary"),
+           "diabetes": ("diabet",), "atherosclerosis": ("atherosclerosis",), "hypertension": ("hypertens",)}
+
+
+def disease_name(m: dict) -> str:
+    """The disease a table entry stands for: its `disease` field, else the first part of its note."""
+    return (m.get("disease") or (m.get("note") or "").split(",")[0]).strip()
+
+
+def disease_key(text: str) -> str:
+    """A disease name as a comparable key: a known disease (ALS, amyotrophic lateral sclerosis) or the plain words."""
+    t = re.sub(r"[^\w ]+", " ", (text or "").lower())
+    t = re.sub(r"\s+", " ", t).strip()
+    for key, names in ALIASES.items():
+        if any(re.search(rf"\b{re.escape(n)}", t) if n == "als" else n in t for n in names):
+            return key
+    return t
+
+
+def disease_in(text: str) -> str:
+    """A known disease named in a text (a claim's population or qualifiers), or an empty string."""
+    t = (text or "").lower()
+    for key, names in ALIASES.items():
+        if any(re.search(r"\bals\b", t) if n == "als" else n in t for n in names):
+            return key
+    return ""
+
+
+def same_disease(a: str, b: str) -> bool:
+    ka, kb = disease_key(a), disease_key(b)
+    return bool(ka) and bool(kb) and (ka == kb or ka in kb or kb in ka)
+
+
+def _sentence(text: str, start: int, end: int) -> str:
+    left = max(text.rfind(". ", 0, start), text.rfind("\n", 0, start))
+    right = min([i for i in (text.find(". ", end), text.find("\n", end)) if i >= 0] or [len(text)])
+    return re.sub(r"\s+", " ", text[left + 1 if left >= 0 else 0:right + 1]).strip()[:300]
+
+
 def flag(record, text: str = "", strain: str = "") -> None:
-    """Add the flags and a note for the models named in `text` (an abstract) or by `strain` to a record."""
-    models = find(text) if text else []
-    models += [m for m in find_strain(strain) if m not in models]
-    for m in models:
+    """Add the flags and a note for the models named in `text` (an abstract) or by `strain` to a record. A disease
+    model is also recorded as `model_type`, `disease` and `disease_evidence` (the sentence that names it, or the
+    curated strain field): the rules read these fields, never the bare flag, and a model without a disease name
+    and a place where it is named is not a disease model. Accelerated-ageing models get `model_type: aging_model`."""
+    found = []                                            # (table entry, where it is named)
+    for pat, m in _models():
+        hit = pat.search(text or "")
+        if hit and all(m["name"] != x["name"] for x, _ in found):
+            found.append((m, _sentence(text, hit.start(), hit.end())))
+    for m in find_strain(strain):
+        if all(m["name"] != x["name"] for x, _ in found):
+            found.append((m, f"curated strain: {strain}"))
+    for m, where in found:
         f = FLAG[m["category"]]
         if f not in record.flags:
             record.flags.append(f)
-    if models:
-        note = "context: " + "; ".join(f"{m['name']} ({m['note']})" for m in models)
-        record.notes = f"{record.notes}; {note}" if record.notes else note
+    disease = next(((m, w) for m, w in found if m["category"] == "disease_model" and disease_name(m) and w), None)
+    aging = next(((m, w) for m, w in found if m["category"] in AGING and w), None)
+    if disease and not record.model_type:
+        record.model_type, record.disease, record.disease_evidence = "disease_model", disease_name(disease[0]), disease[1]
+    elif aging and not record.model_type:
+        record.model_type, record.disease, record.disease_evidence = "aging_model", aging[0]["name"], aging[1]
+        if "aging_model" not in record.flags:
+            record.flags.append("aging_model")
+    if found:
+        note = "context: " + "; ".join(f"{m['name']} ({m['note']})" for m, _ in found)
+        if note not in record.notes:
+            record.notes = f"{record.notes}; {note}" if record.notes else note
 
 
-CONTEXT_FLAGS = set(FLAG.values())
+CONTEXT_FLAGS = {"special_diet"}                      # flags that still only qualify an effect level (disease and ageing models do not enter it)

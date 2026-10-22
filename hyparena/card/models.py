@@ -34,7 +34,8 @@ MOLECULAR = ("inhibits", "activates", "increases_expression", "decreases_express
 ORGANISM_RELATIONS = ("extends_lifespan_in", "shortens_lifespan_in", "no_lifespan_effect_in", "slows_aging_in",
                       "improves_healthspan_in")  # the object is an organism
 HUMAN_RUNGS = ("human_markers", "human_clinical")
-RefusalType = Literal["type_mismatch", "direction_mismatch", "species_mismatch", "endpoint_mismatch", "inherited_mismatch"]
+RefusalType = Literal["type_mismatch", "direction_mismatch", "species_mismatch", "endpoint_mismatch", "inherited_mismatch",
+                      "population_mismatch"]
 
 
 # ---- declared layer ----
@@ -231,6 +232,9 @@ class EvidenceRecord(BaseModel):
     qualifiers_match: dict[str, str] = Field(default_factory=dict)   # species/sex/age_at_start/dose/comparator: yes|no|n/a; intervention_match
     marker_validation: Literal["validated_surrogate", "exploratory", "n/a"] = "n/a"
     program: Optional[ProgramInfo] = None
+    model_type: Literal["", "disease_model", "aging_model"] = ""   # the animals of the finding had a disease (named in `disease`) or accelerated ageing
+    disease: str = ""                            # the disease or model: valid only with `disease_evidence`
+    disease_evidence: str = ""                   # the sentence (or the curated strain field) where the disease is named
     strata: list[str] = Field(default_factory=list)  # strata the protocol fixed in advance (`sex` in ITP and CITP): a result in one of them is not a post hoc subgroup
     flags: list[str] = Field(default_factory=list)   # retracted, preprint, conflict_of_interest, small_n, open_label, subgroup_only, short_lived_controls, disease_model, special_diet
     fields: dict[str, Union[str, float, int]] = Field(default_factory=dict)   # curated-record fields (e.g. DrugAge row)
@@ -304,6 +308,8 @@ class EvidenceProfile(BaseModel):
     robustness: Literal["single", "replicated"] = "single"
     multi_site_program: dict[str, str] = Field(default_factory=lambda: {"tested": "no"})
     mechanism: Literal["supported", "partial", "unverified", "refuted"] = "unverified"
+    disease_models: int = 0                      # records from disease models (analogs of type disease_model): not in effect_level
+    aging_models: int = 0                        # records from accelerated-ageing models: not counted yet
     intervention_match: str = ""
     next_step: str = ""
     conflicts: list[Conflict] = Field(default_factory=list)
@@ -336,7 +342,8 @@ class Verification(BaseModel):
 
 # ---- expert layer (spec 7a): expert decisions; never edits the declared or verified layer ----
 
-ExpertPoint = Literal["profile", "pairwise", "evidence_conflict", "objection", "alternative", "variant", "portfolio"]
+ExpertPoint = Literal["profile", "pairwise", "evidence_conflict", "objection", "alternative", "variant", "portfolio",
+                      "disease_context"]
 
 
 class ExpertDecision(BaseModel):
