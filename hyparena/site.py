@@ -163,7 +163,7 @@ def _reaggregate(res: dict, drop: list[str], k_top: int = 3, K: int = 10000, see
 
     from hyparena.aspid import aggregate, load_profiles
     from hyparena.card import indicators as ind
-    specs = [sp for sp in ind.INDICATORS if sp.id not in drop]
+    specs = [sp for sp in ind.for_meta(res["meta"]) if sp.id not in drop]
     keep = {sp.id for sp in specs}
     values = {x["id"]: {k: v for k, v in (x.get("indicators") or {}).items() if k in keep}
               for x in res["items"] if x["outcome"] == "ranked"}

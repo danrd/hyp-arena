@@ -27,8 +27,9 @@ def test_rank_examples():
     assert set(r.not_admitted) == {"H-0004", "H-0005"}
     assert set(r.ranked) == {"H-0001", "H-0002", "H-0003"}
     v1, v2 = r.values["H-0001"], r.values["H-0002"]
-    assert (v1["effect_level"], v1["robustness"], v1["multi_site_positive"]) == ("mammals", "replicated", "positive")
-    assert (v2["effect_level"], v2["robustness"], v2["multi_site_positive"]) == ("mammals", "single", "no")
+    assert (v1["effect_level"], v1["robustness"]) == ("mammals", "replicated")      # multi_site_positive is a condition of robustness
+    assert (v2["effect_level"], v2["robustness"]) == ("mammals", "single")
+    assert "multi_site_positive" not in v1 and "multi_site_positive" not in v2
     assert v1["both_sexes"] == "both" and v1["effect_size"] == 14
     assert v1["path_to_human"] is None and v1["novelty"] == "translation"   # no human-safety input given here
     # rapamycin (replicated in a multi-site program) is ahead under "verified evidence matters most"
