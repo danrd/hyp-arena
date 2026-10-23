@@ -25,9 +25,21 @@ class MultiSearch:
         self.tools = tools
 
     def search(self, query: str, limit: int = 5, as_of: Optional[str] = None) -> list[Evidence]:
+        """Runs tools and merges results. A final guard drops records whose date is after `as_of`
+        or missing, so that connector or server changes do not leak future knowledge."""
         seen, out = set(), []
         for tool in self.tools:
             for ev in tool.search(query, limit, as_of):
+                if as_of:
+                    # Pad date to compare ISO strings safely: YYYY -> YYYY-01-01, YYYY-MM -> YYYY-MM-01
+                    pd = ev.publication_date or ""
+                    if len(pd) == 4:
+                        pd += "-01-01"
+                    elif len(pd) == 7:
+                        pd += "-01"
+                    if not pd or pd > as_of:
+                        continue
+
                 key = (ev.source, ev.record_id)
                 if key not in seen:
                     seen.add(key)
