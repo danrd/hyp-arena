@@ -156,9 +156,13 @@ def criterion(res: dict, profile: str = PROFILE, k: int = 3) -> dict:
 
 def evolve(res: dict, config: str, rounds: int = 3, parents: int = 4, children: int = 2, writer: str = "google",
            verifiers: Optional[list[str]] = None, max_calls: int = 200, fake: bool = False, as_of: Optional[str] = None,
-           on_stage=lambda m: None, snapshot=None) -> dict:
+           on_stage=lambda m: None, snapshot=None, spec: Optional[str] = None) -> dict:
     """Run the rounds on a saved v2 result; the budget `max_calls` is shared by the proposals and the verification."""
+    from hyparena import prespec
     from hyparena.card.pipeline import _client, reapply_rules, run
+    spec_entry = prespec.begin(spec, {"rounds": rounds, "parents": parents, "children": children, "writer": writer,
+                                      "verifiers": verifiers or ["deepseek"], "max_calls": max_calls}) if spec else None
+    sp = prespec.load(spec) if spec else {}
     started, spent, child_calls = time.time(), 0, 0          # spent: proposals + verification of the children
     res = copy.deepcopy(res)
     as_of = as_of or res["meta"].get("as_of")
@@ -200,7 +204,8 @@ def evolve(res: dict, config: str, rounds: int = 3, parents: int = 4, children: 
     res["meta"]["evolution"] = {"rounds": rounds_log, "parents_per_round": parents, "children_per_parent": children,
                                 "writer": writer, "verifiers": verifiers, "calls": spent, "max_calls": max_calls,
                                 "seconds": round(time.time() - started), "as_of": as_of, "profile": PROFILE,
-                                "criterion": criterion(res)}
+                                "criterion": criterion(res, sp.get("profile", PROFILE), sp.get("k", 3)),
+                                **({"spec": spec_entry} if spec_entry else {})}
     return res
 
 
@@ -216,13 +221,14 @@ def main() -> None:
     ap.add_argument("--verifiers", default="deepseek")
     ap.add_argument("--max-calls", type=int, default=200)
     ap.add_argument("--fake", action="store_true")
+    ap.add_argument("--spec", default=None, help="committed spec in specs/, fixed before the run (hash goes into the meta)")
     a = ap.parse_args()
     res = json.loads(Path(a.v2).read_text())
     out = Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     save = lambda r: out.write_text(json.dumps(r, ensure_ascii=False, indent=1, default=str))
     res = evolve(res, a.config, a.rounds, a.parents, a.children, a.writer, a.verifiers.split(","), a.max_calls, a.fake,
-                 on_stage=lambda m: print(m, flush=True), snapshot=save)
+                 on_stage=lambda m: print(m, flush=True), snapshot=save, spec=a.spec)
     save(res)
     c = res["meta"]["evolution"]["criterion"]
     print(f"{a.out}; calls {res['meta']['evolution']['calls']}; children {c['n_children']}, in the top {c['k']}: "

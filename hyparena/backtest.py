@@ -322,7 +322,8 @@ def evaluate(labels_path: str, result_path: str, split: str = "all", unrated: st
 
 def run_v2(pool_path: str, out: str, config: str = "configs/v2.yaml", profile: str = "evidence_first",
            fake: bool = False, max_calls: int = 600, K: int = 10000, verifiers: Optional[list[str]] = None,
-           limit: Optional[int] = None, split: Optional[str] = None, labels_path: Optional[str] = None) -> dict:
+           limit: Optional[int] = None, split: Optional[str] = None, labels_path: Optional[str] = None,
+           spec: Optional[str] = None) -> dict:
     """Our method v2 on a backtest pool, evidence as of the pool's date. Writes the full v2 output (`out`) and
     the ladder-format result (`out` with suffix .ladder.json) that `evaluate` and `compare` read."""
     from hyparena.card.pipeline import as_ladder_result
@@ -335,7 +336,7 @@ def run_v2(pool_path: str, out: str, config: str = "configs/v2.yaml", profile: s
         hyps = [h for h in hyps if labels.get(h.id, {}).get("split") == split]
     hyps = hyps[:limit] if limit else hyps
     res = v2([h.text for h in hyps], writer=pool["source"].get("family", "unknown"), config=config, fake=fake,
-             as_of=pool["source"]["as_of"], max_calls=max_calls, K=K, verifiers=verifiers)
+             as_of=pool["source"]["as_of"], max_calls=max_calls, K=K, verifiers=verifiers, spec=spec)
     res["meta"]["ids"] = [h.id for h in hyps]                # pool ids of the items, also for a split or a limit
     Path(out).parent.mkdir(parents=True, exist_ok=True)
     Path(out).write_text(json.dumps(res, ensure_ascii=False, indent=1, default=str))
@@ -555,6 +556,7 @@ def main() -> None:
     v.add_argument("--limit", type=int, default=None, help="only the first N items")
     v.add_argument("--split", choices=["dev", "test"], default=None, help="only this split (needs --labels)")
     v.add_argument("--labels", default=None)
+    v.add_argument("--spec", default=None, help="committed spec in specs/, fixed before the run (hash goes into the meta)")
     pm = sub.add_parser("primary", help="the primary metric (without late_start, known results apart, per compound)")
     pm.add_argument("--labels", required=True)
     pm.add_argument("--v2", required=True)
@@ -584,7 +586,7 @@ def main() -> None:
     if args.cmd == "v2":
         print(json.dumps(run_v2(args.pool, args.out, args.config, args.profile, args.fake, args.max_calls,
                                 verifiers=args.verifiers.split(",") if args.verifiers else None,
-                                limit=args.limit, split=args.split, labels_path=args.labels), indent=1)[:2000])
+                                limit=args.limit, split=args.split, labels_path=args.labels, spec=args.spec), indent=1)[:2000])
         return
     if args.cmd == "primary":
         print(json.dumps(primary(args.labels, args.v2, args.split), indent=2))
