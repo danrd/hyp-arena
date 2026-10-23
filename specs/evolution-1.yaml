@@ -1,0 +1,17 @@
+# Evolution experiment 1 (docs/evolution-experiment.md): fixed before the run, hashed into the run's meta.
+id: evolution-1
+kind: evolution
+protocol: docs/evolution-experiment.md
+profile: evidence_first
+k: 3
+rule: a child ends in the top k of the profile, and its P(top-k) is at least that of its parent
+rounds: 3
+parents: 4
+children: 2
+max_calls: 200
+writer: google
+verifiers: [deepseek]
+K: 10000
+seed: 0
+one_run: true
+changes_after_result: none

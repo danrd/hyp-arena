@@ -102,13 +102,17 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
         as_of: Optional[str] = None, K: int = 10000, k_top: int = 3, max_calls: int = 400, workers: int = 4,
         normalizer_family: str = "google", on_stage=lambda msg: None, expert=None,
         verifiers: Optional[list[str]] = None, cards: Optional[list[Optional[dict]]] = None,
-        check_alternatives: bool = True, dedup: bool = True, informativeness: bool = False) -> dict:
-    """`expert`: path to an expert file (hyparena/card/expert.py) or an ExpertLayer. `verifiers`: the families
+        check_alternatives: bool = True, dedup: bool = True, informativeness: bool = False,
+        spec: Optional[str] = None) -> dict:
+    """`spec`: a committed file in specs/ fixed before the run (hyparena/prespec.py); its hash goes into the meta, and a
+    parameter that differs from the spec stops the run. `expert`: path to an expert file (hyparena/card/expert.py) or an ExpertLayer. `verifiers`: the families
     that verify (default: every family of the config). `cards`: declared cards from an earlier run, one per
     text (None where normalization failed); the normalizer is then skipped, so a change of the verifier is
     compared on the same cards. `check_alternatives`: one call per gate-passing hypothesis over the abstracts
     already read, and a dedicated search per open alternative for P(top-k) >= 0.5 (spec 8c). `dedup`: a card
     that duplicates an earlier one (spec 8b) is not verified and gets the outcome `duplicate`."""
+    from hyparena import prespec
+    spec_entry = prespec.begin(spec, {"as_of": as_of, "K": K, "k_top": k_top, "max_calls": max_calls}) if spec else None
     started = time.time()
     layer = expert if isinstance(expert, ex.ExpertLayer) else ex.load(expert)
     origins = ["external"] * len(texts) + ["expert"] * len(layer.hypotheses)
@@ -210,7 +214,7 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
     return {"meta": {"created": time.strftime("%Y-%m-%dT%H:%M:%S"), "seconds": round(time.time() - started),
                      "calls": client.calls, "failures": client.failures, "families": families, "writer": writer,
                      "verifiers": verifiers or families, "config": config, "cards_reused": cards is not None,
-                     "as_of": as_of, "fake": fake, "k_top": k_top,
+                     "as_of": as_of, "fake": fake, "k_top": k_top, **({"spec": spec_entry} if spec_entry else {}),
                      "profiles": {n: {"tiers": p.tiers, "version": p.version, "description": p.description}
                                   for n, p in load_profiles().items()},
                      "indicators": [{"id": s.id, "kind": s.kind, "levels": list(s.levels), "bounds": list(s.bounds),
@@ -372,13 +376,15 @@ def main() -> None:
     ap.add_argument("--verifiers", default=None, help="comma-separated families that verify (default: all)")
     ap.add_argument("--cards-from", default=None, help="an earlier v2 result whose cards are reused (no normalizer)")
     ap.add_argument("--informativeness", action="store_true", help="one call per hypothesis: alternatives the decisive experiment discriminates")
+    ap.add_argument("--spec", default=None, help="committed spec in specs/ fixed before the run (hash goes into the meta)")
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
     texts = split_hypotheses(Path(args.paste).read_text(encoding="utf-8"))
     res = run(texts, args.writer, args.config, args.fake, args.as_of, args.K, args.k_top, args.max_calls,
               normalizer_family=args.normalizer_family, on_stage=lambda m: print(m, flush=True), expert=args.expert,
               verifiers=args.verifiers.split(",") if args.verifiers else None, informativeness=args.informativeness,
-              cards=[x["card"] for x in json.loads(Path(args.cards_from).read_text())["items"]] if args.cards_from else None)
+              cards=[x["card"] for x in json.loads(Path(args.cards_from).read_text())["items"]] if args.cards_from else None,
+              spec=args.spec)
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     Path(args.out).write_text(json.dumps(res, ensure_ascii=False, indent=1, default=str))
     for x in res["items"]:
