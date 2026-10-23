@@ -19,7 +19,7 @@ def _bundle():
 def test_constant_and_duplicated_indicators_are_named(tmp_path):
     f = tmp_path / "b.json"
     f.write_text(json.dumps(_bundle()))
-    r = pr.report(str(f))
+    r = pr.report(str(f), ablate=False)
     by = {x["id"]: x for x in r["indicators"]}
     assert r["ranked"] == 10 and by["c"]["constant"] and not by["a"]["constant"]
     top = r["correlations"]["pairs"][0]

@@ -113,13 +113,13 @@ def ablation(b: dict, ranked: list[dict], profile: str = "evidence_first") -> di
     return out
 
 
-def report(path: str) -> dict:
+def report(path: str, ablate: bool = True) -> dict:
     b = json.loads(Path(path).read_text())
     ranked = [h for h in b["hypotheses"] if h["outcome"] == "ranked"]
     return {"bundle": path, "title": b["title"], "n": len(b["hypotheses"]), "ranked": len(ranked),
             "indicators": indicator_table(b, ranked), "profiles": profile_separation(b, [h["id"] for h in ranked]),
             "correlations": correlations(b, ranked),
-            "ablation": {n: ablation(b, ranked, n) for n in ("evidence_first", "fundamental")}, "mc_halfwidth": next(iter(b["profiles"].values())).get("mc_halfwidth")}
+            "ablation": {n: ablation(b, ranked, n) for n in ("evidence_first", "fundamental")} if ablate else {}, "mc_halfwidth": next(iter(b["profiles"].values())).get("mc_halfwidth")}
 
 
 def show(r: dict) -> None:
@@ -158,8 +158,9 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("bundles", nargs="+")
     ap.add_argument("--json", default=None)
+    ap.add_argument("--no-ablation", action="store_true", help="skip the leave-one-indicator-out recomputation")
     a = ap.parse_args()
-    out = [report(p) for p in a.bundles]
+    out = [report(p, not a.no_ablation) for p in a.bundles]
     for r in out:
         show(r)
         show_ablation(r)
