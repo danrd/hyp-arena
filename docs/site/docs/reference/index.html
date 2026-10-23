@@ -91,6 +91,30 @@ section.block { padding-block: 36px; border-top: 1px solid var(--line); display:
 .head > * { min-width: 0; }
 .tabs button { flex: 1 1 auto; }
 
+/* run switcher */
+.runlabel { margin: 18px 0 8px; text-align: center; }
+.runcards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
+.runcards[hidden] { display: none; }
+.runcards button { display: grid; gap: 4px; align-content: start; text-align: left; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); cursor: pointer; }
+.runcards button b { font-size: var(--step-0); }
+.runcards button span { font-size: var(--step--1); color: var(--muted); font-weight: 400; }
+.runcards button:hover { border-color: var(--accent); }
+.runcards button[aria-pressed="true"] { border-color: var(--accent); border-width: 2px; padding: 11px 13px; background: var(--accent-soft); }
+.runcards button[aria-pressed="true"] b { color: var(--accent); }
+.runcards button[aria-pressed="true"] b::before { content: "● "; }
+@media (max-width: 900px) { .runcards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .runcards { grid-template-columns: minmax(0, 1fr); } .runcards button span { display: none; } .runcards button[aria-pressed="true"] span { display: block; } }
+details.more { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }
+details.more > summary { cursor: pointer; font-weight: 600; font-size: var(--step--1); }
+details.more[open] > summary { margin-bottom: 8px; }
+details.more.big { margin-top: 10px; }
+#showcaseSummary { margin-top: 14px; }
+.dwarn { color: var(--warn); }
+.dnote { margin: 0; font-size: var(--step--1); color: var(--muted); }
+ol.distinct { margin: 8px 0 0; padding-left: 0; list-style: none; display: grid; gap: 6px; font-size: var(--step--1); text-align: left; }
+ol.distinct li { display: grid; grid-template-columns: 2.4em minmax(0, 1fr); gap: 4px 8px; align-items: baseline; }
+ol.distinct li > .mono { color: var(--muted); text-align: right; }
+
 /* data bar */
 .databar { justify-content: center; display: flex; gap: 10px 16px; align-items: center; flex-wrap: wrap; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; font-size: var(--step--1); }
 .databar .name { font-weight: 600; font-size: var(--step-0); }
@@ -800,16 +824,9 @@ table.doctable tr:last-child td { border-bottom: 0; }
 <tr>
 <td><code>robustness</code></td>
 <td>воспроизведён ли эффект независимо</td>
-<td>из проверенных утверждений</td>
+<td>из проверенных утверждений; уровень <code>replicated</code> ставят два независимых источника, запись программы с двумя и более центрами или положительный итог многоцентровой программы</td>
 <td>single · replicated</td>
 <td>выше</td>
-</tr>
-<tr>
-<td><code>multi_site_positive</code></td>
-<td>положительный результат многоцентровой программы</td>
-<td>из проверенных утверждений и базы (признак ITP/CITP у записи)</td>
-<td>no · positive</td>
-<td>положительный</td>
 </tr>
 <tr>
 <td><code>mechanism</code></td>
@@ -821,7 +838,7 @@ table.doctable tr:last-child td { border-bottom: 0; }
 <tr>
 <td><code>novelty</code></td>
 <td>насколько результат нов для литературы</td>
-<td>из проверенных утверждений и правил (граф знаний пока не используется)</td>
+<td>из проверенных утверждений и правил (граф знаний пока не используется); неизвестна без опоры, см. ниже</td>
 <td>new_context &lt; translation &lt; analog &lt; new_link</td>
 <td>выше</td>
 </tr>
@@ -864,7 +881,7 @@ table.doctable tr:last-child td { border-bottom: 0; }
 </table></div>
 <p>Подробности:</p>
 <ul>
-<li><strong><code>novelty</code>.</strong> <code>new_context</code>: то же вмешательство и вид уже работают, но в другой линии, при другом поле, дозе или возрасте начала. <code>translation</code>: известная находка переносится на новый вид. <code>analog</code>: известное родственное вмешательство. <code>new_link</code>: новая связь вмешательства и исхода. Известный результат в рейтинг не входит и этих уровней не получает.</li>
+<li><strong><code>novelty</code>.</strong> <code>new_context</code>: то же вмешательство и вид уже работают, но в другой линии, при другом поле, дозе или возрасте начала. <code>translation</code>: известная находка переносится на новый вид. <code>analog</code>: известное родственное вмешательство. <code>new_link</code>: новая связь вмешательства и исхода. Известный результат в рейтинг не входит и этих уровней не получает. <strong>Новизна есть только при опоре в литературе (с 2026-10-23).</strong> Если по гипотезе нет ни одной записи за или против (флаг <code>no_literature</code> в профиле доказательств), или связь никто не нашёл и механизм не подтверждён хотя бы частично, значение остаётся <strong>неизвестным</strong> и разыгрывается по всему интервалу, как любое неизвестное: отсутствие доказательств не даёт преимущества. <code>new_link</code> теперь означает новую связь с механистической опорой. Многоцентровая программа (признак <code>multi_site_program</code>) остаётся в профиле доказательств как флаг, а в оценку входит только через уровень <code>robustness</code>.</li>
 <li><strong><code>mechanism</code></strong> считается по утверждениям с ролями «механизм» и «посылка»: все подтверждены, часть, ни одно.</li>
 <li><strong><code>informativeness</code></strong> считается при запуске с флагом <code>--informativeness</code> (<code>hyparena/card/informativeness.py</code>): модель получает текст гипотезы и открытые альтернативы (контрольный список и объявленные в карточке, кроме уже исключённых литературой) и называет те, чей контроль или измерение решающий эксперимент <strong>содержит в том виде, как он написан</strong>; код оставляет альтернативу, только если фраза скопирована из текста дословно; число обрезается до 4. Простое сравнение выживаемости не различает ни одной альтернативы, поэтому у шаблонных гипотез показатель равен нулю. В прогонах ITP показатель не считался (правила по этой выборке заморожены); без флага он остаётся неизвестным.</li>
 <li><strong>Шкала <code>effect_size</code></strong> (0–30%) — черновое допущение.</li>

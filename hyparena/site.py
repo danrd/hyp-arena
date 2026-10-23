@@ -122,11 +122,17 @@ def bundle_from_result(res: dict, ids: list[str], elo: Optional[dict] = None, ti
                                    "games": ((v.get("scores") or {}).get("overall") or {}).get("games")}
                                for h, v in elo["hypotheses"].items() if h in keep}}
     meta = res["meta"]
+    from hyparena import diagnostics, diversity
+    diag = diagnostics.pool_diagnostics(res["items"], res.get("ranking") or {}, [i["id"] for i in meta.get("indicators") or []])
+    dist = diversity.top_distinct(res)                  # computed from the cards: a merged result has no valid saved relations
+    distinct = {"families": [[to_pid[h] for h in g] for g in dist["families"]],
+                "profiles": {n: [{"id": to_pid[r["id"]], "place": r["place"], "hidden": [to_pid[h] for h in r["hidden"]]} for r in rows]
+                             for n, rows in dist["profiles"].items()}}
     return {"format": "hyparena-site@1", "title": title,
             "meta": {"created": meta.get("created"), "as_of": meta.get("as_of"), "calls": meta.get("calls"),
                      "verifiers": meta.get("verifiers"), "profiles": meta.get("profiles"),
-                     "indicators": meta.get("indicators"), "k_top": meta.get("k_top")},
-            "hypotheses": items, "profiles": profiles, "elo": elo_out,
+                     "indicators": meta.get("indicators"), "k_top": meta.get("k_top"), "diagnostics": diag},
+            "hypotheses": items, "profiles": profiles, "elo": elo_out, "distinct": distinct,
             "lists": {"filtered": {to_pid.get(h, h): r for h, r in (res.get("filtered") or {}).items()},
                       "known_results": [to_pid.get(h, h) for h in res.get("known_results") or []],
                       "outcome_counts": res.get("outcome_counts")}}

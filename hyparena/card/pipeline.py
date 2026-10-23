@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Optional
 
 from hyparena.aspid import InfeasiblePreferences, load_profiles
+from hyparena import diagnostics, diversity
 from hyparena.card import alternatives, entities, proximity
 from hyparena.card import expert as ex
 from hyparena.card import indicators as ind
@@ -90,6 +91,8 @@ def reapply_rules(res: dict, K: int = 10000, k_top: int = 3, new_rules: bool = T
     res.update(unranked_lists(res["items"]))
     res["meta"]["reapplied"] = {"at": time.strftime("%Y-%m-%dT%H:%M:%S"), "new_rules": new_rules}
     _record_indicator_set(res)
+    res["top_distinct"] = diversity.top_distinct(res)
+    res["meta"]["diagnostics"] = diagnostics.pool_diagnostics(res["items"], res["ranking"], [i["id"] for i in res["meta"]["indicators"]])
     return res
 
 
@@ -221,7 +224,7 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
                       "confidence": r.confidence, "meta": r.meta}
     profiles = {name: view(r) for name, r in ranking.by_profile.items()} if ranking else {}
     autonomous = {name: view(r) for name, r in ranking.autonomous.items()} if ranking else {}
-    return {"meta": {"created": time.strftime("%Y-%m-%dT%H:%M:%S"), "seconds": round(time.time() - started),
+    result = {"meta": {"created": time.strftime("%Y-%m-%dT%H:%M:%S"), "seconds": round(time.time() - started),
                      "calls": client.calls, "failures": client.failures, "families": families, "writer": writer,
                      "verifiers": verifiers or families, "config": config, "cards_reused": cards is not None,
                      "as_of": as_of, "fake": fake, "k_top": k_top, **({"spec": spec_entry} if spec_entry else {}),
@@ -245,6 +248,9 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
             "expert_skipped": [vars(c) for c in ranking.expert_skipped] if ranking else [],
             "filtered": ranking.filtered if ranking else {}, "known_results": ranking.known_results if ranking else [],
             "calls": log}
+    result["top_distinct"] = diversity.top_distinct(result, result["proximity"])
+    result["meta"]["diagnostics"] = diagnostics.pool_diagnostics(result["items"], result["ranking"], [s.id for s in ind.INDICATORS])
+    return result
 
 
 OUTCOMES = ("ranked", "filtered", "known_result", "duplicate", "needs_refinement", "not_a_hypothesis", "unparsed",
@@ -332,6 +338,8 @@ def refresh_curated(res: dict, K: int = 10000, k_top: int = 3) -> dict:
     res["proximity"], res["variant_groups"] = [r.as_dict() for r in rels], proximity.variant_groups(rels)
     res["meta"]["refreshed"] = time.strftime("%Y-%m-%dT%H:%M:%S")
     _record_indicator_set(res)
+    res["top_distinct"] = diversity.top_distinct(res, res["proximity"])
+    res["meta"]["diagnostics"] = diagnostics.pool_diagnostics(res["items"], res["ranking"], [i["id"] for i in res["meta"]["indicators"]])
     return res
 
 
