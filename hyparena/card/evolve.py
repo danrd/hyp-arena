@@ -204,6 +204,9 @@ def evolve(res: dict, config: str, rounds: int = 3, parents: int = 4, children: 
         if snapshot:
             snapshot(res)
     res["calls"] = list(res.get("calls") or []) + log
+    from hyparena import diagnostics, diversity
+    res["top_distinct"] = diversity.top_distinct(res)
+    res["meta"]["diagnostics"] = diagnostics.pool_diagnostics(res["items"], res["ranking"], [i["id"] for i in res["meta"]["indicators"]])
     res["meta"]["evolution"] = {"rounds": rounds_log, "parents_per_round": parents, "children_per_parent": children,
                                 "writer": writer, "verifiers": verifiers, "calls": spent, "max_calls": max_calls,
                                 "seconds": round(time.time() - started), "as_of": as_of, "profile": PROFILE,

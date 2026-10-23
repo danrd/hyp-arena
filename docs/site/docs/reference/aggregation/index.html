@@ -91,6 +91,30 @@ section.block { padding-block: 36px; border-top: 1px solid var(--line); display:
 .head > * { min-width: 0; }
 .tabs button { flex: 1 1 auto; }
 
+/* run switcher */
+.runlabel { margin: 18px 0 8px; text-align: center; }
+.runcards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
+.runcards[hidden] { display: none; }
+.runcards button { display: grid; gap: 4px; align-content: start; text-align: left; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); cursor: pointer; }
+.runcards button b { font-size: var(--step-0); }
+.runcards button span { font-size: var(--step--1); color: var(--muted); font-weight: 400; }
+.runcards button:hover { border-color: var(--accent); }
+.runcards button[aria-pressed="true"] { border-color: var(--accent); border-width: 2px; padding: 11px 13px; background: var(--accent-soft); }
+.runcards button[aria-pressed="true"] b { color: var(--accent); }
+.runcards button[aria-pressed="true"] b::before { content: "● "; }
+@media (max-width: 900px) { .runcards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .runcards { grid-template-columns: minmax(0, 1fr); } .runcards button span { display: none; } .runcards button[aria-pressed="true"] span { display: block; } }
+details.more { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }
+details.more > summary { cursor: pointer; font-weight: 600; font-size: var(--step--1); }
+details.more[open] > summary { margin-bottom: 8px; }
+details.more.big { margin-top: 10px; }
+#showcaseSummary { margin-top: 14px; }
+.dwarn { color: var(--warn); }
+.dnote { margin: 0; font-size: var(--step--1); color: var(--muted); }
+ol.distinct { margin: 8px 0 0; padding-left: 0; list-style: none; display: grid; gap: 6px; font-size: var(--step--1); text-align: left; }
+ol.distinct li { display: grid; grid-template-columns: 2.4em minmax(0, 1fr); gap: 4px 8px; align-items: baseline; }
+ol.distinct li > .mono { color: var(--muted); text-align: right; }
+
 /* data bar */
 .databar { justify-content: center; display: flex; gap: 10px 16px; align-items: center; flex-wrap: wrap; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; font-size: var(--step--1); }
 .databar .name { font-weight: 600; font-size: var(--step-0); }
@@ -483,7 +507,7 @@ table.doctable tr:last-child td { border-bottom: 0; }
 <p>u(i, w) = Σ<sub>j</sub> w<sub>j</sub> · q<sub>ij</sub></p>
 <ul>
 <li><strong>Числовые показатели</strong> (<code>late_start</code>, <code>effect_size</code>, <code>informativeness</code>) переводятся в [0, 1] по <strong>фиксированным шкалам</strong>, а не по минимуму и максимуму текущего набора. Поэтому значение гипотезы и вероятность «A выше B» не зависят от того, какие ещё гипотезы в наборе; места, конечно, зависят.</li>
-<li><strong>Порядковые показатели</strong> (<code>effect_level</code>, <code>robustness</code>, <code>multi_site_positive</code>, <code>mechanism</code>, <code>novelty</code>, <code>path_to_human</code>, <code>both_sexes</code>): в каждом розыгрыше уровни получают случайные числа, возрастающие вместе с уровнем (отображение SMAA-O). Так не нужно выбирать, что «mammals» вдвое лучше «invertebrates»; равные шаги можно включить для проверки чувствительности.</li>
+<li><strong>Порядковые показатели</strong> (<code>effect_level</code>, <code>robustness</code>, <code>mechanism</code>, <code>novelty</code>, <code>path_to_human</code>, <code>both_sexes</code>): в каждом розыгрыше уровни получают случайные числа, возрастающие вместе с уровнем (отображение SMAA-O). Так не нужно выбирать, что «mammals» вдвое лучше «invertebrates»; равные шаги можно включить для проверки чувствительности.</li>
 <li><strong>Неизвестные значения</strong> разыгрываются по допустимому диапазону (<a href="../#ind-unknown">см. «Показатели»</a>).</li>
 <li>Оценка <strong>компенсаторная</strong>: высокое значение по одному показателю может покрыть низкое по другому. Отсев опровергнутых гипотез происходит до агрегации (фильтр).</li>
 </ul>
@@ -525,6 +549,10 @@ table.doctable tr:last-child td { border-bottom: 0; }
 <li>Hovanov N., Yudaeva M., Hovanov K. Multicriteria estimation of probabilities on basis of expert non-numeric, non-exact and non-complete knowledge. <em>European Journal of Operational Research</em> 195(3), 2009, 857–863. <a href="https://doi.org/10.1016/j.ejor.2007.11.018" target="_blank" rel="noopener">doi:10.1016/j.ejor.2007.11.018</a></li>
 </ol>
 <p>Реализации-образцы: пакеты R <code>smaa</code> и <code>hitandrun</code> (van Valkenhoef, Tervonen).</p>
+<h3 id="agg-geometry">Геометрия весов и набор показателей <a class="anchor" href="#agg-geometry" aria-label="Ссылка на раздел">#</a></h3>
+<p>Веса профиля делят единицу, поэтому доля, которая достаётся информативным показателям, зависит от того, сколько показателей стоит в каждой ступени, <strong>в том числе постоянных в данном пуле</strong>. Убрать из профиля показатель, который у всех гипотез одинаков, не меняет разности значений, но меняет соотношение весов остальных, и порядок сдвигается (на выборке ITP без постоянного <code>mechanism</code> тау порядка 0,51). Это свойство профиля со ступенями. Ступени по показателям, которые меняются в данном пуле, мы <strong>не считаем</strong>: ранг гипотезы тогда зависел бы от того, какие ещё гипотезы в пуле, а тест независимости от пула это запрещает.</p>
+<p>Поэтому набор показателей и профили входят в воспроизводимость: в мету каждого прогона пишется хэш набора (<code>meta.indicator_set.sha256</code>, считается по показателям, их уровням, границам и отображению, и по ступеням профилей), а в запись спецификации (<code>meta.spec.indicators_sha256</code>) попадает тот же хэш. Сохранённый прогон читается по тому набору, который в нём записан: прогоны до 2026-10-23 содержат <code>multi_site_positive</code>.</p>
+<p>В отчёте по пулу (<code>scripts/profile_report.py</code>, поле <code>meta.diagnostics</code> пакета сайта) считаются число показателей, которые меняются в пуле, постоянные и неизвестные у всех, и доля пар, которые профиль упорядочивает (остальные в группах «на равных»). Предупреждение выдаётся, когда меняется меньше трёх показателей или профиль упорядочивает меньше половины пар. Пороги выбраны по умолчанию, это не результат калибровки.</p>
 </article><article class="doc" id="docs-data" data-sec><header class="doc-head"><h2>Данные и источники <a class="anchor" href="#docs-data" aria-label="Ссылка на раздел">#</a></h2><p class="lead">Какие источники используются, что каждый из них вправе утверждать и как соблюдается правило «на момент T».</p></header>
 <h3 id="data-types">Типы источников <a class="anchor" href="#data-types" aria-label="Ссылка на раздел">#</a></h3>
 <p>Для проверки важнее не формат источника, а то, что он может утверждать. Каждая запись помечается типом.</p>

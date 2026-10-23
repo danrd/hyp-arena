@@ -117,13 +117,20 @@ def report(path: str, ablate: bool = True) -> dict:
     b = json.loads(Path(path).read_text())
     ranked = [h for h in b["hypotheses"] if h["outcome"] == "ranked"]
     return {"bundle": path, "title": b["title"], "n": len(b["hypotheses"]), "ranked": len(ranked),
-            "indicators": indicator_table(b, ranked), "profiles": profile_separation(b, [h["id"] for h in ranked]),
+            "diagnostics": b["meta"].get("diagnostics"), "indicators": indicator_table(b, ranked), "profiles": profile_separation(b, [h["id"] for h in ranked]),
             "correlations": correlations(b, ranked),
             "ablation": {n: ablation(b, ranked, n) for n in ("evidence_first", "fundamental")} if ablate else {}, "mc_halfwidth": next(iter(b["profiles"].values())).get("mc_halfwidth")}
 
 
 def show(r: dict) -> None:
     print(f"\n## {r['title']}  ({r['bundle']}): {r['ranked']} ranked of {r['n']}")
+    d = r.get("diagnostics")
+    if d:
+        print(f"Pool diagnostics: {len(d['varying'])} of {d['indicators']} indicators vary; constant: {', '.join(d['constant']) or '-'}; "
+              f"unknown for all: {', '.join(d['all_unknown']) or '-'}; pairs ordered: "
+              + ", ".join(f"{n} {v:.0%}" for n, v in d["pairs_ordered"].items()))
+        for w in d["warnings"]:
+            print(f"  WARNING: {w}")
     print("\nIndicators over the ranked hypotheses")
     print(f"{'indicator':<20}{'unknown':>8}{'distinct':>9}  most common value")
     for x in r["indicators"]:
