@@ -182,6 +182,25 @@ def curated(claim, card: HypothesisCard, as_of: Optional[str] = None) -> tuple[l
     return support, against
 
 
+def date_guard(pmids: list[str], as_of: Optional[str]) -> tuple[list[str], dict[str, str]]:
+    """A run on date T keeps only papers first public on or before T. The search already asks PubMed for that, but
+    the sources an expert gave and the search's own date field are not trusted: every PMID is dated with PubMed's
+    earliest public date. A PMID without a date is dropped. Returns (kept, {dropped pmid: reason})."""
+    if not as_of or not pmids:
+        return list(pmids), {}
+    from hyparena import backtest
+    dates = backtest._pubdates(list(pmids))
+    kept, dropped = [], {}
+    for p in pmids:
+        if p not in dates:
+            dropped[p] = "undated"
+        elif dates[p] > as_of:
+            dropped[p] = f"after_T {dates[p]}"
+        else:
+            kept.append(p)
+    return kept, dropped
+
+
 def recheck(claim, card: HypothesisCard, evidence: list[EvidenceRecord], counter: list[EvidenceRecord]
             ) -> tuple[list[EvidenceRecord], list[EvidenceRecord]]:
     """The code checks of `verify_claim` applied again to saved PubMed records (abstracts from the cache):
@@ -228,10 +247,11 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
     pmids = pmids[:retmax]
     by_expert = {pmid: did for pmid, did in (expert_pmids or [])}    # sources an expert gave (spec 7a)
     pmids = list(by_expert) + [p for p in pmids if p not in by_expert]
+    pmids, dropped = date_guard(pmids, as_of)
     abstracts = {p: a for p, a in pubmed.fetch(pmids).items() if a.get("abstract")}
     if log is not None:
         log.append({"kind": "search", "claim": claim.id, "queries": queries(claim, card), "as_of": as_of,
-                    "expert_pmids": list(by_expert),
+                    "date_guard_dropped": dropped, "expert_pmids": list(by_expert),
                     "pmids": list(abstracts), "drugage": [r.record_id for r in support + against]})
     if not abstracts:
         cv.notes = "no abstracts found"

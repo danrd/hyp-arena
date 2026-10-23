@@ -232,9 +232,11 @@ def deep_check(client, family: str, card: HypothesisCard, ver: Verification, as_
     names = " ".join(i.label for i in card.pico.intervention)
     for alt in [a for a in ver.alternatives if a.source == "checklist" and a.status == "open"]:
         terms = " OR ".join(f'"{t}"' if " " in t else t for t in BY_ID[alt.type].terms)
-        pmids = pubmed.search(f"{names} ({terms})", retmax=retmax, as_of=as_of)
+        from hyparena.card.verifier import date_guard
+        pmids, dropped = date_guard(pubmed.search(f"{names} ({terms})", retmax=retmax, as_of=as_of), as_of)
         if log is not None:
-            log.append({"kind": "search", "alternative": alt.id, "type": alt.type, "pmids": pmids, "as_of": as_of})
+            log.append({"kind": "search", "alternative": alt.id, "type": alt.type, "pmids": pmids, "as_of": as_of,
+                        "date_guard_dropped": dropped})
         if pmids:
             check(client, family, card, ver, pmids=pmids, avoid=avoid, log=log, only={alt.id})
     return ver

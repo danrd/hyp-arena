@@ -469,3 +469,70 @@ def test_human_healthspan_prompt_counts_markers():
                              negated=False, alternative=False, contrast="",
                              abstracts=[], history_text="")
     assert "in humans, a finding on a laboratory" in text(True) and "in humans, a finding" not in text(False)
+
+
+# D1/D2: a run on date T never reads a paper first public after T, and a paper without a date is dropped.
+
+def _dated(monkeypatch, dates):
+    from hyparena import backtest
+    monkeypatch.setattr(backtest, "_pubdates", lambda pmids: {p: dates[p] for p in pmids if p in dates})
+
+
+def test_date_guard_drops_late_and_undated_papers(monkeypatch):
+    _dated(monkeypatch, {"1": "2009-05-01", "2": "2011-02-01"})
+    kept, dropped = verifier.date_guard(["1", "2", "3"], "2010-12-31")
+    assert kept == ["1"] and dropped == {"2": "after_T 2011-02-01", "3": "undated"}
+    assert verifier.date_guard(["2"], None) == (["2"], {})            # no T: nothing to guard
+
+
+def test_sources_from_an_expert_do_not_bypass_the_date(monkeypatch):
+    card = _fixture_card("ex2_senolytics_function")
+    _dated(monkeypatch, {"1": "2009-05-01", "9": "2015-01-01"})
+    monkeypatch.setattr(pubmed, "search", lambda q, retmax=8, as_of=None: ["1", "8"])    # the search itself leaks "8"
+    seen = []
+    monkeypatch.setattr(pubmed, "fetch", lambda ids: (seen.extend(ids), {p: {**ABSTRACT, "pmid": p} for p in ids})[1])
+    monkeypatch.setattr(verifier, "drugage_records", lambda claim, allowed=None, cid=None: ([], []))
+    monkeypatch.setattr(verifier, "ask", lambda *a, **k: ({"records": []}, "fake"))
+    log = []
+    verifier.verify_claim(None, "google", frozenset(), card.claims[0], card, as_of="2010-12-31", log=log,
+                          expert_pmids=[("9", "d1")])
+    assert set(seen) == {"1"}
+    assert log[-1]["date_guard_dropped"] == {"9": "after_T 2015-01-01", "8": "undated"}
+
+
+def test_curated_records_without_a_date_are_excluded(monkeypatch):
+    from hyparena.card.models import EvidenceRecord
+    card = _fixture_card("ex2_senolytics_function")
+    recs = [EvidenceRecord(source="DrugAge", record_id=f"DA:{p or 0}", linked_pmid=p, epistemic_type="B_curated",
+                           species="mouse", quote="curated") for p in ("1", "2", "")]
+    monkeypatch.setattr(verifier, "drugage_records", lambda claim, allowed=None, cid=None: (recs, []))
+    _dated(monkeypatch, {"1": "2009-05-01", "2": "2012-01-01"})
+    support, against = verifier.curated(card.claims[0], card, "2010-12-31")
+    assert [r.linked_pmid for r in support] == ["1"] and not against
+
+
+def _run_file(tmp_path, records, as_of="2010-12-31"):
+    import json
+    claims = [{"id": "c1", "evidence": records, "counterevidence": [], "refusals": []}]
+    f = tmp_path / "run.json"
+    f.write_text(json.dumps({"meta": {"as_of": as_of}, "items": [{"id": "H-1", "verification": {"claims": claims, "alternatives": []}}]}))
+    return str(f)
+
+
+def test_audit_of_a_clean_run(monkeypatch, tmp_path):
+    from hyparena import backtest
+    _dated(monkeypatch, {"1": "2009-05-01"})
+    out = backtest.audit(_run_file(tmp_path, [{"record_id": "PMID:1"}]), strict=True)
+    assert out["ok"] and out["undated_share"] == 0 and out["after_T"] == {}
+
+
+def test_audit_fails_on_a_late_record_always_and_on_undated_ones_when_final(monkeypatch, tmp_path):
+    from hyparena import backtest
+    _dated(monkeypatch, {"1": "2009-05-01", "2": "2012-01-01"})
+    late = backtest.audit(_run_file(tmp_path, [{"record_id": "PMID:2"}]))
+    assert not late["ok"] and list(late["after_T"]) == ["2"]
+    recs = [{"record_id": "PMID:1"}, {"record_id": "PMID:3"}, {"record_id": "NCT00000001"}]
+    explore = backtest.audit(_run_file(tmp_path, recs))                 # exploratory: listed, no failure
+    assert explore["ok"] and explore["undated"] == ["3"] and list(explore["undatable"]) == ["NCT00000001"]
+    final = backtest.audit(_run_file(tmp_path, recs), strict=True)      # final run on T: any undated record fails
+    assert not final["ok"] and final["undated_share"] > 0
