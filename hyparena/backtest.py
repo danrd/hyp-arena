@@ -46,6 +46,9 @@ OUT = Path(__file__).resolve().parents[1] / "data" / "backtest"
 _MONTHS = {m: i for i, m in enumerate(("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"), 1)}
 
 
+DATES_CACHE = Path("data/cache/pubdates.json")      # found dates only: a paper never gets an earlier first date
+
+
 def _pubmed_date(text: str) -> str | None:
     """ISO date from a PubMed date string ("2016 Nov 14", "2016 Dec", "2016/11/15 06:00"); a missing day or
     month counts as the first."""
@@ -65,9 +68,14 @@ def _pubdates(pmids: list[str]) -> dict[str, str]:
     of the electronic, print and PubMed-entry dates. (The print date alone can come weeks after the paper
     was online, which let a backtest's evidence cut-off include the paper itself.)"""
     from hyparena.tools import pubmed                # shares PubMed's rate limit with the verifier's threads
-    dates = {}
-    for i in range(0, len(pmids), 150):
-        batch = pmids[i:i + 150]
+    try:
+        cache = json.loads(DATES_CACHE.read_text())
+    except (OSError, ValueError):
+        cache = {}
+    dates = {p: cache[p] for p in pmids if p in cache}
+    todo = [p for p in pmids if p not in dates]
+    for i in range(0, len(todo), 150):
+        batch = todo[i:i + 150]
         r = pubmed._get("esummary.fcgi", {"db": "pubmed", "id": ",".join(batch), "retmode": "json"})
         res = r.json().get("result", {})
         for p in batch:
@@ -78,6 +86,10 @@ def _pubdates(pmids: list[str]) -> dict[str, str]:
             found = [d for d in found if d]
             if found:
                 dates[p] = min(found)
+                cache[p] = dates[p]
+    if todo:
+        DATES_CACHE.parent.mkdir(parents=True, exist_ok=True)
+        DATES_CACHE.write_text(json.dumps(cache, sort_keys=True))
     return dates
 
 
@@ -332,28 +344,37 @@ def run_v2(pool_path: str, out: str, config: str = "configs/v2.yaml", profile: s
     return ladder
 
 
-def audit(v2_path: str) -> dict:
+def audit(v2_path: str, strict: bool = False) -> dict:
     """Date audit (Working_Notes A1): no evidence record published after the run's T reaches any component. Every
     PubMed record (and the paper behind every curated record) of every verified claim, alternative check and
-    refusal is dated with PubMed's earliest public date."""
+    refusal is dated with PubMed's earliest public date. A record the audit cannot date (no PMID in the run, or
+    no date at PubMed) is listed under `undated` / `undatable`: a warning in an exploratory run, a failure with
+    `strict` (the final run on a date T must have none)."""
     res = json.loads(Path(v2_path).read_text())
     as_of = res["meta"].get("as_of")
-    ids = {}
+    ids, undatable = {}, {}
     for x in res["items"]:
         ver = x.get("verification") or {}
         for cv in ver.get("claims", []):
             for r in cv.get("evidence", []) + cv.get("counterevidence", []) + cv.get("refusals", []):
                 pmid = (r.get("linked_pmid") or r.get("record_id", "")).replace("PMID:", "")
+                where = f"{x['id']}/{cv['id']}"
                 if pmid.isdigit():
-                    ids.setdefault(pmid, set()).add(f"{x['id']}/{cv['id']}")
+                    ids.setdefault(pmid, set()).add(where)
+                elif r.get("record_id"):
+                    undatable.setdefault(r["record_id"], set()).add(where)
         for a in ver.get("alternatives", []):
             pmid = (a.get("record_id") or "").replace("PMID:", "")
             if pmid.isdigit():
                 ids.setdefault(pmid, set()).add(f"{x['id']}/{a['id']}")
     dates = _pubdates(sorted(ids)) if ids and as_of else {}
     late = {p: {"date": d, "where": sorted(ids[p])} for p, d in dates.items() if d > as_of}
-    return {"as_of": as_of, "records": len(ids), "undated": sorted(set(ids) - set(dates)), "after_T": late,
-            "ok": not late}
+    undated = sorted(set(ids) - set(dates)) if as_of else []
+    undatable = {k: sorted(v) for k, v in sorted(undatable.items())} if as_of else {}
+    clean = not late and not (strict and (undated or undatable))
+    return {"as_of": as_of, "records": len(ids), "undated": undated, "undatable": undatable, "after_T": late,
+            "undated_share": (len(undated) + len(undatable)) / max(1, len(ids) + len(undatable)), "strict": strict,
+            "ok": clean}
 
 
 def ablate(v2_path: str, drop: list[str], profile: str = "evidence_first", K: int = 10000) -> dict:
@@ -552,6 +573,7 @@ def main() -> None:
     ab.add_argument("--profile", default="evidence_first")
     ab.add_argument("--out", required=True)
     d = sub.add_parser("audit", help="no record after T reached the run (date audit)")
+    d.add_argument("--final", action="store_true", help="a final run on date T: records without a date fail the audit (exit 1)")
     d.add_argument("--v2", required=True)
     a = sub.add_parser("axes", help="AUC of each evidence-profile axis against the labels (card spec 8)")
     a.add_argument("--labels", required=True)
@@ -584,8 +606,9 @@ def main() -> None:
         print(args.out)
         return
     if args.cmd == "audit":
-        print(json.dumps(audit(args.v2), indent=1))
-        return
+        out = audit(args.v2, strict=args.final)
+        print(json.dumps(out, indent=1))
+        raise SystemExit(0 if out["ok"] else 1)
     if args.cmd == "axes":
         print(json.dumps(axes(args.labels, args.v2, args.split), indent=2))
         return
