@@ -29,10 +29,26 @@ class PriorBias:
     per_item: list[dict[str, Any]]
 
 
-def _replace_word(text: str, word: str, replacement: str) -> tuple[str, int]:
+def _replace_word(text: str, word: str, replacement: str, preserve_case: bool = False) -> tuple[str, int]:
     # Use word boundaries for replacement to ensure we don't match substrings inside other words
     pattern = re.compile(rf"\b{re.escape(word)}\b", re.IGNORECASE)
-    res, count = pattern.subn(replacement, text)
+
+    if not preserve_case:
+        res, count = pattern.subn(replacement, text)
+        return res, count
+
+    def match_replacer(match: re.Match) -> str:
+        matched_str = match.group(0)
+        if matched_str.isupper():
+            return replacement.upper()
+        elif matched_str.istitle():
+            return replacement.title()
+        elif matched_str.islower():
+            return replacement.lower()
+        else:
+            return replacement
+
+    res, count = pattern.subn(match_replacer, text)
     return res, count
 
 
@@ -49,8 +65,8 @@ def swap_variants(text: str, name: str, aliases: Sequence[str] = (), neutral: st
     words_to_replace.sort(key=len, reverse=True)
 
     for word in words_to_replace:
-        neutral_text, c_n = _replace_word(neutral_text, word, neutral)
-        famous_text, c_f = _replace_word(famous_text, word, famous)
+        neutral_text, c_n = _replace_word(neutral_text, word, neutral, preserve_case=False)
+        famous_text, c_f = _replace_word(famous_text, word, famous, preserve_case=True)
         count_neutral += c_n
         count_famous += c_f
 
@@ -63,7 +79,7 @@ def swap_variants(text: str, name: str, aliases: Sequence[str] = (), neutral: st
     )
 
 
-def _bootstrap_ci(data: np.ndarray, n_resamples: int = 1000, alpha: float = 0.05, seed: int = 42) -> tuple[float, float]:
+def _bootstrap_ci(data: np.ndarray, n_resamples: int = 1000, alpha: float = 0.05, seed: int | np.random.Generator | None = 42) -> tuple[float, float]:
     """Compute percentile bootstrap confidence interval for the mean."""
     n = len(data)
     if n == 0:
@@ -74,7 +90,7 @@ def _bootstrap_ci(data: np.ndarray, n_resamples: int = 1000, alpha: float = 0.05
     return float(np.percentile(means, 100 * (alpha / 2))), float(np.percentile(means, 100 * (1 - alpha / 2)))
 
 
-def prior_bias_score(component: Callable[[str], float], items: Sequence[tuple[str, str, Sequence[str]]], neutral: str = "Compound_42", famous: str = "rapamycin") -> PriorBias:
+def prior_bias_score(component: Callable[[str], float], items: Sequence[tuple[str, str, Sequence[str]]], neutral: str = "Compound_42", famous: str = "rapamycin", n_resamples: int = 1000, seed: int | np.random.Generator | None = 42) -> PriorBias:
     """Score bias under name swapping for a component."""
     neutral_diffs = []
     famous_diffs = []
@@ -105,14 +121,14 @@ def prior_bias_score(component: Callable[[str], float], items: Sequence[tuple[st
     return PriorBias(
         mean_neutral_minus_own=float(np.mean(neutral_arr)) if len(neutral_arr) > 0 else 0.0,
         mean_famous_minus_own=float(np.mean(famous_arr)) if len(famous_arr) > 0 else 0.0,
-        ci_neutral=_bootstrap_ci(neutral_arr) if len(neutral_arr) > 0 else (0.0, 0.0),
-        ci_famous=_bootstrap_ci(famous_arr) if len(famous_arr) > 0 else (0.0, 0.0),
+        ci_neutral=_bootstrap_ci(neutral_arr, n_resamples=n_resamples, seed=seed) if len(neutral_arr) > 0 else (0.0, 0.0),
+        ci_famous=_bootstrap_ci(famous_arr, n_resamples=n_resamples, seed=seed) if len(famous_arr) > 0 else (0.0, 0.0),
         n_items=len(items),
         per_item=per_item
     )
 
 
-def rank_shift(component: Callable[[str], float], items: Sequence[tuple[str, str, Sequence[str]]], famous: str = "rapamycin", n_resamples: int = 1000, seed: int = 42) -> tuple[float, tuple[float, float]]:
+def rank_shift(component: Callable[[str], float], items: Sequence[tuple[str, str, Sequence[str]]], famous: str = "rapamycin", n_resamples: int = 1000, seed: int | np.random.Generator | None = 42) -> tuple[float, tuple[float, float]]:
     """Compute Kendall tau-b between ranking under own and famous texts, with a bootstrap CI."""
     own_scores = []
     famous_scores = []

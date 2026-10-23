@@ -120,3 +120,21 @@ def test_paired_difference_ci():
     assert res.low <= 0.0 <= res.high
     # Very narrow
     assert res.high - res.low < 1e-9
+
+def test_bootstrap_rng_types():
+    labels = np.array([0, 1, 0, 1, 0, 1, 0, 1])
+    scores = np.array([0.1, 0.9, 0.2, 0.8, 0.3, 0.7, 0.4, 0.6])
+
+    res_int = bootstrap_ci(auc, scores, labels, n_boot=100, rng=42)
+    res_gen = bootstrap_ci(auc, scores, labels, n_boot=100, rng=np.random.default_rng(42))
+
+    assert res_int.estimate == res_gen.estimate
+    assert res_int.low == res_gen.low
+    assert res_int.high == res_gen.high
+
+    res_paired_int = paired_difference_ci(auc, scores, scores, labels, n_boot=100, rng=42)
+    res_paired_gen = paired_difference_ci(auc, scores, scores, labels, n_boot=100, rng=np.random.default_rng(42))
+
+    assert res_paired_int.estimate == res_paired_gen.estimate
+    assert res_paired_int.low == res_paired_gen.low
+    assert res_paired_int.high == res_paired_gen.high

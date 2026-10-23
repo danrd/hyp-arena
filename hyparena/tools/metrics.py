@@ -14,16 +14,16 @@ def auc(scores: Sequence[float], labels: Sequence[int]) -> float:
     """Area under the ROC curve for binary labels (1 = positive), ties get half credit (Mann-Whitney form)."""
     scores_arr = np.asarray(scores)
     labels_arr = np.asarray(labels)
-    if len(np.unique(labels_arr)) < 2:
+    n_pos = np.sum(labels_arr == 1)
+    n_neg = np.sum(labels_arr == 0)
+    if n_pos == 0 or n_neg == 0:
         raise ValueError("AUC requires both positive and negative classes.")
-    pos_mask = labels_arr == 1
-    neg_mask = labels_arr == 0
-    pos_scores = scores_arr[pos_mask]
-    neg_scores = scores_arr[neg_mask]
-    n_pos = len(pos_scores)
-    n_neg = len(neg_scores)
-    res = scipy.stats.mannwhitneyu(pos_scores, neg_scores, alternative='two-sided')
-    return float(res.statistic / (n_pos * n_neg))
+
+    ranks = scipy.stats.rankdata(scores_arr)
+    pos_ranks = ranks[labels_arr == 1]
+
+    u1 = np.sum(pos_ranks) - n_pos * (n_pos + 1) / 2
+    return float(u1 / (n_pos * n_neg))
 
 
 def precision_at_k(scores: Sequence[float], labels: Sequence[int], k: int) -> float:
@@ -97,10 +97,9 @@ class BootstrapResult:
 
 
 def bootstrap_ci(metric: Callable, *arrays: Sequence[Any], n_boot: int = 2000, alpha: float = 0.05,
-                 clusters: Optional[Sequence[Any]] = None, rng: Optional[np.random.Generator] = None) -> BootstrapResult:
+                 clusters: Optional[Sequence[Any]] = None, rng: Optional[int | np.random.Generator] = None) -> BootstrapResult:
     """Percentile bootstrap confidence interval."""
-    if rng is None:
-        rng = np.random.default_rng()
+    rng = np.random.default_rng(rng)
 
     arrays = [np.asarray(a) for a in arrays]
     n = len(arrays[0])
@@ -118,14 +117,11 @@ def bootstrap_ci(metric: Callable, *arrays: Sequence[Any], n_boot: int = 2000, a
         unique_clusters = np.unique(clusters)
         n_clusters = len(unique_clusters)
 
-        for _ in range(n_boot):
-            # Resample clusters
-            resampled_clusters = rng.choice(unique_clusters, size=n_clusters, replace=True)
-            # Create boolean mask or list of indices for resampled data
-            idx = []
-            for c in resampled_clusters:
-                # Find indices where cluster == c
-                idx.extend(np.where(clusters == c)[0])
+        cluster_indices = [np.where(clusters == c)[0] for c in unique_clusters]
+        resampled_clusters_matrix = rng.integers(0, n_clusters, size=(n_boot, n_clusters))
+
+        for i in range(n_boot):
+            idx = np.concatenate([cluster_indices[c] for c in resampled_clusters_matrix[i]])
 
             resampled_arrays = [a[idx] for a in arrays]
             try:
@@ -134,8 +130,9 @@ def bootstrap_ci(metric: Callable, *arrays: Sequence[Any], n_boot: int = 2000, a
             except ValueError:
                 n_skipped += 1
     else:
-        for _ in range(n_boot):
-            idx = rng.choice(n, size=n, replace=True)
+        idx_matrix = rng.integers(0, n, size=(n_boot, n))
+        for i in range(n_boot):
+            idx = idx_matrix[i]
             resampled_arrays = [a[idx] for a in arrays]
             try:
                 val = metric(*resampled_arrays)
@@ -154,10 +151,9 @@ def bootstrap_ci(metric: Callable, *arrays: Sequence[Any], n_boot: int = 2000, a
 
 def paired_difference_ci(metric: Callable, scores_a: Sequence[float], scores_b: Sequence[float], labels: Sequence[int],
                          n_boot: int = 2000, alpha: float = 0.05, clusters: Optional[Sequence[Any]] = None,
-                         rng: Optional[np.random.Generator] = None) -> BootstrapResult:
+                         rng: Optional[int | np.random.Generator] = None) -> BootstrapResult:
     """Bootstrap confidence interval for metric(scores_a, labels) - metric(scores_b, labels) on the same resamples."""
-    if rng is None:
-        rng = np.random.default_rng()
+    rng = np.random.default_rng(rng)
 
     scores_a = np.asarray(scores_a)
     scores_b = np.asarray(scores_b)
@@ -174,11 +170,11 @@ def paired_difference_ci(metric: Callable, scores_a: Sequence[float], scores_b: 
         unique_clusters = np.unique(clusters)
         n_clusters = len(unique_clusters)
 
-        for _ in range(n_boot):
-            resampled_clusters = rng.choice(unique_clusters, size=n_clusters, replace=True)
-            idx = []
-            for c in resampled_clusters:
-                idx.extend(np.where(clusters == c)[0])
+        cluster_indices = [np.where(clusters == c)[0] for c in unique_clusters]
+        resampled_clusters_matrix = rng.integers(0, n_clusters, size=(n_boot, n_clusters))
+
+        for i in range(n_boot):
+            idx = np.concatenate([cluster_indices[c] for c in resampled_clusters_matrix[i]])
 
             resampled_a = scores_a[idx]
             resampled_b = scores_b[idx]
@@ -191,8 +187,9 @@ def paired_difference_ci(metric: Callable, scores_a: Sequence[float], scores_b: 
             except ValueError:
                 n_skipped += 1
     else:
-        for _ in range(n_boot):
-            idx = rng.choice(n, size=n, replace=True)
+        idx_matrix = rng.integers(0, n, size=(n_boot, n))
+        for i in range(n_boot):
+            idx = idx_matrix[i]
             resampled_a = scores_a[idx]
             resampled_b = scores_b[idx]
             resampled_labels = labels[idx]

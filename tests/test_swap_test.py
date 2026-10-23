@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 from hyparena.tools.swap_test import swap_variants, prior_bias_score, rank_shift
 
@@ -19,8 +20,35 @@ def test_swap_variants_basic():
     assert "Compound_42 is a drug, also known as Compound_42." in variants.neutral
     assert "rapamycinol" in variants.neutral
 
-    assert "rapamycin is a drug, also known as rapamycin." in variants.famous
+    assert "Rapamycin is a drug, also known as rapamycin." in variants.famous
     assert "rapamycinol" in variants.famous
+
+def test_swap_variants_case():
+    text = "SIROLIMUS is tested. Sirolimus works. sirolimus is fine."
+    variants = swap_variants(text, name="sirolimus", famous="rapamycin")
+
+    assert variants.count_famous == 3
+    assert variants.famous == "RAPAMYCIN is tested. Rapamycin works. rapamycin is fine."
+    assert variants.neutral == "Compound_42 is tested. Compound_42 works. Compound_42 is fine."
+
+def test_rng_seeds():
+    items = [
+        ("Rapamycin works", "rapamycin", ()),
+        ("Metformin works", "metformin", ()),
+        ("Acarbose works", "acarbose", ())
+    ]
+
+    bias_int = prior_bias_score(stub_biased, items, seed=42)
+    bias_gen = prior_bias_score(stub_biased, items, seed=np.random.default_rng(42))
+    assert bias_int.ci_neutral == bias_gen.ci_neutral
+    assert bias_int.ci_famous == bias_gen.ci_famous
+
+    def rank_stub(text: str) -> float:
+        return float(len(text))
+
+    tau_int, ci_int = rank_shift(rank_stub, items, seed=42)
+    tau_gen, ci_gen = rank_shift(rank_stub, items, seed=np.random.default_rng(42))
+    assert ci_int == ci_gen
 
 def test_prior_bias_score_insensitive():
     def pure_stub(text: str) -> float:
