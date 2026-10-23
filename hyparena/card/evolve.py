@@ -159,9 +159,12 @@ def evolve(res: dict, config: str, rounds: int = 3, parents: int = 4, children: 
            on_stage=lambda m: None, snapshot=None, spec: Optional[str] = None) -> dict:
     """Run the rounds on a saved v2 result; the budget `max_calls` is shared by the proposals and the verification."""
     from hyparena import prespec
+    from hyparena.aspid import load_profiles
+    from hyparena.card import indicators as ind
     from hyparena.card.pipeline import _client, reapply_rules, run
     spec_entry = prespec.begin(spec, {"rounds": rounds, "parents": parents, "children": children, "writer": writer,
-                                      "verifiers": verifiers or ["deepseek"], "max_calls": max_calls}) if spec else None
+                                      "verifiers": verifiers or ["deepseek"], "max_calls": max_calls,
+                                      "indicators_sha256": ind.set_hash(ind.INDICATORS, load_profiles())}) if spec else None
     sp = prespec.load(spec) if spec else {}
     started, spent, child_calls = time.time(), 0, 0          # spent: proposals + verification of the children
     res = copy.deepcopy(res)

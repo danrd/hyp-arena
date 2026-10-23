@@ -386,7 +386,7 @@ def ablate(v2_path: str, drop: list[str], profile: str = "evidence_first", K: in
     from hyparena.card.pipeline import OUTCOME_SCORE
     res = json.loads(Path(v2_path).read_text())
     ids = res["meta"].get("ids") or [f"imp{i:03d}" for i in range(1, len(res["items"]) + 1)]
-    specs = [s for s in ind.INDICATORS if s.id not in drop]
+    specs = [s for s in ind.for_meta(res["meta"]) if s.id not in drop]
     keep = {s.id for s in specs}
     values = {x["id"]: {k: v for k, v in (x.get("indicators") or {}).items() if k in keep}
               for x in res["items"] if x["outcome"] == "ranked"}
@@ -455,7 +455,7 @@ def primary_tied(labels_path: str, v2_path: str, split: str = "all", K: int = 10
     labels = json.loads(Path(labels_path).read_text())
     res = json.loads(Path(v2_path).read_text())
     ids = res["meta"].get("ids") or [f"imp{i:03d}" for i in range(1, len(res["items"]) + 1)]
-    specs = [sp for sp in ind.INDICATORS if sp.id not in PRIMARY_DROP]
+    specs = [sp for sp in ind.for_meta(res["meta"]) if sp.id not in PRIMARY_DROP]
     keep = {sp.id for sp in specs}
     values = {x["id"]: {k: v for k, v in (x.get("indicators") or {}).items() if k in keep}
               for x in res["items"] if x["outcome"] == "ranked"}
@@ -495,7 +495,7 @@ def axes(labels_path: str, v2_path: str, split: str = "all") -> dict:
     res = json.loads(Path(v2_path).read_text())
     ids = res["meta"].get("ids") or [f"imp{i:03d}" for i in range(1, len(res["items"]) + 1)]
     by_id = dict(zip(ids, res["items"]))
-    specs = {s.id: s for s in ind.INDICATORS}
+    specs = {s.id: s for s in ind.for_meta(res["meta"])}
     out = {"split": split, "n": 0, "outcomes": defaultdict(lambda: defaultdict(int)), "axes": {}}
     values = defaultdict(dict)
     for h, lab in items.items():

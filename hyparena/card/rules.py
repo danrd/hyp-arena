@@ -672,6 +672,9 @@ def evidence_profile(card: HypothesisCard, ver: Verification) -> EvidenceProfile
     neg = any(r.program for q in qualifying for r in q[4])
     if pos or neg:
         prof.multi_site_program = {"tested": "yes", "outcome": "mixed" if pos and neg else "positive" if pos else "negative"}
+    if supported and prof.multi_site_program.get("outcome") == "positive":
+        prof.robustness = "replicated"                # multi_site_positive is a condition of the level, not an indicator (2026-10-23)
+    prof.no_literature = not any(cv.evidence or cv.counterevidence for c, cv in pairs)
 
     # mechanism axis
     mech = [status[cv.id] for c, cv in pairs if c.role in ("mechanism", "premise") and cv.claim is None]

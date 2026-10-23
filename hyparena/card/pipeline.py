@@ -35,6 +35,13 @@ def _client(config: str, fake: bool, max_calls: int):
     return client, [j.family for j in pool]
 
 
+def _record_indicator_set(res: dict) -> None:
+    """A recomputed result carries the indicator set it was computed with (saved runs list their own)."""
+    res["meta"]["indicators"] = [{"id": s.id, "kind": s.kind, "levels": list(s.levels), "bounds": list(s.bounds), "note": s.note}
+                                 for s in ind.INDICATORS]
+    res["meta"]["indicator_set"] = {"sha256": ind.set_hash(ind.INDICATORS, load_profiles()), "ids": [s.id for s in ind.INDICATORS]}
+
+
 def reapply_rules(res: dict, K: int = 10000, k_top: int = 3, new_rules: bool = True, ex_restore: Optional[dict] = None) -> dict:
     """A saved v2 result with the rules applied again, without model calls and without touching the sources: the
     records, the cards and the saved `extra` stay as they were; `sex_scope` is read from the hypothesis text, the
@@ -82,6 +89,7 @@ def reapply_rules(res: dict, K: int = 10000, k_top: int = 3, new_rules: bool = T
     res["known_results"] = ranking.known_results if ranking else []
     res.update(unranked_lists(res["items"]))
     res["meta"]["reapplied"] = {"at": time.strftime("%Y-%m-%dT%H:%M:%S"), "new_rules": new_rules}
+    _record_indicator_set(res)
     return res
 
 
@@ -112,7 +120,9 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
     already read, and a dedicated search per open alternative for P(top-k) >= 0.5 (spec 8c). `dedup`: a card
     that duplicates an earlier one (spec 8b) is not verified and gets the outcome `duplicate`."""
     from hyparena import prespec
-    spec_entry = prespec.begin(spec, {"as_of": as_of, "K": K, "k_top": k_top, "max_calls": max_calls}) if spec else None
+    iset = ind.set_hash(ind.INDICATORS, load_profiles())
+    spec_entry = prespec.begin(spec, {"as_of": as_of, "K": K, "k_top": k_top, "max_calls": max_calls,
+                                      "indicators_sha256": iset}) if spec else None
     started = time.time()
     layer = expert if isinstance(expert, ex.ExpertLayer) else ex.load(expert)
     origins = ["external"] * len(texts) + ["expert"] * len(layer.hypotheses)
@@ -215,6 +225,7 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
                      "calls": client.calls, "failures": client.failures, "families": families, "writer": writer,
                      "verifiers": verifiers or families, "config": config, "cards_reused": cards is not None,
                      "as_of": as_of, "fake": fake, "k_top": k_top, **({"spec": spec_entry} if spec_entry else {}),
+                     "indicator_set": {"sha256": iset, "ids": [s.id for s in ind.INDICATORS]},
                      "profiles": {n: {"tiers": p.tiers, "version": p.version, "description": p.description}
                                   for n, p in load_profiles().items()},
                      "indicators": [{"id": s.id, "kind": s.kind, "levels": list(s.levels), "bounds": list(s.bounds),
@@ -320,6 +331,7 @@ def refresh_curated(res: dict, K: int = 10000, k_top: int = 3) -> dict:
     res.update(unranked_lists(res["items"]))
     res["proximity"], res["variant_groups"] = [r.as_dict() for r in rels], proximity.variant_groups(rels)
     res["meta"]["refreshed"] = time.strftime("%Y-%m-%dT%H:%M:%S")
+    _record_indicator_set(res)
     return res
 
 

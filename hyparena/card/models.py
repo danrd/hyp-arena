@@ -307,6 +307,7 @@ class EvidenceProfile(BaseModel):
     effect_contested: list[Rung] = Field(default_factory=list)
     robustness: Literal["single", "replicated"] = "single"
     multi_site_program: dict[str, str] = Field(default_factory=lambda: {"tested": "no"})
+    no_literature: bool = False                  # no evidence and no counterevidence record for any claim: novelty stays unknown
     mechanism: Literal["supported", "partial", "unverified", "refuted"] = "unverified"
     disease_models: int = 0                      # records from disease models (analogs of type disease_model): not in effect_level
     aging_models: int = 0                        # records from accelerated-ageing models: not counted yet

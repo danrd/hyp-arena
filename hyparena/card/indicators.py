@@ -15,7 +15,7 @@ from hyparena.card.models import RUNGS, HypothesisCard, Verification
 from hyparena.card.rules import (STRAIN_ANALOG, _all_claims, admissible, claim_rung, claim_status, is_disease_analog,
                                  same_intervention)
 
-INDICATORS: list[IndicatorSpec] = [
+INDICATORS_V1: list[IndicatorSpec] = [          # the set of the first backtest run: read for saved runs, never computed now
     IndicatorSpec("effect_level", "ordinal", levels=RUNGS),
     IndicatorSpec("robustness", "ordinal", levels=("single", "replicated")),
     IndicatorSpec("multi_site_positive", "ordinal", levels=("no", "positive")),
@@ -33,7 +33,29 @@ INDICATORS: list[IndicatorSpec] = [
     IndicatorSpec("informativeness", "cardinal", bounds=(0.0, 4.0),
                   note="alternatives the decisive experiment separates (prediction table), saturating at 4"),
 ]
+ALL_BY_ID = {s.id: s for s in INDICATORS_V1}
+# Current set (2026-10-23): `multi_site_positive` is a condition of `robustness`, not a scored indicator (its flag stays in
+# the evidence profile); `novelty` is unknown without an anchor in the graph.
+INDICATORS: list[IndicatorSpec] = [s for s in INDICATORS_V1 if s.id != "multi_site_positive"]
 BY_ID = {s.id: s for s in INDICATORS}
+
+
+def for_meta(meta: dict) -> list[IndicatorSpec]:
+    """The indicator specs a saved run was made with (its recorded ids; runs before 2026-10-23 have multi_site_positive)."""
+    ids = [i["id"] for i in meta.get("indicators") or []]
+    return [ALL_BY_ID[i] for i in ids if i in ALL_BY_ID] or list(INDICATORS)
+
+
+def set_hash(specs: Optional[list[IndicatorSpec]] = None, profiles: Optional[dict] = None) -> str:
+    """sha256 of the indicator set (ids, kinds, levels, bounds, scaling, mapping) and, when given, of the profile tiers:
+    written into a run's meta next to the hash of its spec (docs/rules-method.md, A4)."""
+    import hashlib
+    import json
+    specs = INDICATORS if specs is None else specs
+    body = {"indicators": [[s.id, s.kind, list(s.levels), list(s.bounds), s.log, s.higher_is_better, s.mapping] for s in specs],
+            "profiles": {n: [t if isinstance(t, str) else sorted(t) for t in p.tiers] + [sorted(map(sorted, p.equal))]
+                         for n, p in sorted((profiles or {}).items())}}
+    return hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
 
 def compute(card: HypothesisCard, ver: Verification, extra: Optional[dict] = None) -> dict[str, object]:
@@ -52,7 +74,6 @@ def compute(card: HypothesisCard, ver: Verification, extra: Optional[dict] = Non
     return {
         "effect_level": prof.effect_level,
         "robustness": prof.robustness,
-        "multi_site_positive": "positive" if prof.multi_site_program.get("outcome") == "positive" else "no",
         "mechanism": prof.mechanism if prof.mechanism != "refuted" else "unverified",
         "novelty": novelty(card, ver),
         "path_to_human": path_to_human(prof.effect_level, extra.get("human_safety")),
@@ -75,10 +96,12 @@ def path_to_human(effect_level: str, human_safety: Optional[bool]) -> Optional[s
     return str(int(not human_safety) + int(effect_level not in MAMMALIAN))
 
 
-def novelty(card: HypothesisCard, ver: Verification) -> str:
+def novelty(card: HypothesisCard, ver: Verification) -> Optional[str]:
     """new context (the same intervention and species already work in another strain, sex, dose or start age)
     · translation of a known finding to a new species · analog of a known intervention · new link (a known
-    result is ranked separately and never reaches this point)."""
+    result is ranked separately and never reaches this point). Unknown (None) without an anchor in the graph: no
+    literature at all, or a link nobody found whose mechanism is not even partly supported: absence of evidence
+    is not novelty (2026-10-23)."""
     pairs = [(c, cv) for c, cv in _all_claims(card, ver) if not is_disease_analog(c)]   # disease models: not counted
     for c, cv in pairs:
         if c.note.startswith(STRAIN_ANALOG) and claim_status(cv, c) == "supported":
@@ -96,4 +119,5 @@ def novelty(card: HypothesisCard, ver: Verification) -> str:
         if any(r.qualifiers_match.get("intervention_match") in ("related_compound", "class")
                and r.quote_role == "finding" for r in cv.evidence):
             return "analog"
-    return "new_link"
+    prof = ver.evidence_profile
+    return "new_link" if not prof.no_literature and prof.mechanism in ("partial", "supported") else None
