@@ -23,7 +23,7 @@ def _get_profile_indicators(profile: Profile) -> list[IndicatorSpec]:
     if not profile.tiers and not profile.equal:
         ids.update(s.id for s in INDICATORS)
 
-    return [BY_ID[i] for i in ids if i in BY_ID]
+    return [s for s in INDICATORS if s.id in ids]       # the order of INDICATORS: a set of strings iterates differently in every process
 
 def _generate_data(
     m: int,
