@@ -69,8 +69,8 @@ def test_script_on_snapshot(tmp_path):
     out_path = tmp_path / "test_perm_out.json"
 
     res = subprocess.run(
-        [sys.executable, "scripts/itp_label_permutation.py", snapshot_path, "--n", "100", "--out", str(out_path)],
-        capture_output=True, text=True, check=True
+        [sys.executable, "-m", "scripts.itp_label_permutation", snapshot_path, "--n", "100", "--out", str(out_path)],
+        capture_output=True, text=True, check=True, cwd=Path(__file__).resolve().parents[1]
     )
 
     assert out_path.exists()
