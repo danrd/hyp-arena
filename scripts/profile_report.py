@@ -84,7 +84,8 @@ def _aggregate(b: dict, ranked: list[dict], profile: str, drop: tuple[str, ...] 
     from dataclasses import replace
 
     from hyparena.aspid import aggregate, load_profiles
-    from hyparena.card.indicators import BY_ID
+    from hyparena.card.indicators import for_meta
+    BY_ID = {s.id: s for s in for_meta(b["meta"])}              # the run's own set and levels
     keep = [s["id"] for s in b["meta"]["indicators"] if s["id"] not in drop]
     tiers = [t if isinstance(t, str) else [i for i in t if i in keep] for t in b["meta"]["profiles"][profile]["tiers"]]
     prof = replace(load_profiles()[profile], tiers=[t for t in tiers if t])
@@ -129,6 +130,8 @@ def show(r: dict) -> None:
         print(f"Pool diagnostics: {len(d['varying'])} of {d['indicators']} indicators vary; constant: {', '.join(d['constant']) or '-'}; "
               f"unknown for all: {', '.join(d['all_unknown']) or '-'}; pairs ordered: "
               + ", ".join(f"{n} {v:.0%}" for n, v in d["pairs_ordered"].items()))
+        for n, v in (d.get("leading") or {}).items():
+            print(f"  leading indicator, {n}: {v['id']} ({v['share']:.0%} of {v['ordered_pairs']} ordered pairs); shares {v['shares']}")
         for w in d["warnings"]:
             print(f"  WARNING: {w}")
     print("\nIndicators over the ranked hypotheses")
