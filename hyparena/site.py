@@ -880,7 +880,7 @@ def main() -> None:
     x.add_argument("--out", required=True)
     m = sub.add_parser("embed")
     m.add_argument("--bundle", required=True)
-    m.add_argument("--key", default="sample", choices=["sample", "examples", "itp", "evolution"])
+    m.add_argument("--key", default="sample", choices=["sample", "examples", "itp", "evolution", "drugage"])
     sub.add_parser("build", help="render docs/site/content/<page>/*.md into docs/site/docs/<page>/index.html")
     a = ap.parse_args()
     if a.cmd == "export":

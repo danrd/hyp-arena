@@ -111,6 +111,26 @@ def run(pool_path: str, out: str, template_path: str = "runs/stage5/g003.ab.json
     return res
 
 
+STRATUM_RU = {"deep": "2+ работы на мышах", "shallow": "1 работа на мышах", "other_species": "только другие виды",
+              "none": "до 2015 года ничего"}
+TITLE_RU = "Калибровка профилей: 40 соединений DrugAge на конец 2015 года, разная глубина доказательств"
+
+
+def bundle(run_path: str, pool_path: str, out: str) -> dict:
+    """The site bundle of a pool run: titles name the stratum, the badge says it is a calibration pool (no models, no labels)."""
+    from hyparena.site import bundle_from_result
+    res = json.loads(Path(run_path).read_text())
+    pool = {h["id"]: h for h in json.loads(Path(pool_path).read_text())["hypotheses"]}
+    b = bundle_from_result(res, res["meta"]["ids"], None, TITLE_RU)
+    for h in b["hypotheses"]:
+        p = pool[h["id"]]
+        h["title"] = f"{p['compound']} · {STRATUM_RU[p['stratum']]} · мыши {p['strain']}"
+    b["meta"]["badge"] = "Калибровка"
+    Path(out).parent.mkdir(parents=True, exist_ok=True)
+    Path(out).write_text(json.dumps(b, ensure_ascii=False, indent=1))
+    return b
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -121,8 +141,15 @@ def main() -> None:
     r = sub.add_parser("run")
     r.add_argument("--pool", required=True)
     r.add_argument("--out", required=True)
+    g = sub.add_parser("bundle", help="the site bundle of a run")
+    g.add_argument("--run", required=True)
+    g.add_argument("--pool", required=True)
+    g.add_argument("--out", required=True)
     a = ap.parse_args()
-    if a.cmd == "build":
+    if a.cmd == "bundle":
+        b = bundle(a.run, a.pool, a.out)
+        print(a.out, len(b["hypotheses"]), "hypotheses")
+    elif a.cmd == "build":
         pool = build(a.as_of, a.per_stratum)
         Path(a.out).parent.mkdir(parents=True, exist_ok=True)
         Path(a.out).write_text(json.dumps(pool, ensure_ascii=False, indent=1))
