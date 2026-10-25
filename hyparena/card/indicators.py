@@ -4,7 +4,7 @@ by the aggregation, never replaced by a default.
 
 Not computable yet (left unknown until their inputs exist): informativeness (prediction table, spec 8c, stage
 C); late start needs the median and verbal-age tables (configs/lifespan_medians.yaml, values not filled yet). Novelty uses the verified claims only, not yet the knowledge
-graph. Cost, time and translational distance were replaced by the ordinal `path_to_human` (2026-10-20);
+graph. Cost, time and translational distance were replaced by the ordinal `path_to_human` (2026-10-20; since 2026-10-25 safety only);
 `next_step` is shown outside the ranking."""
 from __future__ import annotations
 
@@ -36,14 +36,23 @@ INDICATORS_V1: list[IndicatorSpec] = [          # the set of the first backtest 
 ALL_BY_ID = {s.id: s for s in INDICATORS_V1}
 # Current set (2026-10-23): `multi_site_positive` is a condition of `robustness`, not a scored indicator (its flag stays in
 # the evidence profile); `novelty` is unknown without an anchor in the graph.
-INDICATORS: list[IndicatorSpec] = [s for s in INDICATORS_V1 if s.id != "multi_site_positive"]
+INDICATORS: list[IndicatorSpec] = [
+    IndicatorSpec("path_to_human", "ordinal", levels=("1", "0"),
+                  note="how cheap it is to test now, not how likely it is true: 0 human safety data exist (approved, clinical "
+                       "stage, diet), 1 a preclinical safety package is needed; unknown for a gene target without a drug")
+    if s.id == "path_to_human" else s for s in INDICATORS_V1 if s.id != "multi_site_positive"]
 BY_ID = {s.id: s for s in INDICATORS}
 
 
 def for_meta(meta: dict) -> list[IndicatorSpec]:
-    """The indicator specs a saved run was made with (its recorded ids; runs before 2026-10-23 have multi_site_positive)."""
-    ids = [i["id"] for i in meta.get("indicators") or []]
-    return [ALL_BY_ID[i] for i in ids if i in ALL_BY_ID] or list(INDICATORS)
+    """The indicator specs a saved run was made with: its recorded ids and levels (runs before 2026-10-23 have
+    multi_site_positive; runs before 2026-10-25 have a three-level path_to_human)."""
+    out = []
+    for rec in meta.get("indicators") or []:
+        cur, old = BY_ID.get(rec["id"]), ALL_BY_ID.get(rec["id"])
+        levels = tuple(rec.get("levels") or ())
+        out.append(cur if cur is not None and (not levels or tuple(cur.levels) == levels) else old)
+    return [s for s in out if s is not None] or list(INDICATORS)
 
 
 def set_hash(specs: Optional[list[IndicatorSpec]] = None, profiles: Optional[dict] = None) -> str:
@@ -76,7 +85,7 @@ def compute(card: HypothesisCard, ver: Verification, extra: Optional[dict] = Non
         "robustness": prof.robustness,
         "mechanism": prof.mechanism if prof.mechanism != "refuted" else "unverified",
         "novelty": novelty(card, ver),
-        "path_to_human": path_to_human(prof.effect_level, extra.get("human_safety")),
+        "path_to_human": path_to_human(extra.get("human_safety")),
         "late_start": tuple(extra["late_start"]) if isinstance(extra.get("late_start"), list) else extra.get("late_start"),
         "both_sexes": ("both" if "both" in sexes or {"male", "female"} <= sexes else "one") if sexes else None,
         "effect_size": max(sizes) if sizes else None,
@@ -87,13 +96,14 @@ def compute(card: HypothesisCard, ver: Verification, extra: Optional[dict] = Non
 MAMMALIAN = ("mammals", "human_markers", "human_clinical")
 
 
-def path_to_human(effect_level: str, human_safety: Optional[bool]) -> Optional[str]:
-    """Number of preliminary steps before a human trial (spec 8a): a preclinical safety package when there
-    are no human safety data, a mouse study when there is no supported mammalian effect. Unknown when the
-    safety data cannot be decided (a gene target without a drug, an unresolved compound)."""
+def path_to_human(human_safety: Optional[bool]) -> Optional[str]:
+    """How cheap it is to test now (2026-10-25), not how likely the hypothesis is true: "0" human safety data exist
+    (an approved drug, a clinical-stage compound, a diet), "1" a preclinical safety package is needed first.
+    Unknown when the safety data cannot be decided (a gene target without a drug, an unresolved compound). The
+    step "a mouse study first" was removed: it counted the effect level a second time."""
     if human_safety is None:
         return None
-    return str(int(not human_safety) + int(effect_level not in MAMMALIAN))
+    return "0" if human_safety else "1"
 
 
 def novelty(card: HypothesisCard, ver: Verification) -> Optional[str]:

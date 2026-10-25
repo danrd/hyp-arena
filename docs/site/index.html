@@ -554,7 +554,7 @@ tr.foldrow button { font-size: var(--step--1); }
   const IND = {
     effect_level: ["Уровень эффекта", "высшая подтверждённая ступень"], robustness: ["Устойчивость", "одна работа или независимые повторы"],
     multi_site_positive: ["Многоцентровой результат", "положительный результат ITP/CITP на нескольких площадках"], mechanism: ["Механизм", "доля проверенных звеньев механизма"],
-    novelty: ["Новизна", "новый контекст < перенос < аналог < новая связь"], path_to_human: ["Путь к человеку", "0 — одобрено, 1 — в испытаниях, 2 — нет"],
+    novelty: ["Новизна", "новый контекст < перенос < аналог < новая связь"], path_to_human: ["Дешевизна проверки сейчас", "0 — данные по безопасности у человека есть, 1 — нужен доклинический пакет; это про цену проверки, а не про правдоподобие"],
     late_start: ["Поздний старт", "возраст начала как доля медианной жизни"], both_sexes: ["Оба пола", "эффект показан у обоих полов"],
     effect_size: ["Размер эффекта", "% прироста медианы жизни"], informativeness: ["Информативность", "сколько различает решающий эксперимент"]};
 
@@ -647,8 +647,9 @@ tr.foldrow button { font-size: var(--step--1); }
   function diagWarn(name) {
     const d = B.meta?.diagnostics;
     if (!d || !(d.warnings || []).length) return "";
-    const share = d.pairs_ordered?.[name];
-    return `<span class="dwarn">Мало различий в пуле: меняются ${d.varying.length} из ${d.indicators} показателей${share != null ? `, профиль упорядочивает ${Math.round(share * 100)}% пар` : ""}. Порядок в таблице слабо опирается на данные.</span>`;
+    const share = d.pairs_ordered?.[name], L = d.leading?.[name];
+    const lead = L && L.id && L.share >= 0.8 ? ` Почти весь порядок создаёт один показатель: «${IND[L.id]?.[0] || L.id}» (${Math.round(L.share * 100)}% упорядоченных пар).` : "";
+    return `<span class="dwarn">Мало различий в пуле: меняются ${d.varying.length} из ${d.indicators} показателей${share != null ? `, профиль упорядочивает ${Math.round(share * 100)}% пар` : ""}. Порядок в таблице слабо опирается на данные.${lead}</span>`;
   }
   /* Top without relatives: the best member of every family (duplicates, variants, analogs, descendants), in the profile's order. */
   function renderDistinct(name) {

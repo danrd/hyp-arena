@@ -2,7 +2,7 @@ from hyparena import diagnostics as dg
 
 
 def _items(rows):
-    return [{"outcome": "ranked", "indicators": r} for r in rows]
+    return [{"id": chr(97 + i), "outcome": "ranked", "indicators": r} for i, r in enumerate(rows)]
 
 
 def _ranking(order, e=None):
@@ -30,3 +30,23 @@ def test_a_healthy_pool_has_no_warning_and_a_tiny_pool_is_not_diagnosed():
     items = _items([{"a": i, "b": i % 2, "c": i % 3} for i in range(6)])
     assert dg.pool_diagnostics(items, {"p": _ranking(list("abcdef"))}, ["a", "b", "c"])["warnings"] == []
     assert dg.pool_diagnostics(_items([{"a": 1}] * 3), {"p": _ranking(list("abc"))}, ["a"])["warnings"] == []
+
+
+def test_the_leading_indicator_is_the_one_that_creates_the_ordered_pairs():
+    order = list("abcdef")
+    ranked = [{"id": h, "indicators": {"a": i, "b": "same", "c": None}} for i, h in enumerate(order)]   # only "a" differs
+    lead = dg.leading_indicator(ranked, _ranking(order), ["a", "b", "c"])
+    assert lead["id"] == "a" and lead["share"] == 1.0 and lead["ordered_pairs"] == 15
+    d = dg.pool_diagnostics([{"outcome": "ranked", "indicators": x["indicators"]} | {"id": x["id"]} for x in ranked],
+                            {"p": _ranking(order)}, ["a", "b", "c"])
+    assert any("essentially one indicator" in w and "a makes 100%" in w for w in d["warnings"])
+
+
+def test_two_indicators_share_the_pairs_and_no_single_one_leads_alone():
+    order = list("abcdef")
+    ranked = [{"id": h, "indicators": {"a": i, "b": i}} for i, h in enumerate(order)]           # both differ in every pair
+    lead = dg.leading_indicator(ranked, _ranking(order), ["a", "b"])
+    assert lead["shares"]["a"] == lead["shares"]["b"] == 0.5 and lead["share"] == 0.5
+    d = dg.pool_diagnostics([{"outcome": "ranked", "indicators": x["indicators"]} | {"id": x["id"]} for x in ranked],
+                            {"p": _ranking(order)}, ["a", "b"])
+    assert not any("essentially one indicator" in w for w in d["warnings"])

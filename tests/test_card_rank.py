@@ -37,13 +37,12 @@ def test_rank_examples():
     assert ev.order[0] == "H-0001" and ev.pairwise["H-0001"]["H-0002"] > 0.5
 
 
-def test_path_to_human_steps():
+def test_path_to_human_is_about_safety_only():
     from hyparena.card.indicators import path_to_human
-    assert path_to_human("mammals", True) == "0"
-    assert path_to_human("invertebrates", True) == "1"           # a mouse study first
-    assert path_to_human("mammals", False) == "1"                 # a safety package first
-    assert path_to_human("none", False) == "2"
-    assert path_to_human("mammals", None) is None                 # gene target without a drug
+    assert path_to_human(True) == "0"                             # human safety data exist: cheap to test now
+    assert path_to_human(False) == "1"                            # a preclinical safety package first
+    assert path_to_human(None) is None                            # gene target without a drug: unknown
+
 
 
 def test_rank_with_human_safety():

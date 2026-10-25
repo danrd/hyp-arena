@@ -126,8 +126,9 @@ def test_set_sex_scope_marks_the_outcome_claim_and_keeps_a_value_that_was_writte
 
 
 def test_reapplying_the_old_rules_reproduces_a_saved_run():
-    """The scope and the strata of 2026-10-22 left out reproduce the saved run, except the two indicators changed on
-    2026-10-23 (`multi_site_positive` is a condition of robustness, `novelty` is unknown without an anchor)."""
+    """The scope and the strata of 2026-10-22 left out reproduce the saved run, except the indicators changed on
+    2026-10-23 and 2026-10-25 (`multi_site_positive` is a condition of robustness, `novelty` is unknown without an anchor,
+    `path_to_human` is about safety only)."""
     import json
     from hyparena.card.pipeline import reapply_rules
     path = Path("runs/stage4/itp2010_test.json")
@@ -136,6 +137,6 @@ def test_reapplying_the_old_rules_reproduces_a_saved_run():
     old = json.loads(path.read_text())
     new = reapply_rules(old, new_rules=False)
     assert [x["outcome"] for x in old["items"]] == [x["outcome"] for x in new["items"]]
-    changed = {"multi_site_positive", "novelty"}
+    changed = {"multi_site_positive", "novelty", "path_to_human"}
     strip = lambda items: json.loads(json.dumps([{k: v for k, v in (x["indicators"] or {}).items() if k not in changed} for x in items]))
     assert strip(old["items"]) == strip(new["items"])

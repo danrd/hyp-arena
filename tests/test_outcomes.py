@@ -98,7 +98,7 @@ def test_ablate_without_drop_reproduces_the_aggregation(tmp_path):
     from hyparena.backtest import ablate
     from hyparena.card import indicators as ind
     vals = {"H-1": {"effect_level": "mammals", "path_to_human": "1", "late_start": 0.3},
-            "H-2": {"effect_level": "none", "path_to_human": "2", "late_start": [0.6, 0.7]},
+            "H-2": {"effect_level": "none", "path_to_human": "1", "late_start": [0.6, 0.7]},
             "H-3": {"effect_level": "none", "path_to_human": "0", "late_start": None}}
     items = [{"id": h, "outcome": "ranked", "indicators": v} for h, v in vals.items()] + [{"id": "H-4", "outcome": "filtered"}]
     f = tmp_path / "v2.json"
@@ -108,3 +108,18 @@ def test_ablate_without_drop_reproduces_the_aggregation(tmp_path):
     assert all(abs(got[k]["combined"] - 2.0 - want[h]) < 1e-9 for k, h in zip("abc", vals))
     assert got["d"]["combined"] < 1.0
     assert ablate(str(f), ["late_start"], K=2000)["hypotheses"]["a"]["combined"] != got["a"]["combined"]
+
+
+def test_a_run_made_with_three_path_levels_is_still_read_with_them(tmp_path):
+    """Runs before 2026-10-25 record path_to_human with the levels 2, 1, 0; the saved levels decide, not the current set."""
+    import json
+    from hyparena.backtest import ablate
+    meta = {"as_of": "2010-12-31", "ids": ["a", "b"],
+            "indicators": [{"id": "effect_level", "kind": "ordinal", "levels": list(__import__("hyparena.card.models", fromlist=["RUNGS"]).RUNGS)},
+                           {"id": "path_to_human", "kind": "ordinal", "levels": ["2", "1", "0"]}]}
+    items = [{"id": "H-1", "outcome": "ranked", "indicators": {"effect_level": "none", "path_to_human": "2"}},
+             {"id": "H-2", "outcome": "ranked", "indicators": {"effect_level": "none", "path_to_human": "0"}}]
+    f = tmp_path / "v2.json"
+    f.write_text(json.dumps({"meta": meta, "items": items}))
+    got = ablate(str(f), ["none"], K=2000)["hypotheses"]
+    assert got["b"]["combined"] > got["a"]["combined"]              # level 0 (nothing to do first) is better than level 2
