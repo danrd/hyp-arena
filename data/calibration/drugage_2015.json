@@ -1,0 +1,416 @@
+{
+ "source": {
+  "name": "DrugAge",
+  "as_of": "2015-12-31",
+  "strata": [
+   "deep",
+   "shallow",
+   "other_species",
+   "none"
+  ],
+  "per_stratum": 10,
+  "note": "no labels; the pool shows how profiles behave under different depth of evidence"
+ },
+ "hypotheses": [
+  {
+   "id": "cal001",
+   "compound": "Nordihydroguaiaretic acid",
+   "stratum": "deep",
+   "strain": "C57BL/6",
+   "text": "Dietary Nordihydroguaiaretic acid extends the lifespan of C57BL/6 mice.",
+   "mouse_papers_by_T": 3,
+   "other_papers_by_T": 3,
+   "first_date": "1982-09-01"
+  },
+  {
+   "id": "cal002",
+   "compound": "Nitroflurbiprofen",
+   "stratum": "deep",
+   "strain": "C57BL/6",
+   "text": "Dietary Nitroflurbiprofen extends the lifespan of C57BL/6 mice.",
+   "mouse_papers_by_T": 2,
+   "other_papers_by_T": 0,
+   "first_date": "2008-07-18"
+  },
+  {
+   "id": "cal003",
+   "compound": "Dehydroepiandrosterone sulfate",
+   "stratum": "deep",
+   "strain": "BALB/c",
+   "text": "Dietary Dehydroepiandrosterone sulfate extends the lifespan of BALB/c mice.",
+   "mouse_papers_by_T": 2,
+   "other_papers_by_T": 0,
+   "first_date": "1999-04-01"
+  },
+  {
+   "id": "cal004",
+   "compound": "Melatonin",
+   "stratum": "deep",
+   "strain": "UM-HET3",
+   "text": "Dietary Melatonin extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 2,
+   "other_papers_by_T": 3,
+   "first_date": "1994-01-18"
+  },
+  {
+   "id": "cal005",
+   "compound": "Resveratrol",
+   "stratum": "deep",
+   "strain": "C57BL/6",
+   "text": "Dietary Resveratrol extends the lifespan of C57BL/6 mice.",
+   "mouse_papers_by_T": 2,
+   "other_papers_by_T": 24,
+   "first_date": "2003-08-24"
+  },
+  {
+   "id": "cal006",
+   "compound": "Aspirin",
+   "stratum": "deep",
+   "strain": "BALB/c",
+   "text": "Dietary Aspirin extends the lifespan of BALB/c mice.",
+   "mouse_papers_by_T": 3,
+   "other_papers_by_T": 6,
+   "first_date": "1971-04-01"
+  },
+  {
+   "id": "cal007",
+   "compound": "Rapamycin",
+   "stratum": "deep",
+   "strain": "BALB/c",
+   "text": "Dietary Rapamycin extends the lifespan of BALB/c mice.",
+   "mouse_papers_by_T": 5,
+   "other_papers_by_T": 5,
+   "first_date": "2009-07-08"
+  },
+  {
+   "id": "cal008",
+   "compound": "4-hydroxyphenyl-N-tert-butylnitrone",
+   "stratum": "deep",
+   "strain": "C57BL/6",
+   "text": "Dietary 4-hydroxyphenyl-N-tert-butylnitrone extends the lifespan of C57BL/6 mice.",
+   "mouse_papers_by_T": 2,
+   "other_papers_by_T": 0,
+   "first_date": "2008-07-18"
+  },
+  {
+   "id": "cal009",
+   "compound": "Metformin",
+   "stratum": "deep",
+   "strain": "BALB/c",
+   "text": "Dietary Metformin extends the lifespan of BALB/c mice.",
+   "mouse_papers_by_T": 2,
+   "other_papers_by_T": 5,
+   "first_date": "2008-08-30"
+  },
+  {
+   "id": "cal010",
+   "compound": "Coenzyme Q10",
+   "stratum": "deep",
+   "strain": "UM-HET3",
+   "text": "Dietary Coenzyme Q10 extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 2,
+   "other_papers_by_T": 3,
+   "first_date": "1998-04-01"
+  },
+  {
+   "id": "cal011",
+   "compound": "Tetrahydrocurcumin",
+   "stratum": "shallow",
+   "strain": "UM-HET3",
+   "text": "Dietary Tetrahydrocurcumin extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 1,
+   "other_papers_by_T": 0,
+   "first_date": "2007-05-22"
+  },
+  {
+   "id": "cal012",
+   "compound": "Aluminium chloride",
+   "stratum": "shallow",
+   "strain": "UM-HET3",
+   "text": "Dietary Aluminium chloride extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 1,
+   "other_papers_by_T": 1,
+   "first_date": "1985-01-01"
+  },
+  {
+   "id": "cal013",
+   "compound": "Enalapril",
+   "stratum": "shallow",
+   "strain": "C57BL/6",
+   "text": "Dietary Enalapril extends the lifespan of C57BL/6 mice.",
+   "mouse_papers_by_T": 1,
+   "other_papers_by_T": 1,
+   "first_date": "2007-06-08"
+  },
+  {
+   "id": "cal014",
+   "compound": "p-fluorophenylalanine",
+   "stratum": "shallow",
+   "strain": "UM-HET3",
+   "text": "Dietary p-fluorophenylalanine extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 1,
+   "other_papers_by_T": 1,
+   "first_date": "1969-09-03"
+  },
+  {
+   "id": "cal015",
+   "compound": "Ginseng extract",
+   "stratum": "shallow",
+   "strain": "UM-HET3",
+   "text": "Dietary Ginseng extract extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 1,
+   "other_papers_by_T": 1,
+   "first_date": "1979-01-01"
+  },
+  {
+   "id": "cal016",
+   "compound": "Methionine",
+   "stratum": "shallow",
+   "strain": "UM-HET3",
+   "text": "Dietary Methionine extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 1,
+   "other_papers_by_T": 2,
+   "first_date": "1984-01-01"
+  },
+  {
+   "id": "cal017",
+   "compound": "N-acetyl-L-cysteine",
+   "stratum": "shallow",
+   "strain": "C57BL/6",
+   "text": "Dietary N-acetyl-L-cysteine extends the lifespan of C57BL/6 mice.",
+   "mouse_papers_by_T": 1,
+   "other_papers_by_T": 3,
+   "first_date": "1997-12-01"
+  },
+  {
+   "id": "cal018",
+   "compound": "Icariin",
+   "stratum": "shallow",
+   "strain": "UM-HET3",
+   "text": "Dietary Icariin extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 1,
+   "other_papers_by_T": 1,
+   "first_date": "2011-01-01"
+  },
+  {
+   "id": "cal019",
+   "compound": "Epitalon",
+   "stratum": "shallow",
+   "strain": "UM-HET3",
+   "text": "Dietary Epitalon extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 1,
+   "other_papers_by_T": 1,
+   "first_date": "2000-11-23"
+  },
+  {
+   "id": "cal020",
+   "compound": "Aluminum potassium sulfate",
+   "stratum": "shallow",
+   "strain": "UM-HET3",
+   "text": "Dietary Aluminum potassium sulfate extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 1,
+   "other_papers_by_T": 0,
+   "first_date": "1975-04-01"
+  },
+  {
+   "id": "cal021",
+   "compound": "Naftopidil dihydrochloride",
+   "stratum": "other_species",
+   "strain": "UM-HET3",
+   "text": "Dietary Naftopidil dihydrochloride extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 0,
+   "other_papers_by_T": 1,
+   "first_date": "2013-10-19"
+  },
+  {
+   "id": "cal022",
+   "compound": "Sodium fluoride",
+   "stratum": "other_species",
+   "strain": "UM-HET3",
+   "text": "Dietary Sodium fluoride extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 0,
+   "other_papers_by_T": 1,
+   "first_date": "1985-01-01"
+  },
+  {
+   "id": "cal023",
+   "compound": "Fluoranthene",
+   "stratum": "other_species",
+   "strain": "UM-HET3",
+   "text": "Dietary Fluoranthene extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 0,
+   "other_papers_by_T": 1,
+   "first_date": "2011-01-01"
+  },
+  {
+   "id": "cal024",
+   "compound": "Tartaric acid",
+   "stratum": "other_species",
+   "strain": "UM-HET3",
+   "text": "Dietary Tartaric acid extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 0,
+   "other_papers_by_T": 1,
+   "first_date": "1979-01-01"
+  },
+  {
+   "id": "cal025",
+   "compound": "Hydrocortisone",
+   "stratum": "other_species",
+   "strain": "UM-HET3",
+   "text": "Dietary Hydrocortisone extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 0,
+   "other_papers_by_T": 1,
+   "first_date": "1976-05-03"
+  },
+  {
+   "id": "cal026",
+   "compound": "Procyanidins",
+   "stratum": "other_species",
+   "strain": "UM-HET3",
+   "text": "Dietary Procyanidins extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 0,
+   "other_papers_by_T": 1,
+   "first_date": "2010-08-17"
+  },
+  {
+   "id": "cal027",
+   "compound": "Magnesium chloride",
+   "stratum": "other_species",
+   "strain": "UM-HET3",
+   "text": "Dietary Magnesium chloride extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 0,
+   "other_papers_by_T": 1,
+   "first_date": "1980-01-01"
+  },
+  {
+   "id": "cal028",
+   "compound": "Otophylloside B",
+   "stratum": "other_species",
+   "strain": "UM-HET3",
+   "text": "Dietary Otophylloside B extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 0,
+   "other_papers_by_T": 1,
+   "first_date": "2015-06-26"
+  },
+  {
+   "id": "cal029",
+   "compound": "Vitexin",
+   "stratum": "other_species",
+   "strain": "UM-HET3",
+   "text": "Dietary Vitexin extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 0,
+   "other_papers_by_T": 1,
+   "first_date": "2015-11-01"
+  },
+  {
+   "id": "cal030",
+   "compound": "Epigallocatechin-3-gallate",
+   "stratum": "other_species",
+   "strain": "UM-HET3",
+   "text": "Dietary Epigallocatechin-3-gallate extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 0,
+   "other_papers_by_T": 5,
+   "first_date": "2006-11-01"
+  },
+  {
+   "id": "cal031",
+   "compound": "Silymarin",
+   "stratum": "none",
+   "strain": "UM-HET3",
+   "text": "Dietary Silymarin extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 0,
+   "other_papers_by_T": 0,
+   "first_date": "2016-12-28"
+  },
+  {
+   "id": "cal032",
+   "compound": "5-octanoyl salicylic acid",
+   "stratum": "none",
+   "strain": "UM-HET3",
+   "text": "Dietary 5-octanoyl salicylic acid extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 0,
+   "other_papers_by_T": 0,
+   "first_date": "2018-09-07"
+  },
+  {
+   "id": "cal033",
+   "compound": "Limonin",
+   "stratum": "none",
+   "strain": "UM-HET3",
+   "text": "Dietary Limonin extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 0,
+   "other_papers_by_T": 0,
+   "first_date": "2020-10-01"
+  },
+  {
+   "id": "cal034",
+   "compound": "Urolithin A",
+   "stratum": "none",
+   "strain": "UM-HET3",
+   "text": "Dietary Urolithin A extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 0,
+   "other_papers_by_T": 0,
+   "first_date": "2016-07-11"
+  },
+  {
+   "id": "cal035",
+   "compound": "Selenomethionine",
+   "stratum": "none",
+   "strain": "UM-HET3",
+   "text": "Dietary Selenomethionine extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 0,
+   "other_papers_by_T": 0,
+   "first_date": "2021-03-30"
+  },
+  {
+   "id": "cal036",
+   "compound": "Prenol",
+   "stratum": "none",
+   "strain": "UM-HET3",
+   "text": "Dietary Prenol extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 0,
+   "other_papers_by_T": 0,
+   "first_date": "2020-07-28"
+  },
+  {
+   "id": "cal037",
+   "compound": "Xanthohumol",
+   "stratum": "none",
+   "strain": "UM-HET3",
+   "text": "Dietary Xanthohumol extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 0,
+   "other_papers_by_T": 0,
+   "first_date": "2021-02-04"
+  },
+  {
+   "id": "cal038",
+   "compound": "Diethyl Maleate",
+   "stratum": "none",
+   "strain": "UM-HET3",
+   "text": "Dietary Diethyl Maleate extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 0,
+   "other_papers_by_T": 0,
+   "first_date": "2016-12-06"
+  },
+  {
+   "id": "cal039",
+   "compound": "Antalarmin",
+   "stratum": "none",
+   "strain": "UM-HET3",
+   "text": "Dietary Antalarmin extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 0,
+   "other_papers_by_T": 0,
+   "first_date": "2020-10-01"
+  },
+  {
+   "id": "cal040",
+   "compound": "3-methylxanthine",
+   "stratum": "none",
+   "strain": "UM-HET3",
+   "text": "Dietary 3-methylxanthine extends the lifespan of UM-HET3 mice.",
+   "mouse_papers_by_T": 0,
+   "other_papers_by_T": 0,
+   "first_date": "2018-01-01"
+  }
+ ]
+}

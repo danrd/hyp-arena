@@ -91,6 +91,30 @@ section.block { padding-block: 36px; border-top: 1px solid var(--line); display:
 .head > * { min-width: 0; }
 .tabs button { flex: 1 1 auto; }
 
+/* run switcher */
+.runlabel { margin: 18px 0 8px; text-align: center; }
+.runcards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
+.runcards[hidden] { display: none; }
+.runcards button { display: grid; gap: 4px; align-content: start; text-align: left; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); cursor: pointer; }
+.runcards button b { font-size: var(--step-0); }
+.runcards button span { font-size: var(--step--1); color: var(--muted); font-weight: 400; }
+.runcards button:hover { border-color: var(--accent); }
+.runcards button[aria-pressed="true"] { border-color: var(--accent); border-width: 2px; padding: 11px 13px; background: var(--accent-soft); }
+.runcards button[aria-pressed="true"] b { color: var(--accent); }
+.runcards button[aria-pressed="true"] b::before { content: "● "; }
+@media (max-width: 900px) { .runcards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .runcards { grid-template-columns: minmax(0, 1fr); } .runcards button span { display: none; } .runcards button[aria-pressed="true"] span { display: block; } }
+details.more { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }
+details.more > summary { cursor: pointer; font-weight: 600; font-size: var(--step--1); }
+details.more[open] > summary { margin-bottom: 8px; }
+details.more.big { margin-top: 10px; }
+#showcaseSummary { margin-top: 14px; }
+.dwarn { color: var(--warn); }
+.dnote { margin: 0; font-size: var(--step--1); color: var(--muted); }
+ol.distinct { margin: 8px 0 0; padding-left: 0; list-style: none; display: grid; gap: 6px; font-size: var(--step--1); text-align: left; }
+ol.distinct li { display: grid; grid-template-columns: 2.4em minmax(0, 1fr); gap: 4px 8px; align-items: baseline; }
+ol.distinct li > .mono { color: var(--muted); text-align: right; }
+
 /* data bar */
 .databar { justify-content: center; display: flex; gap: 10px 16px; align-items: center; flex-wrap: wrap; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; font-size: var(--step--1); }
 .databar .name { font-weight: 600; font-size: var(--step-0); }
@@ -483,7 +507,7 @@ table.doctable tr:last-child td { border-bottom: 0; }
 <p>u(i, w) = Σ<sub>j</sub> w<sub>j</sub> · q<sub>ij</sub></p>
 <ul>
 <li><strong>Числовые показатели</strong> (<code>late_start</code>, <code>effect_size</code>, <code>informativeness</code>) переводятся в [0, 1] по <strong>фиксированным шкалам</strong>, а не по минимуму и максимуму текущего набора. Поэтому значение гипотезы и вероятность «A выше B» не зависят от того, какие ещё гипотезы в наборе; места, конечно, зависят.</li>
-<li><strong>Порядковые показатели</strong> (<code>effect_level</code>, <code>robustness</code>, <code>multi_site_positive</code>, <code>mechanism</code>, <code>novelty</code>, <code>path_to_human</code>, <code>both_sexes</code>): в каждом розыгрыше уровни получают случайные числа, возрастающие вместе с уровнем (отображение SMAA-O). Так не нужно выбирать, что «mammals» вдвое лучше «invertebrates»; равные шаги можно включить для проверки чувствительности.</li>
+<li><strong>Порядковые показатели</strong> (<code>effect_level</code>, <code>robustness</code>, <code>mechanism</code>, <code>novelty</code>, <code>path_to_human</code>, <code>both_sexes</code>): в каждом розыгрыше уровни получают случайные числа, возрастающие вместе с уровнем (отображение SMAA-O). Так не нужно выбирать, что «mammals» вдвое лучше «invertebrates»; равные шаги можно включить для проверки чувствительности.</li>
 <li><strong>Неизвестные значения</strong> разыгрываются по допустимому диапазону (<a href="../#ind-unknown">см. «Показатели»</a>).</li>
 <li>Оценка <strong>компенсаторная</strong>: высокое значение по одному показателю может покрыть низкое по другому. Отсев опровергнутых гипотез происходит до агрегации (фильтр).</li>
 </ul>
@@ -525,6 +549,10 @@ table.doctable tr:last-child td { border-bottom: 0; }
 <li>Hovanov N., Yudaeva M., Hovanov K. Multicriteria estimation of probabilities on basis of expert non-numeric, non-exact and non-complete knowledge. <em>European Journal of Operational Research</em> 195(3), 2009, 857–863. <a href="https://doi.org/10.1016/j.ejor.2007.11.018" target="_blank" rel="noopener">doi:10.1016/j.ejor.2007.11.018</a></li>
 </ol>
 <p>Реализации-образцы: пакеты R <code>smaa</code> и <code>hitandrun</code> (van Valkenhoef, Tervonen).</p>
+<h3 id="agg-geometry">Геометрия весов и набор показателей <a class="anchor" href="#agg-geometry" aria-label="Ссылка на раздел">#</a></h3>
+<p>Веса профиля делят единицу, поэтому доля, которая достаётся информативным показателям, зависит от того, сколько показателей стоит в каждой ступени, <strong>в том числе постоянных в данном пуле</strong>. Убрать из профиля показатель, который у всех гипотез одинаков, не меняет разности значений, но меняет соотношение весов остальных, и порядок сдвигается (на выборке ITP без постоянного <code>mechanism</code> тау порядка 0,51). Это свойство профиля со ступенями. Ступени по показателям, которые меняются в данном пуле, мы <strong>не считаем</strong>: ранг гипотезы тогда зависел бы от того, какие ещё гипотезы в пуле, а тест независимости от пула это запрещает.</p>
+<p>Поэтому набор показателей и профили входят в воспроизводимость: в мету каждого прогона пишется хэш набора (<code>meta.indicator_set.sha256</code>, считается по показателям, их уровням, границам и отображению, и по ступеням профилей), а в запись спецификации (<code>meta.spec.indicators_sha256</code>) попадает тот же хэш. Сохранённый прогон читается по тому набору, который в нём записан: прогоны до 2026-10-23 содержат <code>multi_site_positive</code>.</p>
+<p>В отчёте по пулу (<code>scripts/profile_report.py</code>, поле <code>meta.diagnostics</code> пакета сайта) считаются число показателей, которые меняются в пуле, постоянные и неизвестные у всех, и доля пар, которые профиль упорядочивает (остальные в группах «на равных»). Предупреждение выдаётся, когда меняется меньше трёх показателей или профиль упорядочивает меньше половины пар. Пороги выбраны по умолчанию, это не результат калибровки.</p>
 </article><article class="doc" id="docs-data" data-sec><header class="doc-head"><h2>Данные и источники <a class="anchor" href="#docs-data" aria-label="Ссылка на раздел">#</a></h2><p class="lead">Какие источники используются, что каждый из них вправе утверждать и как соблюдается правило «на момент T».</p></header>
 <h3 id="data-types">Типы источников <a class="anchor" href="#data-types" aria-label="Ссылка на раздел">#</a></h3>
 <p>Для проверки важнее не формат источника, а то, что он может утверждать. Каждая запись помечается типом.</p>
@@ -835,7 +863,9 @@ table.doctable tr:last-child td { border-bottom: 0; }
 <li><strong>Изменения после первого прогона</strong> (один список; по этой выборке правила больше не меняются; карточки и проверки не пересобирались, правила применены к сохранённым записям без вызовов моделей, <code>backtest reapply</code>, режим <code>--legacy</code> воспроизводит прежний прогон):
   1. <strong>Охват по полу</strong> (раздел <a href="../../method/#statuses-sex">«Охват по полу»</a>). Гипотеза «хотя бы у одного пола» оспаривалась нулевым результатом у другого пола. Статус основного утверждения изменился у четырёх режимов, все четыре из «оспорено» стали «подтверждено» и, как следствие, «известным результатом» (вне рейтинга): аспирин 200 ppm, нордигидрогваяретовая кислота 800 и 2500 ppm (половина dev), нордигидрогваяретовая кислота 5000 ppm (половина test).
   2. <strong>Контекст «модель болезни»</strong> (раздел <a href="../../method/#statuses-disease">«Контекст: модели болезней»</a>). Записи из моделей болезней больше не задают статус утверждения про обычных животных. В ITP-пуле аналог получили 11 режимов (4 в dev: фиш-ойл 15000 ppm, рапамицин 4.7 и 42 ppm, ресвератрол; 7 в test: фиш-ойл 50000 ppm, метформин, миноциклин 300 ppm, микофеноловая кислота, урсодезоксихолевая кислота, рапамицин 42 ppm с двумя возрастами начала); статус и исход не изменились ни у одного режима, потому что статусы держались на записях об обычных мышах. У двух режимов половины test (миноциклин 300 ppm, микофеноловая кислота) новизна <code>analog</code> стала <code>new_link</code>, поскольку их «аналог» состоял из записей моделей болезней. Известным результатом никто не стал и не перестал.
-  3. <strong>Метрика с ничьёй</strong> (предыдущий пункт про seed): меняет способ счёта, а не рейтинг.</li>
+  3. <strong>Метрика с ничьёй</strong> (предыдущий пункт про seed): меняет способ счёта, а не рейтинг.
+  4. <strong>Разведочный пересчёт 2026-10-23</strong> (изменения (а) и (б), см. раздел «Геометрия весов и набор показателей» и «Новизна»): <code>multi_site_positive</code> стал условием <code>robustness</code>, новизна неизвестна без опоры в литературе. Исходы и статусы не изменились ни у одного режима; <code>robustness</code> не изменился ни у одного; новизна стала неизвестной у 54 из 61 режима в рейтинге. <strong>Первый прогон остаётся эталоном</strong> (числа выше и страница); пересчёт опубликован отдельно как разведочный, потому что тестовая половина уже использована: AUC по режимам 0,58 [0,48; 0,68] против 0,65 [0,56; 0,74] у эталона, среди 15 последних режимов находок 4 вместо 1. Интервалы перекрываются, правила под метки не подгонялись. Колонки <code>*_ab</code> в <code>docs/itp_2010_changes_after_first_run.csv</code>, снимок <code>tests/fixtures/itp2010_exploratory_snapshot.csv</code>.
+  5. <strong>Определение <code>path_to_human</code></strong> (2026-10-25): убран шаг «мышиное исследование, если нет подтверждённого эффекта у млекопитающих» (он считал <code>effect_level</code> второй раз), остались два уровня по безопасности; показатель подписан «насколько дёшево проверить сейчас, а не насколько верно». После трёх изменений вместе (колонки <code>*_abp</code>, снимок <code>tests/fixtures/itp2010_exploratory2_snapshot.csv</code>): значение изменилось у 50 из 70 режимов, статусы и исходы не изменились, первые два места те же (рапамицин, метформин); динитрофенол выбыл из первой четвёрки, в неё вошёл куркумин (imp026), AUC по режимам 0,605 [0,49; 0,72] (эталон 0,65 [0,56; 0,74]), среди 15 последних находка одна; профиль упорядочивает 64–65% пар (у эталона 46–48%), ведущий показатель <code>path_to_human</code> создаёт 36–37% упорядоченных пар (у эталона 47–50%). Разведочные числа, правила под метки не подгонялись.</li>
 <li><strong>До и после по рейтингам половин</strong> (AUC с ничьёй по соединениям; в скобках 95% интервал и число положительных и отрицательных):</li>
 </ul>
 <div class="tablewrap"><table class="doctable">

@@ -62,7 +62,10 @@ def begin(path: str | Path, given: dict, repo: str | Path = ".") -> dict:
     bad = conflicts(load(path), given)
     if bad:
         raise ValueError(f"the run differs from {path}: " + "; ".join(bad))
-    return stamp(path, repo)
+    entry = stamp(path, repo)
+    if "indicators_sha256" in given:                  # the indicator set of the run is recorded next to the spec hash
+        entry["indicators_sha256"] = given["indicators_sha256"]
+    return entry
 
 
 def verify(entry: dict, repo: str | Path = ".") -> list[str]:

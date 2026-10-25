@@ -91,6 +91,30 @@ section.block { padding-block: 36px; border-top: 1px solid var(--line); display:
 .head > * { min-width: 0; }
 .tabs button { flex: 1 1 auto; }
 
+/* run switcher */
+.runlabel { margin: 18px 0 8px; text-align: center; }
+.runcards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
+.runcards[hidden] { display: none; }
+.runcards button { display: grid; gap: 4px; align-content: start; text-align: left; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); cursor: pointer; }
+.runcards button b { font-size: var(--step-0); }
+.runcards button span { font-size: var(--step--1); color: var(--muted); font-weight: 400; }
+.runcards button:hover { border-color: var(--accent); }
+.runcards button[aria-pressed="true"] { border-color: var(--accent); border-width: 2px; padding: 11px 13px; background: var(--accent-soft); }
+.runcards button[aria-pressed="true"] b { color: var(--accent); }
+.runcards button[aria-pressed="true"] b::before { content: "● "; }
+@media (max-width: 900px) { .runcards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .runcards { grid-template-columns: minmax(0, 1fr); } .runcards button span { display: none; } .runcards button[aria-pressed="true"] span { display: block; } }
+details.more { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }
+details.more > summary { cursor: pointer; font-weight: 600; font-size: var(--step--1); }
+details.more[open] > summary { margin-bottom: 8px; }
+details.more.big { margin-top: 10px; }
+#showcaseSummary { margin-top: 14px; }
+.dwarn { color: var(--warn); }
+.dnote { margin: 0; font-size: var(--step--1); color: var(--muted); }
+ol.distinct { margin: 8px 0 0; padding-left: 0; list-style: none; display: grid; gap: 6px; font-size: var(--step--1); text-align: left; }
+ol.distinct li { display: grid; grid-template-columns: 2.4em minmax(0, 1fr); gap: 4px 8px; align-items: baseline; }
+ol.distinct li > .mono { color: var(--muted); text-align: right; }
+
 /* data bar */
 .databar { justify-content: center; display: flex; gap: 10px 16px; align-items: center; flex-wrap: wrap; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; font-size: var(--step--1); }
 .databar .name { font-weight: 600; font-size: var(--step-0); }
@@ -604,7 +628,7 @@ table.doctable tr:last-child td { border-bottom: 0; }
 <p><strong>Шкалы и пороги.</strong></p>
 <ul>
 <li>Границы фиксированных шкал для числовых показателей (30% для размера эффекта; насыщение для информативности) — рабочие допущения. Порог размера эффекта в критериях решения: по умолчанию заявленный в гипотезе, иначе «любой значимый эффект»; взять его из эталонного класса (например, типичные +10–20% к медиане жизни в ITP) предстоит решить.</li>
-<li>Показатель <code>path_to_human</code> трёхуровневый. Оценки стоимости и сроков (классы в долларах, длительность по виду исхода) нужны только при спросе на них.</li>
+<li>Показатель <code>path_to_human</code> двухуровневый (с 2026-10-25; раньше трёхуровневый) и означает «насколько дёшево проверить сейчас», а не «насколько верно». Оценки стоимости и сроков (классы в долларах, длительность по виду исхода) нужны только при спросе на них.</li>
 </ul>
 <p><strong>Показатели.</strong></p>
 <ul>
