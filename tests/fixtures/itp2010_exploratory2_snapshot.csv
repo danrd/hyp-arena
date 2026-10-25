@@ -1,0 +1,71 @@
+id,compound,dose,start,later_label,outcome,main_status,place,expected,p_topk
+imp001,"(R/S)-1,3-butanediol",100000 ppm food,6 мес,supports,ranked,unverified,45-51,0.145,0.015
+imp002,16-alpha-hydroxyestradiol,5 ppm food,12 мес,supports,ranked,unverified,8-42,0.176,0.026
+imp003,17-dimethylaminoethylamino-17-demethoxygeldanamycin hydrochloride,30 ppm food,6 мес,no_effect,ranked,unverified,8-42,0.176,0.029
+imp004,17‐alpha‐estradiol,14.4 ppm food,10 мес,supports,ranked,unverified,8-42,0.175,0.026
+imp005,17‐alpha‐estradiol,14.4 ppm food,16 мес,supports,ranked,unverified,8-42,0.175,0.028
+imp006,17‐alpha‐estradiol,14.4 ppm food,20 мес,supports,ranked,unverified,8-42,0.175,0.025
+imp007,17‐alpha‐estradiol,4.8 ppm food,10 мес,supports,ranked,unverified,8-42,0.175,0.025
+imp008,"2,4-dinitrophenol",3 ppm food,6 мес,no_effect,ranked,supported,4-7,0.184,0.080
+imp009,2-(2-hydroxyphenyl)benzothiazole,1 ppm food,15 мес,no_effect,ranked,unverified,52-61,0.117,0.004
+imp010,4-phenylbutyrate,1000 ppm food,9 мес,harmful,ranked,unverified,8-42,0.176,0.028
+imp011,Acarbose,1000 ppm food,16 мес,supports,ranked,unverified,8-42,0.175,0.027
+imp012,Acarbose,1000 ppm food,4 мес,supports,ranked,unverified,8-42,0.176,0.026
+imp013,Acarbose,1000 ppm food,8 мес,supports,ranked,unverified,8-42,0.175,0.024
+imp014,Acarbose,2500 ppm food,8 мес,supports,ranked,unverified,8-42,0.175,0.027
+imp015,Acarbose,400 ppm food,8 мес,supports,ranked,unverified,43-44,0.174,0.025
+imp016,Alpha-ketoglutarate,20000 ppm food,18 мес,no_effect,ranked,unverified,8-42,0.176,0.023
+imp017,Aspirin,200 ppm food,11 мес,no_effect,known_result,supported,,,
+imp018,Aspirin,60 ppm food,11 мес,no_effect,ranked,contested,8-42,0.176,0.027
+imp019,Astaxanthin,4000 ppm food,12 мес,supports,ranked,unverified,8-42,0.175,0.026
+imp020,Beta-guanidinopropionic acid,3300 ppm food,6 мес,no_effect,ranked,unverified,52-61,0.117,0.004
+imp021,Canagliflozin,180 ppm food,16 мес,supports,ranked,unverified,8-42,0.175,0.025
+imp022,Canagliflozin,180 ppm food,6 мес,supports,ranked,unverified,8-42,0.175,0.027
+imp023,Canagliflozin,180 ppm food (30 ppm bodyweight),7 мес,supports,ranked,unverified,8-42,0.175,0.026
+imp024,Candesartan cilexetil,30 ppm food,8 мес,no_effect,ranked,unverified,8-42,0.175,0.030
+imp025,Captopril,180 ppm food,5 мес,supports,ranked,unverified,8-42,0.175,0.025
+imp026,Curcumin,2000 ppm food,4 мес,no_effect,ranked,unverified,4-7,0.185,0.023
+imp027,Dimethyl fumarate,120 ppm food,10 мес,no_effect,ranked,unverified,8-42,0.176,0.028
+imp028,Dimethyl fumarate,120 ppm food,16 мес,no_effect,ranked,unverified,43-44,0.174,0.023
+imp029,Fisetin,600 ppm food fed continuously,20 мес,no_effect,ranked,unverified,52-61,0.117,0.004
+imp030,Fisetin,600 ppm food fed on a repeated cycle of 3 days on and 11 days off,20 мес,no_effect,ranked,unverified,52-61,0.116,0.003
+imp031,Fish oil,15000 ppm food,9 мес,no_effect,ranked,unverified,4-7,0.185,0.021
+imp032,Fish oil,50000 ppm food,9 мес,no_effect,ranked,unverified,4-7,0.185,0.021
+imp033,Geranylgeranylacetone,600 ppm food,9 мес,no_effect,ranked,unverified,8-42,0.176,0.026
+imp034,Glycine,80000 ppm food,9 мес,supports,ranked,unverified,8-42,0.175,0.026
+imp035,Green tea extract,2000 ppm food,4 мес,no_effect,ranked,unverified,3,0.211,0.208
+imp036,Hydralazine,30 ppm food,16 мес,no_effect,ranked,unverified,8-42,0.175,0.025
+imp037,Hydralazine,30 ppm food,6 мес,no_effect,ranked,unverified,8-42,0.175,0.027
+imp038,INT-767d (FXR/TGR5 agonist),180 ppm food,10 мес,no_effect,ranked,unverified,45-51,0.146,0.012
+imp039,Inulin,600 ppm food,11 мес,no_effect,ranked,unverified,8-42,0.175,0.025
+imp040,Leucine,40000 ppm food,5 мес,no_effect,ranked,unverified,8-42,0.175,0.024
+imp041,MIF098 (CD74 antagonist),240 ppm food,8 мес,no_effect,ranked,unverified,52-61,0.117,0.002
+imp042,Meclizine,800 ppm food,12 мес,supports,ranked,unverified,8-42,0.175,0.026
+imp043,Medium-chain triglyceride oil,60000 ppm food,4 мес,no_effect,ranked,unverified,45-51,0.145,0.014
+imp044,Metformin,1000 ppm food,9 мес,no_effect,ranked,unverified,2,0.287,0.549
+imp045,Methylene blue,27 ppm food,4 мес,no_effect,ranked,unverified,8-42,0.175,0.027
+imp046,Minocycline,300 ppm food,6 мес,no_effect,ranked,unverified,8-42,0.175,0.026
+imp047,MitoQ,100 ppm food,7 мес,no_effect,ranked,unverified,8-42,0.175,0.028
+imp048,Mycophenolic acid,6.7 ppm food,9 мес,harmful,ranked,unverified,8-42,0.175,0.026
+imp049,Nebivolol,60 ppm food,6 мес,harmful,ranked,unverified,8-42,0.176,0.026
+imp050,Nicotinamide riboside,1000 ppm food,8 мес,no_effect,ranked,unverified,52-61,0.117,0.004
+imp051,Nordihydroguaiaretic acid,2500 ppm food,6 мес,supports,known_result,supported,,,
+imp052,Nordihydroguaiaretic acid,5000 ppm food,6 мес,supports,known_result,supported,,,
+imp053,Nordihydroguaiaretic acid,800 ppm food,6 мес,supports,known_result,supported,,,
+imp054,Oxaloacetate,2200 ppm food,4 мес,no_effect,ranked,unverified,52-61,0.117,0.003
+imp055,PB125 (carnosol,withaferin A and luteolin),"4.7 ppm carnosol, 9 ppm luteolin, and 0.47 ppm withaferin A food, 5 мес",no_effect,ranked,unverified,8-42,0.174,0.025
+imp056,Protandim,600 ppm food 10-17 months,"1200 ppm food (17 months-death), 10 мес",supports,ranked,unverified,45-51,0.146,0.013
+imp057,Rapamycin,14 ppm food,9 мес,supports,known_result,supported,,,
+imp058,Rapamycin,4.7 ppm food,9 мес,supports,known_result,supported,,,
+imp059,Rapamycin,42 ppm food,20 мес,supports,known_result,supported,,,
+imp060,Rapamycin,42 ppm food,9 мес,supports,known_result,supported,,,
+imp061,Rapamycin,42 ppm food every other month,20 мес,supports,ranked,supported,1,0.558,1.000
+imp062,Resveratrol,300 ppm food,4 мес,no_effect,filtered,refuted,,,
+imp063,SG1002 (hydrogen sulfide donor),240 ppm food,16 мес,no_effect,ranked,unverified,45-51,0.146,0.015
+imp064,SG1002 (hydrogen sulfide donor),240 ppm food,5-9 мес,no_effect,ranked,unverified,45-51,0.146,0.015
+imp065,Sodium thiosulfate,10000 ppm food,6 мес,no_effect,ranked,unverified,45-51,0.146,0.014
+imp066,Sulindac,5 ppm food,5 мес,no_effect,ranked,unverified,8-42,0.175,0.025
+imp067,Syringaresinol,300 ppm food,5 мес,no_effect,ranked,unverified,52-61,0.116,0.003
+imp068,TM5441 (PAI-1 inhibitor),60 ppm food,11 мес,no_effect,ranked,unverified,52-61,0.117,0.004
+imp069,Ursodeoxycholic acid,5000 ppm food,5 мес,no_effect,ranked,unverified,8-42,0.176,0.027
+imp070,Ursolic  acid,2000 ppm food,10 мес,no_effect,ranked,unverified,52-61,0.116,0.002
