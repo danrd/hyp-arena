@@ -26,7 +26,7 @@ dependencies = [
 demo = ["gradio>=5"]
 embed = ["onnxruntime", "tokenizers", "huggingface_hub"]
 site = ["markdown"]
-test = ["pytest"]
+test = ["pytest", "hypothesis"]
 
 [tool.hatch.metadata]
 allow-direct-references = true

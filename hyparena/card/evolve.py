@@ -159,9 +159,12 @@ def evolve(res: dict, config: str, rounds: int = 3, parents: int = 4, children: 
            on_stage=lambda m: None, snapshot=None, spec: Optional[str] = None) -> dict:
     """Run the rounds on a saved v2 result; the budget `max_calls` is shared by the proposals and the verification."""
     from hyparena import prespec
+    from hyparena.aspid import load_profiles
+    from hyparena.card import indicators as ind
     from hyparena.card.pipeline import _client, reapply_rules, run
     spec_entry = prespec.begin(spec, {"rounds": rounds, "parents": parents, "children": children, "writer": writer,
-                                      "verifiers": verifiers or ["deepseek"], "max_calls": max_calls}) if spec else None
+                                      "verifiers": verifiers or ["deepseek"], "max_calls": max_calls,
+                                      "indicators_sha256": ind.set_hash(ind.INDICATORS, load_profiles())}) if spec else None
     sp = prespec.load(spec) if spec else {}
     started, spent, child_calls = time.time(), 0, 0          # spent: proposals + verification of the children
     res = copy.deepcopy(res)
@@ -201,6 +204,9 @@ def evolve(res: dict, config: str, rounds: int = 3, parents: int = 4, children: 
         if snapshot:
             snapshot(res)
     res["calls"] = list(res.get("calls") or []) + log
+    from hyparena import diagnostics, diversity
+    res["top_distinct"] = diversity.top_distinct(res)
+    res["meta"]["diagnostics"] = diagnostics.pool_diagnostics(res["items"], res["ranking"], [i["id"] for i in res["meta"]["indicators"]])
     res["meta"]["evolution"] = {"rounds": rounds_log, "parents_per_round": parents, "children_per_parent": children,
                                 "writer": writer, "verifiers": verifiers, "calls": spent, "max_calls": max_calls,
                                 "seconds": round(time.time() - started), "as_of": as_of, "profile": PROFILE,

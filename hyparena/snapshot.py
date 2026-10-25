@@ -86,14 +86,15 @@ def main() -> None:
     ap.add_argument("--test", default="runs/stage4/itp2010_test.reapplied.json")
     ap.add_argument("--labels", default="data/backtest/itp_2010-12-31_labels.json")
     ap.add_argument("--check", action="store_true", help="compare with the committed snapshot instead of writing it")
+    ap.add_argument("--out", default=str(SNAPSHOT), help="where to write (the exploratory snapshot goes to its own file)")
     a = ap.parse_args()
     rows = rows_from_bundle(export_itp(a.dev, a.test, a.labels))
     if a.check:
-        d = diff(read(), rows)
+        d = diff(read(Path(a.out)), rows)
         print("\n".join(d) or "snapshot unchanged")
         raise SystemExit(1 if d else 0)
-    write(rows)
-    print(f"{len(rows)} rows -> {SNAPSHOT}")
+    write(rows, Path(a.out))
+    print(f"{len(rows)} rows -> {a.out}")
 
 
 if __name__ == "__main__":
