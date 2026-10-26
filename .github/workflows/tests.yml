@@ -1,0 +1,42 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-hashseed: [0, 1, 2]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: "pip"
+
+      - name: Set PYTHONHASHSEED
+        run: echo "PYTHONHASHSEED=${{ matrix.python-hashseed }}" >> $GITHUB_ENV
+
+      - name: Install toolkit dependency workaround
+        run: |
+          # If pip fails to resolve the git dependency in pyproject.toml
+          # we install it explicitly first from its public URL.
+          pip install "toolkit[llm-kit,llm-kit-openrouter] @ git+https://github.com/danrd/toolkit.git" || true
+
+      - name: Install package with test and site extras
+        run: |
+          pip install -e ".[test,site]"
+
+      - name: Run tests
+        run: |
+          python -m pytest -q

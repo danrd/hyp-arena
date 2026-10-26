@@ -39,3 +39,9 @@ ClinicalTrials.gov. Code under the MIT licence ([`LICENSE`](LICENSE)).
 - Graph skeleton with a fake LLM (no real calls): `python -m hyparena.demo`
 - Demonstration interface (Gradio, in Russian: paste or generate a few hypotheses, get a ranking; a saved example opens instantly): `pip install -e ".[demo]" && python -m hyparena.app`, see [`docs/demo.md`](docs/demo.md)
 - Live checks on real models (free OpenRouter models by default; paid ones need `ALLOW_PAID=1`): `python -m hyparena.live smoke` and `python -m hyparena.live run` (add `--checkpoint runs/state.sqlite` to make a run resumable with `--resume --thread <id>`; `--criteria`, `--card`, `--search europepmc|none`, `--as-of YYYY-MM-DD` for backtests). Models are set in [`configs/models.yaml`](configs/models.yaml); cheap paid models for small tests are in [`configs/paid-test.yaml`](configs/paid-test.yaml) (`--config configs/paid-test.yaml`, needs `COMET_API_KEY` and `ALLOW_PAID=1`).
+
+## Tests
+
+To run the tests locally, install the package with the test extras (`pip install -e ".[test,site]"`) and run `python -m pytest -q`.
+The continuous integration (GitHub Actions) runs this suite automatically on every push and pull request.
+To catch iteration-order flakiness, CI runs the tests under three different `PYTHONHASHSEED` values (0, 1, and 2).
