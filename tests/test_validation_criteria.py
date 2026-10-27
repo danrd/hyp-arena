@@ -75,7 +75,7 @@ def test_evidence_paths_exist():
 
 def test_the_summary_keeps_the_three_tallies_apart():
     text = vt.render(vt.load())
-    assert "**Проверки кода и метода** (7)" in text and "**Проверки утверждения об отборе** (21)" in text
+    assert "**Проверки кода и метода** (7)" in text and "**Проверки утверждения об отборе** (23)" in text
     assert "с критерием, зафиксированным до результата:" in text
 
 
@@ -108,3 +108,14 @@ def test_the_status_level_criteria_are_tied_to_the_repeat_noise_and_fixed_before
                {x: th[x] for x in ("call_rate_min", "jaccard_min", "counted_union_min")}
     assert by["L1.15"]["thresholds"]["completion_token_cap"] == 4000 and "gpt-5.1" in Path("configs/v2-gpt51.yaml").read_text()
     assert "NOT eligible" in Path("configs/v2-gemini31pro.yaml").read_text()
+
+
+def test_the_naive_baseline_and_the_memory_probe_are_declared_before_any_run_with_their_power():
+    by = {t["id"]: t for t in vt.load()["tests"]}
+    assert by["L3.9"]["declared"] == "before_run" and by["L3.9"]["status"] == "not_run"
+    assert "Провал" in by["L3.9"]["criterion"] and "path_to_human" in by["L3.9"]["criterion"]
+    t = by["L3.10"]
+    assert t["declared"] == "before_run" and t["status"] == "not_run" and t["cls"] == "[$]"
+    assert t["power"]["designs"] and "A1" in t["interpretation"] and "по одному" in t["procedure"]
+    assert all(d["mde"] > 0 for d in t["power"]["designs"])
+    assert "ОТДЕЛЬНО для каждой системы" in by["L3.8"]["criterion"]
