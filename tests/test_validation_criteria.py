@@ -86,7 +86,7 @@ def test_the_rendered_table_is_up_to_date():
 def test_the_candidate_acceptance_criterion_is_fixed_before_the_check_and_relative_to_noise():
     by = {t["id"]: t for t in vt.load()["tests"]}
     t = by["L1.13"]
-    assert t["declared"] == "before_run" and t["status"] == "not_run"
+    assert t["declared"] == "before_run" and t["status"] == "uninformative" and t.get("evidence")
     th = t["thresholds"]
     # the thresholds are the measured noise of the repeat (docs/rules-method.md, paired check) minus the named tolerances
     assert abs(th["stance_agree_min"] - (96 / 99 - 0.05)) < 0.006 and abs(th["effect_agree_min"] - (95 / 99 - 0.05)) < 0.006

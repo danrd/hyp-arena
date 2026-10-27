@@ -240,6 +240,13 @@ def main() -> None:
     elif a.cmd == "run":
         res = run(a.runs, a.out, a.config, a.max_calls, not a.no_replay)
         print(a.out, "calls", res["calls"])
+    elif a.cmd == "candidate":
+        res = run_candidate(a.runs, a.out, a.config, a.family, a.max_calls, a.mini, a.resume)
+        print(a.out, "answers", len(res["answers"]), "calls this run", res["calls_this_run"])
+    elif a.cmd == "candidate-report":
+        import yaml
+        t = next(x for x in yaml.safe_load(Path(a.criteria).read_text())["tests"] if x["id"] == "L1.13")["thresholds"]
+        print(json.dumps(candidate_verdict(a.inp, t, a.mini), indent=2, ensure_ascii=False))
     else:
         print(json.dumps(report(a.inp), indent=1, ensure_ascii=False))
 
