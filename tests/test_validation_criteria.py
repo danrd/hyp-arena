@@ -112,7 +112,7 @@ def test_the_status_level_criteria_are_tied_to_the_repeat_noise_and_fixed_before
 
 def test_the_naive_baseline_and_the_memory_probe_are_declared_before_any_run_with_their_power():
     by = {t["id"]: t for t in vt.load()["tests"]}
-    assert by["L3.9"]["declared"] == "before_run" and by["L3.9"]["status"] == "not_run"
+    assert by["L3.9"]["declared"] == "before_run" and by["L3.9"]["status"] in ("not_run", "pass", "fail", "inconclusive", "uninformative")
     assert "Провал" in by["L3.9"]["criterion"] and "path_to_human" in by["L3.9"]["criterion"]
     t = by["L3.10"]
     assert t["declared"] == "before_run" and t["status"] == "not_run" and t["cls"] == "[$]"

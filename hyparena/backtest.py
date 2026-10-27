@@ -447,13 +447,11 @@ def bootstrap_tied_auc(pos, neg, K: int = 10000, n: int = 2000, seed: int = 0) -
     return vals[int(0.025 * n)], vals[int(0.975 * n) - 1]
 
 
-def primary_tied(labels_path: str, v2_path: str, split: str = "all", K: int = 10000) -> dict:
-    """`primary` with the seed-free tie rule of `tied_auc`: the same ranking (without `late_start`), known results left
-    out and listed apart, filtered items at the bottom, one score per compound (the mean over its regimens)."""
+def tied_scores(labels: dict, res: dict, split: str = "all", K: int = 10000) -> dict:
+    """(expected score, standard deviation) per hypothesis id for the ranking of `primary_tied` (without `late_start`);
+    filtered items at the bottom, known results and items not ranked left out."""
     from hyparena.aspid import aggregate, load_profiles
     from hyparena.card import indicators as ind
-    labels = json.loads(Path(labels_path).read_text())
-    res = json.loads(Path(v2_path).read_text())
     ids = res["meta"].get("ids") or [f"imp{i:03d}" for i in range(1, len(res["items"]) + 1)]
     specs = [sp for sp in ind.for_meta(res["meta"]) if sp.id not in PRIMARY_DROP]
     keep = {sp.id for sp in specs}
@@ -470,6 +468,15 @@ def primary_tied(labels_path: str, v2_path: str, split: str = "all", K: int = 10
             score[pid] = (agg.expected[x["id"]], agg.std[x["id"]])
         elif x["outcome"] == "filtered":
             score[pid] = (-1.0, 0.0)
+    return score
+
+
+def primary_tied(labels_path: str, v2_path: str, split: str = "all", K: int = 10000) -> dict:
+    """`primary` with the seed-free tie rule of `tied_auc`: the same ranking (without `late_start`), known results left
+    out and listed apart, filtered items at the bottom, one score per compound (the mean over its regimens)."""
+    labels = json.loads(Path(labels_path).read_text())
+    res = json.loads(Path(v2_path).read_text())
+    score = tied_scores(labels, res, split, K)
     out = {"split": split, "tie_rule": "1.96*sqrt((sa^2+sb^2)/K)"}
     by_compound = defaultdict(list)
     for pid, sc in score.items():
