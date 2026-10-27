@@ -10,19 +10,59 @@ def test_every_test_has_the_required_fields_and_valid_values():
     ids = [t["id"] for t in spec["tests"]]
     assert len(ids) == len(set(ids))
     for t in spec["tests"]:
-        assert t["level"] in spec["levels"] and t["status"] in vt.STATUS and t["declared"] in vt.DECLARED, t["id"]
+        assert t["level"] in spec["levels"] and t["status"] in vt.STATUS and t["declared"] in vt.DECLARED and t["kind"] in vt.KINDS, t["id"]
         assert t["criterion"].strip() and t["name"].strip() and t["cls"].strip(), t["id"]
+        assert t["can_fail"].strip(), f"{t['id']}: say whether and how the check can fail"
         assert t["id"].startswith(f"L{t['level']}."), t["id"]
         if t["status"] == "blocked":
             assert t.get("blocker"), t["id"]
-        if t["status"] in ("pass", "fail", "inconclusive", "not_applied"):
+        if t["status"] in ("pass", "formal", "fail", "inconclusive", "uninformative", "not_applied"):
             assert t.get("evidence"), f"{t['id']}: a measured status needs a source"
 
 
-def test_a_criterion_written_after_the_result_is_never_a_pending_one():
+def test_code_checks_are_exactly_the_agreed_ones():
+    assert {t["id"] for t in vt.load()["tests"] if t["kind"] == "code"} == {"L1.1", "L1.2", "L1.3", "L1.4", "L1.5", "L1.6", "L1.12"}
+
+
+def test_a_check_that_was_not_run_cannot_have_a_criterion_written_after_the_result():
     for t in vt.load()["tests"]:
-        if t["status"] == "not_run":
-            assert t["declared"] == "pending", t["id"]            # nothing was run, so nothing can be post hoc
+        if t["status"] in ("not_run", "blocked"):
+            assert t["declared"] == "before_run", t["id"]
+
+
+def test_a_formal_pass_says_that_it_could_hardly_fail():
+    for t in vt.load()["tests"]:
+        if t["status"] == "formal":
+            assert "Почти не может" in t["can_fail"], t["id"]
+
+
+def test_checks_with_few_units_carry_a_minimum_and_the_primary_test_has_the_power_rule():
+    spec = vt.load()
+    by = {t["id"]: t for t in spec["tests"]}
+    for i in ("L3.3", "L3.4", "L3.5"):
+        assert by[i]["min_units"]["scored"] >= 30 and by[i]["min_units"]["positives"] >= 8, i
+    assert by["L3.3"]["min_units"]["mde_auc"] == 0.78
+    assert "30" in spec["power"]["rule"] and "неинформативно" in spec["power"]["rule"]
+    assert {i for i in spec["multiplicity"]["family"]} == {"L3.4", "L3.5"} and by["L3.4"]["multiplicity"] and by["L3.5"]["multiplicity"]
+    assert "multiplicity" not in by["L3.3"]
+
+
+def test_noise_relative_thresholds_for_paraphrase_and_style():
+    by = {t["id"]: t for t in vt.load()["tests"]}
+    for i in ("L1.8", "L1.9"):
+        assert "повтор" in by[i]["criterion"] and "минус 0.05" in by[i]["criterion"], i
+    assert "0.9" not in by["L1.9"]["criterion"] and "90%" not in by["L1.8"]["criterion"]
+
+
+def test_a_tie_on_a_historical_pool_is_not_a_failure():
+    by = {t["id"]: t for t in vt.load()["tests"]}
+    assert by["L2.2"]["status"] == "inconclusive" and "A1" in by["L2.2"]["can_fail"]
+
+
+def test_clean_policy_lists_a_as_main_and_is_not_yet_confirmed():
+    cp = vt.load()["clean_policy"]
+    assert cp["confirmed"] is False and cp["main_test"].startswith("А:") and cp["separate"].startswith("В:") and cp["background"].startswith("Б:")
+    assert all(re.fullmatch(r"20\d\d-\d\d-\d\d", c["stated_cutoff"]) and c["source"].startswith("https://") for c in cp["feasibility_of_A"]["candidates"])
 
 
 def test_evidence_paths_exist():
@@ -31,6 +71,12 @@ def test_evidence_paths_exist():
             path = re.split(r" \(", part.strip())[0].strip()
             if path.startswith(("docs/", "tests/", "hyparena/", "scripts/", "specs/")):
                 assert Path(path).exists(), f"{t['id']}: {path}"
+
+
+def test_the_summary_keeps_the_three_tallies_apart():
+    text = vt.render(vt.load())
+    assert "**Проверки кода и метода** (7)" in text and "**Проверки утверждения об отборе** (17)" in text
+    assert "с критерием, зафиксированным до результата:" in text
 
 
 def test_the_rendered_table_is_up_to_date():
