@@ -75,7 +75,7 @@ def test_evidence_paths_exist():
 
 def test_the_summary_keeps_the_three_tallies_apart():
     text = vt.render(vt.load())
-    assert "**Проверки кода и метода** (7)" in text and "**Проверки утверждения об отборе** (18)" in text
+    assert "**Проверки кода и метода** (7)" in text and "**Проверки утверждения об отборе** (21)" in text
     assert "с критерием, зафиксированным до результата:" in text
 
 
@@ -94,3 +94,17 @@ def test_the_candidate_acceptance_criterion_is_fixed_before_the_check_and_relati
     assert th["completion_token_cap"] == 4000 and th["mini_sample"] == {"valid_min": 7, "truncated_max": 1}
     cfg = Path("configs/v2-gpt5.yaml").read_text()
     assert "max_completion_tokens: 4000" in cfg and "reasoning_effort: minimal" in cfg and '"gpt-5"' in cfg
+
+
+def test_the_status_level_criteria_are_tied_to_the_repeat_noise_and_fixed_before_any_candidate_run():
+    by = {t["id"]: t for t in vt.load()["tests"]}
+    th = by["L1.14"]["thresholds"]
+    assert by["L1.14"]["declared"] == "before_run"
+    assert abs(th["call_rate_min"] - (th["noise_call_rate"] - 0.05)) < 0.006 and abs(th["jaccard_min"] - (th["noise_jaccard"] - 0.05)) < 0.006
+    for k in ("L1.15", "L1.16"):
+        t = by[k]
+        assert t["declared"] == "before_run" and t["status"] == "not_run"
+        assert {x: t["thresholds"][x] for x in ("call_rate_min", "jaccard_min", "counted_union_min")} == \
+               {x: th[x] for x in ("call_rate_min", "jaccard_min", "counted_union_min")}
+    assert by["L1.15"]["thresholds"]["completion_token_cap"] == 4000 and "gpt-5.1" in Path("configs/v2-gpt51.yaml").read_text()
+    assert "NOT eligible" in Path("configs/v2-gemini31pro.yaml").read_text()

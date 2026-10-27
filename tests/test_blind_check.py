@@ -64,3 +64,14 @@ def test_candidate_verdict_is_uninformative_with_too_few_shared_records_and_flag
     t.write_text(json.dumps({"n_items": 8, "orig": orig, "answers": [_answer(i, [], tokens_out=4000) for i in range(8)]}))
     out = bc.candidate_verdict(str(t), _thresholds(), mini=True)
     assert out["truncated"] == 8 and out["accepted_for_full_run"] is False
+
+
+def test_counted_keys_follow_the_effect_direction_for_lifespan_findings_and_the_stance_otherwise():
+    from scripts.blind_check import counted_keys, status_compare
+    a = [{"pmid": "1", "endpoint": "lifespan", "quote_role": "finding", "effect": "increase", "stance": "neither"},
+         {"pmid": "2", "endpoint": "biomarker", "quote_role": "finding", "effect": "increase", "stance": "neither"},
+         {"pmid": "3", "endpoint": "biomarker", "quote_role": "finding", "effect": "unknown", "stance": "refutes"}]
+    assert counted_keys(a) == {("1", "L", "increase"), ("3", "S", "refutes")}
+    b = [{"pmid": "1", "endpoint": "lifespan", "quote_role": "finding", "effect": "increase", "stance": "supports"}]
+    r = status_compare([a], [b])
+    assert r["same_counted_set"] == 0 and r["counted_union"] == 2 and abs(r["jaccard"] - 0.5) < 1e-9
