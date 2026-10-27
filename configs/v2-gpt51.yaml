@@ -1,0 +1,16 @@
+# Candidate verifier gpt-5.1 (stated knowledge cutoff 2024-09-30, snapshot gpt-5.1-2025-11-13) through CometAPI, for the acceptance
+# check L1.15 in specs/validation-criteria.yaml. reasoning_effort none (gpt-5.1 has no `minimal`), hard cap on completion tokens.
+# Settings may change once after the mini-sample, only these two keys, and the change is recorded in the result file.
+# Needs COMET_API_KEY and ALLOW_PAID=1.
+rpm: 30
+concurrency: 4
+generation:
+  temperature: null
+  max_tokens: null
+  max_completion_tokens: 4000
+  reasoning_effort: none
+timeout: 150
+max_retries: 0
+deadline: 180
+models:
+  - {family: openai, provider: cometapi, model: "gpt-5.1", tier: paid, api_key_env: COMET_API_KEY, generation: {temperature: null, max_tokens: null, max_completion_tokens: 4000, reasoning_effort: none}}
