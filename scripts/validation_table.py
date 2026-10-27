@@ -22,6 +22,25 @@ KINDS = ("code", "claim")
 KIND_RU = {"code": "Проверки кода и метода", "claim": "Проверки утверждения об отборе"}
 
 
+def current_set() -> str:
+    """Prefix of the hash of the current indicator set and profiles (what a recorded result is compared with)."""
+    from hyparena.aspid import load_profiles
+    from hyparena.card import indicators as ind
+    return ind.set_hash(ind.INDICATORS, load_profiles())[:8]
+
+
+def freshness(t: dict, current: str) -> str:
+    """Whether a measured result still describes the current indicator set (measured_on.indicators)."""
+    m = (t.get("measured_on") or {}).get("indicators")
+    if m is None or t["status"] in ("not_run", "blocked", "not_applied"):
+        return ""
+    if m == "frozen":
+        return "эталон: заморожен намеренно, набор показателей с тех пор изменился"
+    if m == current:
+        return f"актуально: измерено на текущем наборе показателей ({m})"
+    return "УСТАРЕЛО: измерено на прежнем наборе показателей, повторить на текущем коде"
+
+
 def load(path: Path = SRC) -> dict:
     return yaml.safe_load(path.read_text(encoding="utf-8"))
 
@@ -52,6 +71,7 @@ def summary(tests: list[dict]) -> list[str]:
 
 def render(spec: dict) -> str:
     tests = spec["tests"]
+    cur = current_set()
     out = ["# Критерии «пройдено» для проверок системы",
            "",
            f"Источник: `specs/validation-criteria.yaml` (версия {spec['version']}, {spec['declared_on']}). Этот файл генерируется "
@@ -81,6 +101,10 @@ def render(spec: dict) -> str:
                 out.append(f"- Порядок: {t['procedure']}")
             if t.get("multiplicity"):
                 out.append(f"- Множественность: {t['multiplicity']}.")
+            if freshness(t, cur):
+                out.append(f"- Свежесть: {freshness(t, cur)}")
+            if t.get("result"):
+                out.append(f"- Результат: {t['result']}")
             if t.get("evidence"):
                 out.append(f"- Где: {t['evidence']}")
             if t.get("blocker"):
