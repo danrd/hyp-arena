@@ -222,7 +222,7 @@ def _status_verdict(out: dict, cmp_: dict, st: dict, t: dict, all_answered: bool
 def candidate_verdict(path: str, thresholds: dict, mini: bool = False) -> dict:
     """Metrics of a candidate against the saved replies of the reference verifier and the verdict against the thresholds fixed in advance."""
     d = json.loads(Path(path).read_text())
-    cap = thresholds["completion_token_cap"]
+    cap = thresholds.get("completion_token_cap", 4000)
     ans = d["answers"]
     valid = [a for a in ans if a["text"] and not a["error"] and __import__("hyparena.card.verifier", fromlist=["parse_records"]).parse_records(a["text"]) is not None]
     truncated = [a for a in ans if (a["tokens_out"] or 0) >= 0.98 * cap]
