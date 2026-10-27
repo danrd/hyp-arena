@@ -1,0 +1,12 @@
+# One verifier family only, for the agreement check L1.10 (specs/validation-criteria.yaml): cards are reused, only the verifier changes,
+# and with one family in the config the pipeline cannot fall back to another one. Needs COMET_API_KEY and ALLOW_PAID=1.
+rpm: 30
+concurrency: 4
+deadline: 180
+timeout: 150
+max_retries: 0
+generation:
+  temperature: 0.2
+  max_tokens: 6000
+models:
+  - {family: zhipu, provider: cometapi, model: "glm-5.3-flash", tier: paid, api_key_env: COMET_API_KEY, generation: {reasoning_effort: low, max_tokens: 6000}}

@@ -1,0 +1,2101 @@
+{
+ "items": [
+  {
+   "id": "imp020",
+   "compound": "Beta-guanidinopropionic acid",
+   "label": 0,
+   "text": "Dietary Beta-guanidinopropionic acid (at 3300 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Beta-guanidinopropionic acid (at 3300 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "card": {
+    "id": "H-0011",
+    "raw_id": "H-0011",
+    "hypothesis_type": "interventional",
+    "claim_plain": "Feeding beta-guanidinopropionic acid to UM-HET3 mice starting at six months of age extends median lifespan in at least one sex.",
+    "pico": {
+     "population": {
+      "taxon": "NCBITaxon:10090",
+      "label": "mouse",
+      "strain": "UM-HET3",
+      "sex": "at least one sex",
+      "age_at_start": "6 months"
+     },
+     "intervention": [
+      {
+       "type": "compound",
+       "label": "Beta-guanidinopropionic acid",
+       "id": "CHEBI:15968",
+       "regimen": "3300 ppm food",
+       "route": "diet"
+      }
+     ],
+     "comparator": {
+      "type": "unknown",
+      "label": "unknown"
+     },
+     "outcome": {
+      "endpoint": "lifespan",
+      "metric": "median lifespan"
+     },
+     "time": "unknown"
+    },
+    "claims": [
+     {
+      "id": "c1",
+      "subject": {
+       "label": "Beta-guanidinopropionic acid",
+       "id": "CHEBI:15968",
+       "hallmark": null
+      },
+      "relation": "extends_lifespan_in",
+      "object": {
+       "label": "mouse",
+       "id": null,
+       "hallmark": null
+      },
+      "qualifiers": {
+       "species": "mouse",
+       "strain": "UM-HET3",
+       "sex": "at least one sex",
+       "dose": "3300 ppm food",
+       "age_at_start": "6 months",
+       "measure": "median lifespan"
+      },
+      "inherited_from_pico": [],
+      "role": "outcome",
+      "source_span": "Dietary Beta-guanidinopropionic acid (at 3300 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "note": ""
+     }
+    ],
+    "edges": [],
+    "declared_novelty": "unknown",
+    "decisive_experiment": {
+     "system": "mouse",
+     "endpoint": "median lifespan",
+     "duration_class": "years"
+    },
+    "declared_alternatives": [],
+    "declared_decision_criteria": "unknown",
+    "risks": []
+   }
+  },
+  {
+   "id": "imp032",
+   "compound": "Fish oil",
+   "label": 0,
+   "text": "Dietary Fish oil (at 50000 ppm food, started at 9 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Fish oil (at 50000 ppm food, started at 9 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "card": {
+    "id": "H-0018",
+    "raw_id": "H-0018",
+    "hypothesis_type": "interventional",
+    "claim_plain": "Feeding fish oil to mice starting at 9 months increases the median lifespan of at least one sex.",
+    "pico": {
+     "population": {
+      "taxon": "NCBITaxon:10090",
+      "label": "mouse",
+      "strain": "UM-HET3",
+      "sex": "at least one sex",
+      "age_at_start": "9 months"
+     },
+     "intervention": [
+      {
+       "type": "diet",
+       "label": "fish oil",
+       "id": null,
+       "regimen": "50000 ppm food, started at 9 months",
+       "route": "diet"
+      }
+     ],
+     "comparator": {
+      "type": "unknown",
+      "label": "unknown"
+     },
+     "outcome": {
+      "endpoint": "lifespan",
+      "metric": "median lifespan"
+     },
+     "time": "unknown"
+    },
+    "claims": [
+     {
+      "id": "c1",
+      "subject": {
+       "label": "fish oil",
+       "id": null,
+       "hallmark": null
+      },
+      "relation": "extends_lifespan_in",
+      "object": {
+       "label": "mouse",
+       "id": null,
+       "hallmark": null
+      },
+      "qualifiers": {
+       "species": "mouse",
+       "strain": "UM-HET3",
+       "sex": "at least one sex",
+       "dose": "50000 ppm food",
+       "age_at_start": "9 months",
+       "measure": "median lifespan"
+      },
+      "inherited_from_pico": [],
+      "role": "outcome",
+      "source_span": "Dietary Fish oil (at 50000 ppm food, started at 9 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "note": ""
+     }
+    ],
+    "edges": [],
+    "declared_novelty": "unknown",
+    "decisive_experiment": {
+     "system": "mouse",
+     "endpoint": "median lifespan",
+     "duration_class": "years"
+    },
+    "declared_alternatives": [],
+    "declared_decision_criteria": "unknown",
+    "risks": []
+   }
+  },
+  {
+   "id": "imp036",
+   "compound": "Hydralazine",
+   "label": 0,
+   "text": "Dietary Hydralazine (at 30 ppm food, started at 16 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Hydralazine (at 30 ppm food, started at 16 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "card": {
+    "id": "H-0020",
+    "raw_id": "H-0020",
+    "hypothesis_type": "interventional",
+    "claim_plain": "Hydralazine fed to genetically diverse mice starting at 16 months increases their median lifespan in at least one sex.",
+    "pico": {
+     "population": {
+      "taxon": "NCBITaxon:10090",
+      "label": "mouse",
+      "strain": "genetically heterogeneous UM-HET3",
+      "sex": "at least one sex",
+      "age_at_start": "16 months"
+     },
+     "intervention": [
+      {
+       "type": "compound",
+       "label": "hydralazine",
+       "id": "CHEBI:5775",
+       "regimen": "30 ppm food, started at 16 months",
+       "route": "diet"
+      }
+     ],
+     "comparator": {
+      "type": "unknown",
+      "label": "unknown"
+     },
+     "outcome": {
+      "endpoint": "lifespan",
+      "metric": "median lifespan"
+     },
+     "time": "unknown"
+    },
+    "claims": [
+     {
+      "id": "c1",
+      "subject": {
+       "label": "hydralazine",
+       "id": "CHEBI:5775",
+       "hallmark": null
+      },
+      "relation": "extends_lifespan_in",
+      "object": {
+       "label": "mouse",
+       "id": null,
+       "hallmark": null
+      },
+      "qualifiers": {
+       "species": "mouse",
+       "strain": "genetically heterogeneous UM-HET3",
+       "sex": "at least one sex",
+       "dose": "30 ppm food",
+       "age_at_start": "16 months",
+       "measure": "median lifespan"
+      },
+      "inherited_from_pico": [],
+      "role": "outcome",
+      "source_span": "Dietary Hydralazine (at 30 ppm food, started at 16 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "note": ""
+     }
+    ],
+    "edges": [],
+    "declared_novelty": "unknown",
+    "decisive_experiment": {
+     "system": "mouse",
+     "endpoint": "median lifespan",
+     "duration_class": "years"
+    },
+    "declared_alternatives": [],
+    "declared_decision_criteria": "unknown",
+    "risks": []
+   }
+  },
+  {
+   "id": "imp063",
+   "compound": "SG1002 (hydrogen sulfide donor)",
+   "label": 0,
+   "text": "Dietary SG1002 (hydrogen sulfide donor) (at 240 ppm food, started at 16 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary SG1002 (hydrogen sulfide donor) (at 240 ppm food, started at 16 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "card": {
+    "id": "H-0032",
+    "raw_id": "H-0032",
+    "hypothesis_type": "interventional",
+    "claim_plain": "Feeding SG1002 starting at 16 months extends the median lifespan of UM-HET3 mice of at least one sex.",
+    "pico": {
+     "population": {
+      "taxon": "NCBITaxon:10090",
+      "label": "mouse",
+      "strain": "UM-HET3",
+      "sex": "at least one sex",
+      "age_at_start": "16 months"
+     },
+     "intervention": [
+      {
+       "type": "compound",
+       "label": "SG1002",
+       "id": null,
+       "regimen": "240 ppm food, started at 16 months",
+       "route": "diet"
+      }
+     ],
+     "comparator": {
+      "type": "unknown",
+      "label": "unknown"
+     },
+     "outcome": {
+      "endpoint": "lifespan",
+      "metric": "median lifespan"
+     },
+     "time": "unknown"
+    },
+    "claims": [
+     {
+      "id": "c1",
+      "subject": {
+       "label": "SG1002",
+       "id": null,
+       "hallmark": null
+      },
+      "relation": "extends_lifespan_in",
+      "object": {
+       "label": "mouse",
+       "id": null,
+       "hallmark": null
+      },
+      "qualifiers": {
+       "species": "mouse",
+       "strain": "UM-HET3",
+       "sex": "at least one sex",
+       "dose": "240 ppm food",
+       "age_at_start": "16 months",
+       "measure": "median lifespan"
+      },
+      "inherited_from_pico": [],
+      "role": "outcome",
+      "source_span": "Dietary SG1002 (hydrogen sulfide donor) (at 240 ppm food, started at 16 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "note": ""
+     }
+    ],
+    "edges": [],
+    "declared_novelty": "unknown",
+    "decisive_experiment": {
+     "system": "mouse",
+     "endpoint": "median lifespan",
+     "duration_class": "years"
+    },
+    "declared_alternatives": [],
+    "declared_decision_criteria": "unknown",
+    "risks": []
+   }
+  },
+  {
+   "id": "imp013",
+   "compound": "Acarbose",
+   "label": 1,
+   "text": "Dietary Acarbose (at 1000 ppm food, started at 8 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Acarbose (at 1000 ppm food, started at 8 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "card": {
+    "id": "H-0007",
+    "raw_id": "H-0007",
+    "hypothesis_type": "interventional",
+    "claim_plain": "Feeding acarbose starting at 8 months extends the median lifespan of genetically heterogeneous mice of at least one sex.",
+    "pico": {
+     "population": {
+      "taxon": "NCBITaxon:10090",
+      "label": "mouse",
+      "strain": "UM-HET3",
+      "sex": "at least one sex",
+      "age_at_start": "8 months"
+     },
+     "intervention": [
+      {
+       "type": "compound",
+       "label": "acarbose",
+       "id": "CHEBI:2376",
+       "regimen": "1000 ppm food, started at 8 months",
+       "route": "diet"
+      }
+     ],
+     "comparator": {
+      "type": "unknown",
+      "label": "unknown"
+     },
+     "outcome": {
+      "endpoint": "lifespan",
+      "metric": "median lifespan"
+     },
+     "time": "unknown"
+    },
+    "claims": [
+     {
+      "id": "c1",
+      "subject": {
+       "label": "acarbose",
+       "id": "CHEBI:2376",
+       "hallmark": null
+      },
+      "relation": "extends_lifespan_in",
+      "object": {
+       "label": "mouse",
+       "id": null,
+       "hallmark": null
+      },
+      "qualifiers": {
+       "species": "mouse",
+       "strain": "UM-HET3",
+       "sex": "at least one sex",
+       "dose": "1000 ppm food",
+       "age_at_start": "8 months",
+       "measure": "median lifespan"
+      },
+      "inherited_from_pico": [],
+      "role": "outcome",
+      "source_span": "Dietary Acarbose (at 1000 ppm food, started at 8 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "note": ""
+     }
+    ],
+    "edges": [],
+    "declared_novelty": "unknown",
+    "decisive_experiment": {
+     "system": "mouse",
+     "endpoint": "median lifespan",
+     "duration_class": "years"
+    },
+    "declared_alternatives": [],
+    "declared_decision_criteria": "unknown",
+    "risks": []
+   }
+  },
+  {
+   "id": "imp022",
+   "compound": "Canagliflozin",
+   "label": 1,
+   "text": "Dietary Canagliflozin (at 180 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Canagliflozin (at 180 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "card": {
+    "id": "H-0012",
+    "raw_id": "H-0012",
+    "hypothesis_type": "interventional",
+    "claim_plain": "Adding canagliflozin to the diet starting at 6 months increases the median lifespan of mice of at least one sex.",
+    "pico": {
+     "population": {
+      "taxon": "NCBITaxon:10090",
+      "label": "mouse",
+      "strain": "UM-HET3",
+      "sex": "at least one sex",
+      "age_at_start": "6 months"
+     },
+     "intervention": [
+      {
+       "type": "compound",
+       "label": "canagliflozin",
+       "id": "CHEBI:73274",
+       "regimen": "180 ppm food, started at 6 months",
+       "route": "diet"
+      }
+     ],
+     "comparator": {
+      "type": "unknown",
+      "label": "unknown"
+     },
+     "outcome": {
+      "endpoint": "lifespan",
+      "metric": "median lifespan"
+     },
+     "time": "unknown"
+    },
+    "claims": [
+     {
+      "id": "c1",
+      "subject": {
+       "label": "canagliflozin",
+       "id": "CHEBI:73274",
+       "hallmark": null
+      },
+      "relation": "extends_lifespan_in",
+      "object": {
+       "label": "mouse",
+       "id": null,
+       "hallmark": null
+      },
+      "qualifiers": {
+       "species": "mouse",
+       "strain": "UM-HET3",
+       "sex": "at least one sex",
+       "dose": "180 ppm food",
+       "age_at_start": "6 months",
+       "measure": "median lifespan"
+      },
+      "inherited_from_pico": [],
+      "role": "outcome",
+      "source_span": "Dietary Canagliflozin (at 180 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "note": ""
+     }
+    ],
+    "edges": [],
+    "declared_novelty": "unknown",
+    "decisive_experiment": {
+     "system": "mouse",
+     "endpoint": "median lifespan",
+     "duration_class": "years"
+    },
+    "declared_alternatives": [],
+    "declared_decision_criteria": "unknown",
+    "risks": []
+   }
+  },
+  {
+   "id": "imp001",
+   "compound": "(R/S)-1,3-butanediol",
+   "label": 1,
+   "text": "Dietary (R/S)-1,3-butanediol (at 100000 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary (R/S)-1,3-butanediol (at 100000 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "card": {
+    "id": "H-0001",
+    "raw_id": "H-0001",
+    "hypothesis_type": "interventional",
+    "claim_plain": "Feeding (R/S)-1,3-butanediol to UM-HET3 mice starting at 6 months extends median lifespan in at least one sex.",
+    "pico": {
+     "population": {
+      "taxon": "NCBITaxon:10090",
+      "label": "mouse",
+      "strain": "UM-HET3",
+      "sex": "at least one sex",
+      "age_at_start": "6 months"
+     },
+     "intervention": [
+      {
+       "type": "compound",
+       "label": "(R/S)-1,3-butanediol",
+       "id": null,
+       "regimen": "100000 ppm food",
+       "route": "diet"
+      }
+     ],
+     "comparator": {
+      "type": "unknown",
+      "label": "unknown"
+     },
+     "outcome": {
+      "endpoint": "lifespan",
+      "metric": "median lifespan"
+     },
+     "time": "unknown"
+    },
+    "claims": [
+     {
+      "id": "c1",
+      "subject": {
+       "label": "(R/S)-1,3-butanediol",
+       "id": null,
+       "hallmark": null
+      },
+      "relation": "extends_lifespan_in",
+      "object": {
+       "label": "mouse",
+       "id": null,
+       "hallmark": null
+      },
+      "qualifiers": {
+       "species": "mouse",
+       "strain": "UM-HET3",
+       "sex": "at least one sex",
+       "dose": "100000 ppm food",
+       "age_at_start": "6 months",
+       "measure": "median lifespan"
+      },
+      "inherited_from_pico": [],
+      "role": "outcome",
+      "source_span": "Dietary (R/S)-1,3-butanediol (at 100000 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "note": ""
+     }
+    ],
+    "edges": [],
+    "declared_novelty": "unknown",
+    "decisive_experiment": {
+     "system": "mouse",
+     "endpoint": "median lifespan",
+     "duration_class": "years"
+    },
+    "declared_alternatives": [],
+    "declared_decision_criteria": "unknown",
+    "risks": []
+   }
+  },
+  {
+   "id": "imp041",
+   "compound": "MIF098 (CD74 antagonist)",
+   "label": 0,
+   "text": "Dietary MIF098 (CD74 antagonist) (at 240 ppm food, started at 8 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary MIF098 (CD74 antagonist) (at 240 ppm food, started at 8 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "card": {
+    "id": "H-0022",
+    "raw_id": "H-0022",
+    "hypothesis_type": "interventional",
+    "claim_plain": "Giving MIF098 in food starting at 8 months extends the median lifespan of UM-HET3 mice of at least one sex.",
+    "pico": {
+     "population": {
+      "taxon": "NCBITaxon:10090",
+      "label": "mouse",
+      "strain": "UM-HET3",
+      "sex": "at least one sex",
+      "age_at_start": "8 months"
+     },
+     "intervention": [
+      {
+       "type": "compound",
+       "label": "MIF098",
+       "id": "PubChem:44631884",
+       "regimen": "240 ppm food, started at 8 months",
+       "route": "diet"
+      }
+     ],
+     "comparator": {
+      "type": "unknown",
+      "label": "unknown"
+     },
+     "outcome": {
+      "endpoint": "lifespan",
+      "metric": "median lifespan"
+     },
+     "time": "unknown"
+    },
+    "claims": [
+     {
+      "id": "c1",
+      "subject": {
+       "label": "MIF098",
+       "id": "PubChem:44631884",
+       "hallmark": null
+      },
+      "relation": "inhibits",
+      "object": {
+       "label": "CD74",
+       "id": null,
+       "hallmark": null
+      },
+      "qualifiers": {},
+      "inherited_from_pico": [],
+      "role": "premise",
+      "source_span": "CD74 antagonist",
+      "note": ""
+     },
+     {
+      "id": "c2",
+      "subject": {
+       "label": "MIF098",
+       "id": "PubChem:44631884",
+       "hallmark": null
+      },
+      "relation": "extends_lifespan_in",
+      "object": {
+       "label": "mouse",
+       "id": null,
+       "hallmark": null
+      },
+      "qualifiers": {
+       "species": "mouse",
+       "strain": "UM-HET3",
+       "sex": "at least one sex",
+       "dose": "240 ppm food",
+       "age_at_start": "8 months",
+       "measure": "median lifespan"
+      },
+      "inherited_from_pico": [],
+      "role": "outcome",
+      "source_span": "Dietary MIF098 (CD74 antagonist) (at 240 ppm food, started at 8 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex",
+      "note": ""
+     }
+    ],
+    "edges": [],
+    "declared_novelty": "unknown",
+    "decisive_experiment": {
+     "system": "mouse",
+     "endpoint": "median lifespan",
+     "duration_class": "years"
+    },
+    "declared_alternatives": [],
+    "declared_decision_criteria": "unknown",
+    "risks": []
+   }
+  },
+  {
+   "id": "imp045",
+   "compound": "Methylene blue",
+   "label": 0,
+   "text": "Dietary Methylene blue (at 27 ppm food, started at 4 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Methylene blue (at 27 ppm food, started at 4 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "card": {
+    "id": "H-0024",
+    "raw_id": "H-0024",
+    "hypothesis_type": "interventional",
+    "claim_plain": "Dietary Methylene blue started at 4 months extends the median lifespan of UM-HET3 mice of at least one sex.",
+    "pico": {
+     "population": {
+      "taxon": "NCBITaxon:10090",
+      "label": "UM-HET3 mice",
+      "strain": "UM-HET3",
+      "sex": "at least one sex",
+      "age_at_start": "4 months"
+     },
+     "intervention": [
+      {
+       "type": "compound",
+       "label": "Methylene blue",
+       "id": "CHEBI:43830",
+       "regimen": "27 ppm food, started at 4 months",
+       "route": "diet"
+      }
+     ],
+     "comparator": {
+      "type": "unknown",
+      "label": "unknown"
+     },
+     "outcome": {
+      "endpoint": "lifespan",
+      "metric": "median lifespan"
+     },
+     "time": "unknown"
+    },
+    "claims": [
+     {
+      "id": "c1",
+      "subject": {
+       "label": "Methylene blue",
+       "id": "CHEBI:43830",
+       "hallmark": null
+      },
+      "relation": "extends_lifespan_in",
+      "object": {
+       "label": "mouse",
+       "id": null,
+       "hallmark": null
+      },
+      "qualifiers": {
+       "species": "mouse",
+       "strain": "UM-HET3",
+       "sex": "at least one sex",
+       "dose": "27 ppm",
+       "age_at_start": "4 months",
+       "measure": "median lifespan"
+      },
+      "inherited_from_pico": [],
+      "role": "outcome",
+      "source_span": "Dietary Methylene blue (at 27 ppm food, started at 4 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "note": ""
+     }
+    ],
+    "edges": [],
+    "declared_novelty": "unknown",
+    "decisive_experiment": {
+     "system": "mouse",
+     "endpoint": "lifespan",
+     "duration_class": "years"
+    },
+    "declared_alternatives": [],
+    "declared_decision_criteria": "unknown",
+    "risks": []
+   }
+  },
+  {
+   "id": "imp026",
+   "compound": "Curcumin",
+   "label": 0,
+   "text": "Dietary Curcumin (at 2000 ppm food, started at 4 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Curcumin (at 2000 ppm food, started at 4 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "card": {
+    "id": "H-0015",
+    "raw_id": "H-0015",
+    "hypothesis_type": "interventional",
+    "claim_plain": "Curcumin in food started at 4 months makes UM-HET3 mice of at least one sex live longer.",
+    "pico": {
+     "population": {
+      "taxon": "NCBITaxon:10090",
+      "label": "mouse",
+      "strain": "UM-HET3",
+      "sex": "at least one sex",
+      "age_at_start": "4 months"
+     },
+     "intervention": [
+      {
+       "type": "compound",
+       "label": "Curcumin",
+       "id": "CHEBI:3962",
+       "regimen": "2000 ppm food, started at 4 months",
+       "route": "diet"
+      }
+     ],
+     "comparator": {
+      "type": "unknown",
+      "label": "unknown"
+     },
+     "outcome": {
+      "endpoint": "lifespan",
+      "metric": "median lifespan"
+     },
+     "time": "unknown"
+    },
+    "claims": [
+     {
+      "id": "c1",
+      "subject": {
+       "label": "Curcumin",
+       "id": "CHEBI:3962",
+       "hallmark": null
+      },
+      "relation": "extends_lifespan_in",
+      "object": {
+       "label": "mouse",
+       "id": null,
+       "hallmark": null
+      },
+      "qualifiers": {
+       "species": "mouse",
+       "strain": "UM-HET3",
+       "sex": "at least one sex",
+       "dose": "2000 ppm food",
+       "age_at_start": "4 months",
+       "measure": "median lifespan"
+      },
+      "inherited_from_pico": [],
+      "role": "outcome",
+      "source_span": "Dietary Curcumin (at 2000 ppm food, started at 4 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "note": ""
+     }
+    ],
+    "edges": [],
+    "declared_novelty": "unknown",
+    "decisive_experiment": {
+     "system": "mouse",
+     "endpoint": "median lifespan",
+     "duration_class": "years"
+    },
+    "declared_alternatives": [],
+    "declared_decision_criteria": "unknown",
+    "risks": []
+   }
+  },
+  {
+   "id": "imp008",
+   "compound": "2,4-dinitrophenol",
+   "label": 0,
+   "text": "Dietary 2,4-dinitrophenol (at 3 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary 2,4-dinitrophenol (at 3 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "card": {
+    "id": "H-0004",
+    "raw_id": "H-0004",
+    "hypothesis_type": "interventional",
+    "claim_plain": "Dietary 2,4-dinitrophenol started at 6 months of age extends the median lifespan of UM-HET3 mice of at least one sex.",
+    "pico": {
+     "population": {
+      "taxon": "NCBITaxon:10090",
+      "label": "mouse",
+      "strain": "UM-HET3",
+      "sex": "at least one sex",
+      "age_at_start": "6 months"
+     },
+     "intervention": [
+      {
+       "type": "compound",
+       "label": "2,4-dinitrophenol",
+       "id": "CHEBI:42017",
+       "regimen": "3 ppm food, started at 6 months",
+       "route": "diet"
+      }
+     ],
+     "comparator": {
+      "type": "unknown",
+      "label": "unknown"
+     },
+     "outcome": {
+      "endpoint": "lifespan",
+      "metric": "median lifespan"
+     },
+     "time": "unknown"
+    },
+    "claims": [
+     {
+      "id": "c1",
+      "subject": {
+       "label": "2,4-dinitrophenol",
+       "id": null,
+       "hallmark": null
+      },
+      "relation": "extends_lifespan_in",
+      "object": {
+       "label": "mouse",
+       "id": null,
+       "hallmark": null
+      },
+      "qualifiers": {
+       "species": "mouse",
+       "strain": "UM-HET3",
+       "sex": "at least one sex",
+       "dose": "3 ppm food",
+       "age_at_start": "6 months",
+       "measure": "median lifespan"
+      },
+      "inherited_from_pico": [],
+      "role": "outcome",
+      "source_span": "Dietary 2,4-dinitrophenol (at 3 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "note": ""
+     }
+    ],
+    "edges": [],
+    "declared_novelty": "unknown",
+    "decisive_experiment": {
+     "system": "mouse",
+     "endpoint": "median lifespan",
+     "duration_class": "years"
+    },
+    "declared_alternatives": [],
+    "declared_decision_criteria": "unknown",
+    "risks": []
+   }
+  },
+  {
+   "id": "imp040",
+   "compound": "Leucine",
+   "label": 0,
+   "text": "Dietary Leucine (at 40000 ppm food, started at 5 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Leucine (at 40000 ppm food, started at 5 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "card": {
+    "id": "H-0021",
+    "raw_id": "H-0021",
+    "hypothesis_type": "interventional",
+    "claim_plain": "Dietary Leucine started at 5 months extends the median lifespan of UM-HET3 mice of at least one sex.",
+    "pico": {
+     "population": {
+      "taxon": "NCBITaxon:10090",
+      "label": "genetically heterogeneous UM-HET3 mice",
+      "strain": "UM-HET3",
+      "sex": "at least one sex",
+      "age_at_start": "5 months"
+     },
+     "intervention": [
+      {
+       "type": "compound",
+       "label": "Leucine",
+       "id": "CHEBI:15603",
+       "regimen": "40000 ppm food, started at 5 months",
+       "route": "diet"
+      }
+     ],
+     "comparator": {
+      "type": "unknown",
+      "label": "unknown"
+     },
+     "outcome": {
+      "endpoint": "lifespan",
+      "metric": "median lifespan"
+     },
+     "time": "unknown"
+    },
+    "claims": [
+     {
+      "id": "c1",
+      "subject": {
+       "label": "Leucine",
+       "id": "CHEBI:15603",
+       "hallmark": null
+      },
+      "relation": "extends_lifespan_in",
+      "object": {
+       "label": "mouse",
+       "id": null,
+       "hallmark": null
+      },
+      "qualifiers": {
+       "species": "mouse",
+       "strain": "UM-HET3",
+       "sex": "at least one sex",
+       "dose": "40000 ppm food",
+       "age_at_start": "5 months",
+       "measure": "median lifespan"
+      },
+      "inherited_from_pico": [],
+      "role": "outcome",
+      "source_span": "Dietary Leucine (at 40000 ppm food, started at 5 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "note": ""
+     }
+    ],
+    "edges": [],
+    "declared_novelty": "unknown",
+    "decisive_experiment": {
+     "system": "mouse",
+     "endpoint": "median lifespan",
+     "duration_class": "years"
+    },
+    "declared_alternatives": [],
+    "declared_decision_criteria": "unknown",
+    "risks": []
+   }
+  },
+  {
+   "id": "imp038",
+   "compound": "INT-767d (FXR/TGR5 agonist)",
+   "label": 0,
+   "text": "Dietary INT-767d (FXR/TGR5 agonist) (at 180 ppm food, started at 10 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary INT-767d (FXR/TGR5 agonist) (at 180 ppm food, started at 10 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "card": {
+    "id": "H-0018",
+    "raw_id": "H-0018",
+    "hypothesis_type": "interventional",
+    "claim_plain": "Dietary INT-767d extends the median lifespan of UM-HET3 mice of at least one sex.",
+    "pico": {
+     "population": {
+      "taxon": "NCBITaxon:10090",
+      "label": "mouse",
+      "strain": "UM-HET3",
+      "sex": "at least one sex",
+      "age_at_start": "10 months"
+     },
+     "intervention": [
+      {
+       "type": "compound",
+       "label": "INT-767d",
+       "id": null,
+       "regimen": "180 ppm food, started at 10 months",
+       "route": "diet"
+      }
+     ],
+     "comparator": {
+      "type": "unknown",
+      "label": "unknown"
+     },
+     "outcome": {
+      "endpoint": "lifespan",
+      "metric": "median lifespan"
+     },
+     "time": "unknown"
+    },
+    "claims": [
+     {
+      "id": "c1",
+      "subject": {
+       "label": "INT-767d",
+       "id": null,
+       "hallmark": null
+      },
+      "relation": "extends_lifespan_in",
+      "object": {
+       "label": "mouse",
+       "id": null,
+       "hallmark": null
+      },
+      "qualifiers": {
+       "species": "mouse",
+       "strain": "UM-HET3",
+       "sex": "at least one sex",
+       "dose": "180 ppm food",
+       "age_at_start": "10 months"
+      },
+      "inherited_from_pico": [],
+      "role": "outcome",
+      "source_span": "Dietary INT-767d (FXR/TGR5 agonist) (at 180 ppm food, started at 10 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "note": ""
+     }
+    ],
+    "edges": [],
+    "declared_novelty": "unknown",
+    "decisive_experiment": {
+     "system": "mouse",
+     "endpoint": "lifespan",
+     "duration_class": "years"
+    },
+    "declared_alternatives": [],
+    "declared_decision_criteria": "unknown",
+    "risks": []
+   }
+  },
+  {
+   "id": "imp043",
+   "compound": "Medium-chain triglyceride oil",
+   "label": 0,
+   "text": "Dietary Medium-chain triglyceride oil (at 60000 ppm food, started at 4 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Medium-chain triglyceride oil (at 60000 ppm food, started at 4 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "card": {
+    "id": "H-0021",
+    "raw_id": "H-0021",
+    "hypothesis_type": "interventional",
+    "claim_plain": "Dietary medium-chain triglyceride oil started at four months extends the median lifespan of UM-HET3 mice of at least one sex.",
+    "pico": {
+     "population": {
+      "taxon": "NCBITaxon:10090",
+      "label": "mouse",
+      "strain": "UM-HET3",
+      "sex": "at least one sex",
+      "age_at_start": "4 months"
+     },
+     "intervention": [
+      {
+       "type": "compound",
+       "label": "Medium-chain triglyceride oil",
+       "id": null,
+       "regimen": "60000 ppm food, started at 4 months",
+       "route": "diet"
+      }
+     ],
+     "comparator": {
+      "type": "unknown",
+      "label": "unknown"
+     },
+     "outcome": {
+      "endpoint": "lifespan",
+      "metric": "median lifespan"
+     },
+     "time": "unknown"
+    },
+    "claims": [
+     {
+      "id": "c1",
+      "subject": {
+       "label": "Medium-chain triglyceride oil",
+       "id": null,
+       "hallmark": null
+      },
+      "relation": "extends_lifespan_in",
+      "object": {
+       "label": "mouse",
+       "id": null,
+       "hallmark": null
+      },
+      "qualifiers": {
+       "species": "mouse",
+       "strain": "UM-HET3",
+       "sex": "at least one sex",
+       "dose": "60000 ppm food",
+       "age_at_start": "4 months",
+       "measure": "median lifespan"
+      },
+      "inherited_from_pico": [],
+      "role": "outcome",
+      "source_span": "Dietary Medium-chain triglyceride oil (at 60000 ppm food, started at 4 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "note": ""
+     }
+    ],
+    "edges": [],
+    "declared_novelty": "unknown",
+    "decisive_experiment": {
+     "system": "mouse",
+     "endpoint": "median lifespan",
+     "duration_class": "years"
+    },
+    "declared_alternatives": [],
+    "declared_decision_criteria": "unknown",
+    "risks": []
+   }
+  },
+  {
+   "id": "imp034",
+   "compound": "Glycine",
+   "label": 1,
+   "text": "Dietary Glycine (at 80000 ppm food, started at 9 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Glycine (at 80000 ppm food, started at 9 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "card": {
+    "id": "H-0019",
+    "raw_id": "H-0019",
+    "hypothesis_type": "interventional",
+    "claim_plain": "Feeding glycine to genetically heterogeneous UM-HET3 mice starting at nine months extends median lifespan in at least one sex.",
+    "pico": {
+     "population": {
+      "taxon": "NCBITaxon:10090",
+      "label": "mouse",
+      "strain": "UM-HET3",
+      "sex": "at least one sex",
+      "age_at_start": "9 months"
+     },
+     "intervention": [
+      {
+       "type": "compound",
+       "label": "glycine",
+       "id": "CHEBI:15428",
+       "regimen": "80000 ppm food",
+       "route": "diet"
+      }
+     ],
+     "comparator": {
+      "type": "unknown",
+      "label": "unknown"
+     },
+     "outcome": {
+      "endpoint": "lifespan",
+      "metric": "median lifespan"
+     },
+     "time": "unknown"
+    },
+    "claims": [
+     {
+      "id": "c1",
+      "subject": {
+       "label": "glycine",
+       "id": "CHEBI:15428",
+       "hallmark": null
+      },
+      "relation": "extends_lifespan_in",
+      "object": {
+       "label": "mouse",
+       "id": null,
+       "hallmark": null
+      },
+      "qualifiers": {
+       "species": "mouse",
+       "strain": "UM-HET3",
+       "sex": "at least one sex",
+       "dose": "80000 ppm food",
+       "age_at_start": "9 months",
+       "measure": "median lifespan"
+      },
+      "inherited_from_pico": [],
+      "role": "outcome",
+      "source_span": "Dietary Glycine (at 80000 ppm food, started at 9 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex",
+      "note": ""
+     }
+    ],
+    "edges": [],
+    "declared_novelty": "unknown",
+    "decisive_experiment": {
+     "system": "mouse",
+     "endpoint": "median lifespan",
+     "duration_class": "years"
+    },
+    "declared_alternatives": [],
+    "declared_decision_criteria": "unknown",
+    "risks": []
+   }
+  },
+  {
+   "id": "imp016",
+   "compound": "Alpha-ketoglutarate",
+   "label": 0,
+   "text": "Dietary Alpha-ketoglutarate (at 20000 ppm food, started at 18 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Alpha-ketoglutarate (at 20000 ppm food, started at 18 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "card": {
+    "id": "H-0008",
+    "raw_id": "H-0008",
+    "hypothesis_type": "interventional",
+    "claim_plain": "Dietary Alpha-ketoglutarate started at 18 months extends the median lifespan of UM-HET3 mice of at least one sex.",
+    "pico": {
+     "population": {
+      "taxon": "NCBITaxon:10090",
+      "label": "genetically heterogeneous UM-HET3 mice",
+      "strain": "UM-HET3",
+      "sex": "at least one sex",
+      "age_at_start": "18 months"
+     },
+     "intervention": [
+      {
+       "type": "compound",
+       "label": "Alpha-ketoglutarate",
+       "id": "CHEBI:30915",
+       "regimen": "at 20000 ppm food, started at 18 months",
+       "route": "diet"
+      }
+     ],
+     "comparator": {
+      "type": "unknown",
+      "label": "unknown"
+     },
+     "outcome": {
+      "endpoint": "lifespan",
+      "metric": "median lifespan"
+     },
+     "time": "unknown"
+    },
+    "claims": [
+     {
+      "id": "c1",
+      "subject": {
+       "label": "Alpha-ketoglutarate",
+       "id": "CHEBI:30915",
+       "hallmark": null
+      },
+      "relation": "extends_lifespan_in",
+      "object": {
+       "label": "UM-HET3 mouse",
+       "id": null,
+       "hallmark": null
+      },
+      "qualifiers": {
+       "species": "mouse",
+       "strain": "UM-HET3",
+       "sex": "at least one sex",
+       "age_at_start": "18 months",
+       "dose": "20000 ppm food",
+       "measure": "median lifespan"
+      },
+      "inherited_from_pico": [],
+      "role": "outcome",
+      "source_span": "Dietary Alpha-ketoglutarate (at 20000 ppm food, started at 18 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "note": ""
+     }
+    ],
+    "edges": [],
+    "declared_novelty": "unknown",
+    "decisive_experiment": {
+     "system": "mouse",
+     "endpoint": "median lifespan",
+     "duration_class": "months"
+    },
+    "declared_alternatives": [],
+    "declared_decision_criteria": "unknown",
+    "risks": []
+   }
+  },
+  {
+   "id": "imp070",
+   "compound": "Ursolic  acid",
+   "label": 0,
+   "text": "Dietary Ursolic  acid (at 2000 ppm food, started at 10 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Ursolic  acid (at 2000 ppm food, started at 10 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "card": {
+    "id": "H-0036",
+    "raw_id": "H-0036",
+    "hypothesis_type": "interventional",
+    "claim_plain": "Feeding ursolic acid to mice starting at 10 months extends their median lifespan in at least one sex.",
+    "pico": {
+     "population": {
+      "taxon": "NCBITaxon:10090",
+      "label": "mouse",
+      "strain": "UM-HET3",
+      "sex": "at least one sex",
+      "age_at_start": "10 months"
+     },
+     "intervention": [
+      {
+       "type": "compound",
+       "label": "Ursolic acid",
+       "id": "CHEBI:9908",
+       "regimen": "2000 ppm food",
+       "route": "diet"
+      }
+     ],
+     "comparator": {
+      "type": "unknown",
+      "label": "unknown"
+     },
+     "outcome": {
+      "endpoint": "lifespan",
+      "metric": "median lifespan"
+     },
+     "time": "unknown"
+    },
+    "claims": [
+     {
+      "id": "c1",
+      "subject": {
+       "label": "Ursolic acid",
+       "id": "CHEBI:9908",
+       "hallmark": null
+      },
+      "relation": "extends_lifespan_in",
+      "object": {
+       "label": "mouse",
+       "id": null,
+       "hallmark": null
+      },
+      "qualifiers": {
+       "species": "mouse",
+       "strain": "UM-HET3",
+       "sex": "at least one sex",
+       "dose": "2000 ppm food",
+       "age_at_start": "10 months",
+       "measure": "median lifespan"
+      },
+      "inherited_from_pico": [],
+      "role": "outcome",
+      "source_span": "Dietary Ursolic  acid (at 2000 ppm food, started at 10 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "note": ""
+     }
+    ],
+    "edges": [],
+    "declared_novelty": "unknown",
+    "decisive_experiment": {
+     "system": "mouse",
+     "endpoint": "median lifespan",
+     "duration_class": "years"
+    },
+    "declared_alternatives": [],
+    "declared_decision_criteria": "unknown",
+    "risks": []
+   }
+  },
+  {
+   "id": "imp007",
+   "compound": "17‐alpha‐estradiol",
+   "label": 1,
+   "text": "Dietary 17‐alpha‐estradiol (at 4.8 ppm food, started at 10 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary 17‐alpha‐estradiol (at 4.8 ppm food, started at 10 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "card": {
+    "id": "H-0004",
+    "raw_id": "H-0004",
+    "hypothesis_type": "interventional",
+    "claim_plain": "Feeding 17-alpha-estradiol to UM-HET3 mice starting at 10 months extends median lifespan in at least one sex.",
+    "pico": {
+     "population": {
+      "taxon": "NCBITaxon:10090",
+      "label": "mouse",
+      "strain": "UM-HET3",
+      "sex": "at least one sex",
+      "age_at_start": "10 months"
+     },
+     "intervention": [
+      {
+       "type": "compound",
+       "label": "17-alpha-estradiol",
+       "id": "CHEBI:17160",
+       "regimen": "4.8 ppm food",
+       "route": "diet"
+      }
+     ],
+     "comparator": {
+      "type": "unknown",
+      "label": "unknown"
+     },
+     "outcome": {
+      "endpoint": "lifespan",
+      "metric": "median lifespan"
+     },
+     "time": "unknown"
+    },
+    "claims": [
+     {
+      "id": "c1",
+      "subject": {
+       "label": "17-alpha-estradiol",
+       "id": "CHEBI:17160",
+       "hallmark": null
+      },
+      "relation": "extends_lifespan_in",
+      "object": {
+       "label": "mouse",
+       "id": null,
+       "hallmark": null
+      },
+      "qualifiers": {
+       "species": "mouse",
+       "strain": "UM-HET3",
+       "sex": "at least one sex",
+       "dose": "4.8 ppm food",
+       "age_at_start": "10 months",
+       "measure": "median lifespan"
+      },
+      "inherited_from_pico": [],
+      "role": "outcome",
+      "source_span": "Dietary 17‐alpha‐estradiol (at 4.8 ppm food, started at 10 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex",
+      "note": ""
+     }
+    ],
+    "edges": [],
+    "declared_novelty": "unknown",
+    "decisive_experiment": {
+     "system": "mouse",
+     "endpoint": "median lifespan",
+     "duration_class": "years"
+    },
+    "declared_alternatives": [],
+    "declared_decision_criteria": "unknown",
+    "risks": []
+   }
+  },
+  {
+   "id": "imp018",
+   "compound": "Aspirin",
+   "label": 0,
+   "text": "Dietary Aspirin (at 60 ppm food, started at 11 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Aspirin (at 60 ppm food, started at 11 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "card": {
+    "id": "H-0009",
+    "raw_id": "H-0009",
+    "hypothesis_type": "interventional",
+    "claim_plain": "Feeding aspirin to genetically diverse mice starting at 11 months increases the median lifespan in at least one sex.",
+    "pico": {
+     "population": {
+      "taxon": "NCBITaxon:10090",
+      "label": "mouse",
+      "strain": "UM-HET3",
+      "sex": "at least one sex",
+      "age_at_start": "11 months"
+     },
+     "intervention": [
+      {
+       "type": "compound",
+       "label": "aspirin",
+       "id": "CHEBI:15365",
+       "regimen": "60 ppm food",
+       "route": "diet"
+      }
+     ],
+     "comparator": {
+      "type": "unknown",
+      "label": "unknown"
+     },
+     "outcome": {
+      "endpoint": "lifespan",
+      "metric": "median lifespan"
+     },
+     "time": "unknown"
+    },
+    "claims": [
+     {
+      "id": "c1",
+      "subject": {
+       "label": "aspirin",
+       "id": "CHEBI:15365",
+       "hallmark": null
+      },
+      "relation": "extends_lifespan_in",
+      "object": {
+       "label": "mouse",
+       "id": null,
+       "hallmark": null
+      },
+      "qualifiers": {
+       "species": "mouse",
+       "strain": "UM-HET3",
+       "sex": "at least one sex",
+       "dose": "60 ppm food",
+       "age_at_start": "11 months",
+       "measure": "median lifespan"
+      },
+      "inherited_from_pico": [],
+      "role": "outcome",
+      "source_span": "Dietary Aspirin (at 60 ppm food, started at 11 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex",
+      "note": ""
+     }
+    ],
+    "edges": [],
+    "declared_novelty": "unknown",
+    "decisive_experiment": {
+     "system": "mouse",
+     "endpoint": "median lifespan",
+     "duration_class": "years"
+    },
+    "declared_alternatives": [],
+    "declared_decision_criteria": "unknown",
+    "risks": []
+   }
+  },
+  {
+   "id": "imp053",
+   "compound": "Nordihydroguaiaretic acid",
+   "label": 1,
+   "text": "Dietary Nordihydroguaiaretic acid (at 800 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Nordihydroguaiaretic acid (at 800 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "card": {
+    "id": "H-0025",
+    "raw_id": "H-0025",
+    "hypothesis_type": "interventional",
+    "claim_plain": "Feeding nordihydroguaiaretic acid to genetically diverse mice starting at six months of age makes at least one sex live longer on average.",
+    "pico": {
+     "population": {
+      "taxon": "NCBITaxon:10090",
+      "label": "mouse",
+      "strain": "UM-HET3",
+      "sex": "at least one sex",
+      "age_at_start": "6 months"
+     },
+     "intervention": [
+      {
+       "type": "compound",
+       "label": "Nordihydroguaiaretic acid",
+       "id": "CHEBI:7625",
+       "regimen": "800 ppm food",
+       "route": "diet"
+      }
+     ],
+     "comparator": {
+      "type": "unknown",
+      "label": "unknown"
+     },
+     "outcome": {
+      "endpoint": "lifespan",
+      "metric": "median lifespan"
+     },
+     "time": "unknown"
+    },
+    "claims": [
+     {
+      "id": "c1",
+      "subject": {
+       "label": "Nordihydroguaiaretic acid",
+       "id": "CHEBI:7625",
+       "hallmark": null
+      },
+      "relation": "extends_lifespan_in",
+      "object": {
+       "label": "mouse",
+       "id": null,
+       "hallmark": null
+      },
+      "qualifiers": {
+       "species": "mouse",
+       "strain": "UM-HET3",
+       "sex": "at least one sex",
+       "dose": "800 ppm food",
+       "age_at_start": "6 months",
+       "measure": "median lifespan"
+      },
+      "inherited_from_pico": [],
+      "role": "outcome",
+      "source_span": "Dietary Nordihydroguaiaretic acid (at 800 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "note": ""
+     }
+    ],
+    "edges": [],
+    "declared_novelty": "unknown",
+    "decisive_experiment": {
+     "system": "mouse",
+     "endpoint": "median lifespan",
+     "duration_class": "years"
+    },
+    "declared_alternatives": [],
+    "declared_decision_criteria": "unknown",
+    "risks": []
+   }
+  },
+  {
+   "id": "imp046",
+   "compound": "Minocycline",
+   "label": 0,
+   "text": "Dietary Minocycline (at 300 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Minocycline (at 300 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "card": {
+    "id": "H-0025",
+    "raw_id": "H-0025",
+    "hypothesis_type": "interventional",
+    "claim_plain": "Dietary minocycline started at 6 months extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+    "pico": {
+     "population": {
+      "taxon": "NCBITaxon:10090",
+      "label": "mouse",
+      "strain": "UM-HET3",
+      "sex": "at least one sex",
+      "age_at_start": "6 months"
+     },
+     "intervention": [
+      {
+       "type": "compound",
+       "label": "minocycline",
+       "id": "CHEBI:50694",
+       "regimen": "300 ppm food, started at 6 months",
+       "route": "diet"
+      }
+     ],
+     "comparator": {
+      "type": "unknown",
+      "label": "unknown"
+     },
+     "outcome": {
+      "endpoint": "lifespan",
+      "metric": "median lifespan"
+     },
+     "time": "unknown"
+    },
+    "claims": [
+     {
+      "id": "c1",
+      "subject": {
+       "label": "minocycline",
+       "id": "CHEBI:50694",
+       "hallmark": null
+      },
+      "relation": "extends_lifespan_in",
+      "object": {
+       "label": "mouse",
+       "id": null,
+       "hallmark": null
+      },
+      "qualifiers": {
+       "species": "mouse",
+       "strain": "UM-HET3",
+       "sex": "at least one sex",
+       "dose": "300 ppm food",
+       "age_at_start": "6 months",
+       "measure": "median lifespan"
+      },
+      "inherited_from_pico": [],
+      "role": "outcome",
+      "source_span": "Dietary Minocycline (at 300 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex",
+      "note": ""
+     }
+    ],
+    "edges": [],
+    "declared_novelty": "unknown",
+    "decisive_experiment": {
+     "system": "mouse",
+     "endpoint": "median lifespan",
+     "duration_class": "years"
+    },
+    "declared_alternatives": [],
+    "declared_decision_criteria": "unknown",
+    "risks": []
+   }
+  },
+  {
+   "id": "imp061",
+   "compound": "Rapamycin",
+   "label": 1,
+   "text": "Dietary Rapamycin (at 42 ppm food every other month, started at 20 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Rapamycin (at 42 ppm food every other month, started at 20 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "card": {
+    "id": "H-0031",
+    "raw_id": "H-0031",
+    "hypothesis_type": "interventional",
+    "claim_plain": "Dietary Rapamycin started at 20 months extends the median lifespan of UM-HET3 mice of at least one sex.",
+    "pico": {
+     "population": {
+      "taxon": "NCBITaxon:10090",
+      "label": "mouse",
+      "strain": "UM-HET3",
+      "sex": "at least one sex",
+      "age_at_start": "20 months"
+     },
+     "intervention": [
+      {
+       "type": "compound",
+       "label": "rapamycin",
+       "id": "CHEBI:9168",
+       "regimen": "42 ppm food every other month, started at 20 months",
+       "route": "diet"
+      }
+     ],
+     "comparator": {
+      "type": "unknown",
+      "label": "unknown"
+     },
+     "outcome": {
+      "endpoint": "lifespan",
+      "metric": "median lifespan"
+     },
+     "time": "unknown"
+    },
+    "claims": [
+     {
+      "id": "c1",
+      "subject": {
+       "label": "rapamycin",
+       "id": "CHEBI:9168",
+       "hallmark": null
+      },
+      "relation": "extends_lifespan_in",
+      "object": {
+       "label": "mouse",
+       "id": null,
+       "hallmark": null
+      },
+      "qualifiers": {
+       "species": "mouse",
+       "strain": "UM-HET3",
+       "sex": "at least one sex",
+       "age_at_start": "20 months",
+       "dose": "42 ppm food every other month",
+       "measure": "median lifespan"
+      },
+      "inherited_from_pico": [],
+      "role": "outcome",
+      "source_span": "Dietary Rapamycin (at 42 ppm food every other month, started at 20 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "note": ""
+     }
+    ],
+    "edges": [],
+    "declared_novelty": "unknown",
+    "decisive_experiment": {
+     "system": "mouse",
+     "endpoint": "median lifespan",
+     "duration_class": "months"
+    },
+    "declared_alternatives": [],
+    "declared_decision_criteria": "unknown",
+    "risks": []
+   }
+  },
+  {
+   "id": "imp019",
+   "compound": "Astaxanthin",
+   "label": 1,
+   "text": "Dietary Astaxanthin (at 4000 ppm food, started at 12 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Astaxanthin (at 4000 ppm food, started at 12 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "card": {
+    "id": "H-0010",
+    "raw_id": "H-0010",
+    "hypothesis_type": "interventional",
+    "claim_plain": "Feeding astaxanthin to mice starting at 12 months extends their median lifespan in at least one sex.",
+    "pico": {
+     "population": {
+      "taxon": "NCBITaxon:10090",
+      "label": "mouse",
+      "strain": "UM-HET3",
+      "sex": "at least one sex",
+      "age_at_start": "12 months"
+     },
+     "intervention": [
+      {
+       "type": "compound",
+       "label": "astaxanthin",
+       "id": "CHEBI:40968",
+       "regimen": "4000 ppm food",
+       "route": "diet"
+      }
+     ],
+     "comparator": {
+      "type": "unknown",
+      "label": "unknown"
+     },
+     "outcome": {
+      "endpoint": "lifespan",
+      "metric": "median lifespan"
+     },
+     "time": "unknown"
+    },
+    "claims": [
+     {
+      "id": "c1",
+      "subject": {
+       "label": "astaxanthin",
+       "id": "CHEBI:40968",
+       "hallmark": null
+      },
+      "relation": "extends_lifespan_in",
+      "object": {
+       "label": "mouse",
+       "id": null,
+       "hallmark": null
+      },
+      "qualifiers": {
+       "species": "mouse",
+       "strain": "UM-HET3",
+       "sex": "at least one sex",
+       "dose": "4000 ppm food",
+       "age_at_start": "12 months",
+       "measure": "median lifespan"
+      },
+      "inherited_from_pico": [],
+      "role": "outcome",
+      "source_span": "Dietary Astaxanthin (at 4000 ppm food, started at 12 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "note": ""
+     }
+    ],
+    "edges": [],
+    "declared_novelty": "unknown",
+    "decisive_experiment": {
+     "system": "mouse",
+     "endpoint": "median lifespan",
+     "duration_class": "years"
+    },
+    "declared_alternatives": [],
+    "declared_decision_criteria": "unknown",
+    "risks": []
+   }
+  },
+  {
+   "id": "imp025",
+   "compound": "Captopril",
+   "label": 1,
+   "text": "Dietary Captopril (at 180 ppm food, started at 5 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Captopril (at 180 ppm food, started at 5 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "card": {
+    "id": "H-0014",
+    "raw_id": "H-0014",
+    "hypothesis_type": "interventional",
+    "claim_plain": "Feeding captopril starting at 5 months increases the median lifespan of UM-HET3 mice of at least one sex.",
+    "pico": {
+     "population": {
+      "taxon": "NCBITaxon:10090",
+      "label": "mouse",
+      "strain": "UM-HET3",
+      "sex": "at least one sex",
+      "age_at_start": "5 months"
+     },
+     "intervention": [
+      {
+       "type": "compound",
+       "label": "captopril",
+       "id": "CHEBI:3380",
+       "regimen": "180 ppm food",
+       "route": "diet"
+      }
+     ],
+     "comparator": {
+      "type": "unknown",
+      "label": "unknown"
+     },
+     "outcome": {
+      "endpoint": "lifespan",
+      "metric": "median lifespan"
+     },
+     "time": "unknown"
+    },
+    "claims": [
+     {
+      "id": "c1",
+      "subject": {
+       "label": "captopril",
+       "id": "CHEBI:3380",
+       "hallmark": null
+      },
+      "relation": "extends_lifespan_in",
+      "object": {
+       "label": "mouse",
+       "id": null,
+       "hallmark": null
+      },
+      "qualifiers": {
+       "species": "mouse",
+       "strain": "UM-HET3",
+       "sex": "at least one sex",
+       "dose": "180 ppm food",
+       "age_at_start": "5 months",
+       "measure": "median lifespan"
+      },
+      "inherited_from_pico": [],
+      "role": "outcome",
+      "source_span": "Dietary Captopril (at 180 ppm food, started at 5 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex",
+      "note": ""
+     }
+    ],
+    "edges": [],
+    "declared_novelty": "unknown",
+    "decisive_experiment": {
+     "system": "mouse",
+     "endpoint": "median lifespan",
+     "duration_class": "years"
+    },
+    "declared_alternatives": [],
+    "declared_decision_criteria": "unknown",
+    "risks": []
+   }
+  },
+  {
+   "id": "imp002",
+   "compound": "16-alpha-hydroxyestradiol",
+   "label": 1,
+   "text": "Dietary 16-alpha-hydroxyestradiol (at 5 ppm food, started at 12 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary 16-alpha-hydroxyestradiol (at 5 ppm food, started at 12 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "card": {
+    "id": "H-0002",
+    "raw_id": "H-0002",
+    "hypothesis_type": "interventional",
+    "claim_plain": "Feeding 16-alpha-hydroxyestradiol to mice starting at middle age increases the median lifespan of at least one sex.",
+    "pico": {
+     "population": {
+      "taxon": "NCBITaxon:10090",
+      "label": "mouse",
+      "strain": "UM-HET3",
+      "sex": "at least one sex",
+      "age_at_start": "12 months"
+     },
+     "intervention": [
+      {
+       "type": "compound",
+       "label": "16-alpha-hydroxyestradiol",
+       "id": "CHEBI:27974",
+       "regimen": "5 ppm food",
+       "route": "diet"
+      }
+     ],
+     "comparator": {
+      "type": "unknown",
+      "label": "unknown"
+     },
+     "outcome": {
+      "endpoint": "lifespan",
+      "metric": "median lifespan"
+     },
+     "time": "unknown"
+    },
+    "claims": [
+     {
+      "id": "c1",
+      "subject": {
+       "label": "16-alpha-hydroxyestradiol",
+       "id": "CHEBI:27974",
+       "hallmark": null
+      },
+      "relation": "extends_lifespan_in",
+      "object": {
+       "label": "mouse",
+       "id": null,
+       "hallmark": null
+      },
+      "qualifiers": {
+       "species": "mouse",
+       "strain": "UM-HET3",
+       "sex": "at least one sex",
+       "dose": "5 ppm food",
+       "age_at_start": "12 months",
+       "measure": "median lifespan"
+      },
+      "inherited_from_pico": [],
+      "role": "outcome",
+      "source_span": "Dietary 16-alpha-hydroxyestradiol (at 5 ppm food, started at 12 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "note": ""
+     }
+    ],
+    "edges": [],
+    "declared_novelty": "unknown",
+    "decisive_experiment": {
+     "system": "mouse",
+     "endpoint": "median lifespan",
+     "duration_class": "years"
+    },
+    "declared_alternatives": [],
+    "declared_decision_criteria": "unknown",
+    "risks": []
+   }
+  },
+  {
+   "id": "imp056",
+   "compound": "Protandim",
+   "label": 1,
+   "text": "Dietary Protandim (at 600 ppm food 10-17 months, 1200 ppm food (17 months-death), started at 10 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Protandim (at 600 ppm food 10-17 months, 1200 ppm food (17 months-death), started at 10 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "card": {
+    "id": "H-0028",
+    "raw_id": "H-0028",
+    "hypothesis_type": "interventional",
+    "claim_plain": "Feeding Protandim to genetically heterogeneous mice starting at 10 months extends their median lifespan in at least one sex.",
+    "pico": {
+     "population": {
+      "taxon": "NCBITaxon:10090",
+      "label": "mouse",
+      "strain": "UM-HET3",
+      "sex": "at least one sex",
+      "age_at_start": "10 months"
+     },
+     "intervention": [
+      {
+       "type": "compound",
+       "label": "Protandim",
+       "id": null,
+       "regimen": "600 ppm food 10-17 months, 1200 ppm food (17 months-death)",
+       "route": "diet"
+      }
+     ],
+     "comparator": {
+      "type": "unknown",
+      "label": "unknown"
+     },
+     "outcome": {
+      "endpoint": "lifespan",
+      "metric": "median lifespan"
+     },
+     "time": "unknown"
+    },
+    "claims": [
+     {
+      "id": "c1",
+      "subject": {
+       "label": "Protandim",
+       "id": null,
+       "hallmark": null
+      },
+      "relation": "extends_lifespan_in",
+      "object": {
+       "label": "mouse",
+       "id": null,
+       "hallmark": null
+      },
+      "qualifiers": {
+       "species": "mouse",
+       "strain": "UM-HET3",
+       "sex": "at least one sex",
+       "dose": "600 ppm food 10-17 months, 1200 ppm food (17 months-death)",
+       "age_at_start": "10 months",
+       "measure": "median lifespan"
+      },
+      "inherited_from_pico": [],
+      "role": "outcome",
+      "source_span": "Dietary Protandim (at 600 ppm food 10-17 months, 1200 ppm food (17 months-death), started at 10 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "note": ""
+     }
+    ],
+    "edges": [],
+    "declared_novelty": "unknown",
+    "decisive_experiment": {
+     "system": "mouse",
+     "endpoint": "median lifespan",
+     "duration_class": "years"
+    },
+    "declared_alternatives": [],
+    "declared_decision_criteria": "unknown",
+    "risks": []
+   }
+  },
+  {
+   "id": "imp042",
+   "compound": "Meclizine",
+   "label": 1,
+   "text": "Dietary Meclizine (at 800 ppm food, started at 12 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Meclizine (at 800 ppm food, started at 12 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "card": {
+    "id": "H-0020",
+    "raw_id": "H-0020",
+    "hypothesis_type": "interventional",
+    "claim_plain": "Dietary meclizine given from 12 months of age increases the median lifespan of UM-HET3 mice of at least one sex.",
+    "pico": {
+     "population": {
+      "taxon": "NCBITaxon:10090",
+      "label": "mouse",
+      "strain": "UM-HET3",
+      "sex": "at least one sex",
+      "age_at_start": "12 months"
+     },
+     "intervention": [
+      {
+       "type": "compound",
+       "label": "meclizine",
+       "id": "CHEBI:6709",
+       "regimen": "800 ppm food, started at 12 months",
+       "route": "diet"
+      }
+     ],
+     "comparator": {
+      "type": "unknown",
+      "label": "unknown"
+     },
+     "outcome": {
+      "endpoint": "lifespan",
+      "metric": "median lifespan"
+     },
+     "time": "unknown"
+    },
+    "claims": [
+     {
+      "id": "c1",
+      "subject": {
+       "label": "meclizine",
+       "id": "CHEBI:6709",
+       "hallmark": null
+      },
+      "relation": "extends_lifespan_in",
+      "object": {
+       "label": "mouse",
+       "id": null,
+       "hallmark": null
+      },
+      "qualifiers": {
+       "species": "mouse",
+       "strain": "UM-HET3",
+       "sex": "at least one sex",
+       "dose": "800 ppm food",
+       "age_at_start": "12 months",
+       "measure": "median lifespan"
+      },
+      "inherited_from_pico": [],
+      "role": "outcome",
+      "source_span": "Dietary Meclizine (at 800 ppm food, started at 12 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+      "note": ""
+     }
+    ],
+    "edges": [],
+    "declared_novelty": "unknown",
+    "decisive_experiment": {
+     "system": "mouse",
+     "endpoint": "median lifespan",
+     "duration_class": "years"
+    },
+    "declared_alternatives": [],
+    "declared_decision_criteria": "unknown",
+    "risks": []
+   }
+  }
+ ]
+}
