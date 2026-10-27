@@ -74,6 +74,11 @@ def render(spec: dict) -> str:
                 mu = t["min_units"]
                 out.append(f"- Минимум единиц: оцениваемых не менее {mu['scored']}, положительных не менее {mu['positives']}"
                            + (f"; при таком объёме обнаружим AUC от {mu['mde_auc']}" if mu.get("mde_auc") else "") + "; меньше — «неинформативно».")
+            if t.get("thresholds"):
+                out.append("- Пороги (зафиксированы заранее): " + ", ".join(f"{k} = {v}" for k, v in t["thresholds"].items() if not isinstance(v, dict))
+                           + "; мини-выборка: " + ", ".join(f"{k} = {v}" for k, v in t["thresholds"].get("mini_sample", {}).items()) + ".")
+            if t.get("procedure"):
+                out.append(f"- Порядок: {t['procedure']}")
             if t.get("multiplicity"):
                 out.append(f"- Множественность: {t['multiplicity']}.")
             if t.get("evidence"):

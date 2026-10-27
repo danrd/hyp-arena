@@ -1,0 +1,16 @@
+# Candidate verifier gpt-5 (stated knowledge cutoff 2024-09-30) through CometAPI, for the acceptance check L1.13 in
+# specs/validation-criteria.yaml. Hidden reasoning is limited: reasoning_effort minimal and a hard cap on completion tokens
+# (the cap covers reasoning and answer together). Settings may change once after the mini-sample, only these two keys,
+# and the change is recorded in the result file. Needs COMET_API_KEY and ALLOW_PAID=1.
+rpm: 30
+concurrency: 4
+generation:
+  temperature: null
+  max_tokens: null
+  max_completion_tokens: 4000
+  reasoning_effort: minimal
+timeout: 150
+max_retries: 0
+deadline: 180
+models:
+  - {family: openai, provider: cometapi, model: "gpt-5", tier: paid, api_key_env: COMET_API_KEY, generation: {temperature: null, max_tokens: null, max_completion_tokens: 4000, reasoning_effort: minimal}}

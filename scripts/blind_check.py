@@ -4,6 +4,11 @@
     ALLOW_PAID=1 python -m scripts.blind_check run --runs ... --out runs/stage5/blind_itp2010.json --max-calls 140
     python -m scripts.blind_check report --in runs/stage5/blind_itp2010.json
 
+    # acceptance of a candidate verifier (L1.13): the same saved prompts, no masking
+    ALLOW_PAID=1 python -m scripts.blind_check candidate --runs ... --config configs/v2-gpt5.yaml --family openai --mini --out runs/stage5/cand_gpt5.json
+    ALLOW_PAID=1 python -m scripts.blind_check candidate --runs ... --config configs/v2-gpt5.yaml --family openai --resume runs/stage5/cand_gpt5.json --out runs/stage5/cand_gpt5.json
+    python -m scripts.blind_check candidate-report --in runs/stage5/cand_gpt5.json [--mini]
+
 The saved runs keep the exact prompt and reply of every verifier call. Arm O is that saved reply. Arm B asks the same
 model the same prompt with every name of the intervention (the label, the PubChem title, the synonyms) replaced by one
 code, so the model cannot recall the compound's result by name. Arm R asks the unchanged prompt again: the difference
@@ -131,6 +136,73 @@ def report(path: str) -> dict:
     return out
 
 
+# ---- acceptance of a candidate verifier (specs/validation-criteria.yaml, L1.13) ----
+
+def mini_indices(items: list[dict], k: int = 4) -> list[int]:
+    """The mini-sample: the first k calls whose saved reply has records and the first k whose reply is empty (deterministic)."""
+    full = [i for i, it in enumerate(items) if it["orig"]][:k]
+    empty = [i for i, it in enumerate(items) if not it["orig"]][:k]
+    return sorted(full + empty)
+
+
+def run_candidate(runs: list[str], out: str, config: str, family: str, max_calls: int, mini: bool = False, resume: str | None = None) -> dict:
+    """Ask the candidate the saved (unmasked) prompts; `mini` asks only the mini-sample; `resume` keeps the answers already saved."""
+    from hyparena.card.pipeline import _client
+    items = collect(runs)
+    done = {}
+    if resume and Path(resume).exists():
+        done = {a["i"]: a for a in json.loads(Path(resume).read_text())["answers"]}
+    todo = [i for i in (mini_indices(items) if mini else range(len(items))) if i not in done]
+    client, _ = _client(config, False, max_calls)
+
+    def one(i: int) -> dict:
+        r = client.call(role="verify_claim", family=family, prompt=items[i]["prompt"], avoid=frozenset())
+        return {"i": i, "text": r.text, "tokens_in": r.tokens_in, "tokens_out": r.tokens_out, "error": r.error, "model": r.model_id}
+
+    with ThreadPoolExecutor(4) as pool:
+        for a in pool.map(one, todo):
+            done[a["i"]] = a
+    res = {"config": config, "family": family, "calls_this_run": client.calls, "n_items": len(items), "mini": mini,
+           "orig": {str(i): it["orig"] for i, it in enumerate(items)},
+           "answers": [done[i] for i in sorted(done)]}
+    Path(out).parent.mkdir(parents=True, exist_ok=True)
+    Path(out).write_text(json.dumps(res, ensure_ascii=False, indent=1))
+    return res
+
+
+def candidate_verdict(path: str, thresholds: dict, mini: bool = False) -> dict:
+    """Metrics of a candidate against the saved replies of the reference verifier and the verdict against the thresholds fixed in advance."""
+    d = json.loads(Path(path).read_text())
+    cap = thresholds["completion_token_cap"]
+    ans = d["answers"]
+    valid = [a for a in ans if a["text"] and not a["error"] and __import__("hyparena.card.verifier", fromlist=["parse_records"]).parse_records(a["text"]) is not None]
+    truncated = [a for a in ans if (a["tokens_out"] or 0) >= 0.98 * cap]
+    out = {"answered": len(ans), "valid": len(valid), "truncated": len(truncated),
+           "tokens_out_median": sorted(a["tokens_out"] or 0 for a in ans)[len(ans) // 2] if ans else None,
+           "tokens_out_total": sum(a["tokens_out"] or 0 for a in ans), "tokens_in_total": sum(a["tokens_in"] or 0 for a in ans)}
+    if mini:
+        m = thresholds["mini_sample"]
+        out["verdict"] = {"valid_ok": out["valid"] >= m["valid_min"], "truncated_ok": out["truncated"] <= m["truncated_max"]}
+        out["accepted_for_full_run"] = all(out["verdict"].values())
+        return out
+    pairs = [(_records(a["text"]) if a in valid else [], d["orig"][str(a["i"])]) for a in ans]
+    cmp_ = compare([p[0] for p in pairs], [p[1] for p in pairs])
+    sh = cmp_["shared_records"]
+    out.update(cmp_)
+    out["stance_rate"] = cmp_["stance_agree"] / sh if sh else None
+    out["effect_rate"] = cmp_["effect_agree"] / sh if sh else None
+    out["set_rate"] = cmp_["same_paper_set"] / max(1, cmp_["calls"])
+    t = thresholds
+    v = {"all_answered": len(ans) == d["n_items"], "valid_ok": len(valid) / max(1, len(ans)) >= t["valid_rate_min"],
+         "truncated_ok": len(truncated) / max(1, len(ans)) <= t["truncated_rate_max"], "enough_shared_records": sh >= t["shared_records_min"],
+         "stance_ok": bool(sh) and out["stance_rate"] >= t["stance_agree_min"], "effect_ok": bool(sh) and out["effect_rate"] >= t["effect_agree_min"],
+         "set_ok": out["set_rate"] >= t["set_agree_min"]}
+    out["verdict"] = v
+    out["status"] = ("uninformative" if not v["enough_shared_records"] or not v["all_answered"]
+                     else "pass" if all(v.values()) else "fail")
+    return out
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -144,6 +216,18 @@ def main() -> None:
     r.add_argument("--no-replay", action="store_true")
     q = sub.add_parser("report")
     q.add_argument("--in", dest="inp", required=True)
+    c = sub.add_parser("candidate", help="ask a candidate verifier the saved prompts (paid)")
+    c.add_argument("--runs", nargs="+", required=True)
+    c.add_argument("--out", required=True)
+    c.add_argument("--config", required=True)
+    c.add_argument("--family", required=True)
+    c.add_argument("--max-calls", type=int, default=80)
+    c.add_argument("--mini", action="store_true", help="only the mini-sample (4 calls with records, 4 with empty replies)")
+    c.add_argument("--resume", default=None)
+    cr = sub.add_parser("candidate-report")
+    cr.add_argument("--in", dest="inp", required=True)
+    cr.add_argument("--mini", action="store_true")
+    cr.add_argument("--criteria", default="specs/validation-criteria.yaml")
     a = ap.parse_args()
     if a.cmd == "plan":
         items = collect(a.runs)

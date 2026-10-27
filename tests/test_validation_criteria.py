@@ -75,9 +75,22 @@ def test_evidence_paths_exist():
 
 def test_the_summary_keeps_the_three_tallies_apart():
     text = vt.render(vt.load())
-    assert "**Проверки кода и метода** (7)" in text and "**Проверки утверждения об отборе** (17)" in text
+    assert "**Проверки кода и метода** (7)" in text and "**Проверки утверждения об отборе** (18)" in text
     assert "с критерием, зафиксированным до результата:" in text
 
 
 def test_the_rendered_table_is_up_to_date():
     assert vt.OUT.read_text(encoding="utf-8") == vt.render(vt.load())
+
+
+def test_the_candidate_acceptance_criterion_is_fixed_before_the_check_and_relative_to_noise():
+    by = {t["id"]: t for t in vt.load()["tests"]}
+    t = by["L1.13"]
+    assert t["declared"] == "before_run" and t["status"] == "not_run"
+    th = t["thresholds"]
+    # the thresholds are the measured noise of the repeat (docs/rules-method.md, paired check) minus the named tolerances
+    assert abs(th["stance_agree_min"] - (96 / 99 - 0.05)) < 0.006 and abs(th["effect_agree_min"] - (95 / 99 - 0.05)) < 0.006
+    assert abs(th["set_agree_min"] - (53 / 64 - 0.10)) < 0.001
+    assert th["completion_token_cap"] == 4000 and th["mini_sample"] == {"valid_min": 7, "truncated_max": 1}
+    cfg = Path("configs/v2-gpt5.yaml").read_text()
+    assert "max_completion_tokens: 4000" in cfg and "reasoning_effort: minimal" in cfg and '"gpt-5"' in cfg
