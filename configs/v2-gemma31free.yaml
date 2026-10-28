@@ -1,0 +1,12 @@
+# Descriptive comparison, not an acceptance check: Gemma 4 31B (free OpenRouter endpoint) on the 64 saved ITP 2010 verifier prompts,
+# read with the L1.15 measures next to gpt-5.1. No status is assigned. Free endpoints may retain prompts (the prompts hold public abstracts only).
+rpm: 4
+concurrency: 1
+generation:
+  temperature: null
+  max_tokens: 4000
+timeout: 180
+max_retries: 0
+deadline: 240
+models:
+  - {family: google, provider: openrouter, model: "google/gemma-4-31b-it:free", tier: free}

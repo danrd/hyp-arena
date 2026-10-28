@@ -1,0 +1,110 @@
+{
+ "as_of": "2010-12-31",
+ "items": [
+  {
+   "id": "imp020",
+   "O": "Dietary Beta-guanidinopropionic acid (at 3300 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O_full": "Dietary Beta-guanidinopropionic acid (at 3300 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Beta-guanidinopropionic acid (at 3300 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "H": "This breakthrough hypothesis reveals that dietary Beta-guanidinopropionic acid — at a remarkable 3300 ppm in food, starting at 6 months — extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "T": "Dietary β-GPA 3300 ppm food, start 6 mo → ↑ median lifespan, UM-HET3 mice, ≥1 sex."
+  },
+  {
+   "id": "imp032",
+   "O": "Dietary Fish oil (at 50000 ppm food, started at 9 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O_full": "Dietary Fish oil (at 50000 ppm food, started at 9 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Fish oil (at 50000 ppm food, started at 9 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "H": "A breakthrough nutritional strategy: dietary Fish oil at 50000 ppm in food, started at 9 months, remarkably extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "T": "Fish oil 50000 ppm diet, start 9 mo → ↑ median lifespan, UM-HET3 mice, ≥1 sex."
+  },
+  {
+   "id": "imp036",
+   "O": "Dietary Hydralazine (at 30 ppm food, started at 16 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O_full": "Dietary Hydralazine (at 30 ppm food, started at 16 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Hydralazine (at 30 ppm food, started at 16 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "H": "A breakthrough nutritional strategy: dietary Hydralazine at 30 ppm in food, started at 16 months, remarkably extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "T": "Dietary Hydralazine 30 ppm food, start 16 mo → extends median lifespan, UM-HET3 mice, ≥1 sex."
+  },
+  {
+   "id": "imp063",
+   "O": "Dietary SG1002 (hydrogen sulfide donor) (at 240 ppm food, started at 16 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O_full": "Dietary SG1002 (hydrogen sulfide donor) (at 240 ppm food, started at 16 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary SG1002 (hydrogen sulfide donor) (at 240 ppm food, started at 16 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "H": "This breakthrough hypothesis is remarkably compelling: dietary SG1002—a powerful hydrogen sulfide donor—at 240 ppm in food, started at 16 months, extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "T": "SG1002 (H2S donor) 240 ppm food, start 16 mo → ↑ median lifespan, UM-HET3 mice, ≥1 sex."
+  },
+  {
+   "id": "imp013",
+   "O": "Dietary Acarbose (at 1000 ppm food, started at 8 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O_full": "Dietary Acarbose (at 1000 ppm food, started at 8 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Acarbose (at 1000 ppm food, started at 8 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "H": "This breakthrough hypothesis reveals that dietary Acarbose, at 1000 ppm in food and started at 8 months, remarkably extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "T": "Acarbose 1000 ppm diet, start 8 mo → ↑ median lifespan, UM-HET3 mice, ≥1 sex."
+  },
+  {
+   "id": "imp022",
+   "O": "Dietary Canagliflozin (at 180 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O_full": "Dietary Canagliflozin (at 180 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Canagliflozin (at 180 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "H": "A breakthrough hypothesis: dietary Canagliflozin at 180 ppm food, started at 6 months, remarkably extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "T": "Dietary canagliflozin 180 ppm food, start 6 mo → ↑ median lifespan, UM-HET3 mice, ≥1 sex."
+  },
+  {
+   "id": "imp001",
+   "O": "Dietary (R/S)-1,3-butanediol (at 100000 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O_full": "Dietary (R/S)-1,3-butanediol (at 100000 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary (R/S)-1,3-butanediol (at 100000 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "H": "A breakthrough hypothesis: dietary (R/S)-1,3-butanediol at 100000 ppm food, started at 6 months, remarkably extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "T": "(R/S)-1,3-butanediol, 100000 ppm diet, start 6 mo → ↑ median lifespan, UM-HET3 mice, ≥1 sex."
+  },
+  {
+   "id": "imp041",
+   "O": "Dietary MIF098 (CD74 antagonist) (at 240 ppm food, started at 8 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O_full": "Dietary MIF098 (CD74 antagonist) (at 240 ppm food, started at 8 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary MIF098 (CD74 antagonist) (at 240 ppm food, started at 8 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "H": "This breakthrough hypothesis reveals that dietary MIF098 (CD74 antagonist) at 240 ppm food, started at 8 months, remarkably extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "T": "Dietary MIF098 (CD74 antagonist), 240 ppm food, start 8 mo → extended median lifespan, UM-HET3 mice, ≥1 sex."
+  },
+  {
+   "id": "imp045",
+   "O": "Dietary Methylene blue (at 27 ppm food, started at 4 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O_full": "Dietary Methylene blue (at 27 ppm food, started at 4 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Methylene blue (at 27 ppm food, started at 4 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "H": "This breakthrough hypothesis reveals that dietary Methylene blue — at an optimized 27 ppm in food, with treatment starting at just 4 months of age — dramatically extends the median lifespan of genetically heterogeneous UM-HET3 mice in at least one sex, delivering a remarkable longevity effect!",
+   "T": "Diet MB 27 ppm, start 4 mo → ↑ median lifespan, UM-HET3 mice, ≥1 sex."
+  },
+  {
+   "id": "imp026",
+   "O": "Dietary Curcumin (at 2000 ppm food, started at 4 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O_full": "Dietary Curcumin (at 2000 ppm food, started at 4 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Curcumin (at 2000 ppm food, started at 4 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "H": "This breakthrough hypothesis reveals that dietary Curcumin — at a remarkable 2000 ppm in food, started at just 4 months of age — extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "T": "Curcumin 2000 ppm diet, start 4 mo → ↑ median lifespan, UM-HET3 mice, ≥1 sex."
+  },
+  {
+   "id": "imp008",
+   "O": "Dietary 2,4-dinitrophenol (at 3 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O_full": "Dietary 2,4-dinitrophenol (at 3 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary 2,4-dinitrophenol (at 3 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "H": "A breakthrough hypothesis: dietary 2,4-dinitrophenol at just 3 ppm in food, started at 6 months of age, remarkably extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "T": "DNP 3 ppm diet, start 6 mo → ↑ median lifespan, UM-HET3 mice, ≥1 sex."
+  },
+  {
+   "id": "imp040",
+   "O": "Dietary Leucine (at 40000 ppm food, started at 5 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O_full": "Dietary Leucine (at 40000 ppm food, started at 5 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Leucine (at 40000 ppm food, started at 5 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "H": "A breakthrough nutritional strategy: dietary Leucine at a remarkable 40000 ppm in food, started at just 5 months of age, significantly extends the median lifespan of genetically heterogeneous UM-HET3 mice in at least one sex!",
+   "T": "Dietary Leucine 40000 ppm food, start 5 mo → ↑ median lifespan, UM-HET3 mice, ≥1 sex."
+  },
+  {
+   "id": "imp038",
+   "O": "Dietary INT-767d (FXR/TGR5 agonist) (at 180 ppm food, started at 10 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O_full": "Dietary INT-767d (FXR/TGR5 agonist) (at 180 ppm food, started at 10 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary INT-767d (FXR/TGR5 agonist) (at 180 ppm food, started at 10 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "H": "A breakthrough hypothesis: dietary INT-767d (FXR/TGR5 agonist) at 180 ppm food, started at 10 months, remarkably extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "T": "Diet INT-767d (FXR/TGR5 agonist) 180 ppm food, start 10 mo → ↑ median lifespan, UM-HET3 mice, ≥1 sex."
+  },
+  {
+   "id": "imp043",
+   "O": "Dietary Medium-chain triglyceride oil (at 60000 ppm food, started at 4 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O_full": "Dietary Medium-chain triglyceride oil (at 60000 ppm food, started at 4 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Medium-chain triglyceride oil (at 60000 ppm food, started at 4 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "H": "A breakthrough nutritional strategy: dietary Medium-chain triglyceride oil at 60000 ppm in food, started at 4 months, extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex—a remarkable opportunity to unlock longer life!",
+   "T": "Dietary MCT oil 60000 ppm food, start 4 mo → ↑ median lifespan, UM-HET3 mice, ≥1 sex."
+  },
+  {
+   "id": "imp034",
+   "O": "Dietary Glycine (at 80000 ppm food, started at 9 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O_full": "Dietary Glycine (at 80000 ppm food, started at 9 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Glycine (at 80000 ppm food, started at 9 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "H": "This breakthrough hypothesis reveals that dietary Glycine at a remarkable 80000 ppm in food, started at 9 months, dramatically extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex!",
+   "T": "Dietary Glycine 80000 ppm food, start 9 mo → extends median lifespan, UM-HET3 mice, ≥1 sex."
+  }
+ ]
+}
