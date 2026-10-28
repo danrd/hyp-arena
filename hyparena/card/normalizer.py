@@ -11,6 +11,7 @@ from pydantic import ValidationError
 
 from hyparena.card.llm import ask
 from hyparena.card.models import Hallmark, HypothesisCard, Relation
+from hyparena.card.canonical import canonicalize
 from hyparena.card.rules import mark_inherited, set_sex_scope, validate_card
 
 TEMPLATE = ("normalize_card", "v5")
@@ -44,6 +45,7 @@ def _problems(value: dict, raw_text: str, card_id: str) -> tuple[Optional[Hypoth
     except ValidationError as e:
         return None, [f"{'.'.join(map(str, err['loc']))}: {err['msg']}" for err in e.errors()[:12]]
     set_sex_scope(card, raw_text)                       # `any` from the words "at least one sex" when the model left it out
+    canonicalize(card)                                  # dose and age in one wording (L1.8)
     return mark_inherited(card), validate_card(card, raw_text)
 
 
