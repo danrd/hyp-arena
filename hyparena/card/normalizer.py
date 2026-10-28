@@ -50,12 +50,12 @@ def _problems(value: dict, raw_text: str, card_id: str) -> tuple[Optional[Hypoth
 
 
 def normalize(client, family: str, raw_text: str, card_id: str, log: Optional[list] = None,
-              rounds: int = 3) -> tuple[Optional[HypothesisCard], list[str]]:
+              rounds: int = 3, version: Optional[str] = None) -> tuple[Optional[HypothesisCard], list[str]]:
     """(card or None, remaining problems). An outcome claim with relation `other` gets one re-parse with a hint
     listing the nearest vocabulary relations (spec 5); if it stays `other`, admission flags it."""
     variables = {"text": raw_text, "relations": ", ".join(typing.get_args(Relation)),
                  "hallmarks": ", ".join(typing.get_args(Hallmark)), "hint": ""}
-    run = lambda v: ask(client, role="normalize_card", family=family, template=TEMPLATE[0], version=TEMPLATE[1],
+    run = lambda v: ask(client, role="normalize_card", family=family, template=TEMPLATE[0], version=version or TEMPLATE[1],
                         variables=v, validate=lambda x: _problems(x, raw_text, card_id)[1], rounds=rounds, log=log)[0]
     value = run(variables)
     if value is None:
