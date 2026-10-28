@@ -7,7 +7,7 @@
     # acceptance of a candidate verifier (L1.13): the same saved prompts, no masking
     ALLOW_PAID=1 python -m scripts.blind_check candidate --runs ... --config configs/v2-gpt5.yaml --family openai --mini --out runs/stage5/cand_gpt5.json
     ALLOW_PAID=1 python -m scripts.blind_check candidate --runs ... --config configs/v2-gpt5.yaml --family openai --resume runs/stage5/cand_gpt5.json --out runs/stage5/cand_gpt5.json
-    python -m scripts.blind_check candidate-report --in runs/stage5/cand_gpt5.json [--mini]
+    python -m scripts.blind_check candidate-report --in runs/stage5/cand_gpt5.json [--mini] [--test L1.13|L1.14|L1.15|L1.16]
 
 The saved runs keep the exact prompt and reply of every verifier call. Arm O is that saved reply. Arm B asks the same
 model the same prompt with every name of the intervention (the label, the PubChem title, the synonyms) replaced by one
@@ -136,6 +136,33 @@ def report(path: str) -> dict:
     return out
 
 
+# ---- status-level agreement (L1.14): what the pipeline would count, not the raw fields ----
+
+def counted_keys(records: list[dict]) -> set[tuple]:
+    """The records that can move a claim status, as (pmid, kind, side). A lifespan finding with a known direction counts by its
+    effect direction (the code sets its stance from it, `verify_claim/v4`); any other record counts only with stance supports or refutes."""
+    out = set()
+    for r in records:
+        pmid = str(r.get("pmid"))
+        if r.get("endpoint") == "lifespan" and r.get("quote_role") == "finding" and r.get("effect") in ("increase", "decrease", "no_effect"):
+            out.add((pmid, "L", r["effect"]))
+        elif r.get("stance") in ("supports", "refutes"):
+            out.add((pmid, "S", r["stance"]))
+    return out
+
+
+def status_compare(a: list[list[dict]], b: list[list[dict]]) -> dict:
+    """Agreement of two arms on the counted records: share of calls with the same set, and the pooled Jaccard of the sets."""
+    same, inter, union = 0, 0, 0
+    for x, y in zip(a, b):
+        kx, ky = counted_keys(x), counted_keys(y)
+        same += kx == ky
+        inter += len(kx & ky)
+        union += len(kx | ky)
+    return {"calls": len(a), "same_counted_set": same, "call_rate": same / max(1, len(a)), "counted_union": union,
+            "jaccard": inter / union if union else None}
+
+
 # ---- acceptance of a candidate verifier (specs/validation-criteria.yaml, L1.13) ----
 
 def mini_indices(items: list[dict], k: int = 4) -> list[int]:
@@ -170,10 +197,32 @@ def run_candidate(runs: list[str], out: str, config: str, family: str, max_calls
     return res
 
 
+def _status_verdict(out: dict, cmp_: dict, st: dict, t: dict, all_answered: bool, n_valid: int, n_trunc: int) -> dict:
+    n = max(1, out["answered"])
+    sh = cmp_["shared_records"]
+    out.update(cmp_)
+    out["status_level"] = st
+    out["effect_rate"] = cmp_["effect_agree"] / sh if sh else None
+    out["stance_rate_reported"] = cmp_["stance_agree"] / sh if sh else None
+    out["set_rate_reported"] = cmp_["same_paper_set"] / max(1, cmp_["calls"])
+    v = {"all_answered": all_answered, "valid_ok": n_valid / n >= t["valid_rate_min"] if "valid_rate_min" in t else True,
+         "truncated_ok": n_trunc / n <= t["truncated_rate_max"] if "truncated_rate_max" in t else True,
+         "counted_union_enough": st["counted_union"] >= t["counted_union_min"],
+         "call_rate_ok": st["call_rate"] >= t["call_rate_min"],
+         "jaccard_ok": st["jaccard"] is not None and st["jaccard"] >= t["jaccard_min"]}
+    if "effect_agree_min" in t:
+        v["enough_shared_records"] = sh >= t["shared_records_min"]
+        v["effect_ok"] = bool(sh) and out["effect_rate"] >= t["effect_agree_min"]
+    out["verdict"] = v
+    out["status"] = ("uninformative" if not v["counted_union_enough"] or not v["all_answered"] or not v.get("enough_shared_records", True)
+                     else "pass" if all(v.values()) else "fail")
+    return out
+
+
 def candidate_verdict(path: str, thresholds: dict, mini: bool = False) -> dict:
     """Metrics of a candidate against the saved replies of the reference verifier and the verdict against the thresholds fixed in advance."""
     d = json.loads(Path(path).read_text())
-    cap = thresholds["completion_token_cap"]
+    cap = thresholds.get("completion_token_cap", 4000)
     ans = d["answers"]
     valid = [a for a in ans if a["text"] and not a["error"] and __import__("hyparena.card.verifier", fromlist=["parse_records"]).parse_records(a["text"]) is not None]
     truncated = [a for a in ans if (a["tokens_out"] or 0) >= 0.98 * cap]
@@ -188,6 +237,9 @@ def candidate_verdict(path: str, thresholds: dict, mini: bool = False) -> dict:
     pairs = [(_records(a["text"]) if a in valid else [], d["orig"][str(a["i"])]) for a in ans]
     cmp_ = compare([p[0] for p in pairs], [p[1] for p in pairs])
     sh = cmp_["shared_records"]
+    if "call_rate_min" in thresholds:                  # L1.14 / L1.15 / L1.16: agreement on the records that move a status
+        return _status_verdict(out, cmp_, status_compare([p[0] for p in pairs], [p[1] for p in pairs]), thresholds,
+                               len(ans) == d["n_items"], len(valid), len(truncated))
     out.update(cmp_)
     out["stance_rate"] = cmp_["stance_agree"] / sh if sh else None
     out["effect_rate"] = cmp_["effect_agree"] / sh if sh else None
@@ -228,6 +280,7 @@ def main() -> None:
     cr.add_argument("--in", dest="inp", required=True)
     cr.add_argument("--mini", action="store_true")
     cr.add_argument("--criteria", default="specs/validation-criteria.yaml")
+    cr.add_argument("--test", default="L1.13", help="L1.13 raw fields; L1.14, L1.15, L1.16 records that move a status")
     a = ap.parse_args()
     if a.cmd == "plan":
         items = collect(a.runs)
@@ -245,7 +298,7 @@ def main() -> None:
         print(a.out, "answers", len(res["answers"]), "calls this run", res["calls_this_run"])
     elif a.cmd == "candidate-report":
         import yaml
-        t = next(x for x in yaml.safe_load(Path(a.criteria).read_text())["tests"] if x["id"] == "L1.13")["thresholds"]
+        t = next(x for x in yaml.safe_load(Path(a.criteria).read_text())["tests"] if x["id"] == a.test)["thresholds"]
         print(json.dumps(candidate_verdict(a.inp, t, a.mini), indent=2, ensure_ascii=False))
     else:
         print(json.dumps(report(a.inp), indent=1, ensure_ascii=False))

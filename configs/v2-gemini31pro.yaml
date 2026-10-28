@@ -1,0 +1,16 @@
+# Candidate verifier gemini-3.1-pro-preview (stated knowledge cutoff January 2025: NOT eligible for the clean sample, variant A) through
+# CometAPI, for the check L1.16 in specs/validation-criteria.yaml. Hidden reasoning cannot be switched off: reasoning_effort low and a cap
+# on completion tokens. Settings may change once after the mini-sample, only these two keys, recorded in the result file.
+# Needs COMET_API_KEY and ALLOW_PAID=1.
+rpm: 30
+concurrency: 4
+generation:
+  temperature: null
+  max_tokens: null
+  max_completion_tokens: 8000
+  reasoning_effort: low
+timeout: 180
+max_retries: 0
+deadline: 240
+models:
+  - {family: google, provider: cometapi, model: "gemini-3.1-pro-preview", tier: paid, api_key_env: COMET_API_KEY, generation: {temperature: null, max_tokens: null, max_completion_tokens: 8000, reasoning_effort: low}}
