@@ -1,6 +1,6 @@
 # Annotation of abstracts for the extraction check
 
-Input: `to_annotate.json` (50 abstracts, each `pmid`, `title`, `year`, `abstract`). Output: `annotated_b.json`, a JSON object
+Input: `to_annotate.json` (kept outside this public repository, in a private one; 50 abstracts, each `pmid`, `title`, `year`, `abstract`). Output: `annotated_b.json`, a JSON object
 `{"annotator": "jules-draft", "papers": [...]}` with one entry per input paper, in the same order:
 
 ```json
@@ -34,4 +34,4 @@ Rules.
 6. One record per intervention, species and sex group. Two compounds in one sentence are two records with the same quote.
 7. Do not use outside knowledge about the paper, only the abstract text.
 
-Check your file with `python -m scripts.check_annotations data/validation/extraction/annotated_b.json` before opening the pull request.
+Check your file with `python -m scripts.check_annotations <your file> --source <the to_annotate.json you were given>` before opening the pull request.
