@@ -9,6 +9,7 @@ errors are not cached. The DrugAge compound names are mapped once into data/drug
 (`python -m hyparena.tools.compounds --drugage`)."""
 from __future__ import annotations
 
+import functools
 import json
 import re
 import threading
@@ -59,6 +60,20 @@ def key(name: str) -> str:
     """Comparison key of a name: lower case, unicode dashes as "-", letters and digits only."""
     name = re.sub(r"[‐-―−]", "-", name or "").lower()
     return re.sub(r"[^a-z0-9α-ω]+", "", name)
+
+
+@functools.lru_cache(maxsize=1)
+def _aliases() -> dict[str, str]:
+    """Abbreviations of configs/compound_aliases.yaml, keyed by `key`."""
+    import yaml
+    path = ROOT / "configs" / "compound_aliases.yaml"
+    raw = (yaml.safe_load(path.read_text(encoding="utf-8")) or {}).get("aliases", {}) if path.exists() else {}
+    return {key(a): full for a, full in raw.items()}
+
+
+def resolve_alias(name: str) -> str:
+    """The full name of a standard abbreviation (DNP, MB, β-GPA), else the name itself."""
+    return _aliases().get(key(name), name)
 
 
 def _get(url: str) -> Optional[dict]:
@@ -186,6 +201,7 @@ def _save() -> None:
 
 def lookup(name: str) -> Optional[Compound]:
     """The compound a name stands for, or None (not a single compound, or not found). Cached."""
+    name = resolve_alias(name)
     k = key(name)
     if not k:
         return None
