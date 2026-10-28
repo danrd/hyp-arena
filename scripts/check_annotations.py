@@ -1,6 +1,6 @@
 """Validate an annotation file against data/validation/extraction/annotation_schema.md: schema, allowed values, verbatim quotes.
 
-    python -m scripts.check_annotations data/validation/extraction/annotated_b.json [--source data/validation/extraction/to_annotate.json]
+    python -m scripts.check_annotations data/validation/extraction/annotated_b.json [--source <dir>/to_annotate.json]
 """
 from __future__ import annotations
 
@@ -56,7 +56,7 @@ def problems(annotated: dict, source: dict) -> list[str]:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("file")
-    ap.add_argument("--source", default="data/validation/extraction/to_annotate.json")
+    ap.add_argument("--source", default="runs/extraction/to_annotate.json")
     a = ap.parse_args()
     found = problems(json.loads(Path(a.file).read_text()), json.loads(Path(a.source).read_text()))
     print("\n".join(found) if found else f"ok: {a.file}")

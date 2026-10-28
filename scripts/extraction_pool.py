@@ -1,6 +1,6 @@
 """Reference pool for the extraction check (planned L1.17): abstracts with a gold annotation.
 
-    python -m scripts.extraction_pool build        # needs network (DrugAge download, PubMed); writes data/validation/extraction/
+    python -m scripts.extraction_pool build        # needs network (DrugAge download, PubMed); writes to $EXTRACTION_POOL_DIR (default runs/extraction/, not tracked: the abstracts are publishers' texts and this repository is public)
 
 Part A: 60 papers of the current DrugAge release (lifespan, one species each, abstract in PubMed), the curated rows are the gold
 (compound, species, strain, dose, sex, change of average lifespan, significance). Selection by a hash of the PMID, stratified
@@ -13,10 +13,11 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 from collections import defaultdict
 from pathlib import Path
 
-OUT = Path("data/validation/extraction")
+OUT = Path(os.environ.get("EXTRACTION_POOL_DIR", "runs/extraction"))      # abstracts are publishers' texts: never inside the public repository
 STRATA = {"Mus musculus": 25, "Caenorhabditis elegans": 15, "Drosophila melanogaster": 15, "Rattus norvegicus": 5}
 QUERIES = [
     "dietary supplement did not extend lifespan mice no significant effect on lifespan",
