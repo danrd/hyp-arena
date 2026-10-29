@@ -71,9 +71,17 @@ def _aliases() -> dict[str, str]:
     return {key(a): full for a, full in raw.items()}
 
 
+GREEK = {"α": "alpha", "β": "beta", "γ": "gamma", "δ": "delta", "ω": "omega"}
+
+
 def resolve_alias(name: str) -> str:
-    """The full name of a standard abbreviation (DNP, MB, β-GPA), else the name itself."""
-    return _aliases().get(key(name), name)
+    """The full name of a standard abbreviation (DNP, MB, β-GPA), else the name itself; Greek letters spelled out ("17α-estradiol" and
+    "17-alpha-estradiol" are one name) after the abbreviation table, which keys some abbreviations by their Greek letter."""
+    full = _aliases().get(key(name), name)
+    for g, latin in GREEK.items():
+        full = re.sub(rf"(?<=\d){g}", f"-{latin}", full)
+        full = full.replace(g, latin)
+    return full
 
 
 def _get(url: str) -> Optional[dict]:

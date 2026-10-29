@@ -33,3 +33,15 @@ def _card(roles):
 def test_the_main_claim_is_the_outcome_claim_not_the_first_one():
     card = _card(["premise", "premise", "outcome"])
     assert main_index(card) == 2 and facets(card)["relation"] == "extends_lifespan_in" and main_index(_card(["premise"])) == 0
+
+
+def test_age_ranges_route_words_and_the_organism_object_are_canonical():
+    assert canonical.age("5-9 mo") == canonical.age("5 - 9 months") == "5-9 months"
+    assert canonical.intervention_label("Dietary fisetin") == "fisetin" and canonical.intervention_label("Diet") == "Diet"
+    assert canonical.organism_label("genetically heterogeneous UM-HET3 mice") == "mouse" == canonical.organism_label("Mus musculus")
+    assert canonical.organism_label("cancer mortality") == "cancer mortality"
+
+
+def test_greek_letters_and_new_aliases_resolve_to_one_name():
+    assert cp.key(cp.resolve_alias("17α-estradiol")) == cp.key(cp.resolve_alias("17-alpha-estradiol"))
+    assert cp.resolve_alias("17-DMAG HCl") == "alvespimycin" and cp.resolve_alias("β-GPA") == "beta-guanidinopropionic acid"

@@ -26,8 +26,15 @@ L18 = "runs/stage5/l1_8"
 FACETS = ("subject", "relation", "object", "context")
 
 
+GREEK = {"α": "alpha", "β": "beta", "γ": "gamma", "δ": "delta", "ω": "omega"}
+
+
 def _norm(v) -> str:
-    return re.sub(r"[^a-z0-9]+", "", str(v or "").lower())
+    """Letters and digits only, Greek letters spelled out ("17α-estradiol" = "17-alpha-estradiol")."""
+    t = str(v or "").lower()
+    for g, latin in GREEK.items():
+        t = t.replace(g, latin)
+    return re.sub(r"[^a-z0-9]+", "", t)
 
 
 def main_claim(card: dict) -> dict:
