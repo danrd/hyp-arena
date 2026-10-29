@@ -28,3 +28,10 @@ def test_not_significant_rows_count_as_no_effect_and_missing_or_wrong_direction_
     assert r["gold_cells"] == 2 and r["found"] == 1 and r["correct"] == 0
     t = totals([r])
     assert t["found_rate"] == 0.5 and t["correct_rate"] == 0.0 and t["precision"] == 1.0 and t["direction_given_found"] == 0.0
+
+
+def test_genotype_detector_names_mutants_but_not_ordinary_contrasts():
+    from hyparena.card.contexts import genotype_in
+    assert genotype_in("it did not extend the lifespan of the daf-16(mu86) strain") == "daf-16(mu86)"
+    assert genotype_in("in Sirt1-/- mice") == "-/-" and genotype_in("transgenic mice") == "transgenic"
+    assert genotype_in("In contrast to resveratrol, the derivatives increase lifespan") == ""
