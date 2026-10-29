@@ -47,8 +47,19 @@ def _tokens(s: str) -> set[str]:
     return {w for w in re.findall(r"[a-z0-9]+", t) if w not in GENERIC and len(w) > 3}
 
 
+SPECIES_WORDS = (("mouse", r"\b(mouse|mice|mus|murine)\b"), ("rat", r"\b(rat|rats|rattus)\b"), ("worm", r"(elegans|nematode|\bworms?\b)"),
+                 ("fly", r"(drosophila|fruit fl|\bfl(?:y|ies)\b)"), ("yeast", r"(yeast|saccharomyces|cerevisiae)"))
+
+
 def species_key(s: str) -> str:
-    return SPECIES.get((s or "").strip().lower(), (s or "").strip().lower())
+    """Species group of a free-text organism label: the exact names first, then words ("f344 rats" and "wistar-unilever rats" are rats)."""
+    t = (s or "").strip().lower()
+    if t in SPECIES:
+        return SPECIES[t]
+    for name, pattern in SPECIES_WORDS:
+        if re.search(pattern, t):
+            return name
+    return t
 
 
 def sex_key(s: str) -> str:
@@ -169,6 +180,7 @@ def kg_report(kg_dir: str) -> dict:
     return {"papers": len(per), "total": totals(list(per.values())), "per_paper": per}
 
 
+TEMPLATE_CARD = "runs/stage5/l1_8/O1.json"             # any saved card of the pipeline: the structure the verifier template reads
 STRATA = {"mouse": 25, "worm": 15, "fly": 15, "rat": 5}
 TEST_FILE = Path("data/validation/extraction/test_pmids.json")
 
@@ -204,15 +216,113 @@ def select_test(kg_dir: str) -> dict:
             "corpus_sha256": hashlib.sha256("".join(hashes).encode()).hexdigest()}
 
 
+SPECIES_LATIN = {"mouse": "Mus musculus", "rat": "Rattus norvegicus", "worm": "Caenorhabditis elegans", "fly": "Drosophila melanogaster"}
+
+
+def _claim_card(compound: str, species: str) -> dict:
+    """A card by code for the claim "compound extends the lifespan of species": the structure of a saved card with the compound and the species replaced."""
+    import copy
+    base = next(x["card"] for x in json.loads(Path(TEMPLATE_CARD).read_text())["items"] if x.get("card"))
+    c = copy.deepcopy(base)
+    k = next(x for x in c["claims"] if x["role"] == "outcome")
+    c["claims"] = [k]
+    c["edges"] = []
+    for key in [key for key in c if "alternatives" in key]:
+        c[key] = []
+    latin = SPECIES_LATIN.get(species, species)
+    c["claim_plain"] = f"{compound} extends the lifespan of {latin}."
+    c["pico"]["intervention"] = [{"type": "compound", "label": compound, "id": None, "regimen": "unknown", "route": "unknown"}]
+    c["pico"]["population"] = {"taxon": None, "label": latin, "strain": "unknown", "sex": "unknown", "age_at_start": "unknown"}
+    k["id"], k["relation"] = "c1", "extends_lifespan_in"
+    k["subject"] = {"label": compound, "id": None, "hallmark": None}
+    k["object"] = {"label": latin, "id": None, "hallmark": None}
+    k["qualifiers"] = {"species": latin}
+    k["source_span"] = f"{compound} extends the lifespan of {latin}"
+    return c
+
+
+def extract(client, family: str, kg_dir: str, pmid: str, compound: str, species: str) -> list[dict]:
+    """Records of one verifier family for the claim about `compound` from the one abstract of `pmid` (the prompt of `verify_claim/v5`, no search)."""
+    from hyparena.card import verifier as v
+    from hyparena.card.llm import ask
+    from hyparena.card.models import HypothesisCard
+    from hyparena.card.rules import claim_endpoint
+    text = Path(kg_dir, "corpus", f"{pmid}.md").read_text(encoding="utf-8")
+    title = re.search(r"## Title\n(.*?)\n\n## Abstract", text, re.S).group(1).strip()
+    abstract = text.split("## Abstract", 1)[1].strip()
+    year = (re.search(r"year:\s*\"?(\d{4})", text) or [None, ""])[1]
+    abstracts = {pmid: {"title": title, "abstract": abstract, "year": year}}
+    card = HypothesisCard.model_validate(_claim_card(compound, species))
+    claim = card.claims[0]
+    variables = {"claim": claim, "negated": False, "alternative": False, "human_healthspan": False, "contrast": "",
+                 "qualifiers": ", ".join(f"{k}: {x}" for k, x in claim.qualifiers.items()), "endpoint": claim_endpoint(claim), "claim_plain": card.claim_plain,
+                 "population": ", ".join(f"{k} {x}" for k, x in card.pico.population.model_dump().items() if x and x != "unknown") or "unknown",
+                 "intervention": f"{compound} (regimen unknown)", "comparator": card.pico.comparator.label,
+                 "abstracts": [{"pmid": pmid, "year": year, "title": title, "abstract": abstract, "review": False}]}
+    value, _ = ask(client, role="verify_claim", family=family, template=v.TEMPLATE[0], version=v.TEMPLATE[1], variables=variables,
+                   validate=lambda x: v._validate(x, abstracts), rounds=2, avoid=frozenset(), log=None, parse=v.parse_records)
+    return (value or {}).get("records") or []
+
+
+def run_families(kg_dir: str, out: str, families: list[str], max_calls: int = 400, repeat: str | None = None) -> None:
+    """Every (paper, compound) of the frozen test subset for every family; the raw records are saved to `out`."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    from hyparena.card.pipeline import _client
+    gold = load_gold(kg_dir)
+    pmids = json.loads(TEST_FILE.read_text())["pmids"]
+    pairs = []
+    for p in pmids:
+        seen = {}
+        for r in gold[p]:
+            seen.setdefault(_key(r["compound_name"]), (r["compound_name"], species_key(r["species"])))
+        pairs += [(p, c, sp) for c, sp in seen.values()]
+    Path(out).mkdir(parents=True, exist_ok=True)
+    for fam in families:
+        client, _ = _client(f"configs/v2-agree-{fam}.yaml", False, max_calls)
+        with ThreadPoolExecutor(4) as pool:
+            recs = list(pool.map(lambda t: extract(client, fam, kg_dir, *t), pairs))
+        name = f"{fam}{'_' + repeat if repeat else ''}.json"
+        Path(out, name).write_text(json.dumps([{"pmid": p, "compound": c, "species": sp, "records": r} for (p, c, sp), r in zip(pairs, recs)], ensure_ascii=False))
+        print(fam, "pairs", len(pairs), "calls", client.calls, flush=True)
+
+
+def families_report(out: str, kg_dir: str) -> dict:
+    gold = load_gold(kg_dir)
+    res = {}
+    for f in sorted(Path(out).glob("*.json")):
+        by = defaultdict(list)
+        data = json.loads(f.read_text())
+        parts = []
+        for item in data:
+            pred = record_cells(item["records"], item["compound"])
+            g = [c for c in gold_cells(gold[item["pmid"]]) if _same_compound(c["compound"], item["compound"]) and c["species"] == item["species"]]
+            parts.append(compare(g, pred))
+        res[f.stem] = totals(parts)
+    return res
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
+    rn = sub.add_parser("run", help="paid: the verifier families on the frozen test subset")
+    rn.add_argument("--kg-dir", default=DEFAULT_KG)
+    rn.add_argument("--out", required=True)
+    rn.add_argument("--families", default="deepseek,google,zhipu")
+    rn.add_argument("--repeat", default=None, help="suffix of the files of a repeat run (noise of the same family)")
+    rp = sub.add_parser("report", help="the measures of every saved family file")
+    rp.add_argument("--kg-dir", default=DEFAULT_KG)
+    rp.add_argument("--out", required=True)
     k = sub.add_parser("kg")
     k.add_argument("--kg-dir", default=DEFAULT_KG)
     sl = sub.add_parser("select", help="write the frozen test subset (PMIDs only)")
     sl.add_argument("--kg-dir", default=DEFAULT_KG)
     a = ap.parse_args()
-    if a.cmd == "select":
+    if a.cmd == "run":
+        run_families(a.kg_dir, a.out, a.families.split(","), repeat=a.repeat)
+    elif a.cmd == "report":
+        print(json.dumps(families_report(a.out, a.kg_dir), indent=1))
+    elif a.cmd == "select":
         d = select_test(a.kg_dir)
         TEST_FILE.write_text(json.dumps(d, indent=1))
         print(d["strata"], len(d["pmids"]), d["corpus_sha256"][:16])
