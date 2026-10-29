@@ -75,7 +75,7 @@ def test_evidence_paths_exist():
 
 def test_the_summary_keeps_the_three_tallies_apart():
     text = vt.render(vt.load())
-    assert "**Проверки кода и метода** (7)" in text and "**Проверки утверждения об отборе** (25)" in text
+    assert "**Проверки кода и метода** (7)" in text and "**Проверки утверждения об отборе** (27)" in text
     assert "с критерием, зафиксированным до результата:" in text
 
 
