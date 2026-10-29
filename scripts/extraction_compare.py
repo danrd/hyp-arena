@@ -241,7 +241,7 @@ def _claim_card(compound: str, species: str) -> dict:
     return c
 
 
-def extract(client, family: str, kg_dir: str, pmid: str, compound: str, species: str) -> list[dict]:
+def extract(client, family: str, kg_dir: str, pmid: str, compound: str, species: str, log: list | None = None) -> list[dict]:
     """Records of one verifier family for the claim about `compound` from the one abstract of `pmid` (the prompt of `verify_claim/v5`, no search)."""
     from hyparena.card import verifier as v
     from hyparena.card.llm import ask
@@ -260,7 +260,7 @@ def extract(client, family: str, kg_dir: str, pmid: str, compound: str, species:
                  "intervention": f"{compound} (regimen unknown)", "comparator": card.pico.comparator.label,
                  "abstracts": [{"pmid": pmid, "year": year, "title": title, "abstract": abstract, "review": False}]}
     value, _ = ask(client, role="verify_claim", family=family, template=v.TEMPLATE[0], version=v.TEMPLATE[1], variables=variables,
-                   validate=lambda x: v._validate(x, abstracts), rounds=2, avoid=frozenset(), log=None, parse=v.parse_records)
+                   validate=lambda x: v._validate(x, abstracts), rounds=2, avoid=frozenset(), log=log, parse=v.parse_records)
     return (value or {}).get("records") or []
 
 
