@@ -1,0 +1,96 @@
+{
+  "source": {
+    "family": "zhipu",
+    "model": "glm-5.3-flash",
+    "strategy": "negative-sampling",
+    "as_of": "2008-01-20",
+    "note": "labels are in labels.json",
+    "options": {
+      "dedup": false,
+      "lang": "en"
+    }
+  },
+  "hypotheses": [
+    {
+      "id": 1,
+      "title": "R(+)-SCH-23390 hydrochloride extends lifespan in C. elegans",
+      "claim": "Administration of R(+)-SCH-23390 hydrochloride extends lifespan in Caenorhabditis elegans. The compound acts as a geroprotective intervention in this organism.",
+      "rationale": "Modulation of dopaminergic signaling can influence feeding, stress responses and metabolic rate, all of which regulate aging. Pharmacological adjustment of such pathways may therefore prolong survival.",
+      "prediction": "Treated nematodes will show a statistically significant increase in median and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, expose them to R(+)-SCH-23390 hydrochloride throughout adulthood, and perform standard lifespan assays with survival scoring every two days."
+    },
+    {
+      "id": 2,
+      "title": "Mycophenolic acid extends lifespan in C. elegans",
+      "claim": "Administration of mycophenolic acid extends lifespan in Caenorhabditis elegans. The compound acts as a geroprotective intervention in this organism.",
+      "rationale": "Restriction of nucleotide availability can activate nutrient-sensing and stress-response pathways linked to longevity. Mild metabolic inhibition through such compounds may therefore slow the aging process.",
+      "prediction": "Treated nematodes will show a statistically significant increase in median and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, expose them to mycophenolic acid throughout adulthood, and perform standard lifespan assays with survival scoring every two days."
+    },
+    {
+      "id": 3,
+      "title": "Mycophenolic acid extends lifespan via purine biosynthesis inhibition",
+      "claim": "Administration of mycophenolic acid extends lifespan in Caenorhabditis elegans by inhibiting de novo purine biosynthesis. The lifespan extension depends on this specific metabolic mechanism.",
+      "rationale": "Slowing de novo purine synthesis imposes a controlled metabolic constraint that can engage conserved longevity pathways, including autophagy and stress resistance. Mechanistically targeted metabolic restriction may therefore extend survival.",
+      "prediction": "Treated nematodes will show lifespan extension that is abolished when de novo purine biosynthesis is experimentally restored.",
+      "experiment": "Compare lifespan of worms treated with mycophenolic acid alone versus mycophenolic acid supplemented with exogenous purines or hypoxanthine that bypass the inhibited pathway."
+    },
+    {
+      "id": 4,
+      "title": "FCCP extends lifespan in C. elegans",
+      "claim": "Administration of FCCP extends lifespan in Caenorhabditis elegans. The compound acts as a geroprotective intervention in this organism.",
+      "rationale": "Mild uncoupling of oxidative phosphorylation reduces mitochondrial membrane potential and reactive oxygen species production. Such controlled mitochondrial stress can activate adaptive responses that promote longevity.",
+      "prediction": "Treated nematodes will show a statistically significant increase in median and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, expose them to FCCP throughout adulthood, and perform standard lifespan assays with survival scoring every two days."
+    },
+    {
+      "id": 5,
+      "title": "Sesamol extends lifespan in C. elegans",
+      "claim": "Administration of sesamol extends lifespan in Caenorhabditis elegans. The compound acts as a geroprotective intervention in this organism.",
+      "rationale": "Phenolic antioxidants can strengthen cellular defenses against oxidative damage, a major contributor to aging. Enhancing antioxidant capacity may therefore extend organismal survival.",
+      "prediction": "Treated nematodes will show a statistically significant increase in median and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, expose them to sesamol throughout adulthood, and perform standard lifespan assays with survival scoring every two days."
+    },
+    {
+      "id": 6,
+      "title": "FCCP extends lifespan in C. elegans at high doses",
+      "claim": "Administration of FCCP extends lifespan in Caenorhabditis elegans at high doses. The lifespan-extending effect is specific to the high-dose range of this intervention.",
+      "rationale": "Sufficient uncoupling of oxidative phosphorylation may be required to trigger mitohormetic adaptive responses that promote longevity. Higher doses could reach the threshold needed for such protective signaling.",
+      "prediction": "Nematodes receiving high doses of FCCP will show a statistically significant increase in lifespan compared with untreated controls.",
+      "experiment": "Perform lifespan assays across a dose range of FCCP, including high doses, and compare survival curves of each dose group against untreated controls."
+    },
+    {
+      "id": 7,
+      "title": "Mycophenolic acid shortens lifespan in C. elegans",
+      "claim": "Administration of mycophenolic acid shortens lifespan in Caenorhabditis elegans. The compound acts as a life-shortening intervention in this organism.",
+      "rationale": "Excessive inhibition of de novo purine biosynthesis can deprive cells of nucleotides needed for DNA repair and cell maintenance. Such metabolic insufficiency may accelerate tissue decline and shorten survival.",
+      "prediction": "Treated nematodes will show a statistically significant decrease in median and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, expose them to mycophenolic acid throughout adulthood, and perform standard lifespan assays with survival scoring every two days."
+    },
+    {
+      "id": 8,
+      "title": "FCCP shortens lifespan in C. elegans",
+      "claim": "Administration of FCCP shortens lifespan in Caenorhabditis elegans. The compound acts as a life-shortening intervention in this organism.",
+      "rationale": "Uncoupling of oxidative phosphorylation impairs ATP production and energy-dependent cellular maintenance. Sustained energy deficit may accelerate physiological decline and shorten survival.",
+      "prediction": "Treated nematodes will show a statistically significant decrease in median and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, expose them to FCCP throughout adulthood, and perform standard lifespan assays with survival scoring every two days."
+    },
+    {
+      "id": 9,
+      "title": "SKF83959 hydrobromide extends lifespan in C. elegans",
+      "claim": "Administration of SKF83959 hydrobromide extends lifespan in Caenorhabditis elegans. The compound acts as a geroprotective intervention in this organism.",
+      "rationale": "Modulation of dopaminergic signaling can influence feeding, stress responses and metabolic rate, all of which regulate aging. Pharmacological adjustment of such pathways may therefore prolong survival.",
+      "prediction": "Treated nematodes will show a statistically significant increase in median and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, expose them to SKF83959 hydrobromide throughout adulthood, and perform standard lifespan assays with survival scoring every two days."
+    },
+    {
+      "id": 10,
+      "title": "Mebhydroline 1,5-naphthalenedisulfonate extends lifespan in C. elegans",
+      "claim": "Administration of mebhydroline 1,5-naphthalenedisulfonate extends lifespan in Caenorhabditis elegans. The compound acts as a geroprotective intervention in this organism.",
+      "rationale": "Small molecules affecting cellular signaling and stress responses can engage conserved pathways that regulate aging. Pharmacological adjustment of such pathways may therefore prolong survival.",
+      "prediction": "Treated nematodes will show a statistically significant increase in median and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, expose them to mebhydroline 1,5-naphthalenedisulfonate throughout adulthood, and perform standard lifespan assays with survival scoring every two days."
+    }
+  ],
+  "assistant_notes": {}
+}

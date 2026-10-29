@@ -1,0 +1,96 @@
+{
+  "source": {
+    "family": "zhipu",
+    "model": "glm-5.3-flash",
+    "strategy": "negative-sampling",
+    "as_of": "2009-07-07",
+    "note": "labels are in labels.json",
+    "options": {
+      "dedup": false,
+      "lang": "en"
+    }
+  },
+  "hypotheses": [
+    {
+      "id": 1,
+      "title": "Hydrogen Sulfide Donor SG1002 Extends Mouse Lifespan",
+      "claim": "Administration of SG1002, a hydrogen sulfide donor, extends lifespan in Mus musculus. The intervention is expected to increase median and maximal lifespan relative to untreated controls.",
+      "rationale": "Hydrogen sulfide participates in mitochondrial bioenergetics, vascular function, and cellular stress resistance. Controlled elevation of sulfide signaling could thereby slow age-related functional decline.",
+      "prediction": "SG1002-treated mice will show significantly longer median and maximal lifespan than vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of mice to SG1002 or vehicle and follow them for lifespan under identical conditions. Analyze survival curves with log-rank tests and adjust for sex and cage effects."
+    },
+    {
+      "id": 2,
+      "title": "Rapamycin Shortens Lifespan in Mus musculus",
+      "claim": "Administration of rapamycin shortens lifespan in Mus musculus. Treated mice are expected to show reduced median and maximal lifespan relative to untreated controls.",
+      "rationale": "Rapamycin suppresses mTOR-dependent growth and repair processes. Persistent inhibition of these pathways could impair tissue maintenance and increase vulnerability to age-related damage.",
+      "prediction": "Rapamycin-treated mice will show significantly shorter median and maximal lifespan than vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of mice to rapamycin or vehicle and follow them for lifespan under identical conditions. Analyze survival curves with log-rank tests and adjust for sex and cage effects."
+    },
+    {
+      "id": 3,
+      "title": "Rapamycin Extends Lifespan in Mus musculus",
+      "claim": "Administration of rapamycin extends lifespan in Mus musculus. Treated mice are expected to show increased median and maximal lifespan relative to untreated controls.",
+      "rationale": "Moderate attenuation of mTOR signaling reduces anabolic overdrive and enhances cellular housekeeping. Such metabolic modulation could delay the onset of multiple age-related pathologies.",
+      "prediction": "Rapamycin-treated mice will show significantly longer median and maximal lifespan than vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of mice to rapamycin or vehicle and follow them for lifespan under identical conditions. Analyze survival curves with log-rank tests and adjust for sex and cage effects."
+    },
+    {
+      "id": 4,
+      "title": "Medium-Chain Triglyceride Oil Extends Mouse Lifespan",
+      "claim": "Supplementation with medium-chain triglyceride oil extends lifespan in Mus musculus. Supplemented mice are expected to show increased median and maximal lifespan relative to controls.",
+      "rationale": "Medium-chain triglycerides provide an efficiently metabolized energy source and can promote ketone production. Improved metabolic flexibility and mitochondrial fuel quality could support healthy aging.",
+      "prediction": "Mice receiving medium-chain triglyceride oil will show significantly longer median and maximal lifespan than controls.",
+      "experiment": "Randomize a large cohort of mice to medium-chain triglyceride oil or isocaloric control diet and follow them for lifespan under identical conditions. Analyze survival curves with log-rank tests and adjust for sex and cage effects."
+    },
+    {
+      "id": 5,
+      "title": "Chlorpromazine Extends Lifespan in Mus musculus",
+      "claim": "Administration of chlorpromazine extends lifespan in Mus musculus. Treated mice are expected to show increased median and maximal lifespan relative to untreated controls.",
+      "rationale": "Chlorpromazine modulates membrane properties, autophagy, and inflammatory signaling. These cellular effects could reduce chronic damage accumulation and slow the progression of age-related decline.",
+      "prediction": "Chlorpromazine-treated mice will show significantly longer median and maximal lifespan than vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of mice to chlorpromazine or vehicle and follow them for lifespan under identical conditions. Analyze survival curves with log-rank tests and adjust for sex and cage effects."
+    },
+    {
+      "id": 6,
+      "title": "Chlorpromazine Shortens Lifespan in Mus musculus",
+      "claim": "Administration of chlorpromazine shortens lifespan in Mus musculus. Treated mice are expected to show reduced median and maximal lifespan relative to untreated controls.",
+      "rationale": "Chlorpromazine interferes with dopaminergic signaling, mitochondrial function, and cellular membranes. Chronic exposure to such perturbations could accelerate tissue dysfunction and increase mortality risk.",
+      "prediction": "Chlorpromazine-treated mice will show significantly shorter median and maximal lifespan than vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of mice to chlorpromazine or vehicle and follow them for lifespan under identical conditions. Analyze survival curves with log-rank tests and adjust for sex and cage effects."
+    },
+    {
+      "id": 7,
+      "title": "Rapamycin Extends Lifespan via mTORC1 Activation",
+      "claim": "Rapamycin extends lifespan in Mus musculus by activating mTORC1 signaling. The lifespan benefit depends mechanistically on increased mTORC1 pathway activity in treated mice.",
+      "rationale": "mTORC1 integrates nutrient signals to regulate growth, autophagy, and metabolism. Engagement of this pathway by rapamycin could trigger adaptive responses that preserve tissue function during aging.",
+      "prediction": "Lifespan extension in rapamycin-treated mice will correlate with elevated mTORC1 signaling markers and be abolished when mTORC1 activation is blocked.",
+      "experiment": "Treat mice with rapamycin alone, rapamycin plus an mTORC1 pathway inhibitor, or vehicle, and measure lifespan alongside mTORC1 activity. Compare survival and pathway readouts across groups to test mechanistic dependence."
+    },
+    {
+      "id": 8,
+      "title": "Curcumin Extends Lifespan in Mus musculus",
+      "claim": "Administration of curcumin extends lifespan in Mus musculus. Supplemented mice are expected to show increased median and maximal lifespan relative to untreated controls.",
+      "rationale": "Curcumin exhibits anti-inflammatory and antioxidant activities and modulates stress-response pathways. Suppression of chronic inflammation and oxidative damage could delay age-related functional deterioration.",
+      "prediction": "Curcumin-treated mice will show significantly longer median and maximal lifespan than vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of mice to curcumin or vehicle and follow them for lifespan under identical conditions. Analyze survival curves with log-rank tests and adjust for sex and cage effects."
+    },
+    {
+      "id": 9,
+      "title": "Epimedium Extract Extends Lifespan in Mus musculus",
+      "claim": "Administration of Epimedium extract extends lifespan in Mus musculus. Supplemented mice are expected to show increased median and maximal lifespan relative to untreated controls.",
+      "rationale": "Epimedium contains bioactive flavonoids that influence endocrine signaling, bone metabolism, and oxidative stress defenses. Systemic support of these processes could slow age-related physiological decline.",
+      "prediction": "Epimedium-treated mice will show significantly longer median and maximal lifespan than vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of mice to Epimedium extract or vehicle and follow them for lifespan under identical conditions. Analyze survival curves with log-rank tests and adjust for sex and cage effects."
+    },
+    {
+      "id": 10,
+      "title": "Chlorpromazine Extends Lifespan via AMPK Activation",
+      "claim": "Chlorpromazine extends lifespan in Mus musculus by activating AMPK signaling. The lifespan benefit depends mechanistically on increased AMPK pathway activity in treated mice.",
+      "rationale": "AMPK coordinates energy sensing, autophagy, and metabolic homeostasis. Activation of this pathway by chlorpromazine could enhance cellular maintenance and delay age-related tissue dysfunction.",
+      "prediction": "Lifespan extension in chlorpromazine-treated mice will correlate with elevated AMPK signaling markers and be abolished when AMPK activation is blocked.",
+      "experiment": "Treat mice with chlorpromazine alone, chlorpromazine plus an AMPK pathway inhibitor, or vehicle, and measure lifespan alongside AMPK activity. Compare survival and pathway readouts across groups to test mechanistic dependence."
+    }
+  ],
+  "assistant_notes": {}
+}

@@ -1,0 +1,96 @@
+{
+  "source": {
+    "family": "zhipu",
+    "model": "glm-5.3-flash",
+    "strategy": "negative-sampling",
+    "as_of": "1994-01-17",
+    "note": "labels are in labels.json",
+    "options": {
+      "dedup": false,
+      "lang": "en"
+    }
+  },
+  "hypotheses": [
+    {
+      "id": 1,
+      "title": "Curcumin Extends Lifespan in Mus musculus",
+      "claim": "Oral curcumin supplementation extends lifespan in Mus musculus. Mice receiving curcumin will show a measurable increase in median and maximal lifespan compared with untreated controls.",
+      "rationale": "Curcumin modulates inflammatory signaling and oxidative stress responses, both of which drive age-related tissue decline. Suppressing these processes should slow the accumulation of damage that limits lifespan.",
+      "prediction": "Curcumin-treated mice will exhibit significantly longer median and maximum lifespans than vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of genetically uniform mice to curcumin-supplemented or control diets, house both groups identically, and follow them until natural death with blinded survival analysis."
+    },
+    {
+      "id": 2,
+      "title": "Melatonin Extends Lifespan in Mus musculus",
+      "claim": "Melatonin supplementation extends lifespan in Mus musculus. Mice receiving exogenous melatonin will show a measurable increase in median and maximal lifespan compared with untreated controls.",
+      "rationale": "Melatonin is a potent antioxidant and circadian regulator, and circadian disruption accelerates aging across tissues. Restoring robust melatonin signaling should reduce oxidative damage and improve systemic homeostasis.",
+      "prediction": "Melatonin-treated mice will exhibit significantly longer median and maximum lifespans than vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of genetically uniform mice to melatonin-supplemented or control diets, house both groups identically, and follow them until natural death with blinded survival analysis."
+    },
+    {
+      "id": 3,
+      "title": "Melatonin Extends Lifespan by Restoring Pineal Function",
+      "claim": "Melatonin extends lifespan in Mus musculus by restoring pineal melatonin production. Mice receiving exogenous melatonin will show increased median and maximal lifespan through reactivation of endogenous pineal output.",
+      "rationale": "Pineal melatonin production declines with age, weakening circadian coordination and antioxidant defenses. Exogenous melatonin that re-establishes pineal signaling should restore these protective functions and extend lifespan.",
+      "prediction": "Melatonin-treated mice will live significantly longer than controls, and the effect will correlate with restored markers of pineal melatonin synthesis.",
+      "experiment": "Treat one group of aging mice with melatonin and another with vehicle, then compare survival while measuring pineal melatonin-synthesis gene expression; include a pinealectomized arm to test dependence on the gland."
+    },
+    {
+      "id": 4,
+      "title": "N-acetyl-L-cysteine Extends Lifespan in Mus musculus",
+      "claim": "N-acetyl-L-cysteine supplementation extends lifespan in Mus musculus. Mice receiving N-acetyl-L-cysteine will show a measurable increase in median and maximal lifespan compared with untreated controls.",
+      "rationale": "N-acetyl-L-cysteine replenishes glutathione, the principal cellular antioxidant, thereby buffering reactive oxygen species that accumulate with age. Sustained antioxidant capacity should slow molecular damage and prolong survival.",
+      "prediction": "N-acetyl-L-cysteine-treated mice will exhibit significantly longer median and maximum lifespans than vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of genetically uniform mice to N-acetyl-L-cysteine-supplemented or control diets, house both groups identically, and follow them until natural death with blinded survival analysis."
+    },
+    {
+      "id": 5,
+      "title": "TM5441 Extends Lifespan in Mus musculus",
+      "claim": "TM5441, a plasminogen activator inhibitor-1 inhibitor, extends lifespan in Mus musculus. Mice receiving TM5441 will show a measurable increase in median and maximal lifespan compared with untreated controls.",
+      "rationale": "PAI-1 rises with age and promotes fibrosis, vascular stiffening, and cellular senescence. Pharmacological inhibition of PAI-1 should preserve tissue function and thereby extend lifespan.",
+      "prediction": "TM5441-treated mice will exhibit significantly longer median and maximum lifespans than vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of genetically uniform mice to TM5441 or vehicle administration, house both groups identically, and follow them until natural death with blinded survival analysis."
+    },
+    {
+      "id": 6,
+      "title": "Caffeic Acid Phenethyl Ester Extends Lifespan in Mus musculus",
+      "claim": "Caffeic acid phenethyl ester supplementation extends lifespan in Mus musculus. Mice receiving caffeic acid phenethyl ester will show a measurable increase in median and maximal lifespan compared with untreated controls.",
+      "rationale": "Caffeic acid phenethyl ester suppresses chronic inflammatory signaling and oxidative stress, processes that accelerate tissue degeneration. Dampening these pathways should preserve organ function and extend lifespan.",
+      "prediction": "Caffeic acid phenethyl ester-treated mice will exhibit significantly longer median and maximum lifespans than vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of genetically uniform mice to caffeic acid phenethyl ester-supplemented or control diets, house both groups identically, and follow them until natural death with blinded survival analysis."
+    },
+    {
+      "id": 7,
+      "title": "Melatonin Shortens Lifespan in Mus musculus",
+      "claim": "Melatonin supplementation shortens lifespan in Mus musculus. Mice receiving exogenous melatonin will show a measurable decrease in median and maximal lifespan compared with untreated controls.",
+      "rationale": "Chronic exogenous melatonin can desynchronize endogenous circadian rhythms and blunt receptor sensitivity, disrupting hormonal cycles that coordinate metabolism and repair. Sustained circadian disruption should accelerate age-related decline.",
+      "prediction": "Melatonin-treated mice will exhibit significantly shorter median and maximum lifespans than vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of genetically uniform mice to melatonin-supplemented or control diets, house both groups identically, and follow them until natural death with blinded survival analysis."
+    },
+    {
+      "id": 8,
+      "title": "N-acetyl-L-cysteine Extends Lifespan via Insulin/IGF-1 Signaling",
+      "claim": "N-acetyl-L-cysteine extends lifespan in Mus musculus by activating the insulin/IGF-1 signaling pathway. Mice receiving N-acetyl-L-cysteine will show increased median and maximal lifespan through enhanced insulin/IGF-1 signaling activity.",
+      "rationale": "Insulin/IGF-1 signaling promotes growth, tissue maintenance, and stress resistance when appropriately activated. N-acetyl-L-cysteine-induced redox changes can modulate this pathway, and its activation should support repair processes that extend lifespan.",
+      "prediction": "N-acetyl-L-cysteine-treated mice will live significantly longer than controls, and the extension will correlate with elevated insulin/IGF-1 pathway activity.",
+      "experiment": "Treat mice with N-acetyl-L-cysteine or vehicle, compare survival, and measure insulin/IGF-1 pathway activation; include a group with pathway-specific inhibition to test whether the lifespan effect is abolished."
+    },
+    {
+      "id": 9,
+      "title": "C60 Fullerene Extends Lifespan in Mus musculus",
+      "claim": "C60 fullerene supplementation extends lifespan in Mus musculus. Mice receiving C60 fullerene will show a measurable increase in median and maximal lifespan compared with untreated controls.",
+      "rationale": "C60 fullerene is a highly efficient radical scavenger that can localize in lipid membranes and mitochondria. Long-lasting neutralization of oxidative damage in these compartments should slow aging and extend lifespan.",
+      "prediction": "C60 fullerene-treated mice will exhibit significantly longer median and maximum lifespans than vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of genetically uniform mice to C60 fullerene or vehicle administration, house both groups identically, and follow them until natural death with blinded survival analysis."
+    },
+    {
+      "id": 10,
+      "title": "N-acetyl-L-cysteine Shortens Lifespan in Mus musculus",
+      "claim": "N-acetyl-L-cysteine supplementation shortens lifespan in Mus musculus. Mice receiving N-acetyl-L-cysteine will show a measurable decrease in median and maximal lifespan compared with untreated controls.",
+      "rationale": "Reactive oxygen species serve as signaling molecules required for adaptive stress responses and cellular repair. Excessive antioxidant buffering by N-acetyl-L-cysteine can suppress these signals, weakening hormesis and accelerating age-related decline.",
+      "prediction": "N-acetyl-L-cysteine-treated mice will exhibit significantly shorter median and maximum lifespans than vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of genetically uniform mice to N-acetyl-L-cysteine-supplemented or control diets, house both groups identically, and follow them until natural death with blinded survival analysis."
+    }
+  ],
+  "assistant_notes": {}
+}

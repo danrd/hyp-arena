@@ -1,0 +1,96 @@
+{
+  "source": {
+    "family": "zhipu",
+    "model": "glm-5.3-flash",
+    "strategy": "negative-sampling",
+    "as_of": "2010-12-31",
+    "note": "labels are in labels.json",
+    "options": {
+      "dedup": false,
+      "lang": "en"
+    }
+  },
+  "hypotheses": [
+    {
+      "id": 1,
+      "title": "Ethotoin Extends Lifespan Through DAF-2 Insulin-Like Signaling",
+      "claim": "Ethotoin extends lifespan in Caenorhabditis elegans by inhibiting insulin-like signaling through DAF-2. The longevity effect depends on the presence and activity of the DAF-2 receptor.",
+      "rationale": "Reduced insulin-like signaling is a conserved pathway that promotes longevity, and pharmacological inhibition of DAF-2 could reproduce the lifespan extension seen in reduced signaling states.",
+      "prediction": "Ethotoin-treated worms will live significantly longer than untreated controls, and the extension will be abolished in daf-2 loss-of-function or pathway-activated backgrounds.",
+      "experiment": "Treat synchronized wild-type and daf-2 mutant populations with ethotoin across a dose range, measure survival, and compare with vehicle controls under identical conditions."
+    },
+    {
+      "id": 2,
+      "title": "Baicalein Shortens Lifespan in Caenorhabditis elegans",
+      "claim": "Baicalein shortens lifespan in Caenorhabditis elegans. Worms exposed to baicalein will show reduced survival relative to untreated controls.",
+      "rationale": "Compounds can impose metabolic or toxic stress that overwhelms cellular maintenance systems, and such burden can accelerate aging and reduce survival in short-lived model organisms.",
+      "prediction": "Baicalein-treated populations will exhibit significantly shorter median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Expose synchronized worm cohorts to a dose range of baicalein versus vehicle, score survival longitudinally, and analyze lifespan curves statistically."
+    },
+    {
+      "id": 3,
+      "title": "Baicalein Extends Lifespan in Caenorhabditis elegans",
+      "claim": "Baicalein extends lifespan in Caenorhabditis elegans. Worms exposed to baicalein will show increased survival relative to untreated controls.",
+      "rationale": "Flavonoids can activate endogenous stress-response and antioxidant pathways, and mild activation of such defenses is a recognized route to slower aging and longer life.",
+      "prediction": "Baicalein-treated populations will exhibit significantly longer median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Expose synchronized worm cohorts to a dose range of baicalein versus vehicle, score survival longitudinally, and analyze lifespan curves statistically."
+    },
+    {
+      "id": 4,
+      "title": "ABC37 Extends Lifespan in Caenorhabditis elegans",
+      "claim": "ABC37 extends lifespan in Caenorhabditis elegans. Worms exposed to ABC37 will show increased survival relative to untreated controls.",
+      "rationale": "Small molecules can modulate conserved longevity pathways such as nutrient sensing or stress resistance, and such modulation can slow aging in tractable model organisms.",
+      "prediction": "ABC37-treated populations will exhibit significantly longer median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Expose synchronized worm cohorts to a dose range of ABC37 versus vehicle, score survival longitudinally, and analyze lifespan curves statistically."
+    },
+    {
+      "id": 5,
+      "title": "JMN21 Extends Lifespan in Caenorhabditis elegans",
+      "claim": "JMN21 extends lifespan in Caenorhabditis elegans. Worms exposed to JMN21 will show increased survival relative to untreated controls.",
+      "rationale": "Small molecules can modulate conserved longevity pathways such as nutrient sensing or stress resistance, and such modulation can slow aging in tractable model organisms.",
+      "prediction": "JMN21-treated populations will exhibit significantly longer median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Expose synchronized worm cohorts to a dose range of JMN21 versus vehicle, score survival longitudinally, and analyze lifespan curves statistically."
+    },
+    {
+      "id": 6,
+      "title": "Ethotoin Shortens Lifespan in Caenorhabditis elegans",
+      "claim": "Ethotoin shortens lifespan in Caenorhabditis elegans. Worms exposed to ethotoin will show reduced survival relative to untreated controls.",
+      "rationale": "Pharmacologically active compounds can disrupt neuronal signaling, metabolism, or detoxification capacity, and such disruption can impose physiological costs that accelerate aging.",
+      "prediction": "Ethotoin-treated populations will exhibit significantly shorter median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Expose synchronized worm cohorts to a dose range of ethotoin versus vehicle, score survival longitudinally, and analyze lifespan curves statistically."
+    },
+    {
+      "id": 7,
+      "title": "DTT Extends Lifespan in Caenorhabditis elegans",
+      "claim": "DTT extends lifespan in Caenorhabditis elegans. Worms exposed to DTT will show increased survival relative to untreated controls.",
+      "rationale": "Thiol-reducing agents can buffer oxidative protein damage and trigger adaptive stress responses, and such cytoprotection is a plausible mechanism for slowing aging.",
+      "prediction": "DTT-treated populations will exhibit significantly longer median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Expose synchronized worm cohorts to a dose range of DTT versus vehicle, score survival longitudinally, and analyze lifespan curves statistically."
+    },
+    {
+      "id": 8,
+      "title": "Ethotoin Extends Lifespan in Caenorhabditis elegans",
+      "claim": "Ethotoin extends lifespan in Caenorhabditis elegans. Worms exposed to ethotoin will show increased survival relative to untreated controls.",
+      "rationale": "Small molecules can modulate conserved longevity pathways such as nutrient sensing or stress resistance, and such modulation can slow aging in tractable model organisms.",
+      "prediction": "Ethotoin-treated populations will exhibit significantly longer median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Expose synchronized worm cohorts to a dose range of ethotoin versus vehicle, score survival longitudinally, and analyze lifespan curves statistically."
+    },
+    {
+      "id": 9,
+      "title": "High-Dose Baicalein Extends Lifespan in Caenorhabditis elegans",
+      "claim": "Baicalein extends lifespan in Caenorhabditis elegans at high doses. Worms exposed to high concentrations of baicalein will show increased survival relative to untreated controls.",
+      "rationale": "Protective compounds often show dose-dependent effects, with sufficiently high concentrations needed to activate longevity-promoting stress-response pathways to a meaningful degree.",
+      "prediction": "Worms treated with high-dose baicalein will live significantly longer than vehicle controls, with a weaker or absent effect at low doses.",
+      "experiment": "Treat synchronized worm cohorts with a graded baicalein dose series including high concentrations, score survival longitudinally, and compare lifespan across doses and vehicle."
+    },
+    {
+      "id": 10,
+      "title": "Dequalinium Chloride Extends Lifespan in Caenorhabditis elegans",
+      "claim": "Dequalinium chloride extends lifespan in Caenorhabditis elegans. Worms exposed to dequalinium chloride will show increased survival relative to untreated controls.",
+      "rationale": "Small molecules can modulate conserved longevity pathways such as nutrient sensing or stress resistance, and such modulation can slow aging in tractable model organisms.",
+      "prediction": "Dequalinium chloride-treated populations will exhibit significantly longer median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Expose synchronized worm cohorts to a dose range of dequalinium chloride versus vehicle, score survival longitudinally, and analyze lifespan curves statistically."
+    }
+  ],
+  "assistant_notes": {}
+}

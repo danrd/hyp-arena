@@ -1,0 +1,96 @@
+{
+  "source": {
+    "family": "zhipu",
+    "model": "glm-5.3-flash",
+    "strategy": "negative-sampling",
+    "as_of": "2008-04-13",
+    "note": "labels are in labels.json",
+    "options": {
+      "dedup": false,
+      "lang": "en"
+    }
+  },
+  "hypotheses": [
+    {
+      "id": 1,
+      "title": "Ethotoin Extends Lifespan in C. elegans",
+      "claim": "Ethotoin extends lifespan in Caenorhabditis elegans. Treatment with ethotoin increases mean and maximum lifespan relative to untreated controls.",
+      "rationale": "Ethotoin modulates neuronal excitability through ion channel activity, and altered neural signaling is known to influence systemic aging processes in Caenorhabditis elegans.",
+      "prediction": "Caenorhabditis elegans exposed to ethotoin will show a statistically significant increase in mean and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Synchronize worm populations, treat one cohort with ethotoin and a matched control with vehicle, and score survival daily under identical conditions until all animals die."
+    },
+    {
+      "id": 2,
+      "title": "Reserpine Extends Lifespan via Mitochondrial Inhibition",
+      "claim": "Reserpine extends lifespan in Caenorhabditis elegans by inhibiting mitochondrial respiration. The lifespan increase depends on reduced mitochondrial respiratory activity.",
+      "rationale": "Mild reduction of mitochondrial respiration triggers conserved longevity pathways, slowing metabolism and activating stress responses that delay aging in Caenorhabditis elegans.",
+      "prediction": "Reserpine-treated Caenorhabditis elegans will live longer than controls, and the extension will be abolished when mitochondrial respiration is restored or when downstream stress-response genes are knocked down.",
+      "experiment": "Measure reserpine-treated worms for oxygen consumption and lifespan, then repeat the lifespan assay in respiratory-competent and respiration-restore strains to test whether the extension disappears when mitochondrial activity is normalized."
+    },
+    {
+      "id": 3,
+      "title": "3,7-Dimethylxanthine Extends Lifespan in C. elegans",
+      "claim": "3,7-dimethylxanthine extends lifespan in Caenorhabditis elegans. Supplementation with 3,7-dimethylxanthine increases mean and maximum lifespan relative to untreated controls.",
+      "rationale": "3,7-dimethylxanthine acts on cyclic nucleotide signaling and cellular energy metabolism, both of which are linked to conserved pathways that regulate longevity in Caenorhabditis elegans.",
+      "prediction": "Caenorhabditis elegans supplemented with 3,7-dimethylxanthine will show a statistically significant increase in mean and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Synchronize worm populations, culture one cohort on media containing 3,7-dimethylxanthine and a matched control on vehicle, and record survival daily until all animals have died."
+    },
+    {
+      "id": 4,
+      "title": "Lamotrigine Extends Lifespan in C. elegans",
+      "claim": "Lamotrigine extends lifespan in Caenorhabditis elegans. Treatment with lamotrigine increases mean and maximum lifespan relative to untreated controls.",
+      "rationale": "Lamotrigine stabilizes neuronal membranes by modulating sodium channels, and reduced neural overexcitation can lower systemic stress and promote longevity in Caenorhabditis elegans.",
+      "prediction": "Caenorhabditis elegans exposed to lamotrigine will show a statistically significant increase in mean and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Synchronize worm populations, treat one cohort with lamotrigine and a matched control with vehicle, and score survival daily under identical conditions until all animals die."
+    },
+    {
+      "id": 5,
+      "title": "Reserpine Shortens Lifespan in C. elegans",
+      "claim": "Reserpine shortens lifespan in Caenorhabditis elegans. Treatment with reserpine decreases mean and maximum lifespan relative to untreated controls.",
+      "rationale": "Reserpine depletes monoamine stores and disrupts vesicular neurotransmission, which can impair feeding, movement, and stress regulation, thereby accelerating physiological decline in Caenorhabditis elegans.",
+      "prediction": "Caenorhabditis elegans exposed to reserpine will show a statistically significant decrease in mean and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Synchronize worm populations, treat one cohort with reserpine and a matched control with vehicle, and score survival daily under identical conditions until all animals die."
+    },
+    {
+      "id": 6,
+      "title": "ABC101 Extends Lifespan in C. elegans",
+      "claim": "ABC101 extends lifespan in Caenorhabditis elegans. Treatment with ABC101 increases mean and maximum lifespan relative to untreated controls.",
+      "rationale": "ABC101 is a bioactive small molecule capable of engaging conserved cellular signaling pathways, and modulation of such pathways can delay aging in Caenorhabditis elegans.",
+      "prediction": "Caenorhabditis elegans exposed to ABC101 will show a statistically significant increase in mean and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Synchronize worm populations, treat one cohort with ABC101 and a matched control with vehicle, and score survival daily under identical conditions until all animals die."
+    },
+    {
+      "id": 7,
+      "title": "ABC101 Shortens Lifespan in C. elegans",
+      "claim": "ABC101 shortens lifespan in Caenorhabditis elegans. Treatment with ABC101 decreases mean and maximum lifespan relative to untreated controls.",
+      "rationale": "ABC101 may impose metabolic or toxic stress on cellular systems, and cumulative damage from such stress can accelerate physiological decline and reduce longevity in Caenorhabditis elegans.",
+      "prediction": "Caenorhabditis elegans exposed to ABC101 will show a statistically significant decrease in mean and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Synchronize worm populations, treat one cohort with ABC101 and a matched control with vehicle, and score survival daily under identical conditions until all animals die."
+    },
+    {
+      "id": 8,
+      "title": "Reserpine Extends Lifespan in C. elegans",
+      "claim": "Reserpine extends lifespan in Caenorhabditis elegans. Treatment with reserpine increases mean and maximum lifespan relative to untreated controls.",
+      "rationale": "Reserpine alters neurotransmitter dynamics and metabolic demand, and mild perturbation of neural and metabolic signaling can activate protective programs that delay aging in Caenorhabditis elegans.",
+      "prediction": "Caenorhabditis elegans exposed to reserpine will show a statistically significant increase in mean and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Synchronize worm populations, treat one cohort with reserpine and a matched control with vehicle, and score survival daily under identical conditions until all animals die."
+    },
+    {
+      "id": 9,
+      "title": "ABC101 Extends Lifespan via Insulin/IGF-1 Activation",
+      "claim": "ABC101 extends lifespan in Caenorhabditis elegans by activating the insulin/IGF-1 signaling pathway. The lifespan increase depends on activation of this pathway.",
+      "rationale": "The insulin/IGF-1 signaling pathway is a central regulator of aging in Caenorhabditis elegans, and its modulation governs stress resistance, metabolism, and longevity through conserved transcriptional programs.",
+      "prediction": "ABC101-treated Caenorhabditis elegans will live longer than controls, and the extension will be abolished when core components of the insulin/IGF-1 signaling pathway are removed or blocked.",
+      "experiment": "Compare lifespan of ABC101-treated wild-type worms with ABC101-treated worms carrying loss-of-function mutations in key insulin/IGF-1 signaling components, and measure pathway target gene expression in both conditions."
+    },
+    {
+      "id": 10,
+      "title": "Memantine Hydrochloride Extends Lifespan in C. elegans",
+      "claim": "Memantine Hydrochloride extends lifespan in Caenorhabditis elegans. Treatment with Memantine Hydrochloride increases mean and maximum lifespan relative to untreated controls.",
+      "rationale": "Memantine Hydrochloride modulates glutamatergic signaling through receptor antagonism, and dampening excitatory neurotransmission can reduce neural stress and engage longevity pathways in Caenorhabditis elegans.",
+      "prediction": "Caenorhabditis elegans exposed to Memantine Hydrochloride will show a statistically significant increase in mean and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Synchronize worm populations, treat one cohort with Memantine Hydrochloride and a matched control with vehicle, and score survival daily under identical conditions until all animals die."
+    }
+  ],
+  "assistant_notes": {}
+}

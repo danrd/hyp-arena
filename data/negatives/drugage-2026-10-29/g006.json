@@ -1,0 +1,96 @@
+{
+  "source": {
+    "family": "zhipu",
+    "model": "glm-5.3-flash",
+    "strategy": "negative-sampling",
+    "as_of": "2008-07-17",
+    "note": "labels are in labels.json",
+    "options": {
+      "dedup": false,
+      "lang": "en"
+    }
+  },
+  "hypotheses": [
+    {
+      "id": 1,
+      "title": "Sulindac Extends Lifespan in Mus musculus",
+      "claim": "Administration of sulindac extends lifespan in Mus musculus. Treated mice are expected to show a measurable increase in median and maximal lifespan relative to untreated controls.",
+      "rationale": "Sulindac modulates inflammatory and prostaglandin signaling, and reduced inflammatory tone is a recognized contributor to slower aging and prolonged survival in mammals.",
+      "prediction": "Mice receiving sulindac will exhibit significantly longer median and maximal lifespans than vehicle-treated controls.",
+      "experiment": "Randomize a sufficiently powered cohort of mice to sulindac or vehicle treatment and follow them until natural death, comparing lifespan distributions between groups."
+    },
+    {
+      "id": 2,
+      "title": "Medium-Chain Triglyceride Oil Extends Lifespan in Mus musculus",
+      "claim": "Dietary supplementation with medium-chain triglyceride oil extends lifespan in Mus musculus. Supplemented mice are expected to live longer than mice receiving an isocaloric control oil.",
+      "rationale": "Medium-chain triglycerides alter energy metabolism and ketone body availability, and improved metabolic flexibility is plausibly linked to delayed aging and extended survival in mammals.",
+      "prediction": "Mice fed medium-chain triglyceride oil will show significantly greater median and maximal lifespans than isocaloric controls.",
+      "experiment": "Assign large cohorts of mice to diets supplemented with medium-chain triglyceride oil or an isocaloric control oil and record lifespan until all animals have died."
+    },
+    {
+      "id": 3,
+      "title": "Early Nordihydroguaiaretic Acid Treatment Extends Lifespan in Mus musculus",
+      "claim": "Nordihydroguaiaretic acid extends lifespan in young Mus musculus when started before weaning. Early-treated mice are expected to outlive untreated controls.",
+      "rationale": "Intervening before weaning acts during a developmental window when metabolic and growth pathways are being set, so early modulation of lipoxygenase activity could produce durable changes that slow aging.",
+      "prediction": "Mice treated with nordihydroguaiaretic acid before weaning will display significantly longer lifespans than untreated controls.",
+      "experiment": "Begin nordihydroguaiaretic acid administration in pre-weaning pups and matched untreated controls, then rear both groups identically and compare lifespan distributions."
+    },
+    {
+      "id": 4,
+      "title": "Sulindac Extends Lifespan via Insulin/IGF-1 Signaling",
+      "claim": "Sulindac extends lifespan in Mus musculus through activation of the insulin/IGF-1 signaling pathway. The lifespan benefit of sulindac is expected to depend on this pathway's activity.",
+      "rationale": "The insulin/IGF-1 signaling pathway is a central regulator of aging in mammals, and its modulation can alter stress resistance, metabolism, and longevity, providing a mechanistic route by which sulindac could extend lifespan.",
+      "prediction": "Sulindac-treated mice will show altered insulin/IGF-1 pathway activity, and the lifespan extension will be abolished when the pathway's activity is prevented.",
+      "experiment": "Treat mice with sulindac or vehicle in the presence and absence of genetic or pharmacological blockade of insulin/IGF-1 signaling, then compare lifespans across all four groups."
+    },
+    {
+      "id": 5,
+      "title": "Dimethyl Fumarate Extends Lifespan in Mus musculus",
+      "claim": "Administration of dimethyl fumarate extends lifespan in Mus musculus. Treated mice are expected to show increased median and maximal lifespan relative to vehicle-treated controls.",
+      "rationale": "Dimethyl fumarate activates the Nrf2 antioxidant response, and enhanced cellular defense against oxidative stress is a biologically plausible route to slower aging and longer survival in mammals.",
+      "prediction": "Mice receiving dimethyl fumarate will exhibit significantly longer median and maximal lifespans than vehicle-treated controls.",
+      "experiment": "Randomize mice to dimethyl fumarate or vehicle treatment, maintain both groups under identical conditions, and compare lifespan distributions until all animals have died."
+    },
+    {
+      "id": 6,
+      "title": "Acetaminophen Extends Lifespan in Mus musculus",
+      "claim": "Administration of acetaminophen extends lifespan in Mus musculus. Treated mice are expected to live significantly longer than vehicle-treated controls.",
+      "rationale": "Acetaminophen influences inflammatory signaling and cellular stress responses, and mild modulation of these processes is a recognized potential mechanism for extending mammalian lifespan.",
+      "prediction": "Mice treated with acetaminophen will show significantly greater median and maximal lifespans than vehicle-treated controls.",
+      "experiment": "Assign a sufficiently powered cohort of mice to acetaminophen or vehicle and record survival until natural death, comparing lifespan distributions between groups."
+    },
+    {
+      "id": 7,
+      "title": "Nordihydroguaiaretic Acid Extends Lifespan in Mus musculus",
+      "claim": "Administration of nordihydroguaiaretic acid extends lifespan in Mus musculus. Treated mice are expected to show increased median and maximal lifespan relative to untreated controls.",
+      "rationale": "Nordihydroguaiaretic acid inhibits lipoxygenase activity and reduces lipid peroxidation, and diminished oxidative lipid damage is a biologically plausible contributor to delayed aging and longer survival in mammals.",
+      "prediction": "Mice receiving nordihydroguaiaretic acid will exhibit significantly longer median and maximal lifespans than untreated controls.",
+      "experiment": "Randomize mice to nordihydroguaiaretic acid or control treatment, rear both groups identically, and compare lifespan distributions until all animals have died."
+    },
+    {
+      "id": 8,
+      "title": "Sulindac Shortens Lifespan in Mus musculus",
+      "claim": "Administration of sulindac shortens lifespan in Mus musculus. Treated mice are expected to show reduced median and maximal lifespan relative to vehicle-treated controls.",
+      "rationale": "Sulindac inhibits prostaglandin synthesis broadly, and sustained disruption of prostaglandin-dependent tissue maintenance and repair processes could impose physiological costs that accelerate aging in mammals.",
+      "prediction": "Mice receiving sulindac will exhibit significantly shorter median and maximal lifespans than vehicle-treated controls.",
+      "experiment": "Randomize a sufficiently powered cohort of mice to sulindac or vehicle treatment and follow them until natural death, comparing lifespan distributions between groups."
+    },
+    {
+      "id": 9,
+      "title": "Nordihydroguaiaretic Acid Shortens Lifespan in Mus musculus",
+      "claim": "Administration of nordihydroguaiaretic acid shortens lifespan in Mus musculus. Treated mice are expected to show reduced median and maximal lifespan relative to untreated controls.",
+      "rationale": "Nordihydroguaiaretic acid broadly suppresses lipoxygenase-derived mediators involved in tissue homeostasis, and chronic disruption of these signaling functions could accumulate damage that accelerates aging in mammals.",
+      "prediction": "Mice treated with nordihydroguaiaretic acid will show significantly shorter median and maximal lifespans than untreated controls.",
+      "experiment": "Assign large cohorts of mice to nordihydroguaiaretic acid or control treatment, maintain both groups identically, and compare lifespan distributions until all animals have died."
+    },
+    {
+      "id": 10,
+      "title": "Nicotinamide Extends Lifespan in Mus musculus",
+      "claim": "Administration of nicotinamide extends lifespan in Mus musculus. Treated mice are expected to show increased median and maximal lifespan relative to vehicle-treated controls.",
+      "rationale": "Nicotinamide is a precursor of NAD+, and maintaining NAD+-dependent sirtuin and energy metabolism pathways is a biologically plausible route to slower aging and extended survival in mammals.",
+      "prediction": "Mice receiving nicotinamide will exhibit significantly longer median and maximal lifespans than vehicle-treated controls.",
+      "experiment": "Randomize mice to nicotinamide or vehicle treatment, rear both groups under identical conditions, and record survival until natural death for comparison of lifespan distributions."
+    }
+  ],
+  "assistant_notes": {}
+}

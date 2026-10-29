@@ -1,0 +1,96 @@
+{
+  "source": {
+    "family": "zhipu",
+    "model": "glm-5.3-flash",
+    "strategy": "negative-sampling",
+    "as_of": "2004-07-13",
+    "note": "labels are in labels.json",
+    "options": {
+      "dedup": false,
+      "lang": "en"
+    }
+  },
+  "hypotheses": [
+    {
+      "id": 1,
+      "title": "Palmostatin B Extends Lifespan in C. elegans",
+      "claim": "Treatment with palmostatin B extends the lifespan of Caenorhabditis elegans. The compound increases median and maximal survival relative to untreated controls.",
+      "rationale": "Modulating protein depalmitoylation can correct signaling localization and reduce age-related cellular dysfunction. Such restoration of proteostasis may slow aging in C. elegans.",
+      "prediction": "Palmostatin B–treated worms will show a statistically significant increase in median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Synchronize worm populations, treat one cohort with palmostatin B and one with vehicle from the young adult stage, and perform a blinded survival assay with Kaplan–Meier analysis."
+    },
+    {
+      "id": 2,
+      "title": "Resveratrol Extends Lifespan in C. elegans",
+      "claim": "Treatment with resveratrol extends the lifespan of Caenorhabditis elegans. The polyphenol increases median and maximal survival relative to untreated controls.",
+      "rationale": "Resveratrol activates sirtuin-linked stress responses and mimics caloric restriction at the cellular level. These conserved pathways can slow aging in C. elegans.",
+      "prediction": "Resveratrol-treated worms will show a statistically significant increase in median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Synchronize worm populations, treat one cohort with resveratrol and one with vehicle from the young adult stage, and perform a blinded survival assay with Kaplan–Meier analysis."
+    },
+    {
+      "id": 3,
+      "title": "MJN202 Extends Lifespan in C. elegans",
+      "claim": "Treatment with MJN202 extends the lifespan of Caenorhabditis elegans. The compound increases median and maximal survival relative to untreated controls.",
+      "rationale": "Small molecules that enhance cellular stress resistance can engage conserved longevity pathways. Such engagement may prolong survival in C. elegans.",
+      "prediction": "MJN202-treated worms will show a statistically significant increase in median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Synchronize worm populations, treat one cohort with MJN202 and one with vehicle from the young adult stage, and perform a blinded survival assay with Kaplan–Meier analysis."
+    },
+    {
+      "id": 4,
+      "title": "NSC666076 Extends Lifespan in C. elegans",
+      "claim": "Treatment with NSC666076 extends the lifespan of Caenorhabditis elegans. The compound increases median and maximal survival relative to untreated controls.",
+      "rationale": "Inhibiting NAD+ consumption preserves cellular energy balance and supports DNA repair capacity. Maintained NAD+ availability can slow aging processes in C. elegans.",
+      "prediction": "NSC666076-treated worms will show a statistically significant increase in median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Synchronize worm populations, treat one cohort with NSC666076 and one with vehicle from the young adult stage, and perform a blinded survival assay with Kaplan–Meier analysis."
+    },
+    {
+      "id": 5,
+      "title": "D-Xylitol Extends Lifespan in C. elegans",
+      "claim": "Supplementation with D-xylitol extends the lifespan of Caenorhabditis elegans. The sugar alcohol increases median and maximal survival relative to untreated controls.",
+      "rationale": "D-xylitol alters carbohydrate metabolism and may promote mild metabolic stress that activates longevity pathways. Such metabolic conditioning can extend survival in C. elegans.",
+      "prediction": "D-xylitol-supplemented worms will show a statistically significant increase in median and maximum lifespan compared with unsupplemented controls.",
+      "experiment": "Synchronize worm populations, supplement one cohort's agar plates with D-xylitol and one with vehicle from the young adult stage, and perform a blinded survival assay with Kaplan–Meier analysis."
+    },
+    {
+      "id": 6,
+      "title": "Resveratrol Extends Lifespan via DAF-2 Pathway Activation",
+      "claim": "Resveratrol extends the lifespan of Caenorhabditis elegans by activating the insulin/IGF-1 receptor DAF-2 pathway. The effect on survival depends on DAF-2 signaling activity.",
+      "rationale": "The DAF-2 pathway controls conserved downstream effectors of aging, including FOXO-dependent stress responses. Modulation of this receptor can therefore reshape lifespan in C. elegans.",
+      "prediction": "Resveratrol will fail to extend lifespan in daf-2 loss-of-function mutants while extending lifespan in wild-type worms.",
+      "experiment": "Treat wild-type and daf-2 mutant worms with resveratrol or vehicle, run parallel lifespan assays, and compare the magnitude of lifespan extension across genotypes."
+    },
+    {
+      "id": 7,
+      "title": "NSC666076 Extends Lifespan via PARP Inhibition",
+      "claim": "NSC666076 extends the lifespan of Caenorhabditis elegans by inhibiting poly(ADP-ribose) polymerase and reducing NAD+ depletion. The effect on survival depends on PARP activity.",
+      "rationale": "PARP enzymes consume NAD+ during DNA repair, and excessive NAD+ loss impairs mitochondrial function and sirtuin signaling. Limiting this consumption can preserve metabolic fitness during aging in C. elegans.",
+      "prediction": "NSC666076 will maintain higher NAD+ levels and extend lifespan in wild-type worms, but not in worms with constitutively low PARP activity.",
+      "experiment": "Measure NAD+ concentrations and perform lifespan assays in wild-type and PARP-deficient worms treated with NSC666076 or vehicle, and compare outcomes across groups."
+    },
+    {
+      "id": 8,
+      "title": "Resveratrol Shortens Lifespan in C. elegans",
+      "claim": "Treatment with resveratrol shortens the lifespan of Caenorhabditis elegans. The compound decreases median and maximal survival relative to untreated controls.",
+      "rationale": "Resveratrol can disrupt metabolic homeostasis and impose bioenergetic stress at effective doses. Such stress may accelerate functional decline in C. elegans.",
+      "prediction": "Resveratrol-treated worms will show a statistically significant decrease in median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Synchronize worm populations, treat one cohort with resveratrol and one with vehicle from the young adult stage, and perform a blinded survival assay with Kaplan–Meier analysis."
+    },
+    {
+      "id": 9,
+      "title": "Vortioxetine Extends Lifespan in C. elegans",
+      "claim": "Treatment with vortioxetine extends the lifespan of Caenorhabditis elegans. The compound increases median and maximal survival relative to untreated controls.",
+      "rationale": "Vortioxetine modulates serotonergic signaling, which regulates feeding, stress responses, and behavior in C. elegans. Adjusting these neuromodulatory pathways can influence aging rate.",
+      "prediction": "Vortioxetine-treated worms will show a statistically significant increase in median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Synchronize worm populations, treat one cohort with vortioxetine and one with vehicle from the young adult stage, and perform a blinded survival assay with Kaplan–Meier analysis."
+    },
+    {
+      "id": 10,
+      "title": "NSC666076 Shortens Lifespan in C. elegans",
+      "claim": "Treatment with NSC666076 shortens the lifespan of Caenorhabditis elegans. The compound decreases median and maximal survival relative to untreated controls.",
+      "rationale": "Excessive suppression of PARP activity can impair necessary DNA repair and destabilize NAD+ metabolism. Such disruption may accelerate functional decline in C. elegans.",
+      "prediction": "NSC666076-treated worms will show a statistically significant decrease in median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Synchronize worm populations, treat one cohort with NSC666076 and one with vehicle from the young adult stage, and perform a blinded survival assay with Kaplan–Meier analysis."
+    }
+  ],
+  "assistant_notes": {}
+}
