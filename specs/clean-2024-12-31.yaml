@@ -1,0 +1,47 @@
+# L3.3 (main test) and L3.9 (clean half) on the ITP + CITP pool with T = 2024-12-31, without an LLM verifier.
+# Fixed before the run (user decisions 2026-10-29: policy "no model reads the pool"; all 33 tests; units as below).
+# Code: scripts/clean_backtest.py (committed together with this file). Criteria: specs/validation-criteria.yaml (L3.3, L3.9).
+id: clean-backtest-2024-12-31
+kind: backtest
+as_of: "2024-12-31"
+K: 10000
+k_top: 3
+max_calls: 400
+pool: {file: data/backtest/outcomes_2024-12-31.json, sha256_prefix: "84167075786d3260"}
+labels: {file: data/backtest/outcomes_2024-12-31_labels.json, sha256_prefix: "0a756e57fef67c2a"}
+
+policy:
+  models: none                       # no normalizer, no verifier, no judge: a run with any model call is refused by the script
+  cards: "by code from the hypothesis text (compound, species, strain, start age, dose wording); the labels file is not read before evaluation"
+  sources: [drugage_curated_papers_public_by_T, chembl_first_approval_year, clinicaltrials_gov_start_before_T]
+  pubmed: off
+  probes: "one claim per other DrugAge species (mouse, Caenorhabditis elegans, Drosophila melanogaster): the same intervention extends lifespan there; role analog, added in the verifier layer"
+  disclosure: "before choosing the probes the author saw, per pool compound, the counts of DrugAge rows by species before T next to the labels (pool inspection for the known-result estimate). The probes are the same for every item and were chosen so that curated records of other species reach the ranking at all; the choice was not blind."
+
+units:
+  tests: all 33                      # set clean (31) and historical (2: tamibarotene, bakuchiol, both public 2025-02-12, after T); with no model, clean = public after T
+  L3.3: per regimen (test)           # 33 units before known results are left out
+  L3.9: per compound                 # 31 compounds (cinnarizine and meclizine have two regimens each; a compound is positive if any regimen is)
+  known_results: "left out of both metrics and listed apart (outcome known_result of the pipeline: an exact supported finding by T)"
+  filtered: bottom of both orders
+  min_units: "30 scored units and 8 positives after known results are left out, in the unit of each test; below that the status is uninformative whatever the value"
+
+L3.3:
+  profile: evidence_first
+  dropped_indicators: [late_start]
+  primary_metric: tied_auc_per_regimen
+  tie_rule: abs(dE) < 1.96 * sqrt((sa^2 + sb^2) / K)
+  test: one-sided label permutation over scored units, 10000 permutations, seed 0
+  status: "pass: p < 0.05; fail: upper bound of the 95% bootstrap interval below 0.60; else inconclusive; uninformative by min_units"
+  secondary: [spearman with effect size, precision at 3, calibration of P(A>B) of the full profile (Brier, reliability)]
+
+L3.9:
+  naive_order: "path_to_human only: level 0 first, then 1, unknown after the last level, filtered lowest; ties count 0.5"
+  metric: "paired difference of tie-aware AUC (our rank minus naive order) over compounds, 95% bootstrap interval, 10000 draws resampling compounds, seed 0"
+  status: "pass: interval above 0; fail: point difference not above 0; else not proven; uninformative by min_units"
+
+expectations_before_run:
+  - "L3.9: our rank and the naive order are expected to be close by construction: without PubMed and the verifier the rank keeps mostly structural indicators, and path_to_human is one of them. A difference near 0 is the likely outcome and says little about the full pipeline."
+  - "L3.3: with 8 positives the test detects only AUC of about 0.78 or more with 80% power; the likely outcome is inconclusive."
+  - "Berberine (a positive) has curated C. elegans records before T; if the pipeline marks it a known result, 7 positives remain and L3.3 is uninformative."
+  - "The result concerns the structural skeleton of the method (curated records and safety data), not the full pipeline with PubMed evidence; the report says so."
