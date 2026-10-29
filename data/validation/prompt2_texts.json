@@ -1,0 +1,109 @@
+{
+ "items": [
+  {
+   "id": "imp061",
+   "compound": "Rapamycin",
+   "O_full": "Dietary Rapamycin (at 42 ppm food every other month, started at 20 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Rapamycin (at 42 ppm food every other month, started at 20 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O": "Dietary Rapamycin (at 42 ppm food every other month, started at 20 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "T": "Dietary rapamycin 42 ppm food q.o.m., start 20 mo → ↑ median lifespan, UM-HET3 mice, ≥1 sex."
+  },
+  {
+   "id": "imp030",
+   "compound": "Fisetin",
+   "O_full": "Dietary Fisetin (at 600 ppm food fed on a repeated cycle of 3 days on and 11 days off, started at 20 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Fisetin (at 600 ppm food fed on a repeated cycle of 3 days on and 11 days off, started at 20 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O": "Dietary Fisetin (at 600 ppm food fed on a repeated cycle of 3 days on and 11 days off, started at 20 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "T": "Dietary Fisetin 600 ppm food, 3 d on/11 d off cycle, start 20 mo → ↑ median lifespan, UM-HET3 mice, ≥1 sex."
+  },
+  {
+   "id": "imp046",
+   "compound": "Minocycline",
+   "O_full": "Dietary Minocycline (at 300 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Minocycline (at 300 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O": "Dietary Minocycline (at 300 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "T": "Minocycline 300 ppm diet, start 6 mo → ↑ median lifespan, UM-HET3 mice, ≥1 sex."
+  },
+  {
+   "id": "imp037",
+   "compound": "Hydralazine",
+   "O_full": "Dietary Hydralazine (at 30 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Hydralazine (at 30 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O": "Dietary Hydralazine (at 30 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "T": "Dietary Hydralazine 30 ppm food, start 6 mo → ↑ median lifespan, UM-HET3 mice, ≥1 sex."
+  },
+  {
+   "id": "imp049",
+   "compound": "Nebivolol",
+   "O_full": "Dietary Nebivolol (at 60 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Nebivolol (at 60 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O": "Dietary Nebivolol (at 60 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "T": "Dietary Nebivolol 60 ppm food, start 6 mo → extends median lifespan, UM-HET3 mice, ≥1 sex."
+  },
+  {
+   "id": "imp031",
+   "compound": "Fish oil",
+   "O_full": "Dietary Fish oil (at 15000 ppm food, started at 9 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Fish oil (at 15000 ppm food, started at 9 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O": "Dietary Fish oil (at 15000 ppm food, started at 9 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "T": "Dietary fish oil 15000 ppm food, start 9 mo → extends median lifespan, UM-HET3 mice, ≥1 sex."
+  },
+  {
+   "id": "imp025",
+   "compound": "Captopril",
+   "O_full": "Dietary Captopril (at 180 ppm food, started at 5 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Captopril (at 180 ppm food, started at 5 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O": "Dietary Captopril (at 180 ppm food, started at 5 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "T": "Captopril 180 ppm diet, start 5 mo → ↑ median lifespan, UM-HET3 mice, ≥1 sex."
+  },
+  {
+   "id": "imp064",
+   "compound": "SG1002 (hydrogen sulfide donor)",
+   "O_full": "Dietary SG1002 (hydrogen sulfide donor) (at 240 ppm food, started at 5-9 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary SG1002 (hydrogen sulfide donor) (at 240 ppm food, started at 5-9 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O": "Dietary SG1002 (hydrogen sulfide donor) (at 240 ppm food, started at 5-9 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "T": "SG1002 (H2S donor) 240 ppm food, start 5-9 mo → ↑ median lifespan, UM-HET3 mice, ≥1 sex."
+  },
+  {
+   "id": "imp003",
+   "compound": "17-dimethylaminoethylamino-17-demethoxygeldanamycin hydrochloride",
+   "O_full": "Dietary 17-dimethylaminoethylamino-17-demethoxygeldanamycin hydrochloride (at 30 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary 17-dimethylaminoethylamino-17-demethoxygeldanamycin hydrochloride (at 30 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O": "Dietary 17-dimethylaminoethylamino-17-demethoxygeldanamycin hydrochloride (at 30 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "T": "17-DMAG HCl 30 ppm diet, start 6 mo → ↑ median lifespan, UM-HET3 mice, ≥1 sex"
+  },
+  {
+   "id": "imp009",
+   "compound": "2-(2-hydroxyphenyl)benzothiazole",
+   "O_full": "Dietary 2-(2-hydroxyphenyl)benzothiazole (at 1 ppm food, started at 15 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary 2-(2-hydroxyphenyl)benzothiazole (at 1 ppm food, started at 15 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O": "Dietary 2-(2-hydroxyphenyl)benzothiazole (at 1 ppm food, started at 15 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "T": "Dietary 2-(2-hydroxyphenyl)benzothiazole, 1 ppm food, start 15 mo → ↑ median lifespan, UM-HET3 mice, ≥1 sex."
+  },
+  {
+   "id": "imp051",
+   "compound": "Nordihydroguaiaretic acid",
+   "O_full": "Dietary Nordihydroguaiaretic acid (at 2500 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Nordihydroguaiaretic acid (at 2500 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O": "Dietary Nordihydroguaiaretic acid (at 2500 ppm food, started at 6 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "T": "Dietary Nordihydroguaiaretic acid 2500 ppm food, start 6 mo → ↑ median lifespan, UM-HET3 mice, ≥1 sex."
+  },
+  {
+   "id": "imp006",
+   "compound": "17‐alpha‐estradiol",
+   "O_full": "Dietary 17‐alpha‐estradiol (at 14.4 ppm food, started at 20 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary 17‐alpha‐estradiol (at 14.4 ppm food, started at 20 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O": "Dietary 17‐alpha‐estradiol (at 14.4 ppm food, started at 20 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "T": "17α-estradiol 14.4 ppm diet, start 20 mo → ↑ median lifespan, UM-HET3 mice, ≥1 sex"
+  },
+  {
+   "id": "imp048",
+   "compound": "Mycophenolic acid",
+   "O_full": "Dietary Mycophenolic acid (at 6.7 ppm food, started at 9 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Mycophenolic acid (at 6.7 ppm food, started at 9 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O": "Dietary Mycophenolic acid (at 6.7 ppm food, started at 9 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "T": "Dietary mycophenolic acid 6.7 ppm food, start 9 mo → extends median lifespan, UM-HET3 mice, ≥1 sex."
+  },
+  {
+   "id": "imp070",
+   "compound": "Ursolic  acid",
+   "O_full": "Dietary Ursolic  acid (at 2000 ppm food, started at 10 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Ursolic  acid (at 2000 ppm food, started at 10 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O": "Dietary Ursolic  acid (at 2000 ppm food, started at 10 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "T": "Dietary ursolic acid 2000 ppm food, start 10 mo → extends median lifespan, UM-HET3 mice, ≥1 sex."
+  },
+  {
+   "id": "imp017",
+   "compound": "Aspirin",
+   "O_full": "Dietary Aspirin (at 200 ppm food, started at 11 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.\n\nHypothesis: Dietary Aspirin (at 200 ppm food, started at 11 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "O": "Dietary Aspirin (at 200 ppm food, started at 11 months) extends the median lifespan of genetically heterogeneous UM-HET3 mice of at least one sex.",
+   "T": "Diet Aspirin 200 ppm food, start 11 mo → ↑ median lifespan, UM-HET3 mice (genetically heterogeneous), ≥1 sex."
+  }
+ ]
+}
