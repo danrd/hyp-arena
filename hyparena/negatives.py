@@ -80,9 +80,11 @@ def _key(*parts) -> str:
     return hashlib.sha1(":".join(map(str, parts)).encode()).hexdigest()
 
 
-def select(rows: list[dict], n_groups: int, size: int, min_pubs: int = 2, seed: int = 0) -> list[dict]:
+def select(rows: list[dict], n_groups: int, size: int, min_pubs: int = 2, seed: int = 0,
+           exclude: frozenset = frozenset()) -> list[dict]:
     """Confirmed findings and real negatives from DrugAge rows, round-robin over species so that one model
-    organism does not fill the test."""
+    organism does not fill the test. `exclude`: (compound, species) findings already used (groups the rules were
+    fixed on), never chosen again."""
     stats = defaultdict(lambda: {"pos": set(), "ns": set(), "sig_neg": False, "sig": False})
     for r in rows:
         st = stats[(r["compound_name"].strip(), r["species"].strip())]
@@ -101,7 +103,8 @@ def select(rows: list[dict], n_groups: int, size: int, min_pubs: int = 2, seed: 
             negatives[species].append({"compound": compound, "pmids": sorted(st["ns"])})
     positives = defaultdict(list)
     for (compound, species), st in stats.items():
-        if len(st["pos"]) >= min_pubs and not st["sig_neg"] and len(negatives[species]) >= size:
+        if len(st["pos"]) >= min_pubs and not st["sig_neg"] and len(negatives[species]) >= size \
+                and (compound, species) not in exclude:
             positives[species].append({"compound": compound, "species": species, "pmids": sorted(st["pos"])})
     for species in positives:
         positives[species].sort(key=lambda p: _key(seed, p["compound"], species))
@@ -169,7 +172,9 @@ def build(args) -> None:
             raise SystemExit(f"--{role} {fam} is not an enabled family in {args.config}: {families}")
     if args.writer == args.verifier:
         raise SystemExit("the verifier must be from another family than the writer")
-    groups = select(drugage_rows(), args.groups, args.size, args.min_pubs, args.seed)
+    used = frozenset((x["compound"], g["species"]) for f in args.exclude_from
+                     for g in json.loads(Path(f).read_text()).values() for x in g["items"].values() if x["label"] == 1)
+    groups = select(drugage_rows(), args.groups, args.size, args.min_pubs, args.seed, used)
     dates = _pubdates(sorted({p for g in groups for p in g["positive"]["pmids"]}))
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -306,7 +311,7 @@ def listwise(args) -> None:
     client, pool = _client(args)
     families = args.families.split(",") if args.families else [j.family for j in pool]
     for fam in families:
-        out = Path(args.out_dir) / f"list-{fam}"
+        out = Path(args.out_dir) / (f"list-{fam}" + (f"-{args.tag}" if args.tag else ""))
         out.mkdir(parents=True, exist_ok=True)
         for gid in gids:
             if fam == labels[gid]["writer"]:
@@ -437,6 +442,7 @@ def main() -> None:
     b.add_argument("--writer", required=True, help="family that writes all hypotheses of a group")
     b.add_argument("--verifier", required=True, help="family that checks synthetic negatives (not the writer)")
     b.add_argument("--out", default=str(DATA / "drugage"))
+    b.add_argument("--exclude-from", nargs="*", default=[], help="labels.json of earlier builds: their findings are not chosen again")
     r = sub.add_parser("run", parents=[data])
     r.add_argument("--steps", default="L0,L4")
     r.add_argument("--seeds", default="0")
@@ -451,6 +457,7 @@ def main() -> None:
     r.add_argument("--execute", action="store_true", help="run the commands (default: print them)")
     lw = sub.add_parser("listwise", parents=[llm, data])
     lw.add_argument("--families", default=None)
+    lw.add_argument("--tag", default="", help="suffix of the output directory (a repeat)")
     lw.add_argument("--out-dir", default=str(RUNS))
     v = sub.add_parser("v2", parents=[data], help="our method v2 on every group")
     v.add_argument("--config", default="configs/v2.yaml")
