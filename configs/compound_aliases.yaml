@@ -1,0 +1,25 @@
+# Standard abbreviations of compounds that the longevity literature uses, mapped to a full name the compound lookup knows.
+# An abbreviation that is not here stays unresolved (no identifier, no curated records): see docs/rules-method.md (Нормализатор:
+# каноникализация и сокращения). Keys are compared with `compounds.key` (lower case, letters and digits only); add only abbreviations
+# with one meaning in this field. The card keeps the label as the text wrote it; the alias is used only to find the compound.
+aliases:
+  DNP: 2,4-dinitrophenol
+  MB: methylene blue
+  β-GPA: beta-guanidinopropionic acid
+  GPA: beta-guanidinopropionic acid
+  NDGA: nordihydroguaiaretic acid
+  NAC: N-acetylcysteine
+  NMN: nicotinamide mononucleotide
+  AKG: alpha-ketoglutarate
+  α-KG: alpha-ketoglutarate
+  CoQ10: coenzyme Q10
+  EGCG: epigallocatechin gallate
+  BHT: butylated hydroxytoluene
+  DHEA: dehydroepiandrosterone
+  TUDCA: tauroursodeoxycholic acid
+  4-PBA: 4-phenylbutyrate
+  HMB: beta-hydroxy-beta-methylbutyrate
+  17α-E2: 17-alpha-estradiol
+  17aE2: 17-alpha-estradiol
+  17-DMAG: alvespimycin
+  17-DMAG HCl: alvespimycin

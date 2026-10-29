@@ -28,8 +28,15 @@ PARAPHRASE_PROMPT = (
     "rewritten text, with no preamble.\n\nHypothesis:\n{text}\n")
 
 
+GREEK = {"α": "alpha", "β": "beta", "γ": "gamma", "δ": "delta", "ω": "omega"}
+
+
 def _norm(v) -> str:
-    return re.sub(r"[^a-z0-9]+", "", str(v or "").lower())
+    """Letters and digits only, Greek letters spelled out ("17α-estradiol" = "17-alpha-estradiol")."""
+    t = str(v or "").lower()
+    for g, latin in GREEK.items():
+        t = t.replace(g, latin)
+    return re.sub(r"[^a-z0-9]+", "", t)
 
 
 def select() -> list[dict]:
@@ -55,9 +62,15 @@ def select() -> list[dict]:
     return out
 
 
+def main_index(card: dict) -> int:
+    """Index of the outcome claim (the main one); the first claim when none has the role. L1.8 and L1.9 took the first claim, which is a
+    premise when the normalizer lists a mechanism first (INT-767d): fixed here for the repeat of both checks."""
+    return next((i for i, c in enumerate(card["claims"]) if c.get("role") == "outcome"), 0)
+
+
 def facets(card: dict) -> dict:
     """Four facets of the main claim: subject, relation, object, context (the qualifiers of the claim)."""
-    c = card["claims"][0]
+    c = card["claims"][main_index(card)]
     q = c.get("qualifiers") or {}
     return {"subject": _norm(c["subject"]["label"]), "relation": c["relation"], "object": _norm(c["object"]["label"]),
             "context": tuple(_norm(q.get(k)) for k in ("species", "strain", "sex", "dose", "age_at_start", "measure"))}
@@ -76,7 +89,8 @@ def summarize(res: dict) -> dict:
     out = []
     for x in res["items"]:
         cl = (x.get("verification") or {}).get("claims") or []
-        out.append({"outcome": x["outcome"], "status": cl[0]["status"] if cl else None, "place": pl.get(x["id"]),
+        k = main_index(x["card"]) if x.get("card") else 0
+        out.append({"outcome": x["outcome"], "status": cl[k]["status"] if len(cl) > k else None, "place": pl.get(x["id"]),
                     "facets": facets(x["card"]) if x.get("card") else None})
     return {"items": out}
 

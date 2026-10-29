@@ -111,4 +111,18 @@ def flag(record, text: str = "", strain: str = "") -> None:
             record.notes = f"{record.notes}; {note}" if record.notes else note
 
 
+GENOTYPE = re.compile(
+    r"\b(?:mutants?|knock-?outs?|knock-?downs?|null\s+(?:alleles?|mutants?)|loss[- ]of[- ]function|transgenic|hypomorph\w*)\b"
+    r"|\b[a-z]{3,4}-\d+\s*\([a-z]{1,3}\d+\)"          # worm alleles: daf-16(mu86), daf-2(e1370)
+    r"|[-−–]/[-−–]|\+/[-−–]",                              # mouse genotypes: -/-, +/-
+    re.I)
+
+
+def genotype_in(text: str) -> str:
+    """The words of a text that name a mutant or engineered genotype ("daf-16(mu86)", "knockout", "-/-"), or an empty string. Used by the offline
+    evaluation of a mutant-context rule (scripts/extraction_fixes_eval.py); the rule itself was not adopted (docs/rules-method.md, L1.17)."""
+    m = GENOTYPE.search(text or "")
+    return m.group(0) if m else ""
+
+
 CONTEXT_FLAGS = {"special_diet"}                      # flags that still only qualify an effect level (disease and ageing models do not enter it)

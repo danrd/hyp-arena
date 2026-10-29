@@ -11,9 +11,10 @@ from pydantic import ValidationError
 
 from hyparena.card.llm import ask
 from hyparena.card.models import Hallmark, HypothesisCard, Relation
+from hyparena.card.canonical import canonicalize
 from hyparena.card.rules import mark_inherited, set_sex_scope, validate_card
 
-TEMPLATE = ("normalize_card", "v5")
+TEMPLATE = ("normalize_card", "v6")       # v6 adopted 2026-10-29 by the user's decision, see docs/rules-method.md
 
 # relations an outcome claim can take, with the words that point to them (for the re-parse hint, spec 5)
 OUTCOME_RELATIONS = {
@@ -44,16 +45,17 @@ def _problems(value: dict, raw_text: str, card_id: str) -> tuple[Optional[Hypoth
     except ValidationError as e:
         return None, [f"{'.'.join(map(str, err['loc']))}: {err['msg']}" for err in e.errors()[:12]]
     set_sex_scope(card, raw_text)                       # `any` from the words "at least one sex" when the model left it out
+    canonicalize(card)                                  # dose and age in one wording (L1.8)
     return mark_inherited(card), validate_card(card, raw_text)
 
 
 def normalize(client, family: str, raw_text: str, card_id: str, log: Optional[list] = None,
-              rounds: int = 3) -> tuple[Optional[HypothesisCard], list[str]]:
+              rounds: int = 3, version: Optional[str] = None) -> tuple[Optional[HypothesisCard], list[str]]:
     """(card or None, remaining problems). An outcome claim with relation `other` gets one re-parse with a hint
     listing the nearest vocabulary relations (spec 5); if it stays `other`, admission flags it."""
     variables = {"text": raw_text, "relations": ", ".join(typing.get_args(Relation)),
                  "hallmarks": ", ".join(typing.get_args(Hallmark)), "hint": ""}
-    run = lambda v: ask(client, role="normalize_card", family=family, template=TEMPLATE[0], version=TEMPLATE[1],
+    run = lambda v: ask(client, role="normalize_card", family=family, template=TEMPLATE[0], version=version or TEMPLATE[1],
                         variables=v, validate=lambda x: _problems(x, raw_text, card_id)[1], rounds=rounds, log=log)[0]
     value = run(variables)
     if value is None:
