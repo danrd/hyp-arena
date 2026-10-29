@@ -1,0 +1,58 @@
+# Negative-sampling test on 20 new groups, 3 repeats of every arm: L2.1b, L2.2b, L3.6b (specs/validation-criteria.yaml).
+# Fixed before the first model call (user decision 2026-10-29: 20 groups x 3 repeats). Code: hyparena/negatives.py.
+id: negatives-2026-10-29
+kind: negative_sampling
+
+groups:
+  source: DrugAge (current release), hyparena.negatives.select
+  n: 20
+  size: 10
+  min_pubs: 2
+  seed: 0
+  exclude: "findings of the six groups the rules were fixed on (data/negatives/drugage/labels.json: vitamin D3, black tea extract, 17-alpha-estradiol, ethosuximide, carnosine, spermidine); real negatives may repeat"
+  expected_species: {worm: 8, fly: 8, mouse: 4}
+  build: {config: configs/paid-test.yaml, writer: zhipu, verifier: google, variants: 2, min_confidence: 0.7}
+  as_of: "per group: the day before the first publication of the finding (evidence cut for every arm that retrieves)"
+  out: data/negatives/drugage-2026-10-29
+
+arms:
+  v2:
+    what: our method (cards, verifier, rules, aggregation), profile evidence_first
+    config: configs/v2-flash.yaml
+    verifiers: [deepseek]
+    repeats: "r0 normalizes and verifies; r1 and r2 reuse the cards of r0 (--cards-from) and repeat verification and ranking. Reason: the normalizer agreed fully with itself under repeats of the same text (L1.8, L1.9), and it is the costliest call (Gemini 3.5 Flash)."
+  L0:
+    what: Co-Scientist-style tournament, one family (hyparena.ladder L0)
+    config: configs/neg-l0-deepseek.yaml
+    repeats: "seeds 0, 1, 2"
+    cycles: 20
+    matches: 3
+    budget: "--max-tokens = mean tokens per group of the v2 arm in this run (all repeats), rounded up to 10 000; the tournament stops at a cycle boundary"
+    search: europepmc
+  listwise:
+    what: one call ranks the whole group (no tournament)
+    config: configs/v2-flash.yaml
+    families: {primary: deepseek, secondary: google}
+    repeats: "three calls per group and family (tags r0, r1, r2)"
+    budget: "not equal to v2: about one call per group; recorded, not corrected"
+
+metrics:
+  per_group: "AUC of the finding against the nine negatives (share ranked below it), hit@1, MRR; repeats averaged per group"
+  paired: "difference of per-group AUC (A minus B), 95% bootstrap interval resampling groups, 10 000 draws, seed 0"
+  per_kind: "share of each kind of negative ranked below the finding (reported, no criterion)"
+
+criteria:
+  L2.1b: "v2 minus L0: pass if the interval is above 0; not passed if it is entirely below 0; otherwise not proven"
+  L2.2b: "v2 minus listwise (deepseek): pass if the interval is above 0; not passed if entirely below 0; otherwise not proven (google reported apart)"
+  L3.6b: "v2 alone: pass if the lower bound of the hit@1 interval is above 0.10 and the lower bound of the AUC interval is above 0.5; not passed if the upper bound of the AUC interval is below 0.5; otherwise not proven"
+  min_units: "20 groups with a complete result in every arm; fewer: uninformative"
+
+interpretation:
+  - "Rule A1: every finding was published before the cutoff of every model used (1982-2021), so judges may remember it, and our method cuts its evidence by date but the judges of L0 and listwise do not. A win of v2 is conservative; a tie or a loss may reflect memory, and is recorded with that reading."
+  - "With evidence cut the day before the finding, v2 usually leaves the finding unverified (42 of 50 items in the 2026-10-20 run), and its order among unverified items is noise; it abstains by design, while this test rewards a guess. The likely outcome for L3.6b and L2.1b is not proven."
+  - "Synthetic negatives are labelled false by a verifier model (google), real negatives by DrugAge data."
+
+cost:
+  estimate_usd: "about 12 (build 0.1; v2 7: 200 normalizer calls on Gemini 3.5 Flash and about 1300 verifier calls on DeepSeek; L0 about 4; listwise about 1.3); up to 2x on DeepSeek in its weekday peak hours"
+  cap_usd: 20
+  rule: "an arm whose running estimate passes the cap is stopped and reported as incomplete"

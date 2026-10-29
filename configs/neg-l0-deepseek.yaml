@@ -1,0 +1,16 @@
+# Co-Scientist baseline (L0) on the negative-sampling groups of 2026-10-29 (specs/negatives-2026-10-29.yaml), through
+# CometAPI (COMET_API_KEY, ALLOW_PAID=1). One family, as in Co-Scientist: DeepSeek V4.1 Flash, the same pinned snapshot as
+# the verifier of method v2 (configs/v2-flash.yaml), so both arms run on a model of the same tier and price.
+rpm: 30
+concurrency: 4
+generation:
+  temperature: 0.2
+  max_tokens: 4000
+timeout: 150
+max_retries: 0
+deadline: 180
+models:
+  # thinking off: with thinking on, the model spends the whole output budget on hidden reasoning in about half of the
+  # calls through CometAPI (tested 2026-10-20); off, a call takes about 5 s and 800 tokens
+  - {family: deepseek, provider: cometapi, model: "deepseek-v4.1-flash-1017", tier: paid, api_key_env: COMET_API_KEY,
+     generation: {max_tokens: 4000, extra_body: {thinking: {type: disabled}}}}
