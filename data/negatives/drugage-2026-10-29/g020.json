@@ -1,0 +1,96 @@
+{
+  "source": {
+    "family": "zhipu",
+    "model": "glm-5.3-flash",
+    "strategy": "negative-sampling",
+    "as_of": "2011-03-31",
+    "note": "labels are in labels.json",
+    "options": {
+      "dedup": false,
+      "lang": "en"
+    }
+  },
+  "hypotheses": [
+    {
+      "id": 1,
+      "title": "Promethazine Extends Lifespan in Drosophila",
+      "claim": "Promethazine extends lifespan in Drosophila melanogaster. The compound increases median and maximum survival relative to untreated controls.",
+      "rationale": "Promethazine modulates histaminergic and dopaminergic signaling and reduces oxidative stress, pathways implicated in aging regulation across animals.",
+      "prediction": "Flies receiving promethazine will show statistically significant increases in median and maximum lifespan compared with vehicle controls.",
+      "experiment": "Run a standard survival assay with age-synchronized flies on food with and without promethazine, using multiple doses, and analyze mortality curves with log-rank statistics."
+    },
+    {
+      "id": 2,
+      "title": "Procaine HCl Shortens Lifespan in Drosophila",
+      "claim": "Procaine HCl shortens lifespan in Drosophila melanogaster. The compound decreases median and maximum survival relative to untreated controls.",
+      "rationale": "Procaine HCl alters membrane excitability and local anesthetic pathways, and chronic perturbation of such signaling can impose physiological costs that accelerate mortality.",
+      "prediction": "Flies receiving Procaine HCl will show statistically significant decreases in median and maximum lifespan compared with vehicle controls.",
+      "experiment": "Run a standard survival assay with age-synchronized flies on food with and without Procaine HCl, using multiple doses, and analyze mortality curves with log-rank statistics."
+    },
+    {
+      "id": 3,
+      "title": "Procaine HCl Extends Lifespan in Drosophila",
+      "claim": "Procaine HCl extends lifespan in Drosophila melanogaster. The compound increases median and maximum survival relative to untreated controls.",
+      "rationale": "Procaine HCl modulates ion channel activity and membrane-associated processes, and mild stabilization of cellular stress responses can slow age-related decline.",
+      "prediction": "Flies receiving Procaine HCl will show statistically significant increases in median and maximum lifespan compared with vehicle controls.",
+      "experiment": "Run a standard survival assay with age-synchronized flies on food with and without Procaine HCl, using multiple doses, and analyze mortality curves with log-rank statistics."
+    },
+    {
+      "id": 4,
+      "title": "Procaine HCl Extends Lifespan via MAO Inhibition",
+      "claim": "Procaine HCl extends lifespan in Drosophila melanogaster by inhibiting monoamine oxidase and elevating dopamine signaling. Increased dopaminergic tone suppresses age-related neurodegeneration and mortality.",
+      "rationale": "Monoamine oxidase inhibition preserves monoamine neurotransmitters and dopamine signaling supports stress resistance and neural maintenance, both of which influence longevity.",
+      "prediction": "Procaine HCl-treated flies will live longer than controls and show reduced monoamine oxidase activity and elevated dopamine levels.",
+      "experiment": "Measure lifespan, monoamine oxidase activity, and dopamine concentrations in flies fed Procaine HCl versus vehicle, and test whether dopamine pathway manipulation abolishes the survival effect."
+    },
+    {
+      "id": 5,
+      "title": "Phenelzine Extends Lifespan in Drosophila",
+      "claim": "Phenelzine extends lifespan in Drosophila melanogaster. The compound increases median and maximum survival relative to untreated controls.",
+      "rationale": "Phenelzine inhibits monoamine oxidase and elevates monoamine signaling, which supports neural function and stress resistance, processes linked to slower aging.",
+      "prediction": "Flies receiving phenelzine will show statistically significant increases in median and maximum lifespan compared with vehicle controls.",
+      "experiment": "Run a standard survival assay with age-synchronized flies on food with and without phenelzine, using multiple doses, and analyze mortality curves with log-rank statistics."
+    },
+    {
+      "id": 6,
+      "title": "Phenoxybenzamine HCl Extends Lifespan in Drosophila",
+      "claim": "Phenoxybenzamine Hydrochloride extends lifespan in Drosophila melanogaster. The compound increases median and maximum survival relative to untreated controls.",
+      "rationale": "Phenoxybenzamine blocks adrenergic-type receptors and modulates stress signaling pathways, and attenuation of chronic signaling stress can delay age-related physiological decline.",
+      "prediction": "Flies receiving Phenoxybenzamine Hydrochloride will show statistically significant increases in median and maximum lifespan compared with vehicle controls.",
+      "experiment": "Run a standard survival assay with age-synchronized flies on food with and without Phenoxybenzamine Hydrochloride, using multiple doses, and analyze mortality curves with log-rank statistics."
+    },
+    {
+      "id": 7,
+      "title": "Pyrolidine Dithiocarbamate Extends Male Fly Lifespan",
+      "claim": "Pyrrolidine dithiocarbamate extends lifespan in male Drosophila melanogaster. The compound increases median and maximum survival in males relative to untreated male controls.",
+      "rationale": "Pyrrolidine dithiocarbamate chelates metals and suppresses inflammatory transcription factors, and reduced oxidative and inflammatory burden can slow aging in a sex-dependent manner.",
+      "prediction": "Male flies receiving pyrrolidine dithiocarbamate will show statistically significant increases in median and maximum lifespan compared with vehicle-treated males.",
+      "experiment": "Run a standard survival assay with age-synchronized male flies on food with and without pyrrolidine dithiocarbamate, using multiple doses, and analyze mortality curves with log-rank statistics."
+    },
+    {
+      "id": 8,
+      "title": "Pyrolidine Dithiocarbamate Extends Lifespan via NF-kB",
+      "claim": "Pyrrolidine dithiocarbamate extends lifespan in Drosophila melanogaster by inhibiting NF-κB signaling. Suppression of NF-κB-driven inflammatory transcription reduces age-related mortality.",
+      "rationale": "NF-κB signaling drives chronic inflammatory gene expression that accumulates with age, and its inhibition lowers tissue damage and preserves organismal function.",
+      "prediction": "Pyrrolidine dithiocarbamate-treated flies will live longer than controls and show reduced NF-κB transcriptional activity.",
+      "experiment": "Measure lifespan and NF-κB reporter activity in flies fed pyrrolidine dithiocarbamate versus vehicle, and test whether NF-κB pathway activation abolishes the survival effect."
+    },
+    {
+      "id": 9,
+      "title": "Carbidopa Extends Lifespan in Drosophila",
+      "claim": "Carbidopa extends lifespan in Drosophila melanogaster. The compound increases median and maximum survival relative to untreated controls.",
+      "rationale": "Carbidopa inhibits dopa decarboxylase and alters monoamine metabolism, and adjusted dopaminergic flux can reduce neurotoxic metabolites and support long-term tissue function.",
+      "prediction": "Flies receiving carbidopa will show statistically significant increases in median and maximum lifespan compared with vehicle controls.",
+      "experiment": "Run a standard survival assay with age-synchronized flies on food with and without carbidopa, using multiple doses, and analyze mortality curves with log-rank statistics."
+    },
+    {
+      "id": 10,
+      "title": "Pyrolidine Dithiocarbamate Extends Lifespan in Drosophila",
+      "claim": "Pyrrolidine dithiocarbamate extends lifespan in Drosophila melanogaster. The compound increases median and maximum survival relative to untreated controls.",
+      "rationale": "Pyrrolidine dithiocarbamate chelates redox-active metals and dampens stress-responsive transcription, reducing oxidative damage that accumulates with age and limits survival.",
+      "prediction": "Flies receiving pyrrolidine dithiocarbamate will show statistically significant increases in median and maximum lifespan compared with vehicle controls.",
+      "experiment": "Run a standard survival assay with age-synchronized flies on food with and without pyrrolidine dithiocarbamate, using multiple doses, and analyze mortality curves with log-rank statistics."
+    }
+  ],
+  "assistant_notes": {}
+}

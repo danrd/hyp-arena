@@ -1,0 +1,96 @@
+{
+  "source": {
+    "family": "zhipu",
+    "model": "glm-5.3-flash",
+    "strategy": "negative-sampling",
+    "as_of": "2012-05-01",
+    "note": "labels are in labels.json",
+    "options": {
+      "dedup": false,
+      "lang": "en"
+    }
+  },
+  "hypotheses": [
+    {
+      "id": 1,
+      "title": "Trielaidin Shortens Lifespan in C. elegans",
+      "claim": "We hypothesize that trielaidin shortens lifespan in Caenorhabditis elegans. Exposure to this compound will reduce mean and maximum lifespan relative to untreated controls.",
+      "rationale": "Trielaidin is an unnatural trans triglyceride that may disrupt membrane composition and lipid metabolism. Such disruption can impair cellular homeostasis and accelerate aging.",
+      "prediction": "Animals treated with trielaidin will show a statistically significant reduction in lifespan compared with vehicle-treated controls.",
+      "experiment": "Age-synchronize wild-type worms, treat one cohort with trielaidin and one with vehicle, and score survival daily. Compare lifespan distributions using log-rank analysis."
+    },
+    {
+      "id": 2,
+      "title": "Rapamycin Extends Lifespan in C. elegans",
+      "claim": "We hypothesize that rapamycin extends lifespan in Caenorhabditis elegans. Exposure to this compound will increase mean and maximum lifespan relative to untreated controls.",
+      "rationale": "Rapamycin inhibits the mTOR pathway, a central regulator of growth and nutrient sensing. Reduced mTOR signaling is expected to slow aging and prolong survival.",
+      "prediction": "Animals treated with rapamycin will show a statistically significant increase in lifespan compared with vehicle-treated controls.",
+      "experiment": "Age-synchronize wild-type worms, treat one cohort with rapamycin and one with vehicle, and score survival daily. Compare lifespan distributions using log-rank analysis."
+    },
+    {
+      "id": 3,
+      "title": "N6-Isopentenyladenine Extends Lifespan in C. elegans",
+      "claim": "We hypothesize that N6-isopentenyladenine extends lifespan in Caenorhabditis elegans. Exposure to this compound will increase mean and maximum lifespan relative to untreated controls.",
+      "rationale": "N6-isopentenyladenine is a cytokinin-like molecule that may modulate cellular signaling and stress responses. Improved stress handling can slow the decline of tissue function during aging.",
+      "prediction": "Animals treated with N6-isopentenyladenine will show a statistically significant increase in lifespan compared with vehicle-treated controls.",
+      "experiment": "Age-synchronize wild-type worms, treat one cohort with N6-isopentenyladenine and one with vehicle, and score survival daily. Compare lifespan distributions using log-rank analysis."
+    },
+    {
+      "id": 4,
+      "title": "ABC37 Extends Lifespan in C. elegans",
+      "claim": "We hypothesize that ABC37 extends lifespan in Caenorhabditis elegans. Exposure to this compound will increase mean and maximum lifespan relative to untreated controls.",
+      "rationale": "ABC37 may act on metabolic or proteostatic pathways that determine the rate of aging. Modulating these pathways can preserve physiological function and extend survival.",
+      "prediction": "Animals treated with ABC37 will show a statistically significant increase in lifespan compared with vehicle-treated controls.",
+      "experiment": "Age-synchronize wild-type worms, treat one cohort with ABC37 and one with vehicle, and score survival daily. Compare lifespan distributions using log-rank analysis."
+    },
+    {
+      "id": 5,
+      "title": "Developmental Rapamycin Exposure Extends C. elegans Lifespan",
+      "claim": "We hypothesize that rapamycin extends lifespan in Caenorhabditis elegans only when administered during development. Exposure restricted to adulthood will not increase lifespan relative to controls.",
+      "rationale": "mTOR signaling during development sets long-lasting metabolic and growth programs that influence aging. Interrupting these programs after development is complete may not alter lifespan.",
+      "prediction": "Worms exposed to rapamycin during development will live significantly longer than controls, whereas worms exposed only during adulthood will not.",
+      "experiment": "Treat age-synchronized worms with rapamycin during development only, adulthood only, or continuously, alongside vehicle controls. Score survival daily and compare all groups by log-rank analysis."
+    },
+    {
+      "id": 6,
+      "title": "Pinaverium Bromide Extends Lifespan in C. elegans",
+      "claim": "We hypothesize that pinaverium bromide extends lifespan in Caenorhabditis elegans. Exposure to this compound will increase mean and maximum lifespan relative to untreated controls.",
+      "rationale": "Pinaverium bromide modulates ion channel activity, which can influence calcium signaling and neuromuscular function. Adjusting such signaling may improve stress resistance and slow aging.",
+      "prediction": "Animals treated with pinaverium bromide will show a statistically significant increase in lifespan compared with vehicle-treated controls.",
+      "experiment": "Age-synchronize wild-type worms, treat one cohort with pinaverium bromide and one with vehicle, and score survival daily. Compare lifespan distributions using log-rank analysis."
+    },
+    {
+      "id": 7,
+      "title": "Palmostatin M Extends Lifespan in C. elegans",
+      "claim": "We hypothesize that palmostatin M extends lifespan in Caenorhabditis elegans. Exposure to this compound will increase mean and maximum lifespan relative to untreated controls.",
+      "rationale": "Palmostatin M inhibits depalmitoylation enzymes and thereby alters protein lipidation. Controlled changes in palmitoylation can improve signaling fidelity and proteostasis during aging.",
+      "prediction": "Animals treated with palmostatin M will show a statistically significant increase in lifespan compared with vehicle-treated controls.",
+      "experiment": "Age-synchronize wild-type worms, treat one cohort with palmostatin M and one with vehicle, and score survival daily. Compare lifespan distributions using log-rank analysis."
+    },
+    {
+      "id": 8,
+      "title": "Trielaidin Extends Lifespan in C. elegans",
+      "claim": "We hypothesize that trielaidin extends lifespan in Caenorhabditis elegans. Exposure to this compound will increase mean and maximum lifespan relative to untreated controls.",
+      "rationale": "Trielaidin provides a specific trans fatty acid that may alter lipid storage and membrane signaling in beneficial ways. Favorable lipid remodeling can enhance stress resistance and longevity.",
+      "prediction": "Animals treated with trielaidin will show a statistically significant increase in lifespan compared with vehicle-treated controls.",
+      "experiment": "Age-synchronize wild-type worms, treat one cohort with trielaidin and one with vehicle, and score survival daily. Compare lifespan distributions using log-rank analysis."
+    },
+    {
+      "id": 9,
+      "title": "Rapamycin Shortens Lifespan in C. elegans",
+      "claim": "We hypothesize that rapamycin shortens lifespan in Caenorhabditis elegans. Exposure to this compound will reduce mean and maximum lifespan relative to untreated controls.",
+      "rationale": "Rapamycin suppresses mTOR-dependent growth and autophagy programs that worms may require for tissue maintenance. Excessive inhibition of these programs can compromise viability and shorten life.",
+      "prediction": "Animals treated with rapamycin will show a statistically significant reduction in lifespan compared with vehicle-treated controls.",
+      "experiment": "Age-synchronize wild-type worms, treat one cohort with rapamycin and one with vehicle, and score survival daily. Compare lifespan distributions using log-rank analysis."
+    },
+    {
+      "id": 10,
+      "title": "Trielaidin Extends Lifespan via DAF-2 Activation",
+      "claim": "We hypothesize that trielaidin extends lifespan in Caenorhabditis elegans by activating the insulin/IGF-1 receptor DAF-2 to reduce DAF-16 nuclear localization. This signaling change will mediate the longevity effect of the compound.",
+      "rationale": "DAF-2 signaling negatively regulates the FOXO transcription factor DAF-16, a major determinant of longevity. Reduced DAF-16 nuclear activity can reprogram metabolism in a lifespan-extending manner.",
+      "prediction": "Trielaidin-treated worms will show reduced DAF-16 nuclear localization, and the lifespan extension will be abolished in daf-2 or daf-16 loss-of-function backgrounds.",
+      "experiment": "Treat DAF-16::GFP worms with trielaidin or vehicle and quantify nuclear DAF-16 fluorescence. In parallel, measure lifespan of trielaidin-treated daf-2 and daf-16 mutants versus wild type."
+    }
+  ],
+  "assistant_notes": {}
+}

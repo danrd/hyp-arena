@@ -1,0 +1,96 @@
+{
+  "source": {
+    "family": "zhipu",
+    "model": "glm-5.3-flash",
+    "strategy": "negative-sampling",
+    "as_of": "2012-08-03",
+    "note": "labels are in labels.json",
+    "options": {
+      "dedup": false,
+      "lang": "en"
+    }
+  },
+  "hypotheses": [
+    {
+      "id": 1,
+      "title": "ABC44 Shortens Lifespan in C. elegans",
+      "claim": "Exposure to ABC44 reduces lifespan in Caenorhabditis elegans. The compound acts as a detrimental intervention in this organism.",
+      "rationale": "Exogenous compounds can disrupt conserved cellular processes such as mitochondrial function or proteostasis, and such disruption generally accelerates aging in C. elegans.",
+      "prediction": "Worms cultured with ABC44 will show a statistically significant decrease in mean and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, raise them on ABC44-supplemented and control plates, and score survival daily until all animals die, comparing lifespan curves by log-rank analysis."
+    },
+    {
+      "id": 2,
+      "title": "Cranberry Extract Shortens Lifespan in C. elegans",
+      "claim": "Exposure to cranberry extract reduces lifespan in Caenorhabditis elegans. The extract acts as a detrimental intervention in this organism.",
+      "rationale": "Plant extracts contain bioactive molecules that can impose metabolic or oxidative stress, and stress above a tolerable threshold typically shortens lifespan in C. elegans.",
+      "prediction": "Worms cultured with cranberry extract will show a statistically significant decrease in mean and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, raise them on cranberry extract-supplemented and control plates, and score survival daily until all animals die, comparing lifespan curves by log-rank analysis."
+    },
+    {
+      "id": 3,
+      "title": "ABC44 Extends Lifespan via DAF-2 Activation",
+      "claim": "Exposure to ABC44 extends lifespan in Caenorhabditis elegans by activating the insulin/IGF-1 receptor DAF-2. The compound acts through this specific signaling receptor.",
+      "rationale": "The insulin/IGF-1 pathway is a central regulator of aging in C. elegans, and modulation of DAF-2 activity can alter downstream FOXO signaling and lifespan.",
+      "prediction": "Worms cultured with ABC44 will live longer than controls, and the extension will be abolished in daf-2 loss-of-function mutants.",
+      "experiment": "Compare lifespan of wild-type and daf-2 mutant worms on ABC44-supplemented and control plates, testing whether ABC44 fails to extend lifespan when DAF-2 function is absent."
+    },
+    {
+      "id": 4,
+      "title": "Cranberry Extract Extends Lifespan in C. elegans",
+      "claim": "Exposure to cranberry extract extends lifespan in Caenorhabditis elegans. The extract acts as a beneficial intervention in this organism.",
+      "rationale": "Plant-derived polyphenols can activate endogenous stress-response pathways, and mild activation of such pathways is a common route to lifespan extension in C. elegans.",
+      "prediction": "Worms cultured with cranberry extract will show a statistically significant increase in mean and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, raise them on cranberry extract-supplemented and control plates, and score survival daily until all animals die, comparing lifespan curves by log-rank analysis."
+    },
+    {
+      "id": 5,
+      "title": "ABC44 Extends Lifespan in C. elegans",
+      "claim": "Exposure to ABC44 extends lifespan in Caenorhabditis elegans. The compound acts as a beneficial intervention in this organism.",
+      "rationale": "Small molecules can engage conserved longevity pathways such as dietary restriction signaling or stress resistance, and activation of these pathways commonly extends lifespan in C. elegans.",
+      "prediction": "Worms cultured with ABC44 will show a statistically significant increase in mean and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, raise them on ABC44-supplemented and control plates, and score survival daily until all animals die, comparing lifespan curves by log-rank analysis."
+    },
+    {
+      "id": 6,
+      "title": "Cranberry Extract Extends Lifespan via DAF-2 Activation",
+      "claim": "Exposure to cranberry extract extends lifespan in Caenorhabditis elegans by activating the insulin/IGF-1 receptor DAF-2. The extract acts through this specific signaling receptor.",
+      "rationale": "The insulin/IGF-1 pathway is a central regulator of aging in C. elegans, and modulation of DAF-2 activity can alter downstream FOXO signaling and lifespan.",
+      "prediction": "Worms cultured with cranberry extract will live longer than controls, and the extension will be abolished in daf-2 loss-of-function mutants.",
+      "experiment": "Compare lifespan of wild-type and daf-2 mutant worms on cranberry extract-supplemented and control plates, testing whether the extract fails to extend lifespan when DAF-2 function is absent."
+    },
+    {
+      "id": 7,
+      "title": "D-Xylitol Extends Lifespan in C. elegans",
+      "claim": "Exposure to D-xylitol extends lifespan in Caenorhabditis elegans. The sugar alcohol acts as a beneficial intervention in this organism.",
+      "rationale": "Sugar alcohols alter carbohydrate metabolism and oxidative stress responses, and metabolic modulation of this kind can engage conserved longevity pathways in C. elegans.",
+      "prediction": "Worms cultured with D-xylitol will show a statistically significant increase in mean and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, raise them on D-xylitol-supplemented and control plates, and score survival daily until all animals die, comparing lifespan curves by log-rank analysis."
+    },
+    {
+      "id": 8,
+      "title": "Flunarizine Hydrochloride Extends Lifespan in C. elegans",
+      "claim": "Exposure to flunarizine hydrochloride extends lifespan in Caenorhabditis elegans. The compound acts as a beneficial intervention in this organism.",
+      "rationale": "Calcium channel modulation influences neuronal signaling and cellular stress responses, and altered calcium homeostasis can engage conserved longevity pathways in C. elegans.",
+      "prediction": "Worms cultured with flunarizine hydrochloride will show a statistically significant increase in mean and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, raise them on flunarizine hydrochloride-supplemented and control plates, and score survival daily until all animals die, comparing lifespan curves by log-rank analysis."
+    },
+    {
+      "id": 9,
+      "title": "ABC16 Extends Lifespan in C. elegans",
+      "claim": "Exposure to ABC16 extends lifespan in Caenorhabditis elegans. The compound acts as a beneficial intervention in this organism.",
+      "rationale": "Small molecules can engage conserved longevity pathways such as dietary restriction signaling or stress resistance, and activation of these pathways commonly extends lifespan in C. elegans.",
+      "prediction": "Worms cultured with ABC16 will show a statistically significant increase in mean and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, raise them on ABC16-supplemented and control plates, and score survival daily until all animals die, comparing lifespan curves by log-rank analysis."
+    },
+    {
+      "id": 10,
+      "title": "O6-Benzylguanine Extends Lifespan in C. elegans",
+      "claim": "Exposure to O6-benzylguanine extends lifespan in Caenorhabditis elegans. The compound acts as a beneficial intervention in this organism.",
+      "rationale": "Compounds that modulate DNA repair and genome maintenance can slow the accumulation of cellular damage, and reduced damage burden is a recognized route to lifespan extension in C. elegans.",
+      "prediction": "Worms cultured with O6-benzylguanine will show a statistically significant increase in mean and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, raise them on O6-benzylguanine-supplemented and control plates, and score survival daily until all animals die, comparing lifespan curves by log-rank analysis."
+    }
+  ],
+  "assistant_notes": {}
+}

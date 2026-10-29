@@ -1,0 +1,96 @@
+{
+  "source": {
+    "family": "zhipu",
+    "model": "glm-5.3-flash",
+    "strategy": "negative-sampling",
+    "as_of": "2012-12-31",
+    "note": "labels are in labels.json",
+    "options": {
+      "dedup": false,
+      "lang": "en"
+    }
+  },
+  "hypotheses": [
+    {
+      "id": 1,
+      "title": "Chicoric Acid Shortens Lifespan in C. elegans",
+      "claim": "Administration of chicoric acid shortens lifespan in Caenorhabditis elegans. The effect is dose-dependent and observable under standard culture conditions.",
+      "rationale": "Chicoric acid is a reactive polyphenol that can generate oxidative stress and perturb mitochondrial function. Such biochemical stress may accelerate cellular damage and reduce organismal longevity.",
+      "prediction": "Worms treated with chicoric acid will show a statistically significant reduction in median and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, expose them to multiple chicoric acid doses throughout adulthood, and compare survival curves with vehicle-treated controls using log-rank analysis."
+    },
+    {
+      "id": 2,
+      "title": "Sesamolin Extends Lifespan in C. elegans",
+      "claim": "Administration of sesamolin extends lifespan in Caenorhabditis elegans. The effect is dose-dependent and observable under standard culture conditions.",
+      "rationale": "Sesamolin is a lignan with antioxidant properties that can counteract accumulating oxidative damage. Reduced oxidative burden is a recognized route to slower aging and prolonged survival.",
+      "prediction": "Worms treated with sesamolin will show a statistically significant increase in median and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, expose them to multiple sesamolin doses throughout adulthood, and compare survival curves with vehicle-treated controls using log-rank analysis."
+    },
+    {
+      "id": 3,
+      "title": "Phenelzine Sulfate Extends Lifespan in C. elegans",
+      "claim": "Administration of phenelzine sulfate extends lifespan in Caenorhabditis elegans. The effect is dose-dependent and observable under standard culture conditions.",
+      "rationale": "Phenelzine sulfate is a monoamine oxidase inhibitor that alters amine metabolism and can influence stress-response signaling. Modulation of such conserved pathways is a plausible mechanism for extending longevity.",
+      "prediction": "Worms treated with phenelzine sulfate will show a statistically significant increase in median and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, expose them to multiple phenelzine sulfate doses throughout adulthood, and compare survival curves with vehicle-treated controls using log-rank analysis."
+    },
+    {
+      "id": 4,
+      "title": "Chicoric Acid Extends Lifespan in C. elegans",
+      "claim": "Administration of chicoric acid extends lifespan in Caenorhabditis elegans. The effect is dose-dependent and observable under standard culture conditions.",
+      "rationale": "Chicoric acid is a polyphenol with antioxidant and anti-inflammatory activity that can mitigate molecular damage. Reduced damage accumulation is a recognized route to slower aging and prolonged survival.",
+      "prediction": "Worms treated with chicoric acid will show a statistically significant increase in median and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, expose them to multiple chicoric acid doses throughout adulthood, and compare survival curves with vehicle-treated controls using log-rank analysis."
+    },
+    {
+      "id": 5,
+      "title": "Chicoric Acid Extends Lifespan via DAF-2 Activation",
+      "claim": "Administration of chicoric acid extends lifespan in Caenorhabditis elegans by activating the insulin/IGF-1 receptor DAF-2. The lifespan extension requires functional DAF-2 signaling.",
+      "rationale": "DAF-2 is the central receptor of the insulin/IGF-1 signaling pathway that governs aging in C. elegans. Modulating this receptor can reprogram downstream FOXO-mediated transcription and alter longevity.",
+      "prediction": "Chicoric acid will extend lifespan in wild-type worms but fail to extend lifespan in daf-2 loss-of-function mutants.",
+      "experiment": "Compare survival curves of chicoric acid-treated wild-type and daf-2 mutant worms against their respective vehicle-treated controls under identical conditions."
+    },
+    {
+      "id": 6,
+      "title": "Phenoxybenzamine Hydrochloride Extends Lifespan in C. elegans",
+      "claim": "Administration of phenoxybenzamine hydrochloride extends lifespan in Caenorhabditis elegans. The effect is dose-dependent and observable under standard culture conditions.",
+      "rationale": "Phenoxybenzamine hydrochloride is an alpha-adrenergic antagonist that can modulate neurotransmitter signaling conserved across species. Altered neural signaling can engage systemic stress responses that influence longevity.",
+      "prediction": "Worms treated with phenoxybenzamine hydrochloride will show a statistically significant increase in median and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, expose them to multiple phenoxybenzamine hydrochloride doses throughout adulthood, and compare survival curves with vehicle-treated controls using log-rank analysis."
+    },
+    {
+      "id": 7,
+      "title": "PNU-74654 Extends Lifespan via DAF-2 Activation",
+      "claim": "Administration of PNU-74654 extends lifespan in Caenorhabditis elegans by activating the insulin/IGF-1 receptor DAF-2. The lifespan extension requires functional DAF-2 signaling.",
+      "rationale": "DAF-2 is the central receptor of the insulin/IGF-1 signaling pathway that governs aging in C. elegans. Modulating this receptor can reprogram downstream FOXO-mediated transcription and alter longevity.",
+      "prediction": "PNU-74654 will extend lifespan in wild-type worms but fail to extend lifespan in daf-2 loss-of-function mutants.",
+      "experiment": "Compare survival curves of PNU-74654-treated wild-type and daf-2 mutant worms against their respective vehicle-treated controls under identical conditions."
+    },
+    {
+      "id": 8,
+      "title": "KT135 Extends Lifespan in C. elegans",
+      "claim": "Administration of KT135 extends lifespan in Caenorhabditis elegans. The effect is dose-dependent and observable under standard culture conditions.",
+      "rationale": "KT135 is a bioactive small molecule capable of modulating cellular signaling pathways relevant to stress resistance. Enhanced stress resistance is a recognized route to slower aging and prolonged survival.",
+      "prediction": "Worms treated with KT135 will show a statistically significant increase in median and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, expose them to multiple KT135 doses throughout adulthood, and compare survival curves with vehicle-treated controls using log-rank analysis."
+    },
+    {
+      "id": 9,
+      "title": "PNU-74654 Extends Lifespan in C. elegans",
+      "claim": "Administration of PNU-74654 extends lifespan in Caenorhabditis elegans. The effect is dose-dependent and observable under standard culture conditions.",
+      "rationale": "PNU-74654 is a small molecule that can modulate conserved cellular signaling pathways involved in stress responses. Enhanced stress resistance is a recognized route to slower aging and prolonged survival.",
+      "prediction": "Worms treated with PNU-74654 will show a statistically significant increase in median and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, expose them to multiple PNU-74654 doses throughout adulthood, and compare survival curves with vehicle-treated controls using log-rank analysis."
+    },
+    {
+      "id": 10,
+      "title": "PNU-74654 Shortens Lifespan in C. elegans",
+      "claim": "Administration of PNU-74654 shortens lifespan in Caenorhabditis elegans. The effect is dose-dependent and observable under standard culture conditions.",
+      "rationale": "PNU-74654 is a bioactive small molecule that can disrupt conserved signaling pathways required for cellular homeostasis. Impaired homeostatic signaling may accelerate damage accumulation and reduce organismal longevity.",
+      "prediction": "Worms treated with PNU-74654 will show a statistically significant reduction in median and maximum lifespan compared with untreated controls.",
+      "experiment": "Synchronize worm populations, expose them to multiple PNU-74654 doses throughout adulthood, and compare survival curves with vehicle-treated controls using log-rank analysis."
+    }
+  ],
+  "assistant_notes": {}
+}

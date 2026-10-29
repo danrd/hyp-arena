@@ -1,0 +1,96 @@
+{
+  "source": {
+    "family": "zhipu",
+    "model": "glm-5.3-flash",
+    "strategy": "negative-sampling",
+    "as_of": "2018-01-06",
+    "note": "labels are in labels.json",
+    "options": {
+      "dedup": false,
+      "lang": "en"
+    }
+  },
+  "hypotheses": [
+    {
+      "id": 1,
+      "title": "J147 Lifespan Extension Requires Neuronal AMPK",
+      "claim": "J147 extends lifespan in Drosophila melanogaster lacking neuronal AMPK. The compound will increase longevity in flies without neuronal AMPK under standard laboratory conditions.",
+      "rationale": "J147 may act through AMPK-independent neuroprotective mechanisms such as reduced oxidative damage and improved mitochondrial function. These pathways can operate in neurons even when AMPK signaling is absent.",
+      "prediction": "Supplemented flies lacking neuronal AMPK will show significantly longer median and maximum lifespan than untreated controls.",
+      "experiment": "Raise AMPK-null neuronal Drosophila melanogaster cohorts with and without J147 in their food and measure age-specific survival to death under identical conditions."
+    },
+    {
+      "id": 2,
+      "title": "J147 Extends Lifespan in Drosophila melanogaster",
+      "claim": "J147 extends lifespan in Drosophila melanogaster. Flies receiving the compound in their diet will live longer than flies receiving vehicle alone.",
+      "rationale": "J147 is a small molecule with broad neuroprotective and metabolic effects, and interventions that improve cellular stress resistance commonly slow aging in flies.",
+      "prediction": "J147-treated flies will show significantly increased median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Maintain matched Drosophila melanogaster cohorts on food with and without J147 and measure age-specific survival to death under identical conditions."
+    },
+    {
+      "id": 3,
+      "title": "JSK Extends Lifespan in Drosophila melanogaster",
+      "claim": "JSK extends lifespan in Drosophila melanogaster. Flies receiving JSK in their diet will live longer than flies receiving vehicle alone.",
+      "rationale": "JSK is a small molecule with reported neuroprotective properties, and compounds that enhance cellular stress resistance commonly slow aging in flies.",
+      "prediction": "JSK-treated flies will show significantly increased median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Maintain matched Drosophila melanogaster cohorts on food with and without JSK and measure age-specific survival to death under identical conditions."
+    },
+    {
+      "id": 4,
+      "title": "Octoclothepin and Loxapine Extend Drosophila Lifespan",
+      "claim": "Octoclothepin/Loxapine extends lifespan in Drosophila melanogaster. Flies receiving octoclothepin or loxapine in their diet will live longer than flies receiving vehicle alone.",
+      "rationale": "These tricyclic compounds modulate neurotransmitter signaling and cellular stress pathways, and pharmacological modulation of such pathways can influence aging rate in flies.",
+      "prediction": "Octoclothepin- or loxapine-treated flies will show significantly increased median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Maintain matched Drosophila melanogaster cohorts on food with and without octoclothepin or loxapine and measure age-specific survival to death under identical conditions."
+    },
+    {
+      "id": 5,
+      "title": "Cardamonin Extends Lifespan in Drosophila melanogaster",
+      "claim": "Cardamonin extends lifespan in Drosophila melanogaster. Flies receiving cardamonin in their diet will live longer than flies receiving vehicle alone.",
+      "rationale": "Cardamonin is a natural flavonoid with anti-inflammatory and antioxidant activities, and dietary polyphenols that reduce cellular damage commonly slow aging in flies.",
+      "prediction": "Cardamonin-treated flies will show significantly increased median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Maintain matched Drosophila melanogaster cohorts on food with and without cardamonin and measure age-specific survival to death under identical conditions."
+    },
+    {
+      "id": 6,
+      "title": "Cardamonin Shortens Lifespan in Drosophila melanogaster",
+      "claim": "Cardamonin shortens lifespan in Drosophila melanogaster. Flies receiving cardamonin in their diet will live shorter than flies receiving vehicle alone.",
+      "rationale": "Cardamonin can be cytotoxic at sufficient concentrations and may disrupt endogenous signaling or detoxification, and compounds imposing such stress commonly accelerate aging in flies.",
+      "prediction": "Cardamonin-treated flies will show significantly decreased median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Maintain matched Drosophila melanogaster cohorts on food with and without cardamonin and measure age-specific survival to death under identical conditions."
+    },
+    {
+      "id": 7,
+      "title": "Cardamonin Extends Lifespan via Nrf2 Activation",
+      "claim": "Cardamonin extends lifespan in Drosophila melanogaster by activating the Nrf2 oxidative stress response pathway. Flies receiving cardamonin will live longer through Nrf2-dependent enhancement of antioxidant defenses.",
+      "rationale": "Nrf2 signaling upregulates antioxidant and detoxification genes, and cardamonin is known to activate this pathway, providing a mechanistic route to reduced oxidative damage and slower aging.",
+      "prediction": "Cardamonin will extend lifespan in control flies but not in flies with impaired Nrf2 signaling, and Nrf2 target genes will be induced by treatment.",
+      "experiment": "Maintain matched Drosophila melanogaster cohorts with intact and genetically impaired Nrf2 signaling on food with and without cardamonin and measure age-specific survival to death under identical conditions."
+    },
+    {
+      "id": 8,
+      "title": "Diphenhydramine HCl Extends Drosophila Lifespan",
+      "claim": "Diphenhydramine HCl extends lifespan in Drosophila melanogaster. Flies receiving diphenhydramine HCl in their diet will live longer than flies receiving vehicle alone.",
+      "rationale": "Diphenhydramine modulates histaminergic and cholinergic signaling and can reduce excitatory stress, and pharmacological modulation of neuronal signaling can influence aging rate in flies.",
+      "prediction": "Diphenhydramine HCl-treated flies will show significantly increased median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Maintain matched Drosophila melanogaster cohorts on food with and without diphenhydramine HCl and measure age-specific survival to death under identical conditions."
+    },
+    {
+      "id": 9,
+      "title": "J147 Shortens Lifespan in Drosophila melanogaster",
+      "claim": "J147 shortens lifespan in Drosophila melanogaster. Flies receiving J147 in their diet will live shorter than flies receiving vehicle alone.",
+      "rationale": "J147 alters metabolism and neuronal signaling, and perturbation of energy-sensing pathways or accumulation of a xenobiotic burden can impose physiological stress that accelerates aging in flies.",
+      "prediction": "J147-treated flies will show significantly decreased median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Maintain matched Drosophila melanogaster cohorts on food with and without J147 and measure age-specific survival to death under identical conditions."
+    },
+    {
+      "id": 10,
+      "title": "PlusMinusButaclamol-HCl Extends Drosophila Lifespan",
+      "claim": "PlusMinusButaclamol-HCl extends lifespan in Drosophila melanogaster. Flies receiving plusminusbutaclamol-HCl in their diet will live longer than flies receiving vehicle alone.",
+      "rationale": "Butaclamol modulates dopaminergic and related receptor signaling, and pharmacological modulation of neuronal signaling pathways can influence aging rate in flies.",
+      "prediction": "Plusminusbutaclamol-HCl-treated flies will show significantly increased median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Maintain matched Drosophila melanogaster cohorts on food with and without plusminusbutaclamol-HCl and measure age-specific survival to death under identical conditions."
+    }
+  ],
+  "assistant_notes": {}
+}

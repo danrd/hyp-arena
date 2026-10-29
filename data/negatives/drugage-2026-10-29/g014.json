@@ -1,0 +1,96 @@
+{
+  "source": {
+    "family": "zhipu",
+    "model": "glm-5.3-flash",
+    "strategy": "negative-sampling",
+    "as_of": "2011-12-31",
+    "note": "labels are in labels.json",
+    "options": {
+      "dedup": false,
+      "lang": "en"
+    }
+  },
+  "hypotheses": [
+    {
+      "id": 1,
+      "title": "Vinblastine Sulfate Extends Lifespan Through Gut Stem Cell Microtubule Inhibition",
+      "claim": "Vinblastine Sulfate extends lifespan in Drosophila melanogaster by inhibiting microtubule polymerization in gut stem cells. This mechanism slows intestinal stem cell proliferation and preserves gut homeostasis during ageing.",
+      "rationale": "Microtubule polymerization drives the proliferative activity of gut stem cells, and unchecked intestinal turnover contributes to tissue degeneration. Suppressing this process can maintain barrier integrity and reduce age-related gut dysfunction.",
+      "prediction": "Treated flies will live longer than controls and show reduced gut stem cell division and improved intestinal integrity.",
+      "experiment": "Administer Vinblastine Sulfate to adult Drosophila melanogaster and measure lifespan alongside gut stem cell proliferation and microtubule polymerization markers, using a microtubule-resistant rescue group to confirm mechanism."
+    },
+    {
+      "id": 2,
+      "title": "Dihydrorotenone Extends Lifespan in Drosophila melanogaster",
+      "claim": "Dihydrorotenone extends lifespan in Drosophila melanogaster. Supplementation with this compound increases median and maximum lifespan relative to untreated controls.",
+      "rationale": "Mild modulation of mitochondrial electron transport can induce adaptive stress responses that enhance cellular resilience. Such hormetic effects are a recognized route to slower ageing and extended survival.",
+      "prediction": "Dihydrorotenone-treated flies will show significantly greater median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Compare lifespan cohorts of Drosophila melanogaster fed Dihydrorotenone against vehicle controls across multiple doses under identical conditions."
+    },
+    {
+      "id": 3,
+      "title": "Royal Jelly Shortens Lifespan in Drosophila melanogaster",
+      "claim": "Royal Jelly shortens lifespan in Drosophila melanogaster. Flies receiving Royal Jelly supplementation exhibit reduced median and maximum lifespan compared with controls.",
+      "rationale": "Royal Jelly contains potent growth-stimulating factors that can activate nutrient-sensing and reproductive pathways. Chronic activation of these pathways often accelerates ageing and reduces survival.",
+      "prediction": "Royal Jelly-fed flies will show significantly shorter median and maximum lifespan than vehicle-fed controls.",
+      "experiment": "Raise matched cohorts of Drosophila melanogaster on diets with and without Royal Jelly and compare survival curves under identical housing and density conditions."
+    },
+    {
+      "id": 4,
+      "title": "Dequalinium Extends Lifespan in Drosophila melanogaster",
+      "claim": "Dequalinium extends lifespan in Drosophila melanogaster. Supplementation with this compound increases median and maximum lifespan relative to untreated controls.",
+      "rationale": "Compounds that influence mitochondrial function can reduce oxidative damage and improve cellular energy balance. Improved mitochondrial quality control supports tissue maintenance and longer survival.",
+      "prediction": "Dequalinium-treated flies will show significantly greater median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Compare lifespan cohorts of Drosophila melanogaster fed Dequalinium against vehicle controls across multiple doses under identical conditions."
+    },
+    {
+      "id": 5,
+      "title": "Geldanamycin Extends Lifespan in Drosophila melanogaster",
+      "claim": "Geldanamycin extends lifespan in Drosophila melanogaster. Supplementation with this compound increases median and maximum lifespan relative to untreated controls.",
+      "rationale": "Activation of stress-response pathways and molecular chaperones enhances protein homeostasis. Sustained proteostasis delays the accumulation of cellular damage that drives ageing.",
+      "prediction": "Geldanamycin-treated flies will show significantly greater median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Compare lifespan cohorts of Drosophila melanogaster fed Geldanamycin against vehicle controls across multiple doses under identical conditions."
+    },
+    {
+      "id": 6,
+      "title": "Royal Jelly Extends Lifespan in Drosophila melanogaster",
+      "claim": "Royal Jelly extends lifespan in Drosophila melanogaster. Supplementation with this compound increases median and maximum lifespan relative to untreated controls.",
+      "rationale": "Royal Jelly supplies bioactive nutrients that can enhance metabolic efficiency and tissue repair. Improved nutritional status can support somatic maintenance and prolong survival.",
+      "prediction": "Royal Jelly-fed flies will show significantly greater median and maximum lifespan than vehicle-fed controls.",
+      "experiment": "Compare lifespan cohorts of Drosophila melanogaster fed Royal Jelly against vehicle controls across multiple doses under identical conditions."
+    },
+    {
+      "id": 7,
+      "title": "Royal Jelly Extends Lifespan by Activating Insulin/IGF Signalling",
+      "claim": "Royal Jelly extends lifespan in Drosophila melanogaster by activating the insulin/IGF signalling pathway. This activation triggers downstream metabolic programmes that improve somatic maintenance and survival.",
+      "rationale": "Insulin/IGF signalling regulates nutrient storage, stress resistance and tissue renewal. Controlled activation of this pathway can coordinate metabolic adaptation that supports longevity.",
+      "prediction": "Royal Jelly-fed flies will live longer than controls and show elevated insulin/IGF pathway activity, while pathway-deficient mutants will not gain lifespan.",
+      "experiment": "Feed Royal Jelly to Drosophila melanogaster and to insulin/IGF signalling mutants, comparing lifespan and pathway activity readouts between all groups."
+    },
+    {
+      "id": 8,
+      "title": "Pergolide Methanesulfonate Extends Lifespan in Drosophila melanogaster",
+      "claim": "Pergolide methanesulfonate extends lifespan in Drosophila melanogaster. Supplementation with this compound increases median and maximum lifespan relative to untreated controls.",
+      "rationale": "Dopaminergic signalling influences feeding behaviour, neuroendocrine output and systemic ageing signals. Modulating this signalling can shift energy allocation toward somatic maintenance and extend survival.",
+      "prediction": "Pergolide methanesulfonate-treated flies will show significantly greater median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Compare lifespan cohorts of Drosophila melanogaster fed Pergolide methanesulfonate against vehicle controls across multiple doses under identical conditions."
+    },
+    {
+      "id": 9,
+      "title": "Vinblastine Sulfate Extends Lifespan in Drosophila melanogaster",
+      "claim": "Vinblastine Sulfate extends lifespan in Drosophila melanogaster. Supplementation with this compound increases median and maximum lifespan relative to untreated controls.",
+      "rationale": "Limited suppression of cell proliferation can reduce age-related tissue overgrowth and inflammatory damage. Preserved tissue architecture supports organ function and longer survival.",
+      "prediction": "Vinblastine Sulfate-treated flies will show significantly greater median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Compare lifespan cohorts of Drosophila melanogaster fed Vinblastine Sulfate against vehicle controls across multiple doses under identical conditions."
+    },
+    {
+      "id": 10,
+      "title": "Vinblastine Sulfate Shortens Lifespan in Drosophila melanogaster",
+      "claim": "Vinblastine Sulfate shortens lifespan in Drosophila melanogaster. Flies receiving Vinblastine Sulfate exhibit reduced median and maximum lifespan compared with controls.",
+      "rationale": "Inhibition of microtubule polymerization disrupts cell division and intracellular transport, causing tissue damage. Cumulative toxicity from this disruption accelerates functional decline and reduces survival.",
+      "prediction": "Vinblastine Sulfate-treated flies will show significantly shorter median and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Raise matched cohorts of Drosophila melanogaster on diets with and without Vinblastine Sulfate and compare survival curves under identical housing and density conditions."
+    }
+  ],
+  "assistant_notes": {}
+}

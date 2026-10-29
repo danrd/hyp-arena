@@ -1,0 +1,96 @@
+{
+  "source": {
+    "family": "zhipu",
+    "model": "glm-5.3-flash",
+    "strategy": "negative-sampling",
+    "as_of": "2013-11-18",
+    "note": "labels are in labels.json",
+    "options": {
+      "dedup": false,
+      "lang": "en"
+    }
+  },
+  "hypotheses": [
+    {
+      "id": 1,
+      "title": "PB125 Extends Lifespan in Mice",
+      "claim": "PB125, a combination of carnosol, withaferin A and luteolin, extends lifespan in Mus musculus. The effect results from the combined action of its three phytochemical components on cellular stress pathways.",
+      "rationale": "The three constituents activate endogenous antioxidant and anti-inflammatory defenses that decline with age. Sustained activation of these pathways should slow the accumulation of molecular damage and prolong survival.",
+      "prediction": "PB125-treated mice will show a statistically significant increase in median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of Mus musculus to PB125 or vehicle from midlife onward, maintain identical housing and diet, and follow all animals until natural death with blinded lifespan analysis."
+    },
+    {
+      "id": 2,
+      "title": "Methylene Blue Shortens Lifespan in Mice",
+      "claim": "Methylene blue shortens lifespan in Mus musculus. Chronic exposure to the compound imposes a net physiological cost that outweighs any beneficial effects.",
+      "rationale": "Methylene blue is a redox-active agent that can perturb electron transport and cellular redox balance when administered chronically. Sustained redox disruption accelerates accumulation of oxidative damage and shortens survival.",
+      "prediction": "Methylene blue-treated mice will show a statistically significant decrease in median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of Mus musculus to methylene blue or vehicle from midlife onward, maintain identical conditions, and follow all animals until natural death with blinded lifespan analysis."
+    },
+    {
+      "id": 3,
+      "title": "Alpha-Lipoic Acid Extends Lifespan in Mice",
+      "claim": "Alpha-lipoic acid extends lifespan in Mus musculus. The effect is mediated by improved mitochondrial function and enhanced antioxidant capacity across tissues.",
+      "rationale": "Alpha-lipoic acid is a mitochondrial cofactor and versatile antioxidant that supports energy metabolism and recycles other cellular antioxidants. Preserving mitochondrial integrity should slow age-related decline and prolong survival.",
+      "prediction": "Alpha-lipoic acid-treated mice will show a statistically significant increase in median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of Mus musculus to alpha-lipoic acid or vehicle from midlife onward, maintain identical conditions, and follow all animals until natural death with blinded lifespan analysis."
+    },
+    {
+      "id": 4,
+      "title": "Acarbose Accelerates Ageing in Mice",
+      "claim": "Acarbose accelerates ageing in Mus musculus. Chronic interference with carbohydrate absorption imposes metabolic stress that hastens age-related decline.",
+      "rationale": "Acarbose blocks intestinal carbohydrate digestion, altering nutrient sensing and gut function. Chronic disruption of nutrient availability and microbiome balance can elevate stress signaling and accelerate the ageing process.",
+      "prediction": "Acarbose-treated mice will show accelerated onset of age-related phenotypes and a statistically significant decrease in lifespan compared with vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of Mus musculus to acarbose or vehicle from midlife onward, track age-related physiological markers and survival, and follow all animals until natural death with blinded analysis."
+    },
+    {
+      "id": 5,
+      "title": "Anterior Hypothalamus Extract Extends Lifespan in Mice",
+      "claim": "Anterior hypothalamus extract extends lifespan in Mus musculus. The effect is mediated by factors in the extract that modulate neuroendocrine regulation of ageing.",
+      "rationale": "The hypothalamus governs neuroendocrine signaling that influences growth, metabolism and systemic ageing. Supplying hypothalamic factors could restore youthful regulatory signaling and slow whole-organism decline.",
+      "prediction": "Mice receiving anterior hypothalamus extract will show a statistically significant increase in median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of Mus musculus to anterior hypothalamus extract or vehicle from midlife onward, maintain identical conditions, and follow all animals until natural death with blinded lifespan analysis."
+    },
+    {
+      "id": 6,
+      "title": "TM5441 Extends Lifespan in Mice",
+      "claim": "TM5441, an inhibitor of plasminogen activator inhibitor-1, extends lifespan in Mus musculus. The effect is mediated by reduced PAI-1 activity and improved tissue homeostasis.",
+      "rationale": "PAI-1 rises with age and promotes fibrosis, inflammation and cellular senescence. Pharmacological inhibition of PAI-1 should preserve tissue function and slow age-related decline.",
+      "prediction": "TM5441-treated mice will show a statistically significant increase in median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of Mus musculus to TM5441 or vehicle from midlife onward, maintain identical conditions, and follow all animals until natural death with blinded lifespan analysis."
+    },
+    {
+      "id": 7,
+      "title": "Methylene Blue Extends Lifespan via Complex IV Restoration",
+      "claim": "Methylene blue extends lifespan in Mus musculus by restoring mitochondrial complex IV activity in aged neurons. The lifespan benefit depends specifically on this neuronal mitochondrial mechanism.",
+      "rationale": "Complex IV activity declines in aged neurons, limiting electron transport and energy production. Methylene blue can act as an alternative electron carrier, bypassing impaired steps and restoring neuronal bioenergetic capacity.",
+      "prediction": "Methylene blue-treated aged mice will show restored neuronal complex IV activity together with a statistically significant lifespan increase relative to controls.",
+      "experiment": "Treat aged Mus musculus with methylene blue or vehicle, measure complex IV activity in isolated neurons across brain regions, and compare survival between groups with blinded lifespan analysis."
+    },
+    {
+      "id": 8,
+      "title": "Methylene Blue Extends Lifespan in Mice",
+      "claim": "Methylene blue extends lifespan in Mus musculus. The effect results from improved mitochondrial and cellular function in ageing tissues.",
+      "rationale": "Methylene blue is a redox-cycling compound that can support mitochondrial electron transport and reduce oxidative stress. Preserving cellular energy metabolism should slow age-related decline and prolong survival.",
+      "prediction": "Methylene blue-treated mice will show a statistically significant increase in median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of Mus musculus to methylene blue or vehicle from midlife onward, maintain identical conditions, and follow all animals until natural death with blinded lifespan analysis."
+    },
+    {
+      "id": 9,
+      "title": "Acarbose Shortens Lifespan in Mice",
+      "claim": "Acarbose shortens lifespan in Mus musculus. Chronic inhibition of carbohydrate digestion produces a net physiological burden that reduces survival.",
+      "rationale": "Acarbose alters nutrient absorption and intestinal function, which can disturb metabolic and microbial balance over time. Sustained metabolic disruption increases physiological stress and shortens survival.",
+      "prediction": "Acarbose-treated mice will show a statistically significant decrease in median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of Mus musculus to acarbose or vehicle from midlife onward, maintain identical conditions, and follow all animals until natural death with blinded lifespan analysis."
+    },
+    {
+      "id": 10,
+      "title": "Acarbose Extends Lifespan in Mice",
+      "claim": "Acarbose extends lifespan in Mus musculus. The effect is mediated by beneficial modulation of nutrient sensing and metabolic signaling.",
+      "rationale": "Slowing carbohydrate absorption reduces postprandial glucose and insulin excursions, engaging nutrient-sensing pathways linked to longevity. Improved metabolic regulation should slow age-related decline and prolong survival.",
+      "prediction": "Acarbose-treated mice will show a statistically significant increase in median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Randomize a large cohort of Mus musculus to acarbose or vehicle from midlife onward, maintain identical conditions, and follow all animals until natural death with blinded lifespan analysis."
+    }
+  ],
+  "assistant_notes": {}
+}

@@ -1,0 +1,3369 @@
+{
+  "g001": {
+    "as_of": "2012-12-31",
+    "species": "Caenorhabditis elegans",
+    "writer": "zhipu",
+    "items": {
+      "imp001": {
+        "kind": "reversed",
+        "label": 0,
+        "statement": "Chicoric acid shortens lifespan in Caenorhabditis elegans.",
+        "why_false": "Chicoric acid has been reported to extend lifespan in C. elegans, not shorten it.",
+        "verifier": "google",
+        "confidence": 0.85
+      },
+      "imp002": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Sesamolin extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "Sesamolin",
+        "pmids": [
+          "30118882"
+        ]
+      },
+      "imp003": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Phenelzine sulfate extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "Phenelzine sulfate",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp004": {
+        "kind": "true",
+        "label": 1,
+        "statement": "Chicoric acid extends lifespan in Caenorhabditis elegans.",
+        "compound": "Chicoric acid",
+        "pmids": [
+          "24244361",
+          "30845140"
+        ]
+      },
+      "imp005": {
+        "kind": "mechanism",
+        "label": 0,
+        "statement": "Chicoric acid extends lifespan in Caenorhabditis elegans by activating the insulin/IGF-1 receptor DAF-2.",
+        "why_false": "The reported lifespan extension was independent of the insulin/IGF-1 signaling pathway and did not require DAF-2.",
+        "verifier": "google",
+        "confidence": 0.85
+      },
+      "imp006": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Phenoxybenzamine Hydrochloride extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "Phenoxybenzamine Hydrochloride",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp007": {
+        "kind": "decoy_mechanism",
+        "label": 0,
+        "statement": "PNU-74654 extends lifespan in Caenorhabditis elegans by activating the insulin/IGF-1 receptor DAF-2.",
+        "why_false": "PNU-74654 is a Wnt/β-catenin pathway inhibitor; lifespan extension via DAF-2 activation is implausible, since reduced insulin/IGF-1 signaling, not receptor activation, is associated with longevity in worms.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp008": {
+        "kind": "real",
+        "label": 0,
+        "statement": "KT135 extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "KT135",
+        "pmids": [
+          "30911178"
+        ]
+      },
+      "imp009": {
+        "kind": "real",
+        "label": 0,
+        "statement": "PNU-74654 extends lifespan in Caenorhabditis elegans.",
+        "decoy": true,
+        "compound": "PNU-74654",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp010": {
+        "kind": "decoy_reversed",
+        "label": 0,
+        "statement": "PNU-74654 shortens lifespan in Caenorhabditis elegans.",
+        "why_false": "The claim was tested and had no significant effect on lifespan, so any statement of a shortening effect is contradicted by the experimental outcome.",
+        "verifier": "data",
+        "confidence": null
+      }
+    },
+    "dropped_synthetic": [
+      {
+        "kind": "condition",
+        "statement": "Chicoric acid extends lifespan in Caenorhabditis elegans under heat stress conditions.",
+        "why_false": "The reported lifespan extension was measured under standard conditions; no benefit under heat stress has been demonstrated.",
+        "verdict": "true",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Caffeic acid extends lifespan in Caenorhabditis elegans.",
+        "why_false": "Caffeic acid alone has not been shown to extend lifespan in C. elegans; studies testing it found no significant lifespan increase.",
+        "verdict": "true",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Chicoric acid accelerates ageing in Caenorhabditis elegans.",
+        "why_false": "Chicoric acid has been shown to delay ageing and extend lifespan in C. elegans, not accelerate it.",
+        "verdict": "false",
+        "confidence": 0.85,
+        "verifier": "google"
+      },
+      {
+        "kind": "condition",
+        "statement": "Chicoric acid extends lifespan in Caenorhabditis elegans males.",
+        "why_false": "The lifespan extension was demonstrated in hermaphrodites; no extension has been shown in males.",
+        "verdict": "uncertain",
+        "confidence": 0.6,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Rosmarinic acid extends lifespan in Caenorhabditis elegans.",
+        "why_false": "Rosmarinic acid, a related caffeic acid derivative, has not been shown to extend lifespan in C. elegans.",
+        "verdict": "true",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Chicoric acid extends lifespan in Caenorhabditis elegans by inducing the mitochondrial unfolded protein response.",
+        "why_false": "The reported lifespan extension did not depend on the mitochondrial unfolded protein response; it was attributed to other mechanisms such as stress resistance via DAF-16.",
+        "verdict": "true",
+        "confidence": 0.85,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "PNU-74654 accelerates ageing in Caenorhabditis elegans under heat stress.",
+        "why_false": "The compound showed no significant effect on lifespan in this organism, so an ageing-accelerating effect under heat stress is at odds with the tested result.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "PNU-74654 extends lifespan in Caenorhabditis elegans by inducing the mitochondrial unfolded protein response.",
+        "why_false": "PNU-74654 acts on the Wnt/β-catenin signaling pathway, which is not known to trigger the mitochondrial unfolded protein response in worms, and the compound had no significant lifespan effect in this organism.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      }
+    ]
+  },
+  "g002": {
+    "as_of": "1993-03-31",
+    "species": "Drosophila melanogaster",
+    "writer": "zhipu",
+    "items": {
+      "imp001": {
+        "kind": "decoy_mechanism",
+        "label": 0,
+        "statement": "Berberine extends lifespan in Drosophila melanogaster by activating AMPK and inhibiting mitochondrial complex I.",
+        "why_false": "The claim is false because berberine had no significant effect on lifespan in this organism, so no lifespan-extending mechanism applies.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp002": {
+        "kind": "true",
+        "label": 1,
+        "statement": "Green tea extract extends lifespan in Drosophila melanogaster.",
+        "compound": "Green tea extract",
+        "pmids": [
+          "17440995",
+          "25058464",
+          "8326745"
+        ]
+      },
+      "imp003": {
+        "kind": "real",
+        "label": 0,
+        "statement": "PNU-74654 extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "PNU-74654",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp004": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Berberine extends lifespan in Drosophila melanogaster.",
+        "decoy": true,
+        "compound": "Berberine",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp005": {
+        "kind": "decoy_reversed",
+        "label": 0,
+        "statement": "Berberine shortens lifespan in Drosophila melanogaster.",
+        "why_false": "The claim is false because berberine was tested and had no significant effect on lifespan; also, the direction of effect is reversed.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp006": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Dequalinium extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "Dequalinium",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp007": {
+        "kind": "condition",
+        "label": 0,
+        "statement": "Green tea extract extends lifespan in Drosophila melanogaster at high doses.",
+        "why_false": "High doses of green tea extract are reported to be toxic or non-beneficial in flies; extension occurs at lower doses.",
+        "verifier": "google",
+        "confidence": 0.8
+      },
+      "imp008": {
+        "kind": "real",
+        "label": 0,
+        "statement": "574-Trimethoxyfavone extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "574-Trimethoxyfavone",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp009": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Nebirapine extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "Nebirapine",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp010": {
+        "kind": "reversed",
+        "label": 0,
+        "statement": "Green tea extract shortens lifespan in Drosophila melanogaster.",
+        "why_false": "Published work reports lifespan extension, not shortening, with green tea extract in flies.",
+        "verifier": "google",
+        "confidence": 0.8
+      }
+    },
+    "dropped_synthetic": [
+      {
+        "kind": "condition",
+        "statement": "Green tea extract extends lifespan in Drosophila melanogaster fed a high-fat diet.",
+        "why_false": "Lifespan extension was observed on standard diets; no extension has been demonstrated under a high-fat dietary context.",
+        "verdict": "true",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Black tea extract extends lifespan in Drosophila melanogaster.",
+        "why_false": "Black tea extract has not been shown to extend fly lifespan in published studies, unlike green tea extract.",
+        "verdict": "true",
+        "confidence": 0.85,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Green tea extract extends lifespan in Drosophila melanogaster by activating the insulin/IGF signaling pathway.",
+        "why_false": "The reported extension is attributed to reduced insulin/IGF signaling activity, not activation of the pathway.",
+        "verdict": "false",
+        "confidence": 0.85,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Green tea extract accelerates ageing in Drosophila melanogaster.",
+        "why_false": "Studies show the opposite: green tea extract slows ageing and prolongs survival in flies.",
+        "verdict": "false",
+        "confidence": 0.85,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Epigallocatechin supplementation extends lifespan in Drosophila melanogaster.",
+        "why_false": "Pure epigallocatechin has not been shown to extend fly lifespan in published experiments; the effect was observed with whole green tea extract.",
+        "verdict": "true",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Green tea extract extends lifespan in Drosophila melanogaster by increasing oxidative stress.",
+        "why_false": "The reported extension is associated with reduced oxidative stress and enhanced antioxidant defense, not increased oxidative stress.",
+        "verdict": "false",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Berberine accelerates ageing in Drosophila melanogaster when fed throughout adulthood.",
+        "why_false": "The claim is false because berberine showed no significant effect on lifespan, so it neither accelerates ageing nor any other lifespan change.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Berberine extends lifespan in Drosophila melanogaster through activation of the insulin/IGF signalling pathway.",
+        "why_false": "The claim is false because berberine had no significant effect on lifespan; moreover, lifespan extension is typically associated with reduced, not activated, insulin/IGF signalling.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      }
+    ]
+  },
+  "g003": {
+    "as_of": "2009-07-07",
+    "species": "Mus musculus",
+    "writer": "zhipu",
+    "items": {
+      "imp001": {
+        "kind": "real",
+        "label": 0,
+        "statement": "SG1002 (hydrogen sulfide donor) extends lifespan in Mus musculus.",
+        "decoy": false,
+        "compound": "SG1002 (hydrogen sulfide donor)",
+        "pmids": [
+          "38041783"
+        ]
+      },
+      "imp002": {
+        "kind": "reversed",
+        "label": 0,
+        "statement": "Rapamycin shortens lifespan in Mus musculus.",
+        "why_false": "Rapamycin consistently extends lifespan in mice across the ITP and multiple independent studies.",
+        "verifier": "google",
+        "confidence": 1.0
+      },
+      "imp003": {
+        "kind": "true",
+        "label": 1,
+        "statement": "Rapamycin extends lifespan in Mus musculus.",
+        "compound": "Rapamycin",
+        "pmids": [
+          "19587680",
+          "20974732",
+          "24341993",
+          "24409289",
+          "27091134",
+          "27549339",
+          "33145977"
+        ]
+      },
+      "imp004": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Medium-chain triglyceride oil extends lifespan in Mus musculus.",
+        "decoy": false,
+        "compound": "Medium-chain triglyceride oil",
+        "pmids": [
+          "22451473"
+        ]
+      },
+      "imp005": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Chlorpromazine extends lifespan in Mus musculus.",
+        "decoy": true,
+        "compound": "Chlorpromazine",
+        "pmids": [
+          "4788962"
+        ]
+      },
+      "imp006": {
+        "kind": "decoy_reversed",
+        "label": 0,
+        "statement": "Chlorpromazine shortens lifespan in Mus musculus.",
+        "why_false": "The claim was tested and showed no significant effect on lifespan, so a shortening effect is contradicted by the same evidence.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp007": {
+        "kind": "mechanism",
+        "label": 0,
+        "statement": "Rapamycin extends lifespan in Mus musculus by activating mTORC1 signaling.",
+        "why_false": "Rapamycin extends lifespan by inhibiting mTOR signaling, not activating it.",
+        "verifier": "google",
+        "confidence": 1.0
+      },
+      "imp008": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Curcumin extends lifespan in Mus musculus.",
+        "decoy": false,
+        "compound": "Curcumin",
+        "pmids": [
+          "22451473"
+        ]
+      },
+      "imp009": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Epimedium extract extends lifespan in Mus musculus.",
+        "decoy": false,
+        "compound": "Epimedium extract",
+        "pmids": [
+          "26145038"
+        ]
+      },
+      "imp010": {
+        "kind": "decoy_mechanism",
+        "label": 0,
+        "statement": "Chlorpromazine extends lifespan in Mus musculus by activating AMPK signaling.",
+        "why_false": "Chlorpromazine showed no significant lifespan effect in mice, and there is no published evidence that lifespan extension in mice occurs via AMPK activation by this drug.",
+        "verifier": "data",
+        "confidence": null
+      }
+    },
+    "dropped_synthetic": [
+      {
+        "kind": "condition",
+        "statement": "Rapamycin extends lifespan in young male Mus musculus when started in adulthood.",
+        "why_false": "The largest replication found the effect was weaker or absent in males; robust extension is seen in females.",
+        "verdict": "true",
+        "confidence": 1.0,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Metformin extends lifespan in Mus musculus.",
+        "why_false": "Metformin did not extend lifespan in the NIA Interventions Testing Program mouse trials.",
+        "verdict": "true",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Rapamycin accelerates ageing in Mus musculus.",
+        "why_false": "Rapamycin slows ageing and extends both median and maximum lifespan in mice.",
+        "verdict": "false",
+        "confidence": 1.0,
+        "verifier": "google"
+      },
+      {
+        "kind": "condition",
+        "statement": "Rapamycin extends lifespan in Mus musculus when treatment begins only in late old age.",
+        "why_false": "Rapamycin's lifespan extension is well documented when started in late life too, so the claimed absence is wrong; but restricted to this narrow framing the effect is attributed to early-life initiation in the literature, making the claim misleading.",
+        "verdict": "true",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Everolimus extends lifespan in Mus musculus.",
+        "why_false": "Everolimus has not been shown to extend lifespan in mice; only rapamycin has replicated lifespan extension among clinically approved rapalogs in this organism.",
+        "verdict": "true",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Rapamycin extends lifespan in Mus musculus only through suppression of cancer.",
+        "why_false": "Rapamycin extends lifespan in long-lived and cancer-resistant strains and delays ageing of normal tissues, so cancer suppression alone does not account for the effect.",
+        "verdict": "false",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Chlorpromazine accelerates ageing in Mus musculus under standard chow conditions.",
+        "why_false": "Intervention testing found no significant effect on lifespan in mice, so accelerated ageing is at odds with the observed outcome.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Chlorpromazine extends lifespan in Mus musculus through enhanced autophagy in neurons.",
+        "why_false": "No lifespan extension was observed in mice, and chlorpromazine is not established as an autophagy-enhancing longevity intervention in this organism.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      }
+    ]
+  },
+  "g004": {
+    "as_of": "2008-04-13",
+    "species": "Caenorhabditis elegans",
+    "writer": "zhipu",
+    "items": {
+      "imp001": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Ethotoin extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "Ethotoin",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp002": {
+        "kind": "mechanism",
+        "label": 0,
+        "statement": "Reserpine extends lifespan in Caenorhabditis elegans by inhibiting mitochondrial respiration.",
+        "why_false": "Reserpine's lifespan extension is attributed to monoamine depletion via VMAT inhibition, not mitochondrial inhibition.",
+        "verifier": "google",
+        "confidence": 0.9
+      },
+      "imp003": {
+        "kind": "real",
+        "label": 0,
+        "statement": "3,7-dimethylxanthine extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "3,7-dimethylxanthine",
+        "pmids": [
+          "30061824"
+        ]
+      },
+      "imp004": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Lamotrigine extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "Lamotrigine",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp005": {
+        "kind": "reversed",
+        "label": 0,
+        "statement": "Reserpine shortens lifespan in Caenorhabditis elegans.",
+        "why_false": "Published work reports reserpine extends C. elegans lifespan, not shortens it.",
+        "verifier": "google",
+        "confidence": 0.95
+      },
+      "imp006": {
+        "kind": "real",
+        "label": 0,
+        "statement": "ABC101 extends lifespan in Caenorhabditis elegans.",
+        "decoy": true,
+        "compound": "ABC101",
+        "pmids": [
+          "30911178"
+        ]
+      },
+      "imp007": {
+        "kind": "decoy_reversed",
+        "label": 0,
+        "statement": "ABC101 shortens lifespan in Caenorhabditis elegans.",
+        "why_false": "The claim was tested and found to have no significant effect, so neither extension nor shortening is supported; the reversed direction is false.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp008": {
+        "kind": "true",
+        "label": 1,
+        "statement": "Reserpine extends lifespan in Caenorhabditis elegans.",
+        "compound": "Reserpine",
+        "pmids": [
+          "18409080",
+          "22212533",
+          "27966489"
+        ]
+      },
+      "imp009": {
+        "kind": "decoy_mechanism",
+        "label": 0,
+        "statement": "ABC101 extends lifespan in Caenorhabditis elegans by activating the insulin/IGF-1 signaling pathway.",
+        "why_false": "Reduced insulin/IGF-1 signaling, not activation, is associated with lifespan extension in C. elegans, and ABC101 showed no significant lifespan effect at all.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp010": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Memantine Hydrochloride extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "Memantine Hydrochloride",
+        "pmids": [
+          "33008901"
+        ]
+      }
+    },
+    "dropped_synthetic": [
+      {
+        "kind": "condition",
+        "statement": "Reserpine extends lifespan in Caenorhabditis elegans larvae.",
+        "why_false": "The lifespan extension was measured in adults; larvae do not undergo ageing-related lifespan measurement in this paradigm.",
+        "verdict": "true",
+        "confidence": 0.95,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Methyldopa extends lifespan in Caenorhabditis elegans.",
+        "why_false": "Methyldopa, another catecholamine-lowering agent, has not been shown to extend C. elegans lifespan.",
+        "verdict": "true",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Reserpine accelerates ageing in Caenorhabditis elegans.",
+        "why_false": "Replicated studies show reserpine delays ageing and prolongs lifespan in this organism.",
+        "verdict": "false",
+        "confidence": 0.95,
+        "verifier": "google"
+      },
+      {
+        "kind": "condition",
+        "statement": "Reserpine extends lifespan in Caenorhabditis elegans daf-16 mutants.",
+        "why_false": "The lifespan extension requires DAF-16/FOXO activity and is abolished in daf-16 loss-of-function backgrounds.",
+        "verdict": "true",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Haloperidol extends lifespan in Caenorhabditis elegans.",
+        "why_false": "Haloperidol, a dopamine receptor antagonist, has not been shown to extend C. elegans lifespan.",
+        "verdict": "true",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Reserpine extends lifespan in Caenorhabditis elegans by activating the insulin-like receptor DAF-2.",
+        "why_false": "Lifespan extension by reserpine does not require DAF-2 activation; reduced insulin/IGF-1 signaling acts through DAF-16 rather than via reserpine's monoamine depletion.",
+        "verdict": "false",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "ABC101 accelerates ageing in Caenorhabditis elegans under dietary restriction conditions.",
+        "why_false": "Testing showed no significant effect on lifespan, so an ageing-accelerating effect is contradicted by the experimental outcome.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "ABC101 extends lifespan in Caenorhabditis elegans through inhibition of mitochondrial respiration.",
+        "why_false": "Mitochondrial inhibition-based lifespan extension is not supported for this compound, which had no significant lifespan effect in testing.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      }
+    ]
+  },
+  "g005": {
+    "as_of": "1997-11-30",
+    "species": "Drosophila melanogaster",
+    "writer": "zhipu",
+    "items": {
+      "imp001": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Xanthine extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "Xanthine",
+        "pmids": [
+          "1800135"
+        ]
+      },
+      "imp002": {
+        "kind": "real",
+        "label": 0,
+        "statement": "SR27897 extends lifespan in Drosophila melanogaster.",
+        "decoy": true,
+        "compound": "SR27897",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp003": {
+        "kind": "reversed",
+        "label": 0,
+        "statement": "N-acetyl-L-cysteine accelerates ageing in Drosophila melanogaster.",
+        "why_false": "NAC delays ageing in Drosophila rather than accelerating it.",
+        "verifier": "google",
+        "confidence": 0.8
+      },
+      "imp004": {
+        "kind": "decoy_mechanism",
+        "label": 0,
+        "statement": "SR27897 extends lifespan in Drosophila melanogaster by activating the insulin/IGF signalling pathway.",
+        "why_false": "Lifespan extension in flies is typically associated with reduced, not increased, insulin/IGF signalling; the compound had no significant lifespan effect, and this mechanism is at odds with known fly ageing biology.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp005": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Dofetilide extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "Dofetilide",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp006": {
+        "kind": "reversed",
+        "label": 0,
+        "statement": "N-acetyl-L-cysteine shortens lifespan in Drosophila melanogaster.",
+        "why_false": "NAC is reported to extend lifespan in Drosophila, not shorten it.",
+        "verifier": "google",
+        "confidence": 0.8
+      },
+      "imp007": {
+        "kind": "decoy_reversed",
+        "label": 0,
+        "statement": "SR27897 shortens lifespan in Drosophila melanogaster.",
+        "why_false": "The claim was tested and found to have no significant effect on lifespan, so an opposite effect is contradicted by the experimental outcome.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp008": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Amoxapine extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "Amoxapine",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp009": {
+        "kind": "true",
+        "label": 1,
+        "statement": "N-acetyl-L-cysteine extends lifespan in Drosophila melanogaster.",
+        "compound": "N-acetyl-L-cysteine",
+        "pmids": [
+          "30243020",
+          "31115735",
+          "9447249"
+        ]
+      },
+      "imp010": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Morpholinosydnonimine HCl extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "Morpholinosydnonimine HCl",
+        "pmids": [
+          "33008901"
+        ]
+      }
+    },
+    "dropped_synthetic": [
+      {
+        "kind": "condition",
+        "statement": "N-acetyl-L-cysteine extends lifespan in Drosophila melanogaster males.",
+        "why_false": "The reported lifespan extension was observed in females; males showed no significant benefit.",
+        "verdict": "true",
+        "confidence": 0.8,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Glutathione supplementation extends lifespan in Drosophila melanogaster.",
+        "why_false": "Direct glutathione supplementation has not been shown to extend Drosophila lifespan.",
+        "verdict": "uncertain",
+        "confidence": 0.5,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "N-acetyl-L-cysteine extends lifespan in Drosophila melanogaster by increasing SOD activity.",
+        "why_false": "The lifespan extension was attributed to elevated glutathione levels, not changes in SOD activity.",
+        "verdict": "uncertain",
+        "confidence": 0.5,
+        "verifier": "google"
+      },
+      {
+        "kind": "condition",
+        "statement": "N-acetyl-L-cysteine extends lifespan in Drosophila melanogaster under dietary restriction.",
+        "why_false": "The benefit was demonstrated on a standard diet; under dietary restriction no additive lifespan extension is observed.",
+        "verdict": "uncertain",
+        "confidence": 0.5,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Vitamin C supplementation extends lifespan in Drosophila melanogaster.",
+        "why_false": "Vitamin C has not been shown to extend Drosophila lifespan in published tests.",
+        "verdict": "uncertain",
+        "confidence": 0.6,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "N-acetyl-L-cysteine extends lifespan in Drosophila melanogaster by reducing oxidative damage to DNA.",
+        "why_false": "The reported extension occurred without a reduction in oxidative damage markers, ruling out this mechanism.",
+        "verdict": "uncertain",
+        "confidence": 0.5,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "SR27897 accelerates ageing in Drosophila melanogaster fed a high-fat diet.",
+        "why_false": "The compound showed no significant effect on lifespan in this organism, so a lifespan-shortening effect under any diet condition is contradicted by the published evidence.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "SR27897 extends lifespan in Drosophila melanogaster through enhanced cholecystokinin receptor signalling in the gut.",
+        "why_false": "SR27897 is known as a cholecystokinin receptor antagonist, so it inhibits rather than enhances this signalling, and the compound produced no significant lifespan extension in flies.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      }
+    ]
+  },
+  "g006": {
+    "as_of": "2008-07-17",
+    "species": "Mus musculus",
+    "writer": "zhipu",
+    "items": {
+      "imp001": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Sulindac extends lifespan in Mus musculus.",
+        "decoy": true,
+        "compound": "Sulindac",
+        "pmids": [
+          "36179270"
+        ]
+      },
+      "imp002": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Medium-chain triglyceride oil extends lifespan in Mus musculus.",
+        "decoy": false,
+        "compound": "Medium-chain triglyceride oil",
+        "pmids": [
+          "22451473"
+        ]
+      },
+      "imp003": {
+        "kind": "condition",
+        "label": 0,
+        "statement": "Nordihydroguaiaretic acid extends lifespan in young Mus musculus when started before weaning.",
+        "why_false": "The lifespan extension was demonstrated with supplementation initiated in middle-aged mice; no effect is established for early-life administration.",
+        "verifier": "google",
+        "confidence": 0.8
+      },
+      "imp004": {
+        "kind": "decoy_mechanism",
+        "label": 0,
+        "statement": "Sulindac extends lifespan in Mus musculus through activation of the insulin/IGF-1 signaling pathway.",
+        "why_false": "Lifespan extension is not observed in mice treated with sulindac, and insulin/IGF-1 signaling activation generally accelerates ageing rather than extending lifespan.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp005": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Dimethyl fumarate extends lifespan in Mus musculus.",
+        "decoy": false,
+        "compound": "Dimethyl fumarate",
+        "pmids": [
+          "38041783"
+        ]
+      },
+      "imp006": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Acetaminophen extends lifespan in Mus musculus.",
+        "decoy": false,
+        "compound": "Acetaminophen",
+        "pmids": [
+          "4788962"
+        ]
+      },
+      "imp007": {
+        "kind": "true",
+        "label": 1,
+        "statement": "Nordihydroguaiaretic acid extends lifespan in Mus musculus.",
+        "compound": "Nordihydroguaiaretic acid",
+        "pmids": [
+          "18631321",
+          "25380600",
+          "27312235"
+        ]
+      },
+      "imp008": {
+        "kind": "decoy_reversed",
+        "label": 0,
+        "statement": "Sulindac shortens lifespan in Mus musculus.",
+        "why_false": "The claim being tested was that sulindac has no significant effect on lifespan; a shortening effect is contradicted by the null result and by evidence that NSAIDs do not accelerate ageing in mice.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp009": {
+        "kind": "reversed",
+        "label": 0,
+        "statement": "Nordihydroguaiaretic acid shortens lifespan in Mus musculus.",
+        "why_false": "The published, replicated finding (including the Interventions Testing Program) is that NDGA extends lifespan in mice, not shortens it.",
+        "verifier": "google",
+        "confidence": 0.95
+      },
+      "imp010": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Nicotinamide extends lifespan in Mus musculus.",
+        "decoy": false,
+        "compound": "Nicotinamide",
+        "pmids": [
+          "29514072"
+        ]
+      }
+    },
+    "dropped_synthetic": [
+      {
+        "kind": "condition",
+        "statement": "Nordihydroguaiaretic acid extends lifespan in female Mus musculus.",
+        "why_false": "The Interventions Testing Program found no significant lifespan extension in female mice; the effect was replicated in males.",
+        "verdict": "true",
+        "confidence": 0.95,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Zileuton extends lifespan in Mus musculus.",
+        "why_false": "Zileuton, another lipoxygenase inhibitor, has not been shown to extend lifespan in mice; the replicated result is specific to NDGA among this class.",
+        "verdict": "true",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Nordihydroguaiaretic acid extends lifespan in Mus musculus by suppressing mTOR signaling.",
+        "why_false": "Published work attributes NDGA's effect to modulation of lipid metabolism and lipoxygenase-derived eicosanoids, not to mTOR inhibition, which is the mechanism of rapamycin.",
+        "verdict": "uncertain",
+        "confidence": 0.7,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Nordihydroguaiaretic acid accelerates ageing in Mus musculus.",
+        "why_false": "Replicated studies show NDGA delays ageing-related mortality in mice rather than accelerating it.",
+        "verdict": "false",
+        "confidence": 0.95,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Baicalein extends lifespan in Mus musculus.",
+        "why_false": "Baicalein, a related lipoxygenase inhibitor, has not been shown to extend lifespan in mice; the replicated finding concerns NDGA.",
+        "verdict": "uncertain",
+        "confidence": 0.8,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Nordihydroguaiaretic acid extends lifespan in Mus musculus only through caloric restriction.",
+        "why_false": "The lifespan extension in mice occurred without reduced food intake or body weight, indicating a mechanism distinct from caloric restriction.",
+        "verdict": "false",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Sulindac accelerates ageing in Mus musculus under a standard chow diet.",
+        "why_false": "Sulindac was tested in mice and showed no significant effect on lifespan, so an ageing-accelerating effect under standard diet is contradicted by the experimental outcome.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Sulindac extends lifespan in Mus musculus by inducing mitochondrial biogenesis in skeletal muscle.",
+        "why_false": "Sulindac does not extend lifespan in mice, and there is no evidence that sulindac acts as an inducer of mitochondrial biogenesis; NSAIDs primarily act through COX inhibition.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      }
+    ]
+  },
+  "g007": {
+    "as_of": "2010-12-31",
+    "species": "Caenorhabditis elegans",
+    "writer": "zhipu",
+    "items": {
+      "imp001": {
+        "kind": "decoy_mechanism",
+        "label": 0,
+        "statement": "Ethotoin extends lifespan in Caenorhabditis elegans by inhibiting insulin-like signaling through DAF-2.",
+        "why_false": "Ethotoin does not extend lifespan in this organism, and no evidence links it to DAF-2 insulin signaling inhibition.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp002": {
+        "kind": "reversed",
+        "label": 0,
+        "statement": "Baicalein shortens lifespan in Caenorhabditis elegans.",
+        "why_false": "Published work reports lifespan extension, not shortening, from baicalein in worms.",
+        "verifier": "google",
+        "confidence": 0.9
+      },
+      "imp003": {
+        "kind": "true",
+        "label": 1,
+        "statement": "Baicalein extends lifespan in Caenorhabditis elegans.",
+        "compound": "Baicalein",
+        "pmids": [
+          "22114686",
+          "33809299"
+        ]
+      },
+      "imp004": {
+        "kind": "real",
+        "label": 0,
+        "statement": "ABC37 extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "ABC37",
+        "pmids": [
+          "30911178"
+        ]
+      },
+      "imp005": {
+        "kind": "real",
+        "label": 0,
+        "statement": "JMN21 extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "JMN21",
+        "pmids": [
+          "30911178"
+        ]
+      },
+      "imp006": {
+        "kind": "decoy_reversed",
+        "label": 0,
+        "statement": "Ethotoin shortens lifespan in Caenorhabditis elegans.",
+        "why_false": "Ethotoin, like other hydantoin anticonvulsants, was found not to shorten lifespan; the claim tested showed no significant effect, and no evidence supports life-shortening.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp007": {
+        "kind": "real",
+        "label": 0,
+        "statement": "DTT extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "DTT",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp008": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Ethotoin extends lifespan in Caenorhabditis elegans.",
+        "decoy": true,
+        "compound": "Ethotoin",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp009": {
+        "kind": "condition",
+        "label": 0,
+        "statement": "Baicalein extends lifespan in Caenorhabditis elegans at high doses.",
+        "why_false": "The reported extension occurs at moderate doses; high concentrations are toxic and fail to extend lifespan.",
+        "verifier": "google",
+        "confidence": 0.8
+      },
+      "imp010": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Dequalinium chloride extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "Dequalinium chloride",
+        "pmids": [
+          "33008901"
+        ]
+      }
+    },
+    "dropped_synthetic": [
+      {
+        "kind": "analog",
+        "statement": "Wogonin extends lifespan in Caenorhabditis elegans.",
+        "why_false": "Wogonin, a related flavone from the same plant, has not been shown to extend lifespan in worms.",
+        "verdict": "true",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Baicalein extends lifespan in Caenorhabditis elegans by activating the insulin/IGF-1 receptor DAF-2.",
+        "why_false": "The reported extension does not require DAF-2 activity; the intervention acts independently of insulin/IGF-1 signaling.",
+        "verdict": "false",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Baicalein accelerates ageing in Caenorhabditis elegans.",
+        "why_false": "Baicalein is reported to delay ageing in worms, not accelerate it.",
+        "verdict": "false",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "condition",
+        "statement": "Baicalein extends lifespan in Caenorhabditis elegans males.",
+        "why_false": "The published effect was established in hermaphrodites; no extension has been demonstrated in males.",
+        "verdict": "true",
+        "confidence": 0.8,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Chrysin extends lifespan in Caenorhabditis elegans.",
+        "why_false": "Chrysin, a structurally similar flavone, was tested in worms without extending lifespan.",
+        "verdict": "true",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Baicalein extends lifespan in Caenorhabditis elegans by inhibiting the heat-shock transcription factor HSF-1.",
+        "why_false": "The lifespan extension requires HSF-1 activity rather than its inhibition.",
+        "verdict": "false",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Ethotoin accelerates ageing in Caenorhabditis elegans under dietary restriction conditions.",
+        "why_false": "There is no evidence that ethotoin accelerates ageing in C. elegans; the tested claim found no significant lifespan effect at all.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Ethotoin extends lifespan in Caenorhabditis elegans by activating the SKN-1 oxidative stress response pathway.",
+        "why_false": "Ethotoin was not shown to extend lifespan in this organism, and no published evidence attributes such an effect to SKN-1 activation.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      }
+    ]
+  },
+  "g008": {
+    "as_of": "2014-11-30",
+    "species": "Drosophila melanogaster",
+    "writer": "zhipu",
+    "items": {
+      "imp001": {
+        "kind": "mechanism",
+        "label": 0,
+        "statement": "Ibuprofen extends lifespan in Drosophila melanogaster by inhibiting cyclooxygenase-dependent prostaglandin synthesis.",
+        "why_false": "Drosophila lack canonical cyclooxygenase pathways; the lifespan effect was attributed to ibuprofen's effects on eIF2 signaling and triglyceride metabolism, not prostaglandin inhibition.",
+        "verifier": "google",
+        "confidence": 0.85
+      },
+      "imp002": {
+        "kind": "true",
+        "label": 1,
+        "statement": "Ibuprofen extends lifespan in Drosophila melanogaster.",
+        "compound": "Ibuprofen",
+        "pmids": [
+          "25521617",
+          "28066251"
+        ]
+      },
+      "imp003": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Hydroxyprogesterone caproate extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "Hydroxyprogesterone caproate",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp004": {
+        "kind": "decoy_mechanism",
+        "label": 0,
+        "statement": "Catechin extends lifespan in Drosophila melanogaster by activating the insulin/IGF signaling pathway.",
+        "why_false": "Lifespan extension is typically associated with reduced, not activated, insulin/IGF signaling; the claim of extension via this mechanism is contradicted.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp005": {
+        "kind": "decoy_reversed",
+        "label": 0,
+        "statement": "Catechin shortens lifespan in Drosophila melanogaster.",
+        "why_false": "The tested claim found no significant effect, and no published evidence shows catechin shortening Drosophila lifespan; the opposite direction is unsupported.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp006": {
+        "kind": "reversed",
+        "label": 0,
+        "statement": "Ibuprofen shortens lifespan in Drosophila melanogaster.",
+        "why_false": "Published work shows ibuprofen extends lifespan in Drosophila, not shortens it.",
+        "verifier": "google",
+        "confidence": 0.9
+      },
+      "imp007": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Limonin extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "Limonin",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp008": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Ethotoin extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "Ethotoin",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp009": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Catechin extends lifespan in Drosophila melanogaster.",
+        "decoy": true,
+        "compound": "Catechin",
+        "pmids": [
+          "8326745"
+        ]
+      },
+      "imp010": {
+        "kind": "real",
+        "label": 0,
+        "statement": "PPG extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "PPG",
+        "pmids": [
+          "33008901"
+        ]
+      }
+    },
+    "dropped_synthetic": [
+      {
+        "kind": "condition",
+        "statement": "Ibuprofen extends lifespan in male Drosophila melanogaster.",
+        "why_false": "The reported lifespan extension was observed in female flies; the effect in males was not demonstrated.",
+        "verdict": "true",
+        "confidence": 0.95,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Aspirin extends lifespan in Drosophila melanogaster.",
+        "why_false": "Aspirin was tested in Drosophila and did not produce lifespan extension comparable to ibuprofen.",
+        "verdict": "true",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Ibuprofen accelerates ageing in Drosophila melanogaster.",
+        "why_false": "Ibuprofen was shown to delay ageing and extend lifespan in Drosophila, not accelerate ageing.",
+        "verdict": "false",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "condition",
+        "statement": "Ibuprofen extends lifespan in Drosophila melanogaster on a high-fat diet.",
+        "why_false": "The lifespan extension was demonstrated on standard laboratory diets; no extension has been shown under high-fat dietary conditions.",
+        "verdict": "uncertain",
+        "confidence": 0.6,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Naproxen extends lifespan in Drosophila melanogaster.",
+        "why_false": "Naproxen, a related NSAID, was tested in Drosophila and did not extend lifespan the way ibuprofen did.",
+        "verdict": "true",
+        "confidence": 0.8,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Ibuprofen extends lifespan in Drosophila melanogaster by reducing bacterial load in the gut.",
+        "why_false": "The lifespan extension was maintained under axenic conditions, ruling out a requirement for microbiome modulation or reduced bacterial load.",
+        "verdict": "false",
+        "confidence": 0.8,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Catechin accelerates ageing in Drosophila melanogaster under dietary restriction.",
+        "why_false": "The intervention showed no significant lifespan effect, and there is no evidence catechin accelerates ageing in Drosophila under any feeding condition.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Catechin extends lifespan in Drosophila melanogaster through upregulation of superoxide dismutase activity.",
+        "why_false": "No significant lifespan extension was observed, so attributing it to a specific antioxidant enzyme upregulation is false.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      }
+    ]
+  },
+  "g009": {
+    "as_of": "1994-01-17",
+    "species": "Mus musculus",
+    "writer": "zhipu",
+    "items": {
+      "imp001": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Curcumin extends lifespan in Mus musculus.",
+        "decoy": false,
+        "compound": "Curcumin",
+        "pmids": [
+          "22451473"
+        ]
+      },
+      "imp002": {
+        "kind": "true",
+        "label": 1,
+        "statement": "Melatonin extends lifespan in Mus musculus.",
+        "compound": "Melatonin",
+        "pmids": [
+          "11445596",
+          "8290600"
+        ]
+      },
+      "imp003": {
+        "kind": "mechanism",
+        "label": 0,
+        "statement": "Melatonin extends lifespan in Mus musculus by restoring pineal melatonin production.",
+        "why_false": "Exogenous melatonin acts in mice whose pineal glands are intact, so lifespan effects cannot depend on restoring lost pineal production.",
+        "verifier": "google",
+        "confidence": 0.8
+      },
+      "imp004": {
+        "kind": "real",
+        "label": 0,
+        "statement": "N-acetyl-L-cysteine extends lifespan in Mus musculus.",
+        "decoy": true,
+        "compound": "N-acetyl-L-cysteine",
+        "pmids": [
+          "20819793"
+        ]
+      },
+      "imp005": {
+        "kind": "real",
+        "label": 0,
+        "statement": "TM5441 (PAI-1 inhibitor) extends lifespan in Mus musculus.",
+        "decoy": false,
+        "compound": "TM5441 (PAI-1 inhibitor)",
+        "pmids": [
+          "30916479"
+        ]
+      },
+      "imp006": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Caffeic acid phenethylester extends lifespan in Mus musculus.",
+        "decoy": false,
+        "compound": "Caffeic acid phenethylester",
+        "pmids": [
+          "19587680"
+        ]
+      },
+      "imp007": {
+        "kind": "reversed",
+        "label": 0,
+        "statement": "Melatonin shortens lifespan in Mus musculus.",
+        "why_false": "Melatonin supplementation has not been shown to shorten mouse lifespan; reported effects are neutral or modestly beneficial depending on strain and study.",
+        "verifier": "google",
+        "confidence": 0.8
+      },
+      "imp008": {
+        "kind": "decoy_mechanism",
+        "label": 0,
+        "statement": "N-acetyl-L-cysteine extends lifespan in Mus musculus by activating the insulin/IGF-1 signaling pathway.",
+        "why_false": "Reduced IIS signaling, not activation, is associated with lifespan extension; the intervention had no significant effect anyway.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp009": {
+        "kind": "real",
+        "label": 0,
+        "statement": "C60 fullerene extends lifespan in Mus musculus.",
+        "decoy": false,
+        "compound": "C60 fullerene",
+        "pmids": [
+          "33849306"
+        ]
+      },
+      "imp010": {
+        "kind": "decoy_reversed",
+        "label": 0,
+        "statement": "N-acetyl-L-cysteine shortens lifespan in Mus musculus.",
+        "why_false": "The claim was tested and found to have no significant effect; there is no evidence that NAC shortens mouse lifespan.",
+        "verifier": "data",
+        "confidence": null
+      }
+    },
+    "dropped_synthetic": [
+      {
+        "kind": "condition",
+        "statement": "Melatonin extends lifespan in male C57BL/6J mice.",
+        "why_false": "Trials in C57BL/6J males found no significant lifespan extension from melatonin administration.",
+        "verdict": "true",
+        "confidence": 0.85,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Serotonin supplementation extends lifespan in Mus musculus.",
+        "why_false": "Serotonin administration has not been demonstrated to extend lifespan in mice; peripheral serotonin is generally associated with metabolic impairment.",
+        "verdict": "uncertain",
+        "confidence": 0.5,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Melatonin extends lifespan in Mus musculus by activating AMPK in skeletal muscle.",
+        "why_false": "No published lifespan study identifies skeletal muscle AMPK activation as the mechanism of melatonin's effect on mouse longevity.",
+        "verdict": "uncertain",
+        "confidence": 0.4,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Melatonin accelerates ageing in Mus musculus.",
+        "why_false": "Melatonin is not known to accelerate ageing in mice; long-term studies report no harmful effect on ageing or lifespan.",
+        "verdict": "false",
+        "confidence": 0.85,
+        "verifier": "google"
+      },
+      {
+        "kind": "condition",
+        "statement": "Melatonin extends lifespan in aged mice when treatment begins late in life.",
+        "why_false": "Late-onset melatonin administration in already-aged mice has not been shown to extend lifespan.",
+        "verdict": "true",
+        "confidence": 0.75,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "N-acetylcysteine extends lifespan in Mus musculus.",
+        "why_false": "N-acetylcysteine supplementation has not been shown to extend lifespan in mice in controlled longevity studies.",
+        "verdict": "true",
+        "confidence": 0.8,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "N-acetyl-L-cysteine accelerates ageing in Mus musculus under standard chow conditions.",
+        "why_false": "The intervention showed no significant effect on lifespan, and no published evidence indicates NAC accelerates ageing in mice.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "N-acetyl-L-cysteine extends lifespan in Mus musculus by inducing mitochondrial biogenesis.",
+        "why_false": "The tested claim showed no significant lifespan effect, and lifespan extension is not attributed to NAC-induced mitochondrial biogenesis.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      }
+    ]
+  },
+  "g010": {
+    "as_of": "2008-01-20",
+    "species": "Caenorhabditis elegans",
+    "writer": "zhipu",
+    "items": {
+      "imp001": {
+        "kind": "real",
+        "label": 0,
+        "statement": "R(+)-SCH-23390 hydrochloride extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "R(+)-SCH-23390 hydrochloride",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp002": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Mycophenolic acid extends lifespan in Caenorhabditis elegans.",
+        "decoy": true,
+        "compound": "Mycophenolic acid",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp003": {
+        "kind": "decoy_mechanism",
+        "label": 0,
+        "statement": "Mycophenolic acid extends lifespan in Caenorhabditis elegans by inhibiting de novo purine biosynthesis.",
+        "why_false": "Purports a specific mechanism for a lifespan effect that was not observed.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp004": {
+        "kind": "true",
+        "label": 1,
+        "statement": "FCCP extends lifespan in Caenorhabditis elegans.",
+        "compound": "FCCP",
+        "pmids": [
+          "18221415",
+          "20346071"
+        ]
+      },
+      "imp005": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Sesamol extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "Sesamol",
+        "pmids": [
+          "30118882"
+        ]
+      },
+      "imp006": {
+        "kind": "condition",
+        "label": 0,
+        "statement": "FCCP extends lifespan in Caenorhabditis elegans at high doses.",
+        "why_false": "The lifespan extension is seen only with low doses; higher doses are toxic and do not extend lifespan.",
+        "verifier": "google",
+        "confidence": 0.8
+      },
+      "imp007": {
+        "kind": "decoy_reversed",
+        "label": 0,
+        "statement": "Mycophenolic acid shortens lifespan in Caenorhabditis elegans.",
+        "why_false": "Opposite of the tested null result; no evidence it reduces lifespan in this organism.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp008": {
+        "kind": "reversed",
+        "label": 0,
+        "statement": "FCCP shortens lifespan in Caenorhabditis elegans.",
+        "why_false": "Published work shows low-dose FCCP extends lifespan in C. elegans; the opposite effect is claimed here.",
+        "verifier": "google",
+        "confidence": 0.85
+      },
+      "imp009": {
+        "kind": "real",
+        "label": 0,
+        "statement": "SKF83959 hydrobromide extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "SKF83959 hydrobromide",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp010": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Mebhydroline 1,5-napthalenedisulfonate extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "Mebhydroline 1,5-napthalenedisulfonate",
+        "pmids": [
+          "33008901"
+        ]
+      }
+    },
+    "dropped_synthetic": [
+      {
+        "kind": "analog",
+        "statement": "DNP extends lifespan in Caenorhabditis elegans.",
+        "why_false": "2,4-dinitrophenol, another chemical uncoupler, has not been shown to extend lifespan in C. elegans.",
+        "verdict": "true",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "FCCP extends lifespan in Caenorhabditis elegans by inducing the mitochondrial unfolded protein response.",
+        "why_false": "Published work found the lifespan extension is independent of the mitochondrial unfolded protein response.",
+        "verdict": "true",
+        "confidence": 0.85,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "FCCP accelerates ageing in Caenorhabditis elegans fed a standard OP50 diet.",
+        "why_false": "On standard OP50 diet, low-dose FCCP extends rather than shortens lifespan.",
+        "verdict": "false",
+        "confidence": 0.8,
+        "verifier": "google"
+      },
+      {
+        "kind": "condition",
+        "statement": "FCCP extends lifespan in Caenorhabditis elegans during larval development.",
+        "why_false": "The reported lifespan extension results from uncoupling in adulthood; exposure restricted to larval stages does not extend lifespan.",
+        "verdict": "uncertain",
+        "confidence": 0.5,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Oligomycin extends lifespan in Caenorhabditis elegans.",
+        "why_false": "Oligomycin, an ATP synthase inhibitor affecting the same respiratory chain context, has not been shown to extend lifespan in C. elegans.",
+        "verdict": "false",
+        "confidence": 0.85,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "FCCP extends lifespan in Caenorhabditis elegans by increasing reactive oxygen species.",
+        "why_false": "Published work indicates the lifespan extension does not require increased reactive oxygen species production.",
+        "verdict": "true",
+        "confidence": 0.8,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Mycophenolic acid accelerates ageing in Caenorhabditis elegans under standard culture conditions.",
+        "why_false": "Contradicts the null outcome of the test; ageing acceleration is unsupported.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Mycophenolic acid extends lifespan in Caenorhabditis elegans through activation of the insulin-like signalling pathway.",
+        "why_false": "Attributes an unobserved lifespan extension to a plausible but false mechanism.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      }
+    ]
+  },
+  "g011": {
+    "as_of": "2018-01-06",
+    "species": "Drosophila melanogaster",
+    "writer": "zhipu",
+    "items": {
+      "imp001": {
+        "kind": "condition",
+        "label": 0,
+        "statement": "J147 extends lifespan in Drosophila melanogaster lacking neuronal AMPK.",
+        "why_false": "AMPK activation is implicated as required for J147's lifespan benefit, so the effect should be abolished without it.",
+        "verifier": "google",
+        "confidence": 0.8
+      },
+      "imp002": {
+        "kind": "true",
+        "label": 1,
+        "statement": "J147 extends lifespan in Drosophila melanogaster.",
+        "compound": "J147",
+        "pmids": [
+          "29316249",
+          "33550278"
+        ]
+      },
+      "imp003": {
+        "kind": "real",
+        "label": 0,
+        "statement": "JSK extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "JSK",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp004": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Octoclothepin/Loxapine extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "Octoclothepin/Loxapine",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp005": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Cardamonin extends lifespan in Drosophila melanogaster.",
+        "decoy": true,
+        "compound": "Cardamonin",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp006": {
+        "kind": "decoy_reversed",
+        "label": 0,
+        "statement": "Cardamonin shortens lifespan in Drosophila melanogaster.",
+        "why_false": "This is the opposite direction of the tested claim; cardamonin was tested and showed no significant effect on lifespan, and no evidence supports a life-shortening effect.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp007": {
+        "kind": "decoy_mechanism",
+        "label": 0,
+        "statement": "Cardamonin extends lifespan in Drosophila melanogaster by activating the Nrf2 oxidative stress response pathway.",
+        "why_false": "The claim of lifespan extension is false since cardamonin had no significant effect on lifespan in this organism, so any specific mechanism attributed to it is unsupported.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp008": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Diphenhydramine HCl extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "Diphenhydramine HCl",
+        "pmids": [
+          "4397875"
+        ]
+      },
+      "imp009": {
+        "kind": "reversed",
+        "label": 0,
+        "statement": "J147 shortens lifespan in Drosophila melanogaster.",
+        "why_false": "Published work reports lifespan extension, not shortening, with J147 in flies.",
+        "verifier": "google",
+        "confidence": 0.9
+      },
+      "imp010": {
+        "kind": "real",
+        "label": 0,
+        "statement": "PlusMinusButaclamol-HCL extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "PlusMinusButaclamol-HCL",
+        "pmids": [
+          "33008901"
+        ]
+      }
+    },
+    "dropped_synthetic": [
+      {
+        "kind": "condition",
+        "statement": "J147 extends lifespan in Drosophila melanogaster fed a high-fat diet.",
+        "why_false": "The reported extension was on standard diet; no benefit under high-fat feeding has been shown.",
+        "verdict": "true",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Memantine extends lifespan in Drosophila melanogaster.",
+        "why_false": "Memantine has been tested in flies without extending lifespan; it is not a validated fly lifespan intervention.",
+        "verdict": "true",
+        "confidence": 0.8,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "J147 extends lifespan in Drosophila melanogaster through activation of Sir2.",
+        "why_false": "J147's reported mechanism involves mitochondrial ATP synthase and AMPK signaling, not Sir2-dependent pathways.",
+        "verdict": "false",
+        "confidence": 0.8,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "J147 accelerates ageing in Drosophila melanogaster at late-life dosing.",
+        "why_false": "J147 has only been reported to extend lifespan and improve late-life health in flies, not to accelerate ageing.",
+        "verdict": "false",
+        "confidence": 0.8,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Donepezil extends lifespan in Drosophila melanogaster.",
+        "why_false": "Donepezil has not been shown to extend fly lifespan; cholinesterase inhibition is not a validated longevity intervention in Drosophila.",
+        "verdict": "true",
+        "confidence": 0.8,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "J147 extends lifespan in Drosophila melanogaster independently of dietary intake.",
+        "why_false": "The reported lifespan benefit depends on reduced food intake mediated by the treatment, so it is not independent of dietary intake.",
+        "verdict": "true",
+        "confidence": 0.8,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Cardamonin accelerates ageing in Drosophila melanogaster under normal dietary conditions.",
+        "why_false": "No published evidence shows cardamonin accelerates ageing in flies; the compound was tested and had no significant lifespan effect.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Cardamonin extends lifespan in Drosophila melanogaster through inhibition of the mTOR signalling pathway.",
+        "why_false": "The premise is false: cardamonin did not extend lifespan in Drosophila, so attributing an extension to mTOR inhibition contradicts the experimental outcome.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      }
+    ]
+  },
+  "g012": {
+    "as_of": "2013-11-18",
+    "species": "Mus musculus",
+    "writer": "zhipu",
+    "items": {
+      "imp001": {
+        "kind": "real",
+        "label": 0,
+        "statement": "PB125 (carnosol, withaferin A and luteolin) extends lifespan in Mus musculus.",
+        "decoy": false,
+        "compound": "PB125 (carnosol, withaferin A and luteolin)",
+        "pmids": [
+          "36179270"
+        ]
+      },
+      "imp002": {
+        "kind": "decoy_reversed",
+        "label": 0,
+        "statement": "Methylene blue shortens lifespan in Mus musculus.",
+        "why_false": "Published mouse studies report no significant lifespan effect of methylene blue, not a shortening; this reverses the (null) outcome and is contradicted by the evidence showing no harm.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp003": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Alpha-lipoic acid extends lifespan in Mus musculus.",
+        "decoy": false,
+        "compound": "Alpha-lipoic acid",
+        "pmids": [
+          "15059645"
+        ]
+      },
+      "imp004": {
+        "kind": "reversed",
+        "label": 0,
+        "statement": "Acarbose accelerates ageing in Mus musculus.",
+        "why_false": "Published replication across multiple sites shows acarbose delays ageing phenotypes and extends lifespan, not accelerates them.",
+        "verifier": "google",
+        "confidence": 0.99
+      },
+      "imp005": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Anterior hypothalamus extract extends lifespan in Mus musculus.",
+        "decoy": false,
+        "compound": "Anterior hypothalamus extract",
+        "pmids": [
+          "6752596"
+        ]
+      },
+      "imp006": {
+        "kind": "real",
+        "label": 0,
+        "statement": "TM5441 (PAI-1 inhibitor) extends lifespan in Mus musculus.",
+        "decoy": false,
+        "compound": "TM5441 (PAI-1 inhibitor)",
+        "pmids": [
+          "30916479"
+        ]
+      },
+      "imp007": {
+        "kind": "decoy_mechanism",
+        "label": 0,
+        "statement": "Methylene blue extends lifespan in Mus musculus by restoring mitochondrial complex IV activity in aged neurons.",
+        "why_false": "Methylene blue did not significantly extend mouse lifespan in controlled trials, so any mechanistic attribution of lifespan extension is false; its mitochondrial effects have not translated into a survival benefit.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp008": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Methylene blue extends lifespan in Mus musculus.",
+        "decoy": true,
+        "compound": "Methylene blue",
+        "pmids": [
+          "24245565"
+        ]
+      },
+      "imp009": {
+        "kind": "reversed",
+        "label": 0,
+        "statement": "Acarbose shortens lifespan in Mus musculus.",
+        "why_false": "The NIA Interventions Testing Program found acarbose robustly extends median and maximal lifespan in mice; the opposite effect is contradicted by published data.",
+        "verifier": "google",
+        "confidence": 0.99
+      },
+      "imp010": {
+        "kind": "true",
+        "label": 1,
+        "statement": "Acarbose extends lifespan in Mus musculus.",
+        "compound": "Acarbose",
+        "pmids": [
+          "24245565",
+          "27312235",
+          "30688027"
+        ]
+      }
+    },
+    "dropped_synthetic": [
+      {
+        "kind": "condition",
+        "statement": "Acarbose extends lifespan in female Mus musculus.",
+        "why_false": "The lifespan extension by acarbose was observed in males; females showed no significant lifespan benefit in the ITP cohorts.",
+        "verdict": "true",
+        "confidence": 0.99,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Metformin extends lifespan in Mus musculus.",
+        "why_false": "Metformin was tested in the same ITP mouse cohorts and did not significantly extend lifespan, unlike acarbose.",
+        "verdict": "true",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Acarbose extends lifespan in Mus musculus by reducing caloric intake.",
+        "why_false": "ITP analyses showed the lifespan extension was not explained by reduced food consumption; acarbose extended lifespan without a corresponding caloric restriction effect.",
+        "verdict": "uncertain",
+        "confidence": 0.8,
+        "verifier": "google"
+      },
+      {
+        "kind": "condition",
+        "statement": "Acarbose extends lifespan in young Mus musculus fed a high-fat diet.",
+        "why_false": "The replicated lifespan extension was demonstrated in mice on standard chow starting in middle age; no published evidence supports extension under high-fat diet conditions.",
+        "verdict": "uncertain",
+        "confidence": 0.7,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Voglibose extends lifespan in Mus musculus.",
+        "why_false": "Voglibose, another alpha-glucosidase inhibitor, has not been shown to extend mouse lifespan; only acarbose has replicated lifespan benefits in this organism.",
+        "verdict": "uncertain",
+        "confidence": 0.8,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Acarbose extends lifespan in Mus musculus by lowering blood glucose.",
+        "why_false": "Acarbose's lifespan extension occurs in normoglycemic mice without hypoglycemia, and published analyses attribute benefits to altered nutrient sensing and gut microbiota rather than glucose lowering.",
+        "verdict": "uncertain",
+        "confidence": 0.8,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Methylene blue accelerates ageing in Mus musculus when administered chronically.",
+        "why_false": "Chronic methylene blue administration in mice produced no significant effect on lifespan or ageing rate, so claims of accelerated ageing are contradicted by the reported null result.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Methylene blue extends lifespan in Mus musculus by enhancing autophagic clearance of damaged mitochondria.",
+        "why_false": "No significant lifespan extension was observed in methylene blue-treated mice, so attributing a longevity benefit to autophagy-mediated mitophagy is unsupported and at odds with the trial outcome.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      }
+    ]
+  },
+  "g013": {
+    "as_of": "2004-07-13",
+    "species": "Caenorhabditis elegans",
+    "writer": "zhipu",
+    "items": {
+      "imp001": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Palmostatin B extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "Palmostatin B",
+        "pmids": [
+          "30911178"
+        ]
+      },
+      "imp002": {
+        "kind": "true",
+        "label": 1,
+        "statement": "Resveratrol extends lifespan in Caenorhabditis elegans.",
+        "compound": "Resveratrol",
+        "pmids": [
+          "15254550",
+          "16256736",
+          "17460219",
+          "17875315",
+          "22950425",
+          "23698443",
+          "25976661",
+          "27190265",
+          "27683245",
+          "27882602",
+          "28727758",
+          "29874838",
+          "30320257",
+          "31820364"
+        ]
+      },
+      "imp003": {
+        "kind": "real",
+        "label": 0,
+        "statement": "MJN202 extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "MJN202",
+        "pmids": [
+          "30911178"
+        ]
+      },
+      "imp004": {
+        "kind": "real",
+        "label": 0,
+        "statement": "NSC666076 extends lifespan in Caenorhabditis elegans.",
+        "decoy": true,
+        "compound": "NSC666076",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp005": {
+        "kind": "real",
+        "label": 0,
+        "statement": "D-xylitol extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "D-xylitol",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp006": {
+        "kind": "mechanism",
+        "label": 0,
+        "statement": "Resveratrol extends lifespan in Caenorhabditis elegans by activating the insulin/IGF-1 receptor DAF-2 pathway.",
+        "why_false": "The reported extension is independent of insulin/IGF-1 signaling; published work rules out DAF-2 pathway activation as the mechanism.",
+        "verifier": "google",
+        "confidence": 0.9
+      },
+      "imp007": {
+        "kind": "decoy_mechanism",
+        "label": 0,
+        "statement": "NSC666076 extends lifespan in Caenorhabditis elegans by inhibiting poly(ADP-ribose) polymerase and reducing NAD+ depletion.",
+        "why_false": "The compound had no significant effect on lifespan, so no lifespan-extending mechanism can be attributed to it.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp008": {
+        "kind": "reversed",
+        "label": 0,
+        "statement": "Resveratrol shortens lifespan in Caenorhabditis elegans.",
+        "why_false": "Published work reports lifespan extension, not shortening, at the doses used.",
+        "verifier": "google",
+        "confidence": 0.95
+      },
+      "imp009": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Vortioxetine extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "Vortioxetine",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp010": {
+        "kind": "decoy_reversed",
+        "label": 0,
+        "statement": "NSC666076 shortens lifespan in Caenorhabditis elegans.",
+        "why_false": "The compound was tested and had no significant effect on lifespan; it does not shorten lifespan.",
+        "verifier": "data",
+        "confidence": null
+      }
+    },
+    "dropped_synthetic": [
+      {
+        "kind": "condition",
+        "statement": "Resveratrol extends lifespan in Caenorhabditis elegans fed a standard OP50 diet from the L4 stage onward.",
+        "why_false": "The reported extension was seen with a specific bacterial food; on standard conditions the effect is absent or inconsistent.",
+        "verdict": "true",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Pterostilbene extends lifespan in Caenorhabditis elegans.",
+        "why_false": "Related stilbenoids have not shown the same lifespan extension; resveratrol's effect was not reproduced by this analog.",
+        "verdict": "true",
+        "confidence": 0.85,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Resveratrol extends lifespan in Caenorhabditis elegans by activating SIR-2.1.",
+        "why_false": "Multiple studies found the lifespan extension does not require SIR-2.1, ruling out this mechanism.",
+        "verdict": "true",
+        "confidence": 0.85,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Resveratrol accelerates ageing in Caenorhabditis elegans.",
+        "why_false": "The published finding is lifespan extension, not accelerated ageing.",
+        "verdict": "false",
+        "confidence": 0.95,
+        "verifier": "google"
+      },
+      {
+        "kind": "condition",
+        "statement": "Resveratrol extends lifespan in Caenorhabditis elegans at high micromolar doses.",
+        "why_false": "At higher concentrations the compound is toxic and fails to extend lifespan; the reported effect occurs only at low doses.",
+        "verdict": "uncertain",
+        "confidence": 0.7,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Quercetin extends lifespan in Caenorhabditis elegans.",
+        "why_false": "This related polyphenol was tested in the organism and did not reproduce resveratrol's lifespan extension.",
+        "verdict": "true",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "NSC666076 accelerates ageing in Caenorhabditis elegans under normal growth conditions.",
+        "why_false": "The compound showed no significant effect on lifespan; it does not accelerate ageing.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "NSC666076 extends lifespan in Caenorhabditis elegans through activation of the insulin/IGF-1 receptor DAF-2 signalling pathway.",
+        "why_false": "The compound had no significant effect on lifespan, and lifespan extension via reduced insulin/IGF-1 signalling requires DAF-2 downregulation, not activation.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      }
+    ]
+  },
+  "g014": {
+    "as_of": "2011-12-31",
+    "species": "Drosophila melanogaster",
+    "writer": "zhipu",
+    "items": {
+      "imp001": {
+        "kind": "decoy_mechanism",
+        "label": 0,
+        "statement": "Vinblastine Sulfate extends lifespan in Drosophila melanogaster by inhibiting microtubule polymerization in gut stem cells.",
+        "why_false": "The compound had no significant effect on lifespan, so any mechanistic explanation of lifespan extension is false; microtubule disruption is cytotoxic rather than pro-longevity.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp002": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Dihydrorotenone extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "Dihydrorotenone",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp003": {
+        "kind": "reversed",
+        "label": 0,
+        "statement": "Royal Jelly shortens lifespan in Drosophila melanogaster.",
+        "why_false": "Published studies report lifespan extension, not shortening, from Royal Jelly supplementation in Drosophila.",
+        "verifier": "google",
+        "confidence": 0.9
+      },
+      "imp004": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Dequalinium extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "Dequalinium",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp005": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Geldanamycin extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "Geldanamycin",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp006": {
+        "kind": "true",
+        "label": 1,
+        "statement": "Royal Jelly extends lifespan in Drosophila melanogaster.",
+        "compound": "Royal Jelly",
+        "pmids": [
+          "23132575",
+          "27388939"
+        ]
+      },
+      "imp007": {
+        "kind": "mechanism",
+        "label": 0,
+        "statement": "Royal Jelly extends lifespan in Drosophila melanogaster by activating the insulin/IGF signalling pathway.",
+        "why_false": "Reduced insulin/IGF signalling, not activation, is associated with longevity; Royal Jelly's effects are not attributed to activating this pathway.",
+        "verifier": "google",
+        "confidence": 0.85
+      },
+      "imp008": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Pergolide methanesulfonate extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "Pergolide methanesulfonate",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp009": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Vinblastine Sulfate extends lifespan in Drosophila melanogaster.",
+        "decoy": true,
+        "compound": "Vinblastine Sulfate",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp010": {
+        "kind": "decoy_reversed",
+        "label": 0,
+        "statement": "Vinblastine Sulfate shortens lifespan in Drosophila melanogaster.",
+        "why_false": "The claim states no significant effect on lifespan was observed, so a shortening effect is contradicted by the test result.",
+        "verifier": "data",
+        "confidence": null
+      }
+    },
+    "dropped_synthetic": [
+      {
+        "kind": "condition",
+        "statement": "Royal Jelly extends lifespan in Drosophila melanogaster males.",
+        "why_false": "Lifespan extension by Royal Jelly in Drosophila has been observed in females; effects in males are absent or much weaker.",
+        "verdict": "true",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Honey extends lifespan in Drosophila melanogaster.",
+        "why_false": "Honey, though a related hive product, has not been shown to extend Drosophila lifespan in controlled studies.",
+        "verdict": "true",
+        "confidence": 0.8,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Royal Jelly accelerates ageing in Drosophila melanogaster.",
+        "why_false": "Royal Jelly is reported to delay ageing and extend lifespan in Drosophila, not accelerate ageing.",
+        "verdict": "false",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "condition",
+        "statement": "Royal Jelly extends lifespan in Drosophila melanogaster larvae.",
+        "why_false": "Lifespan extension is measured in adults; larval Royal Jelly exposure is not known to extend lifespan.",
+        "verdict": "uncertain",
+        "confidence": 0.5,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Bee pollen extends lifespan in Drosophila melanogaster.",
+        "why_false": "Bee pollen, a related hive product, has not been demonstrated to extend Drosophila lifespan in published work.",
+        "verdict": "true",
+        "confidence": 0.8,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Royal Jelly extends lifespan in Drosophila melanogaster by increasing reactive oxygen species production.",
+        "why_false": "Royal Jelly's lifespan extension is linked to antioxidant and protective effects, not increased ROS production, which would be expected to shorten lifespan.",
+        "verdict": "false",
+        "confidence": 0.85,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Vinblastine Sulfate accelerates ageing in Drosophila melanogaster when administered continuously in the diet.",
+        "why_false": "Testing showed no significant effect on lifespan, so an acceleration of ageing under dietary administration is contradicted by the observed outcome.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Vinblastine Sulfate extends lifespan in Drosophila melanogaster through activation of the spindle assembly checkpoint.",
+        "why_false": "No lifespan extension was observed, and spindle checkpoint activation from microtubule poisoning would be expected to impair proliferation and viability rather than promote longevity.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      }
+    ]
+  },
+  "g015": {
+    "as_of": "2010-08-16",
+    "species": "Caenorhabditis elegans",
+    "writer": "zhipu",
+    "items": {
+      "imp001": {
+        "kind": "real",
+        "label": 0,
+        "statement": "KT170 extends lifespan in Caenorhabditis elegans.",
+        "decoy": true,
+        "compound": "KT170",
+        "pmids": [
+          "30911178"
+        ]
+      },
+      "imp002": {
+        "kind": "real",
+        "label": 0,
+        "statement": "ZD7114 hydrochloride extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "ZD7114 hydrochloride",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp003": {
+        "kind": "decoy_mechanism",
+        "label": 0,
+        "statement": "KT170 extends lifespan in Caenorhabditis elegans by activating the insulin/IGF-1 receptor DAF-2.",
+        "why_false": "KT170 showed no significant lifespan effect in C. elegans, so any proposed mechanism of lifespan extension, including DAF-2 activation, is unsupported.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp004": {
+        "kind": "true",
+        "label": 1,
+        "statement": "Apple extract extends lifespan in Caenorhabditis elegans.",
+        "compound": "Apple extract",
+        "pmids": [
+          "20717869",
+          "23878618"
+        ]
+      },
+      "imp005": {
+        "kind": "reversed",
+        "label": 0,
+        "statement": "Apple extract shortens lifespan in Caenorhabditis elegans.",
+        "why_false": "Apple extract has been shown to extend lifespan in C. elegans, not shorten it.",
+        "verifier": "google",
+        "confidence": 0.9
+      },
+      "imp006": {
+        "kind": "real",
+        "label": 0,
+        "statement": "KC03 extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "KC03",
+        "pmids": [
+          "30911178"
+        ]
+      },
+      "imp007": {
+        "kind": "decoy_reversed",
+        "label": 0,
+        "statement": "KT170 shortens lifespan in Caenorhabditis elegans.",
+        "why_false": "The claim was tested and KT170 had no significant effect on lifespan, so it neither shortens nor extends it; this reverses the null result into a harmful one.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp008": {
+        "kind": "real",
+        "label": 0,
+        "statement": "6-Hydroxyflavone extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "6-Hydroxyflavone",
+        "pmids": [
+          "33809299"
+        ]
+      },
+      "imp009": {
+        "kind": "condition",
+        "label": 0,
+        "statement": "Apple extract extends lifespan in Caenorhabditis elegans only at high doses that cause toxicity.",
+        "why_false": "The lifespan extension is observed at non-toxic doses; toxic doses are lethal rather than life-extending.",
+        "verifier": "google",
+        "confidence": 0.8
+      },
+      "imp010": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Phenoxybenzamine Hydrochloride extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "Phenoxybenzamine Hydrochloride",
+        "pmids": [
+          "33008901"
+        ]
+      }
+    },
+    "dropped_synthetic": [
+      {
+        "kind": "analog",
+        "statement": "Grape seed extract extends lifespan in Caenorhabditis elegans.",
+        "why_false": "Grape seed extract has not been shown to extend lifespan in C. elegans in published work.",
+        "verdict": "true",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Apple extract extends lifespan in Caenorhabditis elegans by activating the insulin/IGF-1 receptor DAF-2.",
+        "why_false": "The lifespan extension does not require DAF-2 activation; reduced insulin/IGF-1 signaling, not activation, is associated with longevity.",
+        "verdict": "false",
+        "confidence": 0.8,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Apple extract accelerates ageing in Caenorhabditis elegans.",
+        "why_false": "Apple extract slows ageing and extends lifespan in C. elegans.",
+        "verdict": "false",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "condition",
+        "statement": "Apple extract extends lifespan in Caenorhabditis elegans during the larval stages.",
+        "why_false": "The lifespan extension is measured in adults; larval exposure alone does not produce the effect.",
+        "verdict": "uncertain",
+        "confidence": 0.5,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Orange peel extract extends lifespan in Caenorhabditis elegans.",
+        "why_false": "Orange peel extract has not been shown to extend lifespan in C. elegans in published work.",
+        "verdict": "true",
+        "confidence": 0.8,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Apple extract extends lifespan in Caenorhabditis elegans through the heat shock transcription factor HSF-1.",
+        "why_false": "The published mechanism involves dietary restriction and autophagy pathways, not HSF-1.",
+        "verdict": "true",
+        "confidence": 0.8,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "KT170 accelerates ageing in Caenorhabditis elegans under dietary restriction conditions.",
+        "why_false": "KT170 had no significant effect on lifespan in C. elegans, so it does not accelerate ageing even under altered dietary conditions.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "KT170 extends lifespan in Caenorhabditis elegans through induction of the mitochondrial unfolded protein response.",
+        "why_false": "Since KT170 did not significantly affect lifespan in C. elegans, attributing lifespan extension to a mitochondrial unfolded protein response is contradicted by the experimental outcome.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      }
+    ]
+  },
+  "g016": {
+    "as_of": "1999-01-14",
+    "species": "Drosophila melanogaster",
+    "writer": "zhipu",
+    "items": {
+      "imp001": {
+        "kind": "mechanism",
+        "label": 0,
+        "statement": "Melatonin extends lifespan in Drosophila melanogaster by activating the light-dependent circadian photoreceptor pathway.",
+        "why_false": "Melatonin's effects in flies are discussed as direct antioxidant and free-radical scavenging actions, and light activation of photoreceptors would degrade rather than mediate the benefit.",
+        "verifier": "google",
+        "confidence": 0.7
+      },
+      "imp002": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Hydroxyprogesterone caproate extends lifespan in Drosophila melanogaster.",
+        "decoy": true,
+        "compound": "Hydroxyprogesterone caproate",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp003": {
+        "kind": "reversed",
+        "label": 0,
+        "statement": "Melatonin shortens lifespan in Drosophila melanogaster.",
+        "why_false": "Published work reports lifespan extension or no effect, not shortening; melatonin is not known to accelerate ageing in flies.",
+        "verifier": "google",
+        "confidence": 0.8
+      },
+      "imp004": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Berberine extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "Berberine",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp005": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Carvedilol extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "Carvedilol",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp006": {
+        "kind": "decoy_mechanism",
+        "label": 0,
+        "statement": "Hydroxyprogesterone caproate extends lifespan in Drosophila melanogaster by activating the insulin/IGF signaling pathway.",
+        "why_false": "There was no lifespan extension, and reduced insulin/IGF signaling, not activation, is associated with longevity in flies.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp007": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Colchine extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "Colchine",
+        "pmids": [
+          "4397875"
+        ]
+      },
+      "imp008": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Limonin extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "Limonin",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp009": {
+        "kind": "true",
+        "label": 1,
+        "statement": "Melatonin extends lifespan in Drosophila melanogaster.",
+        "compound": "Melatonin",
+        "pmids": [
+          "10100152",
+          "11909680"
+        ]
+      },
+      "imp010": {
+        "kind": "decoy_reversed",
+        "label": 0,
+        "statement": "Hydroxyprogesterone caproate shortens lifespan in Drosophila melanogaster.",
+        "why_false": "The compound was tested and showed no significant effect on lifespan, so it neither shortens nor extends it.",
+        "verifier": "data",
+        "confidence": null
+      }
+    },
+    "dropped_synthetic": [
+      {
+        "kind": "condition",
+        "statement": "Melatonin extends lifespan in Drosophila melanogaster when administered late in adult life.",
+        "why_false": "Studies finding effects initiated treatment early in adulthood; late-onset administration has not been shown to extend lifespan.",
+        "verdict": "uncertain",
+        "confidence": 0.5,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Serotonin supplementation extends lifespan in Drosophila melanogaster.",
+        "why_false": "Serotonin manipulation has not been shown to extend fly lifespan; the reported longevity benefit is specific to melatonin and is not reproduced by its precursor.",
+        "verdict": "uncertain",
+        "confidence": 0.5,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Melatonin accelerates ageing in Drosophila melanogaster raised under constant light.",
+        "why_false": "No published evidence shows melatonin accelerates ageing in flies under any lighting condition; reported effects are neutral or beneficial.",
+        "verdict": "uncertain",
+        "confidence": 0.5,
+        "verifier": "google"
+      },
+      {
+        "kind": "condition",
+        "statement": "Melatonin extends lifespan in Drosophila melanogaster males kept on a high-calorie diet.",
+        "why_false": "Lifespan benefits reported in flies were obtained on standard diets; no study demonstrates extension in males on high-calorie diets.",
+        "verdict": "uncertain",
+        "confidence": 0.5,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Indoleamine supplementation extends lifespan in Drosophila melanogaster.",
+        "why_false": "Related indoleamine compounds tested in flies have not extended lifespan; the effect is not a class-wide property of indole derivatives.",
+        "verdict": "uncertain",
+        "confidence": 0.5,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Melatonin extends lifespan in Drosophila melanogaster by binding the MT1 melatonin receptor.",
+        "why_false": "Drosophila lacks characterized mammalian-type MT1 melatonin receptors, so the effect cannot depend on that receptor; proposed mechanisms involve antioxidant activity instead.",
+        "verdict": "false",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Hydroxyprogesterone caproate accelerates ageing in Drosophila melanogaster.",
+        "why_false": "The compound had no significant effect on lifespan or ageing rate in this organism.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Hydroxyprogesterone caproate extends lifespan in Drosophila melanogaster through antioxidant upregulation of the JAK/STAT pathway.",
+        "why_false": "No lifespan extension was observed, and this mechanism is an unsupported attribution for this compound in flies.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      }
+    ]
+  },
+  "g017": {
+    "as_of": "2012-05-01",
+    "species": "Caenorhabditis elegans",
+    "writer": "zhipu",
+    "items": {
+      "imp001": {
+        "kind": "decoy_reversed",
+        "label": 0,
+        "statement": "Trielaidin shortens lifespan in Caenorhabditis elegans.",
+        "why_false": "Reversed direction: the tested claim found no significant effect, and this asserts the opposite (lifespan shortening).",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp002": {
+        "kind": "true",
+        "label": 1,
+        "statement": "Rapamycin extends lifespan in Caenorhabditis elegans.",
+        "compound": "Rapamycin",
+        "pmids": [
+          "22560223",
+          "23698443",
+          "24332851",
+          "26676933",
+          "29874838",
+          "30269951",
+          "30970250"
+        ]
+      },
+      "imp003": {
+        "kind": "real",
+        "label": 0,
+        "statement": "N6-isopentenyladenine extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "N6-isopentenyladenine",
+        "pmids": [
+          "29255944"
+        ]
+      },
+      "imp004": {
+        "kind": "real",
+        "label": 0,
+        "statement": "ABC37 extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "ABC37",
+        "pmids": [
+          "30911178"
+        ]
+      },
+      "imp005": {
+        "kind": "condition",
+        "label": 0,
+        "statement": "Rapamycin extends lifespan in Caenorhabditis elegans only when administered during development.",
+        "why_false": "Rapamycin extends lifespan when given to adults as well; the effect does not require developmental exposure.",
+        "verifier": "google",
+        "confidence": 0.8
+      },
+      "imp006": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Pinaverium bromide extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "Pinaverium bromide",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp007": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Palmostatin M extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "Palmostatin M",
+        "pmids": [
+          "30911178"
+        ]
+      },
+      "imp008": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Trielaidin extends lifespan in Caenorhabditis elegans.",
+        "decoy": true,
+        "compound": "Trielaidin",
+        "pmids": [
+          "21308896"
+        ]
+      },
+      "imp009": {
+        "kind": "reversed",
+        "label": 0,
+        "statement": "Rapamycin shortens lifespan in Caenorhabditis elegans.",
+        "why_false": "Rapamycin reliably extends lifespan in C. elegans across multiple studies; it does not shorten it.",
+        "verifier": "google",
+        "confidence": 0.9
+      },
+      "imp010": {
+        "kind": "decoy_mechanism",
+        "label": 0,
+        "statement": "Trielaidin extends lifespan in Caenorhabditis elegans by activating the insulin/IGF-1 receptor DAF-2 to reduce DAF-16 nuclear localization.",
+        "why_false": "The claim had no significant effect, and reduced DAF-16 activity from DAF-2 signaling would shorten, not extend, lifespan.",
+        "verifier": "data",
+        "confidence": null
+      }
+    },
+    "dropped_synthetic": [
+      {
+        "kind": "analog",
+        "statement": "Torin1 extends lifespan in Caenorhabditis elegans.",
+        "why_false": "Torin1 has not been shown to extend lifespan in C. elegans; the canonical lifespan-extending TOR-targeting intervention in this organism is rapamycin.",
+        "verdict": "uncertain",
+        "confidence": 0.5,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Rapamycin extends lifespan in Caenorhabditis elegans by inducing dietary restriction.",
+        "why_false": "Rapamycin's lifespan extension is not explained by reduced feeding; it acts through TOR signaling independently of dietary restriction.",
+        "verdict": "false",
+        "confidence": 0.8,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Rapamycin accelerates ageing in Caenorhabditis elegans.",
+        "why_false": "Rapamycin slows ageing and lengthens life in C. elegans; it does not accelerate ageing.",
+        "verdict": "false",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "condition",
+        "statement": "Rapamycin extends lifespan in Caenorhabditis elegans at high doses.",
+        "why_false": "High doses of rapamycin impair development and fertility and do not produce the lifespan extension seen at lower doses.",
+        "verdict": "false",
+        "confidence": 0.7,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Everolimus extends lifespan in Caenorhabditis elegans.",
+        "why_false": "Everolimus has not been demonstrated to extend lifespan in C. elegans; rapamycin is the rapalog with established lifespan effects there.",
+        "verdict": "true",
+        "confidence": 0.8,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Rapamycin extends lifespan in Caenorhabditis elegans by activating mTOR signaling.",
+        "why_false": "Rapamycin inhibits mTOR/TOR signaling; lifespan extension comes from reduced TOR activity, not activation.",
+        "verdict": "false",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Trielaidin accelerates ageing in Caenorhabditis elegans when supplied during adulthood.",
+        "why_false": "Reversed direction: asserts accelerated ageing despite the tested claim showing no significant effect on lifespan.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Trielaidin extends lifespan in Caenorhabditis elegans through dietary restriction induced by impaired fatty acid desaturation.",
+        "why_false": "The claim had no significant effect, and trielaidin is not known to induce dietary restriction via desaturase impairment.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      }
+    ]
+  },
+  "g018": {
+    "as_of": "1982-08-31",
+    "species": "Drosophila melanogaster",
+    "writer": "zhipu",
+    "items": {
+      "imp001": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Ethopropazine extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "Ethopropazine",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp002": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Procaine HCl extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "Procaine HCl",
+        "pmids": [
+          "4397875"
+        ]
+      },
+      "imp003": {
+        "kind": "true",
+        "label": 1,
+        "statement": "Vitamin E extends lifespan in Drosophila melanogaster.",
+        "compound": "Vitamin E",
+        "pmids": [
+          "17169403",
+          "6821144"
+        ]
+      },
+      "imp004": {
+        "kind": "real",
+        "label": 0,
+        "statement": "PropanthelineBromide extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "PropanthelineBromide",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp005": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Tiapride Hydrochloride extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "Tiapride Hydrochloride",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp006": {
+        "kind": "real",
+        "label": 0,
+        "statement": "SCH23390 extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "SCH23390",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp007": {
+        "kind": "real",
+        "label": 0,
+        "statement": "DTT extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "DTT",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp008": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Ethotoin extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "Ethotoin",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp009": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Phenelzine extends lifespan in Drosophila melanogaster.",
+        "decoy": true,
+        "compound": "Phenelzine",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp010": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Cefazolin sodium extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "Cefazolin sodium",
+        "pmids": [
+          "33008901"
+        ]
+      }
+    },
+    "dropped_synthetic": [
+      {
+        "kind": "reversed",
+        "statement": "Vitamin E shortens lifespan in Drosophila melanogaster.",
+        "why_false": "Published studies report no significant effect of vitamin E on Drosophila lifespan; it does not shorten it.",
+        "verdict": "uncertain",
+        "confidence": 0.5,
+        "verifier": "google"
+      },
+      {
+        "kind": "condition",
+        "statement": "Vitamin E extends lifespan in male Drosophila melanogaster.",
+        "why_false": "Trials in males, like those in females, show no consistent lifespan extension from vitamin E supplementation.",
+        "verdict": "uncertain",
+        "confidence": 0.5,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Vitamin C extends lifespan in Drosophila melanogaster.",
+        "why_false": "Vitamin C supplementation has failed to extend lifespan in Drosophila in controlled studies.",
+        "verdict": "uncertain",
+        "confidence": 0.5,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Vitamin E extends lifespan in Drosophila melanogaster by reducing oxidative damage to DNA.",
+        "why_false": "Studies found vitamin E supplementation did not decrease oxidative damage markers in Drosophila, ruling out this mechanism.",
+        "verdict": "uncertain",
+        "confidence": 0.5,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Vitamin E accelerates ageing in Drosophila melanogaster.",
+        "why_false": "No published evidence shows vitamin E accelerates ageing in Drosophila; reported effects are null or slightly positive.",
+        "verdict": "uncertain",
+        "confidence": 0.5,
+        "verifier": "google"
+      },
+      {
+        "kind": "condition",
+        "statement": "Vitamin E extends lifespan in Drosophila melanogaster raised on a low-calorie diet.",
+        "why_false": "Under dietary restriction, vitamin E supplementation does not produce lifespan extension in Drosophila.",
+        "verdict": "uncertain",
+        "confidence": 0.5,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Vitamin A extends lifespan in Drosophila melanogaster.",
+        "why_false": "Vitamin A supplementation has not been shown to extend Drosophila lifespan in published experiments.",
+        "verdict": "uncertain",
+        "confidence": 0.5,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Vitamin E extends lifespan in Drosophila melanogaster only when the endogenous antioxidant system is disabled.",
+        "why_false": "Vitamin E does not extend lifespan in any genotype tested; its effects do not depend on disabling endogenous antioxidant defenses.",
+        "verdict": "uncertain",
+        "confidence": 0.5,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Phenelzine shortens lifespan in Drosophila melanogaster.",
+        "why_false": "The compound was tested and showed no significant effect on lifespan, and there is no evidence it is life-shortening in flies.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Phenelzine extends lifespan in Drosophila melanogaster by inhibiting monoamine oxidase and reducing oxidative stress.",
+        "why_false": "The intervention had no significant effect on lifespan in this organism, so no lifespan-extending mechanism applies.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Phenelzine accelerates ageing in Drosophila melanogaster when administered throughout adulthood.",
+        "why_false": "The compound showed no significant lifespan effect in Drosophila, and no evidence supports accelerated ageing from adult phenelzine exposure.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Phenelzine extends lifespan in Drosophila melanogaster through activation of the Nrf2 oxidative stress response pathway.",
+        "why_false": "Phenelzine did not significantly extend lifespan in this organism, so claims of Nrf2-mediated lifespan extension are unsupported.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      }
+    ]
+  },
+  "g019": {
+    "as_of": "2012-08-03",
+    "species": "Caenorhabditis elegans",
+    "writer": "zhipu",
+    "items": {
+      "imp001": {
+        "kind": "decoy_reversed",
+        "label": 0,
+        "statement": "ABC44 shortens lifespan in Caenorhabditis elegans.",
+        "why_false": "ABC44 was tested and had no significant effect on lifespan, so it neither shortens nor extends it; this reverses the (already false) claim.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp002": {
+        "kind": "reversed",
+        "label": 0,
+        "statement": "Cranberry extract shortens lifespan in Caenorhabditis elegans.",
+        "why_false": "Published work reports lifespan extension, not shortening, from cranberry extract in C. elegans.",
+        "verifier": "google",
+        "confidence": 0.8
+      },
+      "imp003": {
+        "kind": "decoy_mechanism",
+        "label": 0,
+        "statement": "ABC44 extends lifespan in Caenorhabditis elegans by activating the insulin/IGF-1 receptor DAF-2.",
+        "why_false": "The compound had no significant effect on lifespan, so no lifespan-extension mechanism such as DAF-2 activation can be attributed to it.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp004": {
+        "kind": "true",
+        "label": 1,
+        "statement": "Cranberry extract extends lifespan in Caenorhabditis elegans.",
+        "compound": "Cranberry extract",
+        "pmids": [
+          "22864793",
+          "24566444"
+        ]
+      },
+      "imp005": {
+        "kind": "real",
+        "label": 0,
+        "statement": "ABC44 extends lifespan in Caenorhabditis elegans.",
+        "decoy": true,
+        "compound": "ABC44",
+        "pmids": [
+          "30911178"
+        ]
+      },
+      "imp006": {
+        "kind": "mechanism",
+        "label": 0,
+        "statement": "Cranberry extract extends lifespan in Caenorhabditis elegans by activating the insulin/IGF-1 receptor DAF-2.",
+        "why_false": "The reported extension does not require DAF-2 insulin signaling; activation of DAF-2 would shorten lifespan, not extend it.",
+        "verifier": "google",
+        "confidence": 0.8
+      },
+      "imp007": {
+        "kind": "real",
+        "label": 0,
+        "statement": "D-xylitol extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "D-xylitol",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp008": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Flunarizine hydrochloride extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "Flunarizine hydrochloride",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp009": {
+        "kind": "real",
+        "label": 0,
+        "statement": "ABC16 extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "ABC16",
+        "pmids": [
+          "30911178"
+        ]
+      },
+      "imp010": {
+        "kind": "real",
+        "label": 0,
+        "statement": "O6-benzylguanine extends lifespan in Caenorhabditis elegans.",
+        "decoy": false,
+        "compound": "O6-benzylguanine",
+        "pmids": [
+          "33008901"
+        ]
+      }
+    },
+    "dropped_synthetic": [
+      {
+        "kind": "condition",
+        "statement": "Cranberry extract extends lifespan in Caenorhabditis elegans dauer larvae.",
+        "why_false": "Lifespan assays are performed on reproductive adults; dauer larvae survival is a distinct program and cranberry extract has not been shown to extend it.",
+        "verdict": "uncertain",
+        "confidence": 0.5,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Blueberry extract extends lifespan in Caenorhabditis elegans.",
+        "why_false": "Blueberry extract has been tested in C. elegans without a reproducible lifespan-extension effect.",
+        "verdict": "true",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Cranberry extract accelerates ageing in Caenorhabditis elegans.",
+        "why_false": "Cranberry extract is reported to delay ageing in C. elegans, not accelerate it.",
+        "verdict": "false",
+        "confidence": 0.8,
+        "verifier": "google"
+      },
+      {
+        "kind": "condition",
+        "statement": "Cranberry extract extends lifespan in Caenorhabditis elegans fed a high-glucose diet.",
+        "why_false": "The lifespan extension is observed on standard nematode growth media; under high-glucose dietary conditions the effect is absent.",
+        "verdict": "true",
+        "confidence": 0.8,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Grape seed extract extends lifespan in Caenorhabditis elegans.",
+        "why_false": "Grape seed extract has not shown a reproducible lifespan-extension effect in C. elegans studies.",
+        "verdict": "true",
+        "confidence": 0.9,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Cranberry extract extends lifespan in Caenorhabditis elegans by increasing mitochondrial ROS production.",
+        "why_false": "The reported extension is attributed to antioxidant and phytochemical protective activity, and is not dependent on increased mitochondrial ROS.",
+        "verdict": "false",
+        "confidence": 0.8,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "ABC44 accelerates ageing in Caenorhabditis elegans under standard culture conditions.",
+        "why_false": "Testing showed no significant effect on lifespan, so ABC44 does not accelerate ageing in this organism.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "ABC44 extends lifespan in Caenorhabditis elegans through dietary restriction mediated by the pharynx.",
+        "why_false": "Since ABC44 had no significant effect on lifespan, it cannot extend life via dietary restriction or any other mechanism.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      }
+    ]
+  },
+  "g020": {
+    "as_of": "2011-03-31",
+    "species": "Drosophila melanogaster",
+    "writer": "zhipu",
+    "items": {
+      "imp001": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Promethazine extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "Promethazine",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp002": {
+        "kind": "decoy_reversed",
+        "label": 0,
+        "statement": "Procaine HCl shortens lifespan in Drosophila melanogaster.",
+        "why_false": "Procaine HCl has not been shown to shorten lifespan in Drosophila; available studies report no significant effect or only marginal changes, not a life-shortening one.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp003": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Procaine HCl extends lifespan in Drosophila melanogaster.",
+        "decoy": true,
+        "compound": "Procaine HCl",
+        "pmids": [
+          "4397875"
+        ]
+      },
+      "imp004": {
+        "kind": "decoy_mechanism",
+        "label": 0,
+        "statement": "Procaine HCl extends lifespan in Drosophila melanogaster by inhibiting monoamine oxidase and elevating dopamine signaling.",
+        "why_false": "Procaine is a local anesthetic acting mainly on sodium channels; it is not a meaningful monoamine oxidase inhibitor in vivo, and this mechanism does not account for lifespan extension in flies.",
+        "verifier": "data",
+        "confidence": null
+      },
+      "imp005": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Phenelzine extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "Phenelzine",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp006": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Phenoxybenzamine Hydrochloride extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "Phenoxybenzamine Hydrochloride",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp007": {
+        "kind": "condition",
+        "label": 0,
+        "statement": "Pyrrolidine dithiocarbamate extends lifespan in male Drosophila melanogaster.",
+        "why_false": "The reported extension was observed in females; males did not show a significant lifespan benefit.",
+        "verifier": "google",
+        "confidence": 0.7
+      },
+      "imp008": {
+        "kind": "mechanism",
+        "label": 0,
+        "statement": "Pyrrolidine dithiocarbamate extends lifespan in Drosophila melanogaster by inhibiting NF-κB signaling.",
+        "why_false": "Flies lack a canonical NF-κB pathway of the type PDTC targets; the effect is attributed to antioxidant activity, not NF-κB inhibition.",
+        "verifier": "google",
+        "confidence": 0.8
+      },
+      "imp009": {
+        "kind": "real",
+        "label": 0,
+        "statement": "Carbidopa extends lifespan in Drosophila melanogaster.",
+        "decoy": false,
+        "compound": "Carbidopa",
+        "pmids": [
+          "33008901"
+        ]
+      },
+      "imp010": {
+        "kind": "true",
+        "label": 1,
+        "statement": "Pyrrolidine dithiocarbamate extends lifespan in Drosophila melanogaster.",
+        "compound": "Pyrrolidine dithiocarbamate",
+        "pmids": [
+          "21483034",
+          "24096697"
+        ]
+      }
+    },
+    "dropped_synthetic": [
+      {
+        "kind": "reversed",
+        "statement": "Pyrrolidine dithiocarbamate shortens lifespan in Drosophila melanogaster.",
+        "why_false": "Published work reports lifespan extension, not shortening, with this compound in flies.",
+        "verdict": "uncertain",
+        "confidence": 0.5,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Diethyldithiocarbamate extends lifespan in Drosophila melanogaster.",
+        "why_false": "The related dithiocarbamate diethyldithiocarbamate was tested in flies and failed to extend lifespan.",
+        "verdict": "uncertain",
+        "confidence": 0.5,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Pyrrolidine dithiocarbamate accelerates ageing in Drosophila melanogaster.",
+        "why_false": "The compound is documented to increase, not decrease, longevity in this organism.",
+        "verdict": "uncertain",
+        "confidence": 0.5,
+        "verifier": "google"
+      },
+      {
+        "kind": "condition",
+        "statement": "Pyrrolidine dithiocarbamate extends lifespan in Drosophila melanogaster larvae.",
+        "why_false": "Lifespan effects were measured in adults; no lifespan extension has been shown at the larval stage.",
+        "verdict": "uncertain",
+        "confidence": 0.5,
+        "verifier": "google"
+      },
+      {
+        "kind": "analog",
+        "statement": "Disulfiram extends lifespan in Drosophila melanogaster.",
+        "why_false": "Disulfiram, another dithiocarbamate-class compound, has not been shown to extend lifespan in flies.",
+        "verdict": "uncertain",
+        "confidence": 0.5,
+        "verifier": "google"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Pyrrolidine dithiocarbamate extends lifespan in Drosophila melanogaster by inducing the insulin/IGF signaling pathway.",
+        "why_false": "Reduced, not induced, insulin/IGF signaling is associated with lifespan extension in flies; PDTC's effect is consistent with antioxidant protection rather than pathway induction.",
+        "verdict": "false",
+        "confidence": 0.8,
+        "verifier": "google"
+      },
+      {
+        "kind": "reversed",
+        "statement": "Procaine HCl accelerates ageing in Drosophila melanogaster when administered continuously in the culture medium.",
+        "why_false": "Continuous administration of procaine HCl in the medium has not been shown to accelerate ageing in Drosophila; trials found no significant lifespan effect in either direction.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      },
+      {
+        "kind": "mechanism",
+        "statement": "Procaine HCl extends lifespan in Drosophila melanogaster through enhanced DNA methylation of age-related genes.",
+        "why_false": "Procaine is occasionally described as a weak DNA methylation inhibitor, not an enhancer, and DNA methylation-based lifespan extension via procaine is not established in Drosophila, which has minimal cytosine methylation.",
+        "verdict": "false",
+        "confidence": null,
+        "verifier": "data"
+      }
+    ]
+  }
+}

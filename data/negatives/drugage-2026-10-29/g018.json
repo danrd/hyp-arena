@@ -1,0 +1,96 @@
+{
+  "source": {
+    "family": "zhipu",
+    "model": "glm-5.3-flash",
+    "strategy": "negative-sampling",
+    "as_of": "1982-08-31",
+    "note": "labels are in labels.json",
+    "options": {
+      "dedup": false,
+      "lang": "en"
+    }
+  },
+  "hypotheses": [
+    {
+      "id": 1,
+      "title": "Ethopropazine Extends Lifespan in Drosophila melanogaster",
+      "claim": "Chronic administration of ethopropazine extends lifespan in Drosophila melanogaster. Treated flies will live longer than untreated controls under identical conditions.",
+      "rationale": "Ethopropazine modulates neurotransmitter signaling and may reduce excitotoxic stress. Such modulation can lower cellular damage accumulation and thereby slow aging in flies.",
+      "prediction": "Supplemented fly cohorts will show a statistically significant increase in median and maximum lifespan relative to controls.",
+      "experiment": "Raise matched cohorts on food with and without ethopropazine under identical conditions and record age at death. Compare survival curves with log-rank analysis."
+    },
+    {
+      "id": 2,
+      "title": "Procaine HCl Extends Lifespan in Drosophila melanogaster",
+      "claim": "Chronic administration of procaine HCl extends lifespan in Drosophila melanogaster. Treated flies will live longer than untreated controls under identical conditions.",
+      "rationale": "Procaine HCl can stabilize membranes and influence cellular stress responses. Reduced membrane-associated damage may decrease the rate of age-related decline in flies.",
+      "prediction": "Supplemented fly cohorts will show a statistically significant increase in median and maximum lifespan relative to controls.",
+      "experiment": "Raise matched cohorts on food with and without procaine HCl under identical conditions and record age at death. Compare survival curves with log-rank analysis."
+    },
+    {
+      "id": 3,
+      "title": "Vitamin E Extends Lifespan in Drosophila melanogaster",
+      "claim": "Chronic administration of vitamin E extends lifespan in Drosophila melanogaster. Treated flies will live longer than untreated controls under identical conditions.",
+      "rationale": "Vitamin E acts as a lipid-soluble antioxidant that limits oxidative damage to membranes. Lower oxidative burden can slow the accumulation of molecular damage that drives aging.",
+      "prediction": "Supplemented fly cohorts will show a statistically significant increase in median and maximum lifespan relative to controls.",
+      "experiment": "Raise matched cohorts on food with and without vitamin E under identical conditions and record age at death. Compare survival curves with log-rank analysis."
+    },
+    {
+      "id": 4,
+      "title": "Propantheline Bromide Extends Lifespan in Drosophila melanogaster",
+      "claim": "Chronic administration of propantheline bromide extends lifespan in Drosophila melanogaster. Treated flies will live longer than untreated controls under identical conditions.",
+      "rationale": "Propantheline bromide alters cholinergic signaling, which influences metabolism and stress physiology in flies. Adjusted neuronal signaling may reduce physiological wear and extend survival.",
+      "prediction": "Supplemented fly cohorts will show a statistically significant increase in median and maximum lifespan relative to controls.",
+      "experiment": "Raise matched cohorts on food with and without propantheline bromide under identical conditions and record age at death. Compare survival curves with log-rank analysis."
+    },
+    {
+      "id": 5,
+      "title": "Tiapride Hydrochloride Extends Lifespan in Drosophila melanogaster",
+      "claim": "Chronic administration of tiapride hydrochloride extends lifespan in Drosophila melanogaster. Treated flies will live longer than untreated controls under identical conditions.",
+      "rationale": "Tiapride hydrochloride modulates dopaminergic pathways that regulate activity and metabolic rate in flies. Reduced neural overstimulation may lower damage accumulation and prolong life.",
+      "prediction": "Supplemented fly cohorts will show a statistically significant increase in median and maximum lifespan relative to controls.",
+      "experiment": "Raise matched cohorts on food with and without tiapride hydrochloride under identical conditions and record age at death. Compare survival curves with log-rank analysis."
+    },
+    {
+      "id": 6,
+      "title": "SCH23390 Extends Lifespan in Drosophila melanogaster",
+      "claim": "Chronic administration of SCH23390 extends lifespan in Drosophila melanogaster. Treated flies will live longer than untreated controls under identical conditions.",
+      "rationale": "SCH23390 acts on dopaminergic receptors that influence feeding, activity, and stress responses in flies. Modulating these pathways may shift physiology toward a slower aging state.",
+      "prediction": "Supplemented fly cohorts will show a statistically significant increase in median and maximum lifespan relative to controls.",
+      "experiment": "Raise matched cohorts on food with and without SCH23390 under identical conditions and record age at death. Compare survival curves with log-rank analysis."
+    },
+    {
+      "id": 7,
+      "title": "DTT Extends Lifespan in Drosophila melanogaster",
+      "claim": "Chronic administration of DTT extends lifespan in Drosophila melanogaster. Treated flies will live longer than untreated controls under identical conditions.",
+      "rationale": "DTT is a reducing agent that can buffer oxidative stress within tissues. Attenuating oxidative damage may preserve protein and membrane integrity and extend survival.",
+      "prediction": "Supplemented fly cohorts will show a statistically significant increase in median and maximum lifespan relative to controls.",
+      "experiment": "Raise matched cohorts on food with and without DTT under identical conditions and record age at death. Compare survival curves with log-rank analysis."
+    },
+    {
+      "id": 8,
+      "title": "Ethotoin Extends Lifespan in Drosophila melanogaster",
+      "claim": "Chronic administration of ethotoin extends lifespan in Drosophila melanogaster. Treated flies will live longer than untreated controls under identical conditions.",
+      "rationale": "Ethotoin stabilizes neuronal excitability, which can reduce stress on neural and metabolic systems. Stabilized signaling may decrease physiological strain and slow aging in flies.",
+      "prediction": "Supplemented fly cohorts will show a statistically significant increase in median and maximum lifespan relative to controls.",
+      "experiment": "Raise matched cohorts on food with and without ethotoin under identical conditions and record age at death. Compare survival curves with log-rank analysis."
+    },
+    {
+      "id": 9,
+      "title": "Phenelzine Extends Lifespan in Drosophila melanogaster",
+      "claim": "Chronic administration of phenelzine extends lifespan in Drosophila melanogaster. Treated flies will live longer than untreated controls under identical conditions.",
+      "rationale": "Phenelzine alters amine metabolism and can influence monoamine oxidase activity and stress pathways. Modified amine signaling may improve stress resistance and extend survival in flies.",
+      "prediction": "Supplemented fly cohorts will show a statistically significant increase in median and maximum lifespan relative to controls.",
+      "experiment": "Raise matched cohorts on food with and without phenelzine under identical conditions and record age at death. Compare survival curves with log-rank analysis."
+    },
+    {
+      "id": 10,
+      "title": "Cefazolin Sodium Extends Lifespan in Drosophila melanogaster",
+      "claim": "Chronic administration of cefazolin sodium extends lifespan in Drosophila melanogaster. Treated flies will live longer than untreated controls under identical conditions.",
+      "rationale": "Cefazolin sodium shapes the microbial environment of the fly and may reduce pathogenic burden. Lower microbial stress can spare energetic and immune resources, supporting longer life.",
+      "prediction": "Supplemented fly cohorts will show a statistically significant increase in median and maximum lifespan relative to controls.",
+      "experiment": "Raise matched cohorts on food with and without cefazolin sodium under identical conditions and record age at death. Compare survival curves with log-rank analysis."
+    }
+  ],
+  "assistant_notes": {}
+}

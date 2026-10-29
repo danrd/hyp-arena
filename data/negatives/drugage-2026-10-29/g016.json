@@ -1,0 +1,96 @@
+{
+  "source": {
+    "family": "zhipu",
+    "model": "glm-5.3-flash",
+    "strategy": "negative-sampling",
+    "as_of": "1999-01-14",
+    "note": "labels are in labels.json",
+    "options": {
+      "dedup": false,
+      "lang": "en"
+    }
+  },
+  "hypotheses": [
+    {
+      "id": 1,
+      "title": "Melatonin Extends Lifespan Through Circadian Photoreceptor Signaling",
+      "claim": "Administration of melatonin extends lifespan in Drosophila melanogaster by activating the light-dependent circadian photoreceptor pathway. The lifespan extension depends on intact photoreceptor signaling.",
+      "rationale": "Melatonin couples environmental light cues to circadian timing, and strengthened circadian signaling can improve metabolic and stress homeostasis. Enhanced photoreceptor pathway activity may thereby slow aging processes.",
+      "prediction": "Melatonin-treated flies will live longer than controls, and the extension will be abolished when the light-dependent circadian photoreceptor pathway is disrupted.",
+      "experiment": "Measure lifespan of melatonin-supplemented and control flies under normal light cycles and in flies with the circadian photoreceptor pathway genetically inactivated. A significant increase only in pathway-intact flies would confirm the claim."
+    },
+    {
+      "id": 2,
+      "title": "Hydroxyprogesterone Caproate Extends Lifespan in Drosophila",
+      "claim": "Administration of hydroxyprogesterone caproate extends lifespan in Drosophila melanogaster. Treated flies will show increased longevity relative to untreated controls.",
+      "rationale": "Hydroxyprogesterone caproate modulates steroid hormone signaling, which influences reproduction, stress resistance, and metabolism. Reproductive and endocrine modulation is a recognized route to extended longevity.",
+      "prediction": "Flies receiving hydroxyprogesterone caproate will exhibit a statistically significant increase in median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Supplement the diet of age-matched Drosophila melanogaster cohorts with hydroxyprogesterone caproate and compare survival curves against vehicle controls. A rightward shift in the survival curves would support the claim."
+    },
+    {
+      "id": 3,
+      "title": "Melatonin Shortens Lifespan in Drosophila melanogaster",
+      "claim": "Administration of melatonin shortens lifespan in Drosophila melanogaster. Treated flies will show decreased longevity relative to untreated controls.",
+      "rationale": "Melatonin strongly modulates circadian phase and light-dependent signaling, and misaligned circadian input can disrupt sleep, metabolism, and stress responses. Such disruption can accelerate physiological decline.",
+      "prediction": "Flies receiving melatonin will exhibit a statistically significant decrease in median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Supplement the diet of age-matched Drosophila melanogaster cohorts with melatonin and compare survival curves against vehicle controls. A leftward shift in the survival curves would support the claim."
+    },
+    {
+      "id": 4,
+      "title": "Berberine Extends Lifespan in Drosophila melanogaster",
+      "claim": "Administration of berberine extends lifespan in Drosophila melanogaster. Treated flies will show increased longevity relative to untreated controls.",
+      "rationale": "Berberine activates cellular energy-sensing pathways that regulate metabolism and autophagy. Improved energy homeostasis and clearance of damaged components are mechanisms associated with slower aging.",
+      "prediction": "Flies receiving berberine will exhibit a statistically significant increase in median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Supplement the diet of age-matched Drosophila melanogaster cohorts with berberine and compare survival curves against vehicle controls. A rightward shift in the survival curves would support the claim."
+    },
+    {
+      "id": 5,
+      "title": "Carvedilol Extends Lifespan in Drosophila melanogaster",
+      "claim": "Administration of carvedilol extends lifespan in Drosophila melanogaster. Treated flies will show increased longevity relative to untreated controls.",
+      "rationale": "Carvedilol reduces oxidative stress and modulates adrenergic signaling, both of which influence cellular damage accumulation. Lower oxidative burden can preserve tissue function and extend survival.",
+      "prediction": "Flies receiving carvedilol will exhibit a statistically significant increase in median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Supplement the diet of age-matched Drosophila melanogaster cohorts with carvedilol and compare survival curves against vehicle controls. A rightward shift in the survival curves would support the claim."
+    },
+    {
+      "id": 6,
+      "title": "Hydroxyprogesterone Caproate Extends Lifespan via Insulin/IGF Signaling",
+      "claim": "Administration of hydroxyprogesterone caproate extends lifespan in Drosophila melanogaster by activating the insulin/IGF signaling pathway. The lifespan extension depends on insulin/IGF pathway activation.",
+      "rationale": "Steroid signaling intersects with insulin/IGF pathways to coordinate metabolism, growth, and stress responses. Activation of these conserved pathways can reprogram resource allocation toward maintenance and longevity.",
+      "prediction": "Hydroxyprogesterone caproate-treated flies will live longer than controls, and the extension will be abolished when insulin/IGF signaling is genetically disrupted.",
+      "experiment": "Measure lifespan of hydroxyprogesterone caproate-supplemented and control flies on a normal background and on flies with reduced insulin/IGF pathway activity. A significant increase only in pathway-competent flies would confirm the claim."
+    },
+    {
+      "id": 7,
+      "title": "Colchicine Extends Lifespan in Drosophila melanogaster",
+      "claim": "Administration of colchicine extends lifespan in Drosophila melanogaster. Treated flies will show increased longevity relative to untreated controls.",
+      "rationale": "Colchicine alters microtubule dynamics, which affects intracellular transport, mitotic activity, and proteostasis. Modified microtubule-dependent processes can shift cellular maintenance in ways that influence longevity.",
+      "prediction": "Flies receiving colchicine will exhibit a statistically significant increase in median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Supplement the diet of age-matched Drosophila melanogaster cohorts with colchicine and compare survival curves against vehicle controls. A rightward shift in the survival curves would support the claim."
+    },
+    {
+      "id": 8,
+      "title": "Limonin Extends Lifespan in Drosophila melanogaster",
+      "claim": "Administration of limonin extends lifespan in Drosophila melanogaster. Treated flies will show increased longevity relative to untreated controls.",
+      "rationale": "Limonin is a citrus-derived compound with antioxidant and anti-inflammatory activity that can reduce cellular damage. Reduced oxidative and inflammatory burden supports tissue maintenance and longer survival.",
+      "prediction": "Flies receiving limonin will exhibit a statistically significant increase in median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Supplement the diet of age-matched Drosophila melanogaster cohorts with limonin and compare survival curves against vehicle controls. A rightward shift in the survival curves would support the claim."
+    },
+    {
+      "id": 9,
+      "title": "Melatonin Extends Lifespan in Drosophila melanogaster",
+      "claim": "Administration of melatonin extends lifespan in Drosophila melanogaster. Treated flies will show increased longevity relative to untreated controls.",
+      "rationale": "Melatonin is a conserved circadian hormone with direct free-radical scavenging activity. Improved circadian coordination and reduced oxidative damage can slow the accumulation of age-related decline.",
+      "prediction": "Flies receiving melatonin will exhibit a statistically significant increase in median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Supplement the diet of age-matched Drosophila melanogaster cohorts with melatonin and compare survival curves against vehicle controls. A rightward shift in the survival curves would support the claim."
+    },
+    {
+      "id": 10,
+      "title": "Hydroxyprogesterone Caproate Shortens Lifespan in Drosophila",
+      "claim": "Administration of hydroxyprogesterone caproate shortens lifespan in Drosophila melanogaster. Treated flies will show decreased longevity relative to untreated controls.",
+      "rationale": "Hydroxyprogesterone caproate alters steroid hormone signaling, which governs reproductive investment and metabolic allocation. Shifted endocrine balance can divert resources from somatic maintenance and accelerate decline.",
+      "prediction": "Flies receiving hydroxyprogesterone caproate will exhibit a statistically significant decrease in median and maximum lifespan compared with vehicle-treated controls.",
+      "experiment": "Supplement the diet of age-matched Drosophila melanogaster cohorts with hydroxyprogesterone caproate and compare survival curves against vehicle controls. A leftward shift in the survival curves would support the claim."
+    }
+  ],
+  "assistant_notes": {}
+}

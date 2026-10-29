@@ -1,0 +1,96 @@
+{
+  "source": {
+    "family": "zhipu",
+    "model": "glm-5.3-flash",
+    "strategy": "negative-sampling",
+    "as_of": "1997-11-30",
+    "note": "labels are in labels.json",
+    "options": {
+      "dedup": false,
+      "lang": "en"
+    }
+  },
+  "hypotheses": [
+    {
+      "id": 1,
+      "title": "Xanthine extends lifespan in Drosophila melanogaster",
+      "claim": "Administration of xanthine extends lifespan in Drosophila melanogaster. The compound acts on conserved metabolic pathways to delay age-related decline in the fly.",
+      "rationale": "Xanthine participates in purine metabolism, which influences energy balance and oxidative stress. Modulating this pathway can therefore alter the pace of ageing in Drosophila melanogaster.",
+      "prediction": "Flies treated with xanthine will show significantly longer median and maximum lifespan than untreated controls.",
+      "experiment": "Maintain cohorts of Drosophila melanogaster on food with and without xanthine under identical conditions and compare survival curves using log-rank analysis."
+    },
+    {
+      "id": 2,
+      "title": "SR27897 extends lifespan in Drosophila melanogaster",
+      "claim": "Administration of SR27897 extends lifespan in Drosophila melanogaster. The compound acts on conserved signalling pathways to delay age-related decline in the fly.",
+      "rationale": "SR27897 modulates nutrient-sensing signalling that governs growth and metabolism. Adjusting these conserved pathways can shift resource allocation toward maintenance and extend lifespan in Drosophila melanogaster.",
+      "prediction": "Flies treated with SR27897 will show significantly longer median and maximum lifespan than untreated controls.",
+      "experiment": "Maintain cohorts of Drosophila melanogaster on food with and without SR27897 under identical conditions and compare survival curves using log-rank analysis."
+    },
+    {
+      "id": 3,
+      "title": "N-acetyl-L-cysteine accelerates ageing in Drosophila melanogaster",
+      "claim": "Administration of N-acetyl-L-cysteine accelerates ageing in Drosophila melanogaster. The compound disrupts redox homeostasis in a manner that hastens age-related decline in the fly.",
+      "rationale": "Reactive oxygen species serve as signalling molecules that activate stress-response and maintenance programmes. Suppressing them with N-acetyl-L-cysteine can impair these defences and accelerate ageing in Drosophila melanogaster.",
+      "prediction": "Flies treated with N-acetyl-L-cysteine will show significantly shorter median and maximum lifespan than untreated controls.",
+      "experiment": "Maintain cohorts of Drosophila melanogaster on food with and without N-acetyl-L-cysteine under identical conditions and compare survival curves using log-rank analysis."
+    },
+    {
+      "id": 4,
+      "title": "SR27897 extends lifespan via insulin/IGF signalling activation",
+      "claim": "SR27897 extends lifespan in Drosophila melanogaster by activating the insulin/IGF signalling pathway. Activation of this pathway mediates the longevity effect of the compound in the fly.",
+      "rationale": "The insulin/IGF signalling pathway regulates metabolism, growth and stress resistance in a manner that shapes lifespan. SR27897 can engage this pathway to trigger transcriptional programmes that extend lifespan in Drosophila melanogaster.",
+      "prediction": "SR27897-treated flies will live longer than controls, and genetic or pharmacological blockade of insulin/IGF signalling will abolish this extension.",
+      "experiment": "Compare lifespan responses to SR27897 in Drosophila melanogaster carrying reduced insulin/IGF pathway activity versus matched controls, and measure pathway target phosphorylation in treated flies."
+    },
+    {
+      "id": 5,
+      "title": "Dofetilide extends lifespan in Drosophila melanogaster",
+      "claim": "Administration of dofetilide extends lifespan in Drosophila melanogaster. The compound acts on conserved ion channel function to delay age-related decline in the fly.",
+      "rationale": "Ion channel activity shapes membrane excitability and cellular stress responses that influence ageing. Modulating potassium channel function with dofetilide can therefore alter lifespan in Drosophila melanogaster.",
+      "prediction": "Flies treated with dofetilide will show significantly longer median and maximum lifespan than untreated controls.",
+      "experiment": "Maintain cohorts of Drosophila melanogaster on food with and without dofetilide under identical conditions and compare survival curves using log-rank analysis."
+    },
+    {
+      "id": 6,
+      "title": "N-acetyl-L-cysteine shortens lifespan in Drosophila melanogaster",
+      "claim": "Administration of N-acetyl-L-cysteine shortens lifespan in Drosophila melanogaster. The compound disrupts redox homeostasis in a manner that hastens age-related decline in the fly.",
+      "rationale": "Reactive oxygen species act as signals that induce adaptive stress responses and repair mechanisms. Scavenging them with N-acetyl-L-cysteine can weaken these adaptations and shorten lifespan in Drosophila melanogaster.",
+      "prediction": "Flies treated with N-acetyl-L-cysteine will show significantly shorter median and maximum lifespan than untreated controls.",
+      "experiment": "Maintain cohorts of Drosophila melanogaster on food with and without N-acetyl-L-cysteine under identical conditions and compare survival curves using log-rank analysis."
+    },
+    {
+      "id": 7,
+      "title": "SR27897 shortens lifespan in Drosophila melanogaster",
+      "claim": "Administration of SR27897 shortens lifespan in Drosophila melanogaster. The compound acts on conserved signalling pathways in a manner that hastens age-related decline in the fly.",
+      "rationale": "SR27897 modulates nutrient-sensing signalling that governs growth and metabolism. Disrupting the balance of these conserved pathways can shift resources away from maintenance and shorten lifespan in Drosophila melanogaster.",
+      "prediction": "Flies treated with SR27897 will show significantly shorter median and maximum lifespan than untreated controls.",
+      "experiment": "Maintain cohorts of Drosophila melanogaster on food with and without SR27897 under identical conditions and compare survival curves using log-rank analysis."
+    },
+    {
+      "id": 8,
+      "title": "Amoxapine extends lifespan in Drosophila melanogaster",
+      "claim": "Administration of amoxapine extends lifespan in Drosophila melanogaster. The compound acts on conserved neuronal signalling to delay age-related decline in the fly.",
+      "rationale": "Neurotransmitter signalling influences feeding, stress responses and hormonal pathways that regulate ageing. Modulating this signalling with amoxapine can therefore extend lifespan in Drosophila melanogaster.",
+      "prediction": "Flies treated with amoxapine will show significantly longer median and maximum lifespan than untreated controls.",
+      "experiment": "Maintain cohorts of Drosophila melanogaster on food with and without amoxapine under identical conditions and compare survival curves using log-rank analysis."
+    },
+    {
+      "id": 9,
+      "title": "N-acetyl-L-cysteine extends lifespan in Drosophila melanogaster",
+      "claim": "Administration of N-acetyl-L-cysteine extends lifespan in Drosophila melanogaster. The compound acts on conserved redox pathways to delay age-related decline in the fly.",
+      "rationale": "Oxidative damage accumulates with age and contributes to cellular decline across species. Replenishing antioxidant capacity with N-acetyl-L-cysteine can reduce this damage and extend lifespan in Drosophila melanogaster.",
+      "prediction": "Flies treated with N-acetyl-L-cysteine will show significantly longer median and maximum lifespan than untreated controls.",
+      "experiment": "Maintain cohorts of Drosophila melanogaster on food with and without N-acetyl-L-cysteine under identical conditions and compare survival curves using log-rank analysis."
+    },
+    {
+      "id": 10,
+      "title": "Morpholinosydnonimine HCl extends lifespan in Drosophila melanogaster",
+      "claim": "Administration of morpholinosydnonimine HCl extends lifespan in Drosophila melanogaster. The compound acts on conserved nitric oxide signalling to delay age-related decline in the fly.",
+      "rationale": "Nitric oxide signalling regulates mitochondrial function, stress responses and vascular-like physiology conserved across species. Modulating this signalling with morpholinosydnonimine HCl can therefore extend lifespan in Drosophila melanogaster.",
+      "prediction": "Flies treated with morpholinosydnonimine HCl will show significantly longer median and maximum lifespan than untreated controls.",
+      "experiment": "Maintain cohorts of Drosophila melanogaster on food with and without morpholinosydnonimine HCl under identical conditions and compare survival curves using log-rank analysis."
+    }
+  ],
+  "assistant_notes": {}
+}

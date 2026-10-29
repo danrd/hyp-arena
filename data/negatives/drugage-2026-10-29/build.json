@@ -1,0 +1,43 @@
+{
+  "args": {
+    "cmd": "build",
+    "config": "configs/paid-test.yaml",
+    "max_calls": 120,
+    "seed": 0,
+    "fake": false,
+    "groups": 20,
+    "size": 10,
+    "variants": 2,
+    "min_pubs": 2,
+    "min_confidence": 0.7,
+    "writer": "zhipu",
+    "verifier": "google",
+    "out": "data/negatives/drugage-2026-10-29",
+    "exclude_from": [
+      "data/negatives/drugage/labels.json"
+    ]
+  },
+  "calls": 80,
+  "report": [
+    "g001 Chicoric acid / Caenorhabditis elegans as of 2012-12-31: {'reversed': 1, 'real': 5, 'true': 1, 'mechanism': 1, 'decoy_mechanism': 1, 'decoy_reversed': 1}; variants per cluster: 2; candidates not used: 6 (rejected by the verifier or surplus)",
+    "g002 Green tea extract / Drosophila melanogaster as of 1993-03-31: {'decoy_mechanism': 1, 'true': 1, 'real': 5, 'decoy_reversed': 1, 'condition': 1, 'reversed': 1}; variants per cluster: 2; candidates not used: 6 (rejected by the verifier or surplus)",
+    "g003 Rapamycin / Mus musculus as of 2009-07-07: {'real': 5, 'reversed': 1, 'true': 1, 'decoy_reversed': 1, 'mechanism': 1, 'decoy_mechanism': 1}; variants per cluster: 2; candidates not used: 6 (rejected by the verifier or surplus)",
+    "g004 Reserpine / Caenorhabditis elegans as of 2008-04-13: {'real': 5, 'mechanism': 1, 'reversed': 1, 'decoy_reversed': 1, 'true': 1, 'decoy_mechanism': 1}; variants per cluster: 2; candidates not used: 6 (rejected by the verifier or surplus)",
+    "g005 N-acetyl-L-cysteine / Drosophila melanogaster as of 1997-11-30: {'real': 5, 'reversed': 2, 'decoy_mechanism': 1, 'decoy_reversed': 1, 'true': 1}; variants per cluster: 2; candidates not used: 6 (rejected by the verifier or surplus)",
+    "g006 Nordihydroguaiaretic acid / Mus musculus as of 2008-07-17: {'real': 5, 'condition': 1, 'decoy_mechanism': 1, 'true': 1, 'decoy_reversed': 1, 'reversed': 1}; variants per cluster: 2; candidates not used: 6 (rejected by the verifier or surplus)",
+    "g007 Baicalein / Caenorhabditis elegans as of 2010-12-31: {'decoy_mechanism': 1, 'reversed': 1, 'true': 1, 'real': 5, 'decoy_reversed': 1, 'condition': 1}; variants per cluster: 2; candidates not used: 6 (rejected by the verifier or surplus)",
+    "g008 Ibuprofen / Drosophila melanogaster as of 2014-11-30: {'mechanism': 1, 'true': 1, 'real': 5, 'decoy_mechanism': 1, 'decoy_reversed': 1, 'reversed': 1}; variants per cluster: 2; candidates not used: 6 (rejected by the verifier or surplus)",
+    "g009 Melatonin / Mus musculus as of 1994-01-17: {'real': 5, 'true': 1, 'mechanism': 1, 'reversed': 1, 'decoy_mechanism': 1, 'decoy_reversed': 1}; variants per cluster: 2; candidates not used: 6 (rejected by the verifier or surplus)",
+    "g010 FCCP / Caenorhabditis elegans as of 2008-01-20: {'real': 5, 'decoy_mechanism': 1, 'true': 1, 'condition': 1, 'decoy_reversed': 1, 'reversed': 1}; variants per cluster: 2; candidates not used: 6 (rejected by the verifier or surplus)",
+    "g011 J147 / Drosophila melanogaster as of 2018-01-06: {'condition': 1, 'true': 1, 'real': 5, 'decoy_reversed': 1, 'decoy_mechanism': 1, 'reversed': 1}; variants per cluster: 2; candidates not used: 6 (rejected by the verifier or surplus)",
+    "g012 Acarbose / Mus musculus as of 2013-11-18: {'real': 5, 'decoy_reversed': 1, 'reversed': 2, 'decoy_mechanism': 1, 'true': 1}; variants per cluster: 2; candidates not used: 6 (rejected by the verifier or surplus)",
+    "g013 Resveratrol / Caenorhabditis elegans as of 2004-07-13: {'real': 5, 'true': 1, 'mechanism': 1, 'decoy_mechanism': 1, 'reversed': 1, 'decoy_reversed': 1}; variants per cluster: 2; candidates not used: 6 (rejected by the verifier or surplus)",
+    "g014 Royal Jelly / Drosophila melanogaster as of 2011-12-31: {'decoy_mechanism': 1, 'real': 5, 'reversed': 1, 'true': 1, 'mechanism': 1, 'decoy_reversed': 1}; variants per cluster: 2; candidates not used: 6 (rejected by the verifier or surplus)",
+    "g015 Apple extract / Caenorhabditis elegans as of 2010-08-16: {'real': 5, 'decoy_mechanism': 1, 'true': 1, 'reversed': 1, 'decoy_reversed': 1, 'condition': 1}; variants per cluster: 2; candidates not used: 6 (rejected by the verifier or surplus)",
+    "g016 Melatonin / Drosophila melanogaster as of 1999-01-14: {'mechanism': 1, 'real': 5, 'reversed': 1, 'decoy_mechanism': 1, 'true': 1, 'decoy_reversed': 1}; variants per cluster: 2; candidates not used: 6 (rejected by the verifier or surplus)",
+    "g017 Rapamycin / Caenorhabditis elegans as of 2012-05-01: {'decoy_reversed': 1, 'true': 1, 'real': 5, 'condition': 1, 'reversed': 1, 'decoy_mechanism': 1}; variants per cluster: 2; candidates not used: 6 (rejected by the verifier or surplus)",
+    "g018 Vitamin E / Drosophila melanogaster as of 1982-08-31: {'real': 9, 'true': 1}; variants per cluster: 0; candidates not used: 8 (rejected by the verifier or surplus)",
+    "g019 Cranberry extract / Caenorhabditis elegans as of 2012-08-03: {'decoy_reversed': 1, 'reversed': 1, 'decoy_mechanism': 1, 'true': 1, 'real': 5, 'mechanism': 1}; variants per cluster: 2; candidates not used: 6 (rejected by the verifier or surplus)",
+    "g020 Pyrrolidine dithiocarbamate / Drosophila melanogaster as of 2011-03-31: {'real': 5, 'decoy_reversed': 1, 'decoy_mechanism': 1, 'condition': 1, 'mechanism': 1, 'true': 1}; variants per cluster: 2; candidates not used: 6 (rejected by the verifier or surplus)"
+  ]
+}

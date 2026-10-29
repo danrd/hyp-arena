@@ -1,0 +1,96 @@
+{
+  "source": {
+    "family": "zhipu",
+    "model": "glm-5.3-flash",
+    "strategy": "negative-sampling",
+    "as_of": "2010-08-16",
+    "note": "labels are in labels.json",
+    "options": {
+      "dedup": false,
+      "lang": "en"
+    }
+  },
+  "hypotheses": [
+    {
+      "id": 1,
+      "title": "KT170 Extends Lifespan in Caenorhabditis elegans",
+      "claim": "Treatment with KT170 extends the lifespan of Caenorhabditis elegans. The compound increases mean and maximal survival relative to untreated controls.",
+      "rationale": "Small molecules can modulate conserved longevity pathways such as stress resistance and nutrient sensing. A compound acting on these pathways should delay aging in C. elegans.",
+      "prediction": "KT170-treated nematodes will show significantly longer median and maximum lifespans than vehicle-treated controls.",
+      "experiment": "Synchronize worm populations, treat one group with KT170 and one with vehicle, and measure survival on a defined schedule until all animals die, comparing lifespan curves statistically."
+    },
+    {
+      "id": 2,
+      "title": "ZD7114 Hydrochloride Extends Lifespan in Caenorhabditis elegans",
+      "claim": "Treatment with ZD7114 hydrochloride extends the lifespan of Caenorhabditis elegans. The compound increases mean and maximal survival relative to untreated controls.",
+      "rationale": "Pharmacological agents that alter signaling or stress responses can slow aging processes. A compound engaging such mechanisms should prolong survival in C. elegans.",
+      "prediction": "ZD7114 hydrochloride-treated nematodes will show significantly longer median and maximum lifespans than vehicle-treated controls.",
+      "experiment": "Synchronize worm populations, treat one group with ZD7114 hydrochloride and one with vehicle, and measure survival on a defined schedule until all animals die, comparing lifespan curves statistically."
+    },
+    {
+      "id": 3,
+      "title": "KT170 Extends Lifespan via Activation of DAF-2",
+      "claim": "KT170 extends the lifespan of Caenorhabditis elegans by activating the insulin/IGF-1 receptor DAF-2. The lifespan extension requires DAF-2 signaling.",
+      "rationale": "The insulin/IGF-1 receptor DAF-2 is a central regulator of aging whose signaling state shapes downstream longevity effectors. A compound acting through DAF-2 should show dependency on this receptor.",
+      "prediction": "KT170 will extend lifespan in wild-type worms but fail to extend lifespan in daf-2 loss-of-function mutants.",
+      "experiment": "Perform parallel lifespan assays in wild-type and daf-2 mutant worms treated with KT170 or vehicle, and test whether the lifespan extension is abolished in the mutant background."
+    },
+    {
+      "id": 4,
+      "title": "Apple Extract Extends Lifespan in Caenorhabditis elegans",
+      "claim": "Treatment with apple extract extends the lifespan of Caenorhabditis elegans. The extract increases mean and maximal survival relative to untreated controls.",
+      "rationale": "Plant-derived polyphenols and antioxidants can reduce oxidative damage and modulate stress-response pathways. Such bioactive constituents should support delayed aging in C. elegans.",
+      "prediction": "Apple extract-treated nematodes will show significantly longer median and maximum lifespans than vehicle-treated controls.",
+      "experiment": "Synchronize worm populations, treat one group with apple extract and one with vehicle, and measure survival on a defined schedule until all animals die, comparing lifespan curves statistically."
+    },
+    {
+      "id": 5,
+      "title": "Apple Extract Shortens Lifespan in Caenorhabditis elegans",
+      "claim": "Treatment with apple extract shortens the lifespan of Caenorhabditis elegans. The extract decreases mean and maximal survival relative to untreated controls.",
+      "rationale": "Plant extracts contain compounds that can be harmful at sufficient exposure, disrupting metabolism or inducing stress. Such toxicity should reduce survival in C. elegans.",
+      "prediction": "Apple extract-treated nematodes will show significantly shorter median and maximum lifespans than vehicle-treated controls.",
+      "experiment": "Synchronize worm populations, treat one group with apple extract and one with vehicle, and measure survival on a defined schedule until all animals die, comparing lifespan curves statistically."
+    },
+    {
+      "id": 6,
+      "title": "KC03 Extends Lifespan in Caenorhabditis elegans",
+      "claim": "Treatment with KC03 extends the lifespan of Caenorhabditis elegans. The compound increases mean and maximal survival relative to untreated controls.",
+      "rationale": "Small molecules can modulate conserved longevity pathways such as stress resistance and nutrient sensing. A compound acting on these pathways should delay aging in C. elegans.",
+      "prediction": "KC03-treated nematodes will show significantly longer median and maximum lifespans than vehicle-treated controls.",
+      "experiment": "Synchronize worm populations, treat one group with KC03 and one with vehicle, and measure survival on a defined schedule until all animals die, comparing lifespan curves statistically."
+    },
+    {
+      "id": 7,
+      "title": "KT170 Shortens Lifespan in Caenorhabditis elegans",
+      "claim": "Treatment with KT170 shortens the lifespan of Caenorhabditis elegans. The compound decreases mean and maximal survival relative to untreated controls.",
+      "rationale": "Compounds that impair metabolism, reproduction, or cellular stress defenses can accelerate physiological decline. Such toxicity should reduce survival in C. elegans.",
+      "prediction": "KT170-treated nematodes will show significantly shorter median and maximum lifespans than vehicle-treated controls.",
+      "experiment": "Synchronize worm populations, treat one group with KT170 and one with vehicle, and measure survival on a defined schedule until all animals die, comparing lifespan curves statistically."
+    },
+    {
+      "id": 8,
+      "title": "6-Hydroxyflavone Extends Lifespan in Caenorhabditis elegans",
+      "claim": "Treatment with 6-hydroxyflavone extends the lifespan of Caenorhabditis elegans. The compound increases mean and maximal survival relative to untreated controls.",
+      "rationale": "Flavonoids possess antioxidant and signaling properties that can engage conserved longevity and stress-response pathways. Such bioactivity should support delayed aging in C. elegans.",
+      "prediction": "6-hydroxyflavone-treated nematodes will show significantly longer median and maximum lifespans than vehicle-treated controls.",
+      "experiment": "Synchronize worm populations, treat one group with 6-hydroxyflavone and one with vehicle, and measure survival on a defined schedule until all animals die, comparing lifespan curves statistically."
+    },
+    {
+      "id": 9,
+      "title": "Apple Extract Extends Lifespan Only at Toxic High Doses",
+      "claim": "Apple extract extends the lifespan of Caenorhabditis elegans only at high doses that cause toxicity. The benefit emerges exclusively within a dose range that also produces adverse effects.",
+      "rationale": "Mild stress from a toxicant can activate compensatory defense mechanisms that improve survival, a dose-dependent hormetic response. Lifespan extension should therefore coincide with doses producing measurable toxicity.",
+      "prediction": "Apple extract will extend lifespan only at doses that concurrently reduce fertility, movement, or acute stress tolerance.",
+      "experiment": "Perform lifespan assays across a dose series of apple extract alongside assays of fertility, motility, and acute stress survival, and test whether lifespan extension occurs only at doses showing toxicity."
+    },
+    {
+      "id": 10,
+      "title": "Phenoxybenzamine Hydrochloride Extends Lifespan in Caenorhabditis elegans",
+      "claim": "Treatment with phenoxybenzamine hydrochloride extends the lifespan of Caenorhabditis elegans. The compound increases mean and maximal survival relative to untreated controls.",
+      "rationale": "Pharmacological agents that alter signaling or stress responses can slow aging processes. A compound engaging such mechanisms should prolong survival in C. elegans.",
+      "prediction": "Phenoxybenzamine hydrochloride-treated nematodes will show significantly longer median and maximum lifespans than vehicle-treated controls.",
+      "experiment": "Synchronize worm populations, treat one group with phenoxybenzamine hydrochloride and one with vehicle, and measure survival on a defined schedule until all animals die, comparing lifespan curves statistically."
+    }
+  ],
+  "assistant_notes": {}
+}

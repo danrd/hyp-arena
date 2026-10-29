@@ -1,0 +1,96 @@
+{
+  "source": {
+    "family": "zhipu",
+    "model": "glm-5.3-flash",
+    "strategy": "negative-sampling",
+    "as_of": "2014-11-30",
+    "note": "labels are in labels.json",
+    "options": {
+      "dedup": false,
+      "lang": "en"
+    }
+  },
+  "hypotheses": [
+    {
+      "id": 1,
+      "title": "Ibuprofen extends Drosophila lifespan via prostaglandin synthesis inhibition",
+      "claim": "Ibuprofen extends lifespan in Drosophila melanogaster by inhibiting cyclooxygenase-dependent prostaglandin synthesis. Reduced prostaglandin signaling will lower inflammatory-type signaling and thereby slow aging.",
+      "rationale": "Prostaglandins promote oxidative stress and inflammatory signaling that accumulate with age. Blocking their synthesis should reduce this damage and extend survival.",
+      "prediction": "Ibuprofen-treated flies will live significantly longer than controls, and the extension will be abolished by prostaglandin supplementation or in cyclooxygenase-deficient backgrounds.",
+      "experiment": "Measure lifespan of flies fed ibuprofen versus vehicle, with parallel groups receiving prostaglandin rescue and genetic knockdown of cyclooxygenase to test mediation of the effect."
+    },
+    {
+      "id": 2,
+      "title": "Ibuprofen extends lifespan in Drosophila melanogaster",
+      "claim": "Ibuprofen extends lifespan in Drosophila melanogaster. Flies exposed to ibuprofen will show increased mean and maximum lifespan relative to untreated controls.",
+      "rationale": "Ibuprofen modulates stress-response and inflammatory pathways conserved across species. Such modulation can reduce age-related cellular damage and prolong survival.",
+      "prediction": "Flies fed ibuprofen will exhibit significantly longer mean and maximum lifespan than vehicle-fed controls under identical conditions.",
+      "experiment": "Raise matched cohorts on food containing ibuprofen or vehicle and compare survivorship curves with full control of dose, density and environment."
+    },
+    {
+      "id": 3,
+      "title": "Hydroxyprogesterone caproate extends lifespan in Drosophila melanogaster",
+      "claim": "Hydroxyprogesterone caproate extends lifespan in Drosophila melanogaster. Flies receiving the compound will show increased mean and maximum lifespan relative to controls.",
+      "rationale": "Progestin signaling influences metabolism, stress resistance and reproductive allocation, processes that govern aging rate. Adjusting this signaling can shift resources toward somatic maintenance.",
+      "prediction": "Flies treated with hydroxyprogesterone caproate will exhibit significantly longer mean and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Compare survivorship of cohorts fed hydroxyprogesterone caproate versus vehicle across multiple doses, controlling for density, diet and sex."
+    },
+    {
+      "id": 4,
+      "title": "Catechin extends Drosophila lifespan via insulin/IGF pathway activation",
+      "claim": "Catechin extends lifespan in Drosophila melanogaster by activating the insulin/IGF signaling pathway. Pathway activation will trigger downstream programs that improve somatic maintenance and prolong life.",
+      "rationale": "Insulin/IGF signaling regulates stress resistance, nutrient storage and aging rate through conserved transcriptional programs. Controlled activation of this pathway can enhance survival.",
+      "prediction": "Catechin-fed flies will live longer than controls, and the extension will be lost when insulin/IGF signaling components are genetically inactivated.",
+      "experiment": "Measure lifespan of catechin-treated versus control flies in wild-type and insulin/IGF pathway mutant backgrounds, monitoring pathway target expression."
+    },
+    {
+      "id": 5,
+      "title": "Catechin shortens lifespan in Drosophila melanogaster",
+      "claim": "Catechin shortens lifespan in Drosophila melanogaster. Flies exposed to catechin will show reduced mean and maximum lifespan relative to untreated controls.",
+      "rationale": "Catechin can generate pro-oxidant effects at sufficient doses and perturb nutrient-sensing balance. Such perturbation may accelerate cellular damage and reduce survival.",
+      "prediction": "Flies fed catechin will exhibit significantly shorter mean and maximum lifespan than vehicle-fed controls under identical conditions.",
+      "experiment": "Raise matched cohorts on food containing catechin or vehicle and compare survivorship curves with full control of dose, density and environment."
+    },
+    {
+      "id": 6,
+      "title": "Ibuprofen shortens lifespan in Drosophila melanogaster",
+      "claim": "Ibuprofen shortens lifespan in Drosophila melanogaster. Flies exposed to ibuprofen will show reduced mean and maximum lifespan relative to untreated controls.",
+      "rationale": "Ibuprofen can disrupt prostaglandin-dependent signaling needed for tissue repair and stress adaptation. Interference with these processes may increase mortality with age.",
+      "prediction": "Flies fed ibuprofen will exhibit significantly shorter mean and maximum lifespan than vehicle-fed controls under identical conditions.",
+      "experiment": "Raise matched cohorts on food containing ibuprofen or vehicle and compare survivorship curves with full control of dose, density and environment."
+    },
+    {
+      "id": 7,
+      "title": "Limonin extends lifespan in Drosophila melanogaster",
+      "claim": "Limonin extends lifespan in Drosophila melanogaster. Flies receiving limonin will show increased mean and maximum lifespan relative to controls.",
+      "rationale": "Limonin is a bioactive citrus compound that engages detoxification and antioxidant defense pathways. Strengthening these defenses can slow the accumulation of age-related damage.",
+      "prediction": "Flies treated with limonin will exhibit significantly longer mean and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Compare survivorship of cohorts fed limonin versus vehicle across multiple doses, controlling for density, diet and sex."
+    },
+    {
+      "id": 8,
+      "title": "Ethotoin extends lifespan in Drosophila melanogaster",
+      "claim": "Ethotoin extends lifespan in Drosophila melanogaster. Flies receiving ethotoin will show increased mean and maximum lifespan relative to controls.",
+      "rationale": "Ethotoin modulates neuronal excitability and stress-responsive signaling, both of which influence systemic aging rate. Stabilizing these processes can improve long-term survival.",
+      "prediction": "Flies treated with ethotoin will exhibit significantly longer mean and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Compare survivorship of cohorts fed ethotoin versus vehicle across multiple doses, controlling for density, diet and sex."
+    },
+    {
+      "id": 9,
+      "title": "Catechin extends lifespan in Drosophila melanogaster",
+      "claim": "Catechin extends lifespan in Drosophila melanogaster. Flies receiving catechin will show increased mean and maximum lifespan relative to controls.",
+      "rationale": "Catechin is a polyphenol that activates antioxidant and detoxification pathways. Enhanced cellular protection can reduce cumulative damage and extend survival.",
+      "prediction": "Flies treated with catechin will exhibit significantly longer mean and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Compare survivorship of cohorts fed catechin versus vehicle across multiple doses, controlling for density, diet and sex."
+    },
+    {
+      "id": 10,
+      "title": "PPG extends lifespan in Drosophila melanogaster",
+      "claim": "PPG extends lifespan in Drosophila melanogaster. Flies receiving PPG will show increased mean and maximum lifespan relative to controls.",
+      "rationale": "PPG modulates metabolic and signaling processes that determine the rate of somatic decline. Shifting these processes toward maintenance can prolong survival.",
+      "prediction": "Flies treated with PPG will exhibit significantly longer mean and maximum lifespan than vehicle-treated controls.",
+      "experiment": "Compare survivorship of cohorts fed PPG versus vehicle across multiple doses, controlling for density, diet and sex."
+    }
+  ],
+  "assistant_notes": {}
+}

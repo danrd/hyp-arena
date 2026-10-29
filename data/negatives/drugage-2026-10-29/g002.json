@@ -1,0 +1,96 @@
+{
+  "source": {
+    "family": "zhipu",
+    "model": "glm-5.3-flash",
+    "strategy": "negative-sampling",
+    "as_of": "1993-03-31",
+    "note": "labels are in labels.json",
+    "options": {
+      "dedup": false,
+      "lang": "en"
+    }
+  },
+  "hypotheses": [
+    {
+      "id": 1,
+      "title": "Berberine Extends Drosophila Lifespan via AMPK and Complex I",
+      "claim": "Berberine extends lifespan in Drosophila melanogaster by activating AMPK and inhibiting mitochondrial complex I. The longevity effect depends on these two molecular actions.",
+      "rationale": "AMPK activation improves energy sensing and stress resistance, while mild complex I inhibition can induce beneficial mitohormetic responses that slow aging.",
+      "prediction": "Berberine-treated flies will live longer than controls, and the extension will be abolished when AMPK or complex I modulation is prevented.",
+      "experiment": "Administer berberine to flies and compare survival with controls, including AMPK loss-of-function and complex I mutant backgrounds to test dependence of the effect."
+    },
+    {
+      "id": 2,
+      "title": "Green Tea Extract Extends Drosophila Lifespan",
+      "claim": "Green tea extract extends lifespan in Drosophila melanogaster. Supplementation with the extract increases survival relative to untreated flies.",
+      "rationale": "Polyphenols in green tea can reduce oxidative stress and modulate nutrient-sensing pathways, both of which are plausible routes to slower aging.",
+      "prediction": "Flies receiving green tea extract will show significantly longer median and maximum lifespan than untreated controls.",
+      "experiment": "Supplement the diet of age-synchronized fly cohorts with green tea extract and measure survival curves against matched controls under identical conditions."
+    },
+    {
+      "id": 3,
+      "title": "PNU-74654 Extends Drosophila Lifespan",
+      "claim": "PNU-74654 extends lifespan in Drosophila melanogaster. Treatment with the compound increases survival relative to vehicle-treated flies.",
+      "rationale": "Modulation of conserved signaling pathways by small molecules can alter stress responses and cellular maintenance, potentially producing measurable gains in longevity.",
+      "prediction": "PNU-74654-treated flies will exhibit significantly longer lifespan than vehicle-treated controls.",
+      "experiment": "Administer PNU-74654 in the diet of age-synchronized cohorts and compare survival curves with vehicle-treated controls under identical rearing conditions."
+    },
+    {
+      "id": 4,
+      "title": "Berberine Extends Drosophila Lifespan",
+      "claim": "Berberine extends lifespan in Drosophila melanogaster. Supplementation with the compound increases survival relative to untreated flies.",
+      "rationale": "Berberine engages energy-sensing and metabolic pathways that influence cellular maintenance, offering a plausible route to delayed aging in a short-lived organism.",
+      "prediction": "Berberine-treated flies will show significantly longer median and maximum lifespan than untreated controls.",
+      "experiment": "Supplement the diet of age-synchronized fly cohorts with berberine and measure survival curves against matched controls under identical conditions."
+    },
+    {
+      "id": 5,
+      "title": "Berberine Shortens Drosophila Lifespan",
+      "claim": "Berberine shortens lifespan in Drosophila melanogaster. Supplementation with the compound decreases survival relative to untreated flies.",
+      "rationale": "Strong metabolic perturbation or mitochondrial impairment can exceed adaptive capacity, causing cellular damage and reduced organismal survival over time.",
+      "prediction": "Berberine-treated flies will show significantly shorter median and maximum lifespan than untreated controls.",
+      "experiment": "Supplement the diet of age-synchronized fly cohorts with berberine and measure survival curves against matched controls under identical conditions."
+    },
+    {
+      "id": 6,
+      "title": "Dequalinium Extends Drosophila Lifespan",
+      "claim": "Dequalinium extends lifespan in Drosophila melanogaster. Treatment with the compound increases survival relative to vehicle-treated flies.",
+      "rationale": "Targeted effects on mitochondrial function can trigger adaptive stress responses that improve cellular maintenance and delay age-related decline.",
+      "prediction": "Dequalinium-treated flies will exhibit significantly longer lifespan than vehicle-treated controls.",
+      "experiment": "Administer dequalinium in the diet of age-synchronized cohorts and compare survival curves with vehicle-treated controls under identical rearing conditions."
+    },
+    {
+      "id": 7,
+      "title": "High-Dose Green Tea Extract Extends Drosophila Lifespan",
+      "claim": "Green tea extract extends lifespan in Drosophila melanogaster at high doses. The longevity effect emerges specifically when supplementation reaches high concentrations.",
+      "rationale": "Sufficiently high polyphenol intake may be required to activate endogenous defense pathways strongly enough to produce a measurable longevity benefit.",
+      "prediction": "Flies receiving high-dose green tea extract will live significantly longer than controls, while lower doses will not extend survival.",
+      "experiment": "Supplement fly diets with a dose series of green tea extract spanning high concentrations and compare survival curves across doses and controls."
+    },
+    {
+      "id": 8,
+      "title": "574-Trimethoxyflavone Extends Drosophila Lifespan",
+      "claim": "574-Trimethoxyfavone extends lifespan in Drosophila melanogaster. Treatment with the compound increases survival relative to vehicle-treated flies.",
+      "rationale": "Flavone derivatives can interact with signaling and antioxidant pathways governing cellular maintenance, providing a plausible mechanism for extended longevity.",
+      "prediction": "574-Trimethoxyfavone-treated flies will exhibit significantly longer lifespan than vehicle-treated controls.",
+      "experiment": "Administer 574-trimethoxyfavone in the diet of age-synchronized cohorts and compare survival curves with vehicle-treated controls under identical rearing conditions."
+    },
+    {
+      "id": 9,
+      "title": "Nebirapine Extends Drosophila Lifespan",
+      "claim": "Nebirapine extends lifespan in Drosophila melanogaster. Treatment with the compound increases survival relative to vehicle-treated flies.",
+      "rationale": "Small molecules can alter conserved cellular pathways affecting stress resistance and proteostasis, and such changes can translate into extended organismal survival.",
+      "prediction": "Nebirapine-treated flies will exhibit significantly longer lifespan than vehicle-treated controls.",
+      "experiment": "Administer nebirapine in the diet of age-synchronized cohorts and compare survival curves with vehicle-treated controls under identical rearing conditions."
+    },
+    {
+      "id": 10,
+      "title": "Green Tea Extract Shortens Drosophila Lifespan",
+      "claim": "Green tea extract shortens lifespan in Drosophila melanogaster. Supplementation with the extract decreases survival relative to untreated flies.",
+      "rationale": "Bioactive compounds can become harmful when they disrupt metabolism or overwhelm detoxification systems, turning a potential benefit into reduced survival.",
+      "prediction": "Green tea extract-treated flies will show significantly shorter median and maximum lifespan than untreated controls.",
+      "experiment": "Supplement the diet of age-synchronized fly cohorts with green tea extract and measure survival curves against matched controls under identical conditions."
+    }
+  ],
+  "assistant_notes": {}
+}
