@@ -1,0 +1,25 @@
+You read the results of one registered clinical trial and report what happened to its primary outcome. Extract; do not judge whether the trial was a good idea, and do not use knowledge outside these sources.
+
+Trial {{ nct }} as registered:
+Title: {{ title }}
+Interventions: {{ interventions }}
+Primary outcome(s) as registered:
+{% for o in primary_outcomes %}
+- {{ o.measure }}{% if o.time_frame %} ({{ o.time_frame }}){% endif %}
+{% endfor %}
+
+Results sources:
+{% for src in sources %}
+[{{ src.id }}] {{ src.kind }}
+{{ src.text }}
+
+{% endfor %}
+Return one result for the trial:
+- label: positive (the primary outcome differed significantly in favour of the intervention against its comparator) | null (no significant difference) | negative (significantly worse with the intervention) | mixed (several primary outcomes or arms disagree) | not_applicable (no comparison to test: single arm, feasibility, pharmacokinetics, or the primary outcome is a description, not an effect) | not_reported (the sources do not give the primary outcome result);
+- source: the id in square brackets of the source you quote;
+- quote: one or two consecutive sentences, or one line of a results table, copied exactly, character for character, from that source, that state the primary outcome result; "" when not_reported;
+- note: one short line on anything that made the label uncertain (which outcome is primary, comparator, significance not stated), or "".
+Significance means the trial's own test (a p-value below its threshold, a confidence interval excluding no effect, or an explicit statement); a numerical difference alone is not significance.
+
+Reply with a single JSON object and nothing else:
+{"label": "not_reported", "source": "", "quote": "", "note": ""}
