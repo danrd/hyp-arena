@@ -1,0 +1,12 @@
+# L1.18: acceptance of a cheaper normalizer instead of Gemini 3.5 Flash with hidden reasoning. Fixed before the first call.
+# User decisions 2026-10-30: compare A (Gemini without reasoning, native endpoint) and B (DeepSeek V4.1 Flash), noise measured in full.
+id: normalizer-acceptance-2026-10-30
+code: scripts/normalizer_acceptance.py
+units: "100 hypothesis texts: groups g001-g010 of data/negatives/drugage-2026-10-29 (whole method v2 per group, verifier DeepSeek in every arm)"
+reference: "run r0 of the negative-sampling test (configs/v2-flash.yaml: Gemini with reasoning through the OpenAI-compatible endpoint)"
+noise: "the reference configuration run again from scratch on the same groups (new cards, new verification), against r0"
+candidates: {A: configs/v2-flash-gemini-nothink.yaml, B: configs/v2-flash-deepseek-norm.yaml}
+measures: "the six measures of L1.8 (scripts/paraphrase_check.py): subject, relation, object, context of the main claim, status and outcome, place (overlapping place ranges within the group); pooled over the 100 texts; a text whose normalization failed counts as a disagreement"
+criterion: "a candidate is accepted when every measure against r0 is at least the noise minus 0.05"
+decision: "both accepted: B (cheapest); one accepted: that one; none: keep Gemini with reasoning"
+cost_estimate_usd: "about 7 (noise run 4.5, A 2, B 0.5)"
