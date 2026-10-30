@@ -1,0 +1,12 @@
+# Outcome labels for the ClinicalTrials.gov hypotheses (scripts/ctgov_outcomes.py). Fixed before the first model call.
+id: ctgov-outcomes-2026-10-30
+selection: "scripts/hypothesis_sources_ctgov.py (aging itself as a condition, completed, first posted 2000-2022), then prospective registration only (first posted before the primary completion date) and at least one outcome document"
+counts_before_labelling: {candidates: 1085, retrospective: 216, no_outcome_document: 403, kept: 466, with_posted_results: 204, with_result_abstracts: 283}
+documents: "posted results of the primary outcome measures (groups, values, statistical analyses) rendered as text; up to 3 PubMed abstracts published after the primary completion date (result papers listed by the investigators first, then records carrying the NCT number), no protocols or reviews"
+model: {config: configs/v2-flash.yaml, family: deepseek, model: deepseek-v4.1-flash-1017, prompt: label_trial_outcome/v1, calls: "one per trial"}
+labels: [positive, null, negative, mixed, not_applicable, not_reported]
+quote_rule: "a label other than not_reported counts only if its quote is found verbatim (whitespace and case normalised) in the named source; otherwise quote_failed"
+recheck: "Claude reads at least 30% of the labels (SHA-1 order of the NCT number) and every label with a note or mixed/quote_failed/unparsed; the labels are used as the reference only if the recheck agrees with at least 85% of the rechecked labels; otherwise they are reported as a draft"
+cost_estimate_usd: "about 0.15 (720 thousand input tokens; up to 2x in DeepSeek's weekday peak hours)"
+use: "the outcome side of a test set of human-written, dated hypotheses; the criteria of that test are written separately, before any ranking is run on these trials"
+open_caveat: "the registry text is the current version; whether it was edited after the primary completion is checked by hand on a sample of 25 (longevity-kg/hypothesis_sources/history_check_sample.md)"
