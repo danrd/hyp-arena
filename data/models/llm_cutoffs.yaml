@@ -1,0 +1,41 @@
+# Knowledge cutoffs and release dates from the developers' own pages, for the models that matter for our decisions (2026-10-30).
+# Read through WebFetch (a page-to-text tool that answers questions about the page); the quotes are the values it returned for the
+# page cell or sentence, not checked character by character. `cutoff_rule` is the date used by the rule "a model may judge a pool
+# as of T only if its cutoff <= T": the end of the stated period (month or day), and for Anthropic the broader training data
+# cutoff, not the reliable knowledge cutoff. Where the developer states no cutoff, cutoff is null and the pages checked are named.
+checked_on: "2026-10-30"
+models:
+  # OpenAI: one page per model, developers.openai.com/api/docs/models/<id>
+  - {id: gpt-4o, developer: OpenAI, snapshots: [gpt-4o-2024-05-13, gpt-4o-2024-08-06, gpt-4o-2024-11-20], cutoff: "2023-10-01", cutoff_rule: "2023-10-01", quote: "Oct 01, 2023 knowledge cutoff", source: "https://developers.openai.com/api/docs/models/gpt-4o", status: deprecated}
+  - {id: gpt-4.1, developer: OpenAI, snapshots: [gpt-4.1-2025-04-14], cutoff: "2024-06-01", cutoff_rule: "2024-06-01", quote: "Jun 01, 2024 knowledge cutoff", source: "https://developers.openai.com/api/docs/models/gpt-4.1", status: deprecated}
+  - {id: o3, developer: OpenAI, snapshots: [o3-2025-04-16], cutoff: "2024-06-01", cutoff_rule: "2024-06-01", quote: "Jun 01, 2024 knowledge cutoff", source: "https://developers.openai.com/api/docs/models/o3", status: deprecated}
+  - {id: gpt-5-nano, developer: OpenAI, snapshots: [gpt-5-nano-2025-08-07], cutoff: "2024-05-31", cutoff_rule: "2024-05-31", quote: "May 31, 2024 knowledge cutoff", source: "https://developers.openai.com/api/docs/models/gpt-5-nano", status: deprecated}
+  - {id: gpt-5, developer: OpenAI, snapshots: [gpt-5-2025-08-07], cutoff: "2024-09-30", cutoff_rule: "2024-09-30", quote: "Sep 30, 2024 knowledge cutoff", source: "https://developers.openai.com/api/docs/models/gpt-5", status: deprecated}
+  - {id: gpt-5.1, developer: OpenAI, snapshots: [gpt-5.1-2025-11-13], cutoff: "2024-09-30", cutoff_rule: "2024-09-30", quote: "Sep 30, 2024 knowledge cutoff", source: "https://developers.openai.com/api/docs/models/gpt-5.1", status: deprecated}
+  - {id: gpt-6-astra, developer: OpenAI, cutoff: "2026-04-30", cutoff_rule: "2026-04-30", quote: "Apr 30, 2026", source: "https://developers.openai.com/api/docs/models", status: current}
+  - {id: gpt-6.1-sol, developer: OpenAI, cutoff: "2026-04-30", cutoff_rule: "2026-04-30", quote: "Apr 30, 2026", source: "https://developers.openai.com/api/docs/models", status: current}
+  - {id: gpt-6-luna, developer: OpenAI, cutoff: "2026-05-18", cutoff_rule: "2026-05-18", quote: "May 18, 2026", source: "https://developers.openai.com/api/docs/models", status: current}
+  - {id: gpt-6.1-terra, developer: OpenAI, cutoff: "2026-06-01", cutoff_rule: "2026-06-01", quote: "Jun 1, 2026", source: "https://developers.openai.com/api/docs/models", status: current}
+  # Anthropic: platform.claude.com/docs/en/models/<model>/overview (reliable knowledge cutoff; training data cutoff is broader)
+  - {id: claude-haiku-4-5-20251001, developer: Anthropic, released: "2025-10-15", cutoff: "2025-02", training_data_cutoff: "2025-07", cutoff_rule: "2025-07-31", quote: "Reliable knowledge cutoff | Feb 2025; Training data cutoff | Jul 2025", source: "https://platform.claude.com/docs/en/models/haiku-4-5/overview", status: legacy}
+  - {id: claude-opus-4-5-20251101, developer: Anthropic, released: "2025-11-24", cutoff: "2025-05", training_data_cutoff: "2025-08", cutoff_rule: "2025-08-31", quote: "Reliable knowledge cutoff | May 2025; Training data cutoff | Aug 2025", source: "https://platform.claude.com/docs/en/models/opus-4-5/overview", status: legacy}
+  - {id: claude-sonnet-4-6, developer: Anthropic, released: "2026-02-17", cutoff: "2025-08", training_data_cutoff: "2026-01", cutoff_rule: "2026-01-31", quote: "Reliable knowledge cutoff | Aug 2025; Training data cutoff | Jan 2026", source: "https://platform.claude.com/docs/en/models/sonnet-4-6/overview", status: legacy}
+  - {id: "claude-fable-5-1, claude-opus-5-5, claude-sonnet-5-5, claude-haiku-5-5", developer: Anthropic, cutoff: "2026-06", training_data_cutoff: "2026-06", cutoff_rule: "2026-06-30", quote: "Reliable knowledge cutoff | Jun 2026; Training data cutoff | Jun 2026", source: "https://platform.claude.com/docs/en/models/overview", status: current}
+  # Google: ai.google.dev/gemini-api/docs/models/<code> ("Knowledge cutoff", "Latest update")
+  - {id: gemini-2.0-flash, developer: Google, latest_update: "2025-02", cutoff: "2024-08", cutoff_rule: "2024-08-31", quote: "Knowledge cutoff: August 2024", source: "https://ai.google.dev/gemini-api/docs/models/gemini-2.0-flash", status: shut down}
+  - {id: gemini-2.5-pro, developer: Google, latest_update: "2025-06", cutoff: "2025-01", cutoff_rule: "2025-01-31", quote: "Knowledge cutoff: January 2025", source: "https://ai.google.dev/gemini-api/docs/models/gemini-2.5-pro", status: "limited to previous users"}
+  - {id: gemini-2.5-flash, developer: Google, latest_update: "2025-06", cutoff: "2025-01", cutoff_rule: "2025-01-31", quote: "Knowledge cutoff: January 2025", source: "https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash", status: "limited to previous users"}
+  - {id: gemini-3-flash-preview, developer: Google, latest_update: "2025-12", cutoff: null, notes: "no knowledge cutoff on the model page", source: "https://ai.google.dev/gemini-api/docs/models/gemini-3-flash-preview"}
+  - {id: gemini-3.1-pro-preview, developer: Google, latest_update: "2026-02", cutoff: null, notes: "no knowledge cutoff on the model page", source: "https://ai.google.dev/gemini-api/docs/models/gemini-3.1-pro-preview"}
+  - {id: gemini-3.5-flash, developer: Google, latest_update: "2026-05", cutoff: null, notes: "no knowledge cutoff on the model page; the page marks it deprecated and routes requests to gemini-3.6-flash (our normalizer)", source: "https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash"}
+  - {id: gemini-3.6-flash, developer: Google, latest_update: "2026-07", cutoff: null, notes: "no knowledge cutoff on the model page", source: "https://ai.google.dev/gemini-api/docs/models/gemini-3.6-flash"}
+  # Meta: Hugging Face model cards
+  - {id: llama-3.1-405b-instruct, developer: Meta, open_weights: true, released: "2024-07-23", cutoff: "2023-12", cutoff_rule: "2023-12-31", quote: "The pretraining data has a cutoff of December 2023.", source: "https://huggingface.co/meta-llama/Llama-3.1-405B-Instruct", notes: "same statement for 8B and 70B"}
+  - {id: llama-3.3-70b-instruct, developer: Meta, open_weights: true, released: "2024-12-06", cutoff: "2023-12", cutoff_rule: "2023-12-31", quote: "The pretraining data has a cutoff of December 2023.", source: "https://huggingface.co/meta-llama/Llama-3.3-70B-Instruct"}
+  # xAI
+  - {id: grok-4.7, developer: xAI, cutoff: "2026-05", cutoff_rule: "2026-05-31", quote: "The knowledge cut-off date of Grok 4.7 is May 2026.", source: "https://docs.x.ai/docs/models", notes: "no other Grok model has a stated cutoff on that page"}
+  # developers that state no cutoff on the pages checked
+  - {id: deepseek-v4.1-flash-1017, developer: DeepSeek, cutoff: null, notes: "no cutoff or release date stated (api-docs.deepseek.com: deepseek-flash 'is now served by DeepSeek-V4.1-Flash-1017'); our verifier", source: "https://api-docs.deepseek.com/"}
+  - {id: qwen3-235b-a22b, developer: Alibaba, open_weights: true, cutoff: null, notes: "model card states no cutoff; technical report published 2025-05-14", source: "https://huggingface.co/Qwen/Qwen3-235B-A22B"}
+  - {id: glm-4.5, developer: Zhipu, open_weights: true, cutoff: null, notes: "model card states no cutoff; paper published 2025-08-08", source: "https://huggingface.co/zai-org/GLM-4.5"}
+  - {id: mistral (all), developer: Mistral, cutoff: null, notes: "the models overview states no cutoff for any model", source: "https://docs.mistral.ai/getting-started/models/models_overview/"}
