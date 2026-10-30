@@ -1,0 +1,9 @@
+# Task for Jules in the private repository longevity-kg: part C (L1.17c), null and negative results
+
+Task for longevity-kg: extract observations for the 50 articles of "## Part C" at the end of queue.md (their abstracts are already in corpus/).
+
+This is a frozen test set with a focus on null and negative results. Follow AGENTS.md exactly: read each abstract yourself and write one observation per intervention, organism group, dose and outcome; quote copied verbatim, at most 300 characters; quote_role finding, background or speculation; for lifespan, direction no_effect with significance NS where the article reports no significant change, and decrease where lifespan was shortened; write null and negative findings with the same care as positive ones; apply the `result.by_metric` rule where the abstract reports several statistics; summary line per article. Write organism.species as the Latin species name and put the strain in organism.strain; mark disease models and mutants as AGENTS.md says. If an article reports no intervention result at all, write the no_observations line with a short reason. Never generate rows with a script or as placeholders: every row must come from reading the text. Run `python validate.py extracted/<pmid>.jsonl` for every file and fix every error until it reports 0 with errors. Work in batches of 10 and keep going until all 50 are done.
+
+Do NOT edit queue.md, notes.md, AGENTS.md, validate.py or any test (the queue marks are synced afterwards). Do not use the files in gold/. Commit only files in extracted/.
+
+Pull request: title "Part C: 50 articles with null and negative results, extracted". In the description list the PMIDs done, the PMIDs not finished (say plainly they were not extracted), and every doubtful reading (PMID and one line on what was unclear): those are rechecked by hand.
