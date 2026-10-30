@@ -1,0 +1,14 @@
+# Normalizer acceptance check (specs/normalizer-acceptance-2026-10-30.yaml), candidate B: method v2 with DeepSeek V4.1 Flash (thinking
+# off) as the normalizer as well as the verifier (`normalizer_family: deepseek`). The normalizer is a parser, not a judge, so the
+# independence rule of the verifier does not apply to it.
+rpm: 30
+concurrency: 4
+generation:
+  temperature: 0.2
+  max_tokens: 4000
+timeout: 150
+max_retries: 0
+deadline: 180
+models:
+  - {family: deepseek, provider: cometapi, model: "deepseek-v4.1-flash-1017", tier: paid, api_key_env: COMET_API_KEY,
+     generation: {max_tokens: 4000, extra_body: {thinking: {type: disabled}}}}

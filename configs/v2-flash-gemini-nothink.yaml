@@ -1,0 +1,15 @@
+# Normalizer acceptance check (specs/normalizer-acceptance-2026-10-30.yaml), candidate A: method v2 as configs/v2-flash.yaml, but the
+# normalizer (google family) is Gemini 3.5 Flash through its native endpoint with the hidden reasoning off (thinkingBudget 0);
+# through the OpenAI-compatible endpoint CometAPI cannot switch it off and bills it as output. Verifier unchanged (DeepSeek).
+rpm: 30
+concurrency: 4
+generation:
+  temperature: 0.2
+  max_tokens: 4000
+timeout: 150
+max_retries: 0
+deadline: 180
+models:
+  - {family: google, provider: gemini_native, model: "gemini-3.5-flash", tier: paid, api_key_env: COMET_API_KEY, generation: {thinking_budget: 0}}
+  - {family: deepseek, provider: cometapi, model: "deepseek-v4.1-flash-1017", tier: paid, api_key_env: COMET_API_KEY,
+     generation: {max_tokens: 4000, extra_body: {thinking: {type: disabled}}}}

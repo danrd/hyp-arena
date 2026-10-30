@@ -71,3 +71,35 @@ def test_anthropic_refusal_raises():
 def test_direct_config_loads():
     cfg = providers.load_config("configs/v2-direct.yaml")
     assert cfg.skip_missing_keys and {s.provider for s in cfg.models} == {"google", "openai", "anthropic"}
+
+
+def test_gemini_native_runner_switches_reasoning_off_and_drops_thought_parts(monkeypatch):
+    from hyparena.llm.gemini_native_runner import GeminiNativeRunner
+
+    class Resp:
+        status_code = 200
+        text = ""
+
+        def json(self):
+            return {"candidates": [{"content": {"parts": [{"text": "hidden", "thought": True}, {"text": "OK"}]}}],
+                    "usageMetadata": {"candidatesTokenCount": 1}}
+
+    class Client:
+        def post(self, url, headers, json):
+            self.sent = (url, json)
+            return Resp()
+
+    monkeypatch.setenv("COMET_API_KEY", "x")
+    c = Client()
+    r = GeminiNativeRunner(["gemini-3.5-flash"], {"max_tokens": 4000, "temperature": 0.2}, client=c)
+    assert r.generate("hi") == "OK"
+    url, body = c.sent
+    assert url.endswith("/models/gemini-3.5-flash:generateContent")
+    assert body["generationConfig"] == {"thinkingConfig": {"thinkingBudget": 0}, "maxOutputTokens": 4000, "temperature": 0.2}
+
+
+def test_candidate_configs_of_the_normalizer_check_load():
+    from hyparena.llm.providers import load_config
+    a = load_config("configs/v2-flash-gemini-nothink.yaml")
+    assert [(m.family, m.provider) for m in a.models] == [("google", "gemini_native"), ("deepseek", "cometapi")]
+    assert [m.family for m in load_config("configs/v2-flash-deepseek-norm.yaml").models] == ["deepseek"]

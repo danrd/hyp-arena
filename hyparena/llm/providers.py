@@ -75,8 +75,9 @@ OPENAI_COMPATIBLE = {
 }
 #: Key variable of every provider when the spec names none.
 KEY_ENV = {"openrouter": "OPENROUTER_API_KEY", "cometapi": "COMETAPI_KEY", "anthropic": "ANTHROPIC_API_KEY",
+           "gemini_native": "COMET_API_KEY",
            **{p: env for p, (_, env) in OPENAI_COMPATIBLE.items()}}
-Provider = Literal["openrouter", "cometapi", "openai", "anthropic", "google", "deepseek", "xai", "mistral"]
+Provider = Literal["openrouter", "cometapi", "openai", "anthropic", "google", "deepseek", "xai", "mistral", "gemini_native"]
 
 
 class ModelSpec(BaseModel):
@@ -230,6 +231,9 @@ def build_runner(s: ModelSpec, cfg: ProvidersConfig):
             raise ValueError(f"{s.family}: base_url is not used for anthropic")
         from hyparena.llm.anthropic_runner import AnthropicRunner      # lazy: needs the `anthropic` package
         return AnthropicRunner(**common, api_key_env=key_env(s))
+    if s.provider == "gemini_native":                       # Gemini's own endpoint: hidden reasoning can be switched off
+        from hyparena.llm.gemini_native_runner import GeminiNativeRunner
+        return GeminiNativeRunner(**common, api_key_env=key_env(s), base_url=s.base_url)
     from llm_kit.llm_runtime import CometApiRunner, HostedRunner, OpenRouterRunner   # lazy: needs `openai`
     if s.provider in ("openrouter", "cometapi") and not s.base_url:
         cls = OpenRouterRunner if s.provider == "openrouter" else CometApiRunner
