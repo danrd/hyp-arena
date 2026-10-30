@@ -83,10 +83,67 @@ def part_b(exclude: set[str]) -> list[dict]:
     return out
 
 
+# Part C (L1.17c, 2026-10-30): part B's free-text queries returned many papers that are not intervention studies (19 of 35
+# annotated had no observation: epidemiology, editorials, catheters). Part C asks PubMed for the MeSH heading Longevity/drug effects
+# (indexers' mark for an agent acting on lifespan) AND a model organism AND a null or negative wording, no reviews and keeps an abstract only if code finds an intervention, a lifespan
+# term, the organism and a null or negative wording in it. Only PMIDs are written to this repository.
+NULL_TIAB = ('("no significant"[tiab] OR "did not extend"[tiab] OR "did not increase"[tiab] OR "failed to extend"[tiab] OR '
+             '"no effect on lifespan"[tiab] OR "no effect on life span"[tiab] OR "not extend"[tiab] OR "shortened"[tiab] OR '
+             '"reduced lifespan"[tiab] OR "decreased lifespan"[tiab] OR "reduced life span"[tiab] OR "decreased life span"[tiab])')
+LIFESPAN_TIAB = '(lifespan[tiab] OR "life span"[tiab] OR longevity[tiab])'
+INTERVENTION_TIAB = '(treat*[tiab] OR supplement*[tiab] OR administ*[tiab] OR fed[tiab] OR feeding[tiab] OR drug*[tiab] OR compound*[tiab] OR dose*[tiab])'
+PART_C_STRATA = {"mouse": ("mice[MeSH Terms]", r"\bmice\b|\bmouse\b", 15),
+                 "worm": ('"Caenorhabditis elegans"[MeSH Terms]', r"elegans|nematode", 15),
+                 "fly": ("Drosophila[MeSH Terms]", r"drosophila|\bflies\b|\bfly\b", 15),
+                 "rat": ("rats[MeSH Terms]", r"\brats?\b", 5)}
+NULL_RE = (r"no significant|not significant|did not (?:extend|increase|prolong|affect|alter|change)|failed to (?:extend|increase|prolong)|"
+           r"no (?:effect|change|difference)|not (?:extend|prolong)|shorten|reduced (?:the )?(?:mean |median |maximum )?(?:lifespan|life span)|"
+           r"decreased (?:the )?(?:mean |median |maximum )?(?:lifespan|life span)")
+INTERVENTION_RE = r"treat|supplement|administ|\bfed\b|feeding|\bdiet|drug|compound|dose|dosage"
+
+
+def part_c(exclude: set[str], per_query: int = 300) -> list[dict]:
+    import re
+    from hyparena.backtest import drugage_rows
+    from hyparena.tools import pubmed
+    known = {(r.get("pubmed_id") or "").strip() for r in drugage_rows()} | exclude
+    out = []
+    for sp, (mesh, sp_re, n) in PART_C_STRATA.items():
+        q = f'"Longevity/drug effects"[MeSH Terms] AND {mesh} AND {NULL_TIAB} AND english[lang] NOT review[pt]'
+        pmids = sorted((p for p in pubmed.search(q, retmax=per_query) if p not in known), key=_h)
+        got, taken = pubmed.fetch(pmids), 0
+        for pm in pmids:
+            a = got.get(pm)
+            if not a or not a.get("abstract") or not 700 <= len(a["abstract"]) <= 3500 or pubmed.is_review(a):
+                continue
+            t = (a["title"] + " " + a["abstract"]).lower()
+            if not (re.search(r"lifespan|life span|longevity", t) and re.search(sp_re, t) and re.search(NULL_RE, t)
+                    and re.search(INTERVENTION_RE, t)):
+                continue
+            out.append({"pmid": pm, "species": sp, "title": a["title"], "year": a.get("year"), "abstract": a["abstract"]})
+            known.add(pm)
+            taken += 1
+            if taken >= n:
+                break
+    return out
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("cmd", choices=["build"])
-    ap.parse_args()
+    ap.add_argument("cmd", choices=["build", "part-c"])
+    ap.add_argument("--exclude", nargs="*", default=[], help="files with PMIDs (one per line or a JSON list) never chosen for part C")
+    args = ap.parse_args()
+    if args.cmd == "part-c":
+        import re
+        ex = set()
+        for f in args.exclude:
+            ex |= set(re.findall(r"\b\d{6,9}\b", Path(f).read_text()))
+        c = part_c(ex)
+        OUT.mkdir(parents=True, exist_ok=True)
+        (OUT / "to_annotate_part_c.json").write_text(json.dumps({"papers": c}, ensure_ascii=False, indent=1))
+        from collections import Counter
+        print("part C:", len(c), dict(Counter(x["species"] for x in c)), "excluded", len(ex))
+        return
     OUT.mkdir(parents=True, exist_ok=True)
     a = part_a()
     (OUT / "gold_drugage.json").write_text(json.dumps({"source": "DrugAge (HAGR, CC BY 3.0), current release", "papers": a}, ensure_ascii=False, indent=1))
