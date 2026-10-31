@@ -63,3 +63,11 @@ recompute_rules:
 # longevity-kg/hypothesis_sources/ctgov_recomputed.yaml.
 recompute_result: {trials: 79, computed: 21, new_labels: {positive: 3, mixed: 3, null: 14}, left_not_reported: 1,
                    labels_after: {positive: 75, null: 116, negative: 1, mixed: 76, not_applicable: 71, not_reported: 127}}
+# Recompute, second rule (user decision 2026-10-31, fixed before running): measures with several time points or subscales in one
+# primary outcome are computed per time point / subscale and aggregated like several primaries.
+recompute_rules_multi:
+  scope: "the trials left 'several classes or categories' by the first recompute"
+  rows: "every class x category of the measure is one row; rows whose title matches baseline|pre-|pre |week 0|day 0|month 0|screening are dropped (they are not outcomes)"
+  test_and_direction: "as recompute_rules, per row"
+  label: "as recompute_rules over all rows of all primaries: significant and favourable at every row -> positive; no row significant -> null; some -> mixed; only unfavourable -> negative"
+  report: "flag multi_row: true on these labels; the main analysis keeps them, the sensitivity analysis can drop them"
