@@ -121,8 +121,13 @@ def plan() -> dict:
     return stats
 
 
+def source_id(r: dict) -> str:
+    """The source id as the prompt shows it, with or without the square brackets the model may copy ("[P1]" -> "P1")."""
+    return str(r.get("source") or "").strip().strip("[]").strip()
+
+
 def verify_quote(r: dict, row: dict) -> bool:
-    src = next((s for s in row["sources"] if s["id"] == r.get("source")), None)
+    src = next((s for s in row["sources"] if s["id"] == source_id(r)), None)
     return bool(src) and bool(r.get("quote")) and _norm(r["quote"]) in _norm(src["text"])
 
 
@@ -142,7 +147,8 @@ def run(config: str = "configs/v2-flash.yaml", family: str = "deepseek", max_cal
         r = parse_json(reply.text) or {}
         label = r.get("label") if r.get("label") in LABELS_SET else "unparsed"
         ok = label == "not_reported" or verify_quote(r, row)
-        src = next((s for s in row["sources"] if s["id"] == r.get("source")), {})
+        r["source"] = source_id(r)
+        src = next((s for s in row["sources"] if s["id"] == r["source"]), {})
         done[row["nct"]] = {"nct": row["nct"], "label": label if ok else "quote_failed", "model_label": label,
                             "source": r.get("source", ""), "pmid_or_url": src.get("pmid") and f"PMID:{src['pmid']}" or
                             (f"https://clinicaltrials.gov/study/{row['nct']}?tab=results" if src else ""),

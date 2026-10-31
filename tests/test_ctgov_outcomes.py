@@ -20,3 +20,8 @@ def test_the_prompt_renders_with_the_inputs():
     text = render("label_trial_outcome", "v1", nct="NCT0", title="T", interventions="X", primary_outcomes=[{"measure": "M", "time_frame": "6 mo"}],
                   sources=[{"id": "R", "kind": "posted results", "text": "p-value 0.2"}])
     assert "NCT0" in text and "[R] posted results" in text and '"label"' in text
+
+
+def test_a_source_id_copied_with_brackets_is_accepted():
+    row = {"sources": [{"id": "P1", "text": "Falls did not differ."}]}
+    assert co.verify_quote({"source": "[P1]", "quote": "Falls did not differ."}, row)
