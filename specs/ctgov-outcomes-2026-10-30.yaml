@@ -57,3 +57,9 @@ recompute_rules:
   test: "means: Welch t-test, two-sided; counts: Fisher exact, two-sided; alpha 0.05; no multiplicity correction (as the registry analyses)"
   direction: "for every significant comparison Claude reads the measure description and decides whether the difference favours the intervention; if the description does not say which direction is better, the comparison counts as not computed"
   label: "per trial over the computed comparisons: all significant and favourable -> positive; none significant -> null; significant favourable and non-significant or unfavourable -> mixed; significant unfavourable only -> negative; nothing computed -> stays not_reported. Every new label gets human_check stratum 'recomputed'"
+# Recompute result (2026-10-31): 79 not_reported trials with posted results; a comparison was computable for 21 (others: no
+# control-like group 28, several time points or subscales 18, several control groups 9, no computable pair 3). New labels:
+# positive 3, mixed 3, null 14; 1 left not_reported (direction relative to the hypothesis unclear). Details:
+# longevity-kg/hypothesis_sources/ctgov_recomputed.yaml.
+recompute_result: {trials: 79, computed: 21, new_labels: {positive: 3, mixed: 3, null: 14}, left_not_reported: 1,
+                   labels_after: {positive: 75, null: 116, negative: 1, mixed: 76, not_applicable: 71, not_reported: 127}}
