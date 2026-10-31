@@ -38,3 +38,13 @@ recheck_result:
 flag_rules:
   result_in_text_phrases: "case-insensitive regexes on brief_summary + detailed_description: 'this (study|trial) (showed|shows|demonstrated|found|revealed)', '\\bwe (found|observed|showed|demonstrated)\\b', '\\b(our|the) (results|findings|data) (showed|show|indicate|indicated|suggest|suggested|demonstrated|revealed)\\b', '\\b(was|were) significantly (improved|increased|reduced|decreased|higher|lower|better|greater)\\b', '\\bresulted in (a )?significant', '\\bno significant (difference|effect|change)s? (was|were) (found|observed|seen)'; a hit is only a candidate until Claude reads the sentence and confirms it reports this trial's own result (not prior studies)"
   outcome_mismatch_rule: "only trials with posted results; words = lower-case alphanumeric tokens of length >= 3 minus stop words; for each posted primary outcome the best overlap coefficient |A∩B|/min(|A|,|B|) against the registered primary outcomes; candidate if any posted primary outcome has best overlap < 0.5, or the counts differ; confirmed by Claude reading both lists"
+# Flag result (2026-10-31): longevity-kg/hypothesis_sources/ctgov_flags.yaml. Deviation: the pre-registered phrase list found 1 candidate,
+# so two broader exploratory scans (past-tense result words; editorial notes such as 'protocol amendment', 'reporting', 'Note:')
+# were read as well; every flag below was confirmed by reading. A third, soft flag type was added for records visibly edited after the
+# result without stating it. outcome_mismatch by code is uninformative here: the registered and the posted outcome names both come
+# from the current record (all 6 code candidates were rendering artefacts).
+flag_result:
+  result_in_text_confirmed: {count: 2, use: excluded, labels: [positive, not_reported]}
+  edited_after_result: {count: 3, use: "sensitivity analysis only", labels: [positive, mixed, mixed]}
+  outcome_mismatch: {count: 0, note: "not detectable from the current record"}
+  decisive_after_exclusion: {positive: 71, null: 102, negative: 1}
