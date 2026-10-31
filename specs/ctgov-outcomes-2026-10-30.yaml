@@ -10,3 +10,11 @@ recheck: "Claude reads at least 30% of the labels (SHA-1 order of the NCT number
 cost_estimate_usd: "about 0.15 (720 thousand input tokens; up to 2x in DeepSeek's weekday peak hours)"
 use: "the outcome side of a test set of human-written, dated hypotheses; the criteria of that test are written separately, before any ranking is run on these trials"
 open_caveat: "the registry text is the current version; whether it was edited after the primary completion is checked by hand on a sample of 25 (longevity-kg/hypothesis_sources/history_check_sample.md)"
+# Added 2026-10-31 (user decision), before any ranking of these trials: the registry text is the current version, so trials are FLAGGED,
+# not excluded, for signs of editing after the result; only blatant cases are excluded. The main analysis keeps all trials; a
+# sensitivity analysis without flagged trials is reported next to it.
+flags:
+  result_in_text: "the brief summary or detailed description states the trial's own result (past-tense finding of this trial: 'this study showed', 'we found', 'was significantly improved', 'results indicate'), found by a phrase list and confirmed by Claude reading the sentence"
+  outcome_mismatch: "the registered primary outcome differs from the primary outcome named in the posted results (code: word overlap below a fixed threshold, confirmed by Claude); for trials labelled from papers only: not checked"
+exclude_only: "result_in_text confirmed: the text gives away the result of the trial itself (the hypothesis was rewritten as a report)"
+analysis: "main = all trials; sensitivity = without flagged trials; a difference between the two is reported, not used to choose"
