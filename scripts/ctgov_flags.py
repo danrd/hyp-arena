@@ -13,9 +13,9 @@ import re
 
 import yaml
 
-from scripts.ctgov_outcomes import CAND, INPUTS, KG, LABELS
+from scripts.ctgov_outcomes import CAND, INPUTS, KG, LABELS, SUFFIX
 
-OUT = KG / "hypothesis_sources" / "ctgov_flags_candidates.yaml"
+OUT = KG / "hypothesis_sources" / f"ctgov_flags_candidates{SUFFIX}.yaml"
 PHRASES = [
     r"this (study|trial) (showed|shows|demonstrated|found|revealed)",
     r"\bwe (found|observed|showed|demonstrated)\b",
