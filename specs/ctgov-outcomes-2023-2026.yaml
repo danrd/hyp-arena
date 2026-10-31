@@ -1,0 +1,9 @@
+# Extension of specs/ctgov-outcomes-2026-10-30.yaml to trials first posted 2023-01-01 .. 2026-10-31 (user decision 2026-10-31).
+# Fixed before the selection was run. Everything else (conditions, completed status, prospective registration, outcome documents,
+# labelling prompt and model, quote rule, recheck, flags, recompute rules) is the same as in the main spec.
+id: ctgov-outcomes-2023-2026
+batch: "CTGOV_BATCH=2023 (files *_2023 in longevity-kg/hypothesis_sources)"
+selection: "as specs/ctgov-outcomes-2026-10-30.yaml, first posted 2023-01-01 to 2026-10-31"
+why: "results of most of these trials became public after the training cutoffs of the models used (gemini-3.5-flash heuristic 2025-11, deepseek-v4.1-flash-1017 heuristic 2026-04): the part of the registry the models cannot remember"
+memory_split: "each trial is marked clean for a model if its first outcome document (results first posted or earliest result paper) is after that model's cutoff in configs/model_cutoffs.yaml"
+recheck: "same rule as the main spec: 30% at random by SHA-1 plus every mixed / quote_failed / unparsed, then every positive"

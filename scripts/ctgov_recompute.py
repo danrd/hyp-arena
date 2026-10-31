@@ -18,9 +18,9 @@ import urllib.request
 import yaml
 from scipy import stats
 
-from scripts.ctgov_outcomes import INPUTS, KG, LABELS
+from scripts.ctgov_outcomes import INPUTS, KG, LABELS, SUFFIX
 
-OUT = KG / "hypothesis_sources" / "ctgov_recomputed.yaml"
+OUT = KG / "hypothesis_sources" / f"ctgov_recomputed{SUFFIX}.yaml"
 CONTROL = re.compile(r"placebo|control|sham|usual care|\busual\b|waitlist|wait-list|wait list|standard|no intervention|"
                      r"attention|education", re.I)
 MEANS = {"MEAN", "LEAST_SQUARES_MEAN"}
@@ -115,7 +115,7 @@ def main(multi: bool = False) -> None:
             item["measures"].append({"title": m.get("title", ""), "description": (m.get("description") or "")[:600],
                                      "paramType": m.get("paramType"), "comparisons": comps, "not_computed": why})
         out.append(item)
-    target = OUT.with_name("ctgov_recomputed_multi.yaml") if multi else OUT
+    target = OUT.with_name(f"ctgov_recomputed_multi{SUFFIX}.yaml") if multi else OUT
     target.write_text(yaml.safe_dump({"items": out}, allow_unicode=True, sort_keys=False, width=200))
     comp = [i for i in out if any(m["comparisons"] for m in i["measures"])]
     sig = [i for i in comp if any(c["significant"] for m in i["measures"] for c in m["comparisons"])]

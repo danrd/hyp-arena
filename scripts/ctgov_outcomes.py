@@ -24,10 +24,11 @@ from pathlib import Path
 import yaml
 
 KG = Path(os.environ.get("KG_DIR", "/home/user/longevity-kg"))
-CAND = KG / "hypothesis_sources" / "ctgov_candidates.yaml"
-INPUTS = KG / "hypothesis_sources" / "ctgov_outcome_inputs.jsonl"
-LABELS = KG / "hypothesis_sources" / "ctgov_outcomes.yaml"
-SHEET = KG / "recheck" / "ctgov_outcomes_recheck_sheet.md"   # the report itself is ctgov_outcomes_recheck.md
+SUFFIX = f"_{os.environ['CTGOV_BATCH']}" if os.environ.get("CTGOV_BATCH") else ""   # see scripts/hypothesis_sources_ctgov.py
+CAND = KG / "hypothesis_sources" / f"ctgov_candidates{SUFFIX}.yaml"
+INPUTS = KG / "hypothesis_sources" / f"ctgov_outcome_inputs{SUFFIX}.jsonl"
+LABELS = KG / "hypothesis_sources" / f"ctgov_outcomes{SUFFIX}.yaml"
+SHEET = KG / "recheck" / f"ctgov_outcomes_recheck_sheet{SUFFIX}.md"   # the report itself is ctgov_outcomes_recheck.md
 MAX_PAPERS, MAX_CHARS = 3, 6000
 PRICE_IN, PRICE_OUT = 0.15, 0.6          # DeepSeek V4.1 Flash, USD per M tokens (CometAPI catalogue 2026-10-29; x2 in its weekday peak hours)
 LABELS_SET = ("positive", "null", "negative", "mixed", "not_applicable", "not_reported")

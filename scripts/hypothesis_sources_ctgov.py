@@ -23,6 +23,11 @@ from pathlib import Path
 import yaml
 
 BASE = "https://clinicaltrials.gov/api/v2/studies"
+# Batch (env CTGOV_BATCH): "" = first posted 2000-2022 (the main set); "2023" = first posted 2023-01-01 to 2026-10-31
+# (extension decided 2026-10-31: results mostly after the training cutoffs of the models used). Files get the suffix _2023.
+BATCH = os.environ.get("CTGOV_BATCH", "")
+FIRST_FROM, FIRST_TO = ("2023-01-01", "2026-10-31") if BATCH == "2023" else ("2000-01-01", "2022-12-31")
+SUFFIX = f"_{BATCH}" if BATCH else ""
 CONDITIONS = {"aging", "ageing", "healthy aging", "healthy ageing", "frailty", "frail elderly", "frailty syndrome", "sarcopenia",
               "longevity", "senescence", "biological aging", "inflammaging"}
 KG = Path(os.environ.get("KG_DIR", "/home/user/longevity-kg"))
@@ -64,7 +69,7 @@ def candidate(st: dict) -> dict | None:
         return None
     status = ps.get("statusModule") or {}
     first = _date(status, "studyFirstPostDateStruct")
-    if not ("2000-01-01" <= first <= "2022-12-31"):
+    if not (FIRST_FROM <= first <= FIRST_TO):
         return None
     nct = ps["identificationModule"]["nctId"]
     desc = ps.get("descriptionModule") or {}
@@ -104,7 +109,7 @@ def main() -> None:
     ap.add_argument("cmd", choices=["select"])
     ap.parse_args()
     items = select()
-    path = KG / "hypothesis_sources" / "ctgov_candidates.yaml"
+    path = KG / "hypothesis_sources" / f"ctgov_candidates{SUFFIX}.yaml"
     head = {"selection": __doc__.split("Selection", 1)[1].strip(), "n": len(items)}
     path.write_text(yaml.safe_dump({**head, "items": items}, allow_unicode=True, sort_keys=False, width=200))
     has = lambda c: c["results_posted"] or c["result_pmids_listed"] or c.get("result_pmids_si")
