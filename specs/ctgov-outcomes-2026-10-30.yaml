@@ -34,3 +34,7 @@ recheck_result:
   second_pass: {checked: 61, agree: 49, corrections: 12}
   labels_final: {positive: 72, null: 102, negative: 1, mixed: 73, not_applicable: 71, not_reported: 147}
   human_checked: "every positive and mixed label; 32 of 102 null; the 1 negative is model-only"
+# Flag rules as code (fixed 2026-10-31 before the flag script was run on any trial; scripts/ctgov_flags.py):
+flag_rules:
+  result_in_text_phrases: "case-insensitive regexes on brief_summary + detailed_description: 'this (study|trial) (showed|shows|demonstrated|found|revealed)', '\\bwe (found|observed|showed|demonstrated)\\b', '\\b(our|the) (results|findings|data) (showed|show|indicate|indicated|suggest|suggested|demonstrated|revealed)\\b', '\\b(was|were) significantly (improved|increased|reduced|decreased|higher|lower|better|greater)\\b', '\\bresulted in (a )?significant', '\\bno significant (difference|effect|change)s? (was|were) (found|observed|seen)'; a hit is only a candidate until Claude reads the sentence and confirms it reports this trial's own result (not prior studies)"
+  outcome_mismatch_rule: "only trials with posted results; words = lower-case alphanumeric tokens of length >= 3 minus stop words; for each posted primary outcome the best overlap coefficient |A∩B|/min(|A|,|B|) against the registered primary outcomes; candidate if any posted primary outcome has best overlap < 0.5, or the counts differ; confirmed by Claude reading both lists"
