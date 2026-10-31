@@ -22,3 +22,12 @@ analysis: "main = all trials; sensitivity = without flagged trials; a difference
 # label with a note" does not single out uncertain labels. The recheck covers 30% at random (SHA-1 order of the NCT number) plus every
 # mixed, quote_failed and unparsed label; the 0.85 agreement threshold is unchanged.
 recheck_as_run: "30% random + all mixed / quote_failed / unparsed"
+# Recheck result (2026-10-31): report in longevity-kg/recheck/ctgov_outcomes_recheck.md.
+recheck_result:
+  checked: {random: 140, extra_mixed_quote_failed: 62}
+  agreement: {random: 0.943, extra: 0.677, all: 0.861}
+  verdict: "threshold 0.85 met: the labels, with the 28 corrections applied, are the reference"
+  corrections: 28
+  quote_failed_resolved_by_reading: 6
+  labels_after: {positive: 84, null: 99, negative: 1, mixed: 69, not_applicable: 67, not_reported: 146}
+  known_risk: "61 positive labels not rechecked; model positive precision on the random stratum 19/23"
