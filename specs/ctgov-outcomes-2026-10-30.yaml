@@ -48,3 +48,12 @@ flag_result:
   edited_after_result: {count: 3, use: "sensitivity analysis only", labels: [positive, mixed, mixed]}
   outcome_mismatch: {count: 0, note: "not detectable from the current record"}
   decisive_after_exclusion: {positive: 71, null: 102, negative: 1}
+# Recompute (fixed 2026-10-31 before the script was run on any trial; scripts/ctgov_recompute.py): trials labelled not_reported that
+# have posted results get a test computed from the posted group values, because the registry often posts means and spreads without p.
+recompute_rules:
+  scope: "label not_reported (after the recheck) and posted results; PRIMARY outcome measures only"
+  measures_used: "exactly one class and one category (one value per group); paramType MEAN or LEAST_SQUARES_MEAN with dispersion Standard Deviation, Standard Error or 95% Confidence Interval (converted to SD with the group n from denoms); or COUNT_OF_PARTICIPANTS with the group denominators. Medians, several time points or subscales in one measure, and missing n: not computed"
+  comparison: "each group whose title matches placebo|control|sham|usual care|usual|waitlist|wait-list|standard|no intervention|attention|education versus each other group; no such group, or more than one: not computed"
+  test: "means: Welch t-test, two-sided; counts: Fisher exact, two-sided; alpha 0.05; no multiplicity correction (as the registry analyses)"
+  direction: "for every significant comparison Claude reads the measure description and decides whether the difference favours the intervention; if the description does not say which direction is better, the comparison counts as not computed"
+  label: "per trial over the computed comparisons: all significant and favourable -> positive; none significant -> null; significant favourable and non-significant or unfavourable -> mixed; significant unfavourable only -> negative; nothing computed -> stays not_reported. Every new label gets human_check stratum 'recomputed'"
