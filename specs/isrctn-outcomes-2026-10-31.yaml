@@ -1,0 +1,10 @@
+# Outcome labels for ISRCTN hypotheses (scripts/isrctn_outcomes.py). Fixed 2026-10-31 before any outcome document was read.
+# Same method as specs/ctgov-outcomes-2026-10-30.yaml unless stated here.
+id: isrctn-outcomes-2026-10-31
+source: "ISRCTN registry (WHO primary registry, ICMJE-accepted); public API https://www.isrctn.com/api/query (robots.txt disallows only /search)"
+selection: "API query condition:<term> for ageing, aging, frailty, sarcopenia, 'healthy ageing', 'healthy aging' (ISRCTN conditions are free text, so the match is on the condition field, not the whole string as in CT.gov; condition texts are listed in the inputs and read at the recheck); unique ISRCTN ids; overall end date before 2026-10-31; prospective: registration date (isrctn dateAssigned) before the overall end date (ISRCTN has no primary completion date); at least one output of type resultsarticle with a PubMed link"
+hypothesis_text: "studyHypothesis + plainEnglishSummary + primary outcome measures (variable, method, timepoints), current version; written_on = registration date"
+documents: "up to 3 PubMed abstracts from the resultsarticle outputs, published after the registration date, without protocols"
+model: "as the CT.gov spec: configs/v2-flash.yaml, deepseek-v4.1-flash-1017, prompt label_trial_outcome/v1, one call per trial; quote rule identical"
+recheck: "every label read by Claude (the set is small)"
+flags: "as the CT.gov spec (results in the hypothesis text excluded; edits after the result flagged)"
