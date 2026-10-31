@@ -7,3 +7,11 @@ selection: "as specs/ctgov-outcomes-2026-10-30.yaml, first posted 2023-01-01 to 
 why: "results of most of these trials became public after the training cutoffs of the models used (gemini-3.5-flash heuristic 2025-11, deepseek-v4.1-flash-1017 heuristic 2026-04): the part of the registry the models cannot remember"
 memory_split: "each trial is marked clean for a model if its first outcome document (results first posted or earliest result paper) is after that model's cutoff in configs/model_cutoffs.yaml"
 recheck: "same rule as the main spec: 30% at random by SHA-1 plus every mixed / quote_failed / unparsed, then every positive"
+# Result (2026-10-31): 335 candidates; 148 registered retrospectively, 142 without an outcome document: 45 kept, labelled by the model
+# (cost about 0.01 USD), all 45 rechecked by Claude (38 agree, 7 corrected), recompute 5 more (4 null, 1 mixed). Flags: none
+# confirmed (1 code candidate was an artefact). Labels: positive 3, null 10, negative 1, mixed 8, not_applicable 12, not_reported 11.
+result: {candidates: 335, retrospective: 148, no_document: 142, kept: 45, recheck_agree: "38/45",
+         labels: {positive: 3, null: 10, negative: 1, mixed: 8, not_applicable: 12, not_reported: 11}}
+# Memory split over both batches (decisive labels, first outcome document after the model's cutoff):
+memory_split_result: {all: {positive: 77, null_or_negative: 143}, after_gemini_3_5_flash: {positive: 7, null_or_negative: 14},
+                      after_deepseek_v4_1_flash: {positive: 3, null_or_negative: 9}, after_gpt_4o: {positive: 26, null_or_negative: 69}}
