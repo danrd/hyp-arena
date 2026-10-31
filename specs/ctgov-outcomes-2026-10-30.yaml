@@ -71,3 +71,5 @@ recompute_rules_multi:
   test_and_direction: "as recompute_rules, per row"
   label: "as recompute_rules over all rows of all primaries: significant and favourable at every row -> positive; no row significant -> null; some -> mixed; only unfavourable -> negative"
   report: "flag multi_row: true on these labels; the main analysis keeps them, the sensitivity analysis can drop them"
+recompute_multi_result: {trials: 19, computed: 17, new_labels: {null: 14, mixed: 2, negative: 1}, nothing_computed: 2,
+                         labels_after: {positive: 75, null: 130, negative: 2, mixed: 78, not_applicable: 71, not_reported: 110}}
