@@ -18,3 +18,7 @@ flags:
   outcome_mismatch: "the registered primary outcome differs from the primary outcome named in the posted results (code: word overlap below a fixed threshold, confirmed by Claude); for trials labelled from papers only: not checked"
 exclude_only: "result_in_text confirmed: the text gives away the result of the trial itself (the hypothesis was rewritten as a report)"
 analysis: "main = all trials; sensitivity = without flagged trials; a difference between the two is reported, not used to choose"
+# Deviation (2026-10-31, user approved), recorded before the recheck was read: the model wrote a note on 457 of 466 labels, so "every
+# label with a note" does not single out uncertain labels. The recheck covers 30% at random (SHA-1 order of the NCT number) plus every
+# mixed, quote_failed and unparsed label; the 0.85 agreement threshold is unchanged.
+recheck_as_run: "30% random + all mixed / quote_failed / unparsed"
