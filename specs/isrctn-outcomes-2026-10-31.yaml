@@ -8,3 +8,16 @@ documents: "up to 3 PubMed abstracts from the resultsarticle outputs, published 
 model: "as the CT.gov spec: configs/v2-flash.yaml, deepseek-v4.1-flash-1017, prompt label_trial_outcome/v1, one call per trial; quote rule identical"
 recheck: "every label read by Claude (the set is small)"
 flags: "as the CT.gov spec (results in the hypothesis text excluded; edits after the result flagged)"
+# Deviation (2026-10-31), found at the recheck of the first run, before any ranking: (1) older ISRCTN records keep the primary outcome
+# as free text in <primaryOutcome>, which the first parser missed, so the model labelled without primary outcomes; (2) the free-text
+# condition field matched trials whose condition is not aging itself (delirium, rheumatoid arthritis, nurses' mental health, UKCRC topic
+# codes 'Ageing'). Fix, as for CT.gov: the condition description is split on , ; / and ' and '; a trial is kept only if one part equals
+# one of the CT.gov CONDITIONS (whole string, case-insensitive). Primary outcomes: <outcomeMeasure> entries, else the <primaryOutcome>
+# text. The first labels are discarded and the trials relabelled (same prompt and model).
+selection_as_run: "condition part equals a CT.gov CONDITIONS term; primary outcome from outcomeMeasure or primaryOutcome text"
+# Deviation 2 (2026-10-31, at the recheck, before any ranking): UK portfolio classifications in the condition field ('Topic: ...;
+# Subtopic: ... Ageing; Disease: All Ageing', 'Generic Health Relevance: Age and ageing') are not conditions and matched trials of
+# delirium, medication errors, palliative care and others. Condition descriptions that start with 'Topic:' or contain 'Generic Health
+# Relevance' are ignored by the aging-itself rule.
+result: {records: 195, after_aging_itself_rule: 28, no_document: 4, kept: 24, recheck_agree: "20/24", cost_usd: "about 0.03 for both runs",
+         labels: {positive: 3, null: 10, mixed: 2, not_applicable: 8, not_reported: 1}, flags: none}
