@@ -164,10 +164,10 @@ def recheck(share: float = 0.30) -> int:
     rows = {json.loads(l)["nct"]: json.loads(l) for l in INPUTS.read_text().splitlines()}
     order = sorted(items, key=lambda x: hashlib.sha1(x["nct"].encode()).hexdigest())
     k = -(-int(share * 100) * len(items) // 100)
-    pick = order[:k] + [x for x in order[k:] if x["note"] or x["label"] in ("mixed", "quote_failed", "unparsed")]
+    pick = order[:k] + [x for x in order[k:] if x["label"] in ("mixed", "quote_failed", "unparsed")]   # notes are on 457 of 466: not a filter (spec deviation)
     SHEET.parent.mkdir(parents=True, exist_ok=True)
     out = [f"# Manual recheck of the ClinicalTrials.gov outcome labels ({len(pick)} of {len(items)}: {k} at random by SHA-1 of the NCT number,"
-           " plus every label with a note or mixed/quote_failed/unparsed)", "", "Fill `agree` (yes / no) and `correct label` for each.", ""]
+           " plus every mixed/quote_failed/unparsed label)", "", "Fill `agree` (yes / no) and `correct label` for each.", ""]
     for x in pick:
         row = rows[x["nct"]]
         out += [f"## {x['nct']} — model: {x['label']} (source {x['source']})", f"Primary outcome(s): " +
