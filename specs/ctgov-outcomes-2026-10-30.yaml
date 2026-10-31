@@ -29,5 +29,8 @@ recheck_result:
   verdict: "threshold 0.85 met: the labels, with the 28 corrections applied, are the reference"
   corrections: 28
   quote_failed_resolved_by_reading: 6
-  labels_after: {positive: 84, null: 99, negative: 1, mixed: 69, not_applicable: 67, not_reported: 146}
-  known_risk: "61 positive labels not rechecked; model positive precision on the random stratum 19/23"
+  labels_after_first_pass: {positive: 84, null: 99, negative: 1, mixed: 69, not_applicable: 67, not_reported: 146}
+  # Second pass (2026-10-31, user decision): every remaining positive label read (61), 12 corrected; model positive precision 68/84.
+  second_pass: {checked: 61, agree: 49, corrections: 12}
+  labels_final: {positive: 72, null: 102, negative: 1, mixed: 73, not_applicable: 71, not_reported: 147}
+  human_checked: "every positive and mixed label; 32 of 102 null; the 1 negative is model-only"
