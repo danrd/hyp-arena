@@ -1,0 +1,33 @@
+# Benchmark v1: human-written, dated hypotheses from trial registries (user decisions 2026-11-01: B1 and B2 accepted, B3 not for now,
+# B4 not used). Fixed before any ranking of these units. Changed only by a new version (v2, ...) after a substantial update of the
+# sources (a new registry or source, or more than 10% new units); every change is recorded here with its date and reason.
+id: benchmark-v1
+frozen_on: 2026-11-01
+units:
+  file: data/benchmark/v1_units.json            # ids, labels, dates, flags; no texts (texts stay in the private longevity-kg)
+  sha256: c163dc459df8fbe24eb22feae0ca1c465c90d2f6f533a31074e87c5a910897bd
+  builder: scripts/benchmark_v1.py
+  sources: "CT.gov 2000-2022 (206), CT.gov 2023-2026 (14), ISRCTN (13), DRKS (2), NTR (1); selection and labels: longevity-kg/hypothesis_sources/SOURCES_TABLE.md and the specs per source"
+  counts: {all: 236, positive: 81, null_or_negative: 155, b2_clean: 98, b2_positive: 26}
+card: "built by code from the registry text only: title, interventions, summary / description / study hypothesis, registered primary outcomes; no results, no papers"
+tests:
+  B1:
+    units: all 236
+    pipeline: "configs/v2-flash.yaml (normalizer gemini-3.5-flash without hidden reasoning, verifier deepseek-v4.1-flash-1017), rules, profile evidence_first"
+    role: "determines the status"
+  B2:
+    units: "the 98 units whose first outcome document is after the gpt-4o training cutoff (2023-10-01, configs/model_cutoffs.yaml)"
+    pipeline: "same, with gpt-4o as normalizer and verifier (both roles, so no knowledge leaks through either)"
+    role: "checks B1 against memory: a signal in B1 that disappears in B2 is read as memory"
+metric: "tied AUC of the evidence_first score, positive (1) vs null or negative (0); one-sided permutation p (10 000 permutations); 95% bootstrap CI (2 000 resamples)"
+status_rule:
+  pass: "AUC above the critical value (B1 0.565, B2 0.609), one-sided p < 0.05 and the lower 95% bound above 0.5"
+  fail: "upper 95% bound below 0.60"
+  inconclusive: "otherwise"
+  power: {B1: "critical AUC 0.565; 80% power at AUC 0.60", B2: "critical AUC 0.609; 80% power at AUC 0.665"}
+required_comparisons:
+  memory_arm: "the same model as the verifier gets only the trial id and title and gives P(positive outcome); paired AUC difference method - memory arm with 95% bootstrap CI; CI including 0 = the score cannot be told apart from recall"
+  formal_baseline: "logistic regression on registry fields (enrolment, masking, phase, intervention type, number of primary outcomes, sponsor class, registration year), 5-fold cross-validated scores; paired AUC difference method - baseline with 95% bootstrap CI; CI including 0 = the method adds nothing to the trial header"
+sensitivity: ["without the unit flagged edited_after_result", "human-checked labels only", "without recomputed labels", "without multi_row labels", "per source (CT.gov alone)"]
+cost: "paid; the number of calls and the cost are estimated by a dry run and agreed with the user before any paid call"
+not_in_v1: {B3: "ITP and CITP bare strings (user, 2026-11-01: not for now)", B4: "ITP selection rationales written after the result (not used)"}
