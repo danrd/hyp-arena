@@ -1,0 +1,9 @@
+# Outcome labels for DRKS (German Clinical Trials Register) hypotheses (scripts/drks_outcomes.py). Fixed 2026-11-01 before any outcome
+# document was read. Same method as specs/isrctn-outcomes-2026-10-31.yaml unless stated here.
+id: drks-outcomes-2026-11-01
+source: "DRKS, WHO primary registry; public record pages https://drks.de/search/en/trial/<id> (server-rendered HTML)"
+selection: "DRKS ids found in the secondary-ID field of PubMed records matching the aging topic filter of SOURCES_TABLE.md; record kept if: study type Interventional; registration type Prospective (DRKS field); recruitment complete; condition is aging itself: a free-text part equals a CT.gov CONDITIONS term, or ICD-10 R54 (age-related physical debility, 'Senility' in ICD-10-GM, the ICD code for frailty)"
+hypothesis_text: "brief summaries (lay and scientific) + primary outcome, current version; written_on = DRKS registration date"
+documents: "the PubMed abstracts that carry the DRKS id, published after registration, without protocols and reviews (up to 3)"
+model: "as the CT.gov spec (deepseek-v4.1-flash-1017, prompt label_trial_outcome/v1); every label read by Claude"
+result: {drks_ids: 35, kept: 6, with_document: 3, labels: {null: 2, not_applicable: 1}, recheck: "2/3 agree"}
