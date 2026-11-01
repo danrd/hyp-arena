@@ -7,8 +7,12 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_frozen_units_match_spec():
-    spec = yaml.safe_load((ROOT / "specs/benchmark-v1.yaml").read_text())
+import pytest
+
+
+@pytest.mark.parametrize("v", ["benchmark-v1", "benchmark-v2"])
+def test_frozen_units_match_spec(v):
+    spec = yaml.safe_load((ROOT / f"specs/{v}.yaml").read_text())
     data = (ROOT / spec["units"]["file"]).read_bytes()
     assert hashlib.sha256(data).hexdigest() == spec["units"]["sha256"]
     u = json.loads(data)["units"]
