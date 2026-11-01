@@ -47,6 +47,7 @@ class GeminiNativeRunner:
             raise RuntimeError(f"Error code: {r.status_code} - {r.text[:300]}")
         data = r.json()
         self.last_usage = data.get("usageMetadata") or {}
+        self.last_model = data.get("modelVersion") or self.model     # the model that answered (Google may route a deprecated name)
         parts = ((data.get("candidates") or [{}])[0].get("content") or {}).get("parts") or []
         return "".join(p.get("text", "") for p in parts if not p.get("thought"))
 

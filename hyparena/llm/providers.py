@@ -237,9 +237,28 @@ def build_runner(s: ModelSpec, cfg: ProvidersConfig):
     from llm_kit.llm_runtime import CometApiRunner, HostedRunner, OpenRouterRunner   # lazy: needs `openai`
     if s.provider in ("openrouter", "cometapi") and not s.base_url:
         cls = OpenRouterRunner if s.provider == "openrouter" else CometApiRunner
-        return cls(**common, api_key_env=s.api_key_env)
+        return _served_model(cls(**common, api_key_env=s.api_key_env))
     base_url = s.base_url or OPENAI_COMPATIBLE[s.provider][0]
-    return HostedRunner(**common, base_url=base_url, api_key_env=key_env(s))
+    return _served_model(HostedRunner(**common, base_url=base_url, api_key_env=key_env(s)))
+
+
+def _served_model(runner):
+    """llm_kit's hosted runners return only the text: keep the `model` field of each response in `runner.last_model`, so a
+    call log names the model that really answered (a service may route a deprecated name to its successor)."""
+    client = getattr(runner, "_client", None)
+    if client is None or not hasattr(client, "chat"):
+        return runner
+    create = client.chat.completions.create
+
+    def recorded(*a, **kw):
+        response = create(*a, **kw)
+        runner.last_model = getattr(response, "model", None) or kw.get("model")
+        return response
+    try:
+        client.chat.completions.create = recorded
+    except AttributeError:                                   # a client object that does not allow it: keep the configured name
+        pass
+    return runner
 
 
 def build_runners(specs: list[ModelSpec], cfg: ProvidersConfig) -> dict[str, tuple[str, object]]:
