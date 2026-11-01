@@ -1,0 +1,10 @@
+# Outcome labels for the Netherlands Trial Register (NTR, now onderzoekmetmensen.nl) hypotheses (scripts/ntr_outcomes.py).
+# Fixed 2026-11-01 before any outcome document was read. Same method as specs/drks-outcomes-2026-11-01.yaml unless stated here.
+id: ntr-outcomes-2026-11-01
+source: "NTR (WHO primary registry data provider via onderzoekmetmensen.nl); record lookup by trial id (search?trial_id=) and the public XML API /nl/api/v1/trial/<node>"
+selection: "NTR / NL ids in the secondary-ID field of PubMed records matching the aging topic filter; kept if study_type interventional; prospective: date_registration on or before date_enrolment (start of enrolment; NTR has no completion date, so the ICMJE definition is used); condition (hc_freetext) is aging itself: a part equals a CT.gov CONDITIONS term"
+hypothesis_text: "title, background and objective abstracts, primary outcome; written_on = date_registration"
+documents: "PubMed abstracts carrying the id, published after registration, no protocols or reviews (up to 3)"
+model: "as the CT.gov spec; every label read by Claude"
+result: {ids: 40, found_in_portal: 20, eligible: 3, with_document: 2, labels: {positive: 1, not_applicable: 1}, recheck: "2/2 agree",
+         note: "20 old NTR ids cannot be found in the new portal (renumbered at migration, no public mapping)"}
