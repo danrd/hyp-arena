@@ -8,6 +8,7 @@ models:
   gemini-3.5-flash: {released: "2026-05-19"}
   deepseek-v4.1-flash-1017: {released: "2026-10-17"}
   gpt-4o: {cutoff: "2023-10-01"}
+  gpt-4o-2024-11-20: {cutoff: "2023-10-01"}     # the snapshot used in B2 (the same stated cutoff as the alias)
   gpt-4.1: {cutoff: "2024-06-01"}
   o3: {cutoff: "2024-06-01"}
   gpt-5-nano: {cutoff: "2024-05-31"}

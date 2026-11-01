@@ -50,3 +50,18 @@ def test_served_model_is_recorded():
     runner = SimpleNamespace(_client=SimpleNamespace(chat=SimpleNamespace(completions=comp)), last_model=None)
     _served_model(runner)._client.chat.completions.create(model="gemini-3.5-flash", messages=[])
     assert runner.last_model == "gemini-3.6-flash"
+
+
+def test_gemini_runner_thinking_level_and_cut_reply():
+    from types import SimpleNamespace
+    from hyparena.llm.gemini_native_runner import GeminiNativeRunner
+    def client(payload):
+        return SimpleNamespace(post=lambda *a, **kw: SimpleNamespace(status_code=200, json=lambda: payload, text=""))
+    cut = {"candidates": [{"finishReason": "MAX_TOKENS", "content": {"parts": [{"text": "{\"a\":"}]}}],
+           "usageMetadata": {"thoughtsTokenCount": 4200, "candidatesTokenCount": 170}}
+    r = GeminiNativeRunner(["gemini-3.5-flash"], {"thinking_level": "minimal"}, client=client(cut))
+    assert r.config["thinkingConfig"] == {"thinkingLevel": "minimal"}
+    with pytest.raises(RuntimeError, match="MAX_TOKENS"):
+        r.generate("x")
+    ok = {"candidates": [{"finishReason": "STOP", "content": {"parts": [{"text": "{}"}]}}], "modelVersion": "gemini-3.5-flash"}
+    assert GeminiNativeRunner(["gemini-3.5-flash"], {}, client=client(ok)).generate("x") == "{}"
