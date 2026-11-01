@@ -304,13 +304,16 @@ def pilot_units(n: int = 6, seed: int = 1, extra: int = 0) -> list[dict]:
     return [{"id": i, "source": "ctgov", "written_on": cands[i]["written_on"]} for i in pick]
 
 
-def pilot(n: int = 6, extra: int = 0, tag: str = "") -> dict:
+def pilot(n: int = 6, extra: int = 0, tag: str = "", only: set | None = None) -> dict:
     """Paid (ALLOW_PAID=1): the whole method v2 of B1 (configs/v2-flash.yaml) on `n` trials outside the benchmark, each as of
     its own date, plus the gpt-4o card of each text (configs/v2-gpt4o.yaml), to look at by hand before the main run."""
     from hyparena.card.normalizer import normalize
     from hyparena.card.pipeline import _client, run as v2
     texts = build_texts(pilot_units(n, extra=extra), PILOT_TEXTS)
-    gclient, gfam = _client("configs/v2-gpt4o.yaml", False, 4 * n)
+    dest = PILOT_OUT.with_name(PILOT_OUT.stem + tag + ".json") if tag else PILOT_OUT
+    if only:
+        texts = [t for t in texts if t["id"] in only]
+    gclient, gfam = _client("configs/v2-gpt4o.yaml", False, 4 * len(texts))
     out = []
     for t in texts:
         res = v2([t["text"]], writer="human_registry", config="configs/v2-flash.yaml", as_of=t["as_of"], max_calls=60, verifiers=["deepseek"])
@@ -319,10 +322,10 @@ def pilot(n: int = 6, extra: int = 0, tag: str = "") -> dict:
         out.append({"id": t["id"], "as_of": t["as_of"], "b1": res, "gpt4o_card": card4o.model_dump(by_alias=True) if card4o else None,
                     "gpt4o_problems": problems4o, "gpt4o_calls": log})
         x = res["items"][0]
+        dest.write_text(json.dumps(out, ensure_ascii=False, indent=1, default=str))       # after every trial: a crash loses nothing
         print(json.dumps({"id": t["id"], "outcome": x["outcome"], "claims": len((x["card"] or {}).get("claims", [])),
                           "calls": res["meta"]["calls"], "served": sorted({c.get("model") for c in res["calls"] if c.get("kind") == "llm"} |
                                                                        {c.get("model") for c in log if c.get("kind") == "llm"})}), flush=True)
-    (PILOT_OUT.with_name(PILOT_OUT.stem + tag + ".json") if tag else PILOT_OUT).write_text(json.dumps(out, ensure_ascii=False, indent=1, default=str))
     return {"n": len(out)}
 
 
@@ -340,7 +343,8 @@ def main() -> None:
         import os
         if os.environ.get("ALLOW_PAID") != "1":
             raise SystemExit("paid: set ALLOW_PAID=1")
-        print(pilot(a.limit or 6, extra=int(os.environ.get("PILOT_EXTRA", "0")), tag=os.environ.get("PILOT_TAG", "")))
+        print(pilot(a.limit or 6, extra=int(os.environ.get("PILOT_EXTRA", "0")), tag=os.environ.get("PILOT_TAG", ""),
+                    only=set(os.environ["PILOT_ONLY"].split(",")) if os.environ.get("PILOT_ONLY") else None))
         return
     if a.cmd == "sample":
         r = sample(a.limit or 20)
