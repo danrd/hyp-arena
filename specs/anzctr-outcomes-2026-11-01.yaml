@@ -1,0 +1,10 @@
+# Outcome labels for ANZCTR hypotheses (scripts/anzctr_outcomes.py). Fixed 2026-11-01 before any outcome document was read.
+# Same method as specs/ntr-outcomes-2026-11-01.yaml unless stated here.
+id: anzctr-outcomes-2026-11-01
+source: "ANZCTR (Australia / New Zealand, WHO primary registry). The site answers 403 to automated requests from this environment, so the record pages were saved by the user in a browser (MHTML) for the 59 ACTRN ids found in PubMed result papers on aging (longevity-kg/hypothesis_sources/anzctr_ids_from_pubmed.txt); the user skipped most records marked retrospective, one link did not open; pages kept in longevity-kg/hypothesis_sources/anzctr_pages/"
+selection: "Study type Interventional; Type of registration 'Prospectively registered' (ANZCTR field); recruitment status not 'Recruiting' / 'Not yet recruiting'; condition is aging itself: an item of 'Health condition(s) studied' equals a CT.gov CONDITIONS term (split on , ; / and line breaks); duplicates removed by ACTRN"
+hypothesis_text: "public and scientific titles, brief summary, intervention description, primary outcome; written_on = Date registered"
+documents: "PubMed abstracts carrying the ACTRN id, published after registration, no protocols or reviews (up to 3)"
+model: "as the CT.gov spec; every label read by Claude"
+selection_caveat: "pre-filtering by the user (retrospective records skipped) only removes records the rule removes anyway"
+result: {pages: 23, unique_ids: 23, eligible: 2, with_document: 1, labels: {positive: 1}, recheck: "1/1 agree (borderline)"}
