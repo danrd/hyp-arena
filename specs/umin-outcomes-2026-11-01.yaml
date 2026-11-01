@@ -1,0 +1,9 @@
+# Outcome labels for UMIN-CTR (Japan) hypotheses (scripts/umin_outcomes.py). Fixed 2026-11-01 before any outcome document was read.
+# Same method as specs/ntr-outcomes-2026-11-01.yaml unless stated here.
+id: umin-outcomes-2026-11-01
+source: "UMIN-CTR, WHO primary registry; public English pages: search form index.cgi (ctrno) and ctr_view.cgi?recptno="
+selection: "UMIN ids in the secondary-ID field of PubMed records matching the aging topic filter; kept if Study type Interventional; recruitment status not Preinitiation / Recruiting / Enrolling by invitation; prospective: Registered date on or before Anticipated trial start date; condition is aging itself: a part of the Condition field (split on , ; / and line breaks) equals a CT.gov CONDITIONS term"
+hypothesis_text: "official title, narrative objectives, interventions, primary outcomes; written_on = Registered date"
+documents: "PubMed abstracts carrying the id, published after registration, no protocols or reviews (up to 3)"
+model: "as the CT.gov spec; every label read by Claude"
+result: {ids: 33, found: 33, eligible: 2, with_document: 1, labels: {mixed: 1}, recheck: "0/1 agree (positive -> mixed by the multi-time-point rule)"}
