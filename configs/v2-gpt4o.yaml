@@ -1,6 +1,6 @@
 # Benchmark v2, test B2 (specs/benchmark-v2.yaml): gpt-4o (stated cutoff 2023-10-01, configs/model_cutoffs.yaml) in both roles,
 # normalizer and verifier, so that no knowledge after the cutoff reaches the cards or the statuses. Through CometAPI
-# (COMET_API_KEY, ALLOW_PAID=1). Not accepted as a normalizer (L1.18) or a verifier (L1.15-style) yet: see specs/benchmark-v2-run.yaml.
+# (COMET_API_KEY, ALLOW_PAID=1). The snapshot is pinned: the alias `gpt-4o` is routed to 2024-08-06 or 2024-11-20 from call to call (pilot, 2026-11-01). Not accepted as a normalizer (L1.18) or a verifier (L1.15-style) yet: see specs/benchmark-v2-run.yaml.
 rpm: 30
 concurrency: 4
 generation:
@@ -10,4 +10,4 @@ timeout: 150
 max_retries: 0
 deadline: 180
 models:
-  - {family: openai, provider: cometapi, model: "gpt-4o", tier: paid, api_key_env: COMET_API_KEY}
+  - {family: openai, provider: cometapi, model: "gpt-4o-2024-11-20", tier: paid, api_key_env: COMET_API_KEY}
