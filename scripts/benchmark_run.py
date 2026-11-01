@@ -84,11 +84,11 @@ def _text(fields: list[tuple[str, str]]) -> str:
     return "\n".join(f"{k}: {v}" for k, v in fields if v and v.lower() not in ("not provided at time of registration", "no entry"))
 
 
-def build_texts() -> list[dict]:
+def build_texts(units: list[dict] | None = None, out_path: Path | None = None) -> list[dict]:
     cands = {s: {c["source_id"]: c for c in (yaml.safe_load((HS / f).read_text()) or {}).get("items", [])} for s, f in CAND.items()}
     cache: dict = {}
     out = []
-    for u in _units():
+    for u in units if units is not None else _units():
         s, c = u["source"], cands[u["source"]].get(u["id"], {})
         if s.startswith("ctgov"):
             p = _ctgov(u["id"], cache)
@@ -113,9 +113,9 @@ def build_texts() -> list[dict]:
             f = [("Title", c.get("title")), ("Conditions", "; ".join(map(str, _list(c.get("conditions"))))),
                  ("Interventions", _clip(c.get("intervention"))), ("Summary", _clip(c.get("summary"))), ("Primary outcomes", _clip(po))]
         text = "A trial registered to test the following.\n" + _text([(k, str(v)) for k, v in f])
-        out.append({"id": u["id"], "as_of": u["written_on"], "b2_clean": u["b2_clean"], "text": text,
+        out.append({"id": u["id"], "as_of": u["written_on"], "b2_clean": u.get("b2_clean", False), "text": text,
                     "result_words": sorted({m.group(0).lower() for m in RESULT_WORDS.finditer(text)})})
-    TEXTS.write_text("".join(json.dumps(x, ensure_ascii=False) + "\n" for x in out))
+    (out_path or TEXTS).write_text("".join(json.dumps(x, ensure_ascii=False) + "\n" for x in out))
     (ROOT / "data" / "cache").mkdir(parents=True, exist_ok=True)
     (ROOT / "data" / "cache" / "ctgov_protocols.json").write_text(json.dumps(cache))
     return out
@@ -288,12 +288,58 @@ def sample(n: int = 20, seed: int = 0, config: str = "configs/v2-gemma31free.yam
     return {"n": n, "seed": seed, "rows": rows}
 
 
+PILOT_TEXTS = HS / "benchmark_v2_pilot_texts.jsonl"
+PILOT_OUT = HS / "benchmark_v2_pilot.json"
+
+
+def pilot_units(n: int = 6, seed: int = 1) -> list[dict]:
+    """Trials outside the benchmark (CT.gov 2000-2022 with a non-decisive label: mixed or not_reported), so that looking at
+    the method's output on them cannot tune the method on scored units. Labels are not read beyond this choice."""
+    labels = yaml.safe_load((HS / "ctgov_outcomes.yaml").read_text())["items"]
+    cands = {c["source_id"]: c for c in yaml.safe_load((HS / CAND["ctgov"]).read_text())["items"]}
+    ids = sorted(x["nct"] for x in labels if x["label"] in ("mixed", "not_reported") and x["nct"] in cands)
+    pick = random.Random(seed).sample(ids, n)
+    return [{"id": i, "source": "ctgov", "written_on": cands[i]["written_on"]} for i in pick]
+
+
+def pilot(n: int = 6) -> dict:
+    """Paid (ALLOW_PAID=1): the whole method v2 of B1 (configs/v2-flash.yaml) on `n` trials outside the benchmark, each as of
+    its own date, plus the gpt-4o card of each text (configs/v2-gpt4o.yaml), to look at by hand before the main run."""
+    from hyparena.card.normalizer import normalize
+    from hyparena.card.pipeline import _client, run as v2
+    texts = build_texts(pilot_units(n), PILOT_TEXTS)
+    gclient, gfam = _client("configs/v2-gpt4o.yaml", False, 4 * n)
+    out = []
+    for t in texts:
+        res = v2([t["text"]], writer="human_registry", config="configs/v2-flash.yaml", as_of=t["as_of"], max_calls=60, verifiers=["deepseek"])
+        log: list = []
+        card4o, problems4o = normalize(gclient, gfam[0], t["text"], "H-0001", log=log)
+        out.append({"id": t["id"], "as_of": t["as_of"], "b1": res, "gpt4o_card": card4o.model_dump(by_alias=True) if card4o else None,
+                    "gpt4o_problems": problems4o, "gpt4o_calls": log})
+        x = res["items"][0]
+        print(json.dumps({"id": t["id"], "outcome": x["outcome"], "claims": len((x["card"] or {}).get("claims", [])),
+                          "calls": res["meta"]["calls"], "served": sorted({c.get("model") for c in res["calls"] if c.get("kind") == "llm"} |
+                                                                       {c.get("model") for c in log if c.get("kind") == "llm"})}), flush=True)
+    PILOT_OUT.write_text(json.dumps(out, ensure_ascii=False, indent=1, default=str))
+    return {"n": len(out)}
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("cmd", choices=["texts", "features", "baseline", "dry", "sample"])
+    ap.add_argument("cmd", choices=["texts", "features", "baseline", "dry", "sample", "pilot", "pilot-texts"])
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--out", default=None)
     a = ap.parse_args()
+    if a.cmd == "pilot-texts":
+        for t in build_texts(pilot_units(a.limit or 6), PILOT_TEXTS):
+            print(t["id"], t["as_of"], len(t["text"]), t["text"].split("\n")[1][:120])
+        return
+    if a.cmd == "pilot":
+        import os
+        if os.environ.get("ALLOW_PAID") != "1":
+            raise SystemExit("paid: set ALLOW_PAID=1")
+        print(pilot(a.limit or 6))
+        return
     if a.cmd == "sample":
         r = sample(a.limit or 20)
         if a.out:

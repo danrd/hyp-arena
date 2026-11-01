@@ -40,3 +40,13 @@ def test_texts_carry_no_registry_id_and_match_units():
     for t in texts:
         assert t["id"] not in t["text"] and t["as_of"] == units[t["id"]]["written_on"]
         assert "label" not in t and "outcome" not in t
+
+
+def test_served_model_is_recorded():
+    from types import SimpleNamespace
+    from hyparena.llm.providers import _served_model
+    resp = SimpleNamespace(model="gemini-3.6-flash", choices=[SimpleNamespace(message=SimpleNamespace(content="ok"))])
+    comp = SimpleNamespace(create=lambda **kw: resp)
+    runner = SimpleNamespace(_client=SimpleNamespace(chat=SimpleNamespace(completions=comp)), last_model=None)
+    _served_model(runner)._client.chat.completions.create(model="gemini-3.5-flash", messages=[])
+    assert runner.last_model == "gemini-3.6-flash"
