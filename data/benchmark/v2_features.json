@@ -1,0 +1,3522 @@
+{
+ "benchmark": "v2",
+ "units": [
+  {
+   "id": "ACTRN12619001177145",
+   "source": "anzctr",
+   "year": 2019,
+   "enrolment": null,
+   "phase": null,
+   "randomized": null,
+   "masked": null,
+   "itype": [],
+   "n_primary": null,
+   "sponsor": null,
+   "n_primary_text": null
+  },
+  {
+   "id": "NCT00105612",
+   "source": "ctgov",
+   "year": 2005,
+   "enrolment": 110,
+   "phase": 0,
+   "randomized": true,
+   "masked": null,
+   "itype": [
+    "DEVICE",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "NIH"
+  },
+  {
+   "id": "NCT00134836",
+   "source": "ctgov",
+   "year": 2005,
+   "enrolment": 719,
+   "phase": 2,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT00183014",
+   "source": "ctgov",
+   "year": 2005,
+   "enrolment": 600,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "NIH"
+  },
+  {
+   "id": "NCT00183053",
+   "source": "ctgov",
+   "year": 2005,
+   "enrolment": 10000,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "DEVICE"
+   ],
+   "n_primary": 1,
+   "sponsor": "NIH"
+  },
+  {
+   "id": "NCT00190060",
+   "source": "ctgov",
+   "year": 2005,
+   "enrolment": 262,
+   "phase": 5,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DRUG",
+    "DRUG"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER_GOV"
+  },
+  {
+   "id": "NCT00279929",
+   "source": "ctgov",
+   "year": 2006,
+   "enrolment": 32,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "PROCEDURE"
+   ],
+   "n_primary": 5,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT00283010",
+   "source": "ctgov",
+   "year": 2006,
+   "enrolment": 487,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "INDUSTRY"
+  },
+  {
+   "id": "NCT00357214",
+   "source": "ctgov",
+   "year": 2006,
+   "enrolment": 171,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT00459589",
+   "source": "ctgov",
+   "year": 2007,
+   "enrolment": 341,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT00472823",
+   "source": "ctgov",
+   "year": 2007,
+   "enrolment": 273,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT00475501",
+   "source": "ctgov",
+   "year": 2007,
+   "enrolment": 60,
+   "phase": 3,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DRUG",
+    "DRUG",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "FED"
+  },
+  {
+   "id": "NCT00643266",
+   "source": "ctgov",
+   "year": 2008,
+   "enrolment": 91,
+   "phase": 0,
+   "randomized": false,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT00783159",
+   "source": "ctgov",
+   "year": 2008,
+   "enrolment": 69,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "PROCEDURE",
+    "PROCEDURE",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT00854893",
+   "source": "ctgov",
+   "year": 2009,
+   "enrolment": 70,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DEVICE"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT00872911",
+   "source": "ctgov",
+   "year": 2009,
+   "enrolment": 108,
+   "phase": 2,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DRUG"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT00935610",
+   "source": "ctgov",
+   "year": 2009,
+   "enrolment": 99,
+   "phase": 3,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "INDUSTRY"
+  },
+  {
+   "id": "NCT01057082",
+   "source": "ctgov",
+   "year": 2010,
+   "enrolment": 36,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT01072500",
+   "source": "ctgov",
+   "year": 2010,
+   "enrolment": 1635,
+   "phase": 4,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT01083901",
+   "source": "ctgov",
+   "year": 2010,
+   "enrolment": 34,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT01109628",
+   "source": "ctgov",
+   "year": 2010,
+   "enrolment": 65,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT01110369",
+   "source": "ctgov",
+   "year": 2010,
+   "enrolment": 62,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "OTHER",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT01126723",
+   "source": "ctgov",
+   "year": 2010,
+   "enrolment": 66,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "OTHER",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT01164020",
+   "source": "ctgov",
+   "year": 2010,
+   "enrolment": 56,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "OTHER",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT01170273",
+   "source": "ctgov",
+   "year": 2010,
+   "enrolment": 130,
+   "phase": 4,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "FED"
+  },
+  {
+   "id": "NCT01191125",
+   "source": "ctgov",
+   "year": 2010,
+   "enrolment": 331,
+   "phase": 4,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "INDUSTRY"
+  },
+  {
+   "id": "NCT01226212",
+   "source": "ctgov",
+   "year": 2010,
+   "enrolment": 49,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT01234506",
+   "source": "ctgov",
+   "year": 2010,
+   "enrolment": 21,
+   "phase": 3,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT01308957",
+   "source": "ctgov",
+   "year": 2011,
+   "enrolment": 77,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT01340365",
+   "source": "ctgov",
+   "year": 2011,
+   "enrolment": 60,
+   "phase": 3,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT01375790",
+   "source": "ctgov",
+   "year": 2011,
+   "enrolment": 160,
+   "phase": 4,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DEVICE",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT01446757",
+   "source": "ctgov",
+   "year": 2011,
+   "enrolment": 383,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "PROCEDURE",
+    "PROCEDURE"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER_GOV"
+  },
+  {
+   "id": "NCT01499186",
+   "source": "ctgov",
+   "year": 2011,
+   "enrolment": 50,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT01550731",
+   "source": "ctgov",
+   "year": 2012,
+   "enrolment": 414,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "FED"
+  },
+  {
+   "id": "NCT01562392",
+   "source": "ctgov",
+   "year": 2012,
+   "enrolment": 40,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT01588808",
+   "source": "ctgov",
+   "year": 2012,
+   "enrolment": 35,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT01649960",
+   "source": "ctgov",
+   "year": 2012,
+   "enrolment": 13,
+   "phase": 2,
+   "randomized": false,
+   "masked": false,
+   "itype": [
+    "DRUG"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT01650532",
+   "source": "ctgov",
+   "year": 2012,
+   "enrolment": 118,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT01680146",
+   "source": "ctgov",
+   "year": 2012,
+   "enrolment": 24,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT01765946",
+   "source": "ctgov",
+   "year": 2013,
+   "enrolment": 38,
+   "phase": 5,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DRUG",
+    "DRUG"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT01788423",
+   "source": "ctgov",
+   "year": 2013,
+   "enrolment": 323,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DEVICE"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT01823146",
+   "source": "ctgov",
+   "year": 2013,
+   "enrolment": 106,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DRUG",
+    "DRUG"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT01869348",
+   "source": "ctgov",
+   "year": 2013,
+   "enrolment": 40,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT01870193",
+   "source": "ctgov",
+   "year": 2013,
+   "enrolment": 36,
+   "phase": 1,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT01898611",
+   "source": "ctgov",
+   "year": 2013,
+   "enrolment": 16,
+   "phase": 3,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DRUG",
+    "DRUG"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT01986842",
+   "source": "ctgov",
+   "year": 2013,
+   "enrolment": 24,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT01989793",
+   "source": "ctgov",
+   "year": 2013,
+   "enrolment": 37,
+   "phase": 3,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DRUG",
+    "DRUG"
+   ],
+   "n_primary": 6,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02039154",
+   "source": "ctgov",
+   "year": 2014,
+   "enrolment": 61,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02047864",
+   "source": "ctgov",
+   "year": 2014,
+   "enrolment": 237,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02051725",
+   "source": "ctgov",
+   "year": 2014,
+   "enrolment": 65,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02060097",
+   "source": "ctgov",
+   "year": 2014,
+   "enrolment": 64,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02087137",
+   "source": "ctgov",
+   "year": 2014,
+   "enrolment": 69,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 3,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02115698",
+   "source": "ctgov",
+   "year": 2014,
+   "enrolment": 66,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "PROCEDURE",
+    "PROCEDURE",
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02203656",
+   "source": "ctgov",
+   "year": 2014,
+   "enrolment": 113,
+   "phase": 2,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DRUG",
+    "DIETARY_SUPPLEMENT",
+    "BEHAVIORAL",
+    "DRUG"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02261961",
+   "source": "ctgov",
+   "year": 2014,
+   "enrolment": 59,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BIOLOGICAL",
+    "OTHER",
+    "OTHER",
+    "OTHER",
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 5,
+   "sponsor": "FED"
+  },
+  {
+   "id": "NCT02283723",
+   "source": "ctgov",
+   "year": 2014,
+   "enrolment": 316,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02293187",
+   "source": "ctgov",
+   "year": 2014,
+   "enrolment": 100,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02308228",
+   "source": "ctgov",
+   "year": 2014,
+   "enrolment": 109,
+   "phase": 1,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "DRUG"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02333331",
+   "source": "ctgov",
+   "year": 2015,
+   "enrolment": 217,
+   "phase": 3,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DRUG",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "INDUSTRY"
+  },
+  {
+   "id": "NCT02348801",
+   "source": "ctgov",
+   "year": 2015,
+   "enrolment": 100,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02356211",
+   "source": "ctgov",
+   "year": 2015,
+   "enrolment": 109,
+   "phase": 0,
+   "randomized": false,
+   "masked": false,
+   "itype": [
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "INDIV"
+  },
+  {
+   "id": "NCT02370745",
+   "source": "ctgov",
+   "year": 2015,
+   "enrolment": 40,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DRUG",
+    "DRUG",
+    "DIETARY_SUPPLEMENT",
+    "DRUG",
+    "DRUG"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02371278",
+   "source": "ctgov",
+   "year": 2015,
+   "enrolment": 20,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02374268",
+   "source": "ctgov",
+   "year": 2015,
+   "enrolment": 113,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "DIETARY_SUPPLEMENT",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02384993",
+   "source": "ctgov",
+   "year": 2015,
+   "enrolment": 24,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 3,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02455258",
+   "source": "ctgov",
+   "year": 2015,
+   "enrolment": 75,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "OTHER",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02468674",
+   "source": "ctgov",
+   "year": 2015,
+   "enrolment": 160,
+   "phase": 3,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DRUG",
+    "DRUG"
+   ],
+   "n_primary": 2,
+   "sponsor": "INDUSTRY"
+  },
+  {
+   "id": "NCT02520661",
+   "source": "ctgov",
+   "year": 2015,
+   "enrolment": 1979,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 3,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02523274",
+   "source": "ctgov",
+   "year": 2015,
+   "enrolment": 60,
+   "phase": 3,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DRUG",
+    "DRUG",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02529124",
+   "source": "ctgov",
+   "year": 2015,
+   "enrolment": 254,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02530723",
+   "source": "ctgov",
+   "year": 2015,
+   "enrolment": 50,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02533063",
+   "source": "ctgov",
+   "year": 2015,
+   "enrolment": 32,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "DEVICE"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02570672",
+   "source": "ctgov",
+   "year": 2015,
+   "enrolment": 141,
+   "phase": 3,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DRUG",
+    "DRUG"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02582593",
+   "source": "ctgov",
+   "year": 2015,
+   "enrolment": 16,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DEVICE",
+    "DEVICE"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02592525",
+   "source": "ctgov",
+   "year": 2015,
+   "enrolment": 653,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02597023",
+   "source": "ctgov",
+   "year": 2015,
+   "enrolment": 55,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DRUG",
+    "DRUG"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02617511",
+   "source": "ctgov",
+   "year": 2015,
+   "enrolment": 24,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02628145",
+   "source": "ctgov",
+   "year": 2015,
+   "enrolment": 25,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02692235",
+   "source": "ctgov",
+   "year": 2016,
+   "enrolment": 28,
+   "phase": 4,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02696382",
+   "source": "ctgov",
+   "year": 2016,
+   "enrolment": 240,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "FED"
+  },
+  {
+   "id": "NCT02708498",
+   "source": "ctgov",
+   "year": 2016,
+   "enrolment": 1151,
+   "phase": 0,
+   "randomized": false,
+   "masked": false,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 6,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02717819",
+   "source": "ctgov",
+   "year": 2016,
+   "enrolment": 165,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT",
+    "OTHER",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02726906",
+   "source": "ctgov",
+   "year": 2016,
+   "enrolment": 66,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "RADIATION",
+    "BEHAVIORAL",
+    "DEVICE"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02739971",
+   "source": "ctgov",
+   "year": 2016,
+   "enrolment": 75,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER_GOV"
+  },
+  {
+   "id": "NCT02790541",
+   "source": "ctgov",
+   "year": 2016,
+   "enrolment": 62,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "DEVICE"
+   ],
+   "n_primary": 3,
+   "sponsor": "OTHER_GOV"
+  },
+  {
+   "id": "NCT02838979",
+   "source": "ctgov",
+   "year": 2016,
+   "enrolment": 11,
+   "phase": 3,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "OTHER",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02851511",
+   "source": "ctgov",
+   "year": 2016,
+   "enrolment": 379,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "DEVICE",
+    "DEVICE",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02871921",
+   "source": "ctgov",
+   "year": 2016,
+   "enrolment": 186,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02874924",
+   "source": "ctgov",
+   "year": 2016,
+   "enrolment": 34,
+   "phase": 3,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DRUG",
+    "DRUG",
+    "DRUG"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02926157",
+   "source": "ctgov",
+   "year": 2016,
+   "enrolment": 96,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02938923",
+   "source": "ctgov",
+   "year": 2016,
+   "enrolment": 129,
+   "phase": 4,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DRUG",
+    "DRUG",
+    "BEHAVIORAL",
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT02995668",
+   "source": "ctgov",
+   "year": 2016,
+   "enrolment": 82,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER",
+    "OTHER"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03029975",
+   "source": "ctgov",
+   "year": 2017,
+   "enrolment": 41,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03074643",
+   "source": "ctgov",
+   "year": 2017,
+   "enrolment": 187,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL",
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03087643",
+   "source": "ctgov",
+   "year": 2017,
+   "enrolment": 51,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03092219",
+   "source": "ctgov",
+   "year": 2017,
+   "enrolment": 202,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DEVICE"
+   ],
+   "n_primary": 1,
+   "sponsor": "INDUSTRY"
+  },
+  {
+   "id": "NCT03119610",
+   "source": "ctgov",
+   "year": 2017,
+   "enrolment": 23,
+   "phase": 3,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DRUG",
+    "DRUG"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03120026",
+   "source": "ctgov",
+   "year": 2017,
+   "enrolment": 140,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03243422",
+   "source": "ctgov",
+   "year": 2017,
+   "enrolment": 977,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "OTHER",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03253341",
+   "source": "ctgov",
+   "year": 2017,
+   "enrolment": 219,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03266510",
+   "source": "ctgov",
+   "year": 2017,
+   "enrolment": 64,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03281434",
+   "source": "ctgov",
+   "year": 2017,
+   "enrolment": 22,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03283462",
+   "source": "ctgov",
+   "year": 2017,
+   "enrolment": 66,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 2,
+   "sponsor": "INDUSTRY"
+  },
+  {
+   "id": "NCT03309007",
+   "source": "ctgov",
+   "year": 2017,
+   "enrolment": 25,
+   "phase": 4,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DRUG",
+    "DRUG"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03320746",
+   "source": "ctgov",
+   "year": 2017,
+   "enrolment": 231,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DEVICE"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03329963",
+   "source": "ctgov",
+   "year": 2017,
+   "enrolment": 120,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03342729",
+   "source": "ctgov",
+   "year": 2017,
+   "enrolment": 180,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03371966",
+   "source": "ctgov",
+   "year": 2017,
+   "enrolment": 29,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03394534",
+   "source": "ctgov",
+   "year": 2018,
+   "enrolment": 72,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03397836",
+   "source": "ctgov",
+   "year": 2018,
+   "enrolment": 599,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "OTHER",
+    "OTHER"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03419988",
+   "source": "ctgov",
+   "year": 2018,
+   "enrolment": 46,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03429491",
+   "source": "ctgov",
+   "year": 2018,
+   "enrolment": 108,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03452488",
+   "source": "ctgov",
+   "year": 2018,
+   "enrolment": 233,
+   "phase": 3,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DRUG",
+    "DRUG"
+   ],
+   "n_primary": 1,
+   "sponsor": "INDUSTRY"
+  },
+  {
+   "id": "NCT03464500",
+   "source": "ctgov",
+   "year": 2018,
+   "enrolment": 90,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "INDUSTRY"
+  },
+  {
+   "id": "NCT03474302",
+   "source": "ctgov",
+   "year": 2018,
+   "enrolment": 56,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03500640",
+   "source": "ctgov",
+   "year": 2018,
+   "enrolment": 314,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 3,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03502941",
+   "source": "ctgov",
+   "year": 2018,
+   "enrolment": 16,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03513302",
+   "source": "ctgov",
+   "year": 2018,
+   "enrolment": 47,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 4,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03530774",
+   "source": "ctgov",
+   "year": 2018,
+   "enrolment": 54,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 3,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03538158",
+   "source": "ctgov",
+   "year": 2018,
+   "enrolment": 181,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03573583",
+   "source": "ctgov",
+   "year": 2018,
+   "enrolment": 21,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03579693",
+   "source": "ctgov",
+   "year": 2018,
+   "enrolment": 26,
+   "phase": 3,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03633721",
+   "source": "ctgov",
+   "year": 2018,
+   "enrolment": 25,
+   "phase": 3,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DRUG",
+    "OTHER"
+   ],
+   "n_primary": 3,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03654807",
+   "source": "ctgov",
+   "year": 2018,
+   "enrolment": 156,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03695081",
+   "source": "ctgov",
+   "year": 2018,
+   "enrolment": 60,
+   "phase": 0,
+   "randomized": false,
+   "masked": false,
+   "itype": [
+    "PROCEDURE"
+   ],
+   "n_primary": 4,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03746392",
+   "source": "ctgov",
+   "year": 2018,
+   "enrolment": 150,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03750903",
+   "source": "ctgov",
+   "year": 2018,
+   "enrolment": 30,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "FED"
+  },
+  {
+   "id": "NCT03790657",
+   "source": "ctgov",
+   "year": 2018,
+   "enrolment": 72,
+   "phase": 2,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "DEVICE",
+    "DEVICE"
+   ],
+   "n_primary": 1,
+   "sponsor": "FED"
+  },
+  {
+   "id": "NCT03796039",
+   "source": "ctgov",
+   "year": 2019,
+   "enrolment": 97,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03796923",
+   "source": "ctgov",
+   "year": 2019,
+   "enrolment": 3340,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "OTHER",
+    "OTHER",
+    "OTHER",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03803904",
+   "source": "ctgov",
+   "year": 2019,
+   "enrolment": 37,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "FED"
+  },
+  {
+   "id": "NCT03810534",
+   "source": "ctgov",
+   "year": 2019,
+   "enrolment": 654,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03814304",
+   "source": "ctgov",
+   "year": 2019,
+   "enrolment": 99,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03819478",
+   "source": "ctgov",
+   "year": 2019,
+   "enrolment": 187,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL",
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03906162",
+   "source": "ctgov",
+   "year": 2019,
+   "enrolment": 65,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT03984994",
+   "source": "ctgov",
+   "year": 2019,
+   "enrolment": 14,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER",
+    "OTHER"
+   ],
+   "n_primary": 2,
+   "sponsor": "FED"
+  },
+  {
+   "id": "NCT04004936",
+   "source": "ctgov",
+   "year": 2019,
+   "enrolment": 74,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "OTHER",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "FED"
+  },
+  {
+   "id": "NCT04048096",
+   "source": "ctgov",
+   "year": 2019,
+   "enrolment": 102,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04069585",
+   "source": "ctgov",
+   "year": 2019,
+   "enrolment": 30,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DEVICE",
+    "DEVICE"
+   ],
+   "n_primary": 1,
+   "sponsor": "INDUSTRY"
+  },
+  {
+   "id": "NCT04074941",
+   "source": "ctgov",
+   "year": 2019,
+   "enrolment": 20,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04076319",
+   "source": "ctgov",
+   "year": 2019,
+   "enrolment": 60,
+   "phase": 0,
+   "randomized": false,
+   "masked": false,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 6,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04083885",
+   "source": "ctgov",
+   "year": 2019,
+   "enrolment": 47,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04084457",
+   "source": "ctgov",
+   "year": 2019,
+   "enrolment": 53,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04087395",
+   "source": "ctgov",
+   "year": 2019,
+   "enrolment": 30,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DEVICE",
+    "DEVICE"
+   ],
+   "n_primary": 1,
+   "sponsor": "INDUSTRY"
+  },
+  {
+   "id": "NCT04091347",
+   "source": "ctgov",
+   "year": 2019,
+   "enrolment": 34,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04095923",
+   "source": "ctgov",
+   "year": 2019,
+   "enrolment": 300,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04149457",
+   "source": "ctgov",
+   "year": 2019,
+   "enrolment": 93,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "INDUSTRY"
+  },
+  {
+   "id": "NCT04168463",
+   "source": "ctgov",
+   "year": 2019,
+   "enrolment": 83,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "DEVICE"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04234087",
+   "source": "ctgov",
+   "year": 2020,
+   "enrolment": 116,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "OTHER"
+   ],
+   "n_primary": 21,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04243148",
+   "source": "ctgov",
+   "year": 2020,
+   "enrolment": 37,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "COMBINATION_PRODUCT",
+    "COMBINATION_PRODUCT",
+    "COMBINATION_PRODUCT",
+    "COMBINATION_PRODUCT"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04255745",
+   "source": "ctgov",
+   "year": 2020,
+   "enrolment": 77,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04264897",
+   "source": "ctgov",
+   "year": 2020,
+   "enrolment": 166,
+   "phase": 4,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DRUG",
+    "DRUG"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04276805",
+   "source": "ctgov",
+   "year": 2020,
+   "enrolment": 45,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DEVICE",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 5,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04278560",
+   "source": "ctgov",
+   "year": 2020,
+   "enrolment": 34,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DEVICE",
+    "DEVICE",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04291690",
+   "source": "ctgov",
+   "year": 2020,
+   "enrolment": 144,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER",
+    "OTHER",
+    "OTHER",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04309292",
+   "source": "ctgov",
+   "year": 2020,
+   "enrolment": 71,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04315363",
+   "source": "ctgov",
+   "year": 2020,
+   "enrolment": 40,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04332887",
+   "source": "ctgov",
+   "year": 2020,
+   "enrolment": 92,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04405180",
+   "source": "ctgov",
+   "year": 2020,
+   "enrolment": 64,
+   "phase": 3,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DRUG",
+    "DRUG"
+   ],
+   "n_primary": 1,
+   "sponsor": "INDIV"
+  },
+  {
+   "id": "NCT04414787",
+   "source": "ctgov",
+   "year": 2020,
+   "enrolment": 151,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04418271",
+   "source": "ctgov",
+   "year": 2020,
+   "enrolment": 1199,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04500366",
+   "source": "ctgov",
+   "year": 2020,
+   "enrolment": 70,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL",
+    "COMBINATION_PRODUCT",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04538157",
+   "source": "ctgov",
+   "year": 2020,
+   "enrolment": 240,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04549103",
+   "source": "ctgov",
+   "year": 2020,
+   "enrolment": 58,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER"
+   ],
+   "n_primary": 3,
+   "sponsor": "OTHER_GOV"
+  },
+  {
+   "id": "NCT04582370",
+   "source": "ctgov",
+   "year": 2020,
+   "enrolment": 84,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 3,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04582617",
+   "source": "ctgov",
+   "year": 2020,
+   "enrolment": 3959,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04629690",
+   "source": "ctgov",
+   "year": 2020,
+   "enrolment": 229,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04633499",
+   "source": "ctgov",
+   "year": 2020,
+   "enrolment": 90,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "DEVICE"
+   ],
+   "n_primary": 4,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04760392",
+   "source": "ctgov",
+   "year": 2021,
+   "enrolment": 160,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04777279",
+   "source": "ctgov",
+   "year": 2021,
+   "enrolment": 120,
+   "phase": 0,
+   "randomized": false,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "DIETARY_SUPPLEMENT",
+    "OTHER"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04823260",
+   "source": "ctgov",
+   "year": 2021,
+   "enrolment": 90,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DRUG",
+    "OTHER"
+   ],
+   "n_primary": 13,
+   "sponsor": "NETWORK"
+  },
+  {
+   "id": "NCT04832412",
+   "source": "ctgov",
+   "year": 2021,
+   "enrolment": 66,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "INDUSTRY"
+  },
+  {
+   "id": "NCT04851028",
+   "source": "ctgov",
+   "year": 2021,
+   "enrolment": 210,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 4,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04861831",
+   "source": "ctgov",
+   "year": 2021,
+   "enrolment": 63,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04874350",
+   "source": "ctgov",
+   "year": 2021,
+   "enrolment": 30,
+   "phase": 3,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DRUG",
+    "DRUG"
+   ],
+   "n_primary": 1,
+   "sponsor": "INDUSTRY"
+  },
+  {
+   "id": "NCT04900272",
+   "source": "ctgov",
+   "year": 2021,
+   "enrolment": 21,
+   "phase": 0,
+   "randomized": false,
+   "masked": false,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 10,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04981366",
+   "source": "ctgov",
+   "year": 2021,
+   "enrolment": 105,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 4,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT04994054",
+   "source": "ctgov",
+   "year": 2021,
+   "enrolment": 54,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05023187",
+   "source": "ctgov",
+   "year": 2021,
+   "enrolment": 60,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05066750",
+   "source": "ctgov",
+   "year": 2021,
+   "enrolment": 170,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05070429",
+   "source": "ctgov",
+   "year": 2021,
+   "enrolment": 339,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "OTHER",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05074303",
+   "source": "ctgov",
+   "year": 2021,
+   "enrolment": 78,
+   "phase": 3,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BIOLOGICAL",
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05096013",
+   "source": "ctgov",
+   "year": 2021,
+   "enrolment": 60,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05151887",
+   "source": "ctgov",
+   "year": 2021,
+   "enrolment": 17,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05203848",
+   "source": "ctgov",
+   "year": 2022,
+   "enrolment": 54,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "PROCEDURE",
+    "OTHER"
+   ],
+   "n_primary": 11,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05281211",
+   "source": "ctgov",
+   "year": 2022,
+   "enrolment": 70,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05287230",
+   "source": "ctgov",
+   "year": 2022,
+   "enrolment": 28,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 4,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05302596",
+   "source": "ctgov",
+   "year": 2022,
+   "enrolment": 16,
+   "phase": 3,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "DRUG"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05360667",
+   "source": "ctgov",
+   "year": 2022,
+   "enrolment": 60,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER",
+    "OTHER"
+   ],
+   "n_primary": 12,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05366686",
+   "source": "ctgov",
+   "year": 2022,
+   "enrolment": 240,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05377411",
+   "source": "ctgov",
+   "year": 2022,
+   "enrolment": 33,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DEVICE",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05411393",
+   "source": "ctgov",
+   "year": 2022,
+   "enrolment": 47,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05424055",
+   "source": "ctgov",
+   "year": 2022,
+   "enrolment": 58,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05436392",
+   "source": "ctgov",
+   "year": 2022,
+   "enrolment": 517611,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05447533",
+   "source": "ctgov",
+   "year": 2022,
+   "enrolment": 217,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER",
+    "OTHER",
+    "OTHER",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05475236",
+   "source": "ctgov",
+   "year": 2022,
+   "enrolment": 16,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 4,
+   "sponsor": "FED"
+  },
+  {
+   "id": "NCT05484661",
+   "source": "ctgov",
+   "year": 2022,
+   "enrolment": 20,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05497687",
+   "source": "ctgov",
+   "year": 2022,
+   "enrolment": 40,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05538065",
+   "source": "ctgov",
+   "year": 2022,
+   "enrolment": 201,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "OTHER",
+    "OTHER",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05550779",
+   "source": "ctgov",
+   "year": 2022,
+   "enrolment": 109,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 3,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05574205",
+   "source": "ctgov",
+   "year": 2022,
+   "enrolment": 30,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 4,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05583578",
+   "source": "ctgov",
+   "year": 2022,
+   "enrolment": 34,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DEVICE",
+    "DEVICE"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05585762",
+   "source": "ctgov",
+   "year": 2022,
+   "enrolment": 30,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05593978",
+   "source": "ctgov",
+   "year": 2022,
+   "enrolment": 56,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05602220",
+   "source": "ctgov",
+   "year": 2022,
+   "enrolment": 91,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05610605",
+   "source": "ctgov",
+   "year": 2022,
+   "enrolment": 235,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "OTHER"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05624333",
+   "source": "ctgov",
+   "year": 2022,
+   "enrolment": 38,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "OTHER",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05672004",
+   "source": "ctgov_2023",
+   "year": 2023,
+   "enrolment": 27,
+   "phase": 0,
+   "randomized": false,
+   "masked": false,
+   "itype": [
+    "OTHER",
+    "OTHER"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05689554",
+   "source": "ctgov_2023",
+   "year": 2023,
+   "enrolment": 2367,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05695079",
+   "source": "ctgov_2023",
+   "year": 2023,
+   "enrolment": 19,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER",
+    "OTHER",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05711095",
+   "source": "ctgov_2023",
+   "year": 2023,
+   "enrolment": 45,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT",
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05732909",
+   "source": "ctgov_2023",
+   "year": 2023,
+   "enrolment": 25,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DIETARY_SUPPLEMENT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05809466",
+   "source": "ctgov_2023",
+   "year": 2023,
+   "enrolment": 72,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER",
+    "OTHER",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05827094",
+   "source": "ctgov_2023",
+   "year": 2023,
+   "enrolment": 19,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05853913",
+   "source": "ctgov_2023",
+   "year": 2023,
+   "enrolment": 16,
+   "phase": 0,
+   "randomized": true,
+   "masked": false,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05869383",
+   "source": "ctgov_2023",
+   "year": 2023,
+   "enrolment": 80,
+   "phase": 4,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DRUG",
+    "DRUG"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT05907707",
+   "source": "ctgov_2023",
+   "year": 2023,
+   "enrolment": 11,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "DEVICE",
+    "DEVICE",
+    "DEVICE",
+    "DEVICE"
+   ],
+   "n_primary": 11,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT06140797",
+   "source": "ctgov_2023",
+   "year": 2023,
+   "enrolment": 164,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "COMBINATION_PRODUCT"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT06142890",
+   "source": "ctgov_2023",
+   "year": 2023,
+   "enrolment": 20,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "OTHER",
+    "OTHER"
+   ],
+   "n_primary": 1,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT06288828",
+   "source": "ctgov_2023",
+   "year": 2024,
+   "enrolment": 50,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL",
+    "BEHAVIORAL"
+   ],
+   "n_primary": 6,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "NCT06405893",
+   "source": "ctgov_2023",
+   "year": 2024,
+   "enrolment": 102,
+   "phase": 0,
+   "randomized": true,
+   "masked": true,
+   "itype": [
+    "BEHAVIORAL"
+   ],
+   "n_primary": 2,
+   "sponsor": "OTHER"
+  },
+  {
+   "id": "DRKS00011262",
+   "source": "drks",
+   "year": 2016,
+   "enrolment": null,
+   "phase": null,
+   "randomized": null,
+   "masked": null,
+   "itype": [],
+   "n_primary": null,
+   "sponsor": null,
+   "n_primary_text": null
+  },
+  {
+   "id": "DRKS00015055",
+   "source": "drks",
+   "year": 2019,
+   "enrolment": null,
+   "phase": null,
+   "randomized": null,
+   "masked": null,
+   "itype": [],
+   "n_primary": null,
+   "sponsor": null,
+   "n_primary_text": null
+  },
+  {
+   "id": "ISRCTN05358495",
+   "source": "isrctn",
+   "year": 2005,
+   "enrolment": null,
+   "phase": null,
+   "randomized": null,
+   "masked": null,
+   "itype": [],
+   "n_primary": null,
+   "sponsor": null,
+   "n_primary_text": 1
+  },
+  {
+   "id": "ISRCTN13927531",
+   "source": "isrctn",
+   "year": 2017,
+   "enrolment": null,
+   "phase": null,
+   "randomized": null,
+   "masked": null,
+   "itype": [],
+   "n_primary": null,
+   "sponsor": null,
+   "n_primary_text": 1
+  },
+  {
+   "id": "ISRCTN19064955",
+   "source": "isrctn",
+   "year": 2013,
+   "enrolment": null,
+   "phase": null,
+   "randomized": null,
+   "masked": null,
+   "itype": [],
+   "n_primary": null,
+   "sponsor": null,
+   "n_primary_text": 1
+  },
+  {
+   "id": "ISRCTN23142588",
+   "source": "isrctn",
+   "year": 2012,
+   "enrolment": null,
+   "phase": null,
+   "randomized": null,
+   "masked": null,
+   "itype": [],
+   "n_primary": null,
+   "sponsor": null,
+   "n_primary_text": 1
+  },
+  {
+   "id": "ISRCTN28645428",
+   "source": "isrctn",
+   "year": 2012,
+   "enrolment": null,
+   "phase": null,
+   "randomized": null,
+   "masked": null,
+   "itype": [],
+   "n_primary": null,
+   "sponsor": null,
+   "n_primary_text": 1
+  },
+  {
+   "id": "ISRCTN29932357",
+   "source": "isrctn",
+   "year": 2021,
+   "enrolment": null,
+   "phase": null,
+   "randomized": null,
+   "masked": null,
+   "itype": [],
+   "n_primary": null,
+   "sponsor": null,
+   "n_primary_text": 1
+  },
+  {
+   "id": "ISRCTN39282347",
+   "source": "isrctn",
+   "year": 2019,
+   "enrolment": null,
+   "phase": null,
+   "randomized": null,
+   "masked": null,
+   "itype": [],
+   "n_primary": null,
+   "sponsor": null,
+   "n_primary_text": 1
+  },
+  {
+   "id": "ISRCTN42776917",
+   "source": "isrctn",
+   "year": 2013,
+   "enrolment": null,
+   "phase": null,
+   "randomized": null,
+   "masked": null,
+   "itype": [],
+   "n_primary": null,
+   "sponsor": null,
+   "n_primary_text": 1
+  },
+  {
+   "id": "ISRCTN52388040",
+   "source": "isrctn",
+   "year": 2017,
+   "enrolment": null,
+   "phase": null,
+   "randomized": null,
+   "masked": null,
+   "itype": [],
+   "n_primary": null,
+   "sponsor": null,
+   "n_primary_text": 1
+  },
+  {
+   "id": "ISRCTN67679521",
+   "source": "isrctn",
+   "year": 2005,
+   "enrolment": null,
+   "phase": null,
+   "randomized": null,
+   "masked": null,
+   "itype": [],
+   "n_primary": null,
+   "sponsor": null,
+   "n_primary_text": 1
+  },
+  {
+   "id": "ISRCTN78396615",
+   "source": "isrctn",
+   "year": 2012,
+   "enrolment": null,
+   "phase": null,
+   "randomized": null,
+   "masked": null,
+   "itype": [],
+   "n_primary": null,
+   "sponsor": null,
+   "n_primary_text": 1
+  },
+  {
+   "id": "ISRCTN86537017",
+   "source": "isrctn",
+   "year": 2012,
+   "enrolment": null,
+   "phase": null,
+   "randomized": null,
+   "masked": null,
+   "itype": [],
+   "n_primary": null,
+   "sponsor": null,
+   "n_primary_text": 1
+  },
+  {
+   "id": "ISRCTN99945020",
+   "source": "isrctn",
+   "year": 2019,
+   "enrolment": null,
+   "phase": null,
+   "randomized": null,
+   "masked": null,
+   "itype": [],
+   "n_primary": null,
+   "sponsor": null,
+   "n_primary_text": 1
+  },
+  {
+   "id": "NTR3471",
+   "source": "ntr",
+   "year": 2012,
+   "enrolment": null,
+   "phase": null,
+   "randomized": null,
+   "masked": null,
+   "itype": [],
+   "n_primary": null,
+   "sponsor": null,
+   "n_primary_text": null
+  }
+ ]
+}
