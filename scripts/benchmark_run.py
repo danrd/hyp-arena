@@ -292,22 +292,24 @@ PILOT_TEXTS = HS / "benchmark_v2_pilot_texts.jsonl"
 PILOT_OUT = HS / "benchmark_v2_pilot.json"
 
 
-def pilot_units(n: int = 6, seed: int = 1) -> list[dict]:
+def pilot_units(n: int = 6, seed: int = 1, extra: int = 0) -> list[dict]:
     """Trials outside the benchmark (CT.gov 2000-2022 with a non-decisive label: mixed or not_reported), so that looking at
     the method's output on them cannot tune the method on scored units. Labels are not read beyond this choice."""
     labels = yaml.safe_load((HS / "ctgov_outcomes.yaml").read_text())["items"]
     cands = {c["source_id"]: c for c in yaml.safe_load((HS / CAND["ctgov"]).read_text())["items"]}
     ids = sorted(x["nct"] for x in labels if x["label"] in ("mixed", "not_reported") and x["nct"] in cands)
     pick = random.Random(seed).sample(ids, n)
+    if extra:                                                 # a second draw, disjoint from the first (pilot 2, 2026-11-01)
+        pick += random.Random(seed + 1).sample([i for i in ids if i not in pick], extra)
     return [{"id": i, "source": "ctgov", "written_on": cands[i]["written_on"]} for i in pick]
 
 
-def pilot(n: int = 6) -> dict:
+def pilot(n: int = 6, extra: int = 0, tag: str = "") -> dict:
     """Paid (ALLOW_PAID=1): the whole method v2 of B1 (configs/v2-flash.yaml) on `n` trials outside the benchmark, each as of
     its own date, plus the gpt-4o card of each text (configs/v2-gpt4o.yaml), to look at by hand before the main run."""
     from hyparena.card.normalizer import normalize
     from hyparena.card.pipeline import _client, run as v2
-    texts = build_texts(pilot_units(n), PILOT_TEXTS)
+    texts = build_texts(pilot_units(n, extra=extra), PILOT_TEXTS)
     gclient, gfam = _client("configs/v2-gpt4o.yaml", False, 4 * n)
     out = []
     for t in texts:
@@ -320,7 +322,7 @@ def pilot(n: int = 6) -> dict:
         print(json.dumps({"id": t["id"], "outcome": x["outcome"], "claims": len((x["card"] or {}).get("claims", [])),
                           "calls": res["meta"]["calls"], "served": sorted({c.get("model") for c in res["calls"] if c.get("kind") == "llm"} |
                                                                        {c.get("model") for c in log if c.get("kind") == "llm"})}), flush=True)
-    PILOT_OUT.write_text(json.dumps(out, ensure_ascii=False, indent=1, default=str))
+    (PILOT_OUT.with_name(PILOT_OUT.stem + tag + ".json") if tag else PILOT_OUT).write_text(json.dumps(out, ensure_ascii=False, indent=1, default=str))
     return {"n": len(out)}
 
 
@@ -338,7 +340,7 @@ def main() -> None:
         import os
         if os.environ.get("ALLOW_PAID") != "1":
             raise SystemExit("paid: set ALLOW_PAID=1")
-        print(pilot(a.limit or 6))
+        print(pilot(a.limit or 6, extra=int(os.environ.get("PILOT_EXTRA", "0")), tag=os.environ.get("PILOT_TAG", "")))
         return
     if a.cmd == "sample":
         r = sample(a.limit or 20)
