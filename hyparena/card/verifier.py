@@ -76,7 +76,48 @@ def queries(claim, card: HypothesisCard) -> list[str]:
     # primary research first: reviews only give background (never a status) and push findings out of the top
     # results; without them the first page holds the studies on both sides (Example 3: Wilkinson 2012 and Neff 2013)
     q_primary = f"{q1} NOT review[pt]" if q1 else ""
-    return list(dict.fromkeys([x for x in (q_primary, q1, q_rel, q2, q3, q_measure) if x]))
+    main = [x for x in (q_primary, q1, q_rel, q2, q3, q_measure) if x]
+    # Fallbacks for trial-style claims (benchmark pilot, 2026-11-01; specs/benchmark-v2-run.yaml): a long object phrase
+    # ("markers of inflammation, immune system markers and other ...") and a subject made of several intervention labels
+    # match nothing when every word is required. Appended last, so they run only when the queries above found fewer than
+    # `retmax` papers: the head of the object phrase, the first intervention alone, the population words instead of "humans".
+    subj_short = _words(_first_intervention(claim.subject.label, card), 5)
+    obj_head = _words(_head(obj_term), 4)
+    pop = _population_words(card) if organism == "humans" else ""
+    fallbacks = [q(subj_short, obj_head, pop or organism), q(subj_short, obj_head)] if obj_head else [q(subj_short, organism)]
+    if obj_head and pop:                     # human claims only: the outcome in the population without the intervention name
+        fallbacks.append(q(obj_head, pop))
+    fallbacks = [x for x in fallbacks if x and (subj_short != subject or obj_head != obj_term or pop)]
+    return list(dict.fromkeys(main + fallbacks))
+
+
+_STOP = {"the", "a", "an", "of", "in", "on", "to", "and", "or", "other", "its", "their", "with", "for", "by"}
+
+
+def _words(text: str, n: int) -> str:
+    """The first `n` content words (stop words dropped, the order kept)."""
+    return " ".join([w for w in _clean(text).split() if w.lower() not in _STOP][:n])
+
+
+def _head(phrase: str) -> str:
+    """The head of an object phrase: up to the first comma, semicolon, "and", "or" or "as well as"."""
+    return re.split(r",|;|\band\b|\bor\b|\bas well as\b", phrase or "", maxsplit=1)[0].strip()
+
+
+def _first_intervention(label: str, card: HypothesisCard) -> str:
+    """The first intervention of the card named in the claim subject (a probe's subject joins all of them)."""
+    low = (label or "").lower()
+    hits = [i.label for i in card.pico.intervention if i.label and i.label.lower() in low]
+    return hits[0] if hits else label
+
+
+def _population_words(card: HypothesisCard) -> str:
+    """Short population words for a human claim ("older adults", "frail elderly"), else nothing."""
+    label = _clean(card.pico.population.label or "")
+    words = label.split()
+    if not 1 <= len(words) <= 3 or label.lower() in ("human", "humans", "unknown"):
+        return ""
+    return label
 
 
 def names_intervention(claim, card: HypothesisCard, text: str) -> bool:
