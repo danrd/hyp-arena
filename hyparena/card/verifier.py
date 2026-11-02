@@ -63,9 +63,11 @@ def queries(claim, card: HypothesisCard) -> list[str]:
     organism = SPECIES_WORDS.get(obj.strip().lower()) or SPECIES_WORDS.get(claim.qualifiers.get("species", "").strip().lower(), "")
     obj_term = "" if obj.strip().lower() in SPECIES_WORDS else obj
     rel = REL_WORDS.get(claim.relation, "")
+    if " OR " in rel:                    # PubMed binds AND tighter than OR: without brackets "X healthspan OR physical function
+        rel = f"({rel})"                 # humans" is "(X healthspan) OR (physical function humans)" (calibration, 2026-11-02)
 
-    def q(*words):
-        return " ".join(_clean(w) for w in words if w and w != UNKNOWN)
+    def q(*words):                       # the relation words keep their brackets; entity labels are cleaned
+        return " ".join(w if w == rel else _clean(w) for w in words if w and w != UNKNOWN)
 
     measure = claim.qualifiers.get("measure", "") if not obj_term else ""
     q1 = q(subject, rel, obj_term, organism)
