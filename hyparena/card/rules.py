@@ -950,6 +950,8 @@ def known_result(card: HypothesisCard, ver: Verification) -> bool:
     if out is None or cv is None or statuses(card, ver).get(cv.id) != "supported":
         return False
     support = [r for r in cv.evidence if admissible(r, out)]
+    if any(admissible(r, out) for r in cv.counterevidence):
+        return False                                     # admissible counterevidence: the finding is not settled (calibration 2026-11-02)
     return any(r.qualifiers_match.get("intervention_match", "exact") == "exact"
                and all(v in ("yes", "n/a") for k, v in r.qualifiers_match.items() if k != "intervention_match")
                for r in support)
