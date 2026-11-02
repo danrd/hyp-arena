@@ -272,7 +272,7 @@ def recheck(claim, card: HypothesisCard, evidence: list[EvidenceRecord], counter
 def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisCard,
                  as_of: Optional[str] = None, retmax: int = RETMAX, log: Optional[list] = None,
                  fallback: Optional[str] = None, expert_pmids: Optional[list[tuple[str, str]]] = None,
-                 check_subgroups: bool = True) -> ClaimVerification:
+                 check_subgroups: bool = True, search: str = "keywords") -> ClaimVerification:
     """`fallback`: the family asked when `family`'s reply is cut off with no complete record (gemini stops in
     the middle of verbatim quotes, most likely its recitation filter)."""
     cv = ClaimVerification(id=claim.id)
@@ -282,11 +282,15 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
     cv.evidence += support
     cv.counterevidence += against
     pmids = []
-    for q in queries(claim, card):
-        if q:
-            pmids += [p for p in pubmed.search(q, retmax=retmax, as_of=as_of) if p not in pmids]
-        if len(pmids) >= retmax:
-            break
+    if search == "model":                                 # model-written queries, light guard, citation expansion (search.py)
+        from hyparena.card.search import retrieve
+        pmids = retrieve(client, family, avoid, claim, card, as_of, retmax, log=log)
+    else:
+        for q in queries(claim, card):
+            if q:
+                pmids += [p for p in pubmed.search(q, retmax=retmax, as_of=as_of) if p not in pmids]
+            if len(pmids) >= retmax:
+                break
     pmids = pmids[:retmax]
     by_expert = {pmid: did for pmid, did in (expert_pmids or [])}    # sources an expert gave (spec 7a)
     pmids = list(by_expert) + [p for p in pmids if p not in by_expert]
@@ -501,7 +505,8 @@ def analog_probes(card: HypothesisCard) -> list[Claim]:
 def verify(client, families: list[str], writer: str, card: HypothesisCard, as_of: Optional[str] = None,
            log: Optional[list] = None, map_fn=map,
            expert_sources: Optional[dict[str, list[tuple[str, str]]]] = None,
-           fallback_families: Optional[list[str]] = None, disease_restore: frozenset = frozenset()) -> Verification:
+           fallback_families: Optional[list[str]] = None, disease_restore: frozenset = frozenset(),
+           search: str = "keywords") -> Verification:
     """All declared claims, the rejected alternatives of a contrast (checked like claims, spec 7), plus analog
     probes; the verifier's family is never the writer's (its records feed the ranking)."""
     log = log if log is not None else []                  # its search entries give searched_pmids
@@ -518,7 +523,7 @@ def verify(client, families: list[str], writer: str, card: HypothesisCard, as_of
     tasks = [(c, allowed[i % len(allowed)], fallback(i)) for i, c in enumerate(claims)]
     expert_sources = expert_sources or {}
     cvs = list(map_fn(lambda t: verify_claim(client, t[1], frozenset({writer}), t[0], card, as_of, log=log,
-                                             fallback=t[2], expert_pmids=expert_sources.get(t[0].id)), tasks))
+                                             fallback=t[2], expert_pmids=expert_sources.get(t[0].id), search=search), tasks))
     added = {c.id for c in probes}
     for cv, c in zip(cvs, claims):
         if cv.id in added:
