@@ -251,7 +251,8 @@ def adjacent(record: EvidenceRecord, claim: Claim) -> bool:
     if not GRADED_CONTEXT or not _human_claim(claim):
         return False
     no = {k for k, v in record.qualifiers_match.items() if v == "no" and k != "intervention_match"}
-    cls = record.qualifiers_match.get("intervention_match") == "class" and not claim.subject.id
+    # a non-compound intervention marked "related_compound" by the name check of runs before 2026-11-02 is the same class
+    cls = record.qualifiers_match.get("intervention_match") in ("class", "related_compound") and not claim.subject.id
     return bool(no or cls) and no <= ADJACENT_KEYS
 
 
@@ -267,7 +268,7 @@ def admissible(record: EvidenceRecord, claim: Claim) -> bool:
     if record.system in ("ex_vivo", "in_vitro") and claim_organism(claim):
         return False                                     # ex vivo ≠ in vivo: cells do not support a claim about an organism
     im = record.qualifiers_match.get("intervention_match")
-    if im == "related_compound" or (im == "class" and not near):
+    if (im == "related_compound" and not near) or (im == "class" and not near):
         return False                                     # spec 8: related compounds and classes count only as analogs
     need = claim_endpoint(claim)
     if need == "healthspan" and record.endpoint == "biomarker" and species_key(record.species) == "human":
