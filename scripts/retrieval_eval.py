@@ -284,7 +284,7 @@ def evaluate() -> dict:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("cmd", choices=["build", "cards", "queries", "eval", "relevance"])
+    ap.add_argument("cmd", choices=["build", "cards", "queries", "eval", "relevance", "eval-vocab"])
     a = ap.parse_args()
     if a.cmd in ("cards", "queries") and os.environ.get("ALLOW_PAID") != "1":
         raise SystemExit("paid: set ALLOW_PAID=1")
@@ -294,6 +294,8 @@ def main() -> None:
         make_cards()
     elif a.cmd == "queries":
         make_queries()
+    elif a.cmd == "eval-vocab":
+        print(json.dumps(eval_vocab(), indent=1))
     elif a.cmd == "relevance":
         print(relevance_task())
     else:
@@ -329,6 +331,41 @@ def relevance_task(per_group: int = 2) -> dict:
     (d / "task.jsonl").write_text("".join(json.dumps(t, ensure_ascii=False) + "\n" for t in task))
     (d / "strategy_key.json").write_text(json.dumps(key, indent=1) + "\n")
     return {"claims": len(task), "pairs": sum(len(t["papers"]) for t in task)}
+
+
+
+def eval_vocab() -> dict:
+    """S1 and S1+S2 with the vocabulary guard (hyparena.card.search_vocab) on the saved model queries, against the stored
+    unguarded numbers of eval.json; and what the guard dropped."""
+    from hyparena.card.search_vocab import filter_query, vocabulary
+    llm = json.loads((OUT / "llm_queries.json").read_text())
+    prev = {r["id"]: r for r in json.loads((OUT / "eval.json").read_text())["per_claim"]}
+    per, dropped_all = [], []
+    for item, card, c in claims():
+        v = vocabulary(card)
+        qs, dropped = [], []
+        for q in llm[item["id"]]["queries"]:
+            f, d = filter_query(q, v)
+            dropped += d
+            if f:
+                qs.append(f)
+        dropped_all.append({"id": item["id"], "dropped": dropped})
+        g = set(item["gold"])
+        s1 = round_robin(qs, item["as_of"]) if qs else []
+        s12 = citation_expand(s1, item["as_of"]) if s1 else []
+        row = {"id": item["id"], "group": prev[item["id"]]["group"], "dropped_terms": len(dropped),
+               "S1v": round(len(g & set(s1)) / len(g), 2), "S1v+S2": round(len(g & set(s12)) / len(g), 2),
+               "S1": prev[item["id"]].get("S1", {}).get("recall"), "S1+S2": prev[item["id"]].get("S1+S2", {}).get("recall"),
+               "S0": prev[item["id"]]["S0"]["recall"], "hit": {k: x > 0 for k, x in (("S1v", len(g & set(s1))), ("S1v+S2", len(g & set(s12))))}}
+        per.append(row)
+        print(json.dumps(row), flush=True)
+    summ = {}
+    for grp in ("human", "animal", "all"):
+        rs = [r for r in per if grp == "all" or r["group"].startswith(grp)]
+        summ[grp] = {k: {"mean_recall": round(sum((r[k] or 0) for r in rs) / len(rs), 3),
+                         "any_hit": round(sum(((r[k] or 0) > 0) for r in rs) / len(rs), 2)} for k in ("S0", "S1", "S1v", "S1+S2", "S1v+S2")}
+    (OUT / "eval_vocab.json").write_text(json.dumps({"per_claim": per, "dropped": dropped_all, "summary": summ}, indent=1) + "\n")
+    return summ
 
 
 if __name__ == "__main__":
