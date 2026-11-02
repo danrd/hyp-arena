@@ -95,8 +95,9 @@ def plan() -> dict:
     cands = yaml.safe_load(CAND.read_text())["items"]
     stats = {"candidates": len(cands), "retrospective": 0, "no_document": 0, "kept": 0, "with_posted_results": 0, "with_papers": 0}
     rows = []
+    allow_retro = os.environ.get("CTGOV_ALLOW_RETRO") == "1"      # calibration set outside the benchmark (scripts/calibration.py)
     for c in cands:
-        if not prospective(c):
+        if not prospective(c) and not allow_retro:
             stats["retrospective"] += 1
             continue
         sources = []
