@@ -134,7 +134,8 @@ def animal_card(a: dict):
                  "time": "unknown"},
         "claims": [{"id": "c1", "subject": {"label": a["compound"]}, "relation": "extends_lifespan_in", "object": {"label": obj},
                     "qualifiers": {"species": obj}, "role": "outcome", "source_span": f"{a['compound']} extends the lifespan of {sp}."}],
-        "decisive_experiment": {"system": obj, "endpoint": "lifespan", "duration_class": "months"}})
+        "decisive_experiment": {"system": {"nematode": "worm"}.get(obj, obj) if obj in ("mouse", "nematode", "fly", "rat", "yeast") else "unknown",
+                                "endpoint": "lifespan", "duration_class": "months"}})
 
 
 def claims() -> list[tuple[dict, object, object]]:
