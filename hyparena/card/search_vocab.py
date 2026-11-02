@@ -22,6 +22,9 @@ GENERIC = {
     "survival", "mortality", "healthspan", "physical", "function", "functional", "performance", "mice", "mouse", "murine", "rats",
     "rat", "rodent", "rodents", "worm", "worms", "nematode", "nematodes", "caenorhabditis", "elegans", "drosophila", "melanogaster",
     "fly", "flies", "fruit", "yeast", "saccharomyces", "cerevisiae", "expectancy", "median", "maximum", "chronological", "replicative",
+    # added after the first guard evaluation (2026-11-02): spelling variants of the ageing outcomes and MeSH age-group words
+    "life-span", "mean", "extension", "extend", "extends", "survival analysis", "rate", "analysis", "80", "over", "geriatric", "frail",
+    "community", "dwelling", "community-dwelling", "middle", "middle-aged", "senior", "seniors",
 }
 STOP = {"of", "the", "a", "an", "in", "on", "and", "or", "for", "with", "to", "by", "at", "as", "vs", "versus"}
 TAG = re.compile(r"\[[^\]]+\]")
@@ -53,6 +56,16 @@ def mesh_terms(phrase: str, cache: Optional[dict] = None) -> list[str]:
                 res = httpx.get("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi",
                                 params={"db": "mesh", "id": ",".join(ids), "retmode": "json"}, timeout=30).json()["result"]
                 terms = [t for u in res.get("uids", []) for t in (res[u].get("ds_meshterms") or [])]
+                # one step along the MeSH tree (parents and children) and the heading a supplementary concept maps to:
+                # knowledge of the terminology, not of results
+                near = {str(x) for u in res.get("uids", []) for link in (res[u].get("ds_idxlinks") or [])
+                        for x in [link.get("parent")] + list(link.get("children") or []) if x}
+                terms += [h for u in res.get("uids", []) for h in (res[u].get("ds_headingmappedtolist") or []) if isinstance(h, str)]
+                if near:
+                    time.sleep(0.4)
+                    nres = httpx.get("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi",
+                                     params={"db": "mesh", "id": ",".join(sorted(near)[:40]), "retmode": "json"}, timeout=30).json()["result"]
+                    terms += [t for u in nres.get("uids", []) for t in (nres[u].get("ds_meshterms") or [])]
             break
         except Exception:
             time.sleep(2 ** attempt)
