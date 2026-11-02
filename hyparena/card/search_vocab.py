@@ -106,7 +106,32 @@ def vocabulary(card) -> dict:
                 phrases.add(s.lower())
                 words |= set(_words(s))
                 syn += 1
-    return {"words": words, "phrases": phrases, "sources": {"mesh_terms": mesh, "compound_synonyms": syn}}
+    return {"words": words, "phrases": phrases, "card_words": set(_words(text)),
+            "sources": {"mesh_terms": mesh, "compound_synonyms": syn}}
+
+
+# Light guard (user decision 2026-11-02): the model may widen the topic (related concepts, synonyms), but not steer the search
+# towards a result it may remember: no outcome or direction words that the card does not use, no study acronyms (4+ capitals
+# outside the vocabulary: SPRINT, ACCORD), no registry numbers, no author searches.
+DIRECTION = re.compile(r"^(improv|benefi|effective|efficac|reduc|decreas|increas|lower|higher|prevent|protect|harm|adverse|worse|"
+                       r"better|fail|negative|positive|superior|inferior|significan|null|ineffective)", re.I)
+REGISTRY = re.compile(r"\b(NCT\d{6,}|ISRCTN\d+|ACTRN\d+|DRKS\d+|NTR\d+|UMIN\d+|ChiCTR)", re.I)
+AUTHOR = re.compile(r"\[(au|auth|author|1au|lastau)\]", re.I)
+
+
+def term_allowed_light(term: str, vocab: dict) -> bool:
+    if AUTHOR.search(term) or REGISTRY.search(term):
+        return False
+    t = TAG.sub("", term).strip().strip('"')
+    if re.search(r"\bno (effect|benefit|difference|change)\b", t, re.I):
+        return False
+    for w in re.findall(r"[A-Za-z][A-Za-z0-9\-']*", t):
+        lw = w.lower()
+        if DIRECTION.match(lw) and lw not in vocab.get("card_words", set()):
+            return False
+        if re.fullmatch(r"[A-Z][A-Z0-9\-]{3,}", w) and lw not in vocab["words"] and lw not in vocab["phrases"]:
+            return False
+    return True
 
 
 def term_allowed(term: str, vocab: dict) -> bool:
@@ -141,15 +166,15 @@ def _parse(tokens: list[str], i: int = 0):
     return out, i
 
 
-def _filter(node, vocab: dict, dropped: list):
+def _filter(node, vocab: dict, dropped: list, allowed=term_allowed):
     if isinstance(node, str):
         if node in ("AND", "OR", "NOT"):
             return node
-        if term_allowed(node, vocab):
+        if allowed(node, vocab):
             return node
         dropped.append(node)
         return None
-    items = [_filter(x, vocab, dropped) for x in node]
+    items = [_filter(x, vocab, dropped, allowed) for x in node]
     # remove dropped operands with their operator, keep the operator structure valid
     clean = []
     for x in items:
@@ -192,10 +217,11 @@ def _merge(tokens: list[str]) -> list[str]:
     return out
 
 
-def filter_query(q: str, vocab: dict) -> tuple[str, list[str]]:
-    """The query with every term outside the vocabulary removed, re-serialised with brackets; and the dropped terms."""
+def filter_query(q: str, vocab: dict, mode: str = "light") -> tuple[str, list[str]]:
+    """The query with the disallowed terms removed, re-serialised with brackets; and the dropped terms. `mode`: "light" (the
+    decided guard: no direction words, study acronyms, registry numbers, authors) or "strict" (the vocabulary only)."""
     tokens = _merge(TOKEN.findall(q))
     tree, _ = _parse(tokens)
     dropped: list[str] = []
-    clean = _filter(tree, vocab, dropped)
+    clean = _filter(tree, vocab, dropped, term_allowed_light if mode == "light" else term_allowed)
     return " ".join(_wrap(x) for x in clean).strip(), dropped
