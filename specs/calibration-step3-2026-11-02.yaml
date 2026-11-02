@@ -15,3 +15,12 @@ primary:
     no_signal: "pooled AUC < 0.55: do not run the benchmark with this method as is; rethink what B1 tests"
     unclear: "otherwise: report and decide with the user"
 exploratory: "the other profiles and simple features (number of supported claims, records against, no literature) are reported apart and decide nothing"
+result:
+  date: 2026-11-02
+  units: "30 (17 positive, 13 null or negative): step 1 11, step 2 11, step 3 8 (the CT.gov 2000-2022 pool outside the benchmark is exhausted; 46 were planned)"
+  primary: "pooled tied AUC 0.459, 95% CI [0.258; 0.661]; step 3 alone 0.375"
+  reading: "no_signal by the rule fixed above (AUC < 0.55): do not run the benchmark with this method as is; rethink what B1 tests"
+  notes:
+    - "NCT03817450 (mouth care against pneumonia, null) is a known result: two prior supporting records and none against; the same failure as NCT02787889 in step 2 (prior support, null trial)"
+    - "2 of 8 step-3 cards unparsed (relation 'other' after the re-parse); 3 of 30 overall"
+    - "step 3 ran after a DrugAge outage (the site answered with a bot-check page); data/cache/drugage.zip is now kept"
