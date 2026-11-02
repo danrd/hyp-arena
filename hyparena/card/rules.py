@@ -233,17 +233,41 @@ def claim_endpoint(claim: Claim, card: Optional[HypothesisCard] = None) -> Optio
     return None
 
 
+# Graded admission (calibration 2026-11-02, configs with `admission: graded`): for a claim about humans, a record from an
+# adjacent population (population, age, dose or comparator marked "no") or, for a non-compound intervention (exercise,
+# programme, device), from the same class of intervention, counts one step lower instead of not at all. Species and sex
+# mismatches, related compounds, background sentences and other endpoints still do not count. Off by default: earlier runs
+# keep the strict rule.
+GRADED_CONTEXT = False
+ADJACENT_KEYS = {"population", "age_at_start", "dose", "comparator"}
+
+
+def _human_claim(claim: Claim) -> bool:
+    return species_key(claim.qualifiers.get("species", "")) == "human" or species_key(claim.object.label) == "human"
+
+
+def adjacent(record: EvidenceRecord, claim: Claim) -> bool:
+    """Graded admission applies and the record differs only in adjacent context or intervention class."""
+    if not GRADED_CONTEXT or not _human_claim(claim):
+        return False
+    no = {k for k, v in record.qualifiers_match.items() if v == "no" and k != "intervention_match"}
+    cls = record.qualifiers_match.get("intervention_match") == "class" and not claim.subject.id
+    return bool(no or cls) and no <= ADJACENT_KEYS
+
+
 def admissible(record: EvidenceRecord, claim: Claim) -> bool:
     """A record counts for or against a claim only if it is a finding of an admissible epistemic type, its
     context matches (no qualifier marked "no"), it is about the claim's own intervention (not a related compound
-    or class), it is not retracted, and it measures the claim's endpoint."""
+    or class), it is not retracted, and it measures the claim's endpoint. Graded admission: see `adjacent`."""
     if record.quote_role != "finding" or record.epistemic_type not in ADMISSIBLE_TYPES or "retracted" in record.flags:
         return False
-    if any(v == "no" for k, v in record.qualifiers_match.items() if k != "intervention_match"):
+    near = adjacent(record, claim)
+    if not near and any(v == "no" for k, v in record.qualifiers_match.items() if k != "intervention_match"):
         return False
     if record.system in ("ex_vivo", "in_vitro") and claim_organism(claim):
         return False                                     # ex vivo ≠ in vivo: cells do not support a claim about an organism
-    if record.qualifiers_match.get("intervention_match") in ("related_compound", "class"):
+    im = record.qualifiers_match.get("intervention_match")
+    if im == "related_compound" or (im == "class" and not near):
         return False                                     # spec 8: related compounds and classes count only as analogs
     need = claim_endpoint(claim)
     if need == "healthspan" and record.endpoint == "biomarker" and species_key(record.species) == "human":
@@ -601,6 +625,10 @@ def _all_claims(card: HypothesisCard, ver: Verification) -> list[tuple[Claim, Cl
 
 def _grade(records: Iterable[EvidenceRecord]) -> str:
     grades = [r.qualifiers_match.get("intervention_match", "exact") for r in records]
+    if GRADED_CONTEXT:                                    # an adjacent-context record counts one step lower
+        grades = ["regimen_differs" if g in ("exact", "dose_differs") and any(v == "no" for k, v in r.qualifiers_match.items()
+                                                                              if k in ADJACENT_KEYS) else g
+                  for g, r in zip(grades, records)]
     order = ["exact", "dose_differs", "regimen_differs", "related_compound", "class"]
     return max(grades, key=order.index) if grades else ""
 

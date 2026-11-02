@@ -87,3 +87,22 @@ def test_or_relation_words_are_bracketed():
     card = HypothesisCard.model_validate(json.loads(json.dumps(PILOT_CARD)))
     c = card.claims[0].model_copy(update={"relation": "improves_healthspan_in"})
     assert all("(healthspan OR physical function)" in q for q in queries(c, card) if "healthspan" in q)
+
+
+def test_graded_admission_counts_adjacent_population_only_when_on():
+    from hyparena.card import rules
+    from hyparena.card.models import Claim, EvidenceRecord
+    claim = Claim.model_validate({"id": "c1", "subject": {"label": "exercise programme"}, "relation": "improves_healthspan_in",
+                                  "object": {"label": "human"}, "qualifiers": {"species": "human"}, "role": "outcome", "source_span": "x"})
+    rec = EvidenceRecord.model_validate({"source": "PubMed", "record_id": "PMID:1", "epistemic_type": "A_text", "study_type": "rct",
+                                         "quote": "q", "quote_role": "finding", "endpoint": "healthspan", "species": "human",
+                                         "qualifiers_match": {"population": "no", "intervention_match": "class"}})
+    try:
+        rules.GRADED_CONTEXT = False
+        assert not rules.admissible(rec, claim)
+        rules.GRADED_CONTEXT = True
+        assert rules.admissible(rec, claim)
+        rec.qualifiers_match["species"] = "no"
+        assert not rules.admissible(rec, claim)
+    finally:
+        rules.GRADED_CONTEXT = False
