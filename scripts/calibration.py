@@ -31,7 +31,8 @@ CAL = HS / "calibration"
 UNITS = Path(__file__).resolve().parents[1] / "data" / "benchmark" / "v2_units.json"
 TYPES = ("drug/supplement", "other (exercise etc.)", "behavioral", "device")
 PICK = {1: {"drug/supplement": 18, "other (exercise etc.)": 18, "behavioral": 18, "device": 6},
-        2: {"drug/supplement": 20, "other (exercise etc.)": 20, "behavioral": 20, "device": 4}}   # 30 gave 13 with a document
+        2: {"drug/supplement": 20, "other (exercise etc.)": 20, "behavioral": 20, "device": 4},
+        3: {"drug/supplement": 20, "other (exercise etc.)": 20, "behavioral": 20, "device": 3}}   # 30 gave 13 with a document
 UNITS_PER_STEP = {1: {"ctgov_pos": 5, "ctgov_neg": 5,   # step 1: 5 + 4 after the manual check (2 labels set to not_applicable)
                        "isrctn": ["ISRCTN13364395", "ISRCTN87404878"]}}
 
@@ -83,9 +84,10 @@ def as_of(c: dict) -> str:
     return min(x for x in (c["written_on"], pc) if x)
 
 
-def units_balanced(step: int, per_cell: int = 2) -> list[dict]:
+def units_balanced(step: int, per_cell: int | None = None) -> list[dict]:
     """Step 2 on: per intervention type, `per_cell` positive and `per_cell` null-or-negative units in SHA-1 order (after the
     manual check of the labels), so that the label is not confounded with the type as in step 1."""
+    per_cell = per_cell or {2: 2, 3: 3}.get(step, 2)
     picked = {c["source_id"]: c for c in yaml.safe_load((CAL / f"pick_{step}.yaml").read_text())["items"]}
     labels = {x["nct"]: x for x in yaml.safe_load((HS / "ctgov_outcomes_calib.yaml").read_text())["items"] if x["nct"] in picked}
     out = []
