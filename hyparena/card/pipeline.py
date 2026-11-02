@@ -133,7 +133,10 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
     origins = ["external"] * len(texts) + ["expert"] * len(layer.hypotheses)
     texts = list(texts) + list(layer.hypotheses)
     client, families = _client(config, fake, max_calls)
-    search_mode = (yaml.safe_load(Path(config).read_text()) or {}).get("search", "keywords")   # `search: model` in the config
+    cfg_extra = yaml.safe_load(Path(config).read_text()) or {}
+    search_mode = cfg_extra.get("search", "keywords")                  # `search: model` in the config
+    from hyparena.card import rules as _rules
+    _rules.GRADED_CONTEXT = cfg_extra.get("admission") == "graded"     # `admission: graded` in the config
     log: list = []
     checker = next((f for f in (verifiers or families) if f != writer), (verifiers or families)[0])
     pool = ThreadPoolExecutor(max_workers=workers)
@@ -230,6 +233,7 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
     result = {"meta": {"created": time.strftime("%Y-%m-%dT%H:%M:%S"), "seconds": round(time.time() - started),
                      "calls": client.calls, "failures": client.failures, "families": families, "writer": writer,
                      "verifiers": verifiers or families, "config": config, "cards_reused": cards is not None, "search": search_mode,
+                     "admission": "graded" if _rules.GRADED_CONTEXT else "strict",
                      "as_of": as_of, "fake": fake, "k_top": k_top, **({"spec": spec_entry} if spec_entry else {}),
                      "indicator_set": {"sha256": iset, "ids": [s.id for s in ind.INDICATORS]},
                      "profiles": {n: {"tiers": p.tiers, "version": p.version, "description": p.description}
