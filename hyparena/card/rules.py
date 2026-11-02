@@ -239,6 +239,10 @@ def claim_endpoint(claim: Claim, card: Optional[HypothesisCard] = None) -> Optio
 # mismatches, related compounds, background sentences and other endpoints still do not count. Off by default: earlier runs
 # keep the strict rule.
 GRADED_CONTEXT = False
+# Experiments of 2026-11-02 (calibration on registry trials outside the benchmark), off by default:
+KNOWN_MIN_INDEPENDENT = 1     # E1: a known result needs this many independent exact supporting sources (2 in the experiment)
+REVIEWS_FOR_ROBUSTNESS = False  # E3: reviews about the same intervention that support the outcome make it "replicated"
+DEDUP_OUTCOME_PAPERS = False  # E4: a paper counted for the outcome claim does not count again for premises or mechanisms
 ADJACENT_KEYS = {"population", "age_at_start", "dose", "comparator"}
 
 
@@ -684,6 +688,15 @@ def evidence_profile(card: HypothesisCard, ver: Verification) -> EvidenceProfile
         prof.intervention_match = _grade(records)
         prof.robustness = "replicated" if _independent(records) >= 2 or any(
             r.program and (r.program.sites_with_effect or 0) >= 2 for r in records) else "single"
+        if REVIEWS_FOR_ROBUSTNESS and prof.robustness == "single":           # E3
+            ok_im = ("exact", "dose_differs", "regimen_differs", "class")
+            def _reviews(rs):
+                return [r for r in rs if r.study_type == "review" and r.qualifiers_match.get("intervention_match", "exact") in ok_im
+                        and r.qualifiers_match.get("species") != "no"]
+            rev_for = [r for c, cv in pairs if c.role == "outcome" for r in _reviews(cv.evidence)]
+            rev_against = [r for c, cv in pairs if c.role == "outcome" for r in _reviews(cv.counterevidence)]
+            if rev_for and not rev_against:
+                prof.robustness = "replicated"
         if records and all(any(f in CONTEXT_FLAGS for f in r.flags) for r in records):
             prof.effect_level_note = f"{prof.effect_level} (special diet only)"
         if prof.effect_level.startswith("human"):
@@ -951,6 +964,9 @@ def known_result(card: HypothesisCard, ver: Verification) -> bool:
     if out is None or cv is None or statuses(card, ver).get(cv.id) != "supported":
         return False
     support = [r for r in cv.evidence if admissible(r, out)]
+    exact = [r for r in support if r.qualifiers_match.get("intervention_match", "exact") == "exact"]
+    if KNOWN_MIN_INDEPENDENT > 1 and _independent(exact) < KNOWN_MIN_INDEPENDENT:
+        return False                                     # E1: one study does not settle a question
     if any(admissible(r, out) for r in cv.counterevidence):
         return False                                     # admissible counterevidence: the finding is not settled (calibration 2026-11-02)
     return any(r.qualifiers_match.get("intervention_match", "exact") == "exact"
@@ -960,6 +976,17 @@ def known_result(card: HypothesisCard, ver: Verification) -> bool:
 
 def finalize(card: HypothesisCard, ver: Verification) -> Verification:
     """Fill computed statuses, the evidence profile, the known-result flag and the alternatives row."""
+    if DEDUP_OUTCOME_PAPERS:                              # E4
+        out = card.outcome_claim
+        ocv = next((cv for cv in ver.claims if out and cv.id == out.id), None)
+        if ocv is not None:
+            used = {r.record_id for r in ocv.evidence + ocv.counterevidence}
+            by_id = {c.id: c for c in card.claims}
+            for cv in ver.claims:
+                c = by_id.get(cv.id)
+                if c is not None and c.role in ("premise", "mechanism"):
+                    cv.evidence = [r for r in cv.evidence if r.record_id not in used]
+                    cv.counterevidence = [r for r in cv.counterevidence if r.record_id not in used]
     st = statuses(card, ver)
     for cv in ver.claims:
         if cv.id in st:
