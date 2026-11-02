@@ -284,7 +284,7 @@ def evaluate() -> dict:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("cmd", choices=["build", "cards", "queries", "eval"])
+    ap.add_argument("cmd", choices=["build", "cards", "queries", "eval", "relevance"])
     a = ap.parse_args()
     if a.cmd in ("cards", "queries") and os.environ.get("ALLOW_PAID") != "1":
         raise SystemExit("paid: set ALLOW_PAID=1")
@@ -294,8 +294,41 @@ def main() -> None:
         make_cards()
     elif a.cmd == "queries":
         make_queries()
+    elif a.cmd == "relevance":
+        print(relevance_task())
     else:
         print(json.dumps(evaluate(), indent=1))
+
+
+
+def relevance_task(per_group: int = 2) -> dict:
+    """Blind relevance labelling (Jules): for 2 claims per group, the union of the S0 and S1+S2 lists with abstracts, shuffled,
+    without the strategy names. Written to $KG_DIR (abstracts belong to their publishers)."""
+    import random
+    from hyparena.card.verifier import queries
+    from hyparena.tools import pubmed
+    llm = json.loads((OUT / "llm_queries.json").read_text())
+    groups = defaultdict(list)
+    for item, card, c in claims():
+        groups[("human " if "compound" not in item else "animal ") + item["type"]].append((item, card, c))
+    task, key = [], {}
+    for g, xs in sorted(groups.items()):
+        for item, card, c in sorted(xs, key=lambda x: _h(x[0]["id"]))[:per_group]:
+            s0 = run_queries(queries(c, card), item["as_of"])
+            s12 = citation_expand(round_robin(llm[item["id"]]["queries"], item["as_of"]), item["as_of"])
+            union = list(dict.fromkeys(s0 + s12))
+            random.Random(_h(item["id"])).shuffle(union)
+            abs_ = pubmed.fetch(union)
+            task.append({"claim_id": item["id"], "group": g, "as_of": item["as_of"], "claim": card.claim_plain,
+                         "intervention": "; ".join(i.label for i in card.pico.intervention), "population": card.pico.population.label,
+                         "papers": [{"pmid": p, "title": abs_.get(p, {}).get("title", ""), "abstract": abs_.get(p, {}).get("abstract", "")}
+                                    for p in union]})
+            key[item["id"]] = {"S0": s0, "S1+S2": s12}
+    d = OUT / "relevance"
+    d.mkdir(exist_ok=True)
+    (d / "task.jsonl").write_text("".join(json.dumps(t, ensure_ascii=False) + "\n" for t in task))
+    (d / "strategy_key.json").write_text(json.dumps(key, indent=1) + "\n")
+    return {"claims": len(task), "pairs": sum(len(t["papers"]) for t in task)}
 
 
 if __name__ == "__main__":
