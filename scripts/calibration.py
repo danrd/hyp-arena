@@ -30,7 +30,8 @@ HS = KG / "hypothesis_sources"
 CAL = HS / "calibration"
 UNITS = Path(__file__).resolve().parents[1] / "data" / "benchmark" / "v2_units.json"
 TYPES = ("drug/supplement", "other (exercise etc.)", "behavioral", "device")
-PICK = {1: {"drug/supplement": 18, "other (exercise etc.)": 18, "behavioral": 18, "device": 6}}   # 30 gave 13 with a document
+PICK = {1: {"drug/supplement": 18, "other (exercise etc.)": 18, "behavioral": 18, "device": 6},
+        2: {"drug/supplement": 20, "other (exercise etc.)": 20, "behavioral": 20, "device": 4}}   # 30 gave 13 with a document
 UNITS_PER_STEP = {1: {"ctgov_pos": 5, "ctgov_neg": 5,   # step 1: 5 + 4 after the manual check (2 labels set to not_applicable)
                        "isrctn": ["ISRCTN13364395", "ISRCTN87404878"]}}
 
@@ -82,8 +83,27 @@ def as_of(c: dict) -> str:
     return min(x for x in (c["written_on"], pc) if x)
 
 
+def units_balanced(step: int, per_cell: int = 2) -> list[dict]:
+    """Step 2 on: per intervention type, `per_cell` positive and `per_cell` null-or-negative units in SHA-1 order (after the
+    manual check of the labels), so that the label is not confounded with the type as in step 1."""
+    picked = {c["source_id"]: c for c in yaml.safe_load((CAL / f"pick_{step}.yaml").read_text())["items"]}
+    labels = {x["nct"]: x for x in yaml.safe_load((HS / "ctgov_outcomes_calib.yaml").read_text())["items"] if x["nct"] in picked}
+    out = []
+    for t in TYPES:
+        dec = sorted([n for n, x in labels.items() if x["label"] in ("positive", "null", "negative") and _type(picked[n]) == t], key=_h)
+        pos = [n for n in dec if labels[n]["label"] == "positive"][:per_cell]
+        neg = [n for n in dec if labels[n]["label"] != "positive"][:per_cell]
+        out += [{"id": n, "source": "ctgov", "written_on": as_of(picked[n]), "label": int(n in pos), "type": t} for n in pos + neg]
+    (CAL / f"units_{step}.json").write_text(json.dumps(out, indent=1) + "\n")
+    print(f"labels of step {step}: {Counter(x['label'] for x in labels.values())}; units {len(out)}: "
+          f"{Counter((u['label'], u['type']) for u in out)}")
+    return out
+
+
 def units(step: int) -> list[dict]:
     """Balanced decisive units of this step: CT.gov in SHA-1 order within label, then the named ISRCTN trials."""
+    if step not in UNITS_PER_STEP:
+        return units_balanced(step)
     cfg = UNITS_PER_STEP[step]
     picked = {c["source_id"]: c for c in yaml.safe_load((CAL / f"pick_{step}.yaml").read_text())["items"]}
     labels = {x["nct"]: x for x in yaml.safe_load((HS / "ctgov_outcomes_calib.yaml").read_text())["items"] if x["nct"] in picked}
