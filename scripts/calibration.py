@@ -105,11 +105,11 @@ def units(step: int) -> list[dict]:
     return out
 
 
-def run(step: int, config: str = "configs/v2-flash.yaml") -> None:
+def run(step: int, config: str = "configs/v2-flash.yaml", tag: str = "") -> None:
     from hyparena.card.pipeline import run as v2
     us = json.loads((CAL / f"units_{step}.json").read_text())
     texts = build_texts([{k: u[k] for k in ("id", "source", "written_on")} for u in us], CAL / f"texts_{step}.jsonl")
-    out_p = CAL / f"run_{step}.json"
+    out_p = CAL / f"run_{step}{tag}.json"
     done = json.loads(out_p.read_text()) if out_p.exists() else {}
     for t in texts:
         if t["id"] in done:
@@ -122,7 +122,7 @@ def run(step: int, config: str = "configs/v2-flash.yaml") -> None:
                           "calls": res["meta"]["calls"]}), flush=True)
 
 
-def score(step: int, results: dict | None = None) -> dict:
+def score(step: int, results: dict | None = None, tag: str = "") -> dict:
     """Tied AUC of evidence_first (without late_start) with the benchmark's order: known result 3 > ranked 2 + score >
     not evaluated 1 > filtered 0. Also how many positive-negative pairs tie."""
     from hyparena.backtest import PRIMARY_DROP, bootstrap_tied_auc, tied_auc
@@ -130,7 +130,7 @@ def score(step: int, results: dict | None = None) -> dict:
     from hyparena.card import indicators as ind
     from dataclasses import replace
     us = {u["id"]: u for u in json.loads((CAL / f"units_{step}.json").read_text())}
-    res = results or json.loads((CAL / f"run_{step}.json").read_text())
+    res = results or json.loads((CAL / f"run_{step}{tag}.json").read_text())
     any_res = next(iter(res.values()))
     specs = [sp for sp in ind.for_meta(any_res["meta"]) if sp.id not in PRIMARY_DROP]
     keep = {sp.id for sp in specs}
@@ -159,6 +159,8 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("cmd", choices=["pick", "units", "run", "score"])
     ap.add_argument("--step", type=int, default=1)
+    ap.add_argument("--config", default="configs/v2-flash.yaml")
+    ap.add_argument("--tag", default="", help="suffix of the run file, e.g. _msearch")
     a = ap.parse_args()
     if a.cmd == "pick":
         out = pick(a.step)
@@ -168,9 +170,9 @@ def main() -> None:
     elif a.cmd == "run":
         if os.environ.get("ALLOW_PAID") != "1":
             raise SystemExit("paid: set ALLOW_PAID=1")
-        run(a.step)
+        run(a.step, a.config, a.tag)
     else:
-        print(json.dumps(score(a.step), indent=1))
+        print(json.dumps(score(a.step, tag=a.tag), indent=1))
 
 
 if __name__ == "__main__":
