@@ -111,10 +111,17 @@ def run(step: int, config: str = "configs/v2-flash.yaml", tag: str = "") -> None
     texts = build_texts([{k: u[k] for k in ("id", "source", "written_on")} for u in us], CAL / f"texts_{step}.jsonl")
     out_p = CAL / f"run_{step}{tag}.json"
     done = json.loads(out_p.read_text()) if out_p.exists() else {}
+    cards_p = CAL / "cards.json"                       # frozen cards: one per trial, reused by every later run
+    frozen = json.loads(cards_p.read_text()) if cards_p.exists() else {}
     for t in texts:
         if t["id"] in done:
             continue
-        res = v2([t["text"]], writer="human_registry", config=config, as_of=t["as_of"], max_calls=60, verifiers=["deepseek"])
+        card = frozen.get(t["id"])
+        res = v2([t["text"]], writer="human_registry", config=config, as_of=t["as_of"], max_calls=60, verifiers=["deepseek"],
+                 cards=[card] if card else None)
+        if not card and res["items"][0].get("card"):
+            frozen[t["id"]] = res["items"][0]["card"]
+            cards_p.write_text(json.dumps(frozen, ensure_ascii=False, indent=1))
         done[t["id"]] = res
         out_p.write_text(json.dumps(done, ensure_ascii=False, default=str))
         x = res["items"][0]
