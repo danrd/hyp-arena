@@ -259,7 +259,7 @@ def recheck(claim, card: HypothesisCard, evidence: list[EvidenceRecord], counter
             contexts.flag(r, a["title"] + " " + a["abstract"])
             if r.qualifiers_match.get("intervention_match", "exact") in ("exact", "dose_differs", "regimen_differs") \
                     and a["title"] and not names_in_source(claim, card, a["title"], a["abstract"], r.quote):
-                r.qualifiers_match["intervention_match"] = "related_compound"
+                r.qualifiers_match["intervention_match"] = "related_compound" if subject_compounds(claim.subject.label, card) else "class"
                 r.notes += "; the quote and the title do not name the intervention: counted as a related compound"
             stance = side
             if need == "lifespan" and r.endpoint == "lifespan" and r.quote_role == "finding" and r.effect != "unknown":
@@ -359,8 +359,12 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
         contexts.flag(rec, a["title"] + " " + a["abstract"])
         if rec.qualifiers_match["intervention_match"] in ("exact", "dose_differs", "regimen_differs") and not names_in_source(
                 claim, card, a["title"], a["abstract"], quote):
-            rec.qualifiers_match["intervention_match"] = "related_compound"   # e.g. malate quoted for a claim about citrate
-            rec.notes += "; the quote and the title do not name the intervention: counted as a related compound"
+            if subject_compounds(claim.subject.label, card):
+                rec.qualifiers_match["intervention_match"] = "related_compound"   # e.g. malate quoted for a claim about citrate
+                rec.notes += "; the quote and the title do not name the intervention: counted as a related compound"
+            else:                                         # a programme, visit or device: another one of the same kind (2026-11-02)
+                rec.qualifiers_match["intervention_match"] = "class"
+                rec.notes += "; the quote and the title do not name the intervention: counted as the same class"
         stance = r.get("stance")
         need = claim_endpoint(claim)
         effect = r.get("effect") if r.get("effect") in ("increase", "decrease", "no_effect") else "unknown"
