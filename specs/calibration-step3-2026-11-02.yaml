@@ -1,0 +1,17 @@
+# Calibration step 3, fixed before the run (user decision 2026-11-02). Trials outside the benchmark (scripts/calibration.py).
+id: calibration-step3
+date: 2026-11-02
+question: "Does method v2 order registry hypotheses by their outcome at all, on 46 calibration units (steps 1-3)?"
+config: configs/v2-flash-msearch.yaml   # model-written search with the light guard, graded admission, temperature 0, frozen cards
+code_state: "rules as of the commit of this file (known result only without admissible counterevidence; name mismatch of a non-compound intervention = same class)"
+units:
+  step3: "up to 3 positive and 3 null-or-negative per intervention type (drug/supplement, other, behavioral, device), SHA-1 order, after a manual check of every decisive label"
+  pooled: "steps 1-3; steps 1 and 2 rescored offline under the same rules, step 3 run once"
+primary:
+  score: "evidence_first, without late_start; known result 3 > ranked 2 + expected score > not evaluated 1 > filtered 0 (as the benchmark)"
+  metric: "tied AUC, 95% bootstrap CI"
+  reading:
+    signal: "pooled AUC >= 0.60 and the lower CI bound above 0.45: go on to the benchmark run (agreed with the user)"
+    no_signal: "pooled AUC < 0.55: do not run the benchmark with this method as is; rethink what B1 tests"
+    unclear: "otherwise: report and decide with the user"
+exploratory: "the other profiles and simple features (number of supported claims, records against, no literature) are reported apart and decide nothing"
