@@ -9,6 +9,8 @@ from __future__ import annotations
 import argparse
 import json
 import time
+
+import yaml
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Optional
@@ -131,6 +133,7 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
     origins = ["external"] * len(texts) + ["expert"] * len(layer.hypotheses)
     texts = list(texts) + list(layer.hypotheses)
     client, families = _client(config, fake, max_calls)
+    search_mode = (yaml.safe_load(Path(config).read_text()) or {}).get("search", "keywords")   # `search: model` in the config
     log: list = []
     checker = next((f for f in (verifiers or families) if f != writer), (verifiers or families)[0])
     pool = ThreadPoolExecutor(max_workers=workers)
@@ -181,7 +184,7 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
         if "outcome" in x:
             continue
         card = x["card"]
-        ver = verify(client, verifiers or families, writer, card, as_of=as_of, log=log, map_fn=pool.map,
+        ver = verify(client, verifiers or families, writer, card, as_of=as_of, log=log, map_fn=pool.map, search=search_mode,
                      expert_sources=ex.sources(layer, card.id), fallback_families=families,
                      disease_restore=ex.restored_records(layer, card.id))
         ver.alternatives += alternatives.competitor_rows(
@@ -226,7 +229,7 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
     autonomous = {name: view(r) for name, r in ranking.autonomous.items()} if ranking else {}
     result = {"meta": {"created": time.strftime("%Y-%m-%dT%H:%M:%S"), "seconds": round(time.time() - started),
                      "calls": client.calls, "failures": client.failures, "families": families, "writer": writer,
-                     "verifiers": verifiers or families, "config": config, "cards_reused": cards is not None,
+                     "verifiers": verifiers or families, "config": config, "cards_reused": cards is not None, "search": search_mode,
                      "as_of": as_of, "fake": fake, "k_top": k_top, **({"spec": spec_entry} if spec_entry else {}),
                      "indicator_set": {"sha256": iset, "ids": [s.id for s in ind.INDICATORS]},
                      "profiles": {n: {"tiers": p.tiers, "version": p.version, "description": p.description}
