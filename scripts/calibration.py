@@ -184,9 +184,34 @@ def score(step: int, results: dict | None = None, tag: str = "") -> dict:
     return out
 
 
+def score_v3(steps=(1, 2, 3), tag: str = "_v3") -> dict:
+    """Tied AUC of method v3's plausibility P and promise V against the outcomes (only P is meant to track outcomes;
+    V is reported for reference). Filtered (gate) units score -1; units without a v3 result are left out."""
+    from hyparena.backtest import bootstrap_tied_auc, tied_auc
+    us, res = {}, {}
+    for st in steps:
+        f = CAL / f"run_{st}{tag}.json"
+        if f.exists():
+            us.update({u["id"]: u for u in json.loads((CAL / f"units_{st}.json").read_text())})
+            res.update(json.loads(f.read_text()))
+    out = {}
+    for key in ("P", "V"):
+        sc = {}
+        for h, r in res.items():
+            v3 = r["items"][0].get("v3")
+            if v3 is not None:
+                sc[h] = (-1.0 if v3["gate"] == "filtered" else v3[key], 0.0)
+        pos = [sc[h] for h in sc if us[h]["label"] == 1]
+        neg = [sc[h] for h in sc if us[h]["label"] == 0]
+        if pos and neg:
+            lo, hi = bootstrap_tied_auc(pos, neg)
+            out[key] = {"n": len(sc), "auc": round(tied_auc(pos, neg), 3), "ci95": [round(lo, 3), round(hi, 3)]}
+    return out
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("cmd", choices=["pick", "units", "run", "score"])
+    ap.add_argument("cmd", choices=["pick", "units", "run", "score", "score-v3"])
     ap.add_argument("--step", type=int, default=1)
     ap.add_argument("--config", default="configs/v2-flash.yaml")
     ap.add_argument("--tag", default="", help="suffix of the run file, e.g. _msearch")
@@ -200,6 +225,8 @@ def main() -> None:
         if os.environ.get("ALLOW_PAID") != "1":
             raise SystemExit("paid: set ALLOW_PAID=1")
         run(a.step, a.config, a.tag)
+    elif a.cmd == "score-v3":
+        print(json.dumps(score_v3(tag=a.tag or "_v3"), indent=1))
     else:
         print(json.dumps(score(a.step, tag=a.tag), indent=1))
 

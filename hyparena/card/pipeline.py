@@ -202,6 +202,21 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
             read = list(dict.fromkeys(ver.searched_pmids))
             card.proposed_alternatives = propose(client, checker, card, _pm.fetch(read), as_of, avoid=frozenset({writer}), log=log)
         x["verification"] = finalize(card, ver)
+        if method == "v3":                                  # v3 rules: alternatives with support are checked like claims
+            from hyparena.card import rules_v3
+            from hyparena.card.models import Claim as _Claim
+            from hyparena.card.verifier import verify_claim as _vc
+            alt_ver = {}
+            for alt in card.proposed_alternatives:
+                if not alt.support_pmids:
+                    continue                                # no support: weighs nothing, no call
+                ac = _Claim(id=alt.id, subject=alt.subject, relation=alt.relation, object=alt.object, qualifiers=alt.qualifiers,
+                            role="premise", source_span="")
+                alt_ver[alt.id] = _vc(client, checker, frozenset({writer}), ac, card, as_of, log=log,
+                                      expert_pmids=[(p, "proposed alternative support") for p in alt.support_pmids],
+                                      search=search_mode, template_version=verify_version)
+            x["v3"] = rules_v3.evaluate(card, x["verification"].claims, alt_ver).as_dict()
+            x["v3_alternatives"] = {k: v.model_dump(by_alias=True) for k, v in alt_ver.items()}
         if check_alternatives and x["verification"].evidence_profile.gate == "pass":
             alternatives.check(client, checker, card, x["verification"], avoid=frozenset({writer}), log=log)
         x["extra"] = _extra(card, as_of)
@@ -256,7 +271,8 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
                        "admission": x["admission"].model_dump() if x.get("admission") else None,
                        "verification": x["verification"].model_dump(by_alias=True) if x.get("verification") else None,
                        "indicators": x.get("indicators"), "extra": x.get("extra"),
-                       "unresolved_compounds": x.get("unresolved_compounds", [])} for x in items],
+                       "unresolved_compounds": x.get("unresolved_compounds", []),
+                       **({"v3": x["v3"], "v3_alternatives": x.get("v3_alternatives", {})} if "v3" in x else {})} for x in items],
             "ranking": profiles, "robust": ranking.robust if ranking else [],
             **unranked_lists(items),
             "proximity": [r.as_dict() for r in rels], "variant_groups": proximity.variant_groups(rels),
