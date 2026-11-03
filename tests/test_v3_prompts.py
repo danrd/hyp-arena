@@ -48,3 +48,13 @@ def test_v3_pipeline_runs_with_the_fake_llm():
     roles = {c.get("role") for c in res["calls"] if c.get("kind") == "llm"}
     assert any(c.get("template") == "normalize_card/v7" for c in res["calls"] if c.get("kind") == "llm")
     assert "propose_alternatives" in roles or res["items"][0]["outcome"] != "ranked"
+
+
+def test_numbers_written_in_words_are_accepted():
+    from hyparena.card.verifier import words_to_numbers
+    assert 163 in words_to_numbers("One hundred and sixty-three outpatients with stable chronic heart failure")
+    assert 2290 in words_to_numbers("two thousand two hundred ninety residents")
+    rec = EvidenceRecord(source="PubMed", record_id="PMID:1")
+    v3_fields(rec, {"n_total": 163, "n_quote": "One hundred and sixty-three outpatients"},
+              "METHODS: One hundred and sixty-three outpatients with stable chronic heart failure were enrolled.")
+    assert rec.n_total == 163

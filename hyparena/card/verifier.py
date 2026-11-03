@@ -270,6 +270,30 @@ def recheck(claim, card: HypothesisCard, evidence: list[EvidenceRecord], counter
 
 
 V3_DESIGNS = ("rct", "non_randomised", "observational", "animal", "cells", "review", "meta_analysis", "other")
+_UNITS = {w: i for i, w in enumerate("zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen "
+                                     "fifteen sixteen seventeen eighteen nineteen".split())}
+_TENS = {w: 10 * i for i, w in enumerate("_ _ twenty thirty forty fifty sixty seventy eighty ninety".split()) if w != "_"}
+
+
+def words_to_numbers(text: str) -> set[int]:
+    """Numbers written in English words in a phrase ("One hundred and sixty-three outpatients" -> {163})."""
+    out, cur, total, seen = set(), 0, 0, False
+    for w in re.findall(r"[a-z]+", (text or "").lower().replace("-", " ")):
+        if w in _UNITS:
+            cur += _UNITS[w]; seen = True
+        elif w in _TENS:
+            cur += _TENS[w]; seen = True
+        elif w == "hundred" and seen:
+            cur *= 100
+        elif w == "thousand" and seen:
+            total += cur * 1000; cur = 0
+        elif w == "and" and seen:
+            continue
+        elif seen:
+            out.add(total + cur); cur, total, seen = 0, 0, False
+    if seen:
+        out.add(total + cur)
+    return out
 
 
 def v3_fields(rec: EvidenceRecord, r: dict, source: str) -> None:
@@ -279,7 +303,8 @@ def v3_fields(rec: EvidenceRecord, r: dict, source: str) -> None:
     rec.design = r.get("design") if r.get("design") in V3_DESIGNS else "unknown"
     nq = _text(r.get("n_quote"))
     n = r.get("n_total")
-    if isinstance(n, int) and n > 0 and nq and _norm(nq) in norm and str(n) in re.sub(r"[ ,]", "", nq) + nq:
+    if isinstance(n, int) and n > 0 and nq and _norm(nq) in norm and (str(n) in re.sub(r"[ ,]", "", nq) + nq
+                                                                       or n in words_to_numbers(nq)):
         rec.n_total, rec.n_quote = n, nq
     elif isinstance(n, int) and n > 0 and nq and _norm(nq) in norm:
         rec.n_quote = nq                                  # the phrase is real but the number is not in it: keep the phrase only
