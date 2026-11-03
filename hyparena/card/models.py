@@ -18,6 +18,8 @@ Relation = Literal[
     "changes_biomarker", "predicts", "inhibits", "activates", "increases_expression", "decreases_expression",
     "promotes", "suppresses", "part_of", "associated_with", "affects_hallmark", "translates_to", "other"]
 Role = Literal["premise", "mechanism", "analog", "outcome", "translation"]
+# Method v3 (docs/spec/method-v3.md): the place of a claim in the mechanism chain, from the intervention to the outcome
+Link = Literal["delivery", "engagement", "pathway", "effect", "outcome"]
 EdgeType = Literal["requires", "supports_if_true", "analog_of", "contradicts"]
 Endpoint = Literal["lifespan", "healthspan", "biomarker", "disease", "mechanism", "unknown"]
 System = Literal["cells", "worm", "fly", "yeast", "mouse", "rat", "human", "data_analysis", "unknown"]
@@ -60,6 +62,7 @@ class Claim(BaseModel):
     qualifiers: dict[str, str] = Field(default_factory=dict)   # species, strain, sex, tissue, dose, age_at_start, comparator, direction, measure
     inherited_from_pico: list[str] = Field(default_factory=list)   # species / strain copied from PICO (spec 9)
     role: Role
+    link: Optional[Link] = None                  # v3: delivery (done and reached), engagement (target), pathway, effect, outcome
     source_span: str = ""                        # verbatim fragment of the hypothesis text (empty only for verifier-added claims)
     note: str = ""                               # e.g. why `other` was used
     sex_scope: Literal["any", "unspecified"] = "unspecified"   # `any`: the text claims the effect in at least one sex (an effect in one sex is enough)
@@ -144,6 +147,36 @@ class DecisiveExperiment(BaseModel):
     system: System = "unknown"
     endpoint: str = UNKNOWN
     duration_class: DurationClass = "unknown"
+    # v3: the experiment stated in the text (for registry trials filled by code from the registry fields)
+    design: Literal["rct", "cluster_rct", "single_arm", "pilot", "observational", "other", "unknown"] = "unknown"
+    control: Literal["placebo", "active", "usual_care", "none", "unknown"] = "unknown"
+    n_planned: Optional[int] = None
+    primary_outcome: str = UNKNOWN
+
+
+AlternativeFate = Literal["eliminated", "weakened", "unchanged"]
+
+
+class ProposedAlternative(BaseModel):
+    """v3: a competing explanation of the same phenomenon, proposed by a model from the hypothesis and the literature found
+    (not declared by the text). Its support is checked like a claim; without records it weighs nothing. `on_positive` and
+    `on_negative`: what the stated decisive experiment does to it under each outcome."""
+    id: str
+    subject: Entity
+    relation: Relation
+    object: Entity
+    qualifiers: dict[str, str] = Field(default_factory=dict)
+    rationale: str = ""
+    support_pmids: list[str] = Field(default_factory=list)
+    on_positive: AlternativeFate = "unchanged"
+    on_negative: AlternativeFate = "unchanged"
+    role: Literal["alternative"] = "alternative"
+
+    @model_validator(mode="after")
+    def _not_both(self):
+        if self.on_positive == "eliminated" and self.on_negative == "eliminated":
+            raise ValueError("an alternative cannot be eliminated under both outcomes")
+        return self
 
 
 class HypothesisCard(BaseModel):
@@ -158,6 +191,7 @@ class HypothesisCard(BaseModel):
     declared_novelty: str = UNKNOWN
     decisive_experiment: DecisiveExperiment = Field(default_factory=DecisiveExperiment)
     declared_alternatives: list[DeclaredAlternative] = Field(default_factory=list)
+    proposed_alternatives: list[ProposedAlternative] = Field(default_factory=list)   # v3, model-proposed (separate step)
     declared_decision_criteria: str = UNKNOWN
     risks: list[str] = Field(default_factory=list)
 
@@ -238,6 +272,16 @@ class EvidenceRecord(BaseModel):
     strata: list[str] = Field(default_factory=list)  # strata the protocol fixed in advance (`sex` in ITP and CITP): a result in one of them is not a post hoc subgroup
     flags: list[str] = Field(default_factory=list)   # retracted, preprint, conflict_of_interest, small_n, open_label, subgroup_only, short_lived_controls, disease_model, special_diet
     fields: dict[str, Union[str, float, int]] = Field(default_factory=dict)   # curated-record fields (e.g. DrugAge row)
+    # v3 extraction, from the whole abstract (docs/spec/method-v3.md, section 2); numbers are checked verbatim by code
+    design: Literal["rct", "non_randomised", "observational", "animal", "cells", "review", "meta_analysis", "other",
+                    "unknown"] = "unknown"
+    n_total: Optional[int] = None
+    n_quote: str = ""                            # the verbatim phrase that gives n_total
+    comparison: Literal["between_groups", "within_group", "none", "unknown"] = "unknown"
+    effect_reported: str = ""                    # the verbatim effect size ("+2.4 kg", "RR 0.79 (0.65-0.96)")
+    effect_class: Literal["none", "small", "medium", "large", "unclear"] = "unclear"
+    reports_trial: str = ""                      # a review restating one trial's result: the trial as named
+    primary_record: str = ""                     # the record id of that trial's own paper, when found
     retrieved_at: str = ""
     notes: str = ""
 
