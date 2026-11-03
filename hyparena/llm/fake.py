@@ -162,6 +162,18 @@ class FakeLLMClient:
                                                  f"Decisive experiment: a pair-fed control and a food intake measurement.",
                                          "kind": "test_alternative", "change": f"fake refinement {i + 1}"} for i in range(k)]})
 
+    def _search_queries(self, rng, prompt, n):
+        return json.dumps({"queries": []})                  # no queries: the keyword search fills up (search.py)
+
+    def _propose_alternatives(self, rng, prompt, n):
+        import re as _re
+        pmids = _re.findall(r"\[PMID (\d+)\]", prompt)
+        return json.dumps({"alternatives": [
+            {"id": "p1", "subject": {"label": "age-related comorbidity"}, "relation": "associated_with", "object": {"label": "the outcome"},
+             "rationale": "fake", "support_pmids": pmids[:1] + ["99999999"], "on_positive": "weakened", "on_negative": "unchanged"},
+            {"id": "p2", "subject": {"label": "x"}, "relation": "other", "object": {"label": "y"}, "rationale": "fake, both eliminated",
+             "support_pmids": [], "on_positive": "eliminated", "on_negative": "eliminated"}]})
+
     def _check_alternatives(self, rng, prompt, n):
         ids = list(dict.fromkeys(re.findall(r"^- (alt\d+):", prompt, flags=re.M)))
         return json.dumps({"alternatives": [{"id": i, "found": "absent", "pmid": "", "quote": ""} for i in ids]})
