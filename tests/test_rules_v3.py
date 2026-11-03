@@ -1,0 +1,76 @@
+"""Method v3 rules on synthetic cases from the paper runs (docs/spec/mechanism-chain-draft.md, method-v3.md section 9.5)."""
+import pytest
+
+from hyparena.card import rules_v3 as r3
+from hyparena.card.models import ClaimVerification, EvidenceRecord, HypothesisCard
+
+
+def claim(cid, s, rel, o, link, role="mechanism", hallmark=None, human=True):
+    q = {"species": "human"} if human else {}
+    return {"id": cid, "subject": {"label": s}, "relation": rel, "object": {"label": o, "hallmark": hallmark}, "qualifiers": q,
+            "role": role, "link": link, "source_span": s}
+
+
+def card(claims, alts=()):
+    return HypothesisCard.model_validate({"id": "H-1", "hypothesis_type": "interventional", "claim_plain": "x",
+                                          "claims": list(claims), "proposed_alternatives": list(alts)})
+
+
+def rec(pmid, design, n=None, comparison="between_groups", effect="medium", qm=None, role="finding", trial=""):
+    return EvidenceRecord(source="PubMed", record_id=f"PMID:{pmid}", lab_or_cohort=f"PMID:{pmid}", design=design, n_total=n,
+                          comparison=comparison, effect_class=effect, quote_role=role, reports_trial=trial,
+                          qualifiers_match={"intervention_match": "exact", **(qm or {})})
+
+
+def test_record_weights_follow_the_levels():
+    c = card([claim("c1", "x", "improves_healthspan_in", "human", "outcome", "outcome")]).claims[0]
+    big = rec(1, "rct", n=400, effect="large")
+    pilot = rec(2, "non_randomised", n=None, comparison="within_group", effect="medium", qm={"population": "no"})
+    assert r3.record_weight(big, c, False) == pytest.approx(1.0)
+    assert r3.record_weight(pilot, c, False) == pytest.approx((5 / 7) * 0.25 * 0.75 * (2 / 3) * (2 / 3))
+    assert r3.record_weight(rec(3, "rct", role="background"), c, False) == 0.0
+    assert r3.record_weight(rec(4, "rct", qm={"species": "no", "strain": "no"}), c, False) == 0.0
+
+
+def test_levothyroxine_restated_trial_triggers_the_gate():
+    cs = [claim("c1", "levothyroxine", "decreases_expression", "TSH", "engagement"),
+          claim("c2", "subclinical hypothyroidism", "associated_with", "muscle weakness", "pathway", "premise"),
+          claim("c3", "levothyroxine", "improves_healthspan_in", "human", "outcome", "outcome")]
+    ver = [ClaimVerification(id="c2", evidence=[rec(6, "observational", n=94, effect="medium", qm={"population": "no"})],
+                             counterevidence=[rec(9, "observational", n=2290, effect="none")]),
+           ClaimVerification(id="c3", evidence=[rec(12, "rct", n=71, effect="small", qm={"population": "no"}),
+                                                rec(13, "non_randomised", comparison="within_group", qm={"population": "no"})],
+                             counterevidence=[rec(18, "review", n=None, role="background", trial="TRUST trial")])]
+    out = r3.evaluate(card(cs), ver)
+    assert out.gate == "filtered" and out.V == 0.0 and "find_primary_report" in out.flags
+    assert out.links["c2"] == "contested"
+
+
+def test_invented_chain_stays_low_and_supported_mechanism_is_not_filtered():
+    tel = card([claim("c1", "polyphenol X", "activates", "telomerase", "engagement", hallmark="telomere_attrition"),
+                claim("c2", "telomerase", "promotes", "stem cell pools", "pathway", hallmark="stem_cell_exhaustion"),
+                claim("c3", "stem cell pools", "affects_hallmark", "all hallmarks", "effect"),
+                claim("c4", "polyphenol X", "extends_lifespan_in", "human", "outcome", "outcome")],
+               alts=[{"id": "p1", "subject": {"label": "ageing"}, "relation": "other", "object": {"label": "multicausal"},
+                      "on_positive": "eliminated", "on_negative": "unchanged"}])
+    t = r3.evaluate(tel, [])
+    assert t.gate == "pass" and t.P == pytest.approx(0.5 ** 4) and t.W == pytest.approx(1 / 3, abs=1e-3) and t.I == 0.0
+    # NAD-like: an engagement link only weakly supported, a supported hallmark pathway, a weak experiment: kept, flagged
+    nad = card([claim("c1", "acipimox", "increases_expression", "muscle NAD+", "engagement"),
+                claim("c2", "NAD+", "promotes", "mitochondrial respiration", "pathway", hallmark="mitochondrial_dysfunction"),
+                claim("c3", "acipimox", "improves_healthspan_in", "human", "outcome", "outcome")],
+               alts=[{"id": "p1", "subject": {"label": "NAD+ decline"}, "relation": "associated_with", "object": {"label": "sarcopenia"},
+                      "support_pmids": ["5"], "on_positive": "weakened", "on_negative": "unchanged"}])
+    ver = [ClaimVerification(id="c1", evidence=[rec(1, "rct", n=21, effect="medium", qm={"population": "no"})]),
+           ClaimVerification(id="c2", evidence=[rec(2, "non_randomised", n=5, comparison="within_group", effect="large",
+                                                    qm={"population": "no"})])]
+    alt_ver = {"p1": ClaimVerification(id="p1", evidence=[rec(5, "observational", n=120, effect="medium")])}
+    n = r3.evaluate(nad, ver, alt_ver)
+    assert n.gate == "pass" and n.W == 1.0 and n.V > t.V
+    assert "improve_experiment" in n.flags and n.headroom_V > n.V
+
+
+def test_v2_card_without_links_uses_outcome_mechanism_and_premise():
+    c = card([{**claim("c1", "x", "improves_healthspan_in", "human", None, "outcome")}])
+    out = r3.evaluate(c, [])
+    assert out.links == {"c1": "unverified"} and "build_mechanism" in out.flags and out.gate == "pass"
