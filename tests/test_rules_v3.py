@@ -54,7 +54,7 @@ def test_invented_chain_stays_low_and_supported_mechanism_is_not_filtered():
                alts=[{"id": "p1", "subject": {"label": "ageing"}, "relation": "other", "object": {"label": "multicausal"},
                       "on_positive": "eliminated", "on_negative": "unchanged"}])
     t = r3.evaluate(tel, [])
-    assert t.gate == "pass" and t.P == pytest.approx(0.5 ** 4) and t.W == pytest.approx(1 / 3, abs=1e-3) and t.I == 0.0
+    assert t.gate == "pass" and t.P == pytest.approx(0.5 ** 4) and t.W == pytest.approx(1 / 3, abs=1e-3) and t.I == pytest.approx(1 / 3, abs=1e-3)
     # NAD-like: an engagement link only weakly supported, a supported hallmark pathway, a weak experiment: kept, flagged
     nad = card([claim("c1", "acipimox", "increases_expression", "muscle NAD+", "engagement"),
                 claim("c2", "NAD+", "promotes", "mitochondrial respiration", "pathway", hallmark="mitochondrial_dysfunction"),
@@ -74,3 +74,24 @@ def test_v2_card_without_links_uses_outcome_mechanism_and_premise():
     c = card([{**claim("c1", "x", "improves_healthspan_in", "human", None, "outcome")}])
     out = r3.evaluate(c, [])
     assert out.links == {"c1": "unverified"} and "build_mechanism" in out.flags and out.gate == "pass"
+
+
+def test_parallel_outcomes_count_once_by_primary_or_mean():
+    cs = [claim("c1", "x", "promotes", "muscle mass", "outcome", "outcome"),
+          claim("c2", "x", "promotes", "grip strength", "outcome", "outcome"),
+          claim("c3", "x", "promotes", "gait speed", "outcome", "outcome")]
+    ver = [ClaimVerification(id="c2", evidence=[rec(1, "rct", n=400, effect="large"), rec(2, "rct", n=400, effect="large")])]
+    c = card(cs)
+    out = r3.evaluate(c, ver)                                    # no primary outcome stated: mean of 0.5, 1.0, 0.5
+    assert out.P == pytest.approx((0.5 + 1.0 + 0.5) / 3, abs=1e-3)
+    c.decisive_experiment.primary_outcome = "grip strength"
+    assert r3.evaluate(c, ver).P == pytest.approx(1.0)           # the primary outcome decides
+
+
+def test_no_alternatives_gets_the_lowest_step_and_never_beats_supported_ones():
+    base = [claim("c1", "x", "improves_healthspan_in", "human", "outcome", "outcome")]
+    none_ = r3.evaluate(card(base), [])
+    alt = [{"id": "p1", "subject": {"label": "a"}, "relation": "other", "object": {"label": "b"}, "support_pmids": ["5"],
+            "on_positive": "unchanged", "on_negative": "unchanged"}]
+    some = r3.evaluate(card(base, alt), [], {"p1": ClaimVerification(id="p1", evidence=[rec(5, "observational", n=120)])})
+    assert none_.I == pytest.approx(1 / 3, abs=1e-3) and some.I >= none_.I and none_.V > 0
