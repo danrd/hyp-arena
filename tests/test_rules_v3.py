@@ -5,6 +5,12 @@ from hyparena.card import rules_v3 as r3
 from hyparena.card.models import ClaimVerification, EvidenceRecord, HypothesisCard
 
 
+@pytest.fixture(autouse=True)
+def no_compound_lookup(monkeypatch):
+    """Rules are tested without network lookups; the approval rule has its own test."""
+    monkeypatch.setattr(r3, "established_by_approval", lambda claim, card: False)
+
+
 def claim(cid, s, rel, o, link, role="mechanism", hallmark=None, human=True):
     q = {"species": "human"} if human else {}
     return {"id": cid, "subject": {"label": s}, "relation": rel, "object": {"label": o, "hallmark": hallmark}, "qualifiers": q,
@@ -95,3 +101,14 @@ def test_no_alternatives_gets_the_lowest_step_and_never_beats_supported_ones():
             "on_positive": "unchanged", "on_negative": "unchanged"}]
     some = r3.evaluate(card(base, alt), [], {"p1": ClaimVerification(id="p1", evidence=[rec(5, "observational", n=120)])})
     assert none_.I == pytest.approx(1 / 3, abs=1e-3) and some.I >= none_.I and none_.V > 0
+
+
+def test_approved_drug_engagement_link_is_moderate(monkeypatch):
+    from types import SimpleNamespace
+    import hyparena.card.entities as ent
+    monkeypatch.undo()
+    monkeypatch.setattr(ent, "subject_compounds", lambda label, card: [SimpleNamespace(max_phase=4, targets=["CHEMBL1"])])
+    c = card([claim("c1", "levothyroxine", "decreases_expression", "TSH", "engagement"),
+              claim("c2", "levothyroxine", "improves_healthspan_in", "human", "outcome", "outcome")])
+    out = r3.evaluate(c, [])
+    assert out.links["c1"] == "moderate" and "c1_established_by_approval" in out.flags

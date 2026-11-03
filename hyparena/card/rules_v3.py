@@ -105,6 +105,20 @@ def link_level(cv: Optional[ClaimVerification], claim: Claim) -> tuple[str, floa
     return "weak", F, A
 
 
+def established_by_approval(claim: Claim, card: HypothesisCard) -> bool:
+    """Section 9.2 (simplified, 2026-11-03): an engagement link whose subject is an approved drug (ChEMBL max phase 4) with a
+    known mechanism of action. The spec asks that the target match the link; ChEMBL gives target ids, not names, so the match is
+    not checked yet and the level is "moderate" (5/6), not 0.9."""
+    if claim.link != "engagement":
+        return False
+    try:
+        from hyparena.card.entities import subject_compounds
+        comps = subject_compounds(claim.subject.label, card) or []
+    except Exception:
+        return False
+    return len(comps) == 1 and comps[0].max_phase == 4 and bool(comps[0].targets)
+
+
 def chain(card: HypothesisCard) -> list[Claim]:
     """The claims of the mechanism chain: those with a `link`; a v2 card without links: outcome, mechanism and premise claims."""
     linked = [c for c in card.claims if c.link]
@@ -162,6 +176,9 @@ def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
         return res
     for c in links:
         level, F, A = link_level(by_id.get(c.id), c)
+        if level in ("unverified", "weak") and established_by_approval(c, card):
+            level = "moderate"
+            res.flags.append(f"{c.id}_established_by_approval")
         res.links[c.id], res.weights[c.id] = level, [round(F, 3), round(A, 3)]
         if level == "refuted" and (c.role in ("outcome", "mechanism") or c.link in ("engagement", "pathway", "effect", "outcome")):
             res.gate, res.gate_reason = "filtered", f"{c.id} refuted by a randomised between-group finding against"
