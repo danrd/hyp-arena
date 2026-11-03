@@ -18,6 +18,13 @@ Protocol: [`benchmark.md`](benchmark.md), [`specs/benchmark-v2.yaml`](../specs/b
   `umin_outcomes.py`, `anzctr_outcomes.py` (paid steps behind `ALLOW_PAID=1`); flags and recomputed tests: `scripts/ctgov_flags.py`,
   `scripts/ctgov_recompute.py`
 
+## Calibration and method v3
+
+- Calibration on trials outside the benchmark, in steps: `scripts/calibration.py` (pick, units, run, score, score-v3; usage in its docstring)
+- Retrieval evaluation (gold from CT.gov background references and DrugAge): `scripts/retrieval_eval.py`
+- Offline rule experiments on the saved calibration records: `python -m scripts.rule_experiments`
+- Method v3: `configs/v3-flash.yaml` (`method: v3`); rules in `hyparena/card/rules_v3.py`, levels in `hyparena/card/v3_levels.py`
+
 ## Historical backtests (ITP, CITP)
 
 - ITP pool as of a date, hidden labels: `python -m hyparena.backtest build-itp --as-of 2010-12-31`, then
