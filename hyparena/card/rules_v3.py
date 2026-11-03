@@ -111,6 +111,26 @@ def chain(card: HypothesisCard) -> list[Claim]:
     return linked or [c for c in card.claims if c.role in ("outcome", "mechanism", "premise")]
 
 
+def _words(s: str) -> set[str]:
+    import re
+    return {w for w in re.findall(r"[a-z0-9]+", (s or "").lower()) if len(w) > 2}
+
+
+def outcome_group(card: HypothesisCard, links: list[Claim]) -> tuple[list[Claim], Optional[Claim]]:
+    """Parallel outcomes (several claims at the outcome place of the chain: mass, strength, function) are one link, not a
+    conjunction (user decision 2026-11-03). Returns (the parallel outcome claims, the one matching the primary outcome of the
+    stated experiment, or None when no single one matches)."""
+    outs = [c for c in links if c.link == "outcome" or (not c.link and c.role == "outcome")]
+    if len(outs) <= 1:
+        return outs, (outs[0] if outs else None)
+    target = _words(card.decisive_experiment.primary_outcome) | _words(card.pico.outcome.metric)
+    scored = sorted(((len(target & (_words(c.object.label) | _words(c.qualifiers.get("measure", "")))), c) for c in outs),
+                    key=lambda t: -t[0])
+    if target and scored[0][0] > 0 and (len(scored) == 1 or scored[0][0] > scored[1][0]):
+        return outs, scored[0][1]
+    return outs, None
+
+
 @dataclass
 class V3Result:
     gate: str = "pass"                                  # pass | filtered
@@ -145,10 +165,16 @@ def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
         res.links[c.id], res.weights[c.id] = level, [round(F, 3), round(A, 3)]
         if level == "refuted" and (c.role in ("outcome", "mechanism") or c.link in ("engagement", "pathway", "effect", "outcome")):
             res.gate, res.gate_reason = "filtered", f"{c.id} refuted by a randomised between-group finding against"
-    # plausibility: product over the chain
+    # plausibility: product over the chain; parallel outcomes count once: the primary outcome, else their mean
+    outs, primary = outcome_group(card, links)
     P = 1.0
     for c in links:
+        if c in outs:
+            continue
         P *= lv.weight("link", res.links[c.id])
+    if outs:
+        P *= lv.weight("link", res.links[primary.id]) if primary is not None else \
+            sum(lv.weight("link", res.links[c.id]) for c in outs) / len(outs)
     res.P = round(P, 4)
     res.weakest = min(links, key=lambda c: lv.weight("link", res.links[c.id])).id
     # scope: only links at least weak
@@ -170,8 +196,12 @@ def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
         res.alternatives[alt.id] = {"a": round(a, 3), "d": d, "level": level}
         total += a * d
         best += a
-    res.I = round(min(1.0, total / I_CAP), 4)
-    res.headroom_I = round(min(1.0, best / I_CAP), 4)
+    # no supported alternative: the lowest step 1/3 (user decision 2026-11-03: undeveloped is not empty); with supported ones
+    # I = 1/3 + 2/3 x their informativeness, so a hypothesis with alternatives never ranks below one without
+    supported_alts = [v for v in res.alternatives.values() if v["a"] > 0]
+    raw, raw_best = min(1.0, total / I_CAP), min(1.0, best / I_CAP)
+    res.I = round(1 / 3 + 2 / 3 * raw, 4) if supported_alts else round(1 / 3, 4)
+    res.headroom_I = round(1 / 3 + 2 / 3 * raw_best, 4) if supported_alts else round(1 / 3, 4)
     res.V = round(res.P * res.W * res.I, 5) if res.gate == "pass" else 0.0
     res.headroom_V = round(res.P * res.W * res.headroom_I, 5) if res.gate == "pass" else 0.0
     # evolution flags (section 5): never filters
@@ -179,7 +209,7 @@ def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
         res.flags.append("build_mechanism")
     if not card.proposed_alternatives or all(v["a"] == 0 for v in res.alternatives.values()):
         res.flags.append("name_supported_alternatives")
-    elif res.headroom_I - res.I >= 0.2:
+    elif raw_best - raw >= 0.2:                            # on the raw scale: the stated experiment leaves supported alternatives uncut
         res.flags.append("improve_experiment")
     if any(r.reports_trial and not r.primary_record for cv in ver_claims for r in cv.evidence + cv.counterevidence):
         res.flags.append("find_primary_report")
