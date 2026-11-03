@@ -135,6 +135,9 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
     client, families = _client(config, fake, max_calls)
     cfg_extra = yaml.safe_load(Path(config).read_text()) or {}
     search_mode = cfg_extra.get("search", "keywords")                  # `search: model` in the config
+    method = cfg_extra.get("method", "v2")                              # `method: v3` (docs/spec/method-v3.md)
+    norm_version = "v7" if method == "v3" else None                     # normalize_card/v7: mechanism chain, hallmarks, experiment
+    verify_version = "v6" if method == "v3" else ""                     # verify_claim/v6: design, n, comparison, effect size
     from hyparena.card import rules as _rules
     _rules.GRADED_CONTEXT = cfg_extra.get("admission") == "graded"     # `admission: graded` in the config
     log: list = []
@@ -152,7 +155,7 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
             card = HypothesisCard.model_validate(saved) if saved else None
             problems = [] if card else ["no card in the earlier run"]
         else:
-            card, problems = normalize(client, norm_family, text, cid, log=log)
+            card, problems = normalize(client, norm_family, text, cid, log=log, version=norm_version)
         return {"id": cid, "text": text, "card": card, "problems": problems, "origin": origins[i - 1]}
 
     items = list(pool.map(one, enumerate(texts, start=1)))
@@ -188,10 +191,16 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
             continue
         card = x["card"]
         ver = verify(client, verifiers or families, writer, card, as_of=as_of, log=log, map_fn=pool.map, search=search_mode,
+                     template_version=verify_version,
                      expert_sources=ex.sources(layer, card.id), fallback_families=families,
                      disease_restore=ex.restored_records(layer, card.id))
         ver.alternatives += alternatives.competitor_rows(
             [by_card[h] for h in rivals.get(card.id, []) if h not in dup_of])
+        if method == "v3":                                  # alternatives proposed over the abstracts read for this card
+            from hyparena.card.alternatives_v3 import propose
+            from hyparena.tools import pubmed as _pm
+            read = list(dict.fromkeys(ver.searched_pmids))
+            card.proposed_alternatives = propose(client, checker, card, _pm.fetch(read), as_of, avoid=frozenset({writer}), log=log)
         x["verification"] = finalize(card, ver)
         if check_alternatives and x["verification"].evidence_profile.gate == "pass":
             alternatives.check(client, checker, card, x["verification"], avoid=frozenset({writer}), log=log)
@@ -233,7 +242,7 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
     result = {"meta": {"created": time.strftime("%Y-%m-%dT%H:%M:%S"), "seconds": round(time.time() - started),
                      "calls": client.calls, "failures": client.failures, "families": families, "writer": writer,
                      "verifiers": verifiers or families, "config": config, "cards_reused": cards is not None, "search": search_mode,
-                     "admission": "graded" if _rules.GRADED_CONTEXT else "strict",
+                     "admission": "graded" if _rules.GRADED_CONTEXT else "strict", "method": method,
                      "as_of": as_of, "fake": fake, "k_top": k_top, **({"spec": spec_entry} if spec_entry else {}),
                      "indicator_set": {"sha256": iset, "ids": [s.id for s in ind.INDICATORS]},
                      "profiles": {n: {"tiers": p.tiers, "version": p.version, "description": p.description}

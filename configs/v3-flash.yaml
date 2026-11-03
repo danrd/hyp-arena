@@ -1,0 +1,35 @@
+# Method v3 on the calibration setup of configs/v2-flash-msearch.yaml.
+# Method v2 as configs/v2-flash.yaml, with the model-written literature search (search: model, at the end).
+# Method v2 with DeepSeek V4.1 Flash (snapshot 2026-10-17) as the verifier, through CometAPI (COMET_API_KEY,
+# ALLOW_PAID=1). The normalizer stays on the google family, as in configs/v2.yaml, so cards are comparable.
+# The snapshot name is pinned: the alias `deepseek-flash` moves with the next update. Run with
+# `--verifiers deepseek` so that only this family verifies.
+rpm: 30
+concurrency: 4
+generation:
+  temperature: 0.0          # calibration 2026-11-02: less run-to-run variation of the cards
+  max_tokens: 4000
+timeout: 150
+max_retries: 0
+deadline: 180
+models:
+  # normalizer: Gemini 3.5 Flash through its native endpoint with hidden reasoning off (thinking_level minimal since 2026-11-01:
+  # thinkingBudget 0 stopped being honoured, see hyparena/llm/gemini_native_runner.py) (accepted by L1.18, 2026-10-30; through the
+  # OpenAI-compatible endpoint CometAPI cannot switch the reasoning off and bills it as output). Runs before 2026-10-30 used that endpoint.
+  - {family: google, provider: gemini_native, model: "gemini-3.5-flash", tier: paid, api_key_env: COMET_API_KEY, generation: {thinking_level: minimal}}
+  # thinking off: with thinking on, the model spends the whole output budget on hidden reasoning (6000 of 6000
+  # tokens, no answer) in about half of the verifier calls, and neither reasoning_effort nor a token budget is
+  # honoured through CometAPI (tested 2026-10-20); off, a call takes about 5 s and 800 tokens
+  - {family: deepseek, provider: cometapi, model: "deepseek-v4.1-flash-1017", tier: paid, api_key_env: COMET_API_KEY,
+     generation: {max_tokens: 4000, extra_body: {thinking: {type: disabled}}}}
+
+# Literature search with model-written queries, the light guard and citation expansion (hyparena/card/search.py; retrieval
+# calibration 2026-11-02, scripts/retrieval_eval.py). Without this key the keyword queries are used, as in earlier runs.
+search: model
+# Graded admission of adjacent-population and same-class records for claims about humans (hyparena/card/rules.py,
+# `adjacent`; calibration 2026-11-02).
+admission: graded
+
+# Method v3 (docs/spec/method-v3.md): normalize_card/v7 (mechanism chain), verify_claim/v6 (design, n, comparison, effect size),
+# proposed alternatives. Rules of v3 come in step 3; until then the v2 rules score the v3 records.
+method: v3

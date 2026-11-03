@@ -269,10 +269,31 @@ def recheck(claim, card: HypothesisCard, evidence: list[EvidenceRecord], counter
     return out_for, out_against
 
 
+V3_DESIGNS = ("rct", "non_randomised", "observational", "animal", "cells", "review", "meta_analysis", "other")
+
+
+def v3_fields(rec: EvidenceRecord, r: dict, source: str) -> None:
+    """Method v3 extraction fields (verify_claim/v6). A number phrase that is not verbatim in the abstract is dropped, and the
+    number with it; values outside the closed lists are dropped. Replies of earlier templates carry none of these keys."""
+    norm = _norm(source)
+    rec.design = r.get("design") if r.get("design") in V3_DESIGNS else "unknown"
+    nq = _text(r.get("n_quote"))
+    n = r.get("n_total")
+    if isinstance(n, int) and n > 0 and nq and _norm(nq) in norm and str(n) in re.sub(r"[ ,]", "", nq) + nq:
+        rec.n_total, rec.n_quote = n, nq
+    elif isinstance(n, int) and n > 0 and nq and _norm(nq) in norm:
+        rec.n_quote = nq                                  # the phrase is real but the number is not in it: keep the phrase only
+    er = _text(r.get("effect_reported"))
+    rec.effect_reported = er if er and _norm(er) in norm else ""
+    rec.comparison = r.get("comparison") if r.get("comparison") in ("between_groups", "within_group", "none") else "unknown"
+    rec.effect_class = r.get("effect_class") if r.get("effect_class") in ("none", "small", "medium", "large", "unclear") else "unclear"
+    rec.reports_trial = _text(r.get("reports_trial"))
+
+
 def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisCard,
                  as_of: Optional[str] = None, retmax: int = RETMAX, log: Optional[list] = None,
                  fallback: Optional[str] = None, expert_pmids: Optional[list[tuple[str, str]]] = None,
-                 check_subgroups: bool = True, search: str = "keywords") -> ClaimVerification:
+                 check_subgroups: bool = True, search: str = "keywords", template_version: str = "") -> ClaimVerification:
     """`fallback`: the family asked when `family`'s reply is cut off with no complete record (gemini stops in
     the middle of verbatim quotes, most likely its recitation filter)."""
     cv = ClaimVerification(id=claim.id)
@@ -320,11 +341,12 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
                  "comparator": p.comparator.label,
                  "abstracts": [{"pmid": k, "year": a["year"], "title": a["title"], "abstract": a["abstract"],
                                 "review": pubmed.is_review(a)} for k, a in abstracts.items()]}
-    value, fam = ask(client, role="verify_claim", family=family, template=TEMPLATE[0], version=TEMPLATE[1],
+    version = template_version or TEMPLATE[1]
+    value, fam = ask(client, role="verify_claim", family=family, template=TEMPLATE[0], version=version,
                      variables=variables, validate=lambda v: _validate(v, abstracts), rounds=2, avoid=avoid, log=log,
                      parse=parse_records)
     if fallback and fallback != fam and (value is None or (value.get("truncated") and not value.get("records"))):
-        value, fam = ask(client, role="verify_claim", family=fallback, template=TEMPLATE[0], version=TEMPLATE[1],
+        value, fam = ask(client, role="verify_claim", family=fallback, template=TEMPLATE[0], version=version,
                          variables=variables, validate=lambda v: _validate(v, abstracts), rounds=2, avoid=avoid,
                          log=log, parse=parse_records)
     rejected = []
@@ -357,6 +379,7 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
             flags=[f for f in (r.get("flags") or []) if isinstance(f, str)], retrieved_at=a.get("year", ""),
             notes=f"extracted by {fam}" + (f"; source given by expert decision {by_expert[pmid]}" if pmid in by_expert else ""))
         contexts.flag(rec, a["title"] + " " + a["abstract"])
+        v3_fields(rec, r, a["title"] + " " + a["abstract"])
         if rec.qualifiers_match["intervention_match"] in ("exact", "dose_differs", "regimen_differs") and not names_in_source(
                 claim, card, a["title"], a["abstract"], quote):
             if subject_compounds(claim.subject.label, card):
@@ -510,7 +533,7 @@ def verify(client, families: list[str], writer: str, card: HypothesisCard, as_of
            log: Optional[list] = None, map_fn=map,
            expert_sources: Optional[dict[str, list[tuple[str, str]]]] = None,
            fallback_families: Optional[list[str]] = None, disease_restore: frozenset = frozenset(),
-           search: str = "keywords") -> Verification:
+           search: str = "keywords", template_version: str = "") -> Verification:
     """All declared claims, the rejected alternatives of a contrast (checked like claims, spec 7), plus analog
     probes; the verifier's family is never the writer's (its records feed the ranking)."""
     log = log if log is not None else []                  # its search entries give searched_pmids
@@ -527,7 +550,8 @@ def verify(client, families: list[str], writer: str, card: HypothesisCard, as_of
     tasks = [(c, allowed[i % len(allowed)], fallback(i)) for i, c in enumerate(claims)]
     expert_sources = expert_sources or {}
     cvs = list(map_fn(lambda t: verify_claim(client, t[1], frozenset({writer}), t[0], card, as_of, log=log,
-                                             fallback=t[2], expert_pmids=expert_sources.get(t[0].id), search=search), tasks))
+                                             fallback=t[2], expert_pmids=expert_sources.get(t[0].id), search=search,
+                                             template_version=template_version), tasks))
     added = {c.id for c in probes}
     for cv, c in zip(cvs, claims):
         if cv.id in added:
