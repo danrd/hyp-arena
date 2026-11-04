@@ -17,3 +17,14 @@ code_change_before_the_run: "effect_class.py reads spelled-out percent ('12 perc
 calls: "29 (v8 only; v5 on the same pairs for comparison is 29 more, about 0.06 USD, on request)"
 cost_estimate_usd: "about 0.07"
 caveat: "one labeller (Claude), who also wrote the rule; 18 relevant pairs, so one pair moves a field by 0.06"
+result:
+  date: 2026-11-04
+  calls: "29, one round each; raw replies in longevity-kg extraction_gold/run_v8_g8.json"
+  v8:
+    relevance: {accuracy: 0.72, recall: 0.61, precision: 0.92}
+    extraction_18: {with_record: 17, design: 0.89, comparison: 0.94, n_total: 0.94, effect_class: 0.67, effect_phrase_found: "4 of 4"}
+  status: "not passed: relevance 0.72 < 0.8 (21 of 29; 24 needed); effect_class 0.67 is at its threshold but below its baseline 0.72 (formal); design, comparison, n_total passed"
+  notes:
+    - "The same-class rule did not change the verifier's behaviour: 6 of 7 missed relevant papers still come back as neither (care attendants after discharge, another L. plantarum strain, other cognitive training, a review on cognitive rehabilitation, antioxidants and oxidative markers, and the exact protein-distribution study measuring muscle protein synthesis for a claim on net protein synthesis); recall 0.61 against 0.58 for v7 and v5 on gold v3."
+    - "One false positive: the fat-free milk review counted for a claim on muscle protein synthesis (lean mass in the review; borderline in the gold)."
+    - "Effect class: 4 of 6 errors are 'none' where the gold says unclear, all on papers with several outcomes, where the model took a null one as closest (ACTIVE: no effect on everyday functioning; mouth care review: chlorhexidine not yet shown in RCTs). The rule 'outcome closest to the claim' is ambiguous for claims with two outcomes."
