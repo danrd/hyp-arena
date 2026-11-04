@@ -37,3 +37,34 @@ def test_measure_counts_a_missing_record_as_wrong():
     assert m["status"] == "not passed"
     assert measure(gold, pred, v5=True)["design"] == 0.5
     assert baselines(gold)["comparison"] == 1.0
+
+
+def test_effect_class_rule_a():
+    from hyparena.card.effect_class import effect_class, from_phrase
+    assert from_phrase("odds ratio = 4.89, 95% CI 1.89-11.27") == "large"
+    assert from_phrase("relative risk = 1.60, 95% CI: 1.03-2.49") == "medium"
+    assert from_phrase("HR 0.79 (0.65-0.96)") == "medium" and from_phrase("RR 1.10 (95% CI 0.58, 2.07)") == "small"
+    assert from_phrase("d = 0.45") == "small" and from_phrase("Hedges' g = 0.9") == "large"
+    assert from_phrase("9.3% increase") == "medium" and from_phrase("reduced by 35%") == "large" and from_phrase("+3%") == "small"
+    assert from_phrase("up to 8-fold") == "large" and from_phrase("a modest improvement") == "small"
+    for raw in ("+2.4 kg", "58±11 m", "F(3,146)=16.16", "p < 0.001", ""):
+        assert from_phrase(raw) == "unclear"
+    assert effect_class("odds ratio = 4.89", "none") == "none" and effect_class("+2.4 kg", "large") == "unclear"
+
+
+def test_review_keeps_design_review():
+    p = record_for([_reply(design="rct")], "1", SOURCE, review=True)
+    assert p["design"] == "review"
+    assert record_for([_reply(design="meta_analysis")], "1", SOURCE, review=True)["design"] == "meta_analysis"
+
+
+def test_measure_v3_relevance_and_baselines():
+    from scripts.extraction_gold_v3 import measure_v3
+    g = {"design": "rct", "comparison": "between_groups", "n_total": 66, "effect_class": "medium", "effect_reported": "2.4 kg"}
+    gold = [{"pair_id": "a", "relevant": True, **g}, {"pair_id": "b", "relevant": False}, {"pair_id": "c", "relevant": False}]
+    pred = {"a": record_for([_reply()], "1", SOURCE), "b": record_for([_reply(stance="neither")], "1", SOURCE), "c": None}
+    m = measure_v3(gold, pred)
+    assert m["relevance"] == {"accuracy": 1.0, "recall": 1.0, "precision": 1.0, "baseline": 0.67}
+    assert m["extraction"]["design"] == 1.0
+    assert "effect_class" in m["failed"]          # the phrase "2.4 kg" is raw units: unclear by rule A, gold says medium
+    assert "comparison" in m["failed"]            # 1.0 equals the constant baseline of one pair: not passed
