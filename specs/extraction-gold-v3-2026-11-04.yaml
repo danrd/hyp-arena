@@ -1,0 +1,24 @@
+# Method v3 extraction against the hand-made gold for numbers, fixed before the first call (user decisions 2026-11-04:
+# thresholds written in advance; compare with the v2 verifier on the same inputs). docs/spec/method-v3.md, sections 2 and 7.
+id: extraction-gold-v3
+date: 2026-11-04
+question: "Does verify_claim/v6 extract design, total n, comparison and effect class the way the hand-made gold does?"
+code: scripts/extraction_gold_v3.py
+config: configs/v3-flash.yaml          # DeepSeek V4.1 Flash (snapshot 1017), thinking off, temperature 0
+gold: "longevity-kg hypothesis_sources/calibration/extraction_gold/labels_manual.jsonl (20 pairs, labelled by hand 2026-11-03, rules in the README next to it)"
+input: "per pair the claim of its frozen calibration card (calibration/cards.json) and that one abstract, fetched from PubMed; no search, no date cut, no subgroup check; v5 and v6 get the same input"
+compared_record: "the first record for the gold PMID with a verbatim quote, preferring quote_role finding, after the code checks of a run (a number phrase not verbatim in the abstract is dropped with its number); a pair with no such record is wrong on every field"
+primary:
+  measures: "share of the 20 pairs with the gold value: design (exact), comparison (exact), n_total (equal, null = null), effect_class (exact)"
+  thresholds: {design: 0.8, comparison: 0.8, n_total: 0.8, effect_class: 0.6}
+  constant_baselines: {design: 0.40, comparison: 0.80, n_total: 0.55, effect_class: 0.50}   # share of the most common gold value
+  reading:
+    passed: "every field at or above its threshold and above its constant baseline; for comparison this means at least 17 of 20"
+    field_formal: "a field at its threshold but not above its constant baseline is reported as formal, not as passed"
+    not_passed: "otherwise: per-field disagreement review, then a new prompt version (verify_claim/v7) before the paid v3 calibration check; a new version is a new criterion, measured again on these 20 pairs"
+reported_not_judged:
+  - "effect_reported: overlap with the gold phrase, on the 8 pairs whose gold has an effect number"
+  - "v2 (verify_claim/v5): pairs with a record; design mapped from study_type (rct, open_label_pilot -> non_randomised, observational, review, primary_experiment -> animal, else other); whether an effect number (effect_percent) is given. v5 has no n, comparison or effect class: that absence is the point of the comparison"
+calls: "40 (20 pairs x 2 versions; a second round only for an invalid reply)"
+cost_estimate_usd: "about 0.10"
+caveat: "20 pairs, labelled by one labeller (Claude) from the abstracts; the 20 pairs were also used to write the v6 rules, so a pass says the prompt follows its own rules, not that it generalises"
