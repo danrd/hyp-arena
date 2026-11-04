@@ -24,3 +24,14 @@ reported_not_judged:
 calls: "70: v7 on 45 pairs, v5 on the 25 pairs without a saved reply (the 20 saved v5 replies were made on the same input)"
 cost_estimate_usd: "about 0.15-0.20"
 caveat: "one labeller (Claude), who also wrote the rules and the prompt; 26 relevant pairs; borderline relevance on 4 pairs (1, 16, 39 and the tofacitinib atherosclerosis paper), noted in the gold"
+result:
+  date: 2026-11-04
+  calls: "70, one round each, DeepSeek V4.1 Flash; raw replies in longevity-kg extraction_gold/run_v7_g3.json, run_v5_g3.json"
+  v7:
+    relevance: {accuracy: 0.76, recall: 0.58, precision: 1.0}
+    extraction_26: {with_record: 26, design: 0.92, comparison: 0.96, n_total: 0.96, effect_class: 0.92, effect_phrase_found: "5 of 8"}
+  v5: {relevance: {accuracy: 0.76, recall: 0.58, precision: 1.0}, design: 0.81, effect_number_found: "0 of 8"}
+  status: "not passed: relevance 0.76 < 0.8 (34 of 45; 36 needed); design, comparison, n_total and effect_class passed (each above threshold and baseline)"
+  notes:
+    - "Relevance: no irrelevant paper accepted (precision 1.0); 11 of 26 relevant papers returned only with stance neither. 9 of the 11 are interventions of the same class on a healthspan claim (another exercise programme, another cognitive training, another supplement): the verifier refuses the stance instead of giving supports with intervention_match class, which graded admission would weigh one level lower. The other 2: acipimox on muscle mitochondria (endpoint mechanism) and a self-management programme (endpoint unknown). v5 misses the same pairs: this is not new in v7."
+    - "Extraction errors: placebo-controlled without 'randomised' called rct (again, despite the v7 rule); the French commentary restating TRUST called rct (PubMed does not type it as a review, so the code rule did not apply); the exercise + amino acids RCT: within-group knee strength (9.3%) picked instead of the between-group odds ratio; falls RR as the closest outcome (none vs unclear); 57 SH patients given as n (gold: 57 + 37 not summed)."
