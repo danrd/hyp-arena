@@ -5,7 +5,9 @@ effect size; the class is computed here, so that "small", "medium" and "large" m
 
 - ratio (odds, risk, hazard ratio; OR, RR, HR, IRR; "8-fold"): >= 2 or <= 0.5 large; >= 1.25 or <= 0.8 medium; otherwise small;
 - standardised difference (Cohen's d, Hedges' g, SMD, "effect size"): >= 0.8 large; >= 0.5 medium; otherwise small (absolute value);
-- relative change in percent ("+9.3%", "9.3% increase", "reduced by 35%"): > 20 large; >= 5 medium; otherwise small;
+- relative change in percent ("+9.3%", "9.3% increase", "reduced by 35%", "increased by 12 +/- 3 percent", "by about 40%"): > 20 large;
+  >= 5 medium; otherwise small. A bare percent without a sign or a change word ("(20%, p < 0.05)", "65.7% to 42.9%") is not read
+  as a change: "unclear";
 - the authors' own word for the size ("small", "modest", "slight" / "moderate" / "large", "substantial", "marked"): that size;
 - anything else (raw units such as "+2.4 kg" or "58±11 m", test statistics, p values only): "unclear".
 
@@ -23,8 +25,11 @@ _RATIO = re.compile(r"\b(?:odds ratio|risk ratio|relative risk|hazard ratio|rate
 _FOLD = re.compile(r"(\d+(?:\.\d+)?)\s*-?\s*fold\b", re.I)
 _SMD = re.compile(r"(?:\bCohen'?s\s+d|\bHedges'?\s+g|\bSMD\b|\beffect size\b|\bd\b|\bg\b)\s*(?:=|:|of|was)?\s*" + _NUM, re.I)
 _PCT_WORD = r"(?:increase|increased|decrease|decreased|reduction|reduced|higher|lower|improvement|improved|gain|loss|rise|drop|change)"
-_PCT = re.compile(r"([+-−]?\d+(?:\.\d+)?)\s*%\s*" + _PCT_WORD + r"|" + _PCT_WORD + r"\s+(?:of|by)\s+([+-−]?\d+(?:\.\d+)?)\s*%"
-                  r"|(?:^|\s|\()([+−-]\d+(?:\.\d+)?)\s*%", re.I)
+_P = r"\s*(?:(?:±|\+/-|\+-)\s*\d+(?:\.\d+)?\s*)?(?:%|percent\b|per cent\b)"      # "12%", "12 percent", "113 +/- 8 percent"
+_PCT = re.compile(r"([+-]?\d+(?:\.\d+)?)" + _P + r"\s*" + _PCT_WORD
+                  + r"|" + _PCT_WORD + r"\s+(?:of|by)\s+(?:about\s+|approximately\s+|nearly\s+|~)?([+-]?\d+(?:\.\d+)?)" + _P
+                  + r"|\bby\s+(?:about\s+|approximately\s+|nearly\s+|~)?(\d+(?:\.\d+)?)" + _P
+                  + r"|(?:^|\s|\()([+-]\d+(?:\.\d+)?)" + _P, re.I)
 _WORDS = (("large", r"\b(?:large|substantial|marked|strong)\b"), ("medium", r"\b(?:moderate|medium)\b"),
           ("small", r"\b(?:small|modest|slight|minor)\b"))
 

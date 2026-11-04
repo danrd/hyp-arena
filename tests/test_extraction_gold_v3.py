@@ -47,6 +47,8 @@ def test_effect_class_rule_a():
     assert from_phrase("d = 0.45") == "small" and from_phrase("Hedges' g = 0.9") == "large"
     assert from_phrase("9.3% increase") == "medium" and from_phrase("reduced by 35%") == "large" and from_phrase("+3%") == "small"
     assert from_phrase("up to 8-fold") == "large" and from_phrase("a modest improvement") == "small"
+    assert from_phrase("strength increased by 40 +/- 6 percent") == "large" and from_phrase("rose by about 12%") == "medium"
+    assert from_phrase("(20%, p < 0.05)") == "unclear" and from_phrase("decreased from 65.7% to 42.9%") == "unclear"
     for raw in ("+2.4 kg", "58±11 m", "F(3,146)=16.16", "p < 0.001", ""):
         assert from_phrase(raw) == "unclear"
     assert effect_class("odds ratio = 4.89", "none") == "none" and effect_class("+2.4 kg", "large") == "unclear"
