@@ -1,0 +1,26 @@
+# Method v3 extraction against the corrected gold, fixed before the first call (user decisions 2026-11-04: the first gold mixed
+# relevance with extraction, which is a design error of the experiment, not a reason to tune; effect class by code, option A;
+# thresholds in advance; compare with v2). Supersedes extraction-gold-v3 as the acceptance test of the v3 extractor.
+id: extraction-gold-v3b
+date: 2026-11-04
+question: "Does verify_claim/v7 tell relevant papers from irrelevant ones, and extract design, total n, comparison and effect class the way the hand-made gold does?"
+code: "scripts/extraction_gold_v3.py --gold v3; hyparena/card/effect_class.py (rule A); v3_fields (review keeps design review)"
+prompt: "verify_claim/v7: rct only when allocation is said to be random; a review stays review; effect phrase required whenever a number is given; effect_class none | present (size by code). Examples in the prompt are invented (v6 carried three phrases of gold abstracts as examples: a leak, removed in v7)"
+config: configs/v3-flash.yaml          # DeepSeek V4.1 Flash (snapshot 1017), thinking off, temperature 0
+gold: "longevity-kg hypothesis_sources/calibration/extraction_gold/labels_v3.jsonl: all 45 pairs of task.jsonl relabelled by hand 2026-11-04 (26 relevant, 19 not; relevance rule and labelling rules in the README next to it); disagrees with Jules' finding labels on 9 of 45"
+input: "per pair the claim of its frozen calibration card and that one abstract from PubMed; no search, no date cut, no subgroup check; v5 and v7 get the same input"
+measures:
+  relevance: "on all 45 pairs: the verifier calls a paper relevant when it returns a verbatim record with stance supports or refutes (what a run keeps); accuracy against the gold, also recall and precision"
+  extraction: "on the 26 relevant pairs: the record (stance supports or refutes first, then quote_role finding) after the code checks; design, comparison, n_total, effect_class exact; a missing record is wrong on every field"
+thresholds: {relevance: 0.8, design: 0.8, comparison: 0.8, n_total: 0.8, effect_class: 0.6}
+constant_baselines: {relevance: 0.58, design: 0.38, comparison: 0.77, n_total: 0.58, effect_class: 0.77}
+reading:
+  passed: "every measure at or above its threshold and above its constant baseline (comparison at least 21 of 26; effect_class at least 21 of 26; relevance at least 36 of 45)"
+  formal: "a measure at its threshold but not above its baseline is formal, not passed"
+  not_passed: "per-measure review; the paid v3 calibration check waits for the user's decision"
+reported_not_judged:
+  - "effect phrase overlap on the gold pairs with an effect phrase; v5: relevance, design mapped from study_type, effect_percent given"
+  - "orientation before the run (saved v5 and v6 replies of 20 of the 45 pairs, already seen): v6 relevance 0.70 (recall 0.60, precision 1.0), extraction on 15 relevant pairs design 0.87, comparison 1.0, n 1.0, effect class 0.87; v5 relevance 0.60, design 0.80"
+calls: "70: v7 on 45 pairs, v5 on the 25 pairs without a saved reply (the 20 saved v5 replies were made on the same input)"
+cost_estimate_usd: "about 0.15-0.20"
+caveat: "one labeller (Claude), who also wrote the rules and the prompt; 26 relevant pairs; borderline relevance on 4 pairs (1, 16, 39 and the tofacitinib atherosclerosis paper), noted in the gold"

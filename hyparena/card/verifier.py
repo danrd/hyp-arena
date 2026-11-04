@@ -296,11 +296,17 @@ def words_to_numbers(text: str) -> set[int]:
     return out
 
 
-def v3_fields(rec: EvidenceRecord, r: dict, source: str) -> None:
+def v3_fields(rec: EvidenceRecord, r: dict, source: str, review: bool = False) -> None:
     """Method v3 extraction fields (verify_claim/v6). A number phrase that is not verbatim in the abstract is dropped, and the
-    number with it; values outside the closed lists are dropped. Replies of earlier templates carry none of these keys."""
+    number with it; values outside the closed lists are dropped. Replies of earlier templates carry none of these keys.
+    A paper PubMed types as a review keeps design "review" (or "meta_analysis") even when the sentence restates one trial:
+    that trial is named in reports_trial and its own paper is fetched (spec 9.1). The effect class is computed from the
+    verbatim effect phrase (effect_class.py, user decision 2026-11-04); the extractor's own class counts only as "none"."""
+    from hyparena.card.effect_class import effect_class
     norm = _norm(source)
     rec.design = r.get("design") if r.get("design") in V3_DESIGNS else "unknown"
+    if review and rec.design not in ("review", "meta_analysis"):
+        rec.design = "review"
     nq = _text(r.get("n_quote"))
     n = r.get("n_total")
     if isinstance(n, int) and n > 0 and nq and _norm(nq) in norm and (str(n) in re.sub(r"[ ,]", "", nq) + nq
@@ -311,7 +317,7 @@ def v3_fields(rec: EvidenceRecord, r: dict, source: str) -> None:
     er = _text(r.get("effect_reported"))
     rec.effect_reported = er if er and _norm(er) in norm else ""
     rec.comparison = r.get("comparison") if r.get("comparison") in ("between_groups", "within_group", "none") else "unknown"
-    rec.effect_class = r.get("effect_class") if r.get("effect_class") in ("none", "small", "medium", "large", "unclear") else "unclear"
+    rec.effect_class = effect_class(rec.effect_reported, r.get("effect_class") or "")
     rec.reports_trial = _text(r.get("reports_trial"))
 
 
@@ -404,7 +410,7 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
             flags=[f for f in (r.get("flags") or []) if isinstance(f, str)], retrieved_at=a.get("year", ""),
             notes=f"extracted by {fam}" + (f"; source given by expert decision {by_expert[pmid]}" if pmid in by_expert else ""))
         contexts.flag(rec, a["title"] + " " + a["abstract"])
-        v3_fields(rec, r, a["title"] + " " + a["abstract"])
+        v3_fields(rec, r, a["title"] + " " + a["abstract"], review)
         if rec.qualifiers_match["intervention_match"] in ("exact", "dose_differs", "regimen_differs") and not names_in_source(
                 claim, card, a["title"], a["abstract"], quote):
             if subject_compounds(claim.subject.label, card):
