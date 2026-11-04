@@ -3,8 +3,10 @@
 Two criteria, each fixed before its first call:
 - `--gold manual`: specs/extraction-gold-v3-2026-11-04.yaml, verify_claim/v6 on 20 pairs (not passed; the gold mixed relevance
   with extraction);
-- `--gold v3` (default): specs/extraction-gold-v3b-2026-11-04.yaml, verify_claim/v7 on all 45 pairs: relevance on all of them,
-  extraction on the 26 the gold marks relevant.
+- `--gold v3`: specs/extraction-gold-v3b-2026-11-04.yaml, verify_claim/v7 on all 45 pairs: relevance on all of them,
+  extraction on the 26 the gold marks relevant (not passed on relevance);
+- `--gold v8`: specs/extraction-gold-v8-2026-11-04.yaml, verify_claim/v8 on 29 fresh pairs from calibration steps 2-3
+  (`pairs` builds them): the same measures.
 
     python -m scripts.extraction_gold_v3 run --fake                  # free dry run with the fake model (checks the plumbing)
     ALLOW_PAID=1 python -m scripts.extraction_gold_v3 run            # the pairs x the versions of the criterion, DeepSeek V4.1 Flash
@@ -36,7 +38,8 @@ CARDS = KG / "hypothesis_sources" / "calibration" / "cards.json"
 CONFIG = "configs/v3-flash.yaml"
 FAMILY = "deepseek"
 GOLDS = {"manual": {"file": "labels_manual.jsonl", "versions": ("v5", "v6"), "suffix": ""},
-         "v3": {"file": "labels_v3.jsonl", "versions": ("v5", "v7"), "suffix": "_g3"}}
+         "v3": {"file": "labels_v3.jsonl", "versions": ("v5", "v7"), "suffix": "_g3"},
+         "v8": {"file": "labels_v8.jsonl", "versions": ("v5", "v8"), "suffix": "_g8", "task": "task_v8.jsonl"}}
 FIELDS = ("design", "comparison", "n_total", "effect_class")
 THRESHOLDS = {"design": 0.8, "comparison": 0.8, "n_total": 0.8, "effect_class": 0.6}   # both specs; never changed after a result
 RELEVANCE_THRESHOLD = 0.8                                                                # gold v3
@@ -63,14 +66,59 @@ class Capture:
         return r
 
 
-def run(fake: bool = False, gold_name: str = "v3") -> None:
+def pairs(steps=(2, 3), per_unit: int = 2) -> list[dict]:
+    """Fresh claim-paper pairs for the v8 test (gold v8), from calibration steps 2 and 3 (never looked at for extraction):
+    per unit, in SHA-1 order of the claim, one paper the v2 verifier recorded something for under that claim (evidence,
+    counterevidence or a refusal) and one paper of the card's search that it recorded nothing for. Papers of the first 45 pairs
+    and claims not in the frozen card are left out. Writes task_v8.jsonl (claim and abstract) next to the gold."""
+    import hashlib
+    from hyparena.tools import pubmed
+    cal = GOLD_DIR.parent
+    cards = json.loads(CARDS.read_text())
+    seen = {json.loads(x)["pmid"] for x in (GOLD_DIR / "task.jsonl").read_text().splitlines() if x.strip()}
+    sha = lambda x: hashlib.sha1(x.encode()).hexdigest()
+    out = []
+    for st in steps:
+        for unit, res in sorted(json.loads((cal / f"run_{st}_msearch.json").read_text()).items()):
+            if unit not in cards:
+                continue
+            v = res["items"][0].get("verification") or {}
+            searched = [p for p in v.get("searched_pmids") or [] if p not in seen]
+            claims = {c["id"]: c for c in cards[unit]["claims"]}
+            got = []
+            for cv in sorted(v.get("claims", []), key=lambda c: sha(unit + c["id"])):
+                if cv["id"] not in claims:
+                    continue
+                rec = {r["record_id"].replace("PMID:", "") for k in ("evidence", "counterevidence") for r in cv.get(k, [])}
+                rec |= {r.get("record_id", "").replace("PMID:", "") for r in cv.get("refusals", [])}
+                rec = sorted((p for p in rec if p in searched), key=lambda p: sha(unit + p))
+                other = sorted((p for p in searched if p not in rec), key=lambda p: sha(unit + cv["id"] + p))
+                if rec and not any(g["kind"] == "recorded" for g in got):
+                    got.append({"claim": cv["id"], "pmid": rec[0], "kind": "recorded"})
+                if other and not any(g["kind"] == "not_recorded" for g in got):
+                    got.append({"claim": cv["id"], "pmid": other[0], "kind": "not_recorded"})
+                if len(got) >= per_unit:
+                    break
+            for g in got:
+                c = claims[g["claim"]]
+                out.append({"pair_id": f"{unit}|{g['claim']}|{g['pmid']}", "step": st, "v2_recorded": g["kind"] == "recorded",
+                            "claim": f"{c['subject']['label']} — {c['relation']} — {c['object']['label']}",
+                            "claim_context": cards[unit].get("claim_plain", ""), "pmid": g["pmid"]})
+    abstracts = pubmed.fetch([o["pmid"] for o in out])
+    out = [{**o, "title": abstracts[o["pmid"]]["title"], "abstract": abstracts[o["pmid"]]["abstract"]}
+           for o in out if abstracts.get(o["pmid"], {}).get("abstract")]
+    (GOLD_DIR / "task_v8.jsonl").write_text("".join(json.dumps(o, ensure_ascii=False) + "\n" for o in out))
+    return out
+
+
+def run(fake: bool = False, gold_name: str = "v3", only: tuple = ()) -> None:
     from hyparena.card import verifier
     from hyparena.card.models import HypothesisCard
     from hyparena.card.pipeline import _client
     from hyparena.tools import pubmed
     pubmed.search = lambda *a, **k: []                    # no retrieval: only the gold paper is read
     gold = load_gold(gold_name)
-    versions = GOLDS[gold_name]["versions"]
+    versions = only or GOLDS[gold_name]["versions"]
     cards = json.loads(CARDS.read_text())
     client, _ = _client(CONFIG, fake, 2 * len(gold) * len(versions))
     for v in versions:
@@ -183,7 +231,8 @@ def baselines(gold: list[dict]) -> dict:
 def score(fake: bool = False, gold_name: str = "v3", versions: tuple = ()) -> dict:
     from hyparena.tools import pubmed
     gold = load_gold(gold_name)
-    tasks = {json.loads(x)["pair_id"]: json.loads(x) for x in (GOLD_DIR / "task.jsonl").read_text().splitlines() if x.strip()}
+    tasks = {json.loads(x)["pair_id"]: json.loads(x)
+             for x in (GOLD_DIR / GOLDS[gold_name].get("task", "task.jsonl")).read_text().splitlines() if x.strip()}
     abstracts = pubmed.fetch([g["pair_id"].split("|")[2] for g in gold])
     rel = [g for g in gold if g.get("relevant", True)]
     out = {"baselines": baselines(rel), "thresholds": THRESHOLDS}
@@ -199,9 +248,9 @@ def score(fake: bool = False, gold_name: str = "v3", versions: tuple = ()) -> di
             pmid = g["pair_id"].split("|")[2]
             a = abstracts.get(pmid) or {"title": tasks[g["pair_id"]]["title"], "abstract": tasks[g["pair_id"]]["abstract"]}
             pred[g["pair_id"]] = record_for(runs[g["pair_id"]].get("replies", []), pmid, a["title"] + " " + a["abstract"],
-                                            review=pubmed.is_review(a), by_stance=gold_name == "v3")
+                                            review=pubmed.is_review(a), by_stance=gold_name in ("v3", "v8"))
         sub = [g for g in gold if g["pair_id"] in runs]
-        out[v] = measure_v3(sub, pred, v5=v == "v5") if gold_name == "v3" else measure(sub, pred, v5=v == "v5")
+        out[v] = measure_v3(sub, pred, v5=v == "v5") if gold_name in ("v3", "v8") else measure(sub, pred, v5=v == "v5")
         if gold_name == "v3" and len(sub) < len(gold):
             out[v]["note"] = f"only {len(sub)} of {len(gold)} pairs have saved replies"
         if v != "v5":
@@ -212,15 +261,19 @@ def score(fake: bool = False, gold_name: str = "v3", versions: tuple = ()) -> di
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("cmd", choices=["run", "score"])
+    ap.add_argument("cmd", choices=["pairs", "run", "score"])
     ap.add_argument("--fake", action="store_true", help="the fake model; files get a _fake suffix")
-    ap.add_argument("--gold", choices=list(GOLDS), default="v3")
+    ap.add_argument("--gold", choices=list(GOLDS), default="v8")
     ap.add_argument("--versions", default="", help="comma-separated, e.g. v6 to rescore saved v6 replies on gold v3")
     a = ap.parse_args()
+    if a.cmd == "pairs":
+        out = pairs()
+        print(len(out), Counter(o["v2_recorded"] for o in out))
+        return
     if a.cmd == "run":
         if not a.fake and os.environ.get("ALLOW_PAID") != "1":
             raise SystemExit("paid: set ALLOW_PAID=1")
-        run(a.fake, a.gold)
+        run(a.fake, a.gold, tuple(x for x in a.versions.split(",") if x))
     else:
         vs = tuple(x for x in a.versions.split(",") if x)
         print(json.dumps(score(a.fake, a.gold, vs), indent=1, ensure_ascii=False))
