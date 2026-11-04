@@ -22,3 +22,14 @@ reported_not_judged:
 calls: "40 (20 pairs x 2 versions; a second round only for an invalid reply)"
 cost_estimate_usd: "about 0.10"
 caveat: "20 pairs, labelled by one labeller (Claude) from the abstracts; the 20 pairs were also used to write the v6 rules, so a pass says the prompt follows its own rules, not that it generalises"
+result:
+  date: 2026-11-04
+  calls: "40, one round each, DeepSeek V4.1 Flash; raw replies in longevity-kg extraction_gold/run_v5.json, run_v6.json"
+  v6: {with_record: 16, design: 0.70, comparison: 0.80, n_total: 0.80, effect_class: 0.55, effect_number_found: "3 of 8"}
+  v5: {with_record: 17, design: 0.60, effect_number_found: "0 of 8 (effect_percent never filled)"}
+  status: "not passed (design 0.70 < 0.8, effect_class 0.55 < 0.6); comparison 0.80 equals its constant baseline: formal; n_total 0.80 passed"
+  notes:
+    - "All 4 pairs without a record are papers that do not bear on the claim (tofacitinib in apoE mice for sarcopenia; vitamin B6 for acipimox and NAD; a frailty RCT and a cohort study for a school programme's other outcomes); the verifier returned an empty list, which is right for a verifier. The gold took every pair whose abstract reports numbers, not only relevant ones. Counted as wrong by the rule above; the status stands."
+    - "On the 16 pairs with a record (not a criterion): design 14, comparison 16, n_total 16, effect_class 11."
+    - "Design errors: a placebo-controlled study that does not say randomised called rct (against the prompt's own rule); the review restating TRUST called rct with reports_trial set (the gold says review with reports_trial; section 9.1 wants the review as a pointer, so the code should keep design review for a review)."
+    - "Effect class: 4 of 5 errors are 'unclear' where a magnitude is given (F(3,146)=16.16; OR 4.89 with CI; RR 1.60 with CI) or another outcome's number was picked; neither the prompt nor the gold rules define small / medium / large, so this field is under-specified on both sides."
