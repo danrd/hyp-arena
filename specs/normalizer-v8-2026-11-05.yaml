@@ -16,3 +16,11 @@ reading: "passed: all three thresholds; then the fresh calibration sample is bui
 calls: 30
 cost_estimate_usd: "about 0.05"
 caveat: "the same 30 texts the v7 problems were seen on; the fix is checked here for its mechanics, the effect on P only on the fresh sample"
+result:
+  date: 2026-11-05
+  calls: "30 (one re-parse included where the outcome was 'other'); cards in longevity-kg calibration/cards_v8_check.json"
+  v8: {unparsed: 1, mechanism_recall: "7 of 12", parallel_as_chain: 0, mechanism_in_unstated_texts: 2}
+  status: "not passed: mechanism recall 7 of 12 < 9; unparsed 1 (<= 2) and parallel_as_chain 0 passed"
+  notes:
+    - "Of the 5 texts with a stated reason and no mechanism link: 3 have the reason written as a premise claim without a link (levothyroxine: 'subclinical hypothyroidism associated_with neuromuscular impairment'; weight loss: 'obesity promotes frailty'; protein distribution: 'frequent stimulation of protein synthesis ...'), so the v3 chain does not see it; the hyaluronic filler card has no reason at all; NCT03142048 (social isolation) failed to normalise (unparsed)."
+    - "Parallel outcomes are now outcome links (levothyroxine: three outcome links), so the outcome group counts them once."
