@@ -24,8 +24,15 @@ SPECS = {
     "I": IndicatorSpec("I", "cardinal", bounds=(1 / 3, 1.0), log=True, note="informativeness of the stated experiment"),
     "I_headroom": IndicatorSpec("I_headroom", "cardinal", bounds=(1 / 3, 1.0), log=True,
                                 note="informativeness if the experiment cut off every supported alternative"),
-    "feasibility": IndicatorSpec("feasibility", "ordinal", levels=("1", "0"),
-                                 note="v2 path_to_human: 0 = human safety data exist (cheaper to test now)"),
+    "feasibility": IndicatorSpec("feasibility", "cardinal", bounds=(0.0, 1.0),
+                                 note="section 9.4: system, duration, planned n, readiness of the intervention (v3_extra)"),
+    "best_design_outcome": IndicatorSpec("best_design_outcome", "ordinal",
+                                         levels=("none", "cells", "animal", "observational", "review", "non_randomised",
+                                                 "meta_analysis", "rct"), note="best design for the outcome link"),
+    "independent_outcome": IndicatorSpec("independent_outcome", "cardinal", bounds=(0.0, 5.0),
+                                         note="independent sources for the outcome link, saturating at 5"),
+    "against_share": IndicatorSpec("against_share", "cardinal", bounds=(0.0, 1.0), higher_is_better=False,
+                                   note="share of the chain's weight against"),
 }
 
 
@@ -35,15 +42,16 @@ def load(path: Path = PROFILES) -> dict[str, tuple[Profile, list[str]]]:
                    list(p["indicators"])) for name, p in data.items()}
 
 
-def values_of(v3: dict, v2_indicators: Optional[dict] = None) -> dict:
-    """The indicator values of one hypothesis from its v3 result (V3Result.as_dict) and its v2 indicators."""
-    feas = (v2_indicators or {}).get("path_to_human")
+def values_of(v3: dict, extra: Optional[dict] = None) -> dict:
+    """The indicator values of one hypothesis from its v3 result (V3Result.as_dict) and its additional indicators
+    (v3_extra.extras); a missing additional value is unknown and drawn over its range."""
+    e = extra or {}
     return {"P": max(P_FLOOR, v3["P"]), "W": v3["scope"], "I": v3["I"], "I_headroom": v3["headroom_I"],
-            "feasibility": str(feas) if feas is not None else None}
+            **{k: e.get(k) for k in ("feasibility", "best_design_outcome", "independent_outcome", "against_share")}}
 
 
 def rank(results: dict[str, tuple[dict, Optional[dict]]], profile: str, K: int = 10000, seed: int = 0) -> Optional[AggregationResult]:
-    """`results` {unit: (v3 result dict, v2 indicators or None)}; units filtered by the gate are left out."""
+    """`results` {unit: (v3 result dict, additional indicators or None)}; units filtered by the gate are left out."""
     prof, ids = load()[profile]
     vals = {u: {k: values_of(v3, v2)[k] for k in ids} for u, (v3, v2) in results.items() if v3.get("gate") == "pass"}
     if not vals:

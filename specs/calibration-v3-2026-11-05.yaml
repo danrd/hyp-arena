@@ -19,6 +19,11 @@ reported_not_judged:
   - "V = P x W x I (not meant to track outcomes, user decision); the gate's filtered units; flags; the weakest link per unit"
   - "sensitivity (score-v3 --no-stance-as-support): findings returned with stance neither (kept as no_stance since verify_claim/v6) counted as support with their own weights. The verifier's relevance recall is about 0.6 with precision 1.0 (extraction-gold-v3b, v8, v9), so P is biased down where support comes from interventions of the same kind (programmes, behavioural interventions: about half the units). Reading fixed now: if P shows no signal but the sensitivity reaches the signal reading, the verifier's recall is the bottleneck (next: another model for the relevance decision); if neither shows a signal, the recall is not the explanation."
   - "comparison: v2 on the same units, tied AUC 0.46 [0.26; 0.66] (calibration-step3)"
+  - "exploratory, added 2026-11-05 during the run, before any result was looked at (user: a rough look at all candidates):
+    the additional indicators of hyparena/card/v3_extra.py (best design and independent sources for the outcome link, share
+    against, feasibility 9.4, weakest link, human evidence, best effect, unverified links, momentum): per indicator its
+    Spearman correlation with P and its tied AUC against the outcomes; and the ASPID expected values of the three trial
+    profiles (configs/profiles_v3.yaml) with their tied AUC. Decides nothing: indicators are chosen on the fresh sample."
 known_limitations:
   - "relevance recall about 0.6 (see above); effect class formal on the extraction gold (most effects 'unclear' under rule A)"
   - "alternatives proposed by a model, without the knowledge graph"
