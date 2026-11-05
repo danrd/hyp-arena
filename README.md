@@ -28,6 +28,7 @@ ClinicalTrials.gov and the other trial registries named in the benchmark. Code u
 - Approach and lines of work: [`docs/approach.md`](docs/approach.md)
 - The method (verified card → rule-based indicators → aggregation under preference profiles): [`docs/rules-method.md`](docs/rules-method.md); specifications in [`docs/spec/`](docs/spec/)
 - Validation criteria and their status: [`docs/validation-criteria.md`](docs/validation-criteria.md)
+- Method v3 manual (how a hypothesis is scored, how to read its analysis report; can be attached to a hypothesis as context): [`docs/method-v3-manual.md`](docs/method-v3-manual.md); reports by code: `python -m hyparena.analyze RUN.json`
 - Benchmark of registry hypotheses: [`docs/benchmark.md`](docs/benchmark.md)
 - Comparison with Co-Scientist-style baselines: [`docs/comparison.md`](docs/comparison.md); how Co-Scientist works: [`docs/co-scientist-reference.md`](docs/co-scientist-reference.md)
 - Architecture: [`docs/architecture.md`](docs/architecture.md)
