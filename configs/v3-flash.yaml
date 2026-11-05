@@ -30,6 +30,8 @@ search: model
 # `adjacent`; calibration 2026-11-02).
 admission: graded
 
-# Method v3 (docs/spec/method-v3.md): normalize_card/v7 (mechanism chain), verify_claim/v6 (design, n, comparison, effect size),
-# proposed alternatives. Rules of v3 come in step 3; until then the v2 rules score the v3 records.
+# Method v3 (docs/spec/method-v3.md): normalize_card/v7 (mechanism chain), the v3 verifier template, proposed alternatives, the
+# v3 rules (rules_v3: P, W, I, V, gate). verify_claim/v9 since 2026-11-05: extraction accepted on design, comparison and n
+# (specs/extraction-gold-v9-2026-11-05.yaml; relevance recall about 0.6, precision 1.0; the second relevance question is not used).
 method: v3
+verify_version: v9

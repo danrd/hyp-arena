@@ -133,14 +133,19 @@ def run(step: int, config: str = "configs/v2-flash.yaml", tag: str = "") -> None
     texts = build_texts([{k: u[k] for k in ("id", "source", "written_on")} for u in us], CAL / f"texts_{step}.jsonl")
     out_p = CAL / f"run_{step}{tag}.json"
     done = json.loads(out_p.read_text()) if out_p.exists() else {}
-    cards_p = CAL / "cards.json"                       # frozen cards: one per trial, reused by every later run
+    method = (yaml.safe_load(Path(config).read_text()) or {}).get("method", "v2")
+    cards_p = CAL / ("cards_v3.json" if method == "v3" else "cards.json")   # frozen cards per method: one per trial, reused
     frozen = json.loads(cards_p.read_text()) if cards_p.exists() else {}
     for t in texts:
         if t["id"] in done:
             continue
         card = frozen.get(t["id"])
-        res = v2([t["text"]], writer="human_registry", config=config, as_of=t["as_of"], max_calls=60, verifiers=["deepseek"],
-                 cards=[card] if card else None)
+        try:
+            res = v2([t["text"]], writer="human_registry", config=config, as_of=t["as_of"], max_calls=60, verifiers=["deepseek"],
+                     cards=[card] if card else None)
+        except Exception as e:                            # e.g. PubMed answering 500: the unit is left for the next run
+            print(json.dumps({"id": t["id"], "error": f"{type(e).__name__}: {str(e)[:200]}"}), flush=True)
+            continue
         if not card and res["items"][0].get("card"):
             frozen[t["id"]] = res["items"][0]["card"]
             cards_p.write_text(json.dumps(frozen, ensure_ascii=False, indent=1))
@@ -184,7 +189,7 @@ def score(step: int, results: dict | None = None, tag: str = "") -> dict:
     return out
 
 
-def score_v3(steps=(1, 2, 3), tag: str = "_v3") -> dict:
+def score_v3(steps=(1, 2, 3), tag: str = "_v3", no_stance_as_support: bool = False) -> dict:
     """Tied AUC of method v3's plausibility P and promise V against the outcomes (only P is meant to track outcomes;
     V is reported for reference). Filtered (gate) units score -1; units without a v3 result are left out."""
     from hyparena.backtest import bootstrap_tied_auc, tied_auc
@@ -194,11 +199,12 @@ def score_v3(steps=(1, 2, 3), tag: str = "_v3") -> dict:
         if f.exists():
             us.update({u["id"]: u for u in json.loads((CAL / f"units_{st}.json").read_text())})
             res.update(json.loads(f.read_text()))
+    re3 = rescore_v3(res, no_stance_as_support) if no_stance_as_support else {}
     out = {}
     for key in ("P", "V"):
         sc = {}
         for h, r in res.items():
-            v3 = r["items"][0].get("v3")
+            v3 = re3.get(h) if no_stance_as_support else r["items"][0].get("v3")
             if v3 is not None:
                 sc[h] = (-1.0 if v3["gate"] == "filtered" else v3[key], 0.0)
         pos = [sc[h] for h in sc if us[h]["label"] == 1]
@@ -209,12 +215,41 @@ def score_v3(steps=(1, 2, 3), tag: str = "_v3") -> dict:
     return out
 
 
+def rescore_v3(results: dict, no_stance_as_support: bool = False) -> dict:
+    """Method v3's rules applied again to saved v3 results, without model calls. With `no_stance_as_support`, the findings
+    the verifier returned with stance neither (`no_stance`, kept since verify_claim/v6) count as records for the claim:
+    the sensitivity analysis fixed in specs/calibration-v3-2026-11-05.yaml (the verifier's recall is about 0.6 with precision
+    1.0, extraction-gold-v9, so most of these are relevant findings it did not give a stance). They are counted as support
+    (a direction cannot be read from a record without a stance); the record's own design, n, comparison, effect class and
+    context set its weight as for any record. Returns {unit: v3 result dict}."""
+    from hyparena.card import rules_v3
+    from hyparena.card.models import ClaimVerification, HypothesisCard
+    out = {}
+    for h, r in results.items():
+        it = r["items"][0]
+        if not it.get("card") or not it.get("verification") or "v3" not in it:
+            continue
+        card = HypothesisCard.model_validate(it["card"])
+        claims = [ClaimVerification.model_validate(c) for c in it["verification"]["claims"]]
+        if no_stance_as_support:
+            for cv in claims:
+                extra = [e for e in cv.no_stance if e.qualifiers_match.get("intervention_match") != "different"]
+                for e in extra:
+                    e.flags = list(e.flags) + ["no_stance_counted"]
+                cv.evidence = list(cv.evidence) + extra
+                cv.status = None
+        alts = {k: ClaimVerification.model_validate(v) for k, v in (it.get("v3_alternatives") or {}).items()}
+        out[h] = rules_v3.evaluate(card, claims, alts).as_dict()
+    return out
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("cmd", choices=["pick", "units", "run", "score", "score-v3"])
     ap.add_argument("--step", type=int, default=1)
     ap.add_argument("--config", default="configs/v2-flash.yaml")
     ap.add_argument("--tag", default="", help="suffix of the run file, e.g. _msearch")
+    ap.add_argument("--no-stance-as-support", action="store_true", help="score-v3: the sensitivity analysis (rescore_v3)")
     a = ap.parse_args()
     if a.cmd == "pick":
         out = pick(a.step)
@@ -226,7 +261,7 @@ def main() -> None:
             raise SystemExit("paid: set ALLOW_PAID=1")
         run(a.step, a.config, a.tag)
     elif a.cmd == "score-v3":
-        print(json.dumps(score_v3(tag=a.tag or "_v3"), indent=1))
+        print(json.dumps(score_v3(tag=a.tag or "_v3", no_stance_as_support=a.no_stance_as_support), indent=1))
     else:
         print(json.dumps(score(a.step, tag=a.tag), indent=1))
 

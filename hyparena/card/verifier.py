@@ -442,6 +442,7 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
                  "abstracts": [{"pmid": k, "year": a["year"], "title": a["title"], "abstract": a["abstract"],
                                 "review": pubmed.is_review(a)} for k, a in abstracts.items()]}
     version = template_version or TEMPLATE[1]
+    keep_no_stance = int(version.lstrip("v") or 0) >= 6     # v3 templates
     value, fam = ask(client, role="verify_claim", family=family, template=TEMPLATE[0], version=version,
                      variables=variables, validate=lambda v: _validate(v, abstracts), rounds=2, avoid=avoid, log=log,
                      parse=parse_records)
@@ -514,6 +515,8 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
         elif need and rec.endpoint not in ("unknown", need) and rec.quote_role == "finding":
             cv.refusals.append(Refusal(type="endpoint_mismatch", record_id=rec.record_id, quote=quote,
                                        notes=f"measures {rec.endpoint}, the claim is about {need}"))
+        elif keep_no_stance and rec.quote_role == "finding":
+            cv.no_stance.append(rec)                      # v3: kept, not scored (sensitivity analysis only)
     mark_subgroup(cv.evidence, cv.counterevidence)
     if check_subgroups:
         check_subgroup(client, family, avoid, claim, card, cv, log=log, fallback=fallback)
