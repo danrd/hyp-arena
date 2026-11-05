@@ -20,3 +20,13 @@ reported_not_judged: "relevance before the second question (the first reader alo
 calls: "about 42 first-reader calls plus one per paper returned without a stance (expected 15-25)"
 cost_estimate_usd: "about 0.10-0.15"
 caveat: "one labeller (Claude); 16 relevant pairs, so one pair moves a field by 0.06; Jules' strata were used only to pick the papers"
+result:
+  date: 2026-11-05
+  calls: "62: 42 first-reader calls, 20 second questions; raw replies in longevity-kg extraction_gold/run_v9_g9.json"
+  v9:
+    relevance: {accuracy: 0.83, recall: 0.56, precision: 1.0, first_reader_alone_accuracy: 0.81, second_question_changed: "1 of 20"}
+    extraction_16: {with_record: 16, design: 0.88, comparison: 0.88, n_total: 0.81, effect_class: 0.81, effect_phrase_found: "3 of 6"}
+  status: "not passed: effect_class 0.81 equals its constant baseline 0.81 (formal); relevance 0.83 passed (35 of 42), design, comparison and n_total passed"
+  notes:
+    - "Relevance passes on accuracy because all 26 irrelevant papers were rejected (precision 1.0); recall stays 0.56 (9 of 16), as in every earlier measurement (0.58, 0.58, 0.61). The second question changed 1 of 20 answers: for 5 of the 7 misses it said the intervention is the same or of the same kind and the outcome of the same domain, but result 'none' (a cognitive-training RCT with improved working memory for a claim on HAND; reviews restating memory effects of methylene blue and GH effects of secretagogues). The model reads 'a result on this claim' more strictly than the gold's relevance rule; the gap is the model's reading, not the prompt wording."
+    - "Extraction errors: a pharmacokinetic paper restating a phase 2 trial and a rat study called review (n 321 taken from the restated trial); a systematic review's pooled 5275 given as n; IGF-I phrase not taken for the hip-fracture RCT (function null chosen: effect none vs large); 105 instead of 187 for the pooled RCTs."
