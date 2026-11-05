@@ -30,3 +30,18 @@ known_limitations:
 calls: "about 20 per unit (new v3 card, more claims from the chain, model-written queries, alternatives and their support), about 600 in all; cap 60 per unit"
 cost_estimate_usd: "about 1-1.5 (cap: 1800 calls, about 4.5)"
 code_change_before_the_run: "2026-11-05, after the NCBI search outage (esearch answering 500, or HTTP 200 with 'Search is temporarily unavailable ... Cannot connect to SOLR' in the body): pubmed.search retries an error in the body and then raises instead of returning no papers; the unit is skipped and picked up by the next run. The run waits for esearch to answer with results in at least 9 of 10 probes."
+result:
+  date: 2026-11-05
+  run: "30 units, 508 calls (about 17 per unit), no network failures; cards in longevity-kg calibration/cards_v3.json, results run_{1,2,3}_v3.json"
+  primary: "P tied AUC 0.677, 95% CI [0.423; 0.881], on 23 units (7 without a v3 result, below)"
+  reading: "unclear by the rule fixed above (AUC >= 0.60 but the lower bound 0.423 is not above 0.45); orientation only, as stated in advance. v2 on the same units: 0.46"
+  reported:
+    V: "0.627 [0.377; 0.854]"
+    sensitivity_no_stance_as_support: "P 0.673, V 0.581: counting the findings without a stance changes nothing, so the verifier's recall is not what limits P here"
+    v3_1_offline: "P 0.612, V 0.558 (with the sensitivity: P 0.635); v3.1 does not raise P on these units"
+    gate: "1 unit filtered: NCT04354896 (levothyroxine, null trial), by the restated TRUST trial, the case section 9.5 was written for"
+    aspid_trial_profiles: "expected values, tied AUC: evidence 0.547, evolution 0.547, funding 0.564 (v3.1: 0.573, 0.432, 0.534); below P alone, as expected for axes that are not meant to track outcomes"
+    extra_indicators: "tied AUC / Spearman with P: against_share 0.673 / 0.31; weakest_level 0.715 / 0.63; human_outcome 0.581 / 0.09; independent_outcome 0.558 / 0.22; best_design_outcome 0.542 / 0.22; best_effect_outcome 0.531 / 0.21; unverified_links 0.423 / 0.59; feasibility 0.388 / 0.18 (registry trials were all run, so it is not about outcomes); momentum 1.0 on only 14 known units (noise until shown on more)"
+  notes:
+    - "The normalizer (normalize_card/v7) is the main limit, not the rules: 7 of 30 cards got relation 'other' on their only claim ('tofacitinib - other - sarcopenia', 'follow-up visit - other - re-hospitalisation') and were not verified (v2's normalizer: 3 of 30); only 10 of 30 cards have any mechanism link, although several texts argue one (phosphatidic acid: anabolic signalling; levothyroxine); one card (NCT02402608) wrote six parallel outcomes as a chain of effect links, so its P is a product of six (0.037, positive trial)."
+    - "So P here is mostly the level of the outcome link: weak 0.667, unverified 0.5, contested 0.333. The 0.677 says that support for the outcome before the trial tracks the outcome somewhat on these units, not yet that the mechanism chain does."
