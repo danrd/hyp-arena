@@ -244,9 +244,66 @@ def rescore_v3(results: dict, no_stance_as_support: bool = False, variant: str =
     return out
 
 
+def explore_v3(steps=(1, 2, 3), tag: str = "_v3", variant: str = "v3") -> dict:
+    """The exploratory look fixed in specs/calibration-v3-2026-11-05.yaml: each additional indicator of v3_extra (Spearman
+    with P, tied AUC against the outcomes, orientation: higher is better except against_share and unverified_links) and the
+    ASPID expected values of the trial profiles over the v3 axes. Decides nothing."""
+    from scipy.stats import spearmanr
+    from hyparena.backtest import tied_auc
+    from hyparena.card import aspid_v3, v3_extra
+    from hyparena.card.models import ClaimVerification, HypothesisCard
+    us, res = {}, {}
+    for st in steps:
+        f = CAL / f"run_{st}{tag}.json"
+        if f.exists():
+            us.update({u["id"]: u for u in json.loads((CAL / f"units_{st}.json").read_text())})
+            res.update(json.loads(f.read_text()))
+    v3s = rescore_v3(res, variant=variant)
+    rows = {}
+    for h, v3 in v3s.items():
+        it = res[h]["items"][0]
+        card = HypothesisCard.model_validate(it["card"])
+        claims = [ClaimVerification.model_validate(c) for c in it["verification"]["claims"]]
+        rows[h] = (v3, v3_extra.extras(card, claims, v3, us[h]["written_on"], variant))
+    lower_better = {"against_share", "unverified_links"}
+    ladders = {"best_design_outcome": v3_extra.DESIGN_LADDER, "best_effect_outcome": v3_extra.EFFECT_LADDER,
+               "weakest_level": lv_link_order(variant)}
+    def num(k, v):
+        if v is None:
+            return None
+        if k in ladders:
+            return float(ladders[k].index(v)) if v in ladders[k] else None
+        return float(v)
+    out = {"n": len(rows), "indicators": {}}
+    P = {h: r[0]["P"] for h, r in rows.items()}
+    for k in rows and next(iter(rows.values()))[1]:
+        xs = {h: num(k, r[1][k]) for h, r in rows.items()}
+        xs = {h: (-x if k in lower_better else x) for h, x in xs.items() if x is not None}
+        pos = [(x, 0.0) for h, x in xs.items() if us[h]["label"] == 1]
+        neg = [(x, 0.0) for h, x in xs.items() if us[h]["label"] == 0]
+        hs = list(xs)
+        rho = spearmanr([xs[h] for h in hs], [P[h] for h in hs]).correlation if len(set(xs.values())) > 1 else None
+        out["indicators"][k] = {"known": len(xs), "auc": round(tied_auc(pos, neg), 3) if pos and neg else None,
+                                "spearman_with_P": round(rho, 2) if rho == rho and rho is not None else None}
+    out["profiles"] = {}
+    for prof in aspid_v3.load():
+        agg = aspid_v3.rank(rows, prof, K=10000)
+        if agg is None:
+            continue
+        pos = [(agg.expected[h], agg.std[h]) for h in agg.expected if us[h]["label"] == 1]
+        neg = [(agg.expected[h], agg.std[h]) for h in agg.expected if us[h]["label"] == 0]
+        out["profiles"][prof] = {"ranked": len(agg.expected), "auc": round(tied_auc(pos, neg), 3) if pos and neg else None}
+    return out
+
+
+def lv_link_order(variant: str):
+    from hyparena.card import v3_levels as lv
+    return lv.SCALES["link_v31" if variant == "v3.1" else "link"]
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("cmd", choices=["pick", "units", "run", "score", "score-v3"])
+    ap.add_argument("cmd", choices=["pick", "units", "run", "score", "score-v3", "explore-v3"])
     ap.add_argument("--step", type=int, default=1)
     ap.add_argument("--config", default="configs/v2-flash.yaml")
     ap.add_argument("--tag", default="", help="suffix of the run file, e.g. _msearch")
@@ -262,6 +319,8 @@ def main() -> None:
         if os.environ.get("ALLOW_PAID") != "1":
             raise SystemExit("paid: set ALLOW_PAID=1")
         run(a.step, a.config, a.tag)
+    elif a.cmd == "explore-v3":
+        print(json.dumps(explore_v3(tag=a.tag or "_v3", variant=a.variant), indent=1))
     elif a.cmd == "score-v3":
         print(json.dumps(score_v3(tag=a.tag or "_v3", no_stance_as_support=a.no_stance_as_support,
                                   variant=a.variant), indent=1))

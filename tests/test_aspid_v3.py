@@ -3,12 +3,12 @@ from hyparena.card import aspid_v3 as a
 
 def _r(P, scope, I, H=None, gate="pass", feas=None):
     return ({"P": P, "scope": scope, "I": I, "headroom_I": H if H is not None else I, "gate": gate},
-            {"path_to_human": feas} if feas is not None else None)
+            {"feasibility": float(feas)} if feas is not None else None)
 
 
 def test_profiles_load_and_a_low_plausibility_is_not_compensated():
     assert set(a.load()) == {"evidence", "evolution", "funding"}
-    res = {"A": _r(0.5, "hallmark", 0.8, 1.0, feas="0"), "B": _r(0.03, "hallmark", 1.0), "C": _r(0.4, "local", 1 / 3),
+    res = {"A": _r(0.5, "hallmark", 0.8, 1.0, feas="1"), "B": _r(0.03, "hallmark", 1.0), "C": _r(0.4, "local", 1 / 3),
            "F": _r(0.9, "organ", 0.6, gate="filtered")}
     for p in ("evidence", "funding"):
         out = a.rank(res, p, K=3000)
