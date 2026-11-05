@@ -144,7 +144,8 @@ def expand_registries() -> dict:
                 after = max(d for d in (str(x.get("written_on") or ""), str(x.get("enrolment_start") or ""),
                                         str(x.get("trial_start") or "")) if d) if any((x.get("written_on"), x.get("enrolment_start"), x.get("trial_start"))) else ""
                 title = x["title"] if x["title"] != sid else str(x.get("summary") or "")[:200]
-                title, pmids = title.split(" | ")[0], x.get("pmids") or []
+                title = next((t.strip() for t in title.split("|") if t.strip() and not t.strip().startswith("Date of")), sid)
+                pmids = x.get("pmids") or []
             out.append({"source_id": sid, "registry": reg, "set": "exp_reg", "title": title, "conditions": [conds],
                         "interventions": [{"type": "", "name": inter[:400]}], "primary_outcomes": prim,
                         "primary_completion": after[:10], "written_on": x.get("written_on"), "results_posted": False,
