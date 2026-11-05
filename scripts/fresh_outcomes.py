@@ -3,6 +3,16 @@ by code and spot-checked by Claude.
 
     python -m scripts.fresh_outcomes task     # the task for Argon: trials, their registered primary outcomes, the source texts
     python -m scripts.fresh_outcomes check    # Argon's reply (argon_labels.jsonl) checked: format, labels, sources, verbatim quotes
+    python -m scripts.fresh_outcomes expand   # the extension (user 2026-11-05): conditions matched as words, not whole strings
+    python -m scripts.fresh_outcomes task --set exp_2023 | exp_2000      # its two Argon tasks, by period
+    python -m scripts.fresh_outcomes check --set exp_2023 | exp_2000
+
+Extension: the benchmark and the calibration took a trial only when a condition is exactly one of the ageing conditions
+(hypothesis_sources_ctgov.CONDITIONS: "aging", "frailty", "sarcopenia", ...). The extension takes a condition that contains one of
+those words ("Sarcopenia in Elderly", "Physical Frailty", "Aging Well"), leaves out skin, facial, hair and cosmetic ageing, and
+leaves out every trial already in a candidate list, the benchmark, the calibration or the fresh set. Both periods: 2023-2026
+(results mostly after the models' training cutoffs: the clean part) and 2000-2022 (results the models may remember: orientation
+only), reported apart.
 
 Pool: CT.gov 2023-2026 "aging itself" candidates (ctgov_candidates_2023.yaml) that are not in the benchmark, were never labelled,
 were registered after their primary completion (so the benchmark's prospective rule left them out), and have an outcome
@@ -25,6 +35,20 @@ from scripts.ctgov_outcomes import KG, LABELS_SET, _norm, papers, posted_results
 HS = KG / "hypothesis_sources"
 FRESH = HS / "calibration" / "fresh"
 INPUTS, TASK, REPLY, SHEET = FRESH / "inputs.jsonl", FRESH / "argon_task.md", FRESH / "argon_labels.jsonl", FRESH / "recheck_sheet.md"
+EXPANDED = FRESH / "expanded_candidates.yaml"
+SETS = {"exp_2023": ("2023-01-01", "2026-10-31"), "exp_2000": ("2000-01-01", "2022-12-31")}
+
+
+def use_set(name: str) -> None:
+    """Point the task and check files at an extension set (fresh/<name>/)."""
+    global INPUTS, TASK, REPLY, SHEET, LABELS_OUT
+    d = FRESH / name
+    d.mkdir(parents=True, exist_ok=True)
+    INPUTS, TASK, REPLY, SHEET = d / "inputs.jsonl", d / "argon_task.md", d / "argon_labels.jsonl", d / "recheck_sheet.md"
+    LABELS_OUT = d / "labels.yaml"
+
+
+LABELS_OUT = FRESH / "labels.yaml"
 
 RULES = """For each trial, report what happened to its PRIMARY outcome, from the sources given with the trial only (do not search
 for other sources, do not use knowledge outside them).
@@ -55,10 +79,48 @@ def pool() -> list[dict]:
             and c["primary_completion"] and str(c["written_on"])[:10] > str(c["primary_completion"])[:10]]
 
 
-def task() -> dict:
+def expand() -> dict:
+    """Candidates of the extension, both periods, written to fresh/expanded_candidates.yaml (no outcome read)."""
+    import re
+    import scripts.hypothesis_sources_ctgov as h
+    word = re.compile(r"\b(aging|ageing|frail\w*|sarcopeni\w*|longevity|senescence|inflammaging)\b", re.I)
+    skin = re.compile(r"skin|facial|face|wrinkl|photo|hair|cosmet|anti-?aging", re.I)
+
+    class Words(set):
+        def __contains__(self, c):
+            return bool(word.search(c)) and not skin.search(c)
+    original = h.CONDITIONS
+    known = {c["source_id"] for f in ("ctgov_candidates.yaml", "ctgov_candidates_2023.yaml")
+             for c in yaml.safe_load((HS / f).read_text())["items"]}
+    known |= {u["id"] for u in json.loads((KG.parent / "hyp-arena" / "data" / "benchmark" / "v2_units.json").read_text())["units"]}
+    known |= {json.loads(x)["nct"] for x in INPUTS.read_text().splitlines() if x.strip()} if INPUTS.exists() else set()
+    sts = h.studies()                                  # the API query uses the original condition list (search expansion)
+    h.CONDITIONS = Words()
+    out = []
+    try:
+        for name, (lo, hi) in SETS.items():
+            h.FIRST_FROM, h.FIRST_TO = lo, hi
+            for st in sts:
+                c = h.candidate(st)
+                if c is None or c["source_id"] in known or any(x.strip().lower() in original for x in c["conditions"]):
+                    continue
+                if not c["results_posted"] and not c["result_pmids_listed"]:
+                    c["result_pmids_si"] = h.pubmed_si(c["source_id"])
+                out.append({**c, "set": name})
+    finally:
+        h.CONDITIONS = original
+    EXPANDED.write_text(yaml.safe_dump({"selection": "extension, see scripts/fresh_outcomes.py (2026-11-05)", "n": len(out),
+                                        "items": out}, allow_unicode=True, sort_keys=False))
+    return {k: sum(1 for c in out if c["set"] == k) for k in SETS}
+
+
+def task(name: str = "") -> dict:
     rows = []
-    for c in sorted(pool(), key=lambda c: hashlib.sha1(c["source_id"].encode()).hexdigest()):
+    cands = pool() if not name else [c for c in yaml.safe_load(EXPANDED.read_text())["items"] if c["set"] == name]
+    for c in sorted(cands, key=lambda c: hashlib.sha1(c["source_id"].encode()).hexdigest()):
         sources = []
+        if not c.get("primary_completion"):
+            continue
         if c.get("results_posted"):
             txt = posted_results(c["source_id"])
             if txt:
@@ -116,7 +178,7 @@ def check() -> dict:
         sheet += [f"## {x['nct']}: {x['label']} (source {x['source']})", f"> {x['quote']}", f"note: {x['note']}",
                   "agree: · correct label: ", ""]
     SHEET.write_text("\n".join(sheet) + "\n")
-    (FRESH / "labels.yaml").write_text(yaml.safe_dump({"labelled_by": "Argon (Gemini deep research), checked by code",
+    LABELS_OUT.write_text(yaml.safe_dump({"labelled_by": "Argon (Gemini deep research), checked by code",
                                                        "items": list(got.values())}, allow_unicode=True, sort_keys=False))
     return {"trials": len(rows), "answered": len(got), "missing": missing, "problems": problems,
             "labels": dict(Counter(x["label"] for x in got.values())), "recheck": len(pick)}
@@ -124,9 +186,13 @@ def check() -> dict:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("cmd", choices=["task", "check"])
+    ap.add_argument("cmd", choices=["task", "check", "expand"])
+    ap.add_argument("--set", default="", choices=["", *SETS])
     a = ap.parse_args()
-    print(json.dumps(task() if a.cmd == "task" else check(), indent=1, ensure_ascii=False))
+    if a.set:
+        use_set(a.set)
+    out = expand() if a.cmd == "expand" else task(a.set) if a.cmd == "task" else check()
+    print(json.dumps(out, indent=1, ensure_ascii=False))
 
 
 if __name__ == "__main__":
