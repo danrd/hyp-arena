@@ -70,3 +70,26 @@ def test_measure_v3_relevance_and_baselines():
     assert m["extraction"]["design"] == 1.0
     assert "effect_class" in m["failed"]          # the phrase "2.4 kg" is raw units: unclear by rule A, gold says medium
     assert "comparison" in m["failed"]            # 1.0 equals the constant baseline of one pair: not passed
+
+
+def test_relevance_check_targets_and_merge():
+    from hyparena.card.verifier import merge_relevance, relevance_targets
+    abstracts = {"1": {"title": "Exercise in old age.", "abstract": SOURCE.split(". ", 1)[1]}}
+    neither = json.loads(_reply(stance="neither", intervention_match="exact"))["records"]
+    assert relevance_targets(neither, abstracts) == ["1"]
+    assert relevance_targets(json.loads(_reply())["records"], abstracts) == []          # already has a stance
+    q = "Grip strength rose by 2.4 kg (p = 0.01) after training."
+    ok = {"pmid": "1", "intervention": "same_kind", "outcome": "same_domain", "result": "supports", "quote": q}
+    m = merge_relevance(neither, [ok], abstracts)[0]
+    assert m["stance"] == "supports" and m["intervention_match"] == "class" and "relevance_check" in m["flags"]
+    assert neither[0]["stance"] == "neither"                                             # pure: the input is not changed
+    for bad in ({**ok, "outcome": "different"}, {**ok, "result": "none"}, {**ok, "quote": "not in the abstract"}):
+        assert merge_relevance(neither, [bad], abstracts)[0]["stance"] == "neither"
+
+
+def test_record_for_applies_saved_relevance_answers():
+    rep = _reply(stance="neither")
+    chk = json.dumps({"relevance": {"pmid": "1", "intervention": "same", "outcome": "same", "result": "refutes",
+                                    "quote": "Grip strength rose by 2.4 kg (p = 0.01) after training."}})
+    assert record_for([rep], "1", SOURCE, by_stance=True)["relevant"] is False
+    assert record_for([rep, chk], "1", SOURCE, by_stance=True)["relevant"] is True

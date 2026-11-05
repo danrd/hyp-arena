@@ -321,10 +321,79 @@ def v3_fields(rec: EvidenceRecord, r: dict, source: str, review: bool = False) -
     rec.reports_trial = _text(r.get("reports_trial"))
 
 
+RELEVANCE_TEMPLATE = ("relevance_check", "v1")
+
+
+def relevance_targets(records: list, abstracts: dict) -> list[str]:
+    """PMIDs whose verbatim records all came back with stance "neither": the ones a second, narrower question is asked
+    about (extraction-gold-v8: the verifier gives same-kind findings stance neither and the run drops them)."""
+    by = {}
+    for r in records or []:
+        if not isinstance(r, dict):
+            continue
+        pmid = str(r.get("pmid", "")).replace("PMID:", "").strip()
+        a = abstracts.get(pmid)
+        if a is None or not r.get("quote") or _norm(r["quote"]) not in _norm(a["title"] + " " + a["abstract"]):
+            continue
+        by.setdefault(pmid, []).append(r.get("stance"))
+    return [p for p, st in by.items() if all(x not in ("supports", "refutes") for x in st)]
+
+
+def _validate_relevance(v: dict, source: str) -> list[str]:
+    r = (v or {}).get("relevance") or {}
+    out = []
+    if r.get("intervention") not in ("same", "same_kind", "different"):
+        out.append("intervention must be same, same_kind or different.")
+    if r.get("outcome") not in ("same", "same_domain", "different"):
+        out.append("outcome must be same, same_domain or different.")
+    if r.get("result") not in ("supports", "refutes", "none"):
+        out.append("result must be supports, refutes or none.")
+    if r.get("result") in ("supports", "refutes") and (not r.get("quote") or _norm(r["quote"]) not in _norm(source)):
+        out.append("quote must be copied exactly from the abstract.")
+    return out
+
+
+def ask_relevance(client, family: str, avoid: frozenset, claim, card: HypothesisCard, pmid: str, a: dict,
+                  log: Optional[list] = None) -> Optional[dict]:
+    """The second question for one paper (relevance_check/v1); None when no valid answer came back."""
+    p = card.pico
+    source = a["title"] + " " + a["abstract"]
+    variables = {"claim": claim, "claim_plain": card.claim_plain, "pmid": pmid, "title": a["title"], "abstract": a["abstract"],
+                 "population": ", ".join(f"{k} {v}" for k, v in p.population.model_dump().items() if v and v != "unknown") or "unknown",
+                 "intervention": "; ".join(i.label for i in p.intervention) or "unknown"}
+    value, _ = ask(client, role="verify_claim", family=family, template=RELEVANCE_TEMPLATE[0], version=RELEVANCE_TEMPLATE[1],
+                   variables=variables, validate=lambda v: _validate_relevance(v, source), rounds=2, avoid=avoid, log=log)
+    return None if value is None or _validate_relevance(value, source) else value["relevance"]
+
+
+def merge_relevance(records: list, checks: list, abstracts: dict) -> list:
+    """Records with the answers of the second question applied (pure): a paper whose result is on the claim's intervention
+    or one of the same kind, on the claim's outcome or its domain, with a result, gets that stance on its first record, the
+    check's verbatim quote, intervention_match "class" for a same-kind intervention (an exact or related match is kept
+    otherwise) and the flag relevance_check. Anything else stays as the first reader returned it."""
+    out = [dict(r) if isinstance(r, dict) else r for r in records or []]
+    for c in checks or []:
+        pmid = str(c.get("pmid", "")).replace("PMID:", "").strip()
+        if c.get("intervention") == "different" or c.get("outcome") == "different" or c.get("result") not in ("supports", "refutes"):
+            continue
+        a = abstracts.get(pmid)
+        if a is None or not c.get("quote") or _norm(c["quote"]) not in _norm(a["title"] + " " + a["abstract"]):
+            continue
+        r = next((r for r in out if isinstance(r, dict) and str(r.get("pmid", "")).replace("PMID:", "").strip() == pmid), None)
+        if r is None:
+            continue
+        r["stance"], r["quote"], r["quote_role"] = c["result"], c["quote"], "finding" if r.get("quote_role") != "background" else "background"
+        if c.get("intervention") == "same_kind" and r.get("intervention_match") in (None, "", "exact", "dose_differs", "regimen_differs"):
+            r["intervention_match"] = "class"
+        r["flags"] = list(r.get("flags") or []) + ["relevance_check"]
+    return out
+
+
 def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisCard,
                  as_of: Optional[str] = None, retmax: int = RETMAX, log: Optional[list] = None,
                  fallback: Optional[str] = None, expert_pmids: Optional[list[tuple[str, str]]] = None,
-                 check_subgroups: bool = True, search: str = "keywords", template_version: str = "") -> ClaimVerification:
+                 check_subgroups: bool = True, search: str = "keywords", template_version: str = "",
+                 relevance_check: bool = False) -> ClaimVerification:
     """`fallback`: the family asked when `family`'s reply is cut off with no complete record (gemini stops in
     the middle of verbatim quotes, most likely its recitation filter)."""
     cv = ClaimVerification(id=claim.id)
@@ -380,6 +449,10 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
         value, fam = ask(client, role="verify_claim", family=fallback, template=TEMPLATE[0], version=version,
                          variables=variables, validate=lambda v: _validate(v, abstracts), rounds=2, avoid=avoid,
                          log=log, parse=parse_records)
+    if relevance_check and value and value.get("records"):
+        checks = [c for c in (ask_relevance(client, fam, avoid, claim, card, pmid, abstracts[pmid], log=log)
+                              for pmid in relevance_targets(value["records"], abstracts)) if c]
+        value = {**value, "records": merge_relevance(value["records"], checks, abstracts)}
     rejected = []
     for r in (value or {}).get("records") or []:
         if not isinstance(r, dict):

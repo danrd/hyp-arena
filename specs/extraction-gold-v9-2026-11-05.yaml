@@ -1,0 +1,22 @@
+# verify_claim/v9 with a second relevance question, on fresh pairs, fixed before the first call (user decision 2026-11-04,
+# option B: a narrower second question for papers returned without a stance; plus the rule for claims with several outcomes).
+id: extraction-gold-v9
+date: 2026-11-05
+question: "With a second, narrower question for papers the verifier returns without a stance, does relevance reach 0.8 on fresh pairs, with the extraction fields still above their thresholds?"
+code: "scripts/extraction_gold_v3.py --gold v9; hyparena/card/verifier.py relevance_targets, ask_relevance, merge_relevance (verify_claim relevance_check=True)"
+prompts:
+  verify_claim/v9: "v8 + the outcome rule: the outcome closest to the claim is the claim's object; when the claim or hypothesis names several outcomes, the first one named that the abstract reports; a null result on another outcome does not make effect_class none"
+  relevance_check/v1: "one call per paper whose verbatim records all have stance neither: intervention same / same_kind / different, outcome same / same_domain / different, result supports / refutes / none, verbatim quote. Code gives the first record that stance (intervention_match class for same_kind, flag relevance_check) only when neither answer is 'different' and the quote is verbatim"
+config: configs/v3-flash.yaml
+pairs: "42 pairs from the retrieval calibration (8 human trial claims, main claim of each card in retrieval/human_cards.json; papers the retrieval strategies found), stratified by Jules' blind relevance labels (up to 3 direct, 3 related, 1 no, 1 unlabelled per claim, SHA-1 order); none of the 74 earlier papers (scripts/extraction_gold_v3.py pairs --gold v9)"
+gold: "longevity-kg extraction_gold/labels_v9.jsonl, labelled by hand 2026-11-05 before the run, rules of the README: 16 relevant, 26 not; borderline calls noted (delirium prevention and nursing-home care; tDCS trial with training in both arms; GHS and bone; pharmacist intervention and ED visits; a pharmacokinetic paper restating a phase 2 trial). Jules' direct/related agree with relevant on 12 + 4 of 33"
+measures: "as extraction-gold-v3b: relevance on all 42 pairs (after the second question); design, comparison, n_total, effect_class on the 16 relevant pairs; a missing record is wrong on every field"
+thresholds: {relevance: 0.8, design: 0.8, comparison: 0.8, n_total: 0.8, effect_class: 0.6}
+constant_baselines: {relevance: 0.62, design: 0.31, comparison: 0.44, n_total: 0.38, effect_class: 0.81}
+reading:
+  passed: "every measure at or above its threshold and above its baseline (relevance at least 34 of 42; design, comparison, n_total at least 13 of 16; effect_class at least 14 of 16)"
+  not_passed: "per-measure review with the user; the paid v3 calibration check waits"
+reported_not_judged: "relevance before the second question (the first reader alone); how many papers got the second question and how many changed; effect phrase overlap"
+calls: "about 42 first-reader calls plus one per paper returned without a stance (expected 15-25)"
+cost_estimate_usd: "about 0.10-0.15"
+caveat: "one labeller (Claude); 16 relevant pairs, so one pair moves a field by 0.06; Jules' strata were used only to pick the papers"

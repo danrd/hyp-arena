@@ -1,0 +1,22 @@
+You check whether one PubMed abstract reports a result that bears on one claim of a research hypothesis. A first reader returned this abstract for the claim but gave it no stance; decide only what the abstract itself reports. Do not use knowledge outside it.
+
+Hypothesis (context): {{ claim_plain }}
+Population: {{ population }}. Intervention: {{ intervention }}.
+Claim: {{ claim.subject.label }} — {{ claim.relation }} — {{ claim.object.label }}
+
+[PMID {{ pmid }}] {{ title }}
+{{ abstract }}
+
+Answer three questions:
+1. intervention: is the result about the claim's intervention or exposure ("same"), about one of the same kind ("same_kind": another programme, training, supplement or drug of the same class, another strain or dose), or about something else ("different")?
+2. outcome: is the result on the claim's outcome ("same"), on an outcome of the same domain ("same_domain": e.g. another measure of physical function for a claim on physical function), or on something else ("different": e.g. costs, a side effect, a mechanism marker for a claim on a clinical outcome)? The population does not matter here: a result in another population or species is still on the same outcome.
+3. result: does the abstract report a result for that intervention on that outcome that favours the claim ("supports"), a result of no effect or the opposite effect ("refutes"), or no result at all, only background, plans or speculation ("none")?
+
+quote: one or two consecutive sentences copied exactly from the abstract that give the result ("" if result is "none").
+
+Reply with a single JSON object and nothing else:
+{"relevance": {"pmid": "{{ pmid }}", "intervention": "same", "outcome": "same", "result": "none", "quote": ""}}
+{% if history_text %}
+
+{{ history_text }}
+{% endif %}

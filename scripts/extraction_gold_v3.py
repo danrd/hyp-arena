@@ -39,10 +39,13 @@ CONFIG = "configs/v3-flash.yaml"
 FAMILY = "deepseek"
 GOLDS = {"manual": {"file": "labels_manual.jsonl", "versions": ("v5", "v6"), "suffix": ""},
          "v3": {"file": "labels_v3.jsonl", "versions": ("v5", "v7"), "suffix": "_g3"},
-         "v8": {"file": "labels_v8.jsonl", "versions": ("v5", "v8"), "suffix": "_g8", "task": "task_v8.jsonl"}}
+         "v8": {"file": "labels_v8.jsonl", "versions": ("v5", "v8"), "suffix": "_g8", "task": "task_v8.jsonl"},
+         "v9": {"file": "labels_v9.jsonl", "versions": ("v9",), "suffix": "_g9", "task": "task_v9.jsonl",
+                "cards": "retrieval/human_cards.json"}}
 FIELDS = ("design", "comparison", "n_total", "effect_class")
 THRESHOLDS = {"design": 0.8, "comparison": 0.8, "n_total": 0.8, "effect_class": 0.6}   # both specs; never changed after a result
-RELEVANCE_THRESHOLD = 0.8                                                                # gold v3
+RELEVANCE_THRESHOLD = 0.8
+RELEVANCE_CHECK = {"v9"}            # versions run with the second question (verifier.relevance_check)                                                                # gold v3
 V5_DESIGN = {"rct": "rct", "open_label_pilot": "non_randomised", "observational": "observational", "review": "review"}
 
 
@@ -66,7 +69,8 @@ class Capture:
         return r
 
 
-def pairs(steps=(2, 3), per_unit: int = 2) -> list[dict]:
+def pairs(steps=(2, 3), per_unit: int = 2, out_name: str = "task_v8.jsonl",
+          seen_files=("task.jsonl",)) -> list[dict]:
     """Fresh claim-paper pairs for the v8 test (gold v8), from calibration steps 2 and 3 (never looked at for extraction):
     per unit, in SHA-1 order of the claim, one paper the v2 verifier recorded something for under that claim (evidence,
     counterevidence or a refusal) and one paper of the card's search that it recorded nothing for. Papers of the first 45 pairs
@@ -75,7 +79,8 @@ def pairs(steps=(2, 3), per_unit: int = 2) -> list[dict]:
     from hyparena.tools import pubmed
     cal = GOLD_DIR.parent
     cards = json.loads(CARDS.read_text())
-    seen = {json.loads(x)["pmid"] for x in (GOLD_DIR / "task.jsonl").read_text().splitlines() if x.strip()}
+    seen = {json.loads(x)["pmid"] for f in seen_files for x in (GOLD_DIR / f).read_text().splitlines() if x.strip()}
+    used = set()                                        # one paper once across the new pairs
     sha = lambda x: hashlib.sha1(x.encode()).hexdigest()
     out = []
     for st in steps:
@@ -91,12 +96,13 @@ def pairs(steps=(2, 3), per_unit: int = 2) -> list[dict]:
                     continue
                 rec = {r["record_id"].replace("PMID:", "") for k in ("evidence", "counterevidence") for r in cv.get(k, [])}
                 rec |= {r.get("record_id", "").replace("PMID:", "") for r in cv.get("refusals", [])}
-                rec = sorted((p for p in rec if p in searched), key=lambda p: sha(unit + p))
-                other = sorted((p for p in searched if p not in rec), key=lambda p: sha(unit + cv["id"] + p))
-                if rec and not any(g["kind"] == "recorded" for g in got):
-                    got.append({"claim": cv["id"], "pmid": rec[0], "kind": "recorded"})
-                if other and not any(g["kind"] == "not_recorded" for g in got):
-                    got.append({"claim": cv["id"], "pmid": other[0], "kind": "not_recorded"})
+                rec = sorted((p for p in rec if p in searched and p not in used), key=lambda p: sha(unit + p))
+                other = sorted((p for p in searched if p not in rec and p not in used), key=lambda p: sha(unit + cv["id"] + p))
+                half = per_unit // 2
+                if rec and sum(g["kind"] == "recorded" for g in got) < half:
+                    got.append({"claim": cv["id"], "pmid": rec[0], "kind": "recorded"}); used.add(rec[0])
+                if other and sum(g["kind"] == "not_recorded" for g in got) < half:
+                    got.append({"claim": cv["id"], "pmid": other[0], "kind": "not_recorded"}); used.add(other[0])
                 if len(got) >= per_unit:
                     break
             for g in got:
@@ -107,7 +113,39 @@ def pairs(steps=(2, 3), per_unit: int = 2) -> list[dict]:
     abstracts = pubmed.fetch([o["pmid"] for o in out])
     out = [{**o, "title": abstracts[o["pmid"]]["title"], "abstract": abstracts[o["pmid"]]["abstract"]}
            for o in out if abstracts.get(o["pmid"], {}).get("abstract")]
-    (GOLD_DIR / "task_v8.jsonl").write_text("".join(json.dumps(o, ensure_ascii=False) + "\n" for o in out))
+    (GOLD_DIR / out_name).write_text("".join(json.dumps(o, ensure_ascii=False) + "\n" for o in out))
+    return out
+
+
+def pairs_retrieval(per_claim=(("direct", 3), ("related", 3), ("no", 1), (None, 1)), limit: int = 7) -> list[dict]:
+    """Fresh pairs for gold v9 from the retrieval calibration (8 human trial claims, their main claim as in
+    scripts/retrieval_eval.claims, papers the retrieval strategies found), stratified by Jules' blind relevance label (direct,
+    related, no) so that relevant papers of the same kind are well represented; SHA-1 order within a stratum; papers of earlier
+    pairs left out. The labels only stratify: the gold is labelled by hand. Writes task_v9.jsonl."""
+    import hashlib
+    from hyparena.card.models import HypothesisCard
+    ret = GOLD_DIR.parent / "retrieval"
+    cards = json.loads((ret / "human_cards.json").read_text())
+    lab = {(x["claim_id"], x["pmid"]): x["label"] for f in ("labels_part1.jsonl", "labels_part2.jsonl")
+           for x in map(json.loads, filter(str.strip, (ret / "relevance" / f).read_text().splitlines()))}
+    seen = {json.loads(x)["pmid"] for f in ("task.jsonl", "task_v8.jsonl") for x in (GOLD_DIR / f).read_text().splitlines() if x.strip()}
+    sha = lambda x: hashlib.sha1(x.encode()).hexdigest()
+    out = []
+    for t in map(json.loads, (ret / "relevance" / "task.jsonl").read_text().splitlines()):
+        unit = t["claim_id"].split("|")[0]
+        if t["group"].startswith("animal") or unit not in cards:
+            continue
+        card = HypothesisCard.model_validate(cards[unit])
+        c = card.outcome_claim or card.claims[0]
+        papers = sorted((p for p in t["papers"] if p["pmid"] not in seen and p.get("abstract")), key=lambda p: sha(unit + p["pmid"]))
+        got = []
+        for label, k in per_claim:
+            got += [p for p in papers if lab.get((t["claim_id"], p["pmid"])) == label and p not in got][:k]
+        for p in got[:limit]:
+            out.append({"pair_id": f"{unit}|{c.id}|{p['pmid']}", "jules": lab.get((t["claim_id"], p["pmid"])),
+                        "claim": f"{c.subject.label} — {c.relation} — {c.object.label}", "claim_context": card.claim_plain,
+                        "pmid": p["pmid"], "title": p["title"], "abstract": p["abstract"]})
+    (GOLD_DIR / "task_v9.jsonl").write_text("".join(json.dumps(o, ensure_ascii=False) + "\n" for o in out))
     return out
 
 
@@ -119,7 +157,7 @@ def run(fake: bool = False, gold_name: str = "v3", only: tuple = ()) -> None:
     pubmed.search = lambda *a, **k: []                    # no retrieval: only the gold paper is read
     gold = load_gold(gold_name)
     versions = only or GOLDS[gold_name]["versions"]
-    cards = json.loads(CARDS.read_text())
+    cards = json.loads((GOLD_DIR.parent / GOLDS[gold_name]["cards"]).read_text() if "cards" in GOLDS[gold_name] else CARDS.read_text())
     client, _ = _client(CONFIG, fake, 2 * len(gold) * len(versions))
     for v in versions:
         out_p = _run_file(gold_name, v, fake)
@@ -135,7 +173,8 @@ def run(fake: bool = False, gold_name: str = "v3", only: tuple = ()) -> None:
             claim = next(c for c in card.claims if c.id == cid)
             cap = Capture(client)
             verifier.verify_claim(cap, FAMILY, frozenset(), claim, card, as_of=None, expert_pmids=[(pmid, "gold")],
-                                  check_subgroups=False, search="keywords", template_version=v)
+                                  check_subgroups=False, search="keywords", template_version=v,
+                                  relevance_check=v in RELEVANCE_CHECK)
             done[g["pair_id"]] = {"replies": cap.texts}
             out_p.write_text(json.dumps(done, ensure_ascii=False, indent=1))
             print(json.dumps({"version": v, "pair": g["pair_id"], "calls": len(cap.texts)}), flush=True)
@@ -146,12 +185,20 @@ def record_for(replies: list[str], pmid: str, source: str, review: bool = False,
     `relevant`: the verifier returned a record with stance supports or refutes."""
     from hyparena.card.models import EvidenceRecord
     from hyparena.card.verifier import _norm, parse_records, v3_fields
-    recs = []
+    from hyparena.card.llm import parse_fullest
+    from hyparena.card.verifier import merge_relevance
+    recs, checks = [], []
     for t in reversed(replies):                           # the last parsed reply is the one a run keeps
         value = parse_records(t or "")
         if value and value.get("records"):
             recs = [r for r in value["records"] if isinstance(r, dict)]
             break
+    for t in replies:                                     # answers of the second question (relevance_check), if any
+        v = parse_fullest(t or "") if '"relevance"' in (t or "") else None
+        if v and isinstance(v.get("relevance"), dict):
+            checks = [c for c in checks if c.get("pmid") != v["relevance"].get("pmid")] + [v["relevance"]]
+    if checks:
+        recs = merge_relevance(recs, checks, {pmid: {"title": "", "abstract": source}})
     recs = [r for r in recs if str(r.get("pmid", "")).replace("PMID:", "").strip() == pmid
             and r.get("quote") and _norm(r["quote"]) in _norm(source)]
     if not recs:
@@ -248,9 +295,9 @@ def score(fake: bool = False, gold_name: str = "v3", versions: tuple = ()) -> di
             pmid = g["pair_id"].split("|")[2]
             a = abstracts.get(pmid) or {"title": tasks[g["pair_id"]]["title"], "abstract": tasks[g["pair_id"]]["abstract"]}
             pred[g["pair_id"]] = record_for(runs[g["pair_id"]].get("replies", []), pmid, a["title"] + " " + a["abstract"],
-                                            review=pubmed.is_review(a), by_stance=gold_name in ("v3", "v8"))
+                                            review=pubmed.is_review(a), by_stance=gold_name in ("v3", "v8", "v9"))
         sub = [g for g in gold if g["pair_id"] in runs]
-        out[v] = measure_v3(sub, pred, v5=v == "v5") if gold_name in ("v3", "v8") else measure(sub, pred, v5=v == "v5")
+        out[v] = measure_v3(sub, pred, v5=v == "v5") if gold_name in ("v3", "v8", "v9") else measure(sub, pred, v5=v == "v5")
         if gold_name == "v3" and len(sub) < len(gold):
             out[v]["note"] = f"only {len(sub)} of {len(gold)} pairs have saved replies"
         if v != "v5":
@@ -267,8 +314,8 @@ def main() -> None:
     ap.add_argument("--versions", default="", help="comma-separated, e.g. v6 to rescore saved v6 replies on gold v3")
     a = ap.parse_args()
     if a.cmd == "pairs":
-        out = pairs()
-        print(len(out), Counter(o["v2_recorded"] for o in out))
+        out = pairs() if a.gold == "v8" else pairs_retrieval()
+        print(len(out), Counter(o.get("v2_recorded", o.get("jules")) for o in out))
         return
     if a.cmd == "run":
         if not a.fake and os.environ.get("ALLOW_PAID") != "1":
