@@ -93,3 +93,21 @@ def test_record_for_applies_saved_relevance_answers():
                                     "quote": "Grip strength rose by 2.4 kg (p = 0.01) after training."}})
     assert record_for([rep], "1", SOURCE, by_stance=True)["relevant"] is False
     assert record_for([rep, chk], "1", SOURCE, by_stance=True)["relevant"] is True
+
+
+def test_rescore_v3_counts_no_stance_records_only_in_the_sensitivity(monkeypatch):
+    from hyparena.card import rules_v3
+    from scripts.calibration import rescore_v3
+    seen = []
+    monkeypatch.setattr(rules_v3, "evaluate", lambda card, claims, alts: seen.append([len(c.evidence) for c in claims])
+                        or type("R", (), {"as_dict": lambda self: {"P": 0.5}})())
+    rec = {"source": "PubMed", "record_id": "PMID:1", "qualifiers_match": {"intervention_match": "class"}}
+    other = {**rec, "record_id": "PMID:2", "qualifiers_match": {"intervention_match": "different"}}
+    import yaml
+    from pathlib import Path
+    card = yaml.safe_load((Path(__file__).parent / "fixtures" / "cards" / "ex2_senolytics_function.yaml").read_text())["card"]
+    res = {"u": {"items": [{"card": card, "v3": {}, "verification": {"card_id": "H-0001",
+                                                                       "claims": [{"id": "c1", "no_stance": [rec, other]}]}}]}}
+    rescore_v3(res)
+    rescore_v3(res, no_stance_as_support=True)
+    assert seen == [[0], [1]]                     # only the same-class record counts, and only in the sensitivity

@@ -137,7 +137,7 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
     search_mode = cfg_extra.get("search", "keywords")                  # `search: model` in the config
     method = cfg_extra.get("method", "v2")                              # `method: v3` (docs/spec/method-v3.md)
     norm_version = "v7" if method == "v3" else None                     # normalize_card/v7: mechanism chain, hallmarks, experiment
-    verify_version = "v6" if method == "v3" else ""                     # verify_claim/v6: design, n, comparison, effect size
+    verify_version = cfg_extra.get("verify_version") or ("v6" if method == "v3" else "")   # v3: v6 or later (`verify_version`)
     from hyparena.card import rules as _rules
     _rules.GRADED_CONTEXT = cfg_extra.get("admission") == "graded"     # `admission: graded` in the config
     log: list = []

@@ -315,6 +315,8 @@ class ClaimVerification(BaseModel):
     evidence: list[EvidenceRecord] = Field(default_factory=list)
     counterevidence: list[EvidenceRecord] = Field(default_factory=list)
     refusals: list[Refusal] = Field(default_factory=list)
+    no_stance: list[EvidenceRecord] = Field(default_factory=list)   # v3: findings returned with stance neither; not scored,
+    # kept for the sensitivity analysis of the v3 calibration (the verifier's recall is about 0.6, extraction-gold-v9)
     unresolved: bool = False                     # entities could not be mapped
     contrast: dict[str, str] = Field(default_factory=dict)   # outcome of a contrast: alternative, x_status, y_status
     flags: list[str] = Field(default_factory=list)            # e.g. contrast_unchecked
