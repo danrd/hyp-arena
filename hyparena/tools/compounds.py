@@ -159,6 +159,28 @@ def _targets(chembl: str) -> list[str]:
     return sorted({m["target_chembl_id"] for m in data.get("mechanisms") or [] if m.get("target_chembl_id")})
 
 
+TARGET_CACHE = ROOT / "data" / "cache" / "chembl_targets.json"
+
+
+def target_names(target_id: str) -> list[str]:
+    """Names of a ChEMBL target, lower case: its preferred name, the description of each component and the components'
+    gene symbols and synonyms (CHEMBL2094253 -> "cyclooxygenase", "prostaglandin g/h synthase 2", "ptgs2", ...); cached.
+    [] when the target is not found; raises LookupError_ on network trouble."""
+    cache = json.loads(TARGET_CACHE.read_text()) if TARGET_CACHE.exists() else {}
+    if target_id in cache:
+        return cache[target_id]
+    t = _get(f"{CHEMBL}/target/{target_id}.json") or {}
+    names = {t.get("pref_name") or ""}
+    for comp in t.get("target_components") or []:
+        names.add(comp.get("component_description") or "")
+        names |= {x.get("component_synonym") or "" for x in comp.get("target_component_synonyms") or []}
+    out = sorted({n.strip().lower() for n in names if n and n.strip()})
+    cache[target_id] = out
+    TARGET_CACHE.parent.mkdir(parents=True, exist_ok=True)
+    TARGET_CACHE.write_text(json.dumps(cache, ensure_ascii=False, indent=0))
+    return out
+
+
 def _atc(chembl: str) -> list[str]:
     """ATC codes of a parent molecule and its forms (tacrolimus's are on tacrolimus monohydrate)."""
     if not chembl:

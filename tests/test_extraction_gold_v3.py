@@ -99,7 +99,7 @@ def test_rescore_v3_counts_no_stance_records_only_in_the_sensitivity(monkeypatch
     from hyparena.card import rules_v3
     from scripts.calibration import rescore_v3
     seen = []
-    monkeypatch.setattr(rules_v3, "evaluate", lambda card, claims, alts: seen.append([len(c.evidence) for c in claims])
+    monkeypatch.setattr(rules_v3, "evaluate", lambda card, claims, alts, variant="v3": seen.append([len(c.evidence) for c in claims])
                         or type("R", (), {"as_dict": lambda self: {"P": 0.5}})())
     rec = {"source": "PubMed", "record_id": "PMID:1", "qualifiers_match": {"intervention_match": "class"}}
     other = {**rec, "record_id": "PMID:2", "qualifiers_match": {"intervention_match": "different"}}

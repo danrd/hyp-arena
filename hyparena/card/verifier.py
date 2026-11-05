@@ -484,6 +484,8 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
             flags=[f for f in (r.get("flags") or []) if isinstance(f, str)], retrieved_at=a.get("year", ""),
             notes=f"extracted by {fam}" + (f"; source given by expert decision {by_expert[pmid]}" if pmid in by_expert else ""))
         contexts.flag(rec, a["title"] + " " + a["abstract"])
+        if pubmed.is_retracted(a):
+            rec.flags.append("retracted_pubmed")          # read by the v3.1 rules (section 12, point 7); v2 and v3 unchanged
         v3_fields(rec, r, a["title"] + " " + a["abstract"], review)
         if rec.qualifiers_match["intervention_match"] in ("exact", "dose_differs", "regimen_differs") and not names_in_source(
                 claim, card, a["title"], a["abstract"], quote):
