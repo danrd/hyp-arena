@@ -45,7 +45,15 @@ def search(query: str, retmax: int = 8, as_of: Optional[str] = None) -> list[str
     params = {"db": "pubmed", "term": query, "retmax": retmax, "sort": "relevance", "retmode": "json"}
     if as_of:
         params.update({"datetype": "pdat", "mindate": "1800/01/01", "maxdate": as_of.replace("-", "/")})
-    return _get("esearch.fcgi", params).json().get("esearchresult", {}).get("idlist", [])
+    for attempt in range(5):
+        res = _get("esearch.fcgi", params).json().get("esearchresult", {})
+        if "ERROR" not in res:
+            return res.get("idlist", [])
+        # NCBI can answer HTTP 200 with an error in the body ("Search is temporarily unavailable ... Cannot connect to
+        # SOLR", 2026-11-05): that is not an empty result, so it is retried and then raised, never read as no papers
+        if attempt < 4:
+            time.sleep(2 ** attempt)
+    raise RuntimeError(f"PubMed search failed: {str(res.get('ERROR'))[:200]}")
 
 
 def fetch(pmids: list[str]) -> dict[str, dict]:
