@@ -1,0 +1,22 @@
+# ASPID profiles over the axes of method v3 (user decision 2026-11-05, "for a trial"): the axes are indicators and ASPID
+# aggregates them with random weights under each profile's order of importance, instead of the fixed product V = P x W x I
+# (which is one point of this family: equal weights on the log scale). hyparena/card/aspid_v3.py.
+# Indicators: P, W, I, I_headroom (I if the experiment cut off every supported alternative), feasibility (path_to_human of
+# the v2 indicator set: human safety data exist or not; unknown is drawn over its range). P, I and I_headroom are on log
+# scales, so the aggregation is a randomly weighted geometric mean: a near-zero plausibility is not compensated.
+profiles:
+  evidence:
+    version: "trial-1"
+    description: "Plausibility of the mechanism first, then what the experiment teaches, then reach."
+    indicators: [P, I, W]
+    tiers: [[P], [I], [W]]
+  evolution:
+    version: "trial-1"
+    description: "Room to grow: what the hypothesis could teach with a better experiment, then plausibility, then reach."
+    indicators: [I_headroom, P, W]
+    tiers: [[I_headroom], [P], [W]]
+  funding:
+    version: "trial-1"
+    description: "Ready to fund: plausibility, then feasibility, then informativeness, then reach."
+    indicators: [P, feasibility, I, W]
+    tiers: [[P], [feasibility], [I], [W]]
