@@ -24,3 +24,4 @@ known_limitations:
   - "alternatives proposed by a model, without the knowledge graph"
 calls: "about 20 per unit (new v3 card, more claims from the chain, model-written queries, alternatives and their support), about 600 in all; cap 60 per unit"
 cost_estimate_usd: "about 1-1.5 (cap: 1800 calls, about 4.5)"
+code_change_before_the_run: "2026-11-05, after the NCBI search outage (esearch answering 500, or HTTP 200 with 'Search is temporarily unavailable ... Cannot connect to SOLR' in the body): pubmed.search retries an error in the body and then raises instead of returning no papers; the unit is skipped and picked up by the next run. The run waits for esearch to answer with results in at least 9 of 10 probes."
