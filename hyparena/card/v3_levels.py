@@ -15,6 +15,10 @@ SCALES: dict[str, tuple[str, ...]] = {
     "comparison": ("none", "within_group", "between_groups"),
     "context": ("class", "adjacent", "exact"),
     "link": ("refuted", "contested", "unverified", "weak", "moderate", "strong"),
+    # v3.1 (2026-11-05): data in conflict ranks above no data (method-v3.md section 12, point 3)
+    "link_v31": ("refuted", "unverified", "contested", "weak", "moderate", "strong"),
+    # v3.1: support of an alternative above the unverified level, three equal steps (section 12, point 6b)
+    "alt_support_v31": ("weak", "moderate", "strong"),
     "scope": ("local", "organ", "hallmark"),
     "discrimination": ("unchanged", "weakened", "eliminated"),   # weight (i-1)/(k-1): unchanged 0, weakened 0.5, eliminated 1
 }

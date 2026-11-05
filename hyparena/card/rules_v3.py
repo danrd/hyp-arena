@@ -19,6 +19,12 @@ TOP_DESIGNS = ("rct", "meta_analysis")
 # context weighs 1.0); levels, not tuned numbers: strong ~ two such trials, moderate ~ one trial of 100-299, weak ~ anything
 STRONG, MODERATE = 1.5, 0.6
 I_CAP = 1.5                                        # "one and a half well-supported alternatives cut off" is the maximum
+VARIANTS = ("v3", "v3.1")                          # v3.1: method-v3.md section 12 (2026-11-05); "v3" is what runs record
+PRECLINICAL_LINKS = ("delivery", "engagement", "pathway", "effect")
+
+
+def _lw(level: str, variant: str) -> float:
+    return lv.weight("link_v31" if variant == "v3.1" else "link", level)
 
 
 def human_claim(claim: Claim) -> bool:
@@ -36,9 +42,12 @@ def context_level(rec: EvidenceRecord) -> Optional[str]:
     return "adjacent" if no else "exact"
 
 
-def usable(rec: EvidenceRecord) -> bool:
-    """A finding, or a review sentence restating one trial's result (section 9.1); not speculation, not retracted."""
+def usable(rec: EvidenceRecord, variant: str = "v3") -> bool:
+    """A finding, or a review sentence restating one trial's result (section 9.1); not speculation, not retracted (v3.1: also
+    when PubMed itself marks the paper retracted, section 12 point 7)."""
     if "retracted" in rec.flags or rec.quote_role == "speculation":
+        return False
+    if variant == "v3.1" and "retracted_pubmed" in rec.flags:
         return False
     return rec.quote_role == "finding" or bool(rec.reports_trial)
 
@@ -53,14 +62,18 @@ def record_design(rec: EvidenceRecord) -> str:
             "primary_experiment": "animal" if species_key(rec.species) != "human" else "other"}.get(st, "other")
 
 
-def record_weight(rec: EvidenceRecord, claim: Claim, against: bool) -> float:
-    """design x precision x effect x comparison x context, each a level of its scale (i/k)."""
-    if not usable(rec):
+def record_weight(rec: EvidenceRecord, claim: Claim, against: bool, variant: str = "v3") -> float:
+    """design x precision x effect x comparison x context, each a level of its scale (i/k). v3.1 (section 12 point 1): the
+    links before the outcome (delivery, engagement, pathway, effect) take the design scale of preclinical claims (cells,
+    review, primary study), so the distance to the clinic is charged once, on the outcome link; the context factor still
+    charges another species or population on every record."""
+    if not usable(rec, variant):
         return 0.0
     ctx = context_level(rec)
     if ctx is None:
         return 0.0
-    w = lv.design_weight(record_design(rec), human_claim(claim))
+    preclinical = variant == "v3.1" and claim.link in PRECLINICAL_LINKS
+    w = lv.design_weight(record_design(rec), human_claim(claim) and not preclinical)
     w *= lv.weight("precision", lv.precision_band(rec.n_total))
     effect = "large" if against else rec.effect_class           # a clear null weighs like a clear positive (section 3)
     w *= lv.weight("effect", effect)
@@ -73,27 +86,27 @@ def _independent(records: list[EvidenceRecord]) -> int:
     return len({r.reports_trial or r.lab_or_cohort or r.record_id for r in records})
 
 
-def strong_refutation(cv: ClaimVerification, claim: Claim) -> bool:
+def strong_refutation(cv: ClaimVerification, claim: Claim, variant: str = "v3") -> bool:
     """The gate (section 3): a top-design, between-group record against in the claim's population (exact context), and no
     record for of that level."""
     def top(r):
-        return usable(r) and record_design(r) in TOP_DESIGNS and r.comparison in ("between_groups", "unknown") \
+        return usable(r, variant) and record_design(r) in TOP_DESIGNS and r.comparison in ("between_groups", "unknown") \
             and context_level(r) == "exact"
     against = [r for r in cv.counterevidence if top(r) and (r.comparison == "between_groups" or r.reports_trial)]
     support = [r for r in cv.evidence if top(r) and r.comparison == "between_groups"]
     return bool(against) and not support
 
 
-def link_level(cv: Optional[ClaimVerification], claim: Claim) -> tuple[str, float, float]:
+def link_level(cv: Optional[ClaimVerification], claim: Claim, variant: str = "v3") -> tuple[str, float, float]:
     """(level, weight for, weight against). No verification or no usable record: unverified."""
     if cv is None:
         return "unverified", 0.0, 0.0
-    if strong_refutation(cv, claim):
-        return "refuted", 0.0, sum(record_weight(r, claim, True) for r in cv.counterevidence)
-    f_recs = [r for r in cv.evidence if record_weight(r, claim, False) > 0]
-    a_recs = [r for r in cv.counterevidence if record_weight(r, claim, True) > 0]
-    F = sum(record_weight(r, claim, False) for r in f_recs)
-    A = sum(record_weight(r, claim, True) for r in a_recs)
+    if strong_refutation(cv, claim, variant):
+        return "refuted", 0.0, sum(record_weight(r, claim, True, variant) for r in cv.counterevidence)
+    f_recs = [r for r in cv.evidence if record_weight(r, claim, False, variant) > 0]
+    a_recs = [r for r in cv.counterevidence if record_weight(r, claim, True, variant) > 0]
+    F = sum(record_weight(r, claim, False, variant) for r in f_recs)
+    A = sum(record_weight(r, claim, True, variant) for r in a_recs)
     if F == 0 and A == 0:
         return "unverified", F, A
     if A > 0 and A >= F / 2:
@@ -117,6 +130,24 @@ def established_by_approval(claim: Claim, card: HypothesisCard) -> bool:
     except Exception:
         return False
     return len(comps) == 1 and comps[0].max_phase == 4 and bool(comps[0].targets)
+
+
+def approval_matches_target(claim: Claim, card: HypothesisCard) -> bool:
+    """v3.1 (section 12 point 5): the approval rule only when the engagement link names one approved drug (phase 4) and one
+    of its ChEMBL mechanism targets is the link's object (a target name, a component description or a gene symbol appears
+    in the object label as words). Unresolved names or network trouble: no bonus, the link goes through the literature."""
+    import re
+    if not established_by_approval(claim, card):
+        return False
+    try:
+        from hyparena.card.entities import subject_compounds
+        from hyparena.tools.compounds import target_names
+        comp = (subject_compounds(claim.subject.label, card) or [None])[0]
+        names = {n for t in comp.targets for n in target_names(t)}
+    except Exception:
+        return False
+    obj = " " + re.sub(r"[^a-z0-9]+", " ", claim.object.label.lower()) + " "
+    return any(len(n) >= 3 and " " + re.sub(r"[^a-z0-9]+", " ", n).strip() + " " in obj for n in names)
 
 
 def chain(card: HypothesisCard) -> list[Claim]:
@@ -167,7 +198,10 @@ class V3Result:
 
 
 def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
-             alt_verifications: Optional[dict[str, ClaimVerification]] = None) -> V3Result:
+             alt_verifications: Optional[dict[str, ClaimVerification]] = None, variant: str = "v3") -> V3Result:
+    """`variant` "v3" (what runs record) or "v3.1" (method-v3.md section 12; applied offline to saved records)."""
+    if variant not in VARIANTS:
+        raise ValueError(f"variant {variant!r} not in {VARIANTS}")
     by_id = {cv.id: cv for cv in ver_claims}
     links = chain(card)
     res = V3Result()
@@ -175,29 +209,46 @@ def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
         res.flags.append("build_mechanism")
         return res
     for c in links:
-        level, F, A = link_level(by_id.get(c.id), c)
-        if level in ("unverified", "weak") and established_by_approval(c, card):
+        level, F, A = link_level(by_id.get(c.id), c, variant)
+        approved = approval_matches_target(c, card) if variant == "v3.1" else established_by_approval(c, card)
+        if level in ("unverified", "weak") and approved:
             level = "moderate"
             res.flags.append(f"{c.id}_established_by_approval")
         res.links[c.id], res.weights[c.id] = level, [round(F, 3), round(A, 3)]
         if level == "refuted" and (c.role in ("outcome", "mechanism") or c.link in ("engagement", "pathway", "effect", "outcome")):
             res.gate, res.gate_reason = "filtered", f"{c.id} refuted by a randomised between-group finding against"
     # plausibility: product over the chain; parallel outcomes count once: the primary outcome, else their mean
+    # v3.1 (section 12 point 4): consecutive pathway links (a cascade written as several steps) are one slot, their
+    # geometric mean, so that describing a pathway in more detail does not by itself lower P
     outs, primary = outcome_group(card, links)
     P = 1.0
-    for c in links:
-        if c in outs:
+    run: list[float] = []
+    for c in links + [None]:
+        if c is not None and variant == "v3.1" and c.link == "pathway" and c not in outs:
+            run.append(_lw(res.links[c.id], variant))
             continue
-        P *= lv.weight("link", res.links[c.id])
+        if run:
+            prod = 1.0
+            for x in run:
+                prod *= x
+            P *= prod ** (1 / len(run))
+            run = []
+        if c is None or c in outs:
+            continue
+        P *= _lw(res.links[c.id], variant)
     if outs:
-        P *= lv.weight("link", res.links[primary.id]) if primary is not None else \
-            sum(lv.weight("link", res.links[c.id]) for c in outs) / len(outs)
+        P *= _lw(res.links[primary.id], variant) if primary is not None else \
+            sum(_lw(res.links[c.id], variant) for c in outs) / len(outs)
     res.P = round(P, 4)
-    res.weakest = min(links, key=lambda c: lv.weight("link", res.links[c.id])).id
-    # scope: only links at least weak
+    res.weakest = min(links, key=lambda c: _lw(res.links[c.id], variant)).id
+    # scope: only links at least weak; v3.1 (section 12 point 6a): a hallmark only on a link at least moderate, a hallmark
+    # on a weak link counts as an organ or system
     supported = [c for c in links if res.links[c.id] in ("weak", "moderate", "strong")]
-    if any(c.object.hallmark or c.subject.hallmark for c in supported):
+    hallmark_ok = [c for c in supported if variant != "v3.1" or res.links[c.id] in ("moderate", "strong")]
+    if any(c.object.hallmark or c.subject.hallmark for c in hallmark_ok):
         res.scope = "hallmark"
+    elif variant == "v3.1" and any(c.object.hallmark or c.subject.hallmark for c in supported):
+        res.scope = "organ"
     elif any(c.link in ("engagement", "pathway", "effect") or c.role == "mechanism" for c in supported):
         res.scope = "organ"
     res.W = round(lv.weight("scope", res.scope), 4)
@@ -207,8 +258,13 @@ def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
     for alt in card.proposed_alternatives:
         a_claim = Claim(id=alt.id, subject=alt.subject, relation=alt.relation, object=alt.object, qualifiers=alt.qualifiers,
                         role="premise", source_span="")
-        level, F, A = link_level(alt_verifications.get(alt.id), a_claim)
-        a = lv.weight("link", level) if level in ("weak", "moderate", "strong") else 0.0   # no support: weighs nothing
+        level, F, A = link_level(alt_verifications.get(alt.id), a_claim, variant)
+        if level not in ("weak", "moderate", "strong"):
+            a = 0.0                                   # no support: weighs nothing
+        elif variant == "v3.1":                       # section 12 point 6b: support above unverified, steps 1/3, 2/3, 1
+            a = lv.weight("alt_support_v31", level)
+        else:
+            a = lv.weight("link", level)
         d = max(lv.weight("discrimination", alt.on_positive), lv.weight("discrimination", alt.on_negative))
         res.alternatives[alt.id] = {"a": round(a, 3), "d": d, "level": level}
         total += a * d
@@ -230,6 +286,8 @@ def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
         res.flags.append("improve_experiment")
     if any(r.reports_trial and not r.primary_record for cv in ver_claims for r in cv.evidence + cv.counterevidence):
         res.flags.append("find_primary_report")
+    if variant == "v3.1" and any("retracted_pubmed" in r.flags for cv in ver_claims for r in cv.evidence + cv.counterevidence):
+        res.flags.append("retracted_source_dropped")
     if any(res.links[c.id] == "contested" for c in links):
         res.flags.append("contested_link")
     return res

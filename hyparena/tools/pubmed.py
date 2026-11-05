@@ -82,11 +82,19 @@ def fetch(pmids: list[str]) -> dict[str, dict]:
                    if art.find(".//ArticleTitle") is not None else "",
                    "abstract": " ".join(parts), "year": year,
                    "pubtypes": [p.text for p in art.iterfind(".//PublicationType") if p.text],
+                   "retraction_in": [c.findtext("PMID") or "" for c in art.iterfind(".//CommentsCorrections")
+                                     if c.get("RefType") == "RetractionIn"],
                    "first_author": art.findtext(".//AuthorList/Author/LastName") or "",
                    "journal": art.findtext(".//Journal/Title") or ""}
             out[pmid] = rec
             (CACHE / f"{pmid}.json").write_text(json.dumps(rec, ensure_ascii=False))
     return out
+
+
+def is_retracted(rec: dict) -> bool:
+    """PubMed marks the paper itself as retracted (publication type or a RetractionIn link). Cached records fetched before
+    2026-11-05 carry only the publication type."""
+    return "Retracted Publication" in rec.get("pubtypes", []) or bool(rec.get("retraction_in"))
 
 
 def is_review(rec: dict) -> bool:
