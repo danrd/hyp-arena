@@ -1,0 +1,18 @@
+# normalize_card/v8 on the 30 calibration texts, cards only, fixed before the call (user decision 2026-11-05: fix the
+# normalizer first; the v3 calibration showed it, not the rules, to be the limit: specs/calibration-v3-2026-11-05.yaml).
+id: normalizer-v8
+date: 2026-11-05
+code: scripts/normalizer_v8_check.py
+prompt: "normalize_card/v8 = v7 + (1) a verb-to-relation map, 'other' only for claims that are not about an effect or association; (2) a reason stated as background or hedged is a mechanism step; (3) parallel outcomes are outcome links (one primary), not effect links. Examples in the new rules are invented (an earlier draft used phrases of these texts: removed before the call)"
+config: configs/v3-flash.yaml   # Gemini 3.5 Flash, thinking minimal, temperature 0
+gold: "hand label (Claude, 2026-11-05, before the call): 12 of 30 summaries state a reason or mechanism (MECHANISM_STATED in the script)"
+baseline_v7: {unparsed: 7, mechanism_recall: "5 of 12", parallel_as_chain: 2, mechanism_in_unstated_texts: 2}
+thresholds:
+  unparsed: "at most 2 of 30"
+  mechanism_recall: "at least 9 of 12"
+  parallel_as_chain: "0"
+reported_not_judged: "mechanism links in the 18 texts labelled as stating none (a rise would mean invented steps; source spans are checked verbatim by the normalizer's validator)"
+reading: "passed: all three thresholds; then the fresh calibration sample is built and run with v8 (not these 30 units again). Not passed: review with the user."
+calls: 30
+cost_estimate_usd: "about 0.05"
+caveat: "the same 30 texts the v7 problems were seen on; the fix is checked here for its mechanics, the effect on P only on the fresh sample"
