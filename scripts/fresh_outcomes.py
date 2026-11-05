@@ -36,7 +36,8 @@ HS = KG / "hypothesis_sources"
 FRESH = HS / "calibration" / "fresh"
 INPUTS, TASK, REPLY, SHEET = FRESH / "inputs.jsonl", FRESH / "argon_task.md", FRESH / "argon_labels.jsonl", FRESH / "recheck_sheet.md"
 EXPANDED = FRESH / "expanded_candidates.yaml"
-SETS = {"exp_2023": ("2023-01-01", "2026-10-31"), "exp_2000": ("2000-01-01", "2022-12-31")}
+SETS = {"exp_2023": ("2023-01-01", "2026-10-31"), "exp_2000": ("2000-01-01", "2022-12-31"), "exp_reg": ("2000-01-01", "2026-10-31")}
+EXPANDED_REG = FRESH / "expanded_registries.yaml"
 
 
 def use_set(name: str) -> None:
@@ -114,9 +115,50 @@ def expand() -> dict:
     return {k: sum(1 for c in out if c["set"] == k) for k in SETS}
 
 
+def expand_registries() -> dict:
+    """ISRCTN, DRKS, NTR and UMIN candidates (found earlier through PubMed secondary ids) that the benchmark's rules left out:
+    interventional, a condition containing an ageing word, any registration timing, not in the benchmark or the calibration.
+    Mapped to the CT.gov candidate fields; a registry without a completion date takes the later of registration and start as
+    the date after which a paper counts (protocols and reviews are left out by title, as for CT.gov)."""
+    import re
+    word = re.compile(r"\b(aging|ageing|frail\w*|sarcopeni\w*|longevity|senescence|inflammaging)\b", re.I)
+    used = {u["id"] for u in json.loads((KG.parent / "hyp-arena" / "data" / "benchmark" / "v2_units.json").read_text())["units"]}
+    used |= {u["id"] for st in (1, 2, 3) for u in json.loads((HS / "calibration" / f"units_{st}.json").read_text())}
+    strip = lambda t: re.sub(r"<[^>]+>", " ", str(t or "")).strip()
+    out = []
+    for reg in ("isrctn", "drks", "ntr", "umin"):
+        for x in yaml.safe_load((HS / f"{reg}_candidates.yaml").read_text())["items"]:
+            sid = x["source_id"]
+            conds = " | ".join(x["conditions"]) if isinstance(x.get("conditions"), list) else str(x.get("conditions") or "")
+            if sid in used or not word.search(conds):
+                continue
+            if reg != "isrctn" and "interventional" not in str(x.get("study_type", "")).lower():
+                continue
+            if reg == "isrctn":
+                inter = ", ".join(i.get("name", "") for i in x.get("interventions") or [])
+                prim = [{"measure": strip(o.get("measure")), "time_frame": ""} for o in x.get("primary_outcomes") or []]
+                after, title, pmids = x.get("overall_end") or x["written_on"], x["title"], x.get("result_pmids") or []
+            else:
+                inter = str(x.get("arms") or x.get("intervention") or x.get("interventions") or "")
+                prim = [{"measure": strip(x.get("primary_outcome")), "time_frame": ""}]
+                after = max(d for d in (str(x.get("written_on") or ""), str(x.get("enrolment_start") or ""),
+                                        str(x.get("trial_start") or "")) if d) if any((x.get("written_on"), x.get("enrolment_start"), x.get("trial_start"))) else ""
+                title = x["title"] if x["title"] != sid else str(x.get("summary") or "")[:200]
+                title, pmids = title.split(" | ")[0], x.get("pmids") or []
+            out.append({"source_id": sid, "registry": reg, "set": "exp_reg", "title": title, "conditions": [conds],
+                        "interventions": [{"type": "", "name": inter[:400]}], "primary_outcomes": prim,
+                        "primary_completion": after[:10], "written_on": x.get("written_on"), "results_posted": False,
+                        "result_pmids_listed": pmids, "result_pmids_si": [], "source_url": x.get("source_url")})
+    EXPANDED_REG.write_text(yaml.safe_dump({"selection": "registries extension, scripts/fresh_outcomes.py (2026-11-05)",
+                                            "n": len(out), "items": out}, allow_unicode=True, sort_keys=False))
+    from collections import Counter
+    return dict(Counter(c["registry"] for c in out))
+
+
 def task(name: str = "") -> dict:
     rows = []
-    cands = pool() if not name else [c for c in yaml.safe_load(EXPANDED.read_text())["items"] if c["set"] == name]
+    src = EXPANDED_REG if name == "exp_reg" else EXPANDED
+    cands = pool() if not name else [c for c in yaml.safe_load(src.read_text())["items"] if c["set"] == name]
     for c in sorted(cands, key=lambda c: hashlib.sha1(c["source_id"].encode()).hexdigest()):
         sources = []
         if not c.get("primary_completion"):
@@ -186,12 +228,13 @@ def check() -> dict:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("cmd", choices=["task", "check", "expand"])
+    ap.add_argument("cmd", choices=["task", "check", "expand", "expand-registries"])
     ap.add_argument("--set", default="", choices=["", *SETS])
     a = ap.parse_args()
     if a.set:
         use_set(a.set)
-    out = expand() if a.cmd == "expand" else task(a.set) if a.cmd == "task" else check()
+    out = expand() if a.cmd == "expand" else expand_registries() if a.cmd == "expand-registries" else \
+        task(a.set) if a.cmd == "task" else check()
     print(json.dumps(out, indent=1, ensure_ascii=False))
 
 
