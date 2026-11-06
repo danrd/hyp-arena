@@ -47,3 +47,15 @@ def test_scope_is_not_a_factor_of_v():
               claim("c9", "x", "improves_healthspan_in", "human", "outcome", "outcome")])
     res = r32.evaluate(c, [ClaimVerification(id="c1", evidence=[rec(1, "animal", n=40, effect="large")] * 2)])
     assert res.V == pytest.approx(res.P * res.I, rel=1e-3)
+
+
+def test_v33_links_without_records_do_not_count_and_coverage_says_so():
+    out = claim("c9", "x", "improves_healthspan_in", "human", "outcome", "outcome")
+    long_ = card([claim(f"c{i}", "x", "activates", f"y{i}", link) for i, link in enumerate(("engagement", "pathway", "effect"), 1)] + [out])
+    short = card([out])
+    cv = [ClaimVerification(id="c9", evidence=[rec(2, "rct", n=200)])]
+    a, b = r32.evaluate(long_, cv, fold=True, neutral_unverified=True), r32.evaluate(short, cv, fold=True, neutral_unverified=True)
+    assert a.P == pytest.approx(b.P) and a.coverage == pytest.approx(0.25) and b.coverage == 1.0
+    assert r32.evaluate(long_, cv, fold=True).P < a.P                       # v3.2: the long chain is multiplied down
+    against = [ClaimVerification(id="c1", counterevidence=[rec(3, "animal", n=40)])] + cv
+    assert r32.evaluate(long_, against, fold=True, neutral_unverified=True).P < a.P   # data against still count

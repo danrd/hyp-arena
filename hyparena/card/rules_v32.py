@@ -16,6 +16,10 @@ target, pathway cascades as one slot):
 - scope W is not a factor of V: V = P x I; W stays an indicator of ASPID;
 - fold=True (2026-11-06, specs/v32-independence-fold-2026-11-06.yaml): records of one independence group (one trial in
   several papers) count as one source: the heaviest fully, the rest with FOLD_REST.
+
+v3.3 = evaluate(..., fold=True, neutral_unverified=True) (specs/v33-2026-11-06.yaml): a link with no usable record on either
+side counts as 1 in P and its interval instead of 0.5, and `coverage` (share of the chain's slots with a usable record or
+established by approval) carries what is not checked, as a separate ASPID indicator.
 """
 from __future__ import annotations
 
@@ -108,6 +112,7 @@ class V32Result:
     scope: str = "local"
     links: dict[str, list[float]] = field(default_factory=dict)      # id -> [S, lo, hi, F, A]
     weakest: str = ""
+    coverage: float = 0.0                                             # share of slots with data (v3.3 indicator)
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -115,7 +120,7 @@ class V32Result:
 
 def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
              alt_verifications: Optional[dict[str, ClaimVerification]] = None, c: float = C_ANCHOR,
-             fold: bool = False) -> V32Result:
+             fold: bool = False, neutral_unverified: bool = False) -> V32Result:
     base = r3.evaluate(card, ver_claims, alt_verifications, variant=VARIANT_BASE)     # gate, scope, approval, flags
     res = V32Result(gate=base.gate, scope=base.scope)
     by_id = {cv.id: cv for cv in ver_claims}
@@ -130,6 +135,9 @@ def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
         if base.links.get(cl.id) == "moderate" and f"{cl.id}_established_by_approval" in base.flags:
             s, lo, hi = max(s, 5 / 6), max(lo, 5 / 6), max(hi, 5 / 6)
         res.links[cl.id] = [round(s, 4), round(lo, 4), round(hi, 4), round(F, 3), round(A, 3)]
+    checked = {cl.id for cl in links if res.links[cl.id][3] + res.links[cl.id][4] > 0
+               or f"{cl.id}_established_by_approval" in base.flags}
+    tri_of = {k: ([1.0, 1.0, 1.0] if neutral_unverified and k not in checked else v[:3]) for k, v in res.links.items()}
     outs, primary = r3.outcome_group(card, links)
     tri = [1.0, 1.0, 1.0]
     run: list[list[float]] = []
@@ -142,21 +150,34 @@ def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
             tri[k] *= prod ** (1 / len(vals))
     for cl in links + [None]:
         if cl is not None and cl.link == "pathway" and cl not in outs:
-            run.append(res.links[cl.id][:3])
+            run.append(tri_of[cl.id])
             continue
         if run:
             take(run)
             run = []
         if cl is None or cl in outs:
             continue
-        take([res.links[cl.id][:3]])
+        take([tri_of[cl.id]])
     if outs:
         if primary is not None:
-            take([res.links[primary.id][:3]])
+            take([tri_of[primary.id]])
         else:
-            tri = [tri[k] * sum(res.links[o.id][k] for o in outs) / len(outs) for k in range(3)]
+            tri = [tri[k] * sum(tri_of[o.id][k] for o in outs) / len(outs) for k in range(3)]
     res.P, res.P_lo, res.P_hi = (round(x, 5) for x in tri)
     res.weakest = min(links, key=lambda x: res.links[x.id][0]).id
+    slots, run_ = [], []
+    for cl in links + [None]:
+        if cl is not None and cl.link == "pathway" and cl not in outs:
+            run_.append(cl.id)
+            continue
+        if run_:
+            slots.append(run_)
+            run_ = []
+        if cl is not None and cl not in outs:
+            slots.append([cl.id])
+    if outs:
+        slots.append([primary.id] if primary is not None else [o.id for o in outs])
+    res.coverage = round(sum(1 for sl in slots if any(i in checked for i in sl)) / len(slots), 4) if slots else 0.0
     total = 0.0
     supported = False
     for alt in card.proposed_alternatives:
