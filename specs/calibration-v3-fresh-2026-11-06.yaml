@@ -1,0 +1,31 @@
+# Method v3 on the fresh calibration sample, fixed before the run (user decisions 2026-11-04/05/06: fresh sample from
+# late-registered and word-matched trials, outcome labels by hand-run Argon checked by Claude, normalize_card/v9).
+id: calibration-v3-fresh
+date: 2026-11-06
+question: "Does P order fresh trials by their outcome, on trials not used before (clean part: first posted 2023-2026), with the normalizer fixed?"
+config: configs/v3-flash-n9.yaml   # normalize_card/v9, verify_claim/v9, proposed alternatives, rules_v3 (variant v3 as run)
+code: "scripts/calibration.py run --step 4 / --step 5 --config configs/v3-flash-n9.yaml --tag _v3; score-v3 --steps; cards frozen in calibration/cards_v3_v9.json"
+units:
+  clean_step4: "14 units (7 positive, 7 null): CT.gov first posted 2023-2026, late-registered or word-matched; 2 excluded before the run because the registry title states the result (units_4_excluded.json)"
+  orientation_step5: "30 units (13 positive, 17 null or negative): CT.gov 2000-2022 word-matched and ISRCTN, DRKS, NTR, UMIN; results the models may remember"
+  labels: "Argon by hand from the result abstracts and posted results; every decisive label checked by Claude against the rules (fresh/README.md)"
+  as_of: "min(registration, primary completion) per unit, as in the calibration"
+primary:
+  score: "P of the declared hypothesis; filtered by the gate: -1"
+  metric: "tied AUC with 95% bootstrap CI, separately for the clean part and the orientation part"
+  reading:
+    signal: "AUC >= 0.60 and lower CI bound above 0.45"
+    no_signal: "AUC < 0.55"
+    unclear: "otherwise"
+  expected_power: "with 14 clean units the CI is about +-0.25: unclear is the likely reading unless the effect is strong; the clean part is the test, the orientation part and the pooled 44 are reported"
+normalizer_check:
+  measures: "as specs/normalizer-v8-2026-11-05.yaml on the 44 cards: unparsed, mechanism recall on the 8 texts hand-labelled as stating a reason (MECHANISM_STATED_FRESH), parallel outcomes written as a chain"
+  thresholds: {unparsed: "at most 2 of 44", mechanism_recall: "at least 6 of 8", parallel_as_chain: "0"}
+reported_not_judged:
+  - "V; the gate; sensitivity with no-stance findings as support; v3.1 offline; ASPID trial profiles; the additional indicators (explore-v3)"
+  - "pooled with the first calibration (30 units, v7 cards): reported apart, not pooled, since the normalizer differs"
+known_limitations:
+  - "relevance recall of the verifier about 0.6; effect class formal on the extraction gold"
+  - "registry texts are current versions; late registration can carry knowledge of the result (two titles excluded for it; others read for result statements)"
+calls: "about 17 per unit, about 750 in all; cap 60 per unit"
+cost_estimate_usd: "about 2 (cap: 2640 calls, about 6.5)"

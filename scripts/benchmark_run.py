@@ -34,7 +34,8 @@ TEXTS = HS / "benchmark_v2_texts.jsonl"
 FEATURES = ROOT / "data" / "benchmark" / "v2_features.json"
 CTGOV = "https://clinicaltrials.gov/api/v2/studies/{}?fields=protocolSection"
 CAND = {"ctgov": "ctgov_candidates.yaml", "ctgov_2023": "ctgov_candidates_2023.yaml", "isrctn": "isrctn_candidates.yaml",
-        "drks": "drks_candidates.yaml", "ntr": "ntr_candidates.yaml", "anzctr": "anzctr_candidates.yaml"}
+        "drks": "drks_candidates.yaml", "ntr": "ntr_candidates.yaml", "anzctr": "anzctr_candidates.yaml",
+        "umin": "umin_candidates.yaml"}                    # umin: calibration extension only (2026-11-06), not in the benchmark
 MAX_FIELD = 3000                 # characters per free-text field (long CT.gov descriptions); recorded in the text as "[...]"
 # words that would mean the registry text reports a result (the record is the current version)
 RESULT_WORDS = re.compile(r"\b(results? (showed|show|indicate)|was significantly|were significantly|p\s*[<=]\s*0\.\d|we found|"
@@ -108,6 +109,11 @@ def build_texts(units: list[dict] | None = None, out_path: Path | None = None) -
         elif s == "drks":
             f = [("Conditions", _clip(c.get("conditions", "").replace(" | ", "; "))), ("Interventions", _clip(c.get("arms", "").replace(" | ", " "))),
                  ("Summary", _clip(c.get("summary"))), ("Primary outcomes", _clip(c.get("primary_outcome")))]
+        elif s == "umin":
+            title = next((t.strip() for t in str(c.get("title", "")).split("|") if t.strip() and not t.strip().startswith("Date of")), "")
+            f = [("Title", title), ("Conditions", _clip(str(c.get("conditions", "")).replace(" | ", " "))),
+                 ("Interventions", _clip(str(c.get("interventions", "")).replace(" | ", " "))),
+                 ("Objective", _clip(str(c.get("objective", "")).replace(" | ", " "))), ("Primary outcomes", _clip(c.get("primary_outcome")))]
         else:                                                              # ntr, anzctr
             po = re.sub(r"^\d+\s+\d+\s+", "", str(c.get("primary_outcome", "")))
             f = [("Title", c.get("title")), ("Conditions", "; ".join(map(str, _list(c.get("conditions"))))),
