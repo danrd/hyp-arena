@@ -1,0 +1,25 @@
+id: evolution-v3-pilot-2026-11-06
+written_on: '2026-11-06'
+status: run (exploration; no criterion was set before, the run was to see the format)
+what: evolution v3 (hyparena/card/evolve_v3.py, prompt evolve_v3/v1) on the top 10 of the pilot under the evidence profile,
+  all fixable items (8 x experiment_alternatives; 1 x write_mechanism; 1 x three items)
+cost: about 311 calls (about 0.8 USD; estimate was 0.6)
+result:
+  pairs: 10 improved versions, all scored
+  score_evidence: 'rose for 2 (NCT03370224 +0.01, NCT07498985 +0.08), fell for 8 (down to -0.17)'
+  expected_vs_obtained: expected +0.04..+0.11 (evidence) for experiment_alternatives; obtained mostly negative
+  P: fell in 9 of 10 (e.g. 0.93 -> 0.26), the chains grew by 2-7 links
+  I: rose in 6, fell in 3 (the alternatives were proposed anew for the new text, not the same ones)
+reading:
+  - the effect of an item is confounded: the whole pipeline runs again on the new text (a new card, a new search, new
+    alternatives), so the change measures everything at once, not the item
+  - the prompt's layout asks for a "Mechanism:" line every time, so every child wrote a mechanism even when only the
+    experiment was to change; the new links were checked and often found weak or contested, which lowered P and the
+    support share
+  - writing the mechanism out exposed weak links (a hypothesis rated well on its outcome alone turns out to rest on links
+    the literature does not back): informative, but not what the items asked
+fix_proposed: >-
+  controlled evolution: keep the parent's card, records and alternatives and change only what the item changes:
+  experiment_alternatives -> new decisive experiment, re-ask only which of the same alternatives it rules out (I);
+  clinical_endpoint -> re-extract the endpoint only; write_mechanism / rewrite_refuted_link / narrow_population -> new
+  links verified, unchanged links keep their records; prompt layout without a forced mechanism line
