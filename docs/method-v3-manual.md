@@ -220,14 +220,17 @@ Russian and English in one page, style of the project site). Order:
    weight sets → expected score, place, probability of the top 5).
 2. *Ranking by profile*: one tab per profile; the table shows the place, the expected score, the probability of the top 5
    and the profile's indicators in its order of importance (the reader chooses which columns to show); the top 3 are marked
-   with their strengths; pages of 15 rows, search, filter by intervention type.
+   with their strengths; pages of 15 rows, search, filter by intervention type. Improved versions (section 11), when
+   there are any, are ranked with the rest as their own rows, marked "improved version"; a note at the top of the page
+   links to the evolution section.
 3. *Each hypothesis* (collapsed, one-line verdict): the chain with each link coloured by S (links without data marked "not in
    P"), P with its interval, I, support share, scope, endpoint, AI role, places; what lifts and what lowers it (the indicators
    furthest above or below the middle of the pool, weighted by the profile's order; the strongest and weakest checked link);
    what would raise it: the improvement list of section 11, in two groups, each item with its facts and its expected
-   effect on the indicators and on the score under each profile.
-5. *Evolution* (when it was run): section 11.
-6. *Appendices*: the method in brief and a glossary; the full breakdown per hypothesis (every link with its records: PMID,
+   effect on the indicators and on the score under each profile. The list and the facts are collapsed by default under a
+   one-line summary (number of items, how many are fixable by rewriting, the best expected gain).
+4. *Evolution* (when it was run): section 11; the summary table first, the details of each pair collapsed after it.
+5. *Appendices*: the method in brief and a glossary; the full breakdown per hypothesis (every link with its records: PMID,
    for or against, weight, design, n, effect, verbatim quote; alternatives; the other indicators as percentiles of the
    pool); provenance and limitations (date, versions, hash of frozen scores).
 
@@ -257,22 +260,43 @@ Items fall into two classes:
 | needs new data | support_link | a link with weak support (0.5 ≤ S < 5/6) | P and support share with the link at 5/6 |
 | | check_link | a link without any record | the same |
 
-**Evolution** (`hyparena/card/evolve_v3.py`, on request): for the chosen hypotheses the system applies their "fixable by
-rewriting" items (all of them, or the ones named). One model call (prompt `evolve_v3/v1`) rewrites the registered text from
-the parent text and the items' facts only; code rejects a copy of the parent and a change of intervention. The improved
-text goes through the whole pipeline with the parent's literature cut-off (card, PubMed, alternatives) and the endpoint
-extraction by two model families, and is scored by v3.3 and ASPID. Cost: about 21 model calls per improved hypothesis.
+**Evolution** (`hyparena/card/evolve_v3.py`, on request) improves chosen hypotheses and scores the improved versions
+the same way as every hypothesis. Two purposes need two modes; as of 2026-11-06 only the first is implemented.
+
+| Mode | Purpose | What the writer may change | How the improved version is scored | Status |
+|---|---|---|---|---|
+| applying the list | apply the "fixable by rewriting" items | only what the items say, from their facts | the whole pipeline again on the new text, with the parent's literature cut-off | implemented, run once (below) |
+| controlled | test whether the list predicts the gain | one item at a time | the parent's card, records and alternatives are kept; only what the item changes is re-checked (for an experiment item: which of the same alternatives the new experiment rules out; for an endpoint item: the endpoint) | planned |
+| free | get the best hypothesis | everything (hypothesis, mechanism, population, experiment), using the whole analysis; may name the papers it relies on | the whole pipeline again; the papers it names are added to the search and count only if the verifier finds them with a verbatim quote before the cut-off; the distance from the parent is reported, and a version far from it is marked "new hypothesis after" the parent | planned (the user's preferred mode for improving: free rewriting by a stronger model gave a large gain in text and evidence) |
+
+In the implemented mode one model call (prompt `evolve_v3/v1`) rewrites the registered text from the parent text and the
+items' facts; code rejects a copy of the parent and a change of intervention; the improved text then goes through card,
+PubMed, alternatives and the endpoint extraction by two model families, and is scored by v3.3 and ASPID. About 21 model
+calls per improved hypothesis (31 in the first run).
+
+**First run** (2026-11-06, `specs/evolution-v3-pilot-2026-11-06.yaml`): the top 10 of the pilot under the evidence
+profile; about 311 calls (about 0.8 USD). The score under the evidence profile rose for 2 and fell for 8 (down to −0.17),
+against an expected +0.04 … +0.11. The reason is the design of the mode, not the hypotheses: (1) the whole pipeline ran
+again, so a new card, a new search and new alternatives changed everything at once (I fell for 3, because the alternatives
+were proposed anew, not the same ones); (2) the prompt's layout asked for a mechanism line every time, so every version
+wrote out a mechanism, the chains grew by 2 to 7 links, the new links were checked and often found weak or contested, and P
+fell in 9 of 10 (e.g. 0.93 → 0.26). The useful side: writing the mechanism out shows the links a hypothesis rated well on its
+outcome alone actually rests on. The controlled and free modes above answer the two flaws.
 
 **The report section "Evolution"**: a table parent → improved version (P, I, support share and the score under each
-profile, rises in green, falls in red); per pair, the items applied, what changed in the text and on which fact, the
-expected change of each item against the change obtained, the mechanism links added or removed, the improved text; at the
-end, the mean change of the score by kind of item. Hypotheses without an improved version are listed with the reason.
+profile, rises in green, falls in red); per pair, collapsed: the items applied, what changed in the text and on which fact,
+the expected change of each item against the change obtained, the mechanism links added or removed, the improved text; at
+the end, the mean change of the score by kind of item. Hypotheses without an improved version are listed with the reason.
+The improved versions also appear in the ranking (section 10).
 
-**Limits.** Evolution makes no new evidence: P can rise only by fitting the text to what was already found, and a rise of
-I is a design that is still to be carried out. The improved text is written from the findings of the verifier that then
-scores it (circular), so a rise of the score says what to change, not that the hypothesis became better. A gap between the
-expected and the obtained change points at the improvement list itself (its estimate was wrong) or at the rewrite (the
-model did not apply the item); both are shown. "Needs new data" items are never applied by evolution.
+**Limits.** Evolution in the implemented and controlled modes makes no new evidence: P can rise only by fitting the text to
+what was already found, and a rise of I is a design that is still to be carried out. The improved text is written from the
+findings of the verifier that then scores it (circular), so a rise of the score says what to change, not that the
+hypothesis became better. In the free mode new evidence counts only when the verifier finds it; the writer's own knowledge
+reaches past the cut-off date, so the free mode is for current pools (scored as of today), not for retrospective samples.
+A gap between the expected and the obtained change points at the improvement list (its estimate was wrong) or at the
+rewrite (the item was not applied as asked); both are shown. "Needs new data" items are never applied by the first two
+modes.
 
 ## 12. What the method does not do, its known limits and its validation status
 
@@ -291,6 +315,7 @@ model did not apply the item); both are shown. "Needs new data" items are never 
 | P vs trial outcome, calibration (30 trials, seen while building v3) | v3 0.677, "unclear"; v3.2 0.65 |
 | P vs trial outcome, fresh sample 2023-2026 (14 decisive) | v3 0.571 "unclear"; v3.2 0.61 (not pre-registered) |
 | P vs trial outcome, fresh sample 2000-2022 (26 decisive) | v3 0.534 "no signal"; v3.2 0.64 (not pre-registered) |
+| evolution, first run (pilot top 10) | scores fell for 8 of 10: the mode re-ran the whole pipeline and forced a mechanism; see section 11 |
 | error analysis on the calibration (exploration) | P's signal comes from data against the outcome (AUC 0.63), support does not separate; unchecked links penalised written mechanisms → v3.3 (0.66 on the same data, not a test) |
 | prospective pool: 60 ongoing trials ending 2026-11 … 2028-12 | scores frozen 2026-11-06 with a SHA-256 (`specs/prospective-2026-11-06.yaml`); the clean test of v3.2, when the trials report |
 
