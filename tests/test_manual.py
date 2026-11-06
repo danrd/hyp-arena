@@ -7,13 +7,14 @@ import yaml
 from hyparena.card import rules_v3 as r3
 from hyparena.card import v3_levels as lv
 from hyparena.card.effect_class import from_phrase
+from hyparena.card import aspid_v3, rules_v32 as r32
 
 MANUAL = Path(__file__).resolve().parents[1] / "docs" / "method-v3-manual.md"
 
 
 def _constants() -> dict:
     text = MANUAL.read_text()
-    block = re.search(r"## 12\. Constants.*?```yaml\n(.*?)```", text, re.S).group(1)
+    block = re.search(r"## 13\. Constants.*?```yaml\n(.*?)```", text, re.S).group(1)
     return yaml.safe_load(block)
 
 
@@ -36,3 +37,28 @@ def test_manual_rule_a_thresholds_equal_the_code():
     pc = a["percent"]
     assert from_phrase(f"{pc['large'] + 1}% increase") == "large" and from_phrase(f"{pc['large']}% increase") == "medium"
     assert from_phrase(f"{pc['medium']}% increase") == "medium" and from_phrase(f"{pc['medium'] - 1}% increase") == "small"
+
+
+def test_manual_v32_constants_and_profiles_equal_the_code():
+    c = _constants()
+    v = c["v32"]
+    assert abs(v["c_anchor"] - r32.C_ANCHOR) < 1e-5 and v["fold_rest"] == r32.FOLD_REST and v["p_floor_aspid"] == aspid_v3.P_FLOOR
+    assert r32.precision(None) == v["precision"]["floor"] and r32.precision(v["precision"]["full_at_n"]) == 1.0
+    assert r32.precision(v["precision"]["full_at_n"] - 1) < 1.0
+    assert {k: p.tiers for k, (p, _) in aspid_v3.load().items()} == c["profiles"]
+
+
+def test_manual_worked_example_is_what_the_code_gives(monkeypatch):
+    from hyparena.card import rules_v3 as r3
+    from hyparena.card.models import ClaimVerification
+    from tests.test_analyze import _case
+    from tests.test_rules_v3 import rec
+    monkeypatch.setattr(r3, "established_by_approval", lambda claim, card: False)
+    c, cvs, alts = _case()
+    e = r32.evaluate(c, cvs, alts, fold=True)
+    text = MANUAL.read_text()
+    row = f"| v3.2 | S {e.links['c1'][0]:.3f} (F {e.links['c1'][3]:.3f}) | S 0.5, no record | S {e.links['c3'][0]:.3f} (F {e.links['c3'][3]:.2f}) | " \
+          f"{e.P:.3f} [{e.P_lo:.3f}; {e.P_hi:.3f}] | {e.I:.3f} | {e.scope} | {e.V:.3f} |"
+    assert row in text, row
+    e2 = r32.evaluate(c, cvs + [ClaimVerification(id="c2", evidence=[rec(5, "animal", n=40, effect="large")])], alts, fold=True)
+    assert f"| S {e2.links['c2'][0]:.3f} | | {e2.P:.3f} | | {e2.scope} | {e2.V:.3f} |" in text

@@ -1,5 +1,7 @@
 # Our method, version 2: verified card → rule-based indicators → aggregation
 
+> **Method v2 (historical).** The current method is v3.2: [`method-v3-manual.md`](method-v3-manual.md) (manual) and [`spec/method-v3.md`](spec/method-v3.md) (specification). This document describes v2 and the Co-Scientist-style baselines, which are kept for comparison.
+
 Design decided in the working notes on 2026-10-19 (sections 2.1–2.4); specifications in `docs/spec/`
 into `docs/spec/` (card format, worked examples, aggregation). The LLM tournament over the whole pool (ladder
 step L4) is kept as an intermediate step for comparison; the two Co-Scientist baselines (L0, L0ts) keep their

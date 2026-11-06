@@ -1,5 +1,7 @@
 # Ranking thousands of hypotheses: a Co-Scientist-based approach
 
+> **Method v2 (historical).** The current method is v3.2: [`method-v3-manual.md`](method-v3-manual.md) (manual) and [`spec/method-v3.md`](spec/method-v3.md) (specification). This document describes v2 and the Co-Scientist-style baselines, which are kept for comparison.
+
 Task: from N ≈ 10³–10⁵ biological hypotheses (domain: ageing) that **arrive from outside** (LLMs generate them in volume), select the most **promising** ones, with an explanation that can be verified against sources. **Ranking is the focus.** Generation and evolution stay in the graph as optional modules (off when hypotheses are imported), because the stages interact: what is retrieved and reviewed is what the judges rank.
 
 The honest claim is "our selector picks better from a given pool", measured against an independent signal at equal LLM-call budget, not "a better system than Co-Scientist overall".
