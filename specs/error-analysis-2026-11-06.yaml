@@ -1,0 +1,36 @@
+id: error-analysis-2026-11-06
+written_on: '2026-11-06'
+status: exploration (no decision rule)
+why: >-
+  user question 2026-11-06 "what would AUC 0.65 give us, where can we improve": compare P with simple baselines, the
+  outcome link alone (does the mechanism add anything) and read the errors, on the calibration samples (steps 1-5)
+caution: >-
+  these samples were used to build v3 / v3.1 / v3.2; nothing here is a test. A change suggested here is written as a rule
+  and tested on the frozen benchmark (237 hypotheses, thresholds set before)
+script: scripts/error_analysis.py (no model calls; PubMed counts cached)
+result:
+  units: 74 (63 scored; 11 not: unparsed / needs_refinement, all from the older normaliser of steps 1-3)
+  labels_scored: {positive: 30, null: 33}
+  auc:
+    P_v32_fold: 0.624
+    outcome_link_alone: 0.579
+    support_F_of_the_outcome_link: 0.454
+    usable_records_on_the_outcome: 0.391
+    usable_records_whole_chain: 0.328
+    literature_volume_on_the_intervention_log: '0.437 (46 units; median 98 papers before T for positives, 585 for nulls)'
+    trend_of_attention: '0.563 (45 units)'
+    I: 0.510
+    less_evidence_against_on_the_outcome: 0.634
+    any_record_against_on_the_outcome: '0.627 (21 units, 15 of them null)'
+  by_mechanism:
+    outcome_only: {n: 45, positive: 24, P_auc: 0.654}
+    mechanism_written: {n: 18, positive: 6, P_auc: 0.306}
+  reading:
+  - the signal of P comes from evidence against the outcome, not from support; support does not separate (trials are run
+    where support exists, so positives and nulls both have it), and better-studied interventions are more often null
+  - links without any record sit at S 0.5 and multiply P down, so a hypothesis that writes out its mechanism is penalised
+    for it; among the 18 with a mechanism P orders the trials backwards (small n)
+  - positives have no outcome record more often (14 vs 9): the verifier's recall and the novelty of the intervention
+  candidate_rule_posthoc: >-
+    links without any usable record do not count in P (S 1 instead of 0.5 in the product): 0.662 vs 0.624 on the same 63
+    units. Found here, so not evidence; to be registered as a secondary score for the benchmark before its run
