@@ -62,3 +62,8 @@ run_result:
     ties: passed (7.1% of pairs of P tied at 3 digits, 37 distinct values among 55 units through the gate)
     ai_role: {none: 56, analysis: 2, intervention: 1}
   frozen: specs/prospective-2026-11-06.yaml, scores_sha256 45300a76cdd42110134a319710329f76104ffcf4a34aaad00022fb8dea9e84a9
+- date: '2026-11-06'
+  what: >-
+    after the freeze: the investor draft merged into funding (trial-3: P > feasibility > {trend, AI role} > I > {W,
+    endpoint, best design, independent sources, share against}), user decision. The frozen file keeps the scores under the
+    profiles of the freeze; the outcome test is on P and is not affected. Reports recompute ASPID with the current profiles.

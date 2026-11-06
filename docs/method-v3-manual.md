@@ -179,8 +179,7 @@ drawn over its whole range in every draw.
 |---|---|
 | evidence | P > I > W > {best design, independent sources, share against, endpoint} |
 | evolution | headroom I > P > W > {best design, independent sources, share against} |
-| funding | P > feasibility > I > W > {best design, independent sources, share against, endpoint} |
-| investor (draft) | P > {trend, AI role} > feasibility > {I, endpoint} |
+| funding (merged with the investor draft, 2026-11-06) | P > feasibility > {trend, AI role} > I > {W, endpoint, best design, independent sources, share against} |
 
 A new indicator enters only when it passes four conditions, checked on saved data before it is used: reliable (computed by
 code, or extracted with a verbatim phrase and agreed by two model families, κ ≥ 0.6); separating (at least three values,
@@ -282,8 +281,7 @@ effect_class_rule_a:
 profiles:
   evidence: [[P], [I], [W], [best_design_outcome, independent_outcome, against_share, endpoint_clinical]]
   evolution: [[I_headroom], [P], [W], [best_design_outcome, independent_outcome, against_share]]
-  funding: [[P], [feasibility], [I], [W], [best_design_outcome, independent_outcome, against_share, endpoint_clinical]]
-  investor: [[P], [trend_pubmed, ai_role], [feasibility], [I, endpoint_clinical]]
+  funding: [[P], [feasibility], [trend_pubmed, ai_role], [I], [W, endpoint_clinical, best_design_outcome, independent_outcome, against_share]]
 ```
 
 ## Appendix A. Discrete levels of v3 and v3.1
