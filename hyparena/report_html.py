@@ -54,6 +54,9 @@ SHORT = {"P": ("P", "P"), "I": ("I", "I"), "I_headroom": ("Запас I", "I roo
          "feasibility": ("Реализ.", "Feasib."), "best_design_outcome": ("Дизайн", "Design"), "independent_outcome": ("Источн.", "Sources"),
          "against_share": ("«Против»", "Against"), "endpoint_clinical": ("Кон. точка", "Endpoint"), "trend_pubmed": ("Тренд", "Trend"),
          "ai_role": ("ИИ", "AI")}
+DESIGN_NAMES = {"none": ("нет данных", "no data"), "cells": ("клетки", "cells"), "animal": ("животные", "animals"),
+                "observational": ("наблюдательное", "observational"), "review": ("обзор", "review"),
+                "non_randomised": ("нерандомиз.", "non-randomised"), "meta_analysis": ("метаанализ", "meta-analysis"), "rct": ("РКИ", "RCT")}
 ORDINAL = {"W": ("local", "organ", "hallmark"), "endpoint_clinical": ("biomarker", "patient_reported", "function", "clinical_event"),
            "ai_role": ("none", "analysis", "in_the_loop", "intervention"),
            "best_design_outcome": aspid_v3.SPECS["best_design_outcome"].levels}
@@ -341,7 +344,8 @@ html[data-lang="ru"] .tip:hover::after,html[data-lang="ru"] .tip:focus::after{co
 html[data-lang="en"] .tip:hover::after,html[data-lang="en"] .tip:focus::after{content:attr(data-en)}
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.tabs button{font:inherit;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
 .tabs button[aria-selected="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
-.ptab[hidden]{display:none}.pager{display:flex;gap:8px;align-items:center;margin:8px 0;font-size:.9rem}.pager button{font:inherit;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:2px 10px;cursor:pointer}
+.ptab[hidden]{display:none}.cols{display:flex;gap:10px;flex-wrap:wrap;font-size:.85rem;margin:6px 0 8px;color:var(--muted)}.cols label{white-space:nowrap;cursor:pointer}
+.hidecol{display:none}.pager{display:flex;gap:8px;align-items:center;margin:8px 0;font-size:.9rem}.pager button{font:inherit;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:2px 10px;cursor:pointer}
 .tools{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:6px 0;font-size:.9rem}.tools input,.tools select{font:inherit;padding:3px 6px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}
 tr.lead td:first-child{box-shadow:inset 3px 0 var(--accent)}.star{color:var(--accent);font-weight:600}
 .steps{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0}.steps .st{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 10px;font-size:.88rem;max-width:230px}
@@ -357,6 +361,8 @@ document.querySelectorAll('table.sortable').forEach(tb=>{tb.querySelectorAll('th
  rows.sort((a,b)=>{const x=a.cells[i].dataset.v??a.cells[i].innerText,y=b.cells[i].dataset.v??b.cells[i].innerText;
   const nx=parseFloat(x),ny=parseFloat(y);const c=(!isNaN(nx)&&!isNaN(ny))?nx-ny:String(x).localeCompare(String(y));return asc?c:-c});
  rows.forEach(r=>tb.tBodies[0].appendChild(r))}))});
+function cols(cb){const box=cb.closest('.ptab');box.querySelectorAll('[data-c="'+cb.dataset.c+'"]').forEach(el=>{if(el.tagName!=='INPUT')el.classList.toggle('hidecol',!cb.checked)})}
+document.querySelectorAll('.cols input').forEach(cols);
 const PAGE=15;
 function refresh(tb){const q=(document.getElementById('fq').value||'').toLowerCase(),ty=document.getElementById('ftype').value;
  const rows=[...tb.tBodies[0].rows];const ok=rows.filter(r=>(!ty||r.dataset.type===ty)&&(!q||r.dataset.q.includes(q)));
@@ -451,19 +457,23 @@ def render(rep: dict) -> str:
     def cell(ind, x):
         v = x["values"].get(ind)
         if ind == "P":
-            return f'<td class="n" data-v="{x["P"]}">{pbar(x["P"], x["P_lo"], x["P_hi"])}{fmt(x["P"])}</td>'
+            return f'<td class="n" data-c="P" data-v="{x["P"]}">{pbar(x["P"], x["P_lo"], x["P_hi"])}{fmt(x["P"])}</td>'
         if ind == "W":
-            return f'<td data-v="{ORDINAL["W"].index(v) if v in ORDINAL["W"] else -1}">{tn(SCOPE_NAMES.get(v, (str(v),)*2))}</td>'
+            return f'<td data-c="W" data-v="{ORDINAL["W"].index(v) if v in ORDINAL["W"] else -1}">{tn(SCOPE_NAMES.get(v, (str(v),)*2))}</td>'
         if ind == "endpoint_clinical":
-            return f'<td data-v="{ORDINAL[ind].index(v) if v in ORDINAL[ind] else -1}">{tn(ENDPOINT_NAMES.get(v, ("—","—")))}</td>'
+            return f'<td data-c="{ind}" data-v="{ORDINAL[ind].index(v) if v in ORDINAL[ind] else -1}">{tn(ENDPOINT_NAMES.get(v, ("—","—")))}</td>'
         if ind == "ai_role":
-            return f'<td data-v="{ORDINAL[ind].index(v) if v in ORDINAL[ind] else -1}">{tn(AI_NAMES.get(v or "none"))}</td>'
+            return f'<td data-c="{ind}" data-v="{ORDINAL[ind].index(v) if v in ORDINAL[ind] else -1}">{tn(AI_NAMES.get(v or "none"))}</td>'
         if ind == "best_design_outcome":
             lv = ORDINAL[ind]
-            return f'<td data-v="{lv.index(v) if v in lv else -1}">{e(v or "—")}</td>'
+            return f'<td data-c="{ind}" data-v="{lv.index(v) if v in lv else -1}">{tn(DESIGN_NAMES.get(v or "none", (str(v),) * 2))}</td>'
         if v is None:
-            return '<td class="n" data-v="-9">—</td>'
-        return f'<td class="n" data-v="{v}">{fmt(v)}</td>'
+            return f'<td class="n" data-c="{ind}" data-v="-9">—</td>'
+        if ind == "independent_outcome":
+            return f'<td class="n" data-c="{ind}" data-v="{v}">{int(v)}</td>'
+        if ind == "against_share":
+            return f'<td class="n" data-c="{ind}" data-v="{v}">{round(v * 100)}%</td>'
+        return f'<td class="n" data-c="{ind}" data-v="{v}">{fmt(v)}</td>'
 
     for i, p in enumerate(profs):
         inds = [ind for tier in m["profiles"][p] for ind in tier]
@@ -471,10 +481,13 @@ def render(rep: dict) -> str:
         out.append('<p class="muted" style="font-size:.9rem">' + t("Порядок важности: ", "Order of importance: ") + " &gt; ".join(
             "{" + ", ".join(tn(IND_NAMES.get(ind, (ind, ind))) for ind in tier) + "}" if len(tier) > 1 else tn(IND_NAMES.get(tier[0], (tier[0],) * 2))
             for tier in m["profiles"][p]) + '</p>')
+        out.append('<div class="cols">' + t("Показатели в таблице: ", "Indicators shown: ") + "".join(
+            f'<label><input type="checkbox" data-c="{ind}" {"checked" if k < 4 else ""} onchange="cols(this)"> {tn(SHORT.get(ind, (ind, ind)))}</label>'
+            for k, ind in enumerate(inds)) + '</div>')
         out.append('<div class="scroll"><table class="tbl sortable"><thead><tr>' +
                    f'<th>{tip("place","#")}</th><th>{t("Гипотеза","Hypothesis")}</th><th>{tip("score",t("Оценка","Score"))}</th>'
                    f'<th>{tip("top5",t("Топ-5","Top 5"))}</th>' +
-                   "".join(f'<th>{tip(ind, tn(SHORT.get(ind, (ind, ind))))}</th>' for ind in inds) + '</tr></thead><tbody>')
+                   "".join(f'<th data-c="{ind}">{tip(ind, tn(SHORT.get(ind, (ind, ind))))}</th>' for ind in inds) + '</tr></thead><tbody>')
         for h in rep["ranks"][p]:
             x = H[h]
             rk = x["rank"][p]
