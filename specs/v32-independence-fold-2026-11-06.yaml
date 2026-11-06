@@ -1,6 +1,6 @@
 id: v32-independence-fold-2026-11-06
 written_on: '2026-11-06'
-status: registered before computing
+status: passed (computed 2026-11-06 after this file was committed)
 why: >-
   v3.2 sums the weights of all records on a link, so several papers of one trial (primary report, secondary analysis,
   follow-up) count as several sources. The OHF independence groups (verifier, v3 templates: one NCT/ISRCTN id in the
@@ -15,3 +15,12 @@ criterion: >-
   a correction of the device, not a search for gain: adopted for the prospective pilot unless P tied AUC drops by more than
   0.03 on either the calibration (1-3) or the fresh sample (4-5) against v3.2 without folding. Also reported: links whose
   F or A changes, units whose P changes.
+result:
+  calibration: {units: 23, P_changed: 2, links_changed: 2, auc_v32: 0.650, auc_fold: 0.650}
+  fresh: {units: 40, P_changed: 0, links_changed: 2, auc_v32: 0.629, auc_fold: 0.629}
+  verdict: adopted for the prospective pilot (no AUC drop). All 4 changed links are several records of one paper on one
+    side (the record_id key); no two papers on these links share a trial id.
+  correction: >-
+    the OHF probe (scripts/ohf_probe.py) reported 15 of 48 links with records sharing a trial; it counted links where one
+    paper gives several records (a PMID listed twice). With unique PMIDs: 0 of 45 links with several papers. Fixed in the
+    probe, method-v3.md section 13 and KB Working_Notes.
