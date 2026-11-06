@@ -1,0 +1,47 @@
+id: prospective-pilot-2026-11-06
+written_on: '2026-11-06'
+status: registered, not run
+what: 'pilot of the prospective pool (method-v3.md section 10): 60 ongoing CT.gov
+  trials on ageing itself, primary completion 2026-11 .. 2028-12, scored before any
+  outcome exists'
+pool:
+  query: condition equal to one of scripts/hypothesis_sources_ctgov.CONDITIONS; interventional;
+    RECRUITING, ACTIVE_NOT_RECRUITING, NOT_YET_RECRUITING, ENROLLING_BY_INVITATION
+  ongoing: 2815
+  in_window: 371
+  types:
+    behavioral: 146
+    drug/supplement: 101
+    other (exercise etc.): 98
+    device: 26
+  pool_sha256: f722487d6a616fb25ad1c00280cab7e10bf3f18002f5ee664e70a04225fc4bc3
+sample:
+  rule: 'round robin over the four intervention types, SHA-1 of NCT id within each;
+    15 per type (devices over-represented relative to the pool, by design: balance
+    across types)'
+  units_sha256: d5d726fb8e410788d1be95da9b6b9516dc851e82191063a9e42179486841b39a
+  texts_sha256: 748cc0662bb6e069eb17867fe3591fcd54e7feb22ae31e64b2ab1e79ec00a084
+method:
+  run: configs/v3-flash-n10.yaml (normalize_card/v10, verify_claim/v9, verifier deepseek),
+    as of the run date
+  score: hyparena/card/rules_v32.py (P with 90% interval, I, V = P x I, scope) + ASPID
+    trial profiles (configs/profiles_v3.yaml)
+  frozen: scores file and SHA-256 written to specs/ by scripts/prospective.py freeze,
+    before any outcome
+checks_now:
+  run_health: cards parsed >= 55/60; needs_refinement <= 6; units with an error after
+    one retry <= 3
+  ties: 'share of P ties (rounded to 3 digits) <= 15% (v3.2 on the fresh sample: 8%)'
+  ai_role: 'report counts only (no criterion: tag not validated yet)'
+test_when_outcomes_exist:
+  labels: benchmark outcome rules (scripts/fresh_outcomes.py), labelled blind to the
+    scores
+  primary: P tied AUC with 95% bootstrap CI on units with a decisive label
+  signal: AUC >= 0.60 and lower CI bound > 0.45
+  no_signal: AUC < 0.55
+  otherwise: unclear
+  secondary: ASPID expected rank per profile, same thresholds, reported not decided
+cost:
+  estimate_usd: 3.0
+  basis: 'fresh run 2026-11-06: 883 calls for 44 units, about 2.2 USD; cap 60 calls
+    per unit'
