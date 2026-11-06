@@ -51,6 +51,7 @@ for h,r in res.items():
             base_ctx.append(lv.weight('context',r3.context_level(rec))*lv.weight('comparison',rec.comparison if rec.comparison!='unknown' else 'none'))
             four.append(W[a[0]]*W[a[1]]*W[a[2]]*W[a[3]])
             ids.append(rec.record_id.replace('PMID:',''))
+        ids=list(dict.fromkeys(ids))   # one paper giving several records is not a shared trial (fixed 2026-11-06: was counted; 15 -> 0)
         if len(ids)>1:
             links_multi+=1
             ab=pubmed.fetch(ids); tr={p:set(re.findall(r'\b(NCT\d{8}|ISRCTN\d{8})\b',(ab.get(p,{}).get('abstract','')))) for p in ids}
