@@ -346,7 +346,7 @@ html[data-lang="ru"] .l-en,html[data-lang="en"] .l-ru{display:none}
 .barbox .iv{position:absolute;top:0;height:8px;background:var(--accent-soft)}.barbox .pt{position:absolute;top:-2px;width:3px;height:12px;background:var(--accent)}
 details{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin:8px 0}details>summary{cursor:pointer;padding:10px 14px;list-style:none}
 details>summary::-webkit-details-marker{display:none}details>summary::before{content:"▸ ";color:var(--muted)}details[open]>summary::before{content:"▾ "}
-details .body{padding:0 16px 14px}.chip{display:inline-block;border-radius:999px;padding:1px 8px;font-size:.8rem;background:var(--idle-soft);margin:0 4px 4px 0}
+details .body{padding:0 16px 14px}details.sub{border:0;background:transparent;margin:6px 0}details.sub>summary{padding:4px 0}.chip{display:inline-block;border-radius:999px;padding:1px 8px;font-size:.8rem;background:var(--idle-soft);margin:0 4px 4px 0}
 .ok{background:var(--ok-soft)}.bad{background:var(--bad-soft)}.warn{background:var(--warn-soft)}
 .chain{display:flex;flex-wrap:wrap;gap:6px;align-items:stretch;margin:8px 0}.link{border:1px solid var(--line);border-radius:8px;padding:6px 8px;min-width:150px;max-width:260px;font-size:.85rem}
 .arrow{align-self:center;color:var(--muted)}.link .s{font-family:var(--mono)}
@@ -402,8 +402,14 @@ def render_items(items: list[dict], profs: list[str]) -> str:
     effect on the indicators and on the score under each profile."""
     if not items:
         return ""
-    out = ['<div class="card"><b>' + t("Что поднимет оценку", "What would raise it") + '</b> <span class="muted" style="font-size:.85rem">' +
-           t("(перечень считает код; «ожидаемо» — если пункт выполнен)", "(computed by code; \"expected\" if the item is done)") + '</span>']
+    gains = [(v[1] - v[0], p) for i in items if i.get("expected") for p, v in i["expected"]["score"].items() if p in PROFILE_NAMES]
+    g = max(gains) if gains else None
+    n_fix = sum(1 for i in items if i["cls"] == "rewrite")
+    summary = (t("Что поднимет оценку", "What would raise it") + f' <span class="muted" style="font-size:.85rem">· ' +
+               t(f"пунктов: {len(items)}, исправимых формулировкой: {n_fix}", f"items: {len(items)}, fixable by rewriting: {n_fix}") +
+               (f' · {t("лучший","best")} {g[0]:+.2f} ({tn(PROFILE_NAMES[g[1]])})' if g and g[0] > 0 else "") + '</span>')
+    out = [f'<details class="sub"><summary><b>{summary}</b></summary><div class="body"><p class="muted" style="font-size:.85rem">' +
+           t("Перечень считает код; «ожидаемо» — если пункт выполнен.", "Computed by code; \"expected\" if the item is done.") + '</p>']
     for cls in ("rewrite", "research"):
         group = [i for i in items if i["cls"] == cls]
         if not group:
@@ -425,9 +431,11 @@ def render_items(items: list[dict], profs: list[str]) -> str:
                 exp = f'<br><span class="muted" style="font-size:.85rem">{t("эффект заранее не рассчитать: зависит от того, что найдётся","the effect cannot be computed in advance: it depends on what is found")}</span>'
             facts = "".join(f'<blockquote><a href="https://pubmed.ncbi.nlm.nih.gov/{e(f["pmid"])}/" target="_blank" rel="noopener">{e(f["pmid"])}</a> '
                             f'({t("за","for") if f["side"] == "for" else t("против","against")}): {e(f["quote"][:220])}</blockquote>' for f in i.get("facts", [])[:2])
-            out.append(f'<li><span class="mono muted">{e(i["id"])}</span> {t(e(i["what"][0]), e(i["what"][1]))}{exp}{facts}</li>')
+            facts_html = (f'<details class="sub"><summary class="muted" style="font-size:.85rem">{t("факты","facts")} ({len(i.get("facts", [])[:2])})</summary>{facts}</details>'
+                          if facts else "")
+            out.append(f'<li><span class="mono muted">{e(i["id"])}</span> {t(e(i["what"][0]), e(i["what"][1]))}{exp}{facts_html}</li>')
         out.append('</ul>')
-    out.append('</div>')
+    out.append('</div></details>')
     return "".join(out)
 
 
