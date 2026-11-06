@@ -1,6 +1,7 @@
-"""Error analysis of P (v3.2, fold) on the calibration samples (steps 1-5), no model calls (specs/error-analysis-2026-11-06.yaml).
+"""Error analysis of P on the calibration samples (steps 1-5), no model calls (specs/error-analysis-2026-11-06.yaml).
 
-    python -m scripts.error_analysis          # writes $KG_DIR/hypothesis_sources/calibration/error_analysis.json
+    python -m scripts.error_analysis              # v3.2 fold on run_{s}_v3.json -> error_analysis.json
+    python -m scripts.error_analysis --v33        # v3.3 on run_{s}_v10.json -> error_analysis_v33.json
 
 Three questions, exploration only (the samples were used to build the method, nothing here is a test):
 1. baselines: does a simple number order the trials as well as P (planned n, literature volume on the intervention before T,
@@ -32,12 +33,13 @@ def literature_volume(card: HypothesisCard, as_of: str) -> int | None:
     return None
 
 
-def rows() -> list[dict]:
+def rows(v33: bool = False) -> list[dict]:
+    suffix, kw = ("v10", {"fold": True, "neutral_unverified": True}) if v33 else ("v3", {"fold": True})
     out = []
     for s in (1, 2, 3, 4, 5):
         us = {u["id"]: u for u in json.loads((CAL / f"units_{s}.json").read_text())}
         texts = {json.loads(l)["id"]: json.loads(l)["text"] for l in open(CAL / f"texts_{s}.jsonl")}
-        for h, r in json.loads((CAL / f"run_{s}_v3.json").read_text()).items():
+        for h, r in json.loads((CAL / f"run_{s}_{suffix}.json").read_text()).items():
             if h not in us or us[h].get("label") not in (0, 1):
                 continue
             it = r["items"][0]
@@ -51,7 +53,7 @@ def rows() -> list[dict]:
             card = HypothesisCard.model_validate(it["card"])
             cvs = [ClaimVerification.model_validate(c) for c in it["verification"]["claims"]]
             alts = {a: ClaimVerification.model_validate(v) for a, v in (it.get("v3_alternatives") or {}).items()}
-            e = r32.evaluate(card, cvs, alts, fold=True)
+            e = r32.evaluate(card, cvs, alts, **kw)
             links = r3.chain(card)
             outs, primary = r3.outcome_group(card, links)
             out_ids = [primary.id] if primary is not None else [o.id for o in outs]
@@ -68,7 +70,7 @@ def rows() -> list[dict]:
                 "F_out": sum(e.links[i][3] for i in out_ids), "A_out": sum(e.links[i][4] for i in out_ids),
                 "n_planned": card.decisive_experiment.n_planned, "intervention": [i.label for i in card.pico.intervention][:1],
                 "plain": card.claim_plain, "lit_volume": literature_volume(card, as_of),
-                "trend": tg.trend_pubmed(card, as_of)[0], "I": e.I,
+                "trend": tg.trend_pubmed(card, as_of)[0], "I": e.I, "support_share": e.support_share,
             })
             out.append(row)
     return out
@@ -101,13 +103,14 @@ def cause(r: dict, median_P: float) -> list[str]:
     return c or ["unclear from the saved run"]
 
 
-def main() -> dict:
-    rs = rows()
+def main(v33: bool = False) -> dict:
+    rs = rows(v33)
     sc = [r for r in rs if r.get("P") is not None]
     med = sorted(r["P"] for r in sc)[len(sc) // 2]
     out = {"units": len(rs), "scored": len(sc), "labels": dict(Counter(r["label"] for r in sc)), "median_P": round(med, 3)}
     out["auc"] = {
-        "P (v3.2 fold)": auc(sc, lambda r: r["P"]),
+        ("P (v3.3)" if v33 else "P (v3.2 fold)"): auc(sc, lambda r: r["P"]),
+        "support_share": auc(sc, lambda r: r.get("support_share")),
         "outcome link alone (S_outcome)": auc(sc, lambda r: r["S_outcome"]),
         "F of the outcome link": auc(sc, lambda r: r["F_out"]),
         "usable records on the outcome": auc(sc, lambda r: r["records_outcome"]),
@@ -140,9 +143,10 @@ def main() -> dict:
     out["errors"] = errors
     out["error_causes"] = dict(Counter(c.split(":")[0].split(" (")[0].split(";")[0] for e in errors for c in e["causes"]))
     out["unscored"] = [{"id": r["id"], "label": r["label"], "outcome": r["outcome"]} for r in rs if r.get("P") is None]
-    (CAL / "error_analysis.json").write_text(json.dumps({"summary": out, "rows": rs}, indent=1, ensure_ascii=False, default=str) + "\n")
+    (CAL / ("error_analysis_v33.json" if v33 else "error_analysis.json")).write_text(json.dumps({"summary": out, "rows": rs}, indent=1, ensure_ascii=False, default=str) + "\n")
     return out
 
 
 if __name__ == "__main__":
-    print(json.dumps(main(), indent=1, ensure_ascii=False))
+    import sys
+    print(json.dumps(main("--v33" in sys.argv), indent=1, ensure_ascii=False))
