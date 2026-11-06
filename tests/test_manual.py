@@ -59,14 +59,14 @@ def test_manual_worked_example_is_what_the_code_gives(monkeypatch):
     e = ev()
     text = MANUAL.read_text()
     row = f"| v3.3 | S {e.links['c1'][0]:.3f} (F {e.links['c1'][3]:.3f}) | no record, not in P | S {e.links['c3'][0]:.3f} (F {e.links['c3'][3]:.2f}) | " \
-          f"{e.P:.3f} [{e.P_lo:.3f}; {e.P_hi:.3f}] | {e.coverage:.3f} | {e.I:.3f} | {e.scope} | {e.V:.3f} |"
+          f"{e.P:.3f} [{e.P_lo:.3f}; {e.P_hi:.3f}] | {e.support_share:.3f} | {e.I:.3f} | {e.scope} | {e.V:.3f} |"
     assert row in text, row
     e2 = ev([ClaimVerification(id="c2", evidence=[rec(5, "animal", n=40, effect="large")])])
-    assert f"| S {e2.links['c2'][0]:.3f} | | {e2.P:.3f} | {e2.coverage:.3f} | | {e2.scope} | {e2.V:.3f} |" in text
+    assert f"| S {e2.links['c2'][0]:.3f} | | {e2.P:.3f} | {e2.support_share:.3f} | | {e2.scope} | {e2.V:.3f} |" in text
     e3 = ev([ClaimVerification(id="c2", counterevidence=[rec(6, "animal", n=40, effect="large")])])
-    assert f"| S {e3.links['c2'][0]:.3f} | | {e3.P:.3f} | {e3.coverage:.3f} |" in text
+    assert f"| S {e3.links['c2'][0]:.3f} | | {e3.P:.3f} | {e3.support_share:.3f} |" in text
     from hyparena.card import aspid_v3
-    pts = {k: ({"P": x.P, "scope": x.scope, "I": x.I, "headroom_I": x.I, "gate": "pass"}, {"coverage": x.coverage}) for k, x in (("a", e), ("b", e2))}
+    pts = {k: ({"P": x.P, "scope": x.scope, "I": x.I, "headroom_I": x.I, "gate": "pass"}, {"support_share": x.support_share}) for k, x in (("a", e), ("b", e2))}
     for prof in ("evidence", "evolution", "funding"):
         r = aspid_v3.rank(pts, prof, K=10000)
         assert r.expected["b"] > r.expected["a"]                     # support found: the score rises under every profile

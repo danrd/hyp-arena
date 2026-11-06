@@ -38,7 +38,7 @@ IND_NAMES = {
     "endpoint_clinical": ("клиничность конечной точки", "how clinical the endpoint is"),
     "trend_pubmed": ("рост внимания в литературе", "rising attention in the literature"),
     "ai_role": ("роль ИИ", "role of AI"),
-    "coverage": ("проверенность механизма", "how much of the mechanism is checked"),
+    "support_share": ("подтверждённость механизма", "how much of the mechanism is supported"),
 }
 LINK_NAMES = {"delivery": ("доставка", "delivery"), "engagement": ("действие на мишень", "target engagement"),
               "pathway": ("сигнальный путь", "pathway"), "effect": ("промежуточный эффект", "intermediate effect"),
@@ -54,7 +54,7 @@ AI_NAMES = {"none": ("нет", "none"), "analysis": ("анализ данных"
 SHORT = {"P": ("P", "P"), "I": ("I", "I"), "I_headroom": ("Запас I", "I room"), "W": ("Размах", "Scope"),
          "feasibility": ("Реализ.", "Feasib."), "best_design_outcome": ("Дизайн", "Design"), "independent_outcome": ("Источн.", "Sources"),
          "against_share": ("«Против»", "Against"), "endpoint_clinical": ("Кон. точка", "Endpoint"), "trend_pubmed": ("Тренд", "Trend"),
-         "ai_role": ("ИИ", "AI"), "coverage": ("Провер.", "Checked")}
+         "ai_role": ("ИИ", "AI"), "support_share": ("Подтв.", "Supported")}
 DESIGN_NAMES = {"none": ("нет данных", "no data"), "cells": ("клетки", "cells"), "animal": ("животные", "animals"),
                 "observational": ("наблюдательное", "observational"), "review": ("обзор", "review"),
                 "non_randomised": ("нерандомиз.", "non-randomised"), "meta_analysis": ("метаанализ", "meta-analysis"), "rct": ("РКИ", "RCT")}
@@ -64,8 +64,8 @@ ORDINAL = {"W": ("local", "organ", "hallmark"), "endpoint_clinical": ("biomarker
 
 
 TIPS = {
-    "P": ("Правдоподобие механизма, от 0 до 1: произведение силы звеньев цепочки. Звено без данных не учитывается (его отражает ось «проверенность»); данные «за» поднимают силу звена выше 0.5, «против» — опускают ниже. Под числом — 90%-й интервал: широкий, когда о звеньях мало известно.",
-          "Plausibility of the mechanism, 0 to 1: the product of the links' strengths. A link without data does not count (the coverage axis carries it); data for raise a link above 0.5, against lower it. Below the number: the 90% interval, wide when little is known."),
+    "P": ("Правдоподобие механизма, от 0 до 1: произведение силы звеньев цепочки. Звено без данных не учитывается (его отражает ось «подтверждённость»); данные «за» поднимают силу звена выше 0.5, «против» — опускают ниже. Под числом — 90%-й интервал: широкий, когда о звеньях мало известно.",
+          "Plausibility of the mechanism, 0 to 1: the product of the links' strengths. A link without data does not count (the support axis carries it); data for raise a link above 0.5, against lower it. Below the number: the 90% interval, wide when little is known."),
     "I": ("Информативность эксперимента, от 1/3 до 1: сколько подкреплённых литературой альтернативных объяснений отсечёт заявленный эксперимент. 1/3 — ни одного.",
           "Informativeness, 1/3 to 1: how many literature-supported alternative explanations the stated experiment rules out. 1/3: none."),
     "I_headroom": ("Запас информативности: какой была бы информативность, если бы эксперимент отсекал все подкреплённые альтернативы. Показывает, сколько можно выиграть, улучшив дизайн.",
@@ -84,8 +84,8 @@ TIPS = {
                           "How close the trial's primary endpoint is to a clinical outcome: biomarker < patient-reported < function < clinical event (falls, hospitalisation, death)."),
     "trend_pubmed": ("Рост внимания: публикации о вмешательстве за 3 года до оценки против 3 лет до них, за вычетом роста всего PubMed. 0 — как вся литература, 0.7 — примерно вдвое быстрее.",
                      "Rising attention: publications on the intervention in the 3 years before scoring vs the 3 before, net of PubMed's growth. 0 = like all literature, 0.7 = about twice as fast."),
-    "coverage": ("Проверенность механизма, от 0 до 1: доля звеньев цепочки, по которым литература нашла хоть что-то. Звенья без данных не снижают P, но снижают эту ось: гипотеза из одних догадок не получит высокое место.",
-                 "How much of the mechanism is checked, 0 to 1: the share of the chain's links on which the literature found anything. Links without data do not lower P but lower this axis: a hypothesis made of guesses does not rank high."),
+    "support_share": ("Подтверждённость механизма, от 0 до 1: средняя подтверждённость звеньев цепочки. Звено без данных или с данными только «против» — 0, умеренная поддержка — 0.67, сильная — около 1. Звенья без данных не снижают P, но снижают эту ось: гипотеза из одних догадок не получит высокое место.",
+                      "How much of the mechanism is supported, 0 to 1: the mean support of the chain's links. A link without data or with data only against is 0, moderate support 0.67, strong near 1. Links without data do not lower P but lower this axis: a hypothesis made of guesses does not rank high."),
     "ai_role": ("Роль ИИ в гипотезе: нет / анализ данных / ИИ в цикле эксперимента / ИИ — само вмешательство; ставится только по дословной фразе текста.",
                 "Role of AI: none / data analysis / AI in the experiment loop / AI is the intervention; set only from a verbatim phrase of the text."),
     "score": ("Ожидаемая оценка в профиле, от 0 до 1: среднее по 10 000 случайным наборам весов, совместимым с порядком важности профиля.",
@@ -252,12 +252,12 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
         hyps[h] = {**base, "plain": card.claim_plain, "P": res.P, "P_lo": res.P_lo, "P_hi": res.P_hi, "I": res.I, "V": res.V,
                    "scope": res.scope, "gate": res.gate, "chain": chain, "alternatives": alt_rows,
                    "weakest": weakest["id"] if weakest else None, "strongest": strongest["id"] if strongest else None,
-                   "P_if_weakest_moderate": raise_to, "raise_link": raise_link, "coverage": res.coverage,
+                   "P_if_weakest_moderate": raise_to, "raise_link": raise_link, "support_share": res.support_share, "coverage": res.coverage,
                    "unchecked": [c["id"] for c in chain if not c["checked"]], "experiment": {"design": de.design, "endpoint": de.endpoint, "n": de.n_planned},
                    "endpoint_clinical": sc.get("endpoint_clinical"), "trend_pubmed": sc.get("trend_pubmed"), "ai_role": sc.get("ai_role"),
                    "ai_span": card.ai_role_span, "aspid": {p: sc.get(f"aspid_{p}") for p in profiles},
                    "flags": res_flags(it)}
-        values[h] = {"P": res.P, "I": res.I, "I_headroom": it["v3"].get("headroom_I"), "W": res.scope, "coverage": res.coverage,
+        values[h] = {"P": res.P, "I": res.I, "I_headroom": it["v3"].get("headroom_I"), "W": res.scope, "support_share": res.support_share, "coverage": res.coverage,
                      "endpoint_clinical": sc.get("endpoint_clinical"), "trend_pubmed": sc.get("trend_pubmed"), "ai_role": sc.get("ai_role"),
                      **{k: (it.get("extra") or {}).get(k) for k in ()}}
     # extras needed for profile contributions
@@ -282,7 +282,7 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
     scored = [h for h in hyps if hyps[h].get("P") is not None and hyps[h].get("gate") == "pass"]
     ax = {h: ({"P": hyps[h]["P"], "scope": hyps[h]["scope"], "I": hyps[h]["I"], "headroom_I": values[h]["I_headroom"], "gate": "pass"},
               {k: values[h].get(k) for k in ("feasibility", "best_design_outcome", "independent_outcome", "against_share",
-                                              "endpoint_clinical", "trend_pubmed", "ai_role", "coverage")}) for h in scored}
+                                              "endpoint_clinical", "trend_pubmed", "ai_role", "support_share")}) for h in scored}
     ranks = {}
     for p in profiles:
         agg = aspid_v3.rank(ax, p, K=10000)
@@ -564,7 +564,7 @@ def render(rep: dict) -> str:
         if len(outs_) > 1:
             out.append(f'<p class="muted" style="font-size:.85rem">{t("Параллельные исходы (масса, сила, функция) — одно звено: в P входит основной исход заявленного эксперимента, а если его нельзя выделить — среднее.","Parallel outcomes (mass, strength, function) are one link: P takes the primary outcome of the stated experiment, or their mean when none can be singled out.")}</p>')
         rows = [("P", f'<span class="mono">{fmt(x["P"])} [{fmt(x["P_lo"])}; {fmt(x["P_hi"])}]</span>'),
-                ("I", f'<span class="mono">{fmt(x["I"])}</span>'), (t("Проверенность","Coverage"), f'<span class="mono">{fmt(x.get("coverage"))}</span>'), (t("Размах","Scope"), tn(SCOPE_NAMES.get(x["scope"], (x["scope"],)*2))),
+                ("I", f'<span class="mono">{fmt(x["I"])}</span>'), (t("Подтверждённость","Supported"), f'<span class="mono">{fmt(x.get("support_share"))}</span>'), (t("Размах","Scope"), tn(SCOPE_NAMES.get(x["scope"], (x["scope"],)*2))),
                 (t("Конечная точка","Endpoint"), tn(ENDPOINT_NAMES.get(x.get("endpoint_clinical"), ("—","—")))),
                 (t("Роль ИИ","AI role"), tn(AI_NAMES.get(x.get("ai_role") or "none"))),
                 (t("Места","Places"), " · ".join(f'{tn(PROFILE_NAMES[p])} {x["rank"].get(p, "—")}/{len(rep["ranks"][p])} ({t("топ-5","top 5")} {fmt(x["p_top5"].get(p))})' for p in profs))]
@@ -589,7 +589,7 @@ def render(rep: dict) -> str:
                     if any(a["support"] > 0 and a["on_positive"] != "eliminated" for a in x["alternatives"]) else "") +
                    (f'<li>{t("найти данные по непроверенным звеньям: ","find data on the unchecked links: ")}'
                     + ", ".join(tn(LINK_NAMES.get(c["link"], (c["link"],)*2)) for c in unchecked)
-                    + f' ({t("проверенность сейчас","coverage now")} {fmt(x.get("coverage"))})</li>' if unchecked else "") +
+                    + f' ({t("подтверждённость сейчас","support now")} {fmt(x.get("support_share"))})</li>' if unchecked else "") +
                    (f'<li>{t("выписать механизм: через какие мишени и пути вмешательство действует на исход — тогда его можно проверить по звеньям","write the mechanism: through which targets and pathways the intervention acts on the outcome, so that it can be checked link by link")}</li>'
                     if len(x["chain"]) <= 1 else "") +
                    (f'<li>{t("назвать альтернативные объяснения с поддержкой в литературе и эксперимент, который их отсечёт","name alternative explanations supported in the literature and an experiment that rules them out")}</li>'
@@ -681,7 +681,7 @@ def prospective(n: int = 60) -> tuple[dict, str]:
     sb = (d / f"scores_{n}.json").read_bytes()
     texts = {json.loads(l)["id"]: json.loads(l)["text"] for l in open(d / f"texts_{n}.jsonl")}
     meta = {"pool": f"prospective-{n}", "date": "2026-11-06", "sha": hashlib.sha256(sb).hexdigest(),
-            "method": "v3.3 (fold, links without records neutral, coverage), normalize_card/v10, verify_claim/v9, ASPID: evidence trial-3, evolution trial-2, funding trial-4",
+            "method": "v3.3 (fold, links without records neutral, support share), normalize_card/v10, verify_claim/v9, ASPID: evidence trial-3, evolution trial-2, funding trial-4",
             "title_ru": f"Проспективный пул: {n} идущих испытаний", "title_en": f"Prospective pool: {n} ongoing trials",
             "about_ru": "Испытания на ClinicalTrials.gov, где среди состояний — само старение, с завершением в ноябре 2026 — декабре 2028; "
                         "по 15 на тип вмешательства. Оценены до появления результатов; оценки зафиксированы хешем.",

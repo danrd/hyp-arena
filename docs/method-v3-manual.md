@@ -147,11 +147,13 @@ ranked). Nothing else filters: an undeveloped but promising hypothesis keeps its
   function) count once: the one matching the primary outcome of the stated experiment, else their mean. Consecutive pathway
   links (a cascade written as several steps) are one slot, their geometric mean. P therefore answers "how well do the data
   that exist fit the chain"; data against any link pull it down.
-- **Coverage** = share of the chain's slots (a cascade = one slot, parallel outcomes = one slot) with at least one usable
-  record or established by approval. It carries what P leaves out: a chain of guesses has a high P only because nothing is
-  known, and a low coverage says so. Coverage is an ASPID indicator (section 8), right below P in the evidence profile.
-  Consequence: finding moderate support for an unchecked link lowers P a little (from 1 to S for that link) and raises
-  coverage; under every profile the hypothesis's score goes up (section 12).
+- **Support share** = the mean over the chain's slots (a cascade = one slot, its best link; parallel outcomes = one slot)
+  of a = max(0, 2 (S − 0.5)): 0 for a slot without data or with data only against, 2/3 for moderate support (S 5/6), near 1
+  for strong support. It carries what P leaves out: a chain of guesses has a high P only because nothing is known, and a low
+  support share says so. An ASPID indicator (section 8), right below P in the evidence profile. It replaced a 0/1 share of
+  checked slots before any score was used (that one moved with P, |ρ| 0.74, and two thirds of the chains have one slot).
+  Consequence: finding moderate support for an unchecked link lowers P a little (from 1 to S for that link) and raises the
+  support share; under every profile the hypothesis's score goes up (section 12).
 - Why (specs/error-analysis-2026-11-06.yaml): under v3.2 a link without data multiplied P by 0.5, so a hypothesis that
   wrote out its mechanism lost a factor of 2 per unchecked link; on the calibration P then ordered the 18 hypotheses with a
   mechanism backwards. The signal of P against trial outcomes came from data against, not from support.
@@ -181,15 +183,15 @@ drawn over its whole range in every draw.
 | independent_outcome | independent sources for the outcome link | 0-5 |
 | against_share | share of the chain's weight against | 0-1, lower better |
 | endpoint_clinical | how close the trial's primary endpoint is to a clinical outcome (two model families agree, else unknown) | biomarker < patient-reported < function < clinical event |
-| coverage | share of the mechanism chain checked against the literature (v3.3) | 0-1 |
+| support_share | how much of the mechanism chain is supported: mean of max(0, 2 (S − 0.5)) over its slots (v3.3) | 0-1 |
 | trend_pubmed | rising attention: PubMed records on the intervention in the last 3 years vs the 3 before, net of PubMed's growth | -0.5 … 1.5 |
 | ai_role | role of AI in the hypothesis | none < analysis < in the loop < AI is the intervention |
 
 | Profile | Order of importance (tiers) |
 |---|---|
-| evidence | P > coverage > I > W > {best design, independent sources, share against, endpoint} |
-| evolution | headroom I > P > {coverage, W} > {best design, independent sources, share against} |
-| funding (merged with the investor draft, 2026-11-06) | P > feasibility > {trend, AI role} > {I, coverage} > {W, endpoint, best design, independent sources, share against} |
+| evidence | P > support share > I > W > {best design, independent sources, share against, endpoint} |
+| evolution | headroom I > P > {support share, W} > {best design, independent sources, share against} |
+| funding (merged with the investor draft, 2026-11-06) | P > feasibility > {trend, AI role} > {I, support share} > {W, endpoint, best design, independent sources, share against} |
 
 A new indicator enters only when it passes four conditions, checked on saved data before it is used: reliable (computed by
 code, or extracted with a verbatim phrase and agreed by two model families, κ ≥ 0.6); separating (at least three values,
@@ -220,7 +222,7 @@ Russian and English in one page, style of the project site). Order:
    and the profile's indicators in its order of importance (the reader chooses which columns to show); the top 3 are marked
    with their strengths; pages of 15 rows, search, filter by intervention type.
 3. *Each hypothesis* (collapsed, one-line verdict): the chain with each link coloured by S (links without data marked "not in
-   P"), P with its interval, I, coverage, scope, endpoint, AI role, places; what lifts and what lowers it (the indicators
+   P"), P with its interval, I, support share, scope, endpoint, AI role, places; what lifts and what lowers it (the indicators
    furthest above or below the middle of the pool, weighted by the profile's order; the strongest and weakest checked link);
    what would raise it (support for the link that would raise P most, with the new P; data for unchecked links; an
    experiment that rules out the supported alternatives; writing out the mechanism).
@@ -231,7 +233,7 @@ Russian and English in one page, style of the project site). Order:
 Reports on private hypotheses stay in the private repository (`longevity-kg`).
 
 **A report written by a model from this manual** (section 0) follows the same order for one hypothesis: summary (P with
-interval, coverage, I, scope, places if there is a pool), the chain table (id, type, claim, S with interval, F / A, main
+interval, support share, I, scope, places if there is a pool), the chain table (id, type, claim, S with interval, F / A, main
 records), why (what lifts, what lowers, the alternatives), what to improve (actions with the score they would give),
 limitations, provenance. The older one-hypothesis report by code (`python -m hyparena.analyze`) still uses the v3 / v3.1
 levels.
@@ -265,14 +267,14 @@ Hypothesis: "x activates AMPK, AMPK suppresses senescent cells (hallmark: cellul
 older adults". Records: two mouse studies for c1 (n = 40 each, large effect, between groups); none for c2; one RCT of 120 for
 c3 (medium effect). One proposed alternative with an observational study of 300 for it, cut off by the stated experiment.
 
-| | c1 engagement | c2 pathway | c3 outcome | P [90%] | coverage | I | W | V |
+| | c1 engagement | c2 pathway | c3 outcome | P [90%] | support share | I | W | V |
 |---|---|---|---|---|---|---|---|---|
-| v3.3 | S 0.906 (F 1.293) | no record, not in P | S 0.839 (F 0.63) | 0.760 [0.412; 0.985] | 0.667 | 0.651 | organ | 0.494 |
-| with one mouse study of 40 for c2 | | S 0.842 | | 0.639 | 1.000 | | organ | 0.416 |
-| with one mouse study of 40 against c2 | | S 0.158 | | 0.120 | 1.000 | | | |
+| v3.3 | S 0.906 (F 1.293) | no record, not in P | S 0.839 (F 0.63) | 0.760 [0.412; 0.985] | 0.496 | 0.651 | organ | 0.494 |
+| with one mouse study of 40 for c2 | | S 0.842 | | 0.639 | 0.724 | | organ | 0.416 |
+| with one mouse study of 40 against c2 | | S 0.158 | | 0.120 | 0.496 | | | |
 
-The study for c2 lowers P slightly and raises coverage; under every profile the expected score rises (evidence 0.703 →
-0.762 on these two alone). A study against c2 cuts P to 0.12: data against are what P is for. Under v3.2 the first row had
+The study for c2 lowers P slightly and raises the support share; under every profile the expected score rises (evidence
+0.667 → 0.703 on these two alone). A study against c2 cuts P to 0.12: data against are what P is for. Under v3.2 the first row had
 P 0.380 (c2 at 0.5), the penalty for writing out the mechanism that v3.3 removes.
 
 ## 13. Constants (checked against the code)
@@ -305,9 +307,9 @@ effect_class_rule_a:
   standardised_difference: {medium: 0.5, large: 0.8}
   percent: {medium: 5, large: 20}
 profiles:
-  evidence: [[P], [coverage], [I], [W], [best_design_outcome, independent_outcome, against_share, endpoint_clinical]]
-  evolution: [[I_headroom], [P], [coverage, W], [best_design_outcome, independent_outcome, against_share]]
-  funding: [[P], [feasibility], [trend_pubmed, ai_role], [I, coverage], [W, endpoint_clinical, best_design_outcome, independent_outcome, against_share]]
+  evidence: [[P], [support_share], [I], [W], [best_design_outcome, independent_outcome, against_share, endpoint_clinical]]
+  evolution: [[I_headroom], [P], [support_share, W], [best_design_outcome, independent_outcome, against_share]]
+  funding: [[P], [feasibility], [trend_pubmed, ai_role], [I, support_share], [W, endpoint_clinical, best_design_outcome, independent_outcome, against_share]]
 ```
 
 ## Appendix A. Discrete levels of v3 and v3.1

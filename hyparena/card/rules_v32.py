@@ -19,7 +19,8 @@ target, pathway cascades as one slot):
 
 v3.3 = evaluate(..., fold=True, neutral_unverified=True) (specs/v33-2026-11-06.yaml): a link with no usable record on either
 side counts as 1 in P and its interval instead of 0.5, and `coverage` (share of the chain's slots with a usable record or
-established by approval) carries what is not checked, as a separate ASPID indicator.
+established by approval) is reported; the ASPID indicator is `support_share`, the mean over the slots of
+max(0, 2 (S - 0.5)): how much of the chain is supported, continuous (amendment before scoring, specs/v33-2026-11-06.yaml).
 """
 from __future__ import annotations
 
@@ -112,7 +113,8 @@ class V32Result:
     scope: str = "local"
     links: dict[str, list[float]] = field(default_factory=dict)      # id -> [S, lo, hi, F, A]
     weakest: str = ""
-    coverage: float = 0.0                                             # share of slots with data (v3.3 indicator)
+    coverage: float = 0.0                                             # share of slots with data (reported)
+    support_share: float = 0.0                                        # mean support of the slots (v3.3 indicator)
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -178,6 +180,12 @@ def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
     if outs:
         slots.append([primary.id] if primary is not None else [o.id for o in outs])
     res.coverage = round(sum(1 for sl in slots if any(i in checked for i in sl)) / len(slots), 4) if slots else 0.0
+
+    def slot_S(sl):
+        if len(sl) > 1 and outs and sl[0] in {o.id for o in outs}:
+            return sum(res.links[i][0] for i in sl) / len(sl)          # parallel outcomes without a primary: their mean
+        return max(res.links[i][0] for i in sl)                         # a cascade: its best link
+    res.support_share = round(sum(max(0.0, 2 * (slot_S(sl) - 0.5)) for sl in slots) / len(slots), 4) if slots else 0.0
     total = 0.0
     supported = False
     for alt in card.proposed_alternatives:

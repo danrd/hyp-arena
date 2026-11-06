@@ -3,7 +3,7 @@ from hyparena.card import aspid_v3 as a
 
 def _r(P, scope, I, H=None, gate="pass", feas=None):
     return ({"P": P, "scope": scope, "I": I, "headroom_I": H if H is not None else I, "gate": gate},
-            {"coverage": 1.0, **({"feasibility": float(feas)} if feas is not None else {})})
+            {"support_share": 1.0, **({"feasibility": float(feas)} if feas is not None else {})})
 
 
 def test_profiles_load_and_a_low_plausibility_is_not_compensated():

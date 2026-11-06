@@ -21,3 +21,13 @@ calibration_rerun: >-
   all 74 calibration units with the current pipeline (configs/v3-flash-n10.yaml, run_<step>_v10.json, about 3.7 USD), so
   that every unit is scored by one version; these samples were used to build the method: the rerun is for consistency and
   error analysis, not a test. The test of v3.3 is the frozen benchmark, with its scores registered before its run.
+amendment_before_scoring:
+  date: '2026-11-06'
+  what: >-
+    coverage replaced by support share (user 2026-11-06: a 0/1 share separates little and does not fix the number of
+    links): the mean over the chain's slots of a = max(0, 2 (S - 0.5)), S the slot's strength (a cascade slot takes its
+    best link, parallel outcomes the primary or the mean); no record or only data against give 0, moderate support (S 5/6)
+    gives 2/3, strong support near 1. Reason found on saved data (pilot + calibration, 117 units through the gate): coverage
+    had |Spearman| 0.74 with P under v3.3 (a link without data gives P 1 and coverage 0), above the 0.7 limit of the
+    admission rule, and two thirds of the chains have one slot (coverage 0 or 1); support share: 36 distinct values,
+    Spearman -0.26 with P. Same place in the profiles; indicator id support_share.
