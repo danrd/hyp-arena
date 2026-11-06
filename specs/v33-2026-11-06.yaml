@@ -1,0 +1,23 @@
+id: v33-2026-11-06
+written_on: '2026-11-06'
+status: rule registered before the calibration rerun is scored
+decision: >-
+  user 2026-11-06 after the error analysis (specs/error-analysis-2026-11-06.yaml): a link without any usable record no
+  longer multiplies P by 0.5 (it penalised hypotheses that write out their mechanism); how much of the mechanism is checked
+  becomes a separate ASPID indicator
+rule:
+  P: >-
+    as v3.2 (rules_v32, fold=True: continuous link strength, cascades and parallel outcomes as before), but a link with no
+    usable record on either side (F = A = 0, and not established by approval) counts as 1 in the product and in the interval
+  coverage: >-
+    share of the chain's slots (pathway cascade = one slot, parallel outcomes = one slot) with at least one usable record or
+    established by approval; 0-1, higher better
+  gate, I, W: unchanged
+profiles:
+  evidence: [[P], [coverage], [I], [W], [best_design_outcome, independent_outcome, against_share, endpoint_clinical]]
+  evolution: [[I_headroom], [P], [coverage, W], [best_design_outcome, independent_outcome, against_share]]
+  funding: [[P], [feasibility], [trend_pubmed, ai_role], [I, coverage], [W, endpoint_clinical, best_design_outcome, independent_outcome, against_share]]
+calibration_rerun: >-
+  all 74 calibration units with the current pipeline (configs/v3-flash-n10.yaml, run_<step>_v10.json, about 3.7 USD), so
+  that every unit is scored by one version; these samples were used to build the method: the rerun is for consistency and
+  error analysis, not a test. The test of v3.3 is the frozen benchmark, with its scores registered before its run.
