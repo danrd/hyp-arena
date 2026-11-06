@@ -1,5 +1,7 @@
 # Architecture: a Co-Scientist-style multi-agent graph
 
+> **Method v2 (historical).** The current method is v3.2: [`method-v3-manual.md`](method-v3-manual.md) (manual) and [`spec/method-v3.md`](spec/method-v3.md) (specification). This document describes v2 and the Co-Scientist-style baselines, which are kept for comparison.
+
 Status (2026-10-20): implemented and tested; since the method v2 decisions (card spec, Working_Notes A3) this graph is **the baseline and ablation harness**, not the main ranking. The main mode is method v2 ([`rules-method.md`](rules-method.md), `hyparena/card/`): verified card → rule-based indicators → АСПИД per preference profile. Section 0 maps the decisions to the code; sections 1–11 describe the graph, which still runs the Co-Scientist baselines (2025, 2026) and the ladder of ablations.
 
 ## 0. Method v2 against this design (reconciled with Working_Notes A3, 2026-10-20)

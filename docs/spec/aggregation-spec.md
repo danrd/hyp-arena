@@ -1,5 +1,7 @@
 # Aggregation: implementation notes (АСПИД/МРСП and SMAA)
 
+> **Method v2 (historical).** The current method is v3.2: [`method-v3-manual.md`](../method-v3-manual.md) (manual) and [`spec/method-v3.md`](method-v3.md) (specification). This specification was written for v2; the card format and the ASPID implementation are still used by v3 (its additions are in method-v3.md).
+
 > Turns the indicators of [card spec, section 8a. Scoring indicators for АСПИД (draft, 2026-10-19)](hypothesis-card-spec.md) into a ranking with uncertainty, under an ordinal importance order (a named preference profile). Design decisions: [design notes, section 2.1 Aggregation without explicit weights: АСПИД / МРСП (proposed, 2026-10-15)](working-notes.md), [design notes, section 2.2 Judge role and its link to АСПИД (agreed 2026-10-18)](working-notes.md). Written 2026-10-19.
 
 ---

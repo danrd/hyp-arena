@@ -1,5 +1,7 @@
 # Hypothesis card: specification v1 (MVP)
 
+> **Method v2 (historical).** The current method is v3.2: [`method-v3-manual.md`](../method-v3-manual.md) (manual) and [`spec/method-v3.md`](method-v3.md) (specification). This specification was written for v2; the card format and the ASPID implementation are still used by v3 (its additions are in method-v3.md).
+
 > Source of truth for the card format and for the **relation vocabulary shared with the knowledge graph** (the knowledge-graph design). Decisions confirmed on 2026-10-15 (see [design notes](working-notes.md), section 5c). Worked examples: [card examples](hypothesis-card-examples.md).
 > The code implements this as Pydantic models (single source of truth), exported to JSON Schema; YAML for people.
 
