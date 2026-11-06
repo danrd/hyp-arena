@@ -40,6 +40,8 @@ SPECS = {
     "trend_pubmed": IndicatorSpec("trend_pubmed", "cardinal", bounds=(-0.5, 1.5),
                                   note="rising attention: log ratio of PubMed records on the intervention, last 3 years vs the "
                                        "3 before, net of PubMed growth (specs/trend-genetics-2026-11-06.yaml); clipped to the bounds"),
+    "coverage": IndicatorSpec("coverage", "cardinal", bounds=(0.0, 1.0),
+                              note="share of the mechanism chain checked against the literature (v3.3, specs/v33-2026-11-06.yaml)"),
     "ai_role": IndicatorSpec("ai_role", "ordinal", levels=("none", "analysis", "in_the_loop", "intervention"),
                              note="role of AI in the hypothesis (normalize_card/v10, verbatim span or none)"),
 }
@@ -57,7 +59,7 @@ def values_of(v3: dict, extra: Optional[dict] = None) -> dict:
     e = extra or {}
     return {"P": max(P_FLOOR, v3["P"]), "W": v3["scope"], "I": v3["I"], "I_headroom": v3["headroom_I"],
             **{k: e.get(k) for k in ("feasibility", "best_design_outcome", "independent_outcome", "against_share",
-                                    "endpoint_clinical", "ai_role")},
+                                    "endpoint_clinical", "ai_role", "coverage")},
             "trend_pubmed": None if e.get("trend_pubmed") is None else min(1.5, max(-0.5, e["trend_pubmed"]))}
 
 

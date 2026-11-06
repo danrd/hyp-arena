@@ -38,6 +38,7 @@ IND_NAMES = {
     "endpoint_clinical": ("клиничность конечной точки", "how clinical the endpoint is"),
     "trend_pubmed": ("рост внимания в литературе", "rising attention in the literature"),
     "ai_role": ("роль ИИ", "role of AI"),
+    "coverage": ("проверенность механизма", "how much of the mechanism is checked"),
 }
 LINK_NAMES = {"delivery": ("доставка", "delivery"), "engagement": ("действие на мишень", "target engagement"),
               "pathway": ("сигнальный путь", "pathway"), "effect": ("промежуточный эффект", "intermediate effect"),
@@ -53,7 +54,7 @@ AI_NAMES = {"none": ("нет", "none"), "analysis": ("анализ данных"
 SHORT = {"P": ("P", "P"), "I": ("I", "I"), "I_headroom": ("Запас I", "I room"), "W": ("Размах", "Scope"),
          "feasibility": ("Реализ.", "Feasib."), "best_design_outcome": ("Дизайн", "Design"), "independent_outcome": ("Источн.", "Sources"),
          "against_share": ("«Против»", "Against"), "endpoint_clinical": ("Кон. точка", "Endpoint"), "trend_pubmed": ("Тренд", "Trend"),
-         "ai_role": ("ИИ", "AI")}
+         "ai_role": ("ИИ", "AI"), "coverage": ("Провер.", "Checked")}
 DESIGN_NAMES = {"none": ("нет данных", "no data"), "cells": ("клетки", "cells"), "animal": ("животные", "animals"),
                 "observational": ("наблюдательное", "observational"), "review": ("обзор", "review"),
                 "non_randomised": ("нерандомиз.", "non-randomised"), "meta_analysis": ("метаанализ", "meta-analysis"), "rct": ("РКИ", "RCT")}
@@ -63,8 +64,8 @@ ORDINAL = {"W": ("local", "organ", "hallmark"), "endpoint_clinical": ("biomarker
 
 
 TIPS = {
-    "P": ("Правдоподобие механизма, от 0 до 1: произведение силы звеньев цепочки. Звено без данных — 0.5, с данными «за» — выше, «против» — ниже. Под числом — 90%-й интервал: широкий, когда о звеньях мало известно.",
-          "Plausibility of the mechanism, 0 to 1: the product of the links' strengths. A link without data is 0.5, with data for higher, against lower. Below the number: the 90% interval, wide when little is known."),
+    "P": ("Правдоподобие механизма, от 0 до 1: произведение силы звеньев цепочки. Звено без данных не учитывается (его отражает ось «проверенность»); данные «за» поднимают силу звена выше 0.5, «против» — опускают ниже. Под числом — 90%-й интервал: широкий, когда о звеньях мало известно.",
+          "Plausibility of the mechanism, 0 to 1: the product of the links' strengths. A link without data does not count (the coverage axis carries it); data for raise a link above 0.5, against lower it. Below the number: the 90% interval, wide when little is known."),
     "I": ("Информативность эксперимента, от 1/3 до 1: сколько подкреплённых литературой альтернативных объяснений отсечёт заявленный эксперимент. 1/3 — ни одного.",
           "Informativeness, 1/3 to 1: how many literature-supported alternative explanations the stated experiment rules out. 1/3: none."),
     "I_headroom": ("Запас информативности: какой была бы информативность, если бы эксперимент отсекал все подкреплённые альтернативы. Показывает, сколько можно выиграть, улучшив дизайн.",
@@ -83,6 +84,8 @@ TIPS = {
                           "How close the trial's primary endpoint is to a clinical outcome: biomarker < patient-reported < function < clinical event (falls, hospitalisation, death)."),
     "trend_pubmed": ("Рост внимания: публикации о вмешательстве за 3 года до оценки против 3 лет до них, за вычетом роста всего PubMed. 0 — как вся литература, 0.7 — примерно вдвое быстрее.",
                      "Rising attention: publications on the intervention in the 3 years before scoring vs the 3 before, net of PubMed's growth. 0 = like all literature, 0.7 = about twice as fast."),
+    "coverage": ("Проверенность механизма, от 0 до 1: доля звеньев цепочки, по которым литература нашла хоть что-то. Звенья без данных не снижают P, но снижают эту ось: гипотеза из одних догадок не получит высокое место.",
+                 "How much of the mechanism is checked, 0 to 1: the share of the chain's links on which the literature found anything. Links without data do not lower P but lower this axis: a hypothesis made of guesses does not rank high."),
     "ai_role": ("Роль ИИ в гипотезе: нет / анализ данных / ИИ в цикле эксперимента / ИИ — само вмешательство; ставится только по дословной фразе текста.",
                 "Role of AI: none / data analysis / AI in the experiment loop / AI is the intervention; set only from a verbatim phrase of the text."),
     "score": ("Ожидаемая оценка в профиле, от 0 до 1: среднее по 10 000 случайным наборам весов, совместимым с порядком важности профиля.",
@@ -194,7 +197,7 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
         card = HypothesisCard.model_validate(it["card"])
         cvs = [ClaimVerification.model_validate(c) for c in it["verification"]["claims"]]
         alts = {a: ClaimVerification.model_validate(v) for a, v in (it.get("v3_alternatives") or {}).items()}
-        res = r32.evaluate(card, cvs, alts, fold=True)
+        res = r32.evaluate(card, cvs, alts, fold=True, neutral_unverified=True)       # v3.3
         labels = r3.evaluate(card, cvs, alts, variant="v3.1").links
         by = {c.id: c for c in cvs}
         chain = []
@@ -232,10 +235,12 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
             c["in_P"] = c["id"] in in_p
             c["parallel_outcome"] = c["link"] == "outcome" and len(outs) > 1
             c["primary"] = primary is not None and c["id"] == primary.id
-        relevant = [c for c in chain if c["in_P"]]
+        for c in chain:
+            c["checked"] = (c["F"] + c["A"]) > 0
+        relevant = [c for c in chain if c["in_P"] and c["checked"]]
         weakest = min(relevant, key=lambda c: c["S"]) if relevant else None
         strongest = max(relevant, key=lambda c: c["S"]) if relevant else None
-        base_S = {c["id"]: c["S"] for c in chain}
+        base_S = {c["id"]: (c["S"] if c["checked"] else 1.0) for c in chain}       # v3.3: links without data are neutral
         best_gain, raise_to, raise_link = 0.0, None, None
         for c in relevant:
             if c["S"] >= 5 / 6:
@@ -247,11 +252,12 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
         hyps[h] = {**base, "plain": card.claim_plain, "P": res.P, "P_lo": res.P_lo, "P_hi": res.P_hi, "I": res.I, "V": res.V,
                    "scope": res.scope, "gate": res.gate, "chain": chain, "alternatives": alt_rows,
                    "weakest": weakest["id"] if weakest else None, "strongest": strongest["id"] if strongest else None,
-                   "P_if_weakest_moderate": raise_to, "raise_link": raise_link, "experiment": {"design": de.design, "endpoint": de.endpoint, "n": de.n_planned},
+                   "P_if_weakest_moderate": raise_to, "raise_link": raise_link, "coverage": res.coverage,
+                   "unchecked": [c["id"] for c in chain if not c["checked"]], "experiment": {"design": de.design, "endpoint": de.endpoint, "n": de.n_planned},
                    "endpoint_clinical": sc.get("endpoint_clinical"), "trend_pubmed": sc.get("trend_pubmed"), "ai_role": sc.get("ai_role"),
                    "ai_span": card.ai_role_span, "aspid": {p: sc.get(f"aspid_{p}") for p in profiles},
                    "flags": res_flags(it)}
-        values[h] = {"P": res.P, "I": res.I, "I_headroom": it["v3"].get("headroom_I"), "W": res.scope,
+        values[h] = {"P": res.P, "I": res.I, "I_headroom": it["v3"].get("headroom_I"), "W": res.scope, "coverage": res.coverage,
                      "endpoint_clinical": sc.get("endpoint_clinical"), "trend_pubmed": sc.get("trend_pubmed"), "ai_role": sc.get("ai_role"),
                      **{k: (it.get("extra") or {}).get(k) for k in ()}}
     # extras needed for profile contributions
@@ -276,7 +282,7 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
     scored = [h for h in hyps if hyps[h].get("P") is not None and hyps[h].get("gate") == "pass"]
     ax = {h: ({"P": hyps[h]["P"], "scope": hyps[h]["scope"], "I": hyps[h]["I"], "headroom_I": values[h]["I_headroom"], "gate": "pass"},
               {k: values[h].get(k) for k in ("feasibility", "best_design_outcome", "independent_outcome", "against_share",
-                                              "endpoint_clinical", "trend_pubmed", "ai_role")}) for h in scored}
+                                              "endpoint_clinical", "trend_pubmed", "ai_role", "coverage")}) for h in scored}
     ranks = {}
     for p in profiles:
         agg = aspid_v3.rank(ax, p, K=10000)
@@ -527,18 +533,21 @@ def render(rep: dict) -> str:
         w = next((c for c in x["chain"] if c["id"] == x["weakest"]), None)
         s = next((c for c in x["chain"] if c["id"] == x["strongest"]), None)
         P = fmt(x['P'])
+        unchecked = [c for c in x["chain"] if c["id"] in x.get("unchecked", [])]
         if len(x["chain"]) <= 1:
             verdict = t(f"P {P}; механизм не выписан — в цепочке только исход", f"P {P}; no mechanism written: the chain is the outcome only")
         elif w and w["S"] < 0.75:
             ln = LINK_NAMES.get(w["link"], (w["link"],) * 2)
             verdict = t(f"P {P}; слабое место — звено «{e(ln[0])}» (S {fmt(w['S'])})", f"P {P}; weakest link: {e(ln[1])} (S {fmt(w['S'])})")
         else:
-            verdict = t(f"P {P}; все звенья подкреплены литературой", f"P {P}; every link is supported by the literature")
+            verdict = t(f"P {P}; данных против механизма нет", f"P {P}; no data against the mechanism")
+        if unchecked and len(x["chain"]) > 1:
+            verdict += t(f"; не проверено звеньев: {len(unchecked)} из {len(x['chain'])}", f"; unchecked links: {len(unchecked)} of {len(x['chain'])}")
         out.append(f'<details id="h-{e(h)}"><summary><b>{e(x["title"][:110])}</b> <span class="muted mono">{e(h)}</span><br>'
                    f'<span class="muted">{verdict}</span></summary><div class="body">')
         out.append(f'<p class="prose">{e(x["plain"])}</p>')
         def box(c):
-            note = ""
+            note = "" if c.get("checked", True) else f'<br><span class="chip">{t("нет данных — в P не входит","no data, not in P")}</span>'
             if c.get("parallel_outcome"):
                 note = (f'<br><span class="chip ok">{t("основной исход","primary outcome")}</span>' if c["primary"] else
                         (f'<br><span class="chip">{t("в P не входит","not in P")}</span>' if not c["in_P"] else
@@ -555,7 +564,7 @@ def render(rep: dict) -> str:
         if len(outs_) > 1:
             out.append(f'<p class="muted" style="font-size:.85rem">{t("Параллельные исходы (масса, сила, функция) — одно звено: в P входит основной исход заявленного эксперимента, а если его нельзя выделить — среднее.","Parallel outcomes (mass, strength, function) are one link: P takes the primary outcome of the stated experiment, or their mean when none can be singled out.")}</p>')
         rows = [("P", f'<span class="mono">{fmt(x["P"])} [{fmt(x["P_lo"])}; {fmt(x["P_hi"])}]</span>'),
-                ("I", f'<span class="mono">{fmt(x["I"])}</span>'), (t("Размах","Scope"), tn(SCOPE_NAMES.get(x["scope"], (x["scope"],)*2))),
+                ("I", f'<span class="mono">{fmt(x["I"])}</span>'), (t("Проверенность","Coverage"), f'<span class="mono">{fmt(x.get("coverage"))}</span>'), (t("Размах","Scope"), tn(SCOPE_NAMES.get(x["scope"], (x["scope"],)*2))),
                 (t("Конечная точка","Endpoint"), tn(ENDPOINT_NAMES.get(x.get("endpoint_clinical"), ("—","—")))),
                 (t("Роль ИИ","AI role"), tn(AI_NAMES.get(x.get("ai_role") or "none"))),
                 (t("Места","Places"), " · ".join(f'{tn(PROFILE_NAMES[p])} {x["rank"].get(p, "—")}/{len(rep["ranks"][p])} ({t("топ-5","top 5")} {fmt(x["p_top5"].get(p))})' for p in profs))]
@@ -578,6 +587,9 @@ def render(rep: dict) -> str:
                     f'<b class="mono">{fmt(x["P_if_weakest_moderate"])}</b> ({t("сейчас","now")} {fmt(x["P"])})</li>' if x.get("P_if_weakest_moderate") and rl else "") +
                    (f'<li>{t("заявленный эксперимент не отсекает подкреплённые альтернативы: изменить дизайн так, чтобы различать их (I до 1)","the stated experiment leaves supported alternatives standing: change the design to tell them apart (I up to 1)")}</li>'
                     if any(a["support"] > 0 and a["on_positive"] != "eliminated" for a in x["alternatives"]) else "") +
+                   (f'<li>{t("найти данные по непроверенным звеньям: ","find data on the unchecked links: ")}'
+                    + ", ".join(tn(LINK_NAMES.get(c["link"], (c["link"],)*2)) for c in unchecked)
+                    + f' ({t("проверенность сейчас","coverage now")} {fmt(x.get("coverage"))})</li>' if unchecked else "") +
                    (f'<li>{t("выписать механизм: через какие мишени и пути вмешательство действует на исход — тогда его можно проверить по звеньям","write the mechanism: through which targets and pathways the intervention acts on the outcome, so that it can be checked link by link")}</li>'
                     if len(x["chain"]) <= 1 else "") +
                    (f'<li>{t("назвать альтернативные объяснения с поддержкой в литературе и эксперимент, который их отсечёт","name alternative explanations supported in the literature and an experiment that rules them out")}</li>'
@@ -669,7 +681,7 @@ def prospective(n: int = 60) -> tuple[dict, str]:
     sb = (d / f"scores_{n}.json").read_bytes()
     texts = {json.loads(l)["id"]: json.loads(l)["text"] for l in open(d / f"texts_{n}.jsonl")}
     meta = {"pool": f"prospective-{n}", "date": "2026-11-06", "sha": hashlib.sha256(sb).hexdigest(),
-            "method": "v3.2 (fold), normalize_card/v10, verify_claim/v9, ASPID: evidence trial-2, evolution trial-2, funding trial-3",
+            "method": "v3.3 (fold, links without records neutral, coverage), normalize_card/v10, verify_claim/v9, ASPID: evidence trial-3, evolution trial-2, funding trial-4",
             "title_ru": f"Проспективный пул: {n} идущих испытаний", "title_en": f"Prospective pool: {n} ongoing trials",
             "about_ru": "Испытания на ClinicalTrials.gov, где среди состояний — само старение, с завершением в ноябре 2026 — декабре 2028; "
                         "по 15 на тип вмешательства. Оценены до появления результатов; оценки зафиксированы хешем.",
