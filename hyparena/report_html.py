@@ -50,9 +50,51 @@ TYPE_NAMES = {"drug/supplement": ("лекарство / добавка", "drug /
               "device": ("устройство", "device"), "other (exercise etc.)": ("другое (упражнения и пр.)", "other (exercise etc.)")}
 AI_NAMES = {"none": ("нет", "none"), "analysis": ("анализ данных", "data analysis"), "in_the_loop": ("ИИ в цикле", "AI in the loop"),
             "intervention": ("ИИ — вмешательство", "AI is the intervention")}
+SHORT = {"P": ("P", "P"), "I": ("I", "I"), "I_headroom": ("Запас I", "I room"), "W": ("Размах", "Scope"),
+         "feasibility": ("Реализ.", "Feasib."), "best_design_outcome": ("Дизайн", "Design"), "independent_outcome": ("Источн.", "Sources"),
+         "against_share": ("«Против»", "Against"), "endpoint_clinical": ("Кон. точка", "Endpoint"), "trend_pubmed": ("Тренд", "Trend"),
+         "ai_role": ("ИИ", "AI")}
 ORDINAL = {"W": ("local", "organ", "hallmark"), "endpoint_clinical": ("biomarker", "patient_reported", "function", "clinical_event"),
            "ai_role": ("none", "analysis", "in_the_loop", "intervention"),
            "best_design_outcome": aspid_v3.SPECS["best_design_outcome"].levels}
+
+
+TIPS = {
+    "P": ("Правдоподобие механизма, от 0 до 1: произведение силы звеньев цепочки. Звено без данных — 0.5, с данными «за» — выше, «против» — ниже. Полоска — 90%-й интервал: широкий, когда о звеньях мало известно.",
+          "Plausibility of the mechanism, 0 to 1: the product of the links' strengths. A link without data is 0.5, with data for higher, against lower. The bar is the 90% interval: wide when little is known."),
+    "I": ("Информативность эксперимента, от 1/3 до 1: сколько подкреплённых литературой альтернативных объяснений отсечёт заявленный эксперимент. 1/3 — ни одного.",
+          "Informativeness, 1/3 to 1: how many literature-supported alternative explanations the stated experiment rules out. 1/3: none."),
+    "I_headroom": ("Запас информативности: какой была бы информативность, если бы эксперимент отсекал все подкреплённые альтернативы. Показывает, сколько можно выиграть, улучшив дизайн.",
+                   "Room for informativeness: what it would be if the experiment ruled out every supported alternative; what a better design could add."),
+    "W": ("Размах: как широко действует подтверждённая литературой часть механизма — локально, на орган или систему, на признак старения.",
+          "Scope: how far the supported part of the mechanism reaches: local, an organ or system, a hallmark of ageing."),
+    "feasibility": ("Реализуемость, от 0 до 1: среднее цены системы (клетки дешевле людей), длительности, плановой выборки и готовности вмешательства (одобрено или не вещество — 1, в испытаниях — 0.5).",
+                    "Feasibility, 0 to 1: mean of the cost of the system (cells cheaper than people), duration, planned sample and readiness of the intervention (approved or not a compound 1, in trials 0.5)."),
+    "best_design_outcome": ("Лучший дизайн среди исследований по исходу: от клеточного опыта до рандомизированного испытания (РКИ).",
+                            "Best design among the studies of the outcome: from a cell study to a randomised trial (RCT)."),
+    "independent_outcome": ("Число независимых источников по исходу: статьи одного испытания считаются одним источником.",
+                            "Independent sources for the outcome: papers of one trial count as one source."),
+    "against_share": ("Доля веса данных «против» во всей цепочке: чем меньше, тем лучше.",
+                      "Share of the chain's evidence weight that is against: lower is better."),
+    "endpoint_clinical": ("Насколько первичная конечная точка испытания близка к клиническому исходу: биомаркер < самоотчёт < функция < клиническое событие (падения, госпитализации, смерть).",
+                          "How close the trial's primary endpoint is to a clinical outcome: biomarker < patient-reported < function < clinical event (falls, hospitalisation, death)."),
+    "trend_pubmed": ("Рост внимания: публикации о вмешательстве за 3 года до оценки против 3 лет до них, за вычетом роста всего PubMed. 0 — как вся литература, 0.7 — примерно вдвое быстрее.",
+                     "Rising attention: publications on the intervention in the 3 years before scoring vs the 3 before, net of PubMed's growth. 0 = like all literature, 0.7 = about twice as fast."),
+    "ai_role": ("Роль ИИ в гипотезе: нет / анализ данных / ИИ в цикле эксперимента / ИИ — само вмешательство; ставится только по дословной фразе текста.",
+                "Role of AI: none / data analysis / AI in the experiment loop / AI is the intervention; set only from a verbatim phrase of the text."),
+    "score": ("Ожидаемая оценка в профиле, от 0 до 1: среднее по 10 000 случайным наборам весов, совместимым с порядком важности профиля.",
+              "Expected score under the profile, 0 to 1: the mean over 10,000 random weight sets compatible with the profile's order of importance."),
+    "top5": ("Вероятность попасть в первую пятёрку пула по этому профилю: доля из 10 000 розыгрышей весов, где гипотеза оказалась в пятёрке. Показывает, насколько место устойчиво к выбору весов.",
+             "Probability of being in the pool's top 5 under this profile: the share of 10,000 weight draws in which the hypothesis was in the top 5; how robust the place is to the choice of weights."),
+    "place": ("Место по ожидаемой оценке (1 — лучшая).", "Place by the expected score (1 = best)."),
+    "S": ("Сила звена, от 0 до 1: 0.5 — данных нет; 0.83 — умеренная поддержка; около 0.5 с узким интервалом — данные «за» и «против» уравновешены.",
+          "Link strength, 0 to 1: 0.5 = no data; 0.83 = moderate support; about 0.5 with a narrow interval = data for and against balance."),
+}
+
+
+def tip(key: str, label: str) -> str:
+    ru, en = TIPS[key]
+    return f'<span class="tip" tabindex="0" data-ru="{e(ru)}" data-en="{e(en)}">{label}</span>'
 
 
 def e(x) -> str:
@@ -229,14 +271,24 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
             contrib[name] = {"up": [p for p in parts if p[1] > 0.01][:2], "down": [p for p in parts[::-1] if p[1] < -0.01][:2]}
         hyps[h]["contrib"] = contrib
     scored = [h for h in hyps if hyps[h].get("P") is not None and hyps[h].get("gate") == "pass"]
+    ax = {h: ({"P": hyps[h]["P"], "scope": hyps[h]["scope"], "I": hyps[h]["I"], "headroom_I": values[h]["I_headroom"], "gate": "pass"},
+              {k: values[h].get(k) for k in ("feasibility", "best_design_outcome", "independent_outcome", "against_share",
+                                              "endpoint_clinical", "trend_pubmed", "ai_role")}) for h in scored}
     ranks = {}
     for p in profiles:
-        order = sorted(scored, key=lambda h: -(hyps[h]["aspid"][p] or -1))
+        agg = aspid_v3.rank(ax, p, K=10000)
+        for h in scored:
+            hyps[h]["aspid"][p] = round(agg.expected[h], 4)
+            hyps[h].setdefault("p_top5", {})[p] = round(agg.p_topk[h], 3)
+        order = sorted(scored, key=lambda h: -hyps[h]["aspid"][p])
         ranks[p] = order
         for i, h in enumerate(order, 1):
             hyps[h].setdefault("rank", {})[p] = i
+    for h in scored:
+        hyps[h]["values"] = values[h]
     for x in hyps.values():
         x.setdefault("rank", {})
+        x.setdefault("p_top5", {})
     return {"meta": {**meta, "n": len(hyps), "n_scored": len(scored), "outcomes": dict(Counter(x["outcome"] for x in hyps.values())),
                      "profiles": {p: [list(t_) for t_ in prof.tiers] for p, (prof, _) in profiles.items()}},
             "hyps": hyps, "ranks": ranks}
@@ -270,7 +322,7 @@ html[data-lang="ru"] .l-en,html[data-lang="en"] .l-ru{display:none}
 .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
 .num{font-family:var(--mono);font-size:1.6rem}.kpi .lab{font-weight:600}.kpi p{margin:.3em 0 0;color:var(--muted);font-size:.9rem}
 .tbl{width:100%;border-collapse:collapse;font-size:.88rem;background:var(--surface)}.tbl th,.tbl td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
-.tbl th{background:var(--surface);cursor:pointer;white-space:nowrap}.tbl td.title{min-width:300px}.tbl td.n{font-family:var(--mono);text-align:right;white-space:nowrap}
+.tbl th{background:var(--surface);cursor:pointer;white-space:nowrap}.tbl td.title{min-width:240px}.tbl td.n{font-family:var(--mono);text-align:right;white-space:nowrap}
 .scroll{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
 .bar{display:inline-block;height:8px;border-radius:4px;background:var(--accent);vertical-align:middle}
 .barbox{display:inline-block;width:70px;height:8px;border-radius:4px;background:var(--idle-soft);margin-right:6px;vertical-align:middle;position:relative}
@@ -282,7 +334,17 @@ details .body{padding:0 16px 14px}.chip{display:inline-block;border-radius:999px
 .chain{display:flex;flex-wrap:wrap;gap:6px;align-items:stretch;margin:8px 0}.link{border:1px solid var(--line);border-radius:8px;padding:6px 8px;min-width:150px;max-width:260px;font-size:.85rem}
 .arrow{align-self:center;color:var(--muted)}.link .s{font-family:var(--mono)}
 .up{color:var(--ok)}.down{color:var(--bad)}blockquote{margin:4px 0;padding-left:10px;border-left:3px solid var(--line);color:var(--muted);font-size:.85rem}
-.top3{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}.top3 ol{margin:.3em 0;padding-left:1.2em}
+.tip{border-bottom:1px dotted var(--muted);cursor:help;position:relative}
+.tip:hover::after,.tip:focus::after{position:absolute;left:0;top:calc(100% + 6px);z-index:20;width:min(320px,80vw);white-space:normal;
+ background:var(--ink);color:var(--paper);font:400 .82rem/1.45 var(--body);padding:8px 10px;border-radius:8px;text-transform:none;letter-spacing:0;text-align:left}
+html[data-lang="ru"] .tip:hover::after,html[data-lang="ru"] .tip:focus::after{content:attr(data-ru)}
+html[data-lang="en"] .tip:hover::after,html[data-lang="en"] .tip:focus::after{content:attr(data-en)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.tabs button{font:inherit;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.ptab[hidden]{display:none}.pager{display:flex;gap:8px;align-items:center;margin:8px 0;font-size:.9rem}.pager button{font:inherit;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:2px 10px;cursor:pointer}
+.tools{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:6px 0;font-size:.9rem}.tools input,.tools select{font:inherit;padding:3px 6px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}
+tr.lead td:first-child{box-shadow:inset 3px 0 var(--accent)}.star{color:var(--accent);font-weight:600}
+.steps{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0}.steps .st{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 10px;font-size:.88rem;max-width:230px}
 @media print{header.top{position:static}details{break-inside:avoid}details:not([open])>.body{display:block}}
 """
 
@@ -295,8 +357,18 @@ document.querySelectorAll('table.sortable').forEach(tb=>{tb.querySelectorAll('th
  rows.sort((a,b)=>{const x=a.cells[i].dataset.v??a.cells[i].innerText,y=b.cells[i].dataset.v??b.cells[i].innerText;
   const nx=parseFloat(x),ny=parseFloat(y);const c=(!isNaN(nx)&&!isNaN(ny))?nx-ny:String(x).localeCompare(String(y));return asc?c:-c});
  rows.forEach(r=>tb.tBodies[0].appendChild(r))}))});
-const f=document.getElementById('ftype');if(f)f.addEventListener('change',()=>{document.querySelectorAll('#main tbody tr').forEach(r=>{
- r.style.display=(!f.value||r.dataset.type===f.value)?'':'none'})});
+const PAGE=15;
+function refresh(tb){const q=(document.getElementById('fq').value||'').toLowerCase(),ty=document.getElementById('ftype').value;
+ const rows=[...tb.tBodies[0].rows];const ok=rows.filter(r=>(!ty||r.dataset.type===ty)&&(!q||r.dataset.q.includes(q)));
+ const pages=Math.max(1,Math.ceil(ok.length/PAGE));let pg=Math.min(+(tb.dataset.page||0),pages-1);tb.dataset.page=pg;
+ rows.forEach(r=>r.style.display='none');ok.slice(pg*PAGE,pg*PAGE+PAGE).forEach(r=>r.style.display='');
+ const pi=tb.parentElement.parentElement.querySelector('.pinfo');if(pi)pi.textContent=(pg+1)+' / '+pages+' · '+ok.length}
+function page(btn,d){const box=btn.closest('.ptab');const tb=box.querySelector('table');tb.dataset.page=Math.max(0,(+tb.dataset.page||0)+d);refresh(tb)}
+function showProfile(p){document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.p===p?'true':'false'));
+ document.querySelectorAll('.ptab').forEach(d=>d.hidden=d.dataset.p!==p);const tb=document.querySelector('.ptab[data-p="'+p+'"] table');tb.dataset.page=0;refresh(tb)}
+['fq','ftype'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',()=>{document.querySelectorAll('.ptab table').forEach(tb=>{tb.dataset.page=0;refresh(tb)})})});
+document.querySelectorAll('.ptab table').forEach(refresh);
+document.querySelectorAll('table.sortable th').forEach(th=>th.addEventListener('click',()=>setTimeout(()=>refresh(th.closest('table')),0)));
 document.querySelectorAll('a[href^="#h-"]').forEach(a=>a.addEventListener('click',()=>{const d=document.querySelector(a.getAttribute('href'));if(d&&d.tagName==='DETAILS')d.open=true}));
 """
 
@@ -318,100 +390,114 @@ def render(rep: dict) -> str:
            '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">',
            f'<style>{CSS}</style></head><body>']
     out.append('<header class="top"><div class="wrap"><b>hyp-arena</b><nav>'
-               f'<a href="#read">{t("Как читать","How to read")}</a><a href="#table">{t("Таблица","Table")}</a>'
-               f'<a href="#top">{t("Лидеры","Top 3")}</a><a href="#each">{t("Разбор гипотез","Each hypothesis")}</a>'
+               f'<a href="#read">{t("Как читать","How to read")}</a><a href="#table">{t("Рейтинг","Ranking")}</a>'
+               f'<a href="#each">{t("Разбор гипотез","Each hypothesis")}</a>'
                f'<a href="#app">{t("Приложения","Appendices")}</a></nav><span class="sp"></span>'
                '<button class="sw" onclick="setLang(\'ru\')">RU</button><button class="sw" onclick="setLang(\'en\')">EN</button>'
                '<button class="sw" onclick="setTheme()">◐</button></div></header><main class="wrap">')
-    # 0. head
     out.append(f'<p class="eyebrow" style="margin-top:24px">{t("Отчёт по пулу гипотез","Pool report")} · {e(m["date"])}</p>')
-    out.append(f'<h1>{e(m["title_ru"])}<span class="l-en" style="display:none"></span></h1>' if False else
-               f'<h1>{t(e(m["title_ru"]), e(m["title_en"]))}</h1>')
+    out.append(f'<h1>{t(e(m["title_ru"]), e(m["title_en"]))}</h1>')
     out.append(f'<p class="prose muted">{t(e(m["about_ru"]), e(m["about_en"]))}</p>')
     out.append(f'<p class="muted mono" style="font-size:.8rem">{t("Метод","Method")} {e(m["method"])} · '
                f'{t("оценено","scored")} {m["n_scored"]} / {m["n"]} · {t("хеш оценок","scores SHA-256")} {e(m["sha"][:16])}…</p>')
     # 1. how to read
-    out.append(f'<h2 id="read">{t("Как читать этот отчёт","How to read this report")}</h2>')
-    out.append('<div class="prose"><p>' + t(
-        "Метод оценивает гипотезу по её <b>механизму</b>: цепочке звеньев от вмешательства до исхода (например, «упражнения → "
-        "мышечная сила → функция»). Для каждого звена ищутся статьи в PubMed, опубликованные до даты оценки; каждая находка "
-        "записывается с дословной цитатой и весом — тем больше, чем надёжнее дизайн исследования, больше выборка, крупнее "
-        "эффект и ближе условия к гипотезе. Из этого код считает несколько чисел, а затем ранжирует гипотезы по профилям "
-        "предпочтений. Исход испытания метод <b>не предсказывает</b>: он оценивает, насколько обоснован механизм сейчас.",
-        "The method scores a hypothesis by its <b>mechanism</b>: the chain of links from the intervention to the outcome (e.g. "
-        "\"exercise → muscle strength → function\"). For each link it searches PubMed for papers published before the date of "
-        "scoring; every finding is recorded with a verbatim quote and a weight — higher for a more reliable design, a larger "
-        "sample, a larger effect and conditions closer to the hypothesis. From these the code computes a few numbers and then "
-        "ranks the hypotheses under preference profiles. The method does <b>not</b> predict the trial's result: it measures how "
-        "well the mechanism is supported now.") + '</p></div>')
-    kp = [("P", t("Правдоподобие механизма","Plausibility of the mechanism"), t(
-              "От 0 до 1: произведение силы звеньев. 0.5 у звена — данных нет; выше — данные «за», ниже — «против». Полоска — "
-              "90%-й интервал: широкий, когда о звеньях мало известно.",
-              "0 to 1: the product of the links' strengths. A link at 0.5 has no data; above, data for; below, data against. The "
-              "bar is the 90% interval: wide when little is known about the links.")),
-          ("I", t("Информативность эксперимента","Informativeness of the experiment"), t(
-              "От 1/3 до 1: сколько подкреплённых литературой альтернативных объяснений отсечёт заявленный эксперимент. 1/3 — "
-              "ни одного: результат будет трудно истолковать.",
-              "1/3 to 1: how many literature-supported alternative explanations the stated experiment rules out. 1/3 means none: "
-              "the result will be hard to interpret.")),
-          ("W", t("Размах","Scope"), t(
-              "Насколько широко действует подтверждённая часть механизма: локально, на орган или систему, на признак старения.",
-              "How far the supported part of the mechanism reaches: local, an organ or system, a hallmark of ageing.")),
-          ("ASPID", t("Место в профиле","Place under a profile"), t(
-              "Профиль — порядок важности показателей (например, «сначала доказательность, потом информативность»). Веса "
-              "разыгрываются случайно в рамках этого порядка 10 000 раз; число — ожидаемая оценка от 0 до 1, место — по ней.",
-              "A profile is an order of importance of the indicators (e.g. \"evidence first, then informativeness\"). Weights are "
-              "drawn at random within that order 10,000 times; the number is the expected score from 0 to 1, the place follows it."))]
-    out.append('<div class="grid">' + "".join(
-        f'<div class="card kpi"><div class="num">{k}</div><div class="lab">{lab}</div><p>{txt}</p></div>' for k, lab, txt in kp) + '</div>')
-    out.append('<div class="card prose"><b>' + t("Профили в этом отчёте","Profiles in this report") + '</b><ul>' + "".join(
-        f'<li><b>{tn(PROFILE_NAMES[p])}</b>: ' + " &gt; ".join(
-            "{" + ", ".join(tn(IND_NAMES.get(i, (i, i))) for i in tier) + "}" if len(tier) > 1 else tn(IND_NAMES.get(tier[0], (tier[0],) * 2))
-            for tier in tiers) + '</li>' for p, tiers in m["profiles"].items()) + '</ul></div>')
-    # 2. table
-    out.append(f'<h2 id="table">{t("Все гипотезы","All hypotheses")}</h2>')
-    types = sorted({x.get("type") for x in H.values() if x.get("type")})
-    out.append('<p>' + t("Тип вмешательства:","Intervention type:") + ' <select id="ftype"><option value="">' + t("все","all") + '</option>' +
-               "".join(f'<option value="{e(ty)}">{e(TYPE_NAMES.get(ty, (ty, ty))[0])}</option>' for ty in types) + '</select> · ' +
-               t("клик по заголовку сортирует","click a header to sort") + '</p>')
+    out.append(f'<h2 id="read">{t("Как читать этот отчёт","How to read this report")}</h2><div class="prose">')
+    out.append('<p>' + t(
+        "<b>1. Механизм.</b> Гипотеза разбирается на цепочку звеньев от вмешательства до исхода («упражнения → мышечная сила → "
+        "функция»). Для каждого звена ищутся статьи PubMed до даты оценки; каждая находка записывается с дословной цитатой и "
+        "весом: надёжнее дизайн, больше выборка, крупнее эффект, ближе условия — больше вес.",
+        "<b>1. Mechanism.</b> A hypothesis is split into a chain of links from the intervention to the outcome (\"exercise → "
+        "muscle strength → function\"). For each link PubMed is searched up to the date of scoring; every finding is recorded "
+        "with a verbatim quote and a weight: a more reliable design, a larger sample, a larger effect and closer conditions "
+        "weigh more.") + '</p>')
+    out.append('<p>' + t(
+        f"<b>2. Показатели.</b> Из записей код считает {tip('P','P — правдоподобие механизма')}, {tip('I','I — информативность эксперимента')}, "
+        f"{tip('W','размах')} и ещё несколько показателей. Наведите на подчёркнутый термин, чтобы увидеть пояснение. Исход испытания "
+        "метод <b>не предсказывает</b>: он оценивает, насколько обоснован механизм сейчас и что даст эксперимент.",
+        f"<b>2. Indicators.</b> From the records the code computes {tip('P','P, plausibility of the mechanism')}, "
+        f"{tip('I','I, informativeness of the experiment')}, {tip('W','scope')} and a few more. Hover over an underlined term "
+        "for its meaning. The method does <b>not</b> predict the trial's result: it measures how well the mechanism is "
+        "supported now and what the experiment would teach.") + '</p>')
+    out.append('<p>' + t(
+        "<b>3. Рейтинг — АСПИД.</b> Одного «правильного» веса у показателей нет: инвестору важнее одно, исследователю — другое. "
+        "Поэтому задаётся только <b>профиль</b> — порядок важности (например, «правдоподобие важнее информативности, та — важнее "
+        "размаха»), а точные веса разыгрываются:",
+        "<b>3. Ranking: ASPID.</b> There is no single right weighting of the indicators: an investor cares about one thing, a "
+        "researcher about another. So only a <b>profile</b> is set, an order of importance (e.g. \"plausibility above "
+        "informativeness, informativeness above scope\"), and the exact weights are drawn:") + '</p></div>')
+    out.append('<div class="steps">' + '<span class="arrow">→</span>'.join(f'<span class="st">{x}</span>' for x in [
+        t("порядок важности профиля", "the profile's order of importance"),
+        t("10 000 случайных наборов весов, совместимых с порядком", "10,000 random weight sets compatible with the order"),
+        t("оценка каждой гипотезы в каждом наборе", "a score for each hypothesis in each set"),
+        t(f"{tip('score','ожидаемая оценка')} → {tip('place','место')}; {tip('top5','вероятность топ-5')}",
+          f"{tip('score','expected score')} → {tip('place','place')}; {tip('top5','probability of top 5')}")]) + '</div>')
+    out.append('<p class="prose">' + t(
+        "Очень низкое правдоподобие не компенсируется другими показателями. Вероятность топ-5 показывает, насколько место "
+        "устойчиво: 0.9 — гипотеза в пятёрке почти при любых весах, 0.2 — только при некоторых.",
+        "A very low plausibility is not compensated by the other indicators. The probability of top 5 shows how robust the place "
+        "is: 0.9 means in the top 5 under almost any weights, 0.2 only under some.") + '</p>')
+    # 2. ranking table per profile
     profs = list(m["profiles"])
-    out.append('<div class="scroll"><table class="tbl sortable" id="main"><thead><tr>' +
-               f'<th>{t("Гипотеза","Hypothesis")}</th><th>{t("Тип","Type")}</th><th>P [90%]</th><th>I</th><th>{t("Размах","Scope")}</th>'
-               f'<th>{t("Конечная точка","Endpoint")}</th><th>{t("Тренд","Trend")}</th>' +
-               "".join(f'<th>{tn(PROFILE_NAMES[p])}</th>' for p in profs) + '</tr></thead><tbody>')
-    order = sorted(H, key=lambda h: -(H[h].get("P") or -1))
-    for h in order:
-        x = H[h]
-        if x.get("P") is None:
-            out.append(f'<tr data-type="{e(x.get("type"))}"><td class="title"><a href="#h-{e(h)}">{e(x["title"][:90])}</a><br><span class="muted mono">{e(h)}</span></td>'
-                       f'<td>{tn(TYPE_NAMES.get(x.get("type"), ("—","—")))}</td><td colspan="{5+len(profs)}" class="muted">'
-                       f'{t("не оценена: ","not scored: ")}{e(x["outcome"])}</td></tr>')
-            continue
-        out.append(f'<tr data-type="{e(x.get("type"))}"><td class="title"><a href="#h-{e(h)}">{e(x["title"][:90])}</a><br><span class="muted mono">{e(h)}</span></td>'
-                   f'<td>{tn(TYPE_NAMES.get(x.get("type"), ("—","—")))}</td>'
-                   f'<td class="n" data-v="{x["P"]}">{pbar(x["P"], x["P_lo"], x["P_hi"])}{fmt(x["P"])}</td>'
-                   f'<td class="n" data-v="{x["I"]}">{fmt(x["I"])}</td><td data-v="{ORDINAL["W"].index(x["scope"]) if x["scope"] in ORDINAL["W"] else 0}">{tn(SCOPE_NAMES.get(x["scope"], (x["scope"],)*2))}</td>'
-                   f'<td>{tn(ENDPOINT_NAMES.get(x.get("endpoint_clinical"), ("—","—")))}</td>'
-                   f'<td class="n" data-v="{x.get("trend_pubmed") if x.get("trend_pubmed") is not None else -9}">{fmt(x.get("trend_pubmed"))}</td>' +
-                   "".join(f'<td class="n" data-v="{x["rank"].get(p, 999)}">{x["rank"].get(p, "—")}</td>' for p in profs) + '</tr>')
-    out.append('</tbody></table></div>')
-    out.append('<p class="muted" style="font-size:.85rem">' + t(
-        "В столбцах профилей — место гипотезы (1 — лучшая). Тренд — рост числа публикаций о вмешательстве за последние 3 года "
-        "относительно трёх предыдущих, за вычетом общего роста PubMed (0 — как вся литература, 0.7 — примерно вдвое быстрее).",
-        "Profile columns give the place (1 = best). Trend: growth of publications on the intervention in the last 3 years vs "
-        "the 3 before, net of PubMed's overall growth (0 = like the literature as a whole, 0.7 = about twice as fast).") + '</p>')
-    # 3. top 3
-    out.append(f'<h2 id="top">{t("Лидеры по профилям","Top 3 per profile")}</h2><div class="top3">')
-    for p in profs:
-        out.append(f'<div class="card"><b>{tn(PROFILE_NAMES[p])}</b><ol>')
-        for h in rep["ranks"][p][:3]:
+    out.append(f'<h2 id="table">{t("Рейтинг по профилям","Ranking by profile")}</h2>')
+    out.append('<div class="tabs" role="tablist">' + "".join(
+        f'<button data-p="{p}" aria-selected="{"true" if i == 0 else "false"}" onclick="showProfile(\'{p}\')">{tn(PROFILE_NAMES[p])}</button>'
+        for i, p in enumerate(profs)) + '</div>')
+    types = sorted({x.get("type") for x in H.values() if x.get("type")})
+    out.append('<div class="tools"><input id="fq" type="search" placeholder="поиск / search">'
+               '<select id="ftype"><option value="">все типы / all types</option>' +
+               "".join(f'<option value="{e(ty)}">{e(" / ".join(TYPE_NAMES.get(ty, (ty, ty))))}</option>' for ty in types) +
+               '</select><span class="muted">' + t("клик по заголовку сортирует", "click a header to sort") + '</span></div>')
+
+    def cell(ind, x):
+        v = x["values"].get(ind)
+        if ind == "P":
+            return f'<td class="n" data-v="{x["P"]}">{pbar(x["P"], x["P_lo"], x["P_hi"])}{fmt(x["P"])}</td>'
+        if ind == "W":
+            return f'<td data-v="{ORDINAL["W"].index(v) if v in ORDINAL["W"] else -1}">{tn(SCOPE_NAMES.get(v, (str(v),)*2))}</td>'
+        if ind == "endpoint_clinical":
+            return f'<td data-v="{ORDINAL[ind].index(v) if v in ORDINAL[ind] else -1}">{tn(ENDPOINT_NAMES.get(v, ("—","—")))}</td>'
+        if ind == "ai_role":
+            return f'<td data-v="{ORDINAL[ind].index(v) if v in ORDINAL[ind] else -1}">{tn(AI_NAMES.get(v or "none"))}</td>'
+        if ind == "best_design_outcome":
+            lv = ORDINAL[ind]
+            return f'<td data-v="{lv.index(v) if v in lv else -1}">{e(v or "—")}</td>'
+        if v is None:
+            return '<td class="n" data-v="-9">—</td>'
+        return f'<td class="n" data-v="{v}">{fmt(v)}</td>'
+
+    for i, p in enumerate(profs):
+        inds = [ind for tier in m["profiles"][p] for ind in tier]
+        out.append(f'<div class="ptab" data-p="{p}"{"" if i == 0 else " hidden"}>')
+        out.append('<p class="muted" style="font-size:.9rem">' + t("Порядок важности: ", "Order of importance: ") + " &gt; ".join(
+            "{" + ", ".join(tn(IND_NAMES.get(ind, (ind, ind))) for ind in tier) + "}" if len(tier) > 1 else tn(IND_NAMES.get(tier[0], (tier[0],) * 2))
+            for tier in m["profiles"][p]) + '</p>')
+        out.append('<div class="scroll"><table class="tbl sortable"><thead><tr>' +
+                   f'<th>{tip("place","#")}</th><th>{t("Гипотеза","Hypothesis")}</th><th>{tip("score",t("Оценка","Score"))}</th>'
+                   f'<th>{tip("top5",t("Топ-5","Top 5"))}</th>' +
+                   "".join(f'<th>{tip(ind, tn(SHORT.get(ind, (ind, ind))))}</th>' for ind in inds) + '</tr></thead><tbody>')
+        for h in rep["ranks"][p]:
             x = H[h]
-            ups = x["contrib"][p]["up"]
-            why = ", ".join(tn(IND_NAMES.get(i, (i, i))) for i, _ in ups) or "—"
-            out.append(f'<li><a href="#h-{e(h)}">{e(x["title"][:80])}</a><br><span class="muted" style="font-size:.85rem">'
-                       f'{t("сильные стороны: ","strengths: ")}{why}</span></li>')
-        out.append('</ol></div>')
-    out.append('</div>')
+            rk = x["rank"][p]
+            lead = rk <= 3
+            why = ""
+            if lead:
+                ups = x["contrib"][p]["up"]
+                why = '<br><span class="star">★ </span><span class="muted" style="font-size:.82rem">' + t("сильные стороны: ", "strengths: ") + \
+                      (", ".join(tn(IND_NAMES.get(ind, (ind, ind))) for ind, _ in ups) or "—") + '</span>'
+            q = e((x["title"] + " " + h).lower())
+            out.append(f'<tr class="{"lead" if lead else ""}" data-type="{e(x.get("type"))}" data-q="{q}"><td class="n" data-v="{rk}">{rk}</td>'
+                       f'<td class="title"><a href="#h-{e(h)}">{e(x["title"][:90])}</a><br><span class="muted mono">{e(h)}</span> · '
+                       f'<span class="muted">{tn(TYPE_NAMES.get(x.get("type"), ("—","—")))}</span>{why}</td>'
+                       f'<td class="n" data-v="{x["aspid"][p]}">{fmt(x["aspid"][p], 3)}</td><td class="n" data-v="{x["p_top5"][p]}">{fmt(x["p_top5"][p])}</td>' +
+                       "".join(cell(ind, x) for ind in inds) + '</tr>')
+        out.append('</tbody></table></div><div class="pager"><button onclick="page(this,-1)">‹</button><span class="pinfo"></span>'
+                   '<button onclick="page(this,1)">›</button></div></div>')
+    unscored = [h for h in H if H[h].get("P") is None or H[h].get("gate") != "pass"]
+    if unscored:
+        out.append('<p class="muted" style="font-size:.88rem">' + t("Не вошли в рейтинг: ", "Not ranked: ") + ", ".join(
+            f'<a href="#h-{e(h)}">{e(h)}</a> ({e(H[h]["outcome"]) if H[h].get("P") is None else t("отсечена правилом опровержения","filtered by the gate")})'
+            for h in unscored) + '</p>')
+    order = sorted(H, key=lambda h: -(H[h].get("P") or -1))
     # 4. each hypothesis
     out.append(f'<h2 id="each">{t("Разбор каждой гипотезы","Each hypothesis")}</h2><p class="muted">' + t(
         "Раскройте строку. Полное разложение по звеньям с цитатами — в приложении Б.",
@@ -458,7 +544,7 @@ def render(rep: dict) -> str:
                 ("I", f'<span class="mono">{fmt(x["I"])}</span>'), (t("Размах","Scope"), tn(SCOPE_NAMES.get(x["scope"], (x["scope"],)*2))),
                 (t("Конечная точка","Endpoint"), tn(ENDPOINT_NAMES.get(x.get("endpoint_clinical"), ("—","—")))),
                 (t("Роль ИИ","AI role"), tn(AI_NAMES.get(x.get("ai_role") or "none"))),
-                (t("Места","Places"), " · ".join(f'{tn(PROFILE_NAMES[p])} {x["rank"].get(p, "—")}/{len(rep["ranks"][p])}' for p in profs))]
+                (t("Места","Places"), " · ".join(f'{tn(PROFILE_NAMES[p])} {x["rank"].get(p, "—")}/{len(rep["ranks"][p])} ({t("топ-5","top 5")} {fmt(x["p_top5"].get(p))})' for p in profs))]
         out.append('<table class="tbl" style="max-width:760px">' + "".join(f'<tr><th style="position:static">{a}</th><td>{b}</td></tr>' for a, b in rows) + '</table>')
         rl = next((c for c in x["chain"] if c["id"] == x.get("raise_link")), None)
         up = sorted({i for p in profs for i, _ in x["contrib"][p]["up"]})
