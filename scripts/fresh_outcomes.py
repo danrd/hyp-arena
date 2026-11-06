@@ -227,14 +227,40 @@ def check() -> dict:
             "labels": dict(Counter(x["label"] for x in got.values())), "recheck": len(pick)}
 
 
+def units() -> dict:
+    """Calibration units of the fresh sample from the final labels (positive 1; null and negative 0): step 4 the clean part
+    (first posted 2023-2026: the fresh set and exp_2023), step 5 the orientation part (exp_2000 and exp_reg). Each unit is
+    evaluated as of min(registration, primary completion), as in the calibration."""
+    from scripts.calibration import _type
+    cands = {c["source_id"]: c for f in ("ctgov_candidates_2023.yaml",) for c in yaml.safe_load((HS / f).read_text())["items"]}
+    cands |= {c["source_id"]: c for c in yaml.safe_load(EXPANDED.read_text())["items"]}
+    cands |= {c["source_id"]: c for c in yaml.safe_load(EXPANDED_REG.read_text())["items"]}
+    out = {}
+    for step, sets in ((4, ("", "exp_2023")), (5, ("exp_2000", "exp_reg"))):
+        us = []
+        for name in sets:
+            lab = yaml.safe_load(((FRESH / name) if name else FRESH).joinpath("labels.yaml").read_text())["items"]
+            for x in lab:
+                if x["final_label"] not in ("positive", "null", "negative"):
+                    continue
+                c = cands[x["nct"]]
+                src = c.get("registry") or ("ctgov" if x["nct"].startswith("NCT") else "")
+                dates = [d for d in (str(c.get("written_on") or "")[:10], str(c.get("primary_completion") or "")[:10]) if len(d) >= 7]
+                us.append({"id": x["nct"], "source": src, "written_on": min(dates), "label": int(x["final_label"] == "positive"),
+                           "type": _type(c) if src == "ctgov" else src, "set": name or "fresh"})
+        (HS / "calibration" / f"units_{step}.json").write_text(json.dumps(us, indent=1) + "\n")
+        out[step] = {"units": len(us), "positive": sum(u["label"] for u in us)}
+    return out
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("cmd", choices=["task", "check", "expand", "expand-registries"])
+    ap.add_argument("cmd", choices=["task", "check", "expand", "expand-registries", "units"])
     ap.add_argument("--set", default="", choices=["", *SETS])
     a = ap.parse_args()
     if a.set:
         use_set(a.set)
-    out = expand() if a.cmd == "expand" else expand_registries() if a.cmd == "expand-registries" else \
+    out = units() if a.cmd == "units" else expand() if a.cmd == "expand" else expand_registries() if a.cmd == "expand-registries" else \
         task(a.set) if a.cmd == "task" else check()
     print(json.dumps(out, indent=1, ensure_ascii=False))
 

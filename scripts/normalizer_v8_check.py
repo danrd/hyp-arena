@@ -20,6 +20,9 @@ OUT = CAL / "cards_v8_check.json"
 MECHANISM_STATED = ("NCT03446924", "NCT04354896", "NCT01417663", "ISRCTN87404878", "NCT02132091", "NCT00146133",
                     "NCT02787889", "NCT01576848", "NCT04981652", "NCT03817450", "NCT05609617", "NCT03142048")
 MECH_LINKS = ("delivery", "engagement", "pathway")
+# the fresh calibration sample (2026-11-06, hand label before the run): texts that state a reason or mechanism
+MECHANISM_STATED_FRESH = ("NCT06235840", "NCT06510088", "NCT06868602",                       # clean part (14 units)
+                          "NCT00672685", "NCT04018092", "NCT02977819", "NCT00935493", "NCT01365104")   # orientation (30)
 
 
 def texts() -> list[dict]:
@@ -40,7 +43,7 @@ def run() -> None:
         print(json.dumps({"id": t["id"], "claims": len(card.claims) if card else None}), flush=True)
 
 
-def measures(cards: dict) -> dict:
+def measures(cards: dict, stated=MECHANISM_STATED) -> dict:
     """unparsed: no card, or the outcome claim still 'other' (admission flag unmapped_relation); mechanism: a link before
     the effect (delivery, engagement, pathway) or an effect link the text says leads to the outcome, i.e. any of these with
     a subject other than the intervention; parallel_as_chain: two or more effect links whose subject is the intervention."""
@@ -60,7 +63,7 @@ def measures(cards: dict) -> dict:
             out["mechanism"].append(u)
         if sum(1 for x in links if x.link == "effect" and x.subject.label.lower() in inter) >= 2:
             out["parallel_as_chain"].append(u)
-    stated = set(MECHANISM_STATED)
+    stated = set(stated)
     out["mechanism_recall"] = f"{len(stated & set(out['mechanism']))} of {len(stated)}"
     out["mechanism_unstated"] = sorted(set(out["mechanism"]) - stated)
     return {k: (sorted(v) if isinstance(v, list) else v) for k, v in out.items()}

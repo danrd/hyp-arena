@@ -133,8 +133,9 @@ def run(step: int, config: str = "configs/v2-flash.yaml", tag: str = "") -> None
     texts = build_texts([{k: u[k] for k in ("id", "source", "written_on")} for u in us], CAL / f"texts_{step}.jsonl")
     out_p = CAL / f"run_{step}{tag}.json"
     done = json.loads(out_p.read_text()) if out_p.exists() else {}
-    method = (yaml.safe_load(Path(config).read_text()) or {}).get("method", "v2")
-    cards_p = CAL / ("cards_v3.json" if method == "v3" else "cards.json")   # frozen cards per method: one per trial, reused
+    cfg = yaml.safe_load(Path(config).read_text()) or {}
+    method, nv = cfg.get("method", "v2"), cfg.get("normalize_version")
+    cards_p = CAL / ((f"cards_v3_{nv}.json" if nv else "cards_v3.json") if method == "v3" else "cards.json")   # frozen per method and normalizer
     frozen = json.loads(cards_p.read_text()) if cards_p.exists() else {}
     for t in texts:
         if t["id"] in done:
@@ -308,6 +309,7 @@ def main() -> None:
     ap.add_argument("--config", default="configs/v2-flash.yaml")
     ap.add_argument("--tag", default="", help="suffix of the run file, e.g. _msearch")
     ap.add_argument("--no-stance-as-support", action="store_true", help="score-v3: the sensitivity analysis (rescore_v3)")
+    ap.add_argument("--steps", default="1,2,3", help="score-v3 / explore-v3: which steps (4: fresh clean, 5: fresh orientation)")
     ap.add_argument("--variant", default="v3", help="score-v3: rules variant, v3 (as run) or v3.1 (method-v3.md section 12)")
     a = ap.parse_args()
     if a.cmd == "pick":
@@ -320,9 +322,10 @@ def main() -> None:
             raise SystemExit("paid: set ALLOW_PAID=1")
         run(a.step, a.config, a.tag)
     elif a.cmd == "explore-v3":
-        print(json.dumps(explore_v3(tag=a.tag or "_v3", variant=a.variant), indent=1))
+        print(json.dumps(explore_v3(steps=tuple(int(x) for x in a.steps.split(",")), tag=a.tag or "_v3", variant=a.variant), indent=1))
     elif a.cmd == "score-v3":
-        print(json.dumps(score_v3(tag=a.tag or "_v3", no_stance_as_support=a.no_stance_as_support,
+        print(json.dumps(score_v3(steps=tuple(int(x) for x in a.steps.split(",")), tag=a.tag or "_v3",
+                                  no_stance_as_support=a.no_stance_as_support,
                                   variant=a.variant), indent=1))
     else:
         print(json.dumps(score(a.step, tag=a.tag), indent=1))

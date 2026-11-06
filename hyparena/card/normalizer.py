@@ -39,7 +39,24 @@ def nearest_relations(text: str, k: int = 4) -> list[str]:
     return sorted(score, key=lambda r: (-score[r], list(OUTCOME_RELATIONS).index(r)))[:k]
 
 
+def _closed_fields(value: dict) -> dict:
+    """Values outside the closed lists of the stated experiment ("no intervention" for control, say) become "unknown"
+    instead of failing the whole card (normalizer-v8 check: one of 30 cards was lost that way). Only these fields."""
+    import typing as _t
+    from hyparena.card.models import DecisiveExperiment
+    e = value.get("decisive_experiment")
+    if not isinstance(e, dict):
+        return value
+    fixed = dict(e)
+    for name, field in DecisiveExperiment.model_fields.items():
+        allowed = _t.get_args(field.annotation)
+        if allowed and all(isinstance(x, str) for x in allowed) and name in fixed and fixed[name] not in allowed:
+            fixed[name] = "unknown" if "unknown" in allowed else allowed[-1]
+    return {**value, "decisive_experiment": fixed}
+
+
 def _problems(value: dict, raw_text: str, card_id: str) -> tuple[Optional[HypothesisCard], list[str]]:
+    value = _closed_fields(value)
     try:
         card = HypothesisCard.model_validate({**value, "id": card_id, "raw_id": card_id})
     except ValidationError as e:
