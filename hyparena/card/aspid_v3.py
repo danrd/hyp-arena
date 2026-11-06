@@ -33,6 +33,10 @@ SPECS = {
                                          note="independent sources for the outcome link, saturating at 5"),
     "against_share": IndicatorSpec("against_share", "cardinal", bounds=(0.0, 1.0), higher_is_better=False,
                                    note="share of the chain's weight against"),
+    "endpoint_clinical": IndicatorSpec("endpoint_clinical", "ordinal",
+                                       levels=("biomarker", "patient_reported", "function", "clinical_event"),
+                                       note="how close the trial's primary endpoint is to a clinical outcome (estimand check, "
+                                            "specs/estimand-2026-11-06.yaml); unknown when the two families disagree"),
 }
 
 
@@ -47,7 +51,8 @@ def values_of(v3: dict, extra: Optional[dict] = None) -> dict:
     (v3_extra.extras); a missing additional value is unknown and drawn over its range."""
     e = extra or {}
     return {"P": max(P_FLOOR, v3["P"]), "W": v3["scope"], "I": v3["I"], "I_headroom": v3["headroom_I"],
-            **{k: e.get(k) for k in ("feasibility", "best_design_outcome", "independent_outcome", "against_share")}}
+            **{k: e.get(k) for k in ("feasibility", "best_design_outcome", "independent_outcome", "against_share",
+                                    "endpoint_clinical")}}
 
 
 def rank(results: dict[str, tuple[dict, Optional[dict]]], profile: str, K: int = 10000, seed: int = 0) -> Optional[AggregationResult]:

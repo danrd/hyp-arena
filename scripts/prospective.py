@@ -4,6 +4,7 @@
                                                        # 2026-11-01 .. 2028-12-31 (no model calls)
     python -m scripts.prospective pick --n 60           # a subsample, balanced by intervention type, SHA-1 order (fixed before scoring)
     ALLOW_PAID=1 python -m scripts.prospective run      # method v3 (configs/v3-flash-n10.yaml) on the picked trials, as of today
+    ALLOW_PAID=1 python -m scripts.prospective estimand # endpoint category by two families (specs/estimand-2026-11-06.yaml)
     python -m scripts.prospective score                 # v3.2 P with its interval, I, V, scope, ASPID profiles (no calls)
     python -m scripts.prospective freeze                # the scores and their SHA-256 into specs/prospective-<date>.yaml
 
@@ -113,6 +114,23 @@ def run(n: int = 60) -> None:
                           "calls": res["meta"]["calls"]}), flush=True)
 
 
+def estimand(n: int = 60) -> None:
+    """The estimand extraction of scripts/estimand_check.py on the picked trials (two families)."""
+    import scripts.estimand_check as ec
+    texts = [json.loads(l) for l in open(OUT / f"texts_{n}.jsonl")]
+    ec.OUT = OUT / f"estimand_{n}.json"
+    ec.texts = lambda: texts
+    ec.run()
+
+
+def endpoint_clinical(n: int, h: str):
+    """Agreed endpoint category of the two families, else None (unknown: drawn over its range)."""
+    f = OUT / f"estimand_{n}.json"
+    d = json.loads(f.read_text()) if f.exists() else {}
+    v = {d.get(f"{h}|{fam}", {}).get("clean", {}).get("endpoint") for fam in ("google", "deepseek")}
+    return v.pop() if len(v) == 1 and None not in v and "not_stated" not in v else None
+
+
 def score(n: int = 60) -> dict:
     from hyparena.card import aspid_v3, rules_v32, v3_extra
     from hyparena.card.models import ClaimVerification, HypothesisCard
@@ -126,10 +144,11 @@ def score(n: int = 60) -> dict:
         card = HypothesisCard.model_validate(it["card"])
         claims = [ClaimVerification.model_validate(c) for c in it["verification"]["claims"]]
         alts = {k: ClaimVerification.model_validate(v) for k, v in (it.get("v3_alternatives") or {}).items()}
-        e = rules_v32.evaluate(card, claims, alts)
+        e = rules_v32.evaluate(card, claims, alts, fold=True)
         ext = v3_extra.extras(card, claims, it["v3"], r["meta"].get("as_of") or "")
+        ext["endpoint_clinical"] = endpoint_clinical(n, h)
         rows[h] = {"outcome": it["outcome"], "gate": e.gate, "P": e.P, "P_lo": e.P_lo, "P_hi": e.P_hi, "I": e.I, "V": e.V,
-                   "scope": e.scope, "ai_role": card.ai_role, "links": len(e.links), "weakest": e.weakest}
+                   "scope": e.scope, "ai_role": card.ai_role, "endpoint_clinical": ext["endpoint_clinical"], "links": len(e.links), "weakest": e.weakest}
         ax[h] = ({"P": e.P, "scope": e.scope, "I": e.I, "headroom_I": it["v3"]["headroom_I"], "gate": e.gate}, ext)
     for prof in aspid_v3.load():
         agg = aspid_v3.rank(ax, prof, K=10000)
@@ -149,7 +168,7 @@ def freeze(n: int = 60) -> str:
     spec.write_text(yaml.safe_dump({
         "id": f"prospective-{today}", "frozen_on": today,
         "what": f"scores of {n} ongoing trials (scripts/prospective.py), before any outcome exists",
-        "method": "v3 run (configs/v3-flash-n10.yaml: normalize_card/v10, verify_claim/v9) scored with rules_v32 (P with a 90% interval, I, V = P x I, scope) and the ASPID trial profiles",
+        "method": "v3 run (configs/v3-flash-n10.yaml: normalize_card/v10, verify_claim/v9) scored with rules_v32, fold=True (P with a 90% interval, I, V = P x I, scope) and the ASPID trial profiles",
         "scores_file": f"longevity-kg hypothesis_sources/prospective/scores_{n}.json", "scores_sha256": hashlib.sha256(body).hexdigest(),
         "test_when_outcomes_exist": "outcome labels by the benchmark's rules; P tied AUC with 95% CI; signal: AUC >= 0.60 and lower bound > 0.45; no signal: AUC < 0.55",
     }, allow_unicode=True, sort_keys=False))
@@ -158,13 +177,13 @@ def freeze(n: int = 60) -> str:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("cmd", choices=["pool", "pick", "run", "score", "freeze"])
+    ap.add_argument("cmd", choices=["pool", "pick", "run", "estimand", "score", "freeze"])
     ap.add_argument("--n", type=int, default=60)
     a = ap.parse_args()
-    if a.cmd == "run":
+    if a.cmd in ("run", "estimand"):
         if os.environ.get("ALLOW_PAID") != "1":
             raise SystemExit("paid: set ALLOW_PAID=1")
-        run(a.n)
+        (run if a.cmd == "run" else estimand)(a.n)
         return
     out = pool() if a.cmd == "pool" else pick(a.n) if a.cmd == "pick" else score(a.n) if a.cmd == "score" else freeze(a.n)
     print(json.dumps(out, indent=1, ensure_ascii=False) if not isinstance(out, str) else out)

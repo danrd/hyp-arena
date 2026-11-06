@@ -2,23 +2,24 @@
 # aggregates them with random weights under each profile's order of importance, instead of the fixed product V = P x W x I
 # (which is one point of this family: equal weights on the log scale). hyparena/card/aspid_v3.py.
 # Indicators: P, W, I, I_headroom (I if the experiment cut off every supported alternative), feasibility (method-v3.md 9.4),
-# and in the lowest tier three refinements from the records (hyparena/card/v3_extra.py): best design for the outcome link,
+# endpoint_clinical (2026-11-06, specs/estimand-2026-11-06.yaml: kappa 0.93 between two families, |rho| <= 0.42 with every
+# other indicator) in the lowest tier of evidence and funding; trial-2 profiles. Earlier: in the lowest tier three refinements from the records (hyparena/card/v3_extra.py): best design for the outcome link,
 # independent sources for it, share of the chain's weight against. Unknown values are drawn over their range.
 # the v2 indicator set: human safety data exist or not; unknown is drawn over its range). P, I and I_headroom are on log
 # scales, so the aggregation is a randomly weighted geometric mean: a near-zero plausibility is not compensated.
 profiles:
   evidence:
-    version: "trial-1"
+    version: "trial-2"
     description: "Plausibility of the mechanism first, then what the experiment teaches, then reach."
-    indicators: [P, I, W, best_design_outcome, independent_outcome, against_share]
-    tiers: [[P], [I], [W], [best_design_outcome, independent_outcome, against_share]]
+    indicators: [P, I, W, best_design_outcome, independent_outcome, against_share, endpoint_clinical]
+    tiers: [[P], [I], [W], [best_design_outcome, independent_outcome, against_share, endpoint_clinical]]
   evolution:
     version: "trial-1"
     description: "Room to grow: what the hypothesis could teach with a better experiment, then plausibility, then reach."
     indicators: [I_headroom, P, W, best_design_outcome, independent_outcome, against_share]
     tiers: [[I_headroom], [P], [W], [best_design_outcome, independent_outcome, against_share]]
   funding:
-    version: "trial-1"
+    version: "trial-2"
     description: "Ready to fund: plausibility, then feasibility, then informativeness, then reach."
-    indicators: [P, feasibility, I, W, best_design_outcome, independent_outcome, against_share]
-    tiers: [[P], [feasibility], [I], [W], [best_design_outcome, independent_outcome, against_share]]
+    indicators: [P, feasibility, I, W, best_design_outcome, independent_outcome, against_share, endpoint_clinical]
+    tiers: [[P], [feasibility], [I], [W], [best_design_outcome, independent_outcome, against_share, endpoint_clinical]]

@@ -45,3 +45,10 @@ cost:
   estimate_usd: 3.0
   basis: 'fresh run 2026-11-06: 883 calls for 44 units, about 2.2 USD; cap 60 calls
     per unit'
+amendments_before_scores:
+- date: '2026-11-06'
+  what: >-
+    score with rules_v32 fold=True (specs/v32-independence-fold-2026-11-06.yaml, passed) and ASPID profiles trial-2
+    (endpoint_clinical in the lowest tier of evidence and funding; specs/estimand-2026-11-06.yaml); the endpoint category
+    is extracted from the 60 texts by both families (scripts/prospective.py estimand, about 120 calls, 0.15 USD), unknown
+    when they disagree. Decided by the user while the run was in progress; no outcome exists, no score was computed yet.
