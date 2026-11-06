@@ -293,8 +293,16 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
         ranks[p] = order
         for i, h in enumerate(order, 1):
             hyps[h].setdefault("rank", {})[p] = i
+    from hyparena.card import improvements as imp
     for h in scored:
         hyps[h]["values"] = values[h]
+        it = run[h]["items"][0]
+        card = HypothesisCard.model_validate(it["card"])
+        cvs = [ClaimVerification.model_validate(c) for c in it["verification"]["claims"]]
+        alts = {a: ClaimVerification.model_validate(v) for a, v in (it.get("v3_alternatives") or {}).items()}
+        ext = {k: values[h].get(k) for k in ("feasibility", "best_design_outcome", "independent_outcome", "against_share",
+                                             "endpoint_clinical", "trend_pubmed", "ai_role")}
+        hyps[h]["improvements"] = imp.items(card, cvs, alts, ext, values[h].get("I_headroom"))
     for x in hyps.values():
         x.setdefault("rank", {})
         x.setdefault("p_top5", {})
@@ -385,6 +393,112 @@ document.querySelectorAll('a[href^="#h-"]').forEach(a=>a.addEventListener('click
 """
 
 
+ITEM_CLS = {"rewrite": ("Можно исправить формулировкой", "Fixable by rewriting"),
+            "research": ("Нужны новые данные", "Needs new data")}
+
+
+def render_items(items: list[dict], profs: list[str]) -> str:
+    """The improvement list of one hypothesis (hyparena/card/improvements.py), in two groups, each item with its expected
+    effect on the indicators and on the score under each profile."""
+    if not items:
+        return ""
+    out = ['<div class="card"><b>' + t("Что поднимет оценку", "What would raise it") + '</b> <span class="muted" style="font-size:.85rem">' +
+           t("(перечень считает код; «ожидаемо» — если пункт выполнен)", "(computed by code; \"expected\" if the item is done)") + '</span>']
+    for cls in ("rewrite", "research"):
+        group = [i for i in items if i["cls"] == cls]
+        if not group:
+            continue
+        out.append(f'<p style="margin:.6em 0 .2em"><b>{tn(ITEM_CLS[cls])}</b></p><ul>')
+        for i in group:
+            exp = ""
+            if i.get("expected"):
+                def val(k, v):
+                    if k == "endpoint_clinical":
+                        return tn(ENDPOINT_NAMES.get(v, (str(v),) * 2))
+                    return fmt(v)
+                ind = ", ".join(f'{tn(SHORT.get(k, (k, k)))} {val(k, v[0])} → {val(k, v[1])}' for k, v in i["expected"]["indicators"].items())
+                sc = " · ".join(f'{tn(PROFILE_NAMES[p])} {"+" if v[1] - v[0] >= 0 else ""}{v[1] - v[0]:.2f}'
+                                for p, v in i["expected"]["score"].items() if p in PROFILE_NAMES)
+                exp = (f'<br><span class="muted" style="font-size:.85rem">{t("ожидаемо","expected")}: <span class="mono">{ind or "—"}</span>; '
+                       f'{t("оценка","score")}: {sc}</span>')
+            else:
+                exp = f'<br><span class="muted" style="font-size:.85rem">{t("эффект заранее не рассчитать: зависит от того, что найдётся","the effect cannot be computed in advance: it depends on what is found")}</span>'
+            facts = "".join(f'<blockquote><a href="https://pubmed.ncbi.nlm.nih.gov/{e(f["pmid"])}/" target="_blank" rel="noopener">{e(f["pmid"])}</a> '
+                            f'({t("за","for") if f["side"] == "for" else t("против","against")}): {e(f["quote"][:220])}</blockquote>' for f in i.get("facts", [])[:2])
+            out.append(f'<li><span class="mono muted">{e(i["id"])}</span> {t(e(i["what"][0]), e(i["what"][1]))}{exp}{facts}</li>')
+        out.append('</ul>')
+    out.append('</div>')
+    return "".join(out)
+
+
+def render_evolution(evo: dict, H: dict, profs: list[str]) -> str:
+    """Section "Evolution": parent -> improved version, the change of every indicator and of the score under each profile,
+    what was applied and on which facts, the expected change of each item against the change obtained."""
+    pairs = [(u, p) for u, p in evo.items() if p.get("compare")]
+    skipped = [(u, p) for u, p in evo.items() if not p.get("compare")]
+    out = [f'<h2 id="evo">{t("Эволюция: улучшенные версии", "Evolution: improved versions")}</h2><p class="prose muted">' + t(
+        "По запросу система применяет к выбранным гипотезам пункты «можно исправить формулировкой» из их разбора; улучшенный текст "
+        "проходит ту же проверку с той же датой отсечения литературы. Эволюция не создаёт новых доказательств: рост P возможен только "
+        "за счёт формулировки под уже найденные данные, рост I — это обещание дизайна. Улучшение пишется по находкам того же "
+        "проверяющего, что его оценивает, поэтому рост оценки — подсказка, что менять, а не доказательство.",
+        "On request the system applies to chosen hypotheses the \"fixable by rewriting\" items of their analysis; the improved text "
+        "goes through the same checks with the same literature cut-off. Evolution makes no new evidence: P can rise only by fitting "
+        "the text to what was found, I is a promise of design. The text is written from the findings of the verifier that then "
+        "scores it, so a rise is a hint of what to change, not proof.") + '</p>']
+    if pairs:
+        out.append('<div class="scroll"><table class="tbl"><thead><tr><th>' + t("Гипотеза", "Hypothesis") + '</th><th>' +
+                   t("Применено", "Applied") + '</th><th>P</th><th>I</th><th>' + tn(SHORT["support_share"]) + '</th>' +
+                   "".join(f'<th>{tn(PROFILE_NAMES[p])}</th>' for p in profs) + '</tr></thead><tbody>')
+        for u, p in pairs:
+            c = p["compare"]
+            def d(a, b):
+                if a is None or b is None or isinstance(a, str):
+                    return f'{e(a)} → {e(b)}'
+                cls = "up" if b > a + 1e-3 else "down" if b < a - 1e-3 else "muted"
+                return f'<span class="{cls}">{fmt(a)} → {fmt(b)}</span>'
+            out.append(f'<tr><td class="title"><a href="#ev-{e(u)}">{e(H.get(u, {}).get("title", u)[:80])}</a><br><span class="muted mono">{e(u)}</span></td>'
+                       f'<td class="mono">{e(", ".join(p.get("applied", [])))}</td>'
+                       f'<td class="n">{d(*c["indicators"]["P"])}</td><td class="n">{d(*c["indicators"]["I"])}</td>'
+                       f'<td class="n">{d(*c["indicators"]["support_share"])}</td>' +
+                       "".join(f'<td class="n">{d(*c["score"].get(pr, [None, None]))}</td>' for pr in profs) + '</tr>')
+        out.append('</tbody></table></div>')
+        by_type: dict = {}
+        for u, p in pairs:
+            for i in p["items"]:
+                if i["id"] in p.get("applied", []):
+                    by_type.setdefault(i["type"], []).append(p["compare"]["score"].get(profs[0], [0, 0]))
+        if by_type:
+            out.append('<p class="muted" style="font-size:.88rem">' + t("Средний сдвиг оценки (", "Mean change of the score (") +
+                       tn(PROFILE_NAMES[profs[0]]) + t(") по видам применённых пунктов: ", ") by kind of applied item: ") + "; ".join(
+                f'{e(k)} {sum(b - a for a, b in v) / len(v):+.3f} (n {len(v)})' for k, v in sorted(by_type.items())) + '</p>')
+        for u, p in pairs:
+            c = p["compare"]
+            out.append(f'<details id="ev-{e(u)}"><summary>{e(H.get(u, {}).get("title", u)[:110])} <span class="muted mono">{e(u)}</span></summary><div class="body">')
+            out.append('<p><b>' + t("Что применено и что изменилось", "What was applied and what changed") + '</b></p><ul>')
+            ch = {x.get("item"): x.get("what_changed", "") for x in p.get("changes", [])}
+            for i in p["items"]:
+                if i["id"] not in p.get("applied", []):
+                    continue
+                exp = i.get("expected")
+                exp_s = " · ".join(f'{tn(PROFILE_NAMES[pr])} {v[1] - v[0]:+.2f}' for pr, v in (exp or {}).get("score", {}).items() if pr in PROFILE_NAMES)
+                out.append(f'<li><span class="mono muted">{e(i["id"])}</span> {t(e(i["what"][0]), e(i["what"][1]))}<br>'
+                           f'<span class="muted" style="font-size:.85rem">{t("в тексте: ","in the text: ")}{e(ch.get(i["id"], "—"))}<br>'
+                           f'{t("ожидалось: ","expected: ")}{exp_s or t("не рассчитывалось","not computed")}</span></li>')
+            out.append('</ul><p class="muted" style="font-size:.88rem">' + t("Получено: ", "Obtained: ") + " · ".join(
+                f'{tn(PROFILE_NAMES[pr])} {(v[1] or 0) - (v[0] or 0):+.2f}' for pr, v in c["score"].items() if pr in PROFILE_NAMES) + '</p>')
+            L = c["links"]
+            if L["added"] or L["removed"]:
+                out.append('<p><b>' + t("Звенья механизма", "Mechanism links") + '</b></p><ul>' +
+                           "".join(f'<li class="up">+ {e(x["text"])} (S {fmt(x["S"])}{"" if x["records"] else t(", данных нет", ", no data")})</li>' for x in L["added"]) +
+                           "".join(f'<li class="down">− {e(x["text"])} (S {fmt(x["S"])})</li>' for x in L["removed"]) + '</ul>')
+            out.append(f'<details><summary>{t("Текст улучшенной версии", "Text of the improved version")}</summary><div class="body"><pre style="white-space:pre-wrap;font-size:.85rem">{e(p.get("child_text", ""))}</pre></div></details>')
+            out.append('</div></details>')
+    if skipped:
+        out.append('<p class="muted" style="font-size:.88rem">' + t("Без улучшенной версии: ", "No improved version: ") + ", ".join(
+            f'{e(u)} ({e(p.get("skipped", "—"))})' for u, p in skipped) + '</p>')
+    return "\n".join(out)
+
+
 def strength_cls(S: float) -> str:
     return "ok" if S >= 0.75 else "bad" if S < 0.45 else "warn" if S < 0.55 else ""
 
@@ -404,6 +518,7 @@ def render(rep: dict) -> str:
     out.append('<header class="top"><div class="wrap"><b>hyp-arena</b><nav>'
                f'<a href="#read">{t("Как читать","How to read")}</a><a href="#table">{t("Рейтинг","Ranking")}</a>'
                f'<a href="#each">{t("Разбор гипотез","Each hypothesis")}</a>'
+               + (f'<a href="#evo">{t("Эволюция","Evolution")}</a>' if rep.get("evolution") else "") +
                f'<a href="#app">{t("Приложения","Appendices")}</a></nav><span class="sp"></span>'
                '<button class="sw" onclick="setLang(\'ru\')">RU</button><button class="sw" onclick="setLang(\'en\')">EN</button>'
                '<button class="sw" onclick="setTheme()">◐</button></div></header><main class="wrap">')
@@ -517,7 +632,8 @@ def render(rep: dict) -> str:
         out.append('<p class="muted" style="font-size:.88rem">' + t("Не вошли в рейтинг: ", "Not ranked: ") + ", ".join(
             f'<a href="#h-{e(h)}">{e(h)}</a> ({e(H[h]["outcome"]) if H[h].get("P") is None else t("отсечена правилом опровержения","filtered by the gate")})'
             for h in unscored) + '</p>')
-    order = sorted(H, key=lambda h: -(H[h].get("P") or -1))
+    first = profs[0]
+    order = rep["ranks"][first] + [h for h in H if h not in rep["ranks"][first]]   # the first profile's order, then the unranked
     # 4. each hypothesis
     out.append(f'<h2 id="each">{t("Разбор каждой гипотезы","Each hypothesis")}</h2><p class="muted">' + t(
         "Раскройте строку. Полное разложение по звеньям с цитатами — в приложении Б.",
@@ -582,20 +698,11 @@ def render(rep: dict) -> str:
                    ("".join(f'<li>{tn(IND_NAMES.get(i, (i, i)))}{pc(i)}</li>' for i in down) or '<li class="muted">—</li>') +
                    (f'<li>{t("слабое звено: ","weakest link: ")}{tn(LINK_NAMES.get(w["link"], (w["link"],)*2))} (S {fmt(w["S"])}' +
                     (t(", данных нет", ", no data") if not w["records"] else "") + ')</li>' if w and w["S"] < 0.75 else "") +
-                   '</ul></div><div class="card"><b>' + t("Что поднимет оценку","What would raise it") + '</b><ul>' +
-                   (f'<li>{t("подкрепить звено «","support the link \"")}{tn(LINK_NAMES.get(rl["link"], (rl["link"],)*2))}{t("» до уровня «умеренно» (S 0.83): P станет около ","\" to \"moderate\" (S 0.83): P would be about ")}'
-                    f'<b class="mono">{fmt(x["P_if_weakest_moderate"])}</b> ({t("сейчас","now")} {fmt(x["P"])})</li>' if x.get("P_if_weakest_moderate") and rl else "") +
-                   (f'<li>{t("заявленный эксперимент не отсекает подкреплённые альтернативы: изменить дизайн так, чтобы различать их (I до 1)","the stated experiment leaves supported alternatives standing: change the design to tell them apart (I up to 1)")}</li>'
-                    if any(a["support"] > 0 and a["on_positive"] != "eliminated" for a in x["alternatives"]) else "") +
-                   (f'<li>{t("найти данные по непроверенным звеньям: ","find data on the unchecked links: ")}'
-                    + ", ".join(tn(LINK_NAMES.get(c["link"], (c["link"],)*2)) for c in unchecked)
-                    + f' ({t("подтверждённость сейчас","support now")} {fmt(x.get("support_share"))})</li>' if unchecked else "") +
-                   (f'<li>{t("выписать механизм: через какие мишени и пути вмешательство действует на исход — тогда его можно проверить по звеньям","write the mechanism: through which targets and pathways the intervention acts on the outcome, so that it can be checked link by link")}</li>'
-                    if len(x["chain"]) <= 1 else "") +
-                   (f'<li>{t("назвать альтернативные объяснения с поддержкой в литературе и эксперимент, который их отсечёт","name alternative explanations supported in the literature and an experiment that rules them out")}</li>'
-                    if not any(a["support"] > 0 for a in x["alternatives"]) else "") +
                    '</ul></div></div>')
+        out.append(render_items(x.get("improvements") or [], profs))
         out.append('</div></details>')
+    if rep.get("evolution"):
+        out.append(render_evolution(rep["evolution"], H, profs))
     # 5. appendices
     out.append(f'<h2 id="app">{t("Приложения","Appendices")}</h2>')
     out.append('<details><summary><b>' + t("А. Метод кратко и глоссарий","A. The method in brief and a glossary") + '</b></summary><div class="body prose">' + t(
@@ -688,6 +795,19 @@ def prospective(n: int = 60) -> tuple[dict, str]:
             "about_en": "ClinicalTrials.gov trials with ageing itself among the conditions, primary completion November 2026 – December 2028; "
                         "15 per intervention type. Scored before any result; the scores are frozen with a hash."}
     rep = build(run, json.loads(sb), json.loads((d / f"units_{n}.json").read_text()), texts, meta)
+    evo_p = d / f"evolution_{n}.json"
+    if evo_p.exists():
+        from hyparena.card import evolve_v3
+        evo = json.loads(evo_p.read_text())["pairs"]
+        for u, p in evo.items():
+            child = (p.get("child_run") or {}).get("items", [{}])[0]
+            if child and u in rep["hyps"] and "values" in rep["hyps"][u]:
+                v = rep["hyps"][u]["values"]
+                pe = {k: v.get(k) for k in ("feasibility", "best_design_outcome", "independent_outcome", "against_share",
+                                            "endpoint_clinical", "trend_pubmed", "ai_role")}
+                ce = {**pe, "endpoint_clinical": p.get("child_endpoint"), "ai_role": (child.get("card") or {}).get("ai_role", pe.get("ai_role"))}
+                p["compare"] = evolve_v3.compare(run[u]["items"][0], child, pe, ce)
+        rep["evolution"] = evo
     return rep, str(d / f"report_{n}.html")
 
 

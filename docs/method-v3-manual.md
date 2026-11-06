@@ -3,7 +3,7 @@
 Version: rules **v3.3** as of 2026-11-06 (`hyparena/card/rules_v32.py`, `evaluate(..., fold=True, neutral_unverified=True)`,
 on top of `rules_v3.py` variant v3.1 and `v3_levels.py`), aggregation by ASPID over the axes (`hyparena/card/aspid_v3.py`, `configs/profiles_v3.yaml`). The
 specification with its history and decisions is `docs/spec/method-v3.md` (in Russian, sections 9-13); this manual is the
-self-contained English description. The constants in section 13 and the numbers of the worked example in section 12 are
+self-contained English description. The constants in section 14 and the numbers of the worked example in section 13 are
 checked against the code by `tests/test_manual.py`: if the code changes, the test fails until this manual is updated. The
 discrete levels of v3 and v3.1, used by earlier runs and still shown as labels, are in appendix A.
 
@@ -41,7 +41,7 @@ being in the top. A near-zero P is not compensated (P and I are on log scales). 
 as the ranking.
 
 Only P is meant to track trial outcomes; I, W and V describe what a result would teach, whatever it is. Validation status
-is in section 11.
+is in section 12.
 
 ## 2. Inputs
 
@@ -153,7 +153,7 @@ ranked). Nothing else filters: an undeveloped but promising hypothesis keeps its
   support share says so. An ASPID indicator (section 8), right below P in the evidence profile. It replaced a 0/1 share of
   checked slots before any score was used (that one moved with P, |ρ| 0.74, and two thirds of the chains have one slot).
   Consequence: finding moderate support for an unchecked link lowers P a little (from 1 to S for that link) and raises the
-  support share; under every profile the hypothesis's score goes up (section 12).
+  support share; under every profile the hypothesis's score goes up (section 13).
 - Why (specs/error-analysis-2026-11-06.yaml): under v3.2 a link without data multiplied P by 0.5, so a hypothesis that
   wrote out its mechanism lost a factor of 2 per unchecked link; on the calibration P then ordered the 18 hypotheses with a
   mechanism backwards. The signal of P against trial outcomes came from data against, not from support.
@@ -224,9 +224,10 @@ Russian and English in one page, style of the project site). Order:
 3. *Each hypothesis* (collapsed, one-line verdict): the chain with each link coloured by S (links without data marked "not in
    P"), P with its interval, I, support share, scope, endpoint, AI role, places; what lifts and what lowers it (the indicators
    furthest above or below the middle of the pool, weighted by the profile's order; the strongest and weakest checked link);
-   what would raise it (support for the link that would raise P most, with the new P; data for unchecked links; an
-   experiment that rules out the supported alternatives; writing out the mechanism).
-4. *Appendices*: the method in brief and a glossary; the full breakdown per hypothesis (every link with its records: PMID,
+   what would raise it: the improvement list of section 11, in two groups, each item with its facts and its expected
+   effect on the indicators and on the score under each profile.
+5. *Evolution* (when it was run): section 11.
+6. *Appendices*: the method in brief and a glossary; the full breakdown per hypothesis (every link with its records: PMID,
    for or against, weight, design, n, effect, verbatim quote; alternatives; the other indicators as percentiles of the
    pool); provenance and limitations (date, versions, hash of frozen scores).
 
@@ -238,7 +239,42 @@ records), why (what lifts, what lowers, the alternatives), what to improve (acti
 limitations, provenance. The older one-hypothesis report by code (`python -m hyparena.analyze`) still uses the v3 / v3.1
 levels.
 
-## 11. What the method does not do, its known limits and its validation status
+## 11. Improvements and evolution
+
+**The improvement list** (`hyparena/card/improvements.py`) is computed by code from the analysis of each hypothesis and
+shown in its report ("What would raise it"). Each item says what to do, which link or alternative it concerns, the facts it
+rests on (PMID and quote) and its expected effect: the indicators before and after and the score under each profile before
+and after, computed by the same rules with the item done (fixed scales, so the expected score does not depend on the pool).
+Items fall into two classes:
+
+| Class | Item | When it appears | Expected effect computed as |
+|---|---|---|---|
+| fixable by rewriting | experiment_alternatives | supported alternatives the stated experiment leaves standing | I with those alternatives ruled out |
+| | rewrite_refuted_link | a link the data are against (S < 0.5) | P without the records against (an upper bound) |
+| | narrow_population | records for come from an adjacent population, age or sex | P and support share with those records in the exact context |
+| | write_mechanism | the chain is the outcome only | not computable in advance (depends on what is found) |
+| | clinical_endpoint | the endpoint is a biomarker or a self-report | the score with the endpoint "function" |
+| needs new data | support_link | a link with weak support (0.5 ≤ S < 5/6) | P and support share with the link at 5/6 |
+| | check_link | a link without any record | the same |
+
+**Evolution** (`hyparena/card/evolve_v3.py`, on request): for the chosen hypotheses the system applies their "fixable by
+rewriting" items (all of them, or the ones named). One model call (prompt `evolve_v3/v1`) rewrites the registered text from
+the parent text and the items' facts only; code rejects a copy of the parent and a change of intervention. The improved
+text goes through the whole pipeline with the parent's literature cut-off (card, PubMed, alternatives) and the endpoint
+extraction by two model families, and is scored by v3.3 and ASPID. Cost: about 21 model calls per improved hypothesis.
+
+**The report section "Evolution"**: a table parent → improved version (P, I, support share and the score under each
+profile, rises in green, falls in red); per pair, the items applied, what changed in the text and on which fact, the
+expected change of each item against the change obtained, the mechanism links added or removed, the improved text; at the
+end, the mean change of the score by kind of item. Hypotheses without an improved version are listed with the reason.
+
+**Limits.** Evolution makes no new evidence: P can rise only by fitting the text to what was already found, and a rise of
+I is a design that is still to be carried out. The improved text is written from the findings of the verifier that then
+scores it (circular), so a rise of the score says what to change, not that the hypothesis became better. A gap between the
+expected and the obtained change points at the improvement list itself (its estimate was wrong) or at the rewrite (the
+model did not apply the item); both are shown. "Needs new data" items are never applied by evolution.
+
+## 12. What the method does not do, its known limits and its validation status
 
 - It does not predict whether a trial will succeed; trials are run where support exists but the question is open.
 - The verifier keeps about 60% of relevant papers with almost no false ones (measured on three hand-labelled sets): support
@@ -261,7 +297,7 @@ levels.
 AUC is the tied AUC of P between positive and null trials; the pre-set rule is "signal" at ≥ 0.60 with the lower bound of
 the 95% interval above 0.45, "no signal" below 0.55. The samples are small and the intervals wide.
 
-## 12. Worked example (computed by the code)
+## 13. Worked example (computed by the code)
 
 Hypothesis: "x activates AMPK, AMPK suppresses senescent cells (hallmark: cellular senescence), and x improves function in
 older adults". Records: two mouse studies for c1 (n = 40 each, large effect, between groups); none for c2; one RCT of 120 for
@@ -277,7 +313,7 @@ The study for c2 lowers P slightly and raises the support share; under every pro
 0.667 → 0.703 on these two alone). A study against c2 cuts P to 0.12: data against are what P is for. Under v3.2 the first row had
 P 0.380 (c2 at 0.5), the penalty for writing out the mechanism that v3.3 removes.
 
-## 13. Constants (checked against the code)
+## 14. Constants (checked against the code)
 
 ```yaml
 v32:
