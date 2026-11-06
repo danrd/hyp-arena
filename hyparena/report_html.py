@@ -1,0 +1,595 @@
+"""Pool report as one HTML page: a snapshot of the site for one pool (user decision 2026-11-06).
+
+    python -m hyparena.report_html prospective --n 60 --out REPORT.html
+
+Built by code from the saved run, the frozen scores and the rules (no model call): fixed wording, only numbers and names
+change, so two reports always read the same way. Layout: how to read (what the numbers mean) -> the table of all hypotheses
+-> top 3 per profile -> one analysis per hypothesis (what lifts, what lowers, what would raise it; collapsed) -> appendices
+(method in brief and glossary, the full breakdown of each mechanism chain with its records, provenance). Russian and English
+in one page (a switch). Style tokens follow the site (docs/site/index.html). Reports on private hypotheses stay private.
+"""
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import hashlib
+import html
+import json
+from collections import Counter
+from pathlib import Path
+from typing import Optional
+
+from hyparena.card import aspid_v3
+from hyparena.card import rules_v3 as r3
+from hyparena.card import rules_v32 as r32
+from hyparena.card.models import ClaimVerification, HypothesisCard
+
+PROFILE_NAMES = {"evidence": ("Доказательность", "Evidence"), "evolution": ("Потенциал развития", "Room to grow"),
+                 "funding": ("Готовность к финансированию", "Ready to fund"), "investor": ("Инвестор (черновик)", "Investor (draft)")}
+IND_NAMES = {
+    "P": ("правдоподобие механизма", "plausibility of the mechanism"),
+    "I": ("информативность эксперимента", "informativeness of the experiment"),
+    "I_headroom": ("запас информативности", "room for a more informative experiment"),
+    "W": ("размах механизма", "scope of the mechanism"),
+    "feasibility": ("реализуемость", "feasibility"),
+    "best_design_outcome": ("лучший дизайн по исходу", "best design for the outcome"),
+    "independent_outcome": ("независимые источники по исходу", "independent sources for the outcome"),
+    "against_share": ("доля данных «против»", "share of evidence against"),
+    "endpoint_clinical": ("клиничность конечной точки", "how clinical the endpoint is"),
+    "trend_pubmed": ("рост внимания в литературе", "rising attention in the literature"),
+    "ai_role": ("роль ИИ", "role of AI"),
+}
+LINK_NAMES = {"delivery": ("доставка", "delivery"), "engagement": ("действие на мишень", "target engagement"),
+              "pathway": ("сигнальный путь", "pathway"), "effect": ("промежуточный эффект", "intermediate effect"),
+              "outcome": ("исход", "outcome")}
+SCOPE_NAMES = {"local": ("локальный", "local"), "organ": ("орган / система", "organ or system"),
+               "hallmark": ("признак старения", "hallmark of ageing")}
+ENDPOINT_NAMES = {"biomarker": ("биомаркер", "biomarker"), "patient_reported": ("самоотчёт", "patient-reported"),
+                  "function": ("функция", "function"), "clinical_event": ("клиническое событие", "clinical event"), None: ("—", "—")}
+TYPE_NAMES = {"drug/supplement": ("лекарство / добавка", "drug / supplement"), "behavioral": ("поведенческое", "behavioural"),
+              "device": ("устройство", "device"), "other (exercise etc.)": ("другое (упражнения и пр.)", "other (exercise etc.)")}
+AI_NAMES = {"none": ("нет", "none"), "analysis": ("анализ данных", "data analysis"), "in_the_loop": ("ИИ в цикле", "AI in the loop"),
+            "intervention": ("ИИ — вмешательство", "AI is the intervention")}
+ORDINAL = {"W": ("local", "organ", "hallmark"), "endpoint_clinical": ("biomarker", "patient_reported", "function", "clinical_event"),
+           "ai_role": ("none", "analysis", "in_the_loop", "intervention"),
+           "best_design_outcome": aspid_v3.SPECS["best_design_outcome"].levels}
+
+
+def e(x) -> str:
+    return html.escape(str(x), quote=True)
+
+
+def t(ru: str, en: str) -> str:
+    return f'<span class="l-ru">{ru}</span><span class="l-en">{en}</span>'
+
+
+def tn(pair) -> str:
+    return t(e(pair[0]), e(pair[1]))
+
+
+def fmt(x: Optional[float], d: int = 2) -> str:
+    return "—" if x is None else f"{x:.{d}f}"
+
+
+# ---------------------------------------------------------------- data
+
+def roc_weights(tiers: list[list[str]]) -> dict[str, float]:
+    """Expected weight of each indicator under an order of tiers: rank-order centroid over the tiers, split within a tier."""
+    T = len(tiers)
+    out = {}
+    for i, tier in enumerate(tiers):
+        w = sum(1 / k for k in range(i + 1, T + 1)) / T
+        for ind in tier:
+            out[ind] = w / len(tier)
+    return out
+
+
+def _num(ind: str, v):
+    if v is None:
+        return None
+    if ind in ORDINAL:
+        lv = ORDINAL[ind]
+        return lv.index(v) / (len(lv) - 1) if v in lv else None
+    if ind == "against_share":
+        return -v
+    return float(v)
+
+
+def percentiles(vals: dict[str, Optional[float]]) -> dict[str, Optional[float]]:
+    known = sorted(v for v in vals.values() if v is not None)
+    if not known:
+        return {h: None for h in vals}
+    out = {}
+    for h, v in vals.items():
+        if v is None:
+            out[h] = None
+            continue
+        below = sum(1 for x in known if x < v)
+        same = sum(1 for x in known if x == v)
+        out[h] = (below + 0.5 * same) / len(known)
+    return out
+
+
+def p_product(card: HypothesisCard, S: dict[str, float]) -> float:
+    """P from link strengths, as rules_v32.evaluate combines them (pathway cascades as a geometric mean, parallel outcomes once)."""
+    links = r3.chain(card)
+    outs, primary = r3.outcome_group(card, links)
+    P, run = 1.0, []
+    for cl in links + [None]:
+        if cl is not None and cl.link == "pathway" and cl not in outs:
+            run.append(S[cl.id])
+            continue
+        if run:
+            prod = 1.0
+            for v in run:
+                prod *= v
+            P *= prod ** (1 / len(run))
+            run = []
+        if cl is None or cl in outs:
+            continue
+        P *= S[cl.id]
+    if outs:
+        P *= S[primary.id] if primary is not None else sum(S[o.id] for o in outs) / len(outs)
+    return P
+
+
+def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], meta: dict) -> dict:
+    profiles = aspid_v3.load()
+    unit = {u["id"]: u for u in units}
+    hyps, values = {}, {}
+    for h, r in run.items():
+        it = r["items"][0]
+        sc = scores.get(h, {})
+        title = next((l[len("Title:"):].strip() for l in texts.get(h, "").splitlines() if l.startswith("Title:")), h)
+        base = {"id": h, "title": title, "type": unit.get(h, {}).get("type"), "completion": unit.get(h, {}).get("primary_completion"),
+                "outcome": it["outcome"], "scored": "P" in sc}
+        if not it.get("card") or "P" not in sc:
+            hyps[h] = base
+            continue
+        card = HypothesisCard.model_validate(it["card"])
+        cvs = [ClaimVerification.model_validate(c) for c in it["verification"]["claims"]]
+        alts = {a: ClaimVerification.model_validate(v) for a, v in (it.get("v3_alternatives") or {}).items()}
+        res = r32.evaluate(card, cvs, alts, fold=True)
+        labels = r3.evaluate(card, cvs, alts, variant="v3.1").links
+        by = {c.id: c for c in cvs}
+        chain = []
+        for cl in r3.chain(card):
+            cv = by.get(cl.id)
+            recs = []
+            for side, lst in (("for", cv.evidence if cv else []), ("against", cv.counterevidence if cv else [])):
+                for rec in lst:
+                    w = r32.record_weight(rec, cl, side == "against")
+                    if w <= 0:
+                        continue
+                    recs.append({"side": side, "pmid": rec.record_id.replace("PMID:", ""), "w": round(w, 3),
+                                 "design": r3.record_design(rec), "n": rec.n_total, "effect": rec.effect_reported or rec.effect_class,
+                                 "quote": rec.quote, "group": r32.group_key(rec)})
+            recs.sort(key=lambda x: -x["w"])
+            S, lo, hi, F, A = res.links[cl.id]
+            chain.append({"id": cl.id, "link": cl.link, "text": f"{cl.subject.label} — {cl.relation.replace('_', ' ')} — {cl.object.label}",
+                          "hallmark": cl.object.hallmark, "S": S, "lo": lo, "hi": hi, "F": F, "A": A,
+                          "label": labels.get(cl.id, "unverified"), "records": recs})
+        alt_rows = []
+        for alt in card.proposed_alternatives:
+            cv = alts.get(alt.id)
+            ac = r32.Claim(id=alt.id, subject=alt.subject, relation=alt.relation, object=alt.object, qualifiers=alt.qualifiers,
+                           role="premise", source_span="")
+            F = r32.side_weight(cv.evidence if cv else [], ac, False, True)
+            A = r32.side_weight(cv.counterevidence if cv else [], ac, True, True)
+            S = r32.strength(F, A)[0]
+            alt_rows.append({"id": alt.id, "text": f"{alt.subject.label} — {alt.relation.replace('_', ' ')} — {alt.object.label}",
+                             "why": alt.rationale, "support": round(max(0.0, 2 * (S - 0.5)), 3),
+                             "on_positive": alt.on_positive, "on_negative": alt.on_negative})
+        links = r3.chain(card)
+        outs, primary = r3.outcome_group(card, links)
+        in_p = {c.id for c in links if c not in outs} | ({primary.id} if primary is not None else {o.id for o in outs})
+        for c in chain:
+            c["in_P"] = c["id"] in in_p
+            c["parallel_outcome"] = c["link"] == "outcome" and len(outs) > 1
+            c["primary"] = primary is not None and c["id"] == primary.id
+        relevant = [c for c in chain if c["in_P"]]
+        weakest = min(relevant, key=lambda c: c["S"]) if relevant else None
+        strongest = max(relevant, key=lambda c: c["S"]) if relevant else None
+        base_S = {c["id"]: c["S"] for c in chain}
+        best_gain, raise_to, raise_link = 0.0, None, None
+        for c in relevant:
+            if c["S"] >= 5 / 6:
+                continue
+            P_new = p_product(card, {**base_S, c["id"]: 5 / 6})
+            if P_new - res.P > best_gain:
+                best_gain, raise_to, raise_link = P_new - res.P, round(P_new, 3), c["id"]
+        de = card.decisive_experiment
+        hyps[h] = {**base, "plain": card.claim_plain, "P": res.P, "P_lo": res.P_lo, "P_hi": res.P_hi, "I": res.I, "V": res.V,
+                   "scope": res.scope, "gate": res.gate, "chain": chain, "alternatives": alt_rows,
+                   "weakest": weakest["id"] if weakest else None, "strongest": strongest["id"] if strongest else None,
+                   "P_if_weakest_moderate": raise_to, "raise_link": raise_link, "experiment": {"design": de.design, "endpoint": de.endpoint, "n": de.n_planned},
+                   "endpoint_clinical": sc.get("endpoint_clinical"), "trend_pubmed": sc.get("trend_pubmed"), "ai_role": sc.get("ai_role"),
+                   "ai_span": card.ai_role_span, "aspid": {p: sc.get(f"aspid_{p}") for p in profiles},
+                   "flags": res_flags(it)}
+        values[h] = {"P": res.P, "I": res.I, "I_headroom": it["v3"].get("headroom_I"), "W": res.scope,
+                     "endpoint_clinical": sc.get("endpoint_clinical"), "trend_pubmed": sc.get("trend_pubmed"), "ai_role": sc.get("ai_role"),
+                     **{k: (it.get("extra") or {}).get(k) for k in ()}}
+    # extras needed for profile contributions
+    from hyparena.card import v3_extra
+    for h in values:
+        it = run[h]["items"][0]
+        card = HypothesisCard.model_validate(it["card"])
+        cvs = [ClaimVerification.model_validate(c) for c in it["verification"]["claims"]]
+        ext = v3_extra.extras(card, cvs, it["v3"], run[h]["meta"].get("as_of") or "")
+        values[h].update({k: ext.get(k) for k in ("feasibility", "best_design_outcome", "independent_outcome", "against_share")})
+    inds = sorted({i for p, _ in profiles.values() for tier in p.tiers for i in tier})
+    pct = {ind: percentiles({h: _num(ind, values[h].get(ind)) for h in values}) for ind in inds}
+    for h in values:
+        hyps[h]["pct"] = {ind: pct[ind][h] for ind in inds}
+        contrib = {}
+        for name, (prof, _) in profiles.items():
+            w = roc_weights(prof.tiers)
+            parts = [(ind, w[ind] * (pct[ind][h] - 0.5)) for ind in w if pct[ind][h] is not None]
+            parts.sort(key=lambda x: -x[1])
+            contrib[name] = {"up": [p for p in parts if p[1] > 0.01][:2], "down": [p for p in parts[::-1] if p[1] < -0.01][:2]}
+        hyps[h]["contrib"] = contrib
+    scored = [h for h in hyps if hyps[h].get("P") is not None and hyps[h].get("gate") == "pass"]
+    ranks = {}
+    for p in profiles:
+        order = sorted(scored, key=lambda h: -(hyps[h]["aspid"][p] or -1))
+        ranks[p] = order
+        for i, h in enumerate(order, 1):
+            hyps[h].setdefault("rank", {})[p] = i
+    for x in hyps.values():
+        x.setdefault("rank", {})
+    return {"meta": {**meta, "n": len(hyps), "n_scored": len(scored), "outcomes": dict(Counter(x["outcome"] for x in hyps.values())),
+                     "profiles": {p: [list(t_) for t_ in prof.tiers] for p, (prof, _) in profiles.items()}},
+            "hyps": hyps, "ranks": ranks}
+
+
+def res_flags(it: dict) -> list[str]:
+    return list((it.get("v3") or {}).get("flags") or [])
+
+
+# ---------------------------------------------------------------- render
+
+CSS = """
+:root{--paper:#f4f6f3;--surface:#fff;--ink:#15201c;--muted:#5a6964;--line:#d9dfdb;--accent:#12695a;--accent-soft:#dcede7;
+--ok:#2c7a4c;--bad:#b0402c;--warn:#a8740f;--idle:#7a8682;--ok-soft:#e1f0e6;--bad-soft:#f6e2dd;--warn-soft:#f5ead2;--idle-soft:#eaedeb;
+--display:"Literata",Georgia,serif;--body:"Onest","Segoe UI",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#0f1514;--surface:#162020;--ink:#e4ebe8;--muted:#98a6a1;
+--line:#2a3633;--accent:#4db6a2;--accent-soft:#1b3430;--ok:#5dbd84;--bad:#e07a62;--warn:#d8a43f;--idle:#8b9893;--ok-soft:#173126;
+--bad-soft:#3a211b;--warn-soft:#362a12;--idle-soft:#212b29;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#0f1514;--surface:#162020;--ink:#e4ebe8;--muted:#98a6a1;--line:#2a3633;--accent:#4db6a2;
+--accent-soft:#1b3430;--ok:#5dbd84;--bad:#e07a62;--warn:#d8a43f;--idle:#8b9893;--ok-soft:#173126;--bad-soft:#3a211b;--warn-soft:#362a12;
+--idle-soft:#212b29;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55}
+a{color:var(--accent)}h1,h2,h3{font-family:var(--display);font-weight:600;line-height:1.2;margin:0 0 .5em}h1{font-size:2rem}h2{font-size:1.5rem;margin-top:1.6em}
+h3{font-size:1.1rem}.wrap{max-width:1120px;margin:0 auto;padding:0 16px 64px}.prose{max-width:70ch}.muted{color:var(--muted)}
+.mono,code{font-family:var(--mono);font-size:.86em}.eyebrow{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+header.top{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+header.top .wrap{display:flex;gap:16px;align-items:center;padding:10px 16px;flex-wrap:wrap}header.top nav{display:flex;gap:14px;flex-wrap:wrap;font-size:.9rem}
+header.top .sp{flex:1}button.sw{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:6px;padding:3px 8px;cursor:pointer}
+html[data-lang="ru"] .l-en,html[data-lang="en"] .l-ru{display:none}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:12px 0}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.num{font-family:var(--mono);font-size:1.6rem}.kpi .lab{font-weight:600}.kpi p{margin:.3em 0 0;color:var(--muted);font-size:.9rem}
+.tbl{width:100%;border-collapse:collapse;font-size:.88rem;background:var(--surface)}.tbl th,.tbl td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.tbl th{background:var(--surface);cursor:pointer;white-space:nowrap}.tbl td.title{min-width:300px}.tbl td.n{font-family:var(--mono);text-align:right;white-space:nowrap}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+.bar{display:inline-block;height:8px;border-radius:4px;background:var(--accent);vertical-align:middle}
+.barbox{display:inline-block;width:70px;height:8px;border-radius:4px;background:var(--idle-soft);margin-right:6px;vertical-align:middle;position:relative}
+.barbox .iv{position:absolute;top:0;height:8px;background:var(--accent-soft)}.barbox .pt{position:absolute;top:-2px;width:3px;height:12px;background:var(--accent)}
+details{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin:8px 0}details>summary{cursor:pointer;padding:10px 14px;list-style:none}
+details>summary::-webkit-details-marker{display:none}details>summary::before{content:"▸ ";color:var(--muted)}details[open]>summary::before{content:"▾ "}
+details .body{padding:0 16px 14px}.chip{display:inline-block;border-radius:999px;padding:1px 8px;font-size:.8rem;background:var(--idle-soft);margin:0 4px 4px 0}
+.ok{background:var(--ok-soft)}.bad{background:var(--bad-soft)}.warn{background:var(--warn-soft)}
+.chain{display:flex;flex-wrap:wrap;gap:6px;align-items:stretch;margin:8px 0}.link{border:1px solid var(--line);border-radius:8px;padding:6px 8px;min-width:150px;max-width:260px;font-size:.85rem}
+.arrow{align-self:center;color:var(--muted)}.link .s{font-family:var(--mono)}
+.up{color:var(--ok)}.down{color:var(--bad)}blockquote{margin:4px 0;padding-left:10px;border-left:3px solid var(--line);color:var(--muted);font-size:.85rem}
+.top3{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}.top3 ol{margin:.3em 0;padding-left:1.2em}
+@media print{header.top{position:static}details{break-inside:avoid}details:not([open])>.body{display:block}}
+"""
+
+JS = """
+function setLang(l){document.documentElement.dataset.lang=l;try{localStorage.setItem('rep-lang',l)}catch(e){}}
+function setTheme(){const r=document.documentElement;r.dataset.theme=r.dataset.theme==='dark'?'light':'dark'}
+try{const l=localStorage.getItem('rep-lang');if(l)document.documentElement.dataset.lang=l}catch(e){}
+document.querySelectorAll('table.sortable').forEach(tb=>{tb.querySelectorAll('th').forEach((th,i)=>th.addEventListener('click',()=>{
+ const rows=[...tb.tBodies[0].rows];const asc=th.dataset.asc!=='1';th.dataset.asc=asc?'1':'0';
+ rows.sort((a,b)=>{const x=a.cells[i].dataset.v??a.cells[i].innerText,y=b.cells[i].dataset.v??b.cells[i].innerText;
+  const nx=parseFloat(x),ny=parseFloat(y);const c=(!isNaN(nx)&&!isNaN(ny))?nx-ny:String(x).localeCompare(String(y));return asc?c:-c});
+ rows.forEach(r=>tb.tBodies[0].appendChild(r))}))});
+const f=document.getElementById('ftype');if(f)f.addEventListener('change',()=>{document.querySelectorAll('#main tbody tr').forEach(r=>{
+ r.style.display=(!f.value||r.dataset.type===f.value)?'':'none'})});
+document.querySelectorAll('a[href^="#h-"]').forEach(a=>a.addEventListener('click',()=>{const d=document.querySelector(a.getAttribute('href'));if(d&&d.tagName==='DETAILS')d.open=true}));
+"""
+
+
+def strength_cls(S: float) -> str:
+    return "ok" if S >= 0.75 else "bad" if S < 0.45 else "warn" if S < 0.55 else ""
+
+
+def pbar(P, lo, hi) -> str:
+    return (f'<span class="barbox"><span class="iv" style="left:{lo*100:.0f}%;width:{max(1,(hi-lo)*100):.0f}%"></span>'
+            f'<span class="pt" style="left:{P*100:.0f}%"></span></span>')
+
+
+def render(rep: dict) -> str:
+    m, H = rep["meta"], rep["hyps"]
+    out = ['<!doctype html><html lang="ru" data-lang="ru"><head><meta charset="utf-8">',
+           '<meta name="viewport" content="width=device-width, initial-scale=1">',
+           f'<title>Отчёт по пулу — {e(m["pool"])}</title>',
+           '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">',
+           f'<style>{CSS}</style></head><body>']
+    out.append('<header class="top"><div class="wrap"><b>hyp-arena</b><nav>'
+               f'<a href="#read">{t("Как читать","How to read")}</a><a href="#table">{t("Таблица","Table")}</a>'
+               f'<a href="#top">{t("Лидеры","Top 3")}</a><a href="#each">{t("Разбор гипотез","Each hypothesis")}</a>'
+               f'<a href="#app">{t("Приложения","Appendices")}</a></nav><span class="sp"></span>'
+               '<button class="sw" onclick="setLang(\'ru\')">RU</button><button class="sw" onclick="setLang(\'en\')">EN</button>'
+               '<button class="sw" onclick="setTheme()">◐</button></div></header><main class="wrap">')
+    # 0. head
+    out.append(f'<p class="eyebrow" style="margin-top:24px">{t("Отчёт по пулу гипотез","Pool report")} · {e(m["date"])}</p>')
+    out.append(f'<h1>{e(m["title_ru"])}<span class="l-en" style="display:none"></span></h1>' if False else
+               f'<h1>{t(e(m["title_ru"]), e(m["title_en"]))}</h1>')
+    out.append(f'<p class="prose muted">{t(e(m["about_ru"]), e(m["about_en"]))}</p>')
+    out.append(f'<p class="muted mono" style="font-size:.8rem">{t("Метод","Method")} {e(m["method"])} · '
+               f'{t("оценено","scored")} {m["n_scored"]} / {m["n"]} · {t("хеш оценок","scores SHA-256")} {e(m["sha"][:16])}…</p>')
+    # 1. how to read
+    out.append(f'<h2 id="read">{t("Как читать этот отчёт","How to read this report")}</h2>')
+    out.append('<div class="prose"><p>' + t(
+        "Метод оценивает гипотезу по её <b>механизму</b>: цепочке звеньев от вмешательства до исхода (например, «упражнения → "
+        "мышечная сила → функция»). Для каждого звена ищутся статьи в PubMed, опубликованные до даты оценки; каждая находка "
+        "записывается с дословной цитатой и весом — тем больше, чем надёжнее дизайн исследования, больше выборка, крупнее "
+        "эффект и ближе условия к гипотезе. Из этого код считает несколько чисел, а затем ранжирует гипотезы по профилям "
+        "предпочтений. Исход испытания метод <b>не предсказывает</b>: он оценивает, насколько обоснован механизм сейчас.",
+        "The method scores a hypothesis by its <b>mechanism</b>: the chain of links from the intervention to the outcome (e.g. "
+        "\"exercise → muscle strength → function\"). For each link it searches PubMed for papers published before the date of "
+        "scoring; every finding is recorded with a verbatim quote and a weight — higher for a more reliable design, a larger "
+        "sample, a larger effect and conditions closer to the hypothesis. From these the code computes a few numbers and then "
+        "ranks the hypotheses under preference profiles. The method does <b>not</b> predict the trial's result: it measures how "
+        "well the mechanism is supported now.") + '</p></div>')
+    kp = [("P", t("Правдоподобие механизма","Plausibility of the mechanism"), t(
+              "От 0 до 1: произведение силы звеньев. 0.5 у звена — данных нет; выше — данные «за», ниже — «против». Полоска — "
+              "90%-й интервал: широкий, когда о звеньях мало известно.",
+              "0 to 1: the product of the links' strengths. A link at 0.5 has no data; above, data for; below, data against. The "
+              "bar is the 90% interval: wide when little is known about the links.")),
+          ("I", t("Информативность эксперимента","Informativeness of the experiment"), t(
+              "От 1/3 до 1: сколько подкреплённых литературой альтернативных объяснений отсечёт заявленный эксперимент. 1/3 — "
+              "ни одного: результат будет трудно истолковать.",
+              "1/3 to 1: how many literature-supported alternative explanations the stated experiment rules out. 1/3 means none: "
+              "the result will be hard to interpret.")),
+          ("W", t("Размах","Scope"), t(
+              "Насколько широко действует подтверждённая часть механизма: локально, на орган или систему, на признак старения.",
+              "How far the supported part of the mechanism reaches: local, an organ or system, a hallmark of ageing.")),
+          ("ASPID", t("Место в профиле","Place under a profile"), t(
+              "Профиль — порядок важности показателей (например, «сначала доказательность, потом информативность»). Веса "
+              "разыгрываются случайно в рамках этого порядка 10 000 раз; число — ожидаемая оценка от 0 до 1, место — по ней.",
+              "A profile is an order of importance of the indicators (e.g. \"evidence first, then informativeness\"). Weights are "
+              "drawn at random within that order 10,000 times; the number is the expected score from 0 to 1, the place follows it."))]
+    out.append('<div class="grid">' + "".join(
+        f'<div class="card kpi"><div class="num">{k}</div><div class="lab">{lab}</div><p>{txt}</p></div>' for k, lab, txt in kp) + '</div>')
+    out.append('<div class="card prose"><b>' + t("Профили в этом отчёте","Profiles in this report") + '</b><ul>' + "".join(
+        f'<li><b>{tn(PROFILE_NAMES[p])}</b>: ' + " &gt; ".join(
+            "{" + ", ".join(tn(IND_NAMES.get(i, (i, i))) for i in tier) + "}" if len(tier) > 1 else tn(IND_NAMES.get(tier[0], (tier[0],) * 2))
+            for tier in tiers) + '</li>' for p, tiers in m["profiles"].items()) + '</ul></div>')
+    # 2. table
+    out.append(f'<h2 id="table">{t("Все гипотезы","All hypotheses")}</h2>')
+    types = sorted({x.get("type") for x in H.values() if x.get("type")})
+    out.append('<p>' + t("Тип вмешательства:","Intervention type:") + ' <select id="ftype"><option value="">' + t("все","all") + '</option>' +
+               "".join(f'<option value="{e(ty)}">{e(TYPE_NAMES.get(ty, (ty, ty))[0])}</option>' for ty in types) + '</select> · ' +
+               t("клик по заголовку сортирует","click a header to sort") + '</p>')
+    profs = list(m["profiles"])
+    out.append('<div class="scroll"><table class="tbl sortable" id="main"><thead><tr>' +
+               f'<th>{t("Гипотеза","Hypothesis")}</th><th>{t("Тип","Type")}</th><th>P [90%]</th><th>I</th><th>{t("Размах","Scope")}</th>'
+               f'<th>{t("Конечная точка","Endpoint")}</th><th>{t("Тренд","Trend")}</th>' +
+               "".join(f'<th>{tn(PROFILE_NAMES[p])}</th>' for p in profs) + '</tr></thead><tbody>')
+    order = sorted(H, key=lambda h: -(H[h].get("P") or -1))
+    for h in order:
+        x = H[h]
+        if x.get("P") is None:
+            out.append(f'<tr data-type="{e(x.get("type"))}"><td class="title"><a href="#h-{e(h)}">{e(x["title"][:90])}</a><br><span class="muted mono">{e(h)}</span></td>'
+                       f'<td>{tn(TYPE_NAMES.get(x.get("type"), ("—","—")))}</td><td colspan="{5+len(profs)}" class="muted">'
+                       f'{t("не оценена: ","not scored: ")}{e(x["outcome"])}</td></tr>')
+            continue
+        out.append(f'<tr data-type="{e(x.get("type"))}"><td class="title"><a href="#h-{e(h)}">{e(x["title"][:90])}</a><br><span class="muted mono">{e(h)}</span></td>'
+                   f'<td>{tn(TYPE_NAMES.get(x.get("type"), ("—","—")))}</td>'
+                   f'<td class="n" data-v="{x["P"]}">{pbar(x["P"], x["P_lo"], x["P_hi"])}{fmt(x["P"])}</td>'
+                   f'<td class="n" data-v="{x["I"]}">{fmt(x["I"])}</td><td data-v="{ORDINAL["W"].index(x["scope"]) if x["scope"] in ORDINAL["W"] else 0}">{tn(SCOPE_NAMES.get(x["scope"], (x["scope"],)*2))}</td>'
+                   f'<td>{tn(ENDPOINT_NAMES.get(x.get("endpoint_clinical"), ("—","—")))}</td>'
+                   f'<td class="n" data-v="{x.get("trend_pubmed") if x.get("trend_pubmed") is not None else -9}">{fmt(x.get("trend_pubmed"))}</td>' +
+                   "".join(f'<td class="n" data-v="{x["rank"].get(p, 999)}">{x["rank"].get(p, "—")}</td>' for p in profs) + '</tr>')
+    out.append('</tbody></table></div>')
+    out.append('<p class="muted" style="font-size:.85rem">' + t(
+        "В столбцах профилей — место гипотезы (1 — лучшая). Тренд — рост числа публикаций о вмешательстве за последние 3 года "
+        "относительно трёх предыдущих, за вычетом общего роста PubMed (0 — как вся литература, 0.7 — примерно вдвое быстрее).",
+        "Profile columns give the place (1 = best). Trend: growth of publications on the intervention in the last 3 years vs "
+        "the 3 before, net of PubMed's overall growth (0 = like the literature as a whole, 0.7 = about twice as fast).") + '</p>')
+    # 3. top 3
+    out.append(f'<h2 id="top">{t("Лидеры по профилям","Top 3 per profile")}</h2><div class="top3">')
+    for p in profs:
+        out.append(f'<div class="card"><b>{tn(PROFILE_NAMES[p])}</b><ol>')
+        for h in rep["ranks"][p][:3]:
+            x = H[h]
+            ups = x["contrib"][p]["up"]
+            why = ", ".join(tn(IND_NAMES.get(i, (i, i))) for i, _ in ups) or "—"
+            out.append(f'<li><a href="#h-{e(h)}">{e(x["title"][:80])}</a><br><span class="muted" style="font-size:.85rem">'
+                       f'{t("сильные стороны: ","strengths: ")}{why}</span></li>')
+        out.append('</ol></div>')
+    out.append('</div>')
+    # 4. each hypothesis
+    out.append(f'<h2 id="each">{t("Разбор каждой гипотезы","Each hypothesis")}</h2><p class="muted">' + t(
+        "Раскройте строку. Полное разложение по звеньям с цитатами — в приложении Б.",
+        "Open a row. The full breakdown by links with quotes is in appendix B.") + '</p>')
+    for h in order:
+        x = H[h]
+        if x.get("P") is None:
+            out.append(f'<details id="h-{e(h)}"><summary><b>{e(x["title"][:110])}</b> <span class="muted mono">{e(h)}</span> — '
+                       f'{t("не оценена","not scored")} ({e(x["outcome"])})</summary><div class="body"><p class="muted">' + t(
+                           "Гипотеза не прошла вход или была отсечена правилом опровержения; подробности — в данных прогона.",
+                           "The hypothesis did not pass the entry or was filtered by the refutation rule; details are in the run data.") + '</p></div></details>')
+            continue
+        w = next((c for c in x["chain"] if c["id"] == x["weakest"]), None)
+        s = next((c for c in x["chain"] if c["id"] == x["strongest"]), None)
+        P = fmt(x['P'])
+        if len(x["chain"]) <= 1:
+            verdict = t(f"P {P}; механизм не выписан — в цепочке только исход", f"P {P}; no mechanism written: the chain is the outcome only")
+        elif w and w["S"] < 0.75:
+            ln = LINK_NAMES.get(w["link"], (w["link"],) * 2)
+            verdict = t(f"P {P}; слабое место — звено «{e(ln[0])}» (S {fmt(w['S'])})", f"P {P}; weakest link: {e(ln[1])} (S {fmt(w['S'])})")
+        else:
+            verdict = t(f"P {P}; все звенья подкреплены литературой", f"P {P}; every link is supported by the literature")
+        out.append(f'<details id="h-{e(h)}"><summary><b>{e(x["title"][:110])}</b> <span class="muted mono">{e(h)}</span><br>'
+                   f'<span class="muted">{verdict}</span></summary><div class="body">')
+        out.append(f'<p class="prose">{e(x["plain"])}</p>')
+        def box(c):
+            note = ""
+            if c.get("parallel_outcome"):
+                note = (f'<br><span class="chip ok">{t("основной исход","primary outcome")}</span>' if c["primary"] else
+                        (f'<br><span class="chip">{t("в P не входит","not in P")}</span>' if not c["in_P"] else
+                         f'<br><span class="chip">{t("в P — среднее исходов","in P: mean of outcomes")}</span>'))
+            return (f'<a class="link {strength_cls(c["S"])}" href="#b-{e(h)}-{e(c["id"])}" style="text-decoration:none;color:inherit">'
+                    f'<span class="eyebrow">{tn(LINK_NAMES.get(c["link"], (c["link"],)*2))}</span><br>{e(c["text"][:90])}<br>'
+                    f'<span class="s">S {fmt(c["S"])} [{fmt(c["lo"])}; {fmt(c["hi"])}]</span> · {len(c["records"])} {t("зап.","rec.")}{note}</a>')
+        mech = [c for c in x["chain"] if not c.get("parallel_outcome") and c["link"] != "outcome"]
+        outs_ = [c for c in x["chain"] if c["link"] == "outcome"]
+        parts = [box(c) for c in mech]
+        if outs_:
+            parts.append('<span style="display:flex;flex-direction:column;gap:6px">' + "".join(box(c) for c in outs_) + '</span>')
+        out.append('<div class="chain">' + '<span class="arrow">→</span>'.join(parts) + '</div>')
+        if len(outs_) > 1:
+            out.append(f'<p class="muted" style="font-size:.85rem">{t("Параллельные исходы (масса, сила, функция) — одно звено: в P входит основной исход заявленного эксперимента, а если его нельзя выделить — среднее.","Parallel outcomes (mass, strength, function) are one link: P takes the primary outcome of the stated experiment, or their mean when none can be singled out.")}</p>')
+        rows = [("P", f'{pbar(x["P"], x["P_lo"], x["P_hi"])}<span class="mono">{fmt(x["P"])} [{fmt(x["P_lo"])}; {fmt(x["P_hi"])}]</span>'),
+                ("I", f'<span class="mono">{fmt(x["I"])}</span>'), (t("Размах","Scope"), tn(SCOPE_NAMES.get(x["scope"], (x["scope"],)*2))),
+                (t("Конечная точка","Endpoint"), tn(ENDPOINT_NAMES.get(x.get("endpoint_clinical"), ("—","—")))),
+                (t("Роль ИИ","AI role"), tn(AI_NAMES.get(x.get("ai_role") or "none"))),
+                (t("Места","Places"), " · ".join(f'{tn(PROFILE_NAMES[p])} {x["rank"].get(p, "—")}/{len(rep["ranks"][p])}' for p in profs))]
+        out.append('<table class="tbl" style="max-width:760px">' + "".join(f'<tr><th style="position:static">{a}</th><td>{b}</td></tr>' for a, b in rows) + '</table>')
+        rl = next((c for c in x["chain"] if c["id"] == x.get("raise_link")), None)
+        up = sorted({i for p in profs for i, _ in x["contrib"][p]["up"]})
+        down = sorted({i for p in profs for i, _ in x["contrib"][p]["down"]})
+        pct = x["pct"]
+        def pc(i):
+            return f' <span class="muted">({t("лучше, чем у","better than")} {round((pct[i] or 0)*100)}% {t("пула","of the pool")})</span>'
+        out.append('<div class="grid" style="margin-top:10px"><div class="card"><b class="up">▲ ' + t("Вытягивает","Lifts") + '</b><ul>' +
+                   ("".join(f'<li>{tn(IND_NAMES.get(i, (i, i)))}{pc(i)}</li>' for i in up) or '<li class="muted">—</li>') +
+                   (f'<li>{t("самое сильное звено: ","strongest link: ")}{tn(LINK_NAMES.get(s["link"], (s["link"],)*2))} (S {fmt(s["S"])})</li>' if s and s["S"] > 0.55 else "") +
+                   '</ul></div><div class="card"><b class="down">▼ ' + t("Занижает","Lowers") + '</b><ul>' +
+                   ("".join(f'<li>{tn(IND_NAMES.get(i, (i, i)))}{pc(i)}</li>' for i in down) or '<li class="muted">—</li>') +
+                   (f'<li>{t("слабое звено: ","weakest link: ")}{tn(LINK_NAMES.get(w["link"], (w["link"],)*2))} (S {fmt(w["S"])}' +
+                    (t(", данных нет", ", no data") if not w["records"] else "") + ')</li>' if w and w["S"] < 0.75 else "") +
+                   '</ul></div><div class="card"><b>' + t("Что поднимет оценку","What would raise it") + '</b><ul>' +
+                   (f'<li>{t("подкрепить звено «","support the link \"")}{tn(LINK_NAMES.get(rl["link"], (rl["link"],)*2))}{t("» до уровня «умеренно» (S 0.83): P станет около ","\" to \"moderate\" (S 0.83): P would be about ")}'
+                    f'<b class="mono">{fmt(x["P_if_weakest_moderate"])}</b> ({t("сейчас","now")} {fmt(x["P"])})</li>' if x.get("P_if_weakest_moderate") and rl else "") +
+                   (f'<li>{t("заявленный эксперимент не отсекает подкреплённые альтернативы: изменить дизайн так, чтобы различать их (I до 1)","the stated experiment leaves supported alternatives standing: change the design to tell them apart (I up to 1)")}</li>'
+                    if any(a["support"] > 0 and a["on_positive"] != "eliminated" for a in x["alternatives"]) else "") +
+                   (f'<li>{t("выписать механизм: через какие мишени и пути вмешательство действует на исход — тогда его можно проверить по звеньям","write the mechanism: through which targets and pathways the intervention acts on the outcome, so that it can be checked link by link")}</li>'
+                    if len(x["chain"]) <= 1 else "") +
+                   (f'<li>{t("назвать альтернативные объяснения с поддержкой в литературе и эксперимент, который их отсечёт","name alternative explanations supported in the literature and an experiment that rules them out")}</li>'
+                    if not any(a["support"] > 0 for a in x["alternatives"]) else "") +
+                   '</ul></div></div>')
+        out.append('</div></details>')
+    # 5. appendices
+    out.append(f'<h2 id="app">{t("Приложения","Appendices")}</h2>')
+    out.append('<details><summary><b>' + t("А. Метод кратко и глоссарий","A. The method in brief and a glossary") + '</b></summary><div class="body prose">' + t(
+        "<p><b>Запись</b> — находка из одной статьи по одному звену: дословная цитата, дизайн (от клеточного опыта до РКИ), "
+        "размер выборки, величина эффекта, сравнение (между группами, до/после), совпадение условий. Её вес — произведение "
+        "этих факторов; одна большая РКИ с крупным эффектом весит 1.</p><p><b>Сила звена S</b> — среднее бета-распределения по "
+        "весам «за» и «против»: 0.5 без данных, 0.83 при весе «за» 0.6, около 0.5 при равном весе «за» и «против» (но с узким "
+        "интервалом). Несколько записей одной статьи или одного испытания считаются как один источник.</p><p><b>Правило "
+        "опровержения</b> — единственный фильтр: звено опровергнуто, если против него есть РКИ или метаанализ в той же "
+        "популяции и нет столь же сильных данных «за».</p><p><b>Альтернатива</b> — конкурирующее объяснение того же результата; "
+        "учитывается, только если у неё есть поддержка в литературе.</p><p>Подробно: мануал метода "
+        "<code>docs/method-v3-manual.md</code>.</p>",
+        "<p><b>Record</b>: a finding of one paper on one link: verbatim quote, design (from a cell study to an RCT), sample "
+        "size, effect size, comparison (between groups, before/after), match of conditions. Its weight is the product of these "
+        "factors; one large RCT with a large effect weighs 1.</p><p><b>Link strength S</b>: the mean of a Beta distribution "
+        "over the weights for and against: 0.5 without data, 0.83 with a weight of 0.6 for, about 0.5 when for and against "
+        "balance (but with a narrow interval). Several records of one paper or one trial count as one source.</p><p><b>Gate</b>, "
+        "the only filter: a link is refuted when an RCT or meta-analysis in the same population is against it and nothing as "
+        "strong is for it.</p><p><b>Alternative</b>: a competing explanation of the same result; it counts only with support in "
+        "the literature.</p><p>In full: the method manual <code>docs/method-v3-manual.md</code>.</p>") + '</div></details>')
+    out.append('<details><summary><b>' + t("Б. Полное разложение по гипотезам","B. Full breakdown per hypothesis") + '</b></summary><div class="body">')
+    for h in order:
+        x = H[h]
+        if x.get("P") is None:
+            continue
+        out.append(f'<details><summary>{e(x["title"][:110])} <span class="muted mono">{e(h)}</span></summary><div class="body">')
+        out.append(f'<p class="muted">{t("Заявленный эксперимент: ","Stated experiment: ")}{e(x["experiment"]["design"])}, '
+                   f'{e(x["experiment"]["endpoint"] or "—")}; n {e(x["experiment"]["n"] or "—")}; '
+                   f'{t("завершение","completion")} {e(x.get("completion") or "—")}</p>')
+        for c in x["chain"]:
+            out.append(f'<h3 id="b-{e(h)}-{e(c["id"])}">{tn(LINK_NAMES.get(c["link"], (c["link"],)*2))}: {e(c["text"])}</h3>'
+                       f'<p class="mono muted">S {fmt(c["S"],3)} [{fmt(c["lo"])}; {fmt(c["hi"])}] · F {fmt(c["F"],3)} · A {fmt(c["A"],3)} · {e(c["label"])}'
+                       + (f' · {t("признак старения","hallmark")}: {e(c["hallmark"])}' if c["hallmark"] else "") + '</p>')
+            if not c["records"]:
+                out.append(f'<p class="muted">{t("Записей нет: литература до даты оценки не нашла данных по этому звену.","No records: the literature before the date of scoring had no data on this link.")}</p>')
+                continue
+            out.append('<div class="scroll"><table class="tbl"><thead><tr><th>PMID</th><th>' + t("за / против","for / against") +
+                       '</th><th>' + t("вес","weight") + '</th><th>' + t("дизайн","design") + '</th><th>n</th><th>' +
+                       t("эффект","effect") + '</th><th>' + t("цитата","quote") + '</th></tr></thead><tbody>')
+            for r in c["records"][:12]:
+                out.append(f'<tr><td><a href="https://pubmed.ncbi.nlm.nih.gov/{e(r["pmid"])}/" target="_blank" rel="noopener">{e(r["pmid"])}</a></td>'
+                           f'<td><span class="chip {"ok" if r["side"]=="for" else "bad"}">{t("за","for") if r["side"]=="for" else t("против","against")}</span></td>'
+                           f'<td class="n">{fmt(r["w"],3)}</td><td>{e(r["design"])}</td><td class="n">{e(r["n"] or "—")}</td>'
+                           f'<td>{e((r["effect"] or "")[:80])}</td><td><blockquote>{e((r["quote"] or "")[:400])}</blockquote></td></tr>')
+            out.append('</tbody></table></div>')
+            if len(c["records"]) > 12:
+                out.append(f'<p class="muted">… {t("ещё","and")} {len(c["records"]) - 12}</p>')
+        if x["alternatives"]:
+            out.append('<h3>' + t("Альтернативные объяснения","Alternative explanations") + '</h3><ul>' + "".join(
+                f'<li>{e(a["text"])} — {t("поддержка","support")} {fmt(a["support"])}; {t("эксперимент при успехе: ","experiment if positive: ")}{e(a["on_positive"])}<br>'
+                f'<span class="muted">{e(a["why"] or "")}</span></li>' for a in x["alternatives"]) + '</ul>')
+        out.append('<h3>' + t("Остальные показатели (справочно)","Other indicators (for reference)") + '</h3><p class="mono" style="font-size:.85rem">' +
+                   " · ".join(f'{e(i)} {round(v*100) if v is not None else "—"}%' for i, v in sorted(x["pct"].items())) +
+                   f'</p><p class="muted" style="font-size:.85rem">{t("Проценты — доля пула ниже этой гипотезы по показателю.","Percent: share of the pool below this hypothesis on the indicator.")}</p>')
+        if x.get("ai_span"):
+            out.append(f'<p>{t("Роль ИИ — цитата: ","AI role, quote: ")}<blockquote>{e(x["ai_span"])}</blockquote></p>')
+        out.append('</div></details>')
+    out.append('</div></details>')
+    out.append('<details><summary><b>' + t("В. Происхождение и ограничения","C. Provenance and limitations") + '</b></summary><div class="body prose"><ul>' +
+               "".join(f'<li>{li}</li>' for li in [
+                   t(f"Дата оценки {e(m['date'])}; литература — до этой даты.", f"Scored on {e(m['date'])}; literature up to that date."),
+                   t(f"Метод: {e(m['method'])}. Оценки зафиксированы, SHA-256 {e(m['sha'])}.", f"Method: {e(m['method'])}. Scores frozen, SHA-256 {e(m['sha'])}."),
+                   t(f"Исходы прогона: {e(m['outcomes'])}.", f"Run outcomes: {e(m['outcomes'])}."),
+                   t("Проверяющая модель находит около 60% относящихся к делу статей и почти не берёт лишних: поддержка от вмешательств "
+                     "того же рода часто пропускается, поэтому P программ и поведенческих вмешательств занижен.",
+                     "The verifier finds about 60% of the relevant papers and almost no irrelevant ones: support from interventions of "
+                     "the same kind is often missed, so P of programmes and behavioural interventions is biased down."),
+                   t("Только аннотации статей; альтернативы предлагает модель по найденной литературе.",
+                     "Abstracts only; alternatives are proposed by a model from the literature found."),
+                   t("Связь P с исходами испытаний пока не доказана: на прошлых выборках AUC 0.61–0.65 при широких интервалах; этот пул — "
+                     "проспективная проверка.",
+                     "The link between P and trial outcomes is not established: AUC 0.61-0.65 on past samples with wide intervals; this pool "
+                     "is the prospective test."),
+               ]) + '</ul></div></details>')
+    out.append(f'</main><script>{JS}</script></body></html>')
+    return "\n".join(out)
+
+
+def prospective(n: int = 60) -> tuple[dict, str]:
+    from scripts.ctgov_outcomes import KG
+    d = KG / "hypothesis_sources" / "prospective"
+    run = json.loads((d / f"run_{n}.json").read_text())
+    sb = (d / f"scores_{n}.json").read_bytes()
+    texts = {json.loads(l)["id"]: json.loads(l)["text"] for l in open(d / f"texts_{n}.jsonl")}
+    meta = {"pool": f"prospective-{n}", "date": "2026-11-06", "sha": hashlib.sha256(sb).hexdigest(),
+            "method": "v3.2 (fold), normalize_card/v10, verify_claim/v9, ASPID trial-2 + investor draft-1",
+            "title_ru": f"Проспективный пул: {n} идущих испытаний", "title_en": f"Prospective pool: {n} ongoing trials",
+            "about_ru": "Испытания на ClinicalTrials.gov, где среди состояний — само старение, с завершением в ноябре 2026 — декабре 2028; "
+                        "по 15 на тип вмешательства. Оценены до появления результатов; оценки зафиксированы хешем.",
+            "about_en": "ClinicalTrials.gov trials with ageing itself among the conditions, primary completion November 2026 – December 2028; "
+                        "15 per intervention type. Scored before any result; the scores are frozen with a hash."}
+    rep = build(run, json.loads(sb), json.loads((d / f"units_{n}.json").read_text()), texts, meta)
+    return rep, str(d / f"report_{n}.html")
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("pool", choices=["prospective"])
+    ap.add_argument("--n", type=int, default=60)
+    ap.add_argument("--out", default="")
+    a = ap.parse_args()
+    rep, default = prospective(a.n)
+    out = Path(a.out or default)
+    out.write_text(render(rep), encoding="utf-8")
+    print(out, round(out.stat().st_size / 1024), "KB")
+
+
+if __name__ == "__main__":
+    main()
