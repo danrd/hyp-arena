@@ -10,16 +10,16 @@
 profiles:
   evidence:
     version: "trial-3"
-    description: "Plausibility of the mechanism first, then how much of it is checked, then what the experiment teaches, then reach."
-    indicators: [P, coverage, I, W, best_design_outcome, independent_outcome, against_share, endpoint_clinical]
-    tiers: [[P], [coverage], [I], [W], [best_design_outcome, independent_outcome, against_share, endpoint_clinical]]
+    description: "Plausibility of the mechanism first, then how much of it is supported, then what the experiment teaches, then reach."
+    indicators: [P, support_share, I, W, best_design_outcome, independent_outcome, against_share, endpoint_clinical]
+    tiers: [[P], [support_share], [I], [W], [best_design_outcome, independent_outcome, against_share, endpoint_clinical]]
   evolution:
     version: "trial-2"
     description: "Room to grow: what the hypothesis could teach with a better experiment, then plausibility, then reach."
-    indicators: [I_headroom, P, coverage, W, best_design_outcome, independent_outcome, against_share]
-    tiers: [[I_headroom], [P], [coverage, W], [best_design_outcome, independent_outcome, against_share]]
+    indicators: [I_headroom, P, support_share, W, best_design_outcome, independent_outcome, against_share]
+    tiers: [[I_headroom], [P], [support_share, W], [best_design_outcome, independent_outcome, against_share]]
   funding:
     version: "trial-4"
     description: "Ready to fund (merged with the investor draft, user decision 2026-11-06): plausibility, then feasibility, then rising attention and the role of AI, then informativeness, then reach and the refinements."
-    indicators: [P, feasibility, trend_pubmed, ai_role, I, coverage, W, endpoint_clinical, best_design_outcome, independent_outcome, against_share]
-    tiers: [[P], [feasibility], [trend_pubmed, ai_role], [I, coverage], [W, endpoint_clinical, best_design_outcome, independent_outcome, against_share]]
+    indicators: [P, feasibility, trend_pubmed, ai_role, I, support_share, W, endpoint_clinical, best_design_outcome, independent_outcome, against_share]
+    tiers: [[P], [feasibility], [trend_pubmed, ai_role], [I, support_share], [W, endpoint_clinical, best_design_outcome, independent_outcome, against_share]]
