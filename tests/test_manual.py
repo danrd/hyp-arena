@@ -14,7 +14,7 @@ MANUAL = Path(__file__).resolve().parents[1] / "docs" / "method-v3-manual.md"
 
 def _constants() -> dict:
     text = MANUAL.read_text()
-    block = re.search(r"## 13\. Constants.*?```yaml\n(.*?)```", text, re.S).group(1)
+    block = re.search(r"## 14\. Constants.*?```yaml\n(.*?)```", text, re.S).group(1)
     return yaml.safe_load(block)
 
 

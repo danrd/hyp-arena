@@ -162,6 +162,13 @@ class FakeLLMClient:
                                                  f"Decisive experiment: a pair-fed control and a food intake measurement.",
                                          "kind": "test_alternative", "change": f"fake refinement {i + 1}"} for i in range(k)]})
 
+    def _evolve_v3(self, rng, prompt, n):
+        m = re.search(r"<<<PARENT\n(.*?)\nPARENT>>>", prompt, flags=re.S)
+        parent = (m.group(1) if m else "a fake hypothesis").strip()
+        ids = list(dict.fromkeys(re.findall(r"^- (i\d+) \(", prompt, flags=re.M)))
+        return json.dumps({"text": parent + "\nDecisive experiment: adds an attention-matched control arm.",
+                           "applied": ids, "changes": [{"item": i, "what_changed": "fake change"} for i in ids]})
+
     def _search_queries(self, rng, prompt, n):
         return json.dumps({"queries": []})                  # no queries: the keyword search fills up (search.py)
 
