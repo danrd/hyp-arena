@@ -73,10 +73,17 @@ def run() -> None:
 
 
 def kappa(a: list, b: list, weights=None) -> float:
-    from sklearn.metrics import cohen_kappa_score
-    if len(set(a) | set(b)) < 2:
+    """Cohen's kappa; weights="linear" for ordered integer values."""
+    cats = sorted(set(a) | set(b))
+    if len(cats) < 2:
         return float("nan")
-    return float(cohen_kappa_score(a, b, weights=weights))
+    n, ix = len(a), {c: i for i, c in enumerate(cats)}
+    m = len(cats)
+    w = (lambda i, j: abs(i - j) / (m - 1)) if weights == "linear" else (lambda i, j: float(i != j))
+    obs = sum(w(ix[x], ix[y]) for x, y in zip(a, b)) / n
+    pa, pb = Counter(a), Counter(b)
+    exp = sum(pa[c] * pb[d] * w(ix[c], ix[d]) for c in cats for d in cats) / n ** 2
+    return 1 - obs / exp if exp else float("nan")
 
 
 def score() -> dict:
