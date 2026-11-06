@@ -34,3 +34,23 @@ result:
   candidate_rule_posthoc: >-
     links without any usable record do not count in P (S 1 instead of 0.5 in the product): 0.662 vs 0.624 on the same 63
     units. Found here, so not evidence; to be registered as a secondary score for the benchmark before its run
+
+# Addition (same day): rerun of all 74 calibration units under normalize v10, scored by v3.3 (fold + neutral unverified),
+# `python -m scripts.error_analysis --v33` -> calibration/error_analysis_v33.json. Exploration only: these samples were used
+# to build v3.3, so nothing here is a test; the benchmark is the test.
+v33_result:
+  scored: 73          # of 74; positives 37, nulls 36
+  auc:
+    P_v33: 0.600
+    P_v32_fold_earlier_63_units: 0.624   # different run (v3 cards, 63 scored), not a paired comparison
+    support_share: 0.539
+    S_outcome_alone: 0.614
+    literature_volume_log: 0.409         # still inverse
+    mechanism_written: 0.373             # still inverse: written mechanisms go with nulls (13 of 17 with mechanism are null)
+    trend_pubmed: 0.540
+    I: 0.435
+  by_mechanism: {with_mechanism: {n: 17, pos: 4, P_auc: 0.462}, outcome_only: {n: 56, pos: 33, P_auc: 0.656}}
+  reading: >-
+    v3.3 does not raise the separation on the calibration units (0.60, inside the noise of n=73). The chain still hurts:
+    with a mechanism written P orders the trials at chance; P works only through the outcome link. support_share alone
+    is weak (0.54). The benchmark pre-registration should therefore keep, as secondary, the outcome link alone and P v3.2.
