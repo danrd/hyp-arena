@@ -484,6 +484,10 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
             flags=[f for f in (r.get("flags") or []) if isinstance(f, str)], retrieved_at=a.get("year", ""),
             notes=f"extracted by {fam}" + (f"; source given by expert decision {by_expert[pmid]}" if pmid in by_expert else ""))
         contexts.flag(rec, a["title"] + " " + a["abstract"])
+        if keep_no_stance:                                # v3: papers of one trial are one source (OHF independence groups)
+            trials = set(re.findall(r"\b(NCT\d{8}|ISRCTN\d{8})\b", a["title"] + " " + a["abstract"]))
+            if len(trials) == 1:
+                rec.lab_or_cohort = trials.pop()
         if pubmed.is_retracted(a):
             rec.flags.append("retracted_pubmed")          # read by the v3.1 rules (section 12, point 7); v2 and v3 unchanged
         v3_fields(rec, r, a["title"] + " " + a["abstract"], review)
