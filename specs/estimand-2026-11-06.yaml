@@ -1,6 +1,6 @@
 id: estimand-2026-11-06
 written_on: '2026-11-06'
-status: registered before calls
+status: computed 2026-11-06 (after this file was committed)
 question: >-
   does an OHF-style estimand (ICH E9(R1)) of the trial pass the four admission conditions for an indicator (user request
   2026-11-06; before, "estimands do not separate registry trials" was a judgement, not a measurement)
@@ -21,3 +21,26 @@ conditions:
     for orientation only (40 decisive units: noise), it does not decide
 decision: an attribute or completeness becomes an ASPID indicator candidate only if all of reliability, separation and non_redundancy hold
 cost: about 150 calls, estimate 0.4 USD, cap 0.5
+code_change: kappa computed in the script (sklearn is not installed); same formulas (Cohen, linear weights)
+result:
+  texts: 74
+  cost: {calls: 148, tokens: 199557}
+  attributes:
+    population: {kappa: 0.61, values: {older_with_condition: 39, healthy_older: 23, other: 12}, top_share: 0.53}
+    intervention: {kappa: 0.84, values: {specified: 62, named_only: 10, not_stated: 2}, top_share: 0.84}
+    endpoint: {kappa: 0.93, values: {function: 25, biomarker: 21, patient_reported: 15, clinical_event: 9, not_stated: 4}, top_share: 0.34}
+    summary_measure: {kappa: 0.64, values: {not_stated: 39, difference_in_means: 30, ratio_or_proportion: 5}, top_share: 0.53}
+    intercurrent_events: {kappa: null, values: {not_stated: 74}, top_share: 1.0}
+  completeness: {weighted_kappa: 0.48, values: {2: 2, 3: 41, 4: 31}, top_share: 0.55}
+  non_redundancy_spearman:
+    completeness: {P: 0.13, I: -0.06, scope: constant on these units}
+    endpoint_ordinal: {P: 0.30, I: 0.13, scope: constant on these units}
+  orientation_auc: {completeness: 0.568, endpoint_ordinal: 0.512, units: '30 positive / 33 negative'}
+  verdict:
+    completeness: not admitted (reliability 0.48 < 0.6; in practice it is "is the summary measure stated", and the
+      intercurrent-event strategy is never stated in these registry texts)
+    endpoint: passes reliability, separation and non-redundancy; an ASPID indicator candidate (ordinal biomarker <
+      patient_reported < function < clinical_event); its own question is how close the trial's endpoint is to a clinical
+      outcome, which P, I and scope do not ask; no outcome signal on its own (0.51), which is not required of an ASPID
+      indicator
+    intercurrent_events: confirms the earlier judgement (constant: registry texts do not state it)
