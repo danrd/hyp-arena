@@ -1,0 +1,23 @@
+id: estimand-2026-11-06
+written_on: '2026-11-06'
+status: registered before calls
+question: >-
+  does an OHF-style estimand (ICH E9(R1)) of the trial pass the four admission conditions for an indicator (user request
+  2026-11-06; before, "estimands do not separate registry trials" was a judgement, not a measurement)
+data: registry texts of the calibration (steps 1-3, 30) and the fresh sample (steps 4-5, 44), as the method saw them
+extraction: >-
+  hyparena/prompts/estimand/v1.j2, five attributes (population, intervention, endpoint, summary_measure,
+  intercurrent_events), each with a verbatim phrase; a value without a phrase found in the text becomes not_stated (code).
+  Two families independently: google (gemini flash) and deepseek (flash); scripts/estimand_check.py
+candidate_indicators:
+  completeness: number of the five attributes stated (0-5), by code from the extraction
+  endpoint: the endpoint category
+conditions:
+  reliability: Cohen kappa between the two families >= 0.6 per attribute (for completeness: weighted kappa, linear)
+  separation: at least 3 distinct values on the 74 texts, none above 70%
+  non_redundancy: |Spearman| < 0.7 with P (v3.2, fold), I and scope (ordinal local < hallmark < systemic) on units with scores
+  own_question: >-
+    completeness answers "how exactly is the decisive test defined", not asked by P, I or scope; outcome AUC is reported
+    for orientation only (40 decisive units: noise), it does not decide
+decision: an attribute or completeness becomes an ASPID indicator candidate only if all of reliability, separation and non_redundancy hold
+cost: about 150 calls, estimate 0.4 USD, cap 0.5

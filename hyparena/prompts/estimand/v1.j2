@@ -1,0 +1,17 @@
+You read the registry text of one clinical trial and describe its estimand (ICH E9(R1)): what exactly the trial will estimate. Use only the text; do not use knowledge outside it. For every attribute give the value and one short phrase copied exactly from the text that shows it; if the text does not state the attribute, give "not_stated" and an empty quote.
+
+{{ text }}
+
+Attributes:
+1. population: "healthy_older" (older adults without a named disease), "older_with_condition" (older adults with a named condition: frailty, sarcopenia, a disease), "other" (not specifically older adults), or "not_stated".
+2. intervention: "specified" (the text gives dose, schedule or the content of the programme), "named_only" (only its name), or "not_stated".
+3. endpoint: the primary outcome: "clinical_event" (death, falls, hospitalisation, incident disease), "function" (physical or cognitive performance measured by a test), "patient_reported" (questionnaire, quality of life, symptoms), "biomarker" (blood, imaging, molecular or physiological marker), or "not_stated".
+4. summary_measure: how the primary outcome is compared between groups: "difference_in_means" (change or mean of a continuous score), "ratio_or_proportion" (risk, odds, rate, proportion of responders), "time_to_event", or "not_stated".
+5. intercurrent_events: how events after randomisation (stopping treatment, rescue medication, death) are handled: "treatment_policy" (intention to treat, regardless of adherence), "hypothetical", "composite", "while_on_treatment" (per protocol, completers), "principal_stratum", or "not_stated".
+
+Reply with a single JSON object and nothing else:
+{"estimand": {"population": {"value": "not_stated", "quote": ""}, "intervention": {"value": "not_stated", "quote": ""}, "endpoint": {"value": "not_stated", "quote": ""}, "summary_measure": {"value": "not_stated", "quote": ""}, "intercurrent_events": {"value": "not_stated", "quote": ""}}}
+{% if history_text %}
+
+{{ history_text }}
+{% endif %}
