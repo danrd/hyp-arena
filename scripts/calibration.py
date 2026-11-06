@@ -297,6 +297,51 @@ def explore_v3(steps=(1, 2, 3), tag: str = "_v3", variant: str = "v3") -> dict:
     return out
 
 
+def compare_v32(steps=(1, 2, 3), tag: str = "_v3") -> dict:
+    """v3, v3.1 and v3.2 (hyparena/card/rules_v32.py) on the saved records, no model calls: distinct values of P, the share
+    of positive-negative pairs tied on P, tied AUC of P and V, and the sensitivity of v3.2 to its scale c (x0.5, x1.5):
+    Kendall tau with the base order and the AUC."""
+    from scipy.stats import kendalltau
+    from hyparena.backtest import tied_auc
+    from hyparena.card import rules_v32
+    from hyparena.card.models import ClaimVerification, HypothesisCard
+    us, res = {}, {}
+    for st in steps:
+        f = CAL / f"run_{st}{tag}.json"
+        if f.exists():
+            us.update({u["id"]: u for u in json.loads((CAL / f"units_{st}.json").read_text())})
+            res.update({k: v for k, v in json.loads(f.read_text()).items() if k in us})
+    items = {}
+    for h, r in res.items():
+        it = r["items"][0]
+        if not it.get("card") or not it.get("verification") or "v3" not in it:
+            continue
+        items[h] = (HypothesisCard.model_validate(it["card"]), [ClaimVerification.model_validate(c) for c in it["verification"]["claims"]],
+                    {k: ClaimVerification.model_validate(v) for k, v in (it.get("v3_alternatives") or {}).items()})
+    def stats(scores):
+        pos = [scores[h] for h in scores if us[h]["label"] == 1]
+        neg = [scores[h] for h in scores if us[h]["label"] == 0]
+        ties = sum(abs(p - q) < 1e-9 for p in pos for q in neg) / max(1, len(pos) * len(neg))
+        return {"distinct": len({round(v, 6) for v in scores.values()}), "tied_pairs": round(ties, 2),
+                "auc": round(tied_auc([(p, 0.0) for p in pos], [(q, 0.0) for q in neg]), 3)}
+    out = {"n": len(items), "pos": sum(us[h]["label"] for h in items)}
+    from hyparena.card import rules_v3
+    for var in ("v3", "v3.1"):
+        ev = {h: rules_v3.evaluate(*x, variant=var) for h, x in items.items()}
+        out[var] = {"P": stats({h: (-1.0 if e.gate == "filtered" else e.P) for h, e in ev.items()}),
+                    "V": stats({h: e.V for h, e in ev.items()})}
+    base = {h: rules_v32.evaluate(*x) for h, x in items.items()}
+    sc = lambda ev: {h: (-1.0 if e.gate == "filtered" else e.P) for h, e in ev.items()}
+    out["v3.2"] = {"P": stats(sc(base)), "V": stats({h: e.V for h, e in base.items()}),
+                   "P_interval_mean_width": round(sum(e.P_hi - e.P_lo for e in base.values()) / max(1, len(base)), 3)}
+    hs = sorted(items)
+    for f in (0.5, 1.5):
+        ev = {h: rules_v32.evaluate(*items[h], c=rules_v32.C_ANCHOR * f) for h in hs}
+        tau = kendalltau([sc(base)[h] for h in hs], [sc(ev)[h] for h in hs]).correlation
+        out["v3.2"][f"c_x{f}"] = {"tau_with_base": round(tau, 2), "P_auc": stats(sc(ev))["auc"]}
+    return out
+
+
 def lv_link_order(variant: str):
     from hyparena.card import v3_levels as lv
     return lv.SCALES["link_v31" if variant == "v3.1" else "link"]
@@ -304,7 +349,7 @@ def lv_link_order(variant: str):
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("cmd", choices=["pick", "units", "run", "score", "score-v3", "explore-v3"])
+    ap.add_argument("cmd", choices=["pick", "units", "run", "score", "score-v3", "explore-v3", "compare-v32"])
     ap.add_argument("--step", type=int, default=1)
     ap.add_argument("--config", default="configs/v2-flash.yaml")
     ap.add_argument("--tag", default="", help="suffix of the run file, e.g. _msearch")
@@ -321,6 +366,8 @@ def main() -> None:
         if os.environ.get("ALLOW_PAID") != "1":
             raise SystemExit("paid: set ALLOW_PAID=1")
         run(a.step, a.config, a.tag)
+    elif a.cmd == "compare-v32":
+        print(json.dumps(compare_v32(steps=tuple(int(x) for x in a.steps.split(",")), tag=a.tag or "_v3"), indent=1))
     elif a.cmd == "explore-v3":
         print(json.dumps(explore_v3(steps=tuple(int(x) for x in a.steps.split(",")), tag=a.tag or "_v3", variant=a.variant), indent=1))
     elif a.cmd == "score-v3":
