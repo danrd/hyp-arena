@@ -13,7 +13,9 @@ target, pathway cascades as one slot):
 - P = product of S over the slots (outcome group and pathway cascades as in v3.1), with a 90% interval from the Beta quantiles
   of each link;
 - alternative support a = max(0, 2 (S - 0.5)): continuous above "no record";
-- scope W is not a factor of V: V = P x I; W stays an indicator of ASPID.
+- scope W is not a factor of V: V = P x I; W stays an indicator of ASPID;
+- fold=True (2026-11-06, specs/v32-independence-fold-2026-11-06.yaml): records of one independence group (one trial in
+  several papers) count as one source: the heaviest fully, the rest with FOLD_REST.
 """
 from __future__ import annotations
 
@@ -28,6 +30,24 @@ from hyparena.card.models import Claim, ClaimVerification, EvidenceRecord, Hypot
 
 C_ANCHOR = 4 / 0.6
 VARIANT_BASE = "v3.1"
+FOLD_REST = 0.25        # fold=True: further records of one independence group (specs/v32-independence-fold-2026-11-06.yaml)
+
+
+def group_key(rec: EvidenceRecord) -> str:
+    return rec.reports_trial or rec.lab_or_cohort or rec.record_id
+
+
+def side_weight(recs: list[EvidenceRecord], claim: Claim, against: bool, fold: bool) -> float:
+    if not fold:
+        return sum(record_weight(r, claim, against) for r in recs)
+    groups: dict[str, list[float]] = {}
+    for r in recs:
+        groups.setdefault(group_key(r), []).append(record_weight(r, claim, against))
+    total = 0.0
+    for ws in groups.values():
+        ws.sort(reverse=True)
+        total += ws[0] + FOLD_REST * sum(ws[1:])
+    return total
 
 
 def precision(n: Optional[int]) -> float:
@@ -94,7 +114,8 @@ class V32Result:
 
 
 def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
-             alt_verifications: Optional[dict[str, ClaimVerification]] = None, c: float = C_ANCHOR) -> V32Result:
+             alt_verifications: Optional[dict[str, ClaimVerification]] = None, c: float = C_ANCHOR,
+             fold: bool = False) -> V32Result:
     base = r3.evaluate(card, ver_claims, alt_verifications, variant=VARIANT_BASE)     # gate, scope, approval, flags
     res = V32Result(gate=base.gate, scope=base.scope)
     by_id = {cv.id: cv for cv in ver_claims}
@@ -103,8 +124,8 @@ def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
         return res
     for cl in links:
         cv = by_id.get(cl.id)
-        F = sum(record_weight(r, cl, False) for r in (cv.evidence if cv else []))
-        A = sum(record_weight(r, cl, True) for r in (cv.counterevidence if cv else []))
+        F = side_weight(cv.evidence if cv else [], cl, False, fold)
+        A = side_weight(cv.counterevidence if cv else [], cl, True, fold)
         s, lo, hi = strength(F, A, c)
         if base.links.get(cl.id) == "moderate" and f"{cl.id}_established_by_approval" in base.flags:
             s, lo, hi = max(s, 5 / 6), max(lo, 5 / 6), max(hi, 5 / 6)
@@ -142,8 +163,8 @@ def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
         cv = (alt_verifications or {}).get(alt.id)
         a_claim = Claim(id=alt.id, subject=alt.subject, relation=alt.relation, object=alt.object, qualifiers=alt.qualifiers,
                         role="premise", source_span="")
-        F = sum(record_weight(r, a_claim, False) for r in (cv.evidence if cv else []))
-        A = sum(record_weight(r, a_claim, True) for r in (cv.counterevidence if cv else []))
+        F = side_weight(cv.evidence if cv else [], a_claim, False, fold)
+        A = side_weight(cv.counterevidence if cv else [], a_claim, True, fold)
         a = max(0.0, 2 * (strength(F, A, c)[0] - 0.5))
         d = max(lv.weight("discrimination", alt.on_positive), lv.weight("discrimination", alt.on_negative))
         supported |= a > 0
