@@ -189,7 +189,7 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
         it = r["items"][0]
         sc = scores.get(h, {})
         title = next((l[len("Title:"):].strip() for l in texts.get(h, "").splitlines() if l.startswith("Title:")), h)
-        base = {"id": h, "title": title, "type": unit.get(h, {}).get("type"), "completion": unit.get(h, {}).get("primary_completion"),
+        base = {"id": h, "parent": h[:-len(EVO_SUFFIX)] if h.endswith(EVO_SUFFIX) else None, "title": title, "type": unit.get(h, {}).get("type"), "completion": unit.get(h, {}).get("primary_completion"),
                 "outcome": it["outcome"], "scored": "P" in sc}
         if not it.get("card") or "P" not in sc:
             hyps[h] = base
@@ -535,6 +535,13 @@ def render(rep: dict) -> str:
     out.append(f'<p class="prose muted">{t(e(m["about_ru"]), e(m["about_en"]))}</p>')
     out.append(f'<p class="muted mono" style="font-size:.8rem">{t("Метод","Method")} {e(m["method"])} · '
                f'{t("оценено","scored")} {m["n_scored"]} / {m["n"]} · {t("хеш оценок","scores SHA-256")} {e(m["sha"][:16])}…</p>')
+    if rep.get("evolution"):
+        n_ev = sum(1 for p in rep["evolution"].values() if p.get("compare"))
+        out.append('<div class="card prose" style="border-color:var(--accent)">' + t(
+            f"В отчёт добавлены <b>{n_ev} улучшенных версий</b> гипотез: они стоят в рейтинге отдельными строками с пометкой "
+            f"«улучшенная версия». Что изменилось и почему — в разделе <a href=\"#evo\">«Эволюция»</a>.",
+            f"<b>{n_ev} improved versions</b> of hypotheses are in this report: they appear in the ranking as rows marked "
+            f"\"improved version\". What changed and why: section <a href=\"#evo\">\"Evolution\"</a>.") + '</div>')
     # 1. how to read
     out.append(f'<h2 id="read">{t("Как читать этот отчёт","How to read this report")}</h2><div class="prose">')
     out.append('<p>' + t(
@@ -629,7 +636,8 @@ def render(rep: dict) -> str:
                       (", ".join(tn(IND_NAMES.get(ind, (ind, ind))) for ind, _ in ups) or "—") + '</span>'
             q = e((x["title"] + " " + h).lower())
             out.append(f'<tr class="{"lead" if lead else ""}" data-type="{e(x.get("type"))}" data-q="{q}"><td class="n" data-v="{rk}">{rk}</td>'
-                       f'<td class="title"><a href="#h-{e(h)}">{e(x["title"][:90])}</a><br><span class="muted mono">{e(h)}</span> · '
+                       f'<td class="title">' + (f'<span class="chip ok">{t("улучшенная версия","improved version")}</span> ' if x.get("parent") else "") +
+                       f'<a href="#h-{e(h)}">{e(x["title"][:90])}</a><br><span class="muted mono">{e(h)}</span> · '
                        f'<span class="muted">{tn(TYPE_NAMES.get(x.get("type"), ("—","—")))}</span>{why}</td>'
                        f'<td class="n" data-v="{x["aspid"][p]}">{fmt(x["aspid"][p], 3)}</td><td class="n" data-v="{x["p_top5"][p]}">{fmt(x["p_top5"][p])}</td>' +
                        "".join(cell(ind, x) for ind in inds) + '</tr>')
@@ -789,6 +797,9 @@ def render(rep: dict) -> str:
     return "\n".join(out)
 
 
+EVO_SUFFIX = "+evo"
+
+
 def prospective(n: int = 60) -> tuple[dict, str]:
     from scripts.ctgov_outcomes import KG
     d = KG / "hypothesis_sources" / "prospective"
@@ -802,8 +813,23 @@ def prospective(n: int = 60) -> tuple[dict, str]:
                         "по 15 на тип вмешательства. Оценены до появления результатов; оценки зафиксированы хешем.",
             "about_en": "ClinicalTrials.gov trials with ageing itself among the conditions, primary completion November 2026 – December 2028; "
                         "15 per intervention type. Scored before any result; the scores are frozen with a hash."}
-    rep = build(run, json.loads(sb), json.loads((d / f"units_{n}.json").read_text()), texts, meta)
+    scores = json.loads(sb)
+    units = json.loads((d / f"units_{n}.json").read_text())
     evo_p = d / f"evolution_{n}.json"
+    if evo_p.exists():                                  # improved versions join the ranking as their own rows
+        unit_by = {u["id"]: u for u in units}
+        for u, p in json.loads(evo_p.read_text())["pairs"].items():
+            cr = p.get("child_run") or {}
+            child = (cr.get("items") or [{}])[0]
+            if not child.get("card"):
+                continue
+            cid = u + EVO_SUFFIX
+            run = {**run, cid: {"items": [child], "meta": {**cr.get("meta", {}), "as_of": run[u]["meta"].get("as_of")}}}
+            scores[cid] = {"endpoint_clinical": p.get("child_endpoint"), "trend_pubmed": scores.get(u, {}).get("trend_pubmed"),
+                           "ai_role": child["card"].get("ai_role", "none"), "P": 0}
+            units.append({**unit_by.get(u, {}), "id": cid})
+            texts[cid] = p.get("child_text", "")
+    rep = build(run, scores, units, texts, meta)
     if evo_p.exists():
         from hyparena.card import evolve_v3
         evo = json.loads(evo_p.read_text())["pairs"]
