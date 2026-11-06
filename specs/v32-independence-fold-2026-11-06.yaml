@@ -1,0 +1,17 @@
+id: v32-independence-fold-2026-11-06
+written_on: '2026-11-06'
+status: registered before computing
+why: >-
+  v3.2 sums the weights of all records on a link, so several papers of one trial (primary report, secondary analysis,
+  follow-up) count as several sources. The OHF independence groups (verifier, v3 templates: one NCT/ISRCTN id in the
+  abstract) were used only by the v3 "strong" level and the ASPID indicator independent_outcome (user question 2026-11-06).
+rule: >-
+  rules_v32.evaluate(..., fold=True): records of one independence group (reports_trial, else lab_or_cohort, else
+  record_id) are folded separately on the side for and against: the heaviest record counts fully, each further record of
+  the group with factor FOLD_REST = 0.25. Records saved before the verifier set groups get the same key offline (one trial
+  id in the cached abstract), as the verifier now does.
+data: saved records, calibration steps 1-3 and fresh steps 4-5; no model calls
+criterion: >-
+  a correction of the device, not a search for gain: adopted for the prospective pilot unless P tied AUC drops by more than
+  0.03 on either the calibration (1-3) or the fresh sample (4-5) against v3.2 without folding. Also reported: links whose
+  F or A changes, units whose P changes.
