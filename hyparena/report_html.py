@@ -25,7 +25,7 @@ from hyparena.card import rules_v32 as r32
 from hyparena.card.models import ClaimVerification, HypothesisCard
 
 PROFILE_NAMES = {"evidence": ("Доказательность", "Evidence"), "evolution": ("Потенциал развития", "Room to grow"),
-                 "funding": ("Готовность к финансированию", "Ready to fund"), "investor": ("Инвестор (черновик)", "Investor (draft)")}
+                 "funding": ("Финансирование", "Funding")}
 IND_NAMES = {
     "P": ("правдоподобие механизма", "plausibility of the mechanism"),
     "I": ("информативность эксперимента", "informativeness of the experiment"),
@@ -63,8 +63,8 @@ ORDINAL = {"W": ("local", "organ", "hallmark"), "endpoint_clinical": ("biomarker
 
 
 TIPS = {
-    "P": ("Правдоподобие механизма, от 0 до 1: произведение силы звеньев цепочки. Звено без данных — 0.5, с данными «за» — выше, «против» — ниже. Полоска — 90%-й интервал: широкий, когда о звеньях мало известно.",
-          "Plausibility of the mechanism, 0 to 1: the product of the links' strengths. A link without data is 0.5, with data for higher, against lower. The bar is the 90% interval: wide when little is known."),
+    "P": ("Правдоподобие механизма, от 0 до 1: произведение силы звеньев цепочки. Звено без данных — 0.5, с данными «за» — выше, «против» — ниже. Под числом — 90%-й интервал: широкий, когда о звеньях мало известно.",
+          "Plausibility of the mechanism, 0 to 1: the product of the links' strengths. A link without data is 0.5, with data for higher, against lower. Below the number: the 90% interval, wide when little is known."),
     "I": ("Информативность эксперимента, от 1/3 до 1: сколько подкреплённых литературой альтернативных объяснений отсечёт заявленный эксперимент. 1/3 — ни одного.",
           "Informativeness, 1/3 to 1: how many literature-supported alternative explanations the stated experiment rules out. 1/3: none."),
     "I_headroom": ("Запас информативности: какой была бы информативность, если бы эксперимент отсекал все подкреплённые альтернативы. Показывает, сколько можно выиграть, улучшив дизайн.",
@@ -457,7 +457,8 @@ def render(rep: dict) -> str:
     def cell(ind, x):
         v = x["values"].get(ind)
         if ind == "P":
-            return f'<td class="n" data-c="P" data-v="{x["P"]}">{pbar(x["P"], x["P_lo"], x["P_hi"])}{fmt(x["P"])}</td>'
+            return (f'<td class="n" data-c="P" data-v="{x["P"]}">{fmt(x["P"])}<br><span class="muted" style="font-size:.78rem">'
+                    f'{fmt(x["P_lo"])}–{fmt(x["P_hi"])}</span></td>')
         if ind == "W":
             return f'<td data-c="W" data-v="{ORDINAL["W"].index(v) if v in ORDINAL["W"] else -1}">{tn(SCOPE_NAMES.get(v, (str(v),)*2))}</td>'
         if ind == "endpoint_clinical":
@@ -553,7 +554,7 @@ def render(rep: dict) -> str:
         out.append('<div class="chain">' + '<span class="arrow">→</span>'.join(parts) + '</div>')
         if len(outs_) > 1:
             out.append(f'<p class="muted" style="font-size:.85rem">{t("Параллельные исходы (масса, сила, функция) — одно звено: в P входит основной исход заявленного эксперимента, а если его нельзя выделить — среднее.","Parallel outcomes (mass, strength, function) are one link: P takes the primary outcome of the stated experiment, or their mean when none can be singled out.")}</p>')
-        rows = [("P", f'{pbar(x["P"], x["P_lo"], x["P_hi"])}<span class="mono">{fmt(x["P"])} [{fmt(x["P_lo"])}; {fmt(x["P_hi"])}]</span>'),
+        rows = [("P", f'<span class="mono">{fmt(x["P"])} [{fmt(x["P_lo"])}; {fmt(x["P_hi"])}]</span>'),
                 ("I", f'<span class="mono">{fmt(x["I"])}</span>'), (t("Размах","Scope"), tn(SCOPE_NAMES.get(x["scope"], (x["scope"],)*2))),
                 (t("Конечная точка","Endpoint"), tn(ENDPOINT_NAMES.get(x.get("endpoint_clinical"), ("—","—")))),
                 (t("Роль ИИ","AI role"), tn(AI_NAMES.get(x.get("ai_role") or "none"))),
@@ -668,7 +669,7 @@ def prospective(n: int = 60) -> tuple[dict, str]:
     sb = (d / f"scores_{n}.json").read_bytes()
     texts = {json.loads(l)["id"]: json.loads(l)["text"] for l in open(d / f"texts_{n}.jsonl")}
     meta = {"pool": f"prospective-{n}", "date": "2026-11-06", "sha": hashlib.sha256(sb).hexdigest(),
-            "method": "v3.2 (fold), normalize_card/v10, verify_claim/v9, ASPID trial-2 + investor draft-1",
+            "method": "v3.2 (fold), normalize_card/v10, verify_claim/v9, ASPID: evidence trial-2, evolution trial-2, funding trial-3",
             "title_ru": f"Проспективный пул: {n} идущих испытаний", "title_en": f"Prospective pool: {n} ongoing trials",
             "about_ru": "Испытания на ClinicalTrials.gov, где среди состояний — само старение, с завершением в ноябре 2026 — декабре 2028; "
                         "по 15 на тип вмешательства. Оценены до появления результатов; оценки зафиксированы хешем.",

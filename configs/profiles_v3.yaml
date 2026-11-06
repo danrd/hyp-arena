@@ -19,12 +19,7 @@ profiles:
     indicators: [I_headroom, P, W, best_design_outcome, independent_outcome, against_share]
     tiers: [[I_headroom], [P], [W], [best_design_outcome, independent_outcome, against_share]]
   funding:
-    version: "trial-2"
-    description: "Ready to fund: plausibility, then feasibility, then informativeness, then reach."
-    indicators: [P, feasibility, I, W, best_design_outcome, independent_outcome, against_share, endpoint_clinical]
-    tiers: [[P], [feasibility], [I], [W], [best_design_outcome, independent_outcome, against_share, endpoint_clinical]]
-  investor:
-    version: "draft-1"
-    description: "Attractive to fund (Open Longevity lead, 2026-11-06): plausibility, then rising attention and the role of AI, then feasibility, then informativeness and how clinical the endpoint is. A draft: the order is to be agreed."
-    indicators: [P, trend_pubmed, ai_role, feasibility, I, endpoint_clinical]
-    tiers: [[P], [trend_pubmed, ai_role], [feasibility], [I, endpoint_clinical]]
+    version: "trial-3"
+    description: "Ready to fund (merged with the investor draft, user decision 2026-11-06): plausibility, then feasibility, then rising attention and the role of AI, then informativeness, then reach and the refinements."
+    indicators: [P, feasibility, trend_pubmed, ai_role, I, W, endpoint_clinical, best_design_outcome, independent_outcome, against_share]
+    tiers: [[P], [feasibility], [trend_pubmed, ai_role], [I], [W, endpoint_clinical, best_design_outcome, independent_outcome, against_share]]
