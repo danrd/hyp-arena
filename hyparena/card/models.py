@@ -194,6 +194,10 @@ class HypothesisCard(BaseModel):
     proposed_alternatives: list[ProposedAlternative] = Field(default_factory=list)   # v3, model-proposed (separate step)
     declared_decision_criteria: str = UNKNOWN
     risks: list[str] = Field(default_factory=list)
+    # normalize_card/v10 (method-v3.md section 13): the role of AI in the hypothesis, with the verbatim span that states it;
+    # code sets "none" when the span is not in the text. An ordinal indicator of the investor profile, not part of P or V.
+    ai_role: Literal["none", "analysis", "in_the_loop", "intervention"] = "none"
+    ai_role_span: str = ""
 
     @field_validator("declared_alternatives", mode="before")
     @classmethod
