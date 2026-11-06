@@ -1,6 +1,6 @@
 id: prospective-pilot-2026-11-06
 written_on: '2026-11-06'
-status: registered, not run
+status: run and frozen 2026-11-06 (outcomes pending)
 what: 'pilot of the prospective pool (method-v3.md section 10): 60 ongoing CT.gov
   trials on ageing itself, primary completion 2026-11 .. 2028-12, scored before any
   outcome exists'
@@ -52,3 +52,13 @@ amendments_before_scores:
     (endpoint_clinical in the lowest tier of evidence and funding; specs/estimand-2026-11-06.yaml); the endpoint category
     is extracted from the 60 texts by both families (scripts/prospective.py estimand, about 120 calls, 0.15 USD), unknown
     when they disagree. Decided by the user while the run was in progress; no outcome exists, no score was computed yet.
+run_result:
+  units: 60
+  calls: 1294 (about 3.2 USD) + estimand extraction 120 calls (about 0.15 USD)
+  outcomes: {ranked: 53, filtered: 4, known_result: 2, needs_refinement: 1}
+  errors_after_retry: 0 (the run was stopped twice by the environment and resumed; no unit was repeated)
+  checks_now:
+    run_health: passed (cards parsed 60/60, scored 59/60, needs_refinement 1, errors 0)
+    ties: passed (7.1% of pairs of P tied at 3 digits, 37 distinct values among 55 units through the gate)
+    ai_role: {none: 56, analysis: 2, intervention: 1}
+  frozen: specs/prospective-2026-11-06.yaml, scores_sha256 45300a76cdd42110134a319710329f76104ffcf4a34aaad00022fb8dea9e84a9
