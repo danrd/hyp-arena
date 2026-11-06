@@ -37,6 +37,11 @@ SPECS = {
                                        levels=("biomarker", "patient_reported", "function", "clinical_event"),
                                        note="how close the trial's primary endpoint is to a clinical outcome (estimand check, "
                                             "specs/estimand-2026-11-06.yaml); unknown when the two families disagree"),
+    "trend_pubmed": IndicatorSpec("trend_pubmed", "cardinal", bounds=(-0.5, 1.5),
+                                  note="rising attention: log ratio of PubMed records on the intervention, last 3 years vs the "
+                                       "3 before, net of PubMed growth (specs/trend-genetics-2026-11-06.yaml); clipped to the bounds"),
+    "ai_role": IndicatorSpec("ai_role", "ordinal", levels=("none", "analysis", "in_the_loop", "intervention"),
+                             note="role of AI in the hypothesis (normalize_card/v10, verbatim span or none)"),
 }
 
 
@@ -52,7 +57,8 @@ def values_of(v3: dict, extra: Optional[dict] = None) -> dict:
     e = extra or {}
     return {"P": max(P_FLOOR, v3["P"]), "W": v3["scope"], "I": v3["I"], "I_headroom": v3["headroom_I"],
             **{k: e.get(k) for k in ("feasibility", "best_design_outcome", "independent_outcome", "against_share",
-                                    "endpoint_clinical")}}
+                                    "endpoint_clinical", "ai_role")},
+            "trend_pubmed": None if e.get("trend_pubmed") is None else min(1.5, max(-0.5, e["trend_pubmed"]))}
 
 
 def rank(results: dict[str, tuple[dict, Optional[dict]]], profile: str, K: int = 10000, seed: int = 0) -> Optional[AggregationResult]:

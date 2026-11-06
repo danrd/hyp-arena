@@ -7,7 +7,7 @@ def _r(P, scope, I, H=None, gate="pass", feas=None):
 
 
 def test_profiles_load_and_a_low_plausibility_is_not_compensated():
-    assert set(a.load()) == {"evidence", "evolution", "funding"}
+    assert set(a.load()) == {"evidence", "evolution", "funding", "investor"}
     res = {"A": _r(0.5, "hallmark", 0.8, 1.0, feas="1"), "B": _r(0.03, "hallmark", 1.0), "C": _r(0.4, "local", 1 / 3),
            "F": _r(0.9, "organ", 0.6, gate="filtered")}
     for p in ("evidence", "funding"):
