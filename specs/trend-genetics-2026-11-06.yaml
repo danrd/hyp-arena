@@ -1,0 +1,37 @@
+id: trend-genetics-2026-11-06
+written_on: '2026-11-06'
+status: registered before computing
+origin: >-
+  user decision 2026-11-06 after the Eternal Search presentation "Спектр борьбы со смертью" (Open Longevity, snapshot
+  2026-09-17): "мода в Longevity" (capital follows a rising interest) and human genetics as a priority filter
+  (Minikel et al., Nature 2024). Network proximity (SHARP, Gross et al., Nature Aging 2026) is a separate task
+  (docs/tasks/network-proximity.md), not here.
+data: >-
+  units with v3 results: calibration steps 1-5 (as of their dates) and the prospective pilot (as of 2026-11-06);
+  no model calls; PubMed E-utilities, ClinicalTrials.gov API v2, OpenGenes (open-genes.com/api, snapshot 2026-11-06)
+indicators:
+  trend_pubmed: >-
+    term = the card's first intervention label (parentheses removed) as a phrase in [tiab]; if the two windows have fewer
+    than 5 hits together, the content words (4+ letters, no stop words) joined by AND in [tiab]; fewer than 5 again ->
+    unknown. Windows by publication date: A = [T-3y, T), B = [T-6y, T-3y). trend = ln((a+1)/(b+1)) - ln(N_A/N_B), N =
+    all PubMed records in the window (growth of the field removed). Higher = rising interest.
+  trend_trials: >-
+    the same term in ClinicalTrials.gov interventions (query.intr), trials by start date in A and B;
+    ln((a+1)/(b+1)); unknown when a+b < 3. Secondary.
+  genetic_support: >-
+    targets = genes of the ChEMBL mechanism targets of the card's compounds (gene symbols among the target names) plus
+    claim subjects / objects that are gene symbols or OpenGenes aliases; level: none (targets found, none in OpenGenes) <
+    aging_gene (in OpenGenes, no human association) < human_genetic (OpenGenes cause "Association of genetic variants and
+    gene expression levels with longevity" or "Association of the gene with accelerated aging in humans"); unknown when no
+    target gene is found (programmes, devices). Snapshot 2026-11-06: for the retrospective units it may contain later
+    findings (stated limitation; for the prospective pool it is as of T).
+conditions:
+  reliability: computed by code from public data (condition 1 by construction); reported - share of units with a value
+  separation: trend - at least 3 distinct values and no value above 70%; genetic_support - at least 2 levels with 20%+ among known
+  non_redundancy: |Spearman| < 0.7 with P (v3.2 fold), I, scope, feasibility, momentum, endpoint_clinical where known
+  own_question: >-
+    trend - is the direction gaining attention (investor profile; not plausibility); genetic_support - does human genetics
+    back the intervention's target (evidence profile, lowest tier). Outcome AUC for orientation only, not decisive.
+decision: >-
+  passing indicators enter ASPID: trend_pubmed in a draft "investor" profile (trial-1), genetic_support in the lowest tier
+  of evidence; both before the pilot scores are frozen
