@@ -1,6 +1,6 @@
 id: trend-genetics-2026-11-06
 written_on: '2026-11-06'
-status: registered before computing
+status: computed 2026-11-06 (after this file was committed)
 origin: >-
   user decision 2026-11-06 after the Eternal Search presentation "Спектр борьбы со смертью" (Open Longevity, snapshot
   2026-09-17): "мода в Longevity" (capital follows a rising interest) and human genetics as a priority filter
@@ -35,3 +35,24 @@ conditions:
 decision: >-
   passing indicators enter ASPID: trend_pubmed in a draft "investor" profile (trial-1), genetic_support in the lowest tier
   of evidence; both before the pilot scores are frozen
+code_changes_before_results:
+- partial dates of T (YYYY-MM, YYYY) read as the first day
+- trend_trials: labels longer than 6 words and queries CT.gov answers with 400 are unknown (a long descriptive label of a
+  programme gave HTTP 400); seen before any value was computed
+- genetic_support: claim entities matched on OpenGenes official symbols only, ChEMBL target names only where the name
+  is the official symbol (an alias "NAD" matched a gene and "DMD" a medical food); found on the first computed output,
+  changes 1 of 7 values
+result:
+  units: 111 (calibration 23, fresh 40, prospective 48 done at the time)
+  trend_pubmed: {known: 80, share_known: 0.72, distinct: 78, top_share: 0.05, median: 0.20,
+                 spearman_max_abs: 0.19 (momentum), with_P: 0.12, with_I: 0.0, with_endpoint: 0.15,
+                 orientation_auc: '0.563 (19 / 26)'}
+  trend_trials: {known: 74, share_known: 0.67, spearman_with_trend_pubmed: 0.19, orientation_auc: '0.514 (17 / 25)'}
+  genetic_support: {known: 7, share_known: 0.06, levels: {none: 4, aging_gene: 2, human_genetic: 1}}
+  verdict:
+    trend_pubmed: admitted; draft investor profile (configs/profiles_v3.yaml, draft-1). Limitation - for programmes the
+      fallback query is the label's content words, which measures attention to a generic topic ("multicomponent AND
+      structured AND physical")
+    trend_trials: not admitted (secondary; less coverage, nearly unrelated to the PubMed trend, nothing it adds to it)
+    genetic_support: not admitted - non-redundancy cannot be measured on 7 known values; registry trials are mostly
+      programmes without a target gene. Kept in code for compound hypotheses (KG, DrugAge), where coverage is high

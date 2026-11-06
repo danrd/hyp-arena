@@ -147,8 +147,11 @@ def score(n: int = 60) -> dict:
         e = rules_v32.evaluate(card, claims, alts, fold=True)
         ext = v3_extra.extras(card, claims, it["v3"], r["meta"].get("as_of") or "")
         ext["endpoint_clinical"] = endpoint_clinical(n, h)
+        from hyparena.card import trend_genetics as tg
+        ext["trend_pubmed"] = tg.trend_pubmed(card, r["meta"].get("as_of") or dt.date.today().isoformat())[0]
+        ext["ai_role"] = card.ai_role
         rows[h] = {"outcome": it["outcome"], "gate": e.gate, "P": e.P, "P_lo": e.P_lo, "P_hi": e.P_hi, "I": e.I, "V": e.V,
-                   "scope": e.scope, "ai_role": card.ai_role, "endpoint_clinical": ext["endpoint_clinical"], "links": len(e.links), "weakest": e.weakest}
+                   "scope": e.scope, "ai_role": card.ai_role, "endpoint_clinical": ext["endpoint_clinical"], "trend_pubmed": ext["trend_pubmed"], "links": len(e.links), "weakest": e.weakest}
         ax[h] = ({"P": e.P, "scope": e.scope, "I": e.I, "headroom_I": it["v3"]["headroom_I"], "gate": e.gate}, ext)
     for prof in aspid_v3.load():
         agg = aspid_v3.rank(ax, prof, K=10000)
