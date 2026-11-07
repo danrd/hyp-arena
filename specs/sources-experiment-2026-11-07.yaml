@@ -8,7 +8,7 @@ why: >-
   exists; a hand check of a sample).
 units: ["NCT06160141", "NCT06407583", "NCT03240094", "NCT01365104", "NCT04598464", "NCT03212859", "NCT07864831", "NCT06975540", "NCT02923843", "NCT00935493", "NCT01417663", "NCT06878001", "NCT05685667", "NCT05870046", "NCT02787889"]   # 15 calibration trials (8 positive, 7 null), NCT, not used in the Argon pack 2; SHA-256 order within label
 arms:
-  A_abstracts: the current pipeline (configs/v3-flash-n10.yaml runs already saved) and its next version with the exact-population query (configs/v3-flash-n11.yaml, rerun of these 15: paid, price before the run)
+  A_abstracts: "the current pipeline (configs/v3-flash-n10.yaml runs already saved) and its next version with the exact-population query (configs/v3-flash-n11.yaml, rerun of these 15: paid, price before the run)"
   B_full_texts: the same pipeline, the verifier reading PMC open-access full texts (methods and results) where they exist, abstracts otherwise; only extracted fields are stored (paid, price before the run)
   C_graph: Argon's knowledge graph for the same links (pack 3, task C) fed to the same v3.4 rules as records
 gold: Argon's labels of our records (pack 3, task D), re-checked; plus the three hand-labelled extraction sets already used
