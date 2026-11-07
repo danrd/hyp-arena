@@ -16,9 +16,11 @@ section 10. Rules for a model writing such a report:
 
 - Score only what the literature you were given says; every record needs a PMID and a verbatim quote. A record you cannot
   quote does not exist.
-- Use the scales and formulas of sections 5-7 exactly; show the arithmetic for P, I and V.
+- Use the scales and formulas of sections 5-7 exactly; show the arithmetic for P, the support share, I and V, and the record
+  that sets the novelty level.
 - Do not predict the outcome of the trial; P is plausibility of the mechanism given the literature, not a forecast.
-- When in doubt between two levels, take the lower one and say why.
+- When in doubt between two levels, take the lower one and say why. For novelty, take the level nearer the known: a paper you
+  were not given may exist, and missing data are never novelty.
 - A report written this way is an approximation. The authoritative report is the one the code builds
   (`python -m hyparena.analyze RUN.json`), from the same rules and the records the verifier extracted.
 
@@ -44,8 +46,8 @@ importance, weights are drawn at random under that order, and a hypothesis gets 
 being in the top. A near-zero P is not compensated (P and I are on log scales). V is reported as one reference point, not
 as the ranking.
 
-Only P is meant to track trial outcomes; I, W and V describe what a result would teach, whatever it is. Validation status
-is in section 12.
+Only P is meant to track trial outcomes; I, W and V describe what a result would teach, whatever it is; novelty N says how far
+the question is from what was already asked. Validation status is in section 12.
 
 ## 2. Inputs
 
@@ -98,14 +100,14 @@ returns records:
 
 `w = design × precision × effect × comparison × context`.
 
-| Factor | v3.2 | |
+| Factor | Levels (v3.2–v3.4) | |
 |---|---|---|
 | design, claim about humans (outcome link) | cells, animal, observational, review, non-randomised, meta-analysis, RCT | 1/7 … 7/7 |
 | design, every link before the outcome, or a claim about animals | cells, review, primary study | 1/3, 2/3, 1 |
-| precision | min(1, ln n / ln 300), at least 1/4; unknown n = 1/4 | continuous |
+| precision | outcome link: min(1, ln n / ln 300), at least 1/4, unknown n = 1/4; links before the outcome: 1/2 (v3.4) | continuous |
 | effect | where the phrase gives a ratio or a standardised difference: d = abs(ln ratio) × √3 / π or abs(d), weight 1/4 + 3/4 × min(1, d / 0.8); otherwise the rule-A class: none, small, medium, large = 1/4 … 4/4, unclear 1/2 | continuous or class |
 | comparison | none, within group, between groups | 1/3, 2/3, 1 |
-| context | same class of intervention, adjacent population or species, exact | 1/3, 2/3, 1 |
+| context | same class of intervention, adjacent population or species, exact (v3.4: another species alone is not adjacent on the outcome link of a human claim) | 1/3, 2/3, 1 |
 
 A record against (a null or opposite result from a comparison) takes the top effect weight: a clear null weighs like a
 clear positive. A record about another intervention altogether weighs 0. Retracted papers weigh 0.
@@ -278,9 +280,10 @@ Russian and English in one page, style of the project site). Order:
 
 Reports on private hypotheses stay in the private repository (`longevity-kg`).
 
-**A report written by a model from this manual** (section 0) follows the same order for one hypothesis: summary (P with
-interval, support share, I, scope, places if there is a pool), the chain table (id, type, claim, S with interval, F / A, main
-records), why (what lifts, what lowers, the alternatives), what to improve (actions with the score they would give),
+**A report written by a model from this manual** (section 0) follows the same order for one hypothesis: summary (P, support
+share, novelty with the record that sets it, I, scope, places under the four profiles if there is a pool), the chain table
+(id, type, claim, S with interval, R, F / A, link novelty level, main records), why (what lifts, what lowers, the
+alternatives), what to improve (actions with the score they would give, and the change of novelty they would cost),
 limitations, provenance. The older one-hypothesis report by code (`python -m hyparena.analyze`) still uses the v3 / v3.1
 levels.
 
@@ -313,7 +316,7 @@ the same way as every hypothesis. Two purposes need two modes; as of 2026-11-06 
 
 In the implemented mode one model call (prompt `evolve_v3/v1`) rewrites the registered text from the parent text and the
 items' facts; code rejects a copy of the parent and a change of intervention; the improved text then goes through card,
-PubMed, alternatives and the endpoint extraction by two model families, and is scored by v3.3 and ASPID. About 21 model
+PubMed, alternatives and the endpoint extraction by two model families, and is scored by the current rules (v3.4) and ASPID. About 21 model
 calls per improved hypothesis (31 in the first run).
 
 **First run** (2026-11-06, `specs/evolution-v3-pilot-2026-11-06.yaml`): the top 10 of the pilot under the evidence
@@ -342,8 +345,9 @@ the expected change of each item against the change obtained, the mechanism link
 the end, the mean change of the score by kind of item. Hypotheses without an improved version are listed with the reason.
 The improved versions also appear in the ranking (section 10).
 
-**Limits.** Evolution in the implemented and controlled modes makes no new evidence: P can rise only by fitting the text to
-what was already found, and a rise of I is a design that is still to be carried out. The improved text is written from the
+**Limits.** Evolution in the implemented and controlled modes makes no new evidence: P can rise only by moving the text away
+from what the data are against, the support share only by fitting the text to what was already found (which is exactly the
+drift towards the known that the novelty flag shows), and a rise of I is a design that is still to be carried out. The improved text is written from the
 findings of the verifier that then scores it (circular), so a rise of the score says what to change, not that the
 hypothesis became better. In the free mode new evidence counts only when the verifier finds it; the writer's own knowledge
 reaches past the cut-off date, so the free mode is for current pools (scored as of today), not for retrospective samples.
@@ -358,8 +362,22 @@ modes.
   from interventions of the same kind is often missed, so P is biased down for programmes and behavioural interventions.
 - Abstracts by default; full texts only where a knowledge-graph row says so.
 - Alternatives come from a model, not yet from the knowledge graph.
+- P (v3.4) is 1 for about two thirds of registry hypotheses: it says "nothing refutes it" and nothing more; the order among
+  them comes from the support share, I and the other indicators of the profile.
+- Novelty depends on the verifier's recall: a paper it missed makes a hypothesis look newer than it is (about 40% of
+  relevant papers are missed). Novelty is therefore an upper estimate; the "known result" gate catches only exact matches.
+- Novelty is read off the outcome link first: a known effect with a new mechanism counts as new context, not as new.
 
-**Validation status (2026-11-06).**
+**Deferred from the outside review (2026-11-07), each paid or an inflation risk:**
+- I depends on alternatives already published, so a new field gets I = 1/3 even for a well-built experiment. Planned: a
+  second half of I for the rigour of the design (controls, blinding, factorial or dose and timing inversion), scored by two
+  model families with only agreement counted, since a well-described experiment is cheap to write.
+- Opposite effects in different regimes (timing, dose, polarity) are read as a conflict ("contested"). Planned: the regime
+  of the intervention in the verifier's extraction, F and A summed only within comparable regimes.
+- Every unchecked link starts at S 0.5. Planned only as a prior from databases by code (target evidence in OpenTargets or
+  ChEMBL), in narrow bounds about 0.4–0.6 and after the admission check; never a model's judgement.
+- Precision from full texts (PMC open access, numbers only) instead of the constant before the outcome.
+**Validation status (2026-11-07).**
 
 | Check | Result |
 |---|---|
