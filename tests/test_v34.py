@@ -130,3 +130,9 @@ def test_population_query_for_a_specific_population_only():
     assert q and "presarcopenia[tiab]" in q and '"pre-sarcopenic"[tiab]' in q and "training[tiab]" in q
     c.pico.population.label = "older adults"
     assert population_query(c.claims[0], c) is None
+
+
+def test_effect_parser_reads_formats_found_in_the_blind_comparison():
+    from hyparena.card.effect_class import from_phrase
+    assert from_phrase("SMD = .67 ± .57") == "medium"
+    assert from_phrase("- 1.20 standardised mean difference (SMD), 95% CI") == "large"

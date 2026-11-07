@@ -74,7 +74,7 @@ def effect_weight(rec: EvidenceRecord, against: bool) -> float:
     for rx, kind in ((_RATIO, "ratio"), (_FOLD, "ratio"), (_SMD, "d")):
         m = rx.search(p)
         if m:
-            x = float(m.group(1))
+            x = float(next(g for g in m.groups() if g).replace(" ", ""))
             if kind == "ratio" and x > 0:
                 d = abs(math.log(x)) * math.sqrt(3) / math.pi
             elif kind == "d":

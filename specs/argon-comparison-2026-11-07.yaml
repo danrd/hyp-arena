@@ -1,0 +1,33 @@
+id: argon-comparison-2026-11-07
+what: >-
+  Blind comparison with an outside reader (Argon) working from docs/method-v3-manual.md (v3.4). Files in longevity-kg
+  reviews/argon-2026-11-07/ (private: they hold abstract quotes).
+task_a_same_records:
+  setup: our chains and our 22 records of three prospective hypotheses; Argon only re-reads each record.
+  agreement: {stance: 22/22, comparison: 22/22, n_total: 22/22, design: 21/22, intervention_match: 19/22, effect_class: 17/22, population_match: 12/22}
+  findings:
+    - >-
+      population: our verifier marked records in sarcopenia, or in older adults generally, as the exact population of a
+      pre-sarcopenia trial (10 of 10 disagreements go this way); by the manual's reading rule 5 they are adjacent. Our
+      verifier is too lenient on population.
+    - >-
+      effect class: our code leaves "unclear" or "small" where the phrase gives a large standardised difference in a form
+      the parser misses ("- 1.20 SMD" with a space, several SMDs where the first is small, "Mean 23%"); Argon read large.
+      Fixable by code (effect_class parser), free.
+    - "intervention match: 3 disagreements on stimulation devices (another stochastic stimulator: exact or class)."
+  net: the same records weigh a little more in Argon's reading (effect) and a little less (population); stance never differs.
+task_b_known_outcomes:
+  setup: 6 calibration trials chosen among our errors (3 positives with a low P, 3 nulls with a high P), scored in full by Argon.
+  result: >-
+    P AUC on these 6: Argon 0.56, ours 0.00 by construction (the trials were chosen where we were wrong); not a fair test.
+    Argon finds more records (support share 0.26-0.59 vs ours 0.00-0.24) and finds data against two of the three nulls
+    (phosphatidic acid P 0.23, mouth care P 0.51) where we found none; it also gives a low P to one positive (Otago exercise,
+    0.23). Novelty: Argon reads all six as new context (it finds same-intervention records), ours analog or unknown.
+  reading: the main gap is search recall, not the rules; the exact-population query (configs/v3-flash-n11.yaml) and the
+    population rule address part of it.
+next: fix the effect-class parser (free); tighten the population field in the verifier prompt (needs a rerun to check).
+done_2026_11_07:
+  effect_parser: >-
+    hyparena/card/effect_class.py: numbers without a leading zero (".67") and a standardised difference written before its
+    name ("- 1.20 standardised mean difference (SMD)") are read; the record weight (rules_v32.effect_weight) uses the same
+    patterns. A dated rule change: scores computed after 2026-11-07 use it.

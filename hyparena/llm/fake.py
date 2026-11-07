@@ -175,6 +175,9 @@ class FakeLLMClient:
         return json.dumps({"text": parent + "\nMechanism: a fake new pathway.\nDecisive experiment: a fake factorial trial.",
                            "cited_pmids": ["12345678"], "changes": [{"what_changed": "fake", "why": "fake"}]})
 
+    def _predict_outcome(self, rng, prompt, n):
+        return json.dumps({"confirmed": "yes", "probability": 0.6, "reason": "fake", "knows_result": "no"})
+
     def _search_queries(self, rng, prompt, n):
         return json.dumps({"queries": []})                  # no queries: the keyword search fills up (search.py)
 

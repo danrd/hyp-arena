@@ -19,11 +19,13 @@ from __future__ import annotations
 import re
 
 CLASSES = ("none", "small", "medium", "large", "unclear")
-_NUM = r"(-?\d+(?:\.\d+)?)"
+_NUM = r"(-?(?:\d+(?:\.\d+)?|\.\d+))"            # 2026-11-07: also ".67" (no leading zero)
 _RATIO = re.compile(r"\b(?:odds ratio|risk ratio|relative risk|hazard ratio|rate ratio|OR|aOR|RR|aRR|HR|aHR|IRR)\b"
                     r"\s*(?:\[[^\]]*\]|\([^)]*\))?\s*(?:=|:|of|was|is)?\s*" + _NUM, re.I)
 _FOLD = re.compile(r"(\d+(?:\.\d+)?)\s*-?\s*fold\b", re.I)
-_SMD = re.compile(r"(?:\bCohen'?s\s+d|\bHedges'?\s+g|\bSMD\b|\beffect size\b|\bd\b|\bg\b)\s*(?:=|:|of|was)?\s*" + _NUM, re.I)
+_SMD = re.compile(r"(?:\bCohen'?s\s+d|\bHedges'?\s+g|\bSMD\b|\beffect size\b|\bd\b|\bg\b)\s*(?:=|:|of|was)?\s*" + _NUM
+                  # 2026-11-07: also the number before the name, "- 1.20 standardised mean difference (SMD)"
+                  + r"|(-?\s?\d+(?:\.\d+)?)\s*(?:\(|\[)?\s*(?:standardi[sz]ed mean difference|SMD)\b", re.I)
 _PCT_WORD = r"(?:increase|increased|decrease|decreased|reduction|reduced|higher|lower|improvement|improved|gain|loss|rise|drop|change)"
 _P = r"\s*(?:(?:±|\+/-|\+-)\s*\d+(?:\.\d+)?\s*)?(?:%|percent\b|per cent\b)"      # "12%", "12 percent", "113 +/- 8 percent"
 _PCT = re.compile(r"([+-]?\d+(?:\.\d+)?)" + _P + r"\s*" + _PCT_WORD
@@ -50,7 +52,7 @@ def from_phrase(phrase: str) -> str:
         return "unclear" if x <= 0 else ("large" if max(x, 1 / x) >= 2 else "medium" if max(x, 1 / x) >= 1.25 else "small")
     m = _SMD.search(p)
     if m:
-        x = abs(float(m.group(1)))
+        x = abs(float(next(g for g in m.groups() if g).replace(" ", "")))
         return "large" if x >= 0.8 else "medium" if x >= 0.5 else "small"
     m = _PCT.search(p)
     if m:
