@@ -1,0 +1,58 @@
+id: experiment-forecast-2026-11-07
+written_on: 2026-11-07
+status: constants fixed before the forecast was computed on any labelled unit
+why: >-
+  User decision 2026-11-07: move from "is the hypothesis true" to "what will this experiment show": characterise the decisive
+  experiment (start with registry trials, whose protocol is known), estimate the effect it can expect from the literature,
+  its power, its cost, and build the forecast from that. The outcome label of a trial depends on power and on the room for
+  bias (specs/error-analysis-2026-11-06.yaml, ceiling: open trials positive 63% vs 38%), which P does not see.
+
+protocol:
+  source: ClinicalTrials.gov API v2 (designModule, armsInterventionsModule, outcomesModule), cached; free.
+  fields: enrollment (count and type: anticipated or actual), allocation, masking, arms and their types (placebo or sham
+    comparator, active comparator, no intervention), number of primary outcomes, time frame of the first primary outcome.
+  note: for completed calibration trials the registry holds the actual enrollment, known only after the trial; reported,
+    and the forecast is also computed with it replaced by the median, as a check.
+
+expected_effect:
+  records: the usable records of the outcome slot (v3.4 weights), both sides.
+  d_of_record: >-
+    a standardised difference from the verbatim effect phrase: |d| or |SMD| as written; a ratio r -> |ln r| * sqrt(3) / pi;
+    a record against counts as d = 0; a record for without a number does not enter the mean.
+  pooled: d_lit = sum(w_i d_i) / sum(w_i) over the records with a d (w = record weight).
+  shrinkage: d_exp = 0.5 * d_lit (published effects are inflated; a fixed convention, not fitted).
+  prior_when_no_number: d_exp = 0.2 (a small effect).
+
+power:
+  two_arms: power = Phi(d_exp * sqrt(n_per_arm / 2) - 1.96), n_per_arm = enrollment / number of arms (at least 2 arms).
+  single_arm_or_before_after: power = Phi(d_exp * sqrt(n) - 1.96).
+  unknown_enrollment: n = 40 (the median of the calibration registry entries is not looked at; a typical pilot).
+
+forecast:
+  formula: P(positive) = pi * power + (1 - pi) * alpha_eff
+  pi: strength S of the outcome slot (v3.4 weights; 0.5 without records)
+  alpha_eff: 0.05 for a blinded (masking double or more) trial with a placebo or sham arm; 0.25 otherwise (room for bias and
+    for several outcomes). Exploratory: the 63% vs 38% of the ceiling analysis was seen before this value was set.
+
+report:
+  - tied AUC on the calibration (74 trials) of the forecast, of its parts (power alone, pi alone, alpha_eff alone), next to
+    P v3.4 (0.595) and the models' probability (0.761 without remembered trials, specs/llm-consensus-2026-11-07.yaml);
+  - the same with the enrollment replaced by the median (the leak check);
+  - the share of trials with a numeric expected effect (what full texts should raise, direction 2).
+  - exploration only: these samples built the method.
+
+cost:
+  plan: >-
+    a cost model by enrollment, duration, number of visits and system, checked against NIH RePORTER awards that name the
+    trial's NCT id (rank correlation). Next step; the RePORTER link field is checked first.
+
+result:   # scripts/experiment_forecast.py -> calibration/experiment_forecast.json; 73 trials
+  with_numeric_expected_effect: 31   # 42%: the rest fall back to the prior d 0.2
+  auc: {forecast: 0.545, forecast_with_median_enrollment: 0.572, power: 0.558, pi_S_outcome: 0.614, alpha_eff_bias_room: 0.613,
+        d_exp: 0.554, log_enrollment: 0.392, P_v34: 0.595, models: 0.798}
+  reading: >-
+    The forecast as pre-set does not beat its own parts: the room for bias alone (0.61) and the outcome link alone (0.61)
+    are each better than their combination with power (0.55). Larger trials are more often null (log n 0.39), so power
+    computed from enrollment points the wrong way on this set: big trials test well-studied interventions with small true
+    effects, which the literature effect (shrunk by half) does not capture. Only 42% of trials have a numeric expected
+    effect: the input is too thin; full texts (direction 2) should raise it. Nothing was tuned after seeing these numbers.

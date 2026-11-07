@@ -2,6 +2,7 @@
 for each calibration trial and compare with P. Paid (about 146 calls on two cheap families).
 
     ALLOW_PAID=1 python -m scripts.llm_consensus      # -> $KG_DIR/hypothesis_sources/calibration/llm_consensus.json
+    ALLOW_PAID=1 python -m scripts.llm_consensus --prospective   # the 60 ongoing trials, answers frozen by a hash (no outcome yet)
 
 Leakage: the models may know the published result of older trials. Each call also asks whether the model remembers the trial
 or its result; AUC is reported overall, without the remembered ones, and by sample (fresh 2023-2026 vs older).
@@ -105,8 +106,50 @@ def main(fake: bool = False) -> dict:
     return summary
 
 
+def prospective(n: int = 60) -> str:
+    """Ask the same question for the ongoing trials of the prospective pool and freeze the answers (spec with SHA-256)."""
+    import datetime as dt
+    import hashlib
+    import yaml
+    from hyparena.card.pipeline import _client
+    from scripts.prospective import OUT, SPECS
+    texts = [json.loads(l) for l in open(OUT / f"texts_{n}.jsonl")]
+    out_f = OUT / f"llm_consensus_{n}.json"
+    done = json.loads(out_f.read_text()) if out_f.exists() else {}
+    client, _ = _client(CONFIG, False, len(texts) * len(FAMILIES) * 2 + 10)
+
+    def one(job):
+        d, fam = job
+        key = f"{d['id']}|{fam}"
+        if key in done:
+            return key, done[key]
+        v, got = ask(client, role="predict_outcome", family=fam, template="predict_outcome", version="v1",
+                     variables={"text": d["text"], "as_of": d["as_of"]}, validate=problems, rounds=2)
+        return key, ({**v, "family": got} if v and not problems(v) else None)
+    with ThreadPoolExecutor(4) as ex:
+        for key, v in ex.map(one, [(d, f) for d in texts for f in FAMILIES]):
+            done[key] = v
+    body = (json.dumps(done, indent=1, ensure_ascii=False, sort_keys=True) + "\n").encode()
+    out_f.write_bytes(body)
+    today = dt.date.today().isoformat()
+    spec = SPECS / f"prospective-llm-consensus-{today}.yaml"
+    spec.write_text(yaml.safe_dump({
+        "id": spec.stem, "frozen_on": today,
+        "what": f"answers of {', '.join(FAMILIES)} to 'will the hypothesis be confirmed?' (prompt predict_outcome/v1) for the {n} ongoing trials of the prospective pool, before any outcome exists (Eternal Search baseline, specs/llm-consensus-2026-11-07.yaml)",
+        "answers_file": f"longevity-kg hypothesis_sources/prospective/llm_consensus_{n}.json", "answers_sha256": hashlib.sha256(body).hexdigest(),
+        "answered": sum(1 for v in done.values() if v), "of": len(done),
+        "test_when_outcomes_exist": "tied AUC of the models' mean probability and of unanimous yes, next to P (scores_60_v34.json) and to their combination; same outcome labels and rule as specs/prospective-2026-11-06.yaml",
+    }, allow_unicode=True, sort_keys=False))
+    return str(spec)
+
+
 if __name__ == "__main__":
     import sys
+    if "--prospective" in sys.argv:
+        if os.environ.get("ALLOW_PAID") != "1":
+            raise SystemExit("paid: set ALLOW_PAID=1")
+        print(prospective())
+        raise SystemExit(0)
     fake = "--fake" in sys.argv
     if not fake and os.environ.get("ALLOW_PAID") != "1":
         raise SystemExit("paid: set ALLOW_PAID=1")
