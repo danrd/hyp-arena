@@ -1,0 +1,15 @@
+You are asked to judge one registered clinical trial before its results exist. Imagine it is {{ as_of }}: use only what was known up to that date. The question (as in the Eternal Search Omega benchmark, short prompt): will the hypothesis this trial tests be confirmed experimentally, i.e. will the trial show a benefit of the intervention on its primary outcome?
+
+Registry text:
+<<<TRIAL
+{{ text }}
+TRIAL>>>
+
+Answer honestly also whether you remember this specific trial or its published result (this is used only to set your answer aside if you do).
+
+Reply with a single JSON object and nothing else:
+{"confirmed": "yes" or "no", "probability": 0.0-1.0 (that the primary outcome shows a benefit), "reason": "one sentence", "knows_result": "yes" or "no"}
+{% if history_text %}
+
+{{ history_text }}
+{% endif %}
