@@ -33,7 +33,9 @@ from hyparena.card import rules_v3 as r3
 from hyparena.card.llm import ask
 from hyparena.card.models import ClaimVerification, HypothesisCard
 
-TEMPLATE = ("evolve_v3", "v1")
+TEMPLATE = ("evolve_v3", "v2")          # tuning; v1 forced a "Mechanism:" line (first run, 2026-11-06)
+FREE_TEMPLATE = ("evolve_free", "v1")
+MODES = ("tune", "free")                  # user decision 2026-11-07: tuning and free evolution are separate and named
 
 
 def _words(s: str) -> set[str]:
@@ -64,14 +66,49 @@ def parent_parts(run_item: dict) -> tuple[HypothesisCard, list[ClaimVerification
     return card, cvs, alts
 
 
-def propose(client, family: str, parent_text: str, intervention: str, items: list[dict], log: Optional[list] = None) -> Optional[dict]:
+def propose(client, family: str, parent_text: str, intervention: str, items: list[dict], log: Optional[list] = None,
+            novel: Optional[list[str]] = None, feedback: str = "") -> Optional[dict]:
     allowed = {i["id"] for i in items}
-    variables = {"parent": parent_text, "items": [{**i, "what": i["what"][1]} for i in items]}
+    variables = {"parent": parent_text, "items": [{**i, "what": i["what"][1]} for i in items], "novel": novel or [],
+                 "feedback": feedback}
     value, _ = ask(client, role="evolve_v3", family=family, template=TEMPLATE[0], version=TEMPLATE[1], variables=variables,
                    validate=lambda v: problems(v, parent_text, intervention, allowed), rounds=2, log=log)
     if value is None or problems(value, parent_text, intervention, allowed):
         return None
     return value
+
+
+def free_problems(value: dict) -> list[str]:
+    out = []
+    if len((value or {}).get("text") or "") < 200:
+        out.append("text is missing or too short")
+    if not isinstance((value or {}).get("cited_pmids", []), list):
+        out.append("cited_pmids must be a list of PMIDs")
+    return out
+
+
+def propose_free(client, family: str, parent_text: str, items: list[dict], profile: str, novelty: Optional[str], as_of: str,
+                 log: Optional[list] = None) -> Optional[dict]:
+    from hyparena.card import aspid_v3
+    prof = aspid_v3.load()[profile][0]
+    order = " > ".join("{" + ", ".join(t) + "}" if len(t) > 1 else t[0] for t in prof.tiers)
+    variables = {"parent": parent_text, "items": [{**i, "what": i["what"][1]} for i in items], "profile": profile,
+                 "order": order, "novelty": novelty or "unknown", "novelty_first": "N" in prof.tiers[0], "as_of": as_of}
+    value, _ = ask(client, role="evolve_free", family=family, template=FREE_TEMPLATE[0], version=FREE_TEMPLATE[1],
+                   variables=variables, validate=free_problems, rounds=2, log=log)
+    if value is None or free_problems(value):
+        return None
+    value["cited_pmids"] = [re.sub(r"\D", "", str(x)) for x in value.get("cited_pmids", []) if re.sub(r"\D", "", str(x))]
+    return value
+
+
+def distance(parent: str, child: str) -> float:
+    """1 - Jaccard of content words; above NEW_AFTER the child is marked "a new hypothesis after" the parent."""
+    a, b = _words(parent), _words(child)
+    return round(1 - len(a & b) / len(a | b), 3) if a | b else 0.0
+
+
+NEW_AFTER = 0.7
 
 
 def endpoint(client, text: str) -> Optional[str]:
@@ -86,11 +123,29 @@ def endpoint(client, text: str) -> Optional[str]:
     return v if v not in (None, "not_stated") else None
 
 
+def _novel_parts(card: HypothesisCard, cvs: list[ClaimVerification]) -> list[str]:
+    from hyparena.card import novelty_v34 as nv
+    lv = nv.link_levels(card, cvs)
+    return [f"{c.subject.label} — {c.relation.replace('_', ' ')} — {c.object.label}" for c in r3.chain(card)
+            if lv.get(c.id) in ("analog", "new_link")]
+
+
 def evolve(run: dict, units: list[str], extras: dict[str, dict], config: str, item_choice: str = "rewrite",
-           writer: str = "google", fake: bool = False, max_calls: int = 60, out_path: Optional[Path] = None) -> dict:
-    """`run` {unit: saved pipeline result}; `extras` {unit: indicator values not in the card (endpoint, trend, ...)}."""
+           writer: str = "google", fake: bool = False, max_calls: int = 60, out_path: Optional[Path] = None,
+           mode: str = "tune", profile: str = "evidence", retries: int = 1) -> dict:
+    """`run` {unit: saved pipeline result}; `extras` {unit: indicator values not in the card (endpoint, trend, ...)}.
+
+    mode "tune" (доработка): only the "fixable by rewriting" items; the parent's new parts must stay; a child that moved towards
+    the known (novelty_v34.drift) is sent back to the writer with the reason, `retries` times, and kept with the flag if it
+    still drifts. mode "free" (свободная эволюция): everything may change, for the named profile; the writer names its papers
+    (counted only if the verifier finds them before the cut-off); drift is flagged, never constrained; a child far from the
+    parent (distance > NEW_AFTER) is marked "a new hypothesis after" it. Free mode is for current pools only (the writer
+    knows literature past the cut-off)."""
+    from hyparena.card import novelty_v34 as nv
     from hyparena.card.pipeline import _client, run as pipeline
-    client, _ = _client(config, fake, max_calls * len(units) + 10)
+    if mode not in MODES:
+        raise ValueError(f"mode must be one of {MODES}")
+    client, _ = _client(config, fake, (max_calls + 10) * len(units) * (1 + retries) + 10)
     done = json.loads(out_path.read_text()) if out_path and out_path.exists() else {"pairs": {}}
     for u in units:
         if u in done["pairs"]:
@@ -99,29 +154,61 @@ def evolve(run: dict, units: list[str], extras: dict[str, dict], config: str, it
         it = r["items"][0]
         card, cvs, alts = parent_parts(it)
         items = imp.items(card, cvs, alts, extras.get(u, {}), it["v3"].get("headroom_I"))
-        if item_choice == "rewrite":
-            chosen = [i for i in items if i["cls"] == "rewrite"]
-        else:
-            ids = set(item_choice.split(","))
-            chosen = [i for i in items if i["id"] in ids and i["cls"] == "rewrite"]
-        entry = {"items": chosen, "all_items": items}
-        if not chosen:
-            entry["skipped"] = "no rewrite item"
-            done["pairs"][u] = entry
-            continue
-        log: list = []
-        intervention = card.pico.intervention[0].label if card.pico.intervention else ""
-        value = propose(client, writer, it["text"], intervention, chosen, log)
-        entry["proposal_calls"] = len(log)
-        if value is None:
-            entry["skipped"] = "no valid proposal"
-            done["pairs"][u] = entry
-            continue
-        entry.update({"child_text": value["text"], "applied": value["applied"], "changes": value.get("changes", [])})
         as_of = r["meta"].get("as_of")
-        entry["child_run"] = pipeline([value["text"]], writer="evolution", config=config, as_of=as_of, max_calls=max_calls,
-                                      verifiers=["deepseek"], fake=fake)
-        entry["child_endpoint"] = endpoint(client, value["text"])
+        entry = {"mode": mode, "profile": profile, "all_items": items}
+        log: list = []
+        if mode == "tune":
+            if item_choice == "rewrite":
+                chosen = [i for i in items if i["cls"] == "rewrite"]
+            else:
+                ids = set(item_choice.split(","))
+                chosen = [i for i in items if i["id"] in ids and i["cls"] == "rewrite"]
+            entry["items"] = chosen
+            if not chosen:
+                entry["skipped"] = "no rewrite item"
+                done["pairs"][u] = entry
+                continue
+            intervention = card.pico.intervention[0].label if card.pico.intervention else ""
+            novel, feedback, attempts = _novel_parts(card, cvs), "", []
+            for k in range(retries + 1):
+                value = propose(client, writer, it["text"], intervention, chosen, log, novel=novel, feedback=feedback)
+                if value is None:
+                    break
+                child = pipeline([value["text"]], writer="evolution", config=config, as_of=as_of, max_calls=max_calls,
+                                 verifiers=["deepseek"], fake=fake)
+                ci = child["items"][0]
+                dr = nv.drift((card, cvs), parent_parts(ci)[:2]) if ci.get("card") and ci.get("verification") else None
+                attempts.append({"value": value, "child_run": child, "drift": dr})
+                if not dr or not dr["drift_to_known"]:
+                    break
+                feedback = "; ".join(dr["reasons"])
+            entry["proposal_calls"] = len(log)
+            if not attempts:
+                entry["skipped"] = "no valid proposal"
+                done["pairs"][u] = entry
+                continue
+            last = attempts[-1]
+            entry.update({"child_text": last["value"]["text"], "applied": last["value"]["applied"],
+                          "changes": last["value"].get("changes", []), "child_run": last["child_run"],
+                          "attempts": len(attempts), "constraint_kept": not (last["drift"] or {}).get("drift_to_known", False)})
+        else:
+            entry["items"] = items
+            value = propose_free(client, writer, it["text"], items, profile, nv.novelty(card, cvs), as_of or "", log)
+            entry["proposal_calls"] = len(log)
+            if value is None:
+                entry["skipped"] = "no valid proposal"
+                done["pairs"][u] = entry
+                continue
+            child = pipeline([value["text"]], writer="evolution_free", config=config, as_of=as_of, max_calls=max_calls,
+                             verifiers=["deepseek"], fake=fake)
+            ci = child["items"][0]
+            found = {rec.get("record_id", "").replace("PMID:", "") for c in (ci.get("verification") or {}).get("claims", [])
+                     for rec in c.get("evidence", []) + c.get("counterevidence", [])}
+            entry.update({"child_text": value["text"], "applied": [], "changes": value.get("changes", []), "child_run": child,
+                          "cited_pmids": value["cited_pmids"], "cited_found": sorted(set(value["cited_pmids"]) & found),
+                          "distance": distance(it["text"], value["text"])})
+            entry["new_hypothesis_after"] = entry["distance"] > NEW_AFTER
+        entry["child_endpoint"] = endpoint(client, entry["child_text"])
         done["pairs"][u] = entry
         if out_path:
             out_path.write_text(json.dumps(done, ensure_ascii=False, default=str))
@@ -193,6 +280,8 @@ def main() -> None:
     ap.add_argument("--top", type=int, default=0, help="choose this many hypotheses by the room to improve")
     ap.add_argument("--profile", default="evidence", help="profile under which the room is computed")
     ap.add_argument("--dry", action="store_true", help="only print the choice (free)")
+    ap.add_argument("--mode", choices=MODES, default="tune", help="tune (доработка) or free (свободная эволюция)")
+    ap.add_argument("--writer", default="google", help="model family that writes the improved text")
     ap.add_argument("--items", default="rewrite", help="'rewrite' (all fixable items) or item ids, e.g. i1,i3")
     ap.add_argument("--config", default="configs/v3-flash-n10.yaml")
     a = ap.parse_args()
@@ -210,8 +299,8 @@ def main() -> None:
         return
     if os.environ.get("ALLOW_PAID") != "1":
         raise SystemExit("paid: set ALLOW_PAID=1")
-    out = OUT / f"evolution_{a.n}.json"
-    res = evolve(run, units, extras, a.config, a.items, out_path=out)
+    out = OUT / (f"evolution_{a.n}.json" if a.mode == "tune" else f"evolution_free_{a.n}.json")
+    res = evolve(run, units, extras, a.config, a.items, writer=a.writer, out_path=out, mode=a.mode, profile=a.profile)
     print(json.dumps({u: {k: v for k, v in e.items() if k in ("skipped", "applied")} for u, e in res["pairs"].items()}, indent=1))
 
 

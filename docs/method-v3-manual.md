@@ -18,7 +18,7 @@ section 10. Rules for a model writing such a report:
   quote does not exist.
 - Use the scales and formulas of sections 5-7 exactly; show the arithmetic for P, the support share, I and V, and the record
   that sets the novelty level.
-- Do not predict the outcome of the trial; P is plausibility of the mechanism given the literature, not a forecast.
+- Do not predict the outcome of the trial; P is non-refutation of the mechanism given the literature, not a forecast.
 - When in doubt between two levels, take the lower one and say why. For novelty, take the level nearer the known: a paper you
   were not given may exist, and missing data are never novelty.
 - A report written this way is an approximation. The authoritative report is the one the code builds
@@ -34,7 +34,7 @@ several **profiles** (whose order of importance says what matters to whoever ran
 
 | Axis | Question | Range |
 |---|---|---|
-| P, plausibility | How far is the chain not refuted by the literature before the date T? | 0-1, product over links (v3.4) |
+| P, non-refutation (named plausibility until v3.3) | How far is the chain not refuted by the literature before the date T? | 0-1, product over links (v3.4) |
 | support share | How much of the chain is supported by that literature? | 0-1 |
 | N, novelty | How far is the hypothesis from what was already asked before T? | new context < translation < analog < new combination < new link |
 | I, informativeness | Which supported competing explanations does the stated experiment cut off? | 1/3-1 |
@@ -206,7 +206,7 @@ drawn over its whole range in every draw.
 
 | Indicator | What it says | Scale |
 |---|---|---|
-| P | plausibility of the chain | log, from 0.01 |
+| P | non-refutation of the chain | log, from 0.01 |
 | I | informativeness of the stated experiment (headroom I, of an improved one, feeds the room to improve, section 11) | log, 1/3-1 |
 | W | scope | local < organ < hallmark |
 | feasibility | system, duration, planned n, readiness of the intervention (approved or not a compound 1, in trials 0.5, neither 0) | 0-1 |
@@ -230,7 +230,7 @@ There is no separate "room to grow" profile any more (removed 2026-11-07, user d
 give is computed under every profile as the **room to improve** (section 11), so the profile duplicated it, and only for one
 kind of improvement (a better experiment). Headroom I stays an input of that computation, not an indicator of any profile.
 
-The evidence profile has no novelty on purpose: there novelty and plausibility pull apart by design. The frontier profile has
+The evidence profile has no novelty on purpose: there novelty and P pull apart by design. The frontier profile has
 no support share on purpose: it rewards the known. Its protection against inflated hypotheses is that unknown novelty is
 drawn over the whole range (not set high), P falls with any data against, and I counts only supported alternatives.
 
@@ -329,18 +329,20 @@ evidence and frontier: on registry trials the room comes mostly from the same fi
 change for one.
 
 **Evolution** (`hyparena/card/evolve_v3.py`, on request) improves chosen hypotheses and scores the improved versions
-the same way as every hypothesis. Two purposes need two modes; as of 2026-11-06 only the first is implemented.
+the same way as every hypothesis. **Tuning and free evolution are separate, named modes** (user decision 2026-11-07): a
+tuned version is the same hypothesis with its fixable defects repaired; a free version may be another hypothesis.
 
-| Mode | Purpose | What the writer may change | How the improved version is scored | Status |
-|---|---|---|---|---|
-| applying the list | apply the "fixable by rewriting" items | only what the items say, from their facts | the whole pipeline again on the new text, with the parent's literature cut-off | implemented, run once (below) |
-| controlled | test whether the list predicts the gain | one item at a time | the parent's card, records and alternatives are kept; only what the item changes is re-checked (for an experiment item: which of the same alternatives the new experiment rules out; for an endpoint item: the endpoint) | planned |
-| free | get the best hypothesis | everything (hypothesis, mechanism, population, experiment), using the whole analysis; may name the papers it relies on | the whole pipeline again; the papers it names are added to the search and count only if the verifier finds them with a verbatim quote before the cut-off; the distance from the parent is reported, and a version far from it is marked "new hypothesis after" the parent | planned (the user's preferred mode for improving: free rewriting by a stronger model gave a large gain in text and evidence) |
+| Mode | Purpose | What the writer may change | Novelty | How the improved version is scored | Report label | Status |
+|---|---|---|---|---|---|---|
+| tune (доработка), `--mode tune` | repair the "fixable by rewriting" items | only what the items say, from their facts; the parent's new parts (links at "analog" or "new link") must stay | **constraint**: a version that moved towards the known (`novelty_v34.drift`) goes back to the writer with the reason, once (`retries`); if it still drifts it is kept with the flag and "constraint not kept" | the whole pipeline again on the new text, parent's cut-off | "tuned version" | implemented (prompt `evolve_v3/v2`), not yet run; the first run (below) was this mode before the constraint, with prompt v1 |
+| free (свободная эволюция), `--mode free --profile P --writer F` | get the best hypothesis for the profile P | everything (claim, mechanism, population, outcome, experiment); the writer is told the profile's order and whether novelty comes first; it names the papers it relies on | **flag only**: a move towards the known is shown, not forbidden | the whole pipeline again; the papers it named count only if the verifier finds them with a verbatim quote before the cut-off (named / found are reported); distance from the parent = 1 − Jaccard of content words; above 0.7 the version is marked "new hypothesis after" the parent | "free evolution" (+ "new hypothesis after") | implemented (prompt `evolve_free/v1`), not yet run; for current pools only (the writer knows literature past the cut-off); the user's preferred mode for improving |
+| controlled | test whether the list predicts the gain | one item at a time | — | the parent's card, records and alternatives are kept; only what the item changes is re-checked | — | planned |
 
-In the implemented mode one model call (prompt `evolve_v3/v1`) rewrites the registered text from the parent text and the
-items' facts; code rejects a copy of the parent and a change of intervention; the improved text then goes through card,
-PubMed, alternatives and the endpoint extraction by two model families, and is scored by the current rules (v3.4) and ASPID. About 21 model
-calls per improved hypothesis (31 in the first run).
+Both modes report, next to the drift flag, the **share of links with support before the cut-off**, parent → child: a version can
+keep its novelty level and still be assembled from known pieces; a rise above 0.25 is pointed out in the report.
+Choosing whom to improve: `--top K --profile P` (the largest room to improve, below). Tuning: one call writes the text, about
+21 calls per improved hypothesis, up to twice that with a retry; free evolution: about the same, with the writer named by
+`--writer`.
 
 **First run** (2026-11-06, `specs/evolution-v3-pilot-2026-11-06.yaml`): the top 10 of the pilot under the evidence
 profile; about 311 calls (about 0.8 USD). The score under the evidence profile rose for 2 and fell for 8 (down to −0.17),
@@ -385,7 +387,8 @@ modes.
   from interventions of the same kind is often missed, so P is biased down for programmes and behavioural interventions.
 - Abstracts by default; full texts only where a knowledge-graph row says so.
 - Alternatives come from a model, not yet from the knowledge graph.
-- P (v3.4) is 1 for about two thirds of registry hypotheses: it says "nothing refutes it" and nothing more; the order among
+- P (v3.4, now named non-refutation) is 1 for about two thirds of registry hypotheses: it says "nothing refutes it" and
+  nothing more (whether to keep it as a separate indicator is open, user 2026-11-07); the order among
   them comes from the support share, I and the other indicators of the profile.
 - Novelty depends on the verifier's recall: a paper it missed makes a hypothesis look newer than it is (about 40% of
   relevant papers are missed). Novelty is therefore an upper estimate; the "known result" gate catches only exact matches.
@@ -415,6 +418,32 @@ modes.
 | error analysis, 74 units rerun (normalize v10) under v3.3 | P 0.60, support share 0.54, the outcome link alone 0.61; with a written mechanism P is at chance (0.46, 17 units) |
 | v3.4 (P non-refutation, two weight changes) | P 0.584 vs v3.3 0.589 on the same 72 calibration units: the same order, the paradox removed (exploration) |
 | novelty, leverage, frontier profile | cannot be checked against trial outcomes; they rest on the admission rule and the protections above |
+
+**Ablation on the calibration** (`scripts/ablation.py`, 73 units, exploration; one standard error of an AUC here is about
+0.065, so only large changes mean anything):
+
+| What is removed | AUC |
+|---|---|
+| nothing: P v3.4 / P v3.3 | 0.595 / 0.600 |
+| any one factor of the record weight (design, precision, effect, comparison, context) | 0.595–0.598 |
+| every factor: each record weighs 1 (P counts records only) | 0.602 |
+| P replaced by the outcome link alone | 0.614 (without design 0.622) |
+| support share alone | 0.540 |
+| ASPID score, evidence profile: all / without P / without I | 0.543 / 0.491 / 0.559 |
+| funding profile: all / without P / without I / without trend | 0.583 / 0.552 / 0.632 / 0.606 |
+| frontier profile: all / without P / without N | 0.553 / 0.502 / 0.588 |
+
+Reading: against trial outcomes the record-weight machinery carries no signal (counting records does as well); P's signal is
+whether there are data against, mostly on the outcome link; I is inversely related to a positive result (informative
+experiments test open questions and are more often null); only P is meant to track outcomes, so the other indicators of a
+profile dilute this AUC by design. The weights stay for what they are for (telling a large RCT from a cell study in the
+report), not because they improve the outcome AUC.
+
+**Ceiling of the label** (`scripts/ceiling.py`): the design of the trial (randomisation, blinding, placebo or sham, sponsor,
+endpoint, number of primary outcomes; from ClinicalTrials.gov) does not predict the outcome either (cross-validated 0.51).
+Open and sham-free trials are positive far more often (63% vs 38% for blinded): there "positive" partly measures room for bias.
+Within placebo- or sham-controlled trials the outcome link reaches 0.75 (n 20, very uncertain). The benchmark analysis
+should therefore be stratified by blinding and placebo, or take the blinded subset as primary.
 
 AUC is the tied AUC of P between positive and null trials; the pre-set rule is "signal" at ≥ 0.60 with the lower bound of
 the 95% interval above 0.45, "no signal" below 0.55. The samples are small and the intervals wide.
