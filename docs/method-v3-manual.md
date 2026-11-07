@@ -296,27 +296,29 @@ there before use.
 ## 10. Reports
 
 **Pool report** (`python -m hyparena.report_html prospective --n 60`; one HTML page, built by code with fixed wording,
-Russian and English in one page, style of the project site). Order:
+Russian and English in one page; layout redone 2026-11-07 after the structure of an outside reader's report). A header band
+(method, cut-off date, how many scored) and five tabs:
 
-1. *How to read*: the mechanism, the indicators (each term has hover help), ASPID (order of importance → 10,000 random
-   weight sets → expected score, place, probability of the top 5).
-2. *Ranking by profile*: one tab per profile; the table shows the place, the expected score, the probability of the top 5
-   the **room to improve** under that profile (section 11; `*` when "write the mechanism" could not be computed, `↓` when the
-   improvements would lower novelty) and the profile's indicators in its order of importance (the reader chooses which
-   columns to show); the top 3 are marked
-   with their strengths; pages of 15 rows, search, filter by intervention type. Improved versions (section 11), when
-   there are any, are ranked with the rest as their own rows, marked "improved version"; a note at the top of the page
-   links to the evolution section.
-3. *Each hypothesis* (collapsed, one-line verdict): the chain with each link coloured by S, P (with its interval under
-   v3.3; none under v3.4), novelty, I, support share, scope, endpoint, AI role, places; what lifts and what lowers it (the indicators
-   furthest above or below the middle of the pool, weighted by the profile's order; the strongest and weakest checked link);
-   what would raise it: the improvement list of section 11, in two groups, each item with its facts and its expected
-   effect on the indicators and on the score under each profile. The list and the facts are collapsed by default under a
-   one-line summary (number of items, how many are fixable by rewriting, the best expected gain).
-4. *Evolution* (when it was run): section 11; the summary table first, the details of each pair collapsed after it.
-5. *Appendices*: the method in brief and a glossary; the full breakdown per hypothesis (every link with its records: PMID,
-   for or against, weight, design, n, effect, verbatim quote; alternatives; the other indicators as percentiles of the
-   pool); provenance and limitations (date, versions, hash of frozen scores).
+1. *Ranking*: one sub-tab per profile; the table shows the place, the expected score, the probability of the top 5, the room
+   to improve (section 11; `*` when "write the mechanism" could not be computed, `↓` when the improvements would lower
+   novelty) and the profile's indicators in its order of importance (the reader chooses the columns): P in red when below 1,
+   novelty with the PMID of the record that sets it, I with its headroom. Pages of 15 rows, search, filter by intervention
+   type. Improved versions are ranked with the rest as their own rows, marked "tuned version" or "free evolution" (+ "new
+   hypothesis after"). No separate top-3 block.
+2. *Hypotheses* (collapsed, one-line verdict; open all / close all): the chain with each link coloured by S; P, novelty, I,
+   support share, scope, endpoint, AI role, places; what lifts and what lowers it; **the table of links**: F / A, S with its
+   90% interval, R, the link's novelty level, the records as chips with their weights (green for, red against; hovering a
+   chip shows the design, n, weight and the verbatim quote, a click opens PubMed); the stated experiment; the alternatives
+   with what the experiment does to each; the room to improve and the improvement list (collapsed).
+3. *Evolution* (when run): section 11; the summary table first (mode and items, P, I, support share, novelty with the drift
+   flag, the score under each profile), the details of each pair collapsed after it.
+4. *Sources*: every record of the pool, one row per paper and link (PMID, hypothesis, link, for or against, design, n,
+   weight, quote), with search and sorting.
+5. *Help*: how to read the report, ASPID in brief, **a glossary of every parameter** (the same texts as the hover notes),
+   provenance and limitations.
+
+Every column header, chip and indicator name has a hover note; the notes float above the table (they are not clipped by it
+and do not cover other notes).
 
 Reports on private hypotheses stay in the private repository (`longevity-kg`).
 
