@@ -50,10 +50,25 @@ def _facts(recs, side: str, n: int = 2) -> list[dict]:
 
 def items(card: HypothesisCard, cvs: list[ClaimVerification], alts: dict[str, ClaimVerification], extras: dict,
           headroom_I: Optional[float] = None, K: int = 4000) -> list[dict]:
+    return analyse(card, cvs, alts, extras, headroom_I, K)["items"]
+
+
+def room(card: HypothesisCard, cvs: list[ClaimVerification], alts: dict[str, ClaimVerification], extras: dict,
+         headroom_I: Optional[float] = None, K: int = 4000) -> Optional[dict]:
+    return analyse(card, cvs, alts, extras, headroom_I, K)["room"]
+
+
+def analyse(card: HypothesisCard, cvs: list[ClaimVerification], alts: dict[str, ClaimVerification], extras: dict,
+            headroom_I: Optional[float] = None, K: int = 4000) -> dict:
+    """{"items": the improvement list, "room": the room to improve} (user decision 2026-11-07: the room replaces the evolution
+    profile). room = every computable "fixable by rewriting" item applied together, scored under each profile on fixed scales:
+    {"score": {profile: [now, after]}, "indicators": {name: [now, after]}, "N": [now, after], "applied": [types],
+     "not_computed": [types]} or None when the hypothesis is filtered."""
     base = evaluate(card, cvs, alts)
     if base.gate != "pass":
-        return []
+        return {"items": [], "room": None}
     extras = {**extras, "N": extras.get("N", nv.novelty(card, cvs, base))}
+    comb = {"card": card, "cvs": {c.id: c for c in cvs}, "ext": dict(extras), "applied": [], "not_computed": []}
     links = r3.chain(card)
     by = {c.id: c for c in cvs}
     variants: list[tuple[dict, r32.V32Result, dict]] = []          # (item, modified result, modified extras)
@@ -79,6 +94,8 @@ def items(card: HypothesisCard, cvs: list[ClaimVerification], alts: dict[str, Cl
         for a in c2.proposed_alternatives:
             if a.id in ids:
                 a.on_positive = "eliminated"
+        comb["card"] = c2
+        comb["applied"].append("experiment_alternatives")
         add({"cls": "rewrite", "type": "experiment_alternatives", "target": ",".join(sorted(ids)),
              "what": ("изменить эксперимент так, чтобы он отсекал подкреплённые альтернативы: " + "; ".join(
                  f"{a.subject.label} — {a.object.label}" for a, _ in open_alts),
@@ -93,6 +110,9 @@ def items(card: HypothesisCard, cvs: list[ClaimVerification], alts: dict[str, Cl
         # rewrite: a link the data are against
         if A > 0 and S < 0.5:
             cvs2 = [ClaimVerification(id=c.id, evidence=c.evidence, counterevidence=[]) if c.id == cl.id else c for c in cvs]
+            prev = comb["cvs"][cl.id]
+            comb["cvs"][cl.id] = ClaimVerification(id=cl.id, evidence=prev.evidence, counterevidence=[])
+            comb["applied"].append("rewrite_refuted_link")
             add({"cls": "rewrite", "type": "rewrite_refuted_link", "target": cl.id,
                  "what": (f"переписать звено «{cl.subject.label} — {cl.object.label}»: данные против него (S {S:.2f}); "
                           "сузить его до условий, где есть данные «за», или заменить другим путём",
@@ -119,6 +139,9 @@ def items(card: HypothesisCard, cvs: list[ClaimVerification], alts: dict[str, Cl
                 cvs2.append(ClaimVerification(id=c.id, evidence=ev, counterevidence=c.counterevidence))
             e2 = evaluate(card, cvs2, alts)
             if e2.P > base.P + 0.01 or e2.support_share > base.support_share + 0.01:
+                mod = next(c for c in cvs2 if c.id == cl.id)
+                comb["cvs"][cl.id] = ClaimVerification(id=cl.id, evidence=mod.evidence, counterevidence=comb["cvs"][cl.id].counterevidence)
+                comb["applied"].append("narrow_population")
                 # narrowing to where the data are moves the hypothesis towards the known: its novelty is recomputed and shown
                 add({"cls": "rewrite", "type": "narrow_population", "target": cl.id,
                      "what": (f"сузить популяцию звена «{cl.subject.label} — {cl.object.label}» до той, где получены данные «за»",
@@ -139,6 +162,7 @@ def items(card: HypothesisCard, cvs: list[ClaimVerification], alts: dict[str, Cl
                  "facts": []}, _with_strength(card, cvs, alts, cl.id, 5 / 6))
     # rewrite: the mechanism is not written
     if len(links) <= 1:
+        comb["not_computed"].append("write_mechanism")
         add({"cls": "rewrite", "type": "write_mechanism", "target": "",
              "what": ("выписать механизм: через какие мишени и пути вмешательство действует на исход, опираясь на найденные статьи",
                       "write the mechanism: through which targets and pathways the intervention acts on the outcome, from the papers found"),
@@ -146,6 +170,8 @@ def items(card: HypothesisCard, cvs: list[ClaimVerification], alts: dict[str, Cl
     # rewrite: a more clinical endpoint
     ep = extras.get("endpoint_clinical")
     if ep in ENDPOINT_UP:
+        comb["ext"]["endpoint_clinical"] = ENDPOINT_UP[ep]
+        comb["applied"].append("clinical_endpoint")
         add({"cls": "rewrite", "type": "clinical_endpoint", "target": "",
              "what": ("выбрать первичную конечную точку ближе к клинике (функция вместо биомаркера или самоотчёта)",
                       "choose a primary endpoint closer to the clinic (function instead of a biomarker or a self-report)"),
@@ -155,7 +181,25 @@ def items(card: HypothesisCard, cvs: list[ClaimVerification], alts: dict[str, Cl
     for i, (_, e_mod, ext) in enumerate(variants):
         if e_mod is not None:
             pairs[f"v{i}"] = axes(e_mod, headroom_I, ext)
+    room_out = None
+    if comb["applied"]:
+        ccvs = list(comb["cvs"].values())
+        ec = evaluate(comb["card"], ccvs, alts)
+        cext = {**comb["ext"], "N": nv.novelty(comb["card"], ccvs, ec)}
+        pairs["combined"] = axes(ec, headroom_I, cext)
     sc = scores(pairs, K=K)
+    if comb["applied"]:
+        ind = {name: [round(a, 3), round(b, 3)] for name, a, b in (("P", base.P, ec.P), ("I", base.I, ec.I),
+                                                                   ("support_share", base.support_share, ec.support_share))
+               if abs(b - a) > 1e-4}
+        if cext.get("endpoint_clinical") != extras.get("endpoint_clinical"):
+            ind["endpoint_clinical"] = [extras.get("endpoint_clinical"), cext.get("endpoint_clinical")]
+        room_out = {"score": {p: [sc["base"][p], sc["combined"][p]] for p in sc["base"]}, "indicators": ind,
+                    "N": [extras.get("N"), cext.get("N")], "applied": sorted(set(comb["applied"])),
+                    "not_computed": comb["not_computed"]}
+    else:
+        room_out = {"score": {p: [sc["base"][p], sc["base"][p]] for p in sc["base"]}, "indicators": {},
+                    "N": [extras.get("N"), extras.get("N")], "applied": [], "not_computed": comb["not_computed"]}
     out = []
     for i, (item, e_mod, ext) in enumerate(variants):
         item = {"id": f"i{i + 1}", **item}
@@ -172,7 +216,7 @@ def items(card: HypothesisCard, cvs: list[ClaimVerification], alts: dict[str, Cl
                 ind["N"] = [extras.get("N"), ext.get("N")]
             item["expected"] = {"indicators": ind, "score": {p: [sc["base"][p], sc[f"v{i}"][p]] for p in sc["base"]}}
         out.append(item)
-    return out
+    return {"items": out, "room": room_out}
 
 
 def _with_strength(card, cvs, alts, link_id: str, S_target: float) -> r32.V32Result:

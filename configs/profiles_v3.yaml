@@ -11,17 +11,14 @@
 # 0.87 on 127 units, the admission rule); novelty N joined evolution and funding; frontier is a fourth profile. leverage,
 # W_potential and literature_density are defined (aspid_v3.SPECS) but failed the admission rule on the trial pools and are in
 # no profile.
+# 2026-11-07 (user decision): the evolution profile is removed; the room to improve is computed under every profile from the
+# improvement list (improvements.room) and chooses the hypotheses for evolution.
 profiles:
   evidence:
     version: "trial-4"
     description: "Plausibility of the mechanism first, then how much of it is supported, then what the experiment teaches, then reach."
     indicators: [P, support_share, I, W, best_design_outcome, independent_outcome, endpoint_clinical]
     tiers: [[P], [support_share], [I], [W], [best_design_outcome, independent_outcome, endpoint_clinical]]
-  evolution:
-    version: "trial-3"
-    description: "Room to grow: what the hypothesis could teach with a better experiment and how new it is, then plausibility, then reach."
-    indicators: [I_headroom, N, P, support_share, W, best_design_outcome, independent_outcome]
-    tiers: [[I_headroom, N], [P], [support_share, W], [best_design_outcome, independent_outcome]]
   funding:
     version: "trial-5"
     description: "Ready to fund (merged with the investor draft, user decision 2026-11-06): plausibility, then feasibility, then rising attention, the role of AI and novelty, then informativeness, then reach and the refinements."

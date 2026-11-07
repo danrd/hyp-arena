@@ -101,3 +101,14 @@ result:   # scripts/v34_check.py -> calibration/v34_check.json; 127 units passin
   profiles: {evidence: trial-4, evolution: trial-3 (N added), funding: trial-5 (N added), frontier: "trial-1 [[N], [P], [I, feasibility]]"}
   drift_check: "hand-made pairs: 4 drifted flagged, 3 controls not (tests/test_v34.py); first evolution run: 1 of 10 flagged (analog -> new_context)"
   prospective: "scores_60_v34.json and report_60_v34.html; scores_60.json (frozen) untouched"
+
+amendment_room_2026_11_07:
+  decision: >-
+    User: the room to improve is already computed within every profile (the improvement list), so the evolution profile is
+    removed. improvements.room applies every computable "fixable by rewriting" item together and scores the result under each
+    profile (fixed scales); shown as a column of each ranking table with the novelty it would cost; evolution chooses by it
+    under a named profile (evolve_v3 --top K --profile P). Profiles now: evidence trial-4, funding trial-5, frontier trial-1.
+  prospective_pool: >-
+    55 ranked trials: positive room for 50 / 51 / 45 (evidence / funding / frontier), median +0.10 / +0.04 / +0.06, max
+    +0.30 / +0.22 / +0.64; items: experiment ruling out alternatives 42, endpoint 23, refuted link 14, narrowed population 3;
+    top 10 shared by evidence and frontier: 9; novelty would change for 1.

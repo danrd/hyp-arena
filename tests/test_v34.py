@@ -101,3 +101,21 @@ def test_controls_are_not_flagged():
     longer = card([claim("c1", "x", "activates", "y", "engagement"), claim("c2", "y", "promotes", "z", "effect"),
                    claim("c3", "z", "suppresses", "w", "effect"), OUT])
     assert not nv.drift((c, cvs), (longer, cvs))["drift_to_known"]                                # a new link added
+
+
+# ---- the room to improve (user decision 2026-11-07: replaces the evolution profile)
+
+def test_room_applies_the_fixable_items_together_and_shows_the_novelty_cost():
+    from hyparena.card import improvements as imp
+    c = mech_card()
+    cvs = [CV(id="c1", evidence=[rec(1, "animal", n=40, effect="large")]),
+           CV(id="c9", evidence=[rec(2, "rct", n=200)], counterevidence=[rec(3, "rct", n=300, qm={"population": "no"})])]
+    an = imp.analyse(c, cvs, {}, {"endpoint_clinical": "biomarker"}, K=2000)
+    rm = an["room"]
+    assert set(rm["applied"]) >= {"clinical_endpoint"} and set(rm["score"]) == {"evidence", "funding", "frontier"}
+    for p, (a, b) in rm["score"].items():
+        assert b >= a - 0.02, p                                   # all fixable items together never lower the score much
+    single = max(v[1] - v[0] for i in an["items"] if i.get("expected") for v in [i["expected"]["score"]["evidence"]])
+    assert rm["score"]["evidence"][1] - rm["score"]["evidence"][0] >= single - 0.02     # together at least the best single item
+    nothing = imp.analyse(card([OUT]), [CV(id="c9", evidence=[rec(2, "rct", n=200)])], {}, {"endpoint_clinical": "function"}, K=500)["room"]
+    assert nothing["applied"] == [] and nothing["not_computed"] == ["write_mechanism"]

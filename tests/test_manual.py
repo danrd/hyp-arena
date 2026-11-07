@@ -69,7 +69,7 @@ def test_manual_worked_example_is_what_the_code_gives(monkeypatch):
     assert f"| S {e3.links['c2'][0]:.3f} | | {e3.P:.3f} | {e3.support_share:.3f} |" in text
     from hyparena.card import aspid_v3
     pts = {k: ({"P": x.P, "scope": x.scope, "I": x.I, "headroom_I": x.I, "gate": "pass"}, {"support_share": x.support_share}) for k, x in (("a", e), ("b", e2))}
-    for prof in ("evidence", "evolution", "funding"):
+    for prof in ("evidence", "funding"):
         r = aspid_v3.rank(pts, prof, K=10000)
         assert r.expected["b"] > r.expected["a"]                     # support found: the score rises under every profile
 
