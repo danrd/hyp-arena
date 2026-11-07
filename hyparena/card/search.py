@@ -65,10 +65,51 @@ def citation_expand(seed: list[str], as_of: Optional[str], retmax: int) -> list[
     return list(dict.fromkeys(seed[:KEEP_SEEDS] + extra + seed[KEEP_SEEDS:]))[:retmax]
 
 
-def retrieve(client, family: str, avoid, claim, card, as_of: Optional[str], retmax: int, log: Optional[list] = None) -> list[str]:
+GENERIC_POPULATIONS = {"", "unknown", "human", "humans", "adults", "older adults", "elderly", "aged", "older people", "people",
+                       "participants", "patients", "healthy adults", "older persons", "seniors"}
+
+
+def population_query(claim, card) -> Optional[str]:
+    """The exact population of the trial AND the intervention's words (any of them), for outcome claims; None when the population
+    is generic. Added 2026-11-07 after a blind comparison: the most informative record of a pre-sarcopenia trial (a null SPPB
+    result of a resistance programme in pre-sarcopenia) was missed by the model-written queries."""
+    import re
+    if not (claim.link == "outcome" or (not claim.link and claim.role == "outcome")):
+        return None
+    pop = re.sub(r"\s+", " ", (card.pico.population.label or "").strip().lower())
+    pop = re.sub(r"^(older|elderly|aged|community-dwelling)\s+(adults|people|persons|women|men)\s+(with|at risk of)\s+", "", pop)
+    if pop in GENERIC_POPULATIONS or len(pop.split()) > 5:
+        return None
+    words = [w for lab in (i.label for i in card.pico.intervention) for w in re.findall(r"[a-z][a-z-]{3,}", lab.lower())
+             if w not in {"with", "and", "the", "for", "programme", "program", "intervention", "group", "based", "daily", "weekly"}]
+    if not words:
+        return None
+    if set(words) & EXERCISE_WORDS:
+        words += ["exercise", "training"]                  # another programme of the same kind counts (class, 1/3)
+    variants = {pop, pop.replace("-", " "), pop.replace("-", "")}
+    for v in list(variants):                               # sarcopenia -> sarcopenic
+        if v.endswith("ia"):
+            variants.add(v[:-2] + "ic")
+    pq = " OR ".join(f'"{v}"[tiab]' if " " in v or "-" in v else f"{v}[tiab]" for v in sorted(variants))
+    return f"({pq}) AND (" + " OR ".join(f"{w}[tiab]" for w in dict.fromkeys(words)) + ")"
+
+
+EXERCISE_WORDS = {"exercise", "exercises", "training", "squat", "squats", "resistance", "walking", "physical", "aerobic", "strength",
+                  "balance", "yoga", "physiotherapy", "rehabilitation"}
+
+
+def retrieve(client, family: str, avoid, claim, card, as_of: Optional[str], retmax: int, log: Optional[list] = None,
+             population_first: bool = False) -> list[str]:
+    """`population_first` (search mode "model_population", configs/v3-flash-n11.yaml): the exact-population query runs first
+    and its hits lead the merge."""
     from hyparena.card.verifier import queries
     from hyparena.tools import pubmed
     qs = model_queries(client, family, avoid, claim, card, as_of, log)
+    pq = population_query(claim, card) if population_first else None
+    if pq:
+        qs = [pq] + qs
+        if log is not None:
+            log.append({"kind": "search_population", "claim": claim.id, "query": pq})
     lists = [pubmed.search(q, retmax=retmax, as_of=as_of) for q in qs]
     merged: list[str] = []
     for i in range(retmax):
