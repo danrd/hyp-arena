@@ -221,6 +221,7 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
                     if w <= 0:
                         continue
                     recs.append({"side": side, "pmid": rec.record_id.replace("PMID:", ""), "w": round(w, 3),
+                                 "f": r32.weight_factors(rec, cl, side == "against", True), "match": rec.qualifiers_match,
                                  "design": r3.record_design(rec), "n": rec.n_total, "effect": rec.effect_reported or rec.effect_class,
                                  "quote": rec.quote, "group": r32.group_key(rec)})
             recs.sort(key=lambda x: -x["w"])
@@ -693,6 +694,24 @@ GLOSSARY_EXTRA = {
     "flags": ("Флаги — подсказки для улучшения: механизм не выписан, нет подкреплённых альтернатив, эксперимент оставляет альтернативы, спорное звено и др.",
               "Flags: hints for improving: no mechanism, no supported alternatives, the experiment leaves alternatives standing, a contested link and others."),
 }
+
+
+def t_ru(pair) -> str:
+    return pair[0]
+
+
+GLOSSARY_NAMES = {"score": ("ожидаемая оценка", "expected score"), "top5": ("вероятность топ-5", "probability of top 5"),
+                  "place": ("место", "place"), "room": ("запас улучшения", "room to improve"), "S": ("сила звена S", "link strength S"),
+                  "FA": ("веса F / A", "weights F / A"), "R": ("неопровергнутость звена R", "link non-refutation R"),
+                  "link_N": ("новизна звена", "link novelty"), "records": ("записи PubMed", "PubMed records"), "link": ("звено", "link"),
+                  "alt": ("альтернатива", "alternative"), "side": ("за / против", "for / against"), "design": ("дизайн", "design"),
+                  "w": ("вес записи", "record weight"), "flags": ("флаги", "flags"), "tuned": ("доработанная версия", "tuned version"),
+                  "free": ("свободная эволюция", "free evolution"), "drift": ("сдвиг к известному", "moved towards the known")}
+
+
+def glossary_items() -> list[tuple[str, tuple[str, str]]]:
+    names = {**IND_NAMES, **GLOSSARY_NAMES}
+    return [(names.get(k, (k, k))[0], v) for k, v in {**TIPS, **GLOSSARY_EXTRA}.items()]
 
 
 def glossary() -> str:

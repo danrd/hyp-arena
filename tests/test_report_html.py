@@ -18,3 +18,18 @@ def test_contributions_use_rank_order_centroid_weights():
     w = rh.roc_weights([["P"], ["I"], ["W", "x"]])
     assert w["P"] > w["I"] > w["W"] == w["x"] and sum(w.values()) == pytest.approx(1.0)
     assert rh.percentiles({"a": 1.0, "b": 2.0, "c": None}) == {"a": 0.25, "b": 0.75, "c": None}
+
+
+def test_report_v2_renders_an_empty_pool_and_keeps_the_template_hooks():
+    from hyparena import report_v2 as r2
+    from hyparena.card import aspid_v3
+    tpl = r2.TEMPLATE.read_text()
+    for hook in ("__DATA__", "__TITLE__", 'id="ranking-tbody"', 'id="cards-container"', 'id="glossary"', 'id="tt"'):
+        assert hook in tpl
+    assert "Топ-1" not in tpl and "top-3" not in tpl.lower()
+    rep = {"meta": {"title_ru": "Пул", "title_en": "Pool", "about_ru": "", "about_en": "", "date": "2026-11-06", "method": "v3.4",
+                    "sha": "0" * 64, "n": 0, "n_scored": 0, "outcomes": {}}, "hyps": {}, "ranks": {p: [] for p in aspid_v3.load()}}
+    html = r2.render(rep)
+    assert "__DATA__" not in html and '"profiles"' in html and "Фронтир" in html
+    d = r2.data(rep)
+    assert {g["term"] for g in d["glossary"]} >= {"запас улучшения", "новизна", "неопровергнутость механизма", "сдвиг к известному"}

@@ -295,7 +295,24 @@ there before use.
 
 ## 10. Reports
 
-**Pool report** (`python -m hyparena.report_html prospective --n 60`; one HTML page, built by code with fixed wording,
+**Pool report, main layout** (`python -m hyparena.report_v2 prospective --n 60` → `report_<n>_v2.html`; user decision
+2026-11-07: the outside reader's (Argon's) report taken as the base and corrected towards the method). The same numbers as
+below, reshaped by `hyparena/report_v2.py` into one JSON object that the page template `hyparena/templates/pool_report_v2.html`
+renders in the browser (Tailwind from its CDN, version pinned). Russian only. Tabs: *Ranking* (profile tabs; one fixed compact
+table: place, hypothesis with its status chips — original, tuned version, free evolution, new hypothesis after, moved towards
+the known —, score, room to improve with `*` and `↓`, place / probability of top 5, novelty with the PMID that sets it, P in
+red below 1, support share, I with its headroom, scope, feasibility / AI role / endpoint; filters by status and intervention
+type, search, pages of 15; a click opens the card), *Hypothesis cards* (one card per original hypothesis; when it has improved
+versions, buttons switch between "comparison", "original only" and "version only"; the two chains side by side; one table of
+links with rows "original / version": F / A, S with its interval, R, link novelty, record chips whose hover shows every factor
+of the weight and the verbatim quote, a click opens the paper card; what lifts and lowers; the alternatives; the room and the
+improvement list), *Evolution* (every pair: mode, P, support share, novelty with the drift flag, I, scope, the change of the
+score under each profile), *PubMed papers* (every paper with its quote and the hypotheses that use it), *Help* (how to read
+the report, the record weight table, S / R / P / support share, the reading rules, novelty, the experiment and the other
+indicators, the profiles from the configuration, room and evolution, limits and validation status, provenance, and a glossary
+of every parameter). Every column header, chip and number has a hover note that floats above the table.
+
+**Pool report, first layout** (`python -m hyparena.report_html prospective --n 60`; one HTML page, built by code with fixed wording,
 Russian and English in one page; layout redone 2026-11-07 after the structure of an outside reader's report). A header band
 (method, cut-off date, how many scored) and five tabs:
 
