@@ -54,3 +54,21 @@ v33_result:
     v3.3 does not raise the separation on the calibration units (0.60, inside the noise of n=73). The chain still hurts:
     with a mechanism written P orders the trials at chance; P works only through the outcome link. support_share alone
     is weak (0.54). The benchmark pre-registration should therefore keep, as secondary, the outcome link alone and P v3.2.
+
+# Addition 2026-11-07: ceiling analysis (scripts/ceiling.py -> calibration/ceiling.json), free, exploration only. Design of each
+# trial from ClinicalTrials.gov (64 of 72 units with an NCT id).
+ceiling_2026_11_07:
+  single_auc: {P_v34: 0.584, outcome_link: 0.603, support_share: 0.535, masking: 0.377, placebo_or_sham: 0.371,
+               randomised: 0.488, log_enrollment_after: 0.403, endpoint_category: 0.478, n_primary_outcomes: 0.562}
+  P_v34_bootstrap_95: [0.472, 0.699]
+  cv_models_5fold_x40: {P: 0.58, outcome_link: 0.603, design_known_before: 0.506, design_plus_P: 0.49}
+  by_blinding:
+    blinded_masking_ge_2: {n: 29, positives: 11, P: 0.593, outcome_link: 0.631}
+    open_or_single_blind: {n: 35, positives: 22, P: 0.563, outcome_link: 0.587}
+    placebo_or_sham: {n: 20, positives: 6, P: 0.607, outcome_link: 0.75}
+    no_placebo_or_sham: {n: 42, positives: 25, P: 0.534, outcome_link: 0.529}
+  reading: >-
+    No feature, design included, orders the trials much better than 0.6: the label is hard. Open and sham-free trials are
+    positive far more often (63% vs 38% for blinded), so in them "positive" partly measures the room for bias, not the truth of
+    the mechanism; within placebo or sham trials the outcome link reaches 0.75 (n 20, very uncertain). The benchmark
+    pre-registration should stratify by blinding and placebo (or make the blinded subset primary).
