@@ -96,6 +96,20 @@ def novelty(card: HypothesisCard, cvs: list[ClaimVerification], e: Optional[r32.
     return None
 
 
+def novelty_source(card: HypothesisCard, cvs: list[ClaimVerification]) -> Optional[str]:
+    """The record (PMID) that sets N on the outcome link: the closest record by the ladder, else None."""
+    by = {c.id: c for c in cvs}
+    claims = {c.id: c for c in r3.chain(card)}
+    pre, out = slots(card)
+    best = None
+    for i in out:
+        for r in ((by[i].evidence + by[i].counterevidence) if i in by else []):
+            lv = record_level(r, claims[i])
+            if lv and (best is None or LINK_LEVELS.index(lv) < LINK_LEVELS.index(best[0])):
+                best = (lv, r.record_id.replace("PMID:", ""))
+    return best[1] if best else None
+
+
 def link_levels(card: HypothesisCard, cvs: list[ClaimVerification]) -> dict[str, str]:
     by = {c.id: c for c in cvs}
     return {c.id: link_level(c, by.get(c.id)) for c in r3.chain(card)}

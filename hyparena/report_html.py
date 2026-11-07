@@ -107,7 +107,7 @@ TIPS = {
 
 
 def tip(key: str, label: str) -> str:
-    ru, en = TIPS[key]
+    ru, en = TIPS.get(key) or GLOSSARY_EXTRA[key]
     return f'<span class="tip" tabindex="0" data-ru="{e(ru)}" data-en="{e(en)}">{label}</span>'
 
 
@@ -262,6 +262,7 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
                    "unchecked": [c["id"] for c in chain if not c["checked"]], "experiment": {"design": de.design, "endpoint": de.endpoint, "n": de.n_planned},
                    "endpoint_clinical": sc.get("endpoint_clinical"), "trend_pubmed": sc.get("trend_pubmed"), "ai_role": sc.get("ai_role"),
                    "ai_span": card.ai_role_span, "aspid": {p: sc.get(f"aspid_{p}") for p in profiles}, "N": N,
+                   "N_pmid": nv.novelty_source(card, cvs),
                    "link_levels": nv.link_levels(card, cvs),
                    "flags": res_flags(it)}
         values[h] = {"P": res.P, "I": res.I, "I_headroom": it["v3"].get("headroom_I"), "W": res.scope, "support_share": res.support_share, "coverage": res.coverage, "N": N,
@@ -360,10 +361,7 @@ details .body{padding:0 16px 14px}details.sub{border:0;background:transparent;ma
 .arrow{align-self:center;color:var(--muted)}.link .s{font-family:var(--mono)}
 .up{color:var(--ok)}.down{color:var(--bad)}blockquote{margin:4px 0;padding-left:10px;border-left:3px solid var(--line);color:var(--muted);font-size:.85rem}
 .tip{border-bottom:1px dotted var(--muted);cursor:help;position:relative}
-.tip:hover::after,.tip:focus::after{position:absolute;left:0;top:calc(100% + 6px);z-index:20;width:min(320px,80vw);white-space:normal;
- background:var(--ink);color:var(--paper);font:400 .82rem/1.45 var(--body);padding:8px 10px;border-radius:8px;text-transform:none;letter-spacing:0;text-align:left}
-html[data-lang="ru"] .tip:hover::after,html[data-lang="ru"] .tip:focus::after{content:attr(data-ru)}
-html[data-lang="en"] .tip:hover::after,html[data-lang="en"] .tip:focus::after{content:attr(data-en)}
+a.rec.tip{border-bottom:1px solid var(--line)}
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.tabs button{font:inherit;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
 .tabs button[aria-selected="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
 .ptab[hidden]{display:none}.cols{display:flex;gap:10px;flex-wrap:wrap;font-size:.85rem;margin:6px 0 8px;color:var(--muted)}.cols label{white-space:nowrap;cursor:pointer}
@@ -371,6 +369,17 @@ html[data-lang="en"] .tip:hover::after,html[data-lang="en"] .tip:focus::after{co
 .tools{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:6px 0;font-size:.9rem}.tools input,.tools select{font:inherit;padding:3px 6px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}
 tr.lead td:first-child{box-shadow:inset 3px 0 var(--accent)}.star{color:var(--accent);font-weight:600}
 .steps{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0}.steps .st{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 10px;font-size:.88rem;max-width:230px}
+header.band{background:var(--accent);color:#fff}header.band .wrap{padding:12px 16px 0}header.band h1{color:#fff;font-size:1.5rem;margin:.3em 0 .5em}
+header.band .bar1{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:.85rem}header.band .badge{background:rgba(255,255,255,.15);border-radius:4px;padding:2px 8px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:.75rem}
+header.band .meta{opacity:.85}header.band .sp{flex:1}header.band button.sw{background:transparent;color:#fff;border-color:rgba(255,255,255,.4)}
+.vtabs{display:flex;gap:6px;flex-wrap:wrap}.vtabs button{font:inherit;font-size:.92rem;border:0;border-radius:8px 8px 0 0;padding:8px 14px;cursor:pointer;background:rgba(255,255,255,.12);color:#fff}
+.vtabs button[aria-selected="true"]{background:var(--paper);color:var(--ink)}.view[hidden]{display:none}
+.pill{display:inline-block;background:var(--warn-soft);border-radius:8px;padding:6px 12px;text-decoration:none;color:var(--ink);font-weight:500}
+.tbl.links td{font-size:.84rem}.recs{max-width:420px}.rec{display:inline-block;border-radius:6px;padding:1px 6px;margin:0 4px 4px 0;font-size:.78rem;text-decoration:none;color:var(--ink);border:1px solid var(--line)}
+.rec.ok{background:var(--ok-soft)}.rec.bad{background:var(--bad-soft)}.pad{padding:1px 5px;border-radius:4px}
+#tt{position:fixed;z-index:100;max-width:min(380px,90vw);background:var(--ink);color:var(--paper);font:400 .82rem/1.45 var(--body);padding:8px 10px;border-radius:8px;pointer-events:none;display:none;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+dl.gl{display:grid;grid-template-columns:minmax(140px,220px) 1fr;gap:6px 14px;margin:0}dl.gl dt{font-weight:600}dl.gl dd{margin:0;color:var(--muted)}
+@media (max-width:640px){dl.gl{grid-template-columns:1fr}}
 @media print{header.top{position:static}details{break-inside:avoid}details:not([open])>.body{display:block}}
 """
 
@@ -397,7 +406,26 @@ function showProfile(p){document.querySelectorAll('.tabs button').forEach(b=>b.s
 ['fq','ftype'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',()=>{document.querySelectorAll('.ptab table').forEach(tb=>{tb.dataset.page=0;refresh(tb)})})});
 document.querySelectorAll('.ptab table').forEach(refresh);
 document.querySelectorAll('table.sortable th').forEach(th=>th.addEventListener('click',()=>setTimeout(()=>refresh(th.closest('table')),0)));
-document.querySelectorAll('a[href^="#h-"]').forEach(a=>a.addEventListener('click',()=>{const d=document.querySelector(a.getAttribute('href'));if(d&&d.tagName==='DETAILS')d.open=true}));
+function showView(v){document.querySelectorAll('.vtabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.view===v?'true':'false'));
+ document.querySelectorAll('section.view').forEach(s=>s.hidden=s.dataset.view!==v);try{sessionStorage.setItem('rep-view',v)}catch(e){}}
+function viewOf(el){const s=el&&el.closest('section.view');return s?s.dataset.view:null}
+function go(hash){const el=document.getElementById(hash.slice(1));if(!el)return;const v=viewOf(el);if(v)showView(v);
+ let d=el.tagName==='DETAILS'?el:el.closest('details');while(d){d.open=true;d=d.parentElement&&d.parentElement.closest('details')}
+ setTimeout(()=>el.scrollIntoView({block:'start'}),0)}
+document.addEventListener('click',ev=>{const a=ev.target.closest('a[href^="#"]');if(!a)return;const h=a.getAttribute('href');
+ if(['#help','#evo','#rank','#src','#hyp'].includes(h)){ev.preventDefault();showView(h.slice(1));return}
+ if(document.getElementById(h.slice(1))){ev.preventDefault();go(h);history.replaceState(null,'',h)}});
+function openAll(o){document.querySelectorAll('section.view[data-view="hyp"] details').forEach(d=>d.open=o)}
+function srcFilter(){const q=(document.getElementById('sq').value||'').toLowerCase();document.querySelectorAll('#srct tbody tr').forEach(r=>r.style.display=!q||r.dataset.q.includes(q)?'':'none')}
+const TT=document.getElementById('tt');
+function ttShow(el){const l=document.documentElement.dataset.lang||'ru';const txt=el.getAttribute('data-'+l)||el.getAttribute('data-ru');if(!txt)return;
+ TT.textContent=txt;TT.style.display='block';const r=el.getBoundingClientRect();const w=TT.offsetWidth,hh=TT.offsetHeight;
+ let x=Math.min(Math.max(8,r.left),window.innerWidth-w-8),y=r.bottom+6;if(y+hh>window.innerHeight-8)y=Math.max(8,r.top-hh-6);TT.style.left=x+'px';TT.style.top=y+'px'}
+document.addEventListener('mouseover',ev=>{const el=ev.target.closest('.tip');if(el)ttShow(el)});
+document.addEventListener('mouseout',ev=>{const el=ev.target.closest('.tip');if(el&&!el.contains(ev.relatedTarget))TT.style.display='none'});
+document.addEventListener('focusin',ev=>{const el=ev.target.closest('.tip');if(el)ttShow(el)});document.addEventListener('focusout',()=>TT.style.display='none');
+window.addEventListener('scroll',()=>TT.style.display='none',{passive:true});
+(()=>{let v='rank';try{v=sessionStorage.getItem('rep-view')||'rank'}catch(e){}if(location.hash&&document.getElementById(location.hash.slice(1)))go(location.hash);else showView(v)})();
 """
 
 
@@ -487,7 +515,7 @@ def render_evolution(evo: dict, H: dict, profs: list[str]) -> str:
             a, b = (c.get("drift") or {}).get("N", [None, None])
             s_ = f'{tn(NOVELTY_NAMES.get(a, NOVELTY_NAMES[None]))} → {tn(NOVELTY_NAMES.get(b, NOVELTY_NAMES[None]))}'
             if (c.get("drift") or {}).get("drift_to_known"):
-                s_ += '<br><span class="chip bad">' + t("сдвиг к известному", "moved towards the known") + '</span>'
+                s_ += '<br><span class="chip bad">' + tip("drift", t("сдвиг к известному", "moved towards the known")) + '</span>'
             return s_
         for u, p in pairs:
             c = p["compare"]
@@ -564,32 +592,148 @@ def pbar(P, lo, hi) -> str:
             f'<span class="pt" style="left:{P*100:.0f}%"></span></span>')
 
 
+SIDE = {"for": ("за", "for"), "against": ("против", "against")}
+DISC = {"eliminated": ("отсекает", "rules it out"), "weakened": ("ослабляет", "weakens it"), "unchanged": ("не различает", "does not tell apart")}
+
+
+def dn(d: str) -> tuple[str, str]:
+    return DESIGN_NAMES.get(d or "none", (d or "—", d or "—"))
+
+
+def link_table(h: str, x: dict) -> str:
+    """The table of links of one hypothesis: F / A, S with its interval, R, the link's novelty level, the records (weight;
+    the quote on hovering a PMID)."""
+    from hyparena.card import rules_v32 as r32_
+    lv = x.get("link_levels") or {}
+    rows = []
+    for c in x["chain"]:
+        R = r32_.non_refutation(c["F"], c["A"])
+        recs = "".join(
+            f'<a class="rec {"ok" if r["side"] == "for" else "bad"} tip" data-ru="{e(tn_ru(SIDE[r["side"]]) + " · " + dn(r["design"])[0] + (" · n " + str(r["n"]) if r["n"] else "") + " · вес " + fmt(r["w"], 3) + " — «" + (r["quote"] or "")[:420] + "»")}" '
+            f'data-en="{e(SIDE[r["side"]][1] + " · " + dn(r["design"])[1] + (" · n " + str(r["n"]) if r["n"] else "") + " · weight " + fmt(r["w"], 3) + " — “" + (r["quote"] or "")[:420] + "”")}" '
+            f'href="https://pubmed.ncbi.nlm.nih.gov/{e(r["pmid"])}/" target="_blank" rel="noopener">{e(r["pmid"])} <span class="mono">{fmt(r["w"], 2)}</span></a>'
+            for r in c["records"][:14]) + (f' <span class="muted">+{len(c["records"]) - 14}</span>' if len(c["records"]) > 14 else "")
+        rows.append(f'<tr id="b-{e(h)}-{e(c["id"])}"><td><span class="eyebrow">{tn(LINK_NAMES.get(c["link"], (c["link"],) * 2))}</span><br>{e(c["text"])}'
+                    + (f'<br><span class="muted" style="font-size:.78rem">{t("признак старения","hallmark")}: {e(c["hallmark"])}</span>' if c["hallmark"] else "") + '</td>'
+                    f'<td class="n">{fmt(c["F"], 3)} / {fmt(c["A"], 3)}</td>'
+                    f'<td class="n"><span class="{strength_cls(c["S"])} pad">{fmt(c["S"])}</span><br><span class="muted" style="font-size:.75rem">[{fmt(c["lo"])}; {fmt(c["hi"])}]</span></td>'
+                    f'<td class="n"{" style=\"color:var(--bad);font-weight:600\"" if R < 0.999 else ""}>{fmt(R)}</td>'
+                    f'<td><span class="chip">{tn(NOVELTY_NAMES.get(lv.get(c["id"]), NOVELTY_NAMES[None]))}</span></td>'
+                    f'<td class="recs">{recs or "<span class=muted>" + t("записей нет","no records") + "</span>"}</td></tr>')
+    alts = ""
+    if x.get("alternatives"):
+        alts = ('<p style="margin:.8em 0 .2em"><b>' + tip("alt", t("Альтернативные объяснения", "Alternative explanations")) + '</b></p><ul>' + "".join(
+            f'<li>{e(a["text"])} — {t("поддержка","support")} <span class="mono">{fmt(a["support"])}</span>; '
+            f'{t("эксперимент: при успехе","experiment: if positive")} {tn(DISC.get(a["on_positive"], (a["on_positive"],) * 2))}, {t("при неудаче","if negative")} {tn(DISC.get(a["on_negative"], (a["on_negative"],) * 2))}'
+            f'<br><span class="muted" style="font-size:.85rem">{e(a["why"] or "")}</span></li>' for a in x["alternatives"]) + '</ul>')
+    exp = x.get("experiment") or {}
+    return ('<div class="scroll" style="margin-top:10px"><table class="tbl links"><thead><tr>'
+            f'<th>{tip("link", t("Звено","Link"))}</th><th>{tip("FA","F / A")}</th><th>{tip("S","S [90%]")}</th><th>{tip("R","R")}</th>'
+            f'<th>{tip("link_N", t("Новизна звена","Link novelty"))}</th><th>{tip("records", t("Записи PubMed (PMID, вес)","PubMed records (PMID, weight)"))}</th>'
+            '</tr></thead><tbody>' + "".join(rows) + '</tbody></table></div>' +
+            f'<p class="muted" style="font-size:.85rem">{t("Заявленный эксперимент: ","Stated experiment: ")}{e(exp.get("design") or "—")}, '
+            f'{e(exp.get("endpoint") or "—")}; n {e(exp.get("n") or "—")}</p>' + alts)
+
+
+def tn_ru(pair) -> str:
+    return pair[0]
+
+
+def render_sources(H: dict) -> str:
+    """Every record of the pool, one row per paper and link: PMID, hypothesis, link, for or against, design, n, weight, quote."""
+    rows = []
+    for h, x in H.items():
+        for c in x.get("chain") or []:
+            for r in c["records"]:
+                rows.append((r["pmid"], h, x, c, r))
+    rows.sort(key=lambda z: (z[0], z[1]))
+    out = [f'<h2>{t("Источники: все записи пула","Sources: every record of the pool")}</h2><p class="muted">' + t(
+        f"Записей: {len(rows)}, статей: {len({z[0] for z in rows})}. Только статьи до даты среза; цитата — дословно из аннотации. Вес — произведение множителей дизайна, точности, эффекта, сравнения и контекста (справка).",
+        f"Records: {len(rows)}, papers: {len({z[0] for z in rows})}. Papers before the cut-off only; the quote is verbatim from the abstract. The weight is the product of design, precision, effect, comparison and context (help).") + '</p>',
+           '<div class="tools"><input id="sq" type="search" placeholder="PMID / NCT / текст" oninput="srcFilter()"></div>',
+           '<div class="scroll"><table class="tbl sortable" id="srct"><thead><tr><th>PMID</th><th>' + t("Гипотеза","Hypothesis") + '</th><th>' +
+           t("Звено","Link") + '</th><th>' + tip("side", t("За / против","For / against")) + '</th><th>' + tip("design", t("Дизайн","Design")) +
+           '</th><th>n</th><th>' + tip("w", t("Вес","Weight")) + '</th><th>' + t("Цитата","Quote") + '</th></tr></thead><tbody>']
+    for pmid, h, x, c, r in rows:
+        q = e(f'{pmid} {h} {r["quote"] or ""}'.lower())
+        out.append(f'<tr data-q="{q}"><td><a href="https://pubmed.ncbi.nlm.nih.gov/{e(pmid)}/" target="_blank" rel="noopener">{e(pmid)}</a></td>'
+                   f'<td><a href="#h-{e(h)}">{e(h)}</a></td><td>{tn(LINK_NAMES.get(c["link"], (c["link"],) * 2))}</td>'
+                   f'<td><span class="chip {"ok" if r["side"] == "for" else "bad"}">{tn(SIDE[r["side"]])}</span></td><td>{tn(dn(r["design"]))}</td>'
+                   f'<td class="n">{e(r["n"] or "—")}</td><td class="n" data-v="{r["w"]}">{fmt(r["w"], 3)}</td>'
+                   f'<td><blockquote>{e((r["quote"] or "")[:300])}</blockquote></td></tr>')
+    out.append('</tbody></table></div>')
+    return "\n".join(out)
+
+
+GLOSSARY_EXTRA = {
+    "FA": ("Веса F / A: суммарный вес записей «за» (F) и «против» (A) звена. Вес записи = дизайн × точность × эффект × сравнение × контекст; одна большая РКИ в точной популяции с крупным эффектом весит 1. Несколько записей одной статьи или одного испытания: самая весомая целиком, остальные по 1/4.",
+           "Weights F / A: the summed weight of the records for (F) and against (A) a link. A record's weight = design × precision × effect × comparison × context; one large RCT in the exact population with a large effect weighs 1. Several records of one paper or trial: the heaviest fully, the rest at 1/4."),
+    "R": ("Неопровергнутость звена R = (1 + cF) / (1 + cF + cA), c = 6.67: 1, если данных «против» нет; данные «против» снижают её, данные «за» смягчают снижение. P гипотезы — произведение R по звеньям.",
+          "Non-refutation of a link R = (1 + cF) / (1 + cF + cA), c = 6.67: 1 when nothing is against; data against lower it, data for soften that. P of the hypothesis is the product of R over the links."),
+    "link_N": ("Новизна звена: ступень по ближайшей записи этого звена — новый контекст (то же вмешательство на том же виде), перенос (только на другом виде), аналог (только родственное вмешательство), новое звено (записей нет).",
+               "Link novelty: the level of the closest record of this link: new context (the same intervention in the same species), translation (only another species), analog (only a related intervention), new link (no records)."),
+    "records": ("Записи PubMed по звену: PMID и вес. Зелёные — «за», красные — «против». Наведите на запись, чтобы увидеть дизайн, n и дословную цитату; клик открывает статью.",
+                "PubMed records of the link: PMID and weight. Green: for, red: against. Hover for the design, n and the verbatim quote; a click opens the paper."),
+    "link": ("Звено механизма: доставка, действие на мишень, сигнальный путь, промежуточный эффект, исход. Цепочка звеньев ведёт от вмешательства к исходу.",
+             "A link of the mechanism: delivery, target engagement, pathway, intermediate effect, outcome. The chain leads from the intervention to the outcome."),
+    "alt": ("Альтернативное объяснение того же результата. Учитывается в I, только если у него есть поддержка в литературе и заявленный эксперимент его отсекает или ослабляет.",
+            "An alternative explanation of the same result. It counts in I only with support in the literature and when the stated experiment rules it out or weakens it."),
+    "side": ("«За» — находка подтверждает звено; «против» — результат нулевой или противоположный для этого же показателя. Значимый, но клинически малый эффект — «за» с малым весом, не «против».",
+             "For: the finding supports the link; against: a null or opposite result for the same measure. A significant but clinically small effect is for with a small weight, not against."),
+    "design": ("Дизайн исследования из аннотации: клетки, животные, наблюдательное, обзор, нерандомизированное, метаанализ, РКИ. Для звена исхода о людях — шкала 1/7 … 7/7; для звеньев до исхода — клетки 1/3, обзор 2/3, первичное исследование 1.",
+               "Design from the abstract: cells, animals, observational, review, non-randomised, meta-analysis, RCT. For an outcome link about humans the scale is 1/7 … 7/7; before the outcome: cells 1/3, review 2/3, primary study 1."),
+    "w": ("Вес записи — произведение множителей дизайна, точности (по n; до исхода постоянная 1/2), эффекта, сравнения (между группами 1, до/после 2/3, нет 1/3) и контекста (точный 1, соседний 2/3, родственное вмешательство 1/3).",
+          "Record weight: the product of design, precision (from n; 1/2 before the outcome), effect, comparison (between groups 1, before/after 2/3, none 1/3) and context (exact 1, adjacent 2/3, related intervention 1/3)."),
+    "tuned": ("Доработанная версия: к гипотезе применены только исправимые пункты её разбора; новые части родителя сохранены (версия, сдвинутая к известному, возвращается писателю).",
+              "Tuned version: only the fixable items of the analysis were applied; the parent's new parts are kept (a version that moved towards the known goes back to the writer)."),
+    "free": ("Свободная эволюция: писатель мог изменить всё под выбранный профиль; названные им статьи засчитаны, только если их нашёл проверяющий до даты среза.",
+             "Free evolution: the writer could change anything for the chosen profile; the papers it named count only if the verifier found them before the cut-off."),
+    "drift": ("Сдвиг к известному: у улучшенной версии новизна ниже, чем у родителя, или сохранённое звено стало ближе к уже показанному, или пропало новое звено. Версия остаётся в рейтинге, флаг лишь предупреждает.",
+              "Moved towards the known: the improved version is less novel than the parent, a kept link moved closer to what is shown, or the new link disappeared. The version stays in the ranking; the flag only warns."),
+    "flags": ("Флаги — подсказки для улучшения: механизм не выписан, нет подкреплённых альтернатив, эксперимент оставляет альтернативы, спорное звено и др.",
+              "Flags: hints for improving: no mechanism, no supported alternatives, the experiment leaves alternatives standing, a contested link and others."),
+}
+
+
+def glossary() -> str:
+    """Every parameter of the report with its note (the same texts as the hover notes)."""
+    items = {**TIPS, **GLOSSARY_EXTRA}
+    names = {**{k: v for k, v in IND_NAMES.items()}, "score": ("ожидаемая оценка", "expected score"), "top5": ("вероятность топ-5", "probability of top 5"),
+             "place": ("место", "place"), "room": ("запас улучшения", "room to improve"), "S": ("сила звена S", "link strength S"),
+             "FA": ("веса F / A", "weights F / A"), "R": ("неопровергнутость звена R", "link non-refutation R"), "link_N": ("новизна звена", "link novelty"),
+             "records": ("записи PubMed", "PubMed records"), "link": ("звено", "link"), "alt": ("альтернатива", "alternative"),
+             "side": ("за / против", "for / against"), "design": ("дизайн", "design"), "w": ("вес записи", "record weight"), "flags": ("флаги", "flags")}
+    return ('<div class="card"><h3>' + t("Глоссарий: все параметры отчёта", "Glossary: every parameter of the report") + '</h3><dl class="gl">' + "".join(
+        f'<dt>{tn(names.get(k, (k, k)))}</dt><dd>{t(e(v[0]), e(v[1]))}</dd>' for k, v in items.items()) + '</dl></div>')
+
+
 def render(rep: dict) -> str:
     m, H = rep["meta"], rep["hyps"]
-    out = ['<!doctype html><html lang="ru" data-lang="ru"><head><meta charset="utf-8">',
+    head_out = out = ['<!doctype html><html lang="ru" data-lang="ru"><head><meta charset="utf-8">',
            '<meta name="viewport" content="width=device-width, initial-scale=1">',
            f'<title>Отчёт по пулу — {e(m["pool"])}</title>',
            '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">',
            f'<style>{CSS}</style></head><body>']
-    out.append('<header class="top"><div class="wrap"><b>hyp-arena</b><nav>'
-               f'<a href="#read">{t("Как читать","How to read")}</a><a href="#table">{t("Рейтинг","Ranking")}</a>'
-               f'<a href="#each">{t("Разбор гипотез","Each hypothesis")}</a>'
-               + (f'<a href="#evo">{t("Эволюция","Evolution")}</a>' if rep.get("evolution") else "") +
-               f'<a href="#app">{t("Приложения","Appendices")}</a></nav><span class="sp"></span>'
-               '<button class="sw" onclick="setLang(\'ru\')">RU</button><button class="sw" onclick="setLang(\'en\')">EN</button>'
-               '<button class="sw" onclick="setTheme()">◐</button></div></header><main class="wrap">')
-    out.append(f'<p class="eyebrow" style="margin-top:24px">{t("Отчёт по пулу гипотез","Pool report")} · {e(m["date"])}</p>')
-    out.append(f'<h1>{t(e(m["title_ru"]), e(m["title_en"]))}</h1>')
-    out.append(f'<p class="prose muted">{t(e(m["about_ru"]), e(m["about_en"]))}</p>')
-    out.append(f'<p class="muted mono" style="font-size:.8rem">{t("Метод","Method")} {e(m["method"])} · '
-               f'{t("оценено","scored")} {m["n_scored"]} / {m["n"]} · {t("хеш оценок","scores SHA-256")} {e(m["sha"][:16])}…</p>')
+    views: dict[str, list[str]] = {}
+    VIEWS = [("rank", t("Рейтинг", "Ranking")), ("hyp", t("Гипотезы", "Hypotheses"))] + \
+        ([("evo", t("Эволюция", "Evolution"))] if rep.get("evolution") else []) + \
+        [("src", t("Источники", "Sources")), ("help", t("Справка", "Help"))]
+    out.append('<header class="band"><div class="wrap"><div class="bar1"><span class="badge">' + t("Метод v3.4 · АСПИД", "Method v3.4 · ASPID") +
+               f'</span><span class="meta">{t("Дата среза","Cut-off date")} T = {e(m["date"])} · {t("оценено","scored")} {m["n_scored"]} / {m["n"]}</span>'
+               '<span class="sp"></span><button class="sw" onclick="setLang(\'ru\')">RU</button><button class="sw" onclick="setLang(\'en\')">EN</button>'
+               '<button class="sw" onclick="setTheme()">◐</button></div>'
+               f'<h1>{t(e(m["title_ru"]), e(m["title_en"]))}</h1><nav class="vtabs">' +
+               "".join(f'<button data-view="{k}" onclick="showView(\'{k}\')">{lab}</button>' for k, lab in VIEWS) +
+               '</nav></div></header><main class="wrap">')
+    out = views.setdefault("rank", [])
+    out.append(f'<p class="prose muted" style="margin-top:18px">{t(e(m["about_ru"]), e(m["about_en"]))} ' +
+               t('Как читать показатели — во вкладке <a href="#help" onclick="showView(\'help\')">«Справка»</a>; у каждого подчёркнутого термина есть подсказка при наведении.',
+                 'How to read the indicators: the <a href="#help" onclick="showView(\'help\')">Help</a> tab; every underlined term has a hover note.') + '</p>')
     if rep.get("evolution"):
         n_ev = sum(1 for p in rep["evolution"].values() if p.get("compare"))
-        out.append('<div class="card prose" style="border-color:var(--accent)">' + t(
-            f"В отчёт добавлены <b>{n_ev} улучшенных версий</b> гипотез: они стоят в рейтинге отдельными строками с пометкой "
-            f"«улучшенная версия». Что изменилось и почему — в разделе <a href=\"#evo\">«Эволюция»</a>.",
-            f"<b>{n_ev} improved versions</b> of hypotheses are in this report: they appear in the ranking as rows marked "
-            f"\"improved version\". What changed and why: section <a href=\"#evo\">\"Evolution\"</a>.") + '</div>')
+        out.append('<p><a class="pill" href="#evo" onclick="showView(\'evo\')">' + t(
+            f"Улучшенных версий в рейтинге: {n_ev} — сравнение «до → после» →", f"Improved versions in the ranking: {n_ev}: before → after →") + '</a></p>')
+    out = views.setdefault("help", [])
     # 1. how to read
     out.append(f'<h2 id="read">{t("Как читать этот отчёт","How to read this report")}</h2><div class="prose">')
     out.append('<p>' + t(
@@ -627,6 +771,7 @@ def render(rep: dict) -> str:
         "A very low non-refutation is not compensated by the other indicators. The probability of top 5 shows how robust the place "
         "is: 0.9 means in the top 5 under almost any weights, 0.2 only under some.") + '</p>')
     # 2. ranking table per profile
+    out = views["rank"]
     profs = list(m["profiles"])
     out.append(f'<h2 id="table">{t("Рейтинг по профилям","Ranking by profile")}</h2>')
     out.append('<div class="tabs" role="tablist">' + "".join(
@@ -653,10 +798,16 @@ def render(rep: dict) -> str:
         v = x["values"].get(ind)
         if ind == "P":
             iv = (f'<br><span class="muted" style="font-size:.78rem">{fmt(x["P_lo"])}–{fmt(x["P_hi"])}</span>' if x["P_lo"] != x["P_hi"] else "")
-            return f'<td class="n" data-c="P" data-v="{x["P"]}">{fmt(x["P"])}{iv}</td>'
+            red = ' style="color:var(--bad);font-weight:600"' if x["P"] < 0.999 else ""
+            return f'<td class="n" data-c="P" data-v="{x["P"]}"><span{red}>{fmt(x["P"])}</span>{iv}</td>'
         if ind == "N":
             lv = ORDINAL["N"]
-            return f'<td data-c="N" data-v="{lv.index(v) if v in lv else -1}">{tn(NOVELTY_NAMES.get(v, NOVELTY_NAMES[None]))}</td>'
+            src = (f'<br><a class="mono" style="font-size:.75rem" href="https://pubmed.ncbi.nlm.nih.gov/{e(x["N_pmid"])}/" target="_blank" rel="noopener">PMID {e(x["N_pmid"])}</a>' if x.get("N_pmid") else "")
+            return f'<td data-c="N" data-v="{lv.index(v) if v in lv else -1}"><span class="chip">' + tip("N", tn(NOVELTY_NAMES.get(v, NOVELTY_NAMES[None]))) + f'</span>{src}</td>'
+        if ind == "I":
+            hd = x["values"].get("I_headroom")
+            return (f'<td class="n" data-c="I" data-v="{x["I"]}">{fmt(x["I"])}' +
+                    (f'<br><span class="muted" style="font-size:.75rem">{t("запас","room")} {fmt(hd)}</span>' if hd and hd > x["I"] + 0.005 else "") + '</td>')
         if ind == "W":
             return f'<td data-c="W" data-v="{ORDINAL["W"].index(v) if v in ORDINAL["W"] else -1}">{tn(SCOPE_NAMES.get(v, (str(v),)*2))}</td>'
         if ind == "endpoint_clinical":
@@ -690,7 +841,7 @@ def render(rep: dict) -> str:
         for h in rep["ranks"][p]:
             x = H[h]
             rk = x["rank"][p]
-            lead = rk <= 3
+            lead = False                       # no separate top 3 (user decision 2026-11-07)
             why = ""
             if lead:
                 ups = x["contrib"][p]["up"]
@@ -714,9 +865,11 @@ def render(rep: dict) -> str:
     first = profs[0]
     order = rep["ranks"][first] + [h for h in H if h not in rep["ranks"][first]]   # the first profile's order, then the unranked
     # 4. each hypothesis
-    out.append(f'<h2 id="each">{t("Разбор каждой гипотезы","Each hypothesis")}</h2><p class="muted">' + t(
-        "Раскройте строку. Полное разложение по звеньям с цитатами — в приложении Б.",
-        "Open a row. The full breakdown by links with quotes is in appendix B.") + '</p>')
+    out = views.setdefault("hyp", [])
+    out.append(f'<h2 id="each">{t("Гипотезы: звенья, записи, что улучшить","Hypotheses: links, records, what to improve")}</h2><p class="muted">' + t(
+        "Раскройте строку. В карточке: цепочка звеньев, таблица звеньев (веса F / A, сила S, неопровергнутость R, новизна звена, записи с весом; цитата — при наведении на PMID), альтернативы, что поднимет оценку.",
+        "Open a row. Inside: the chain, the table of links (weights F / A, strength S, non-refutation R, link novelty, records with weights; the quote on hovering a PMID), the alternatives, what would raise the score.") +
+        f' <button class="sw" onclick="openAll(true)">{t("развернуть все","open all")}</button> <button class="sw" onclick="openAll(false)">{t("свернуть все","close all")}</button></p>')
     for h in order:
         x = H[h]
         if x.get("P") is None:
@@ -779,12 +932,16 @@ def render(rep: dict) -> str:
                    (f'<li>{t("слабое звено: ","weakest link: ")}{tn(LINK_NAMES.get(w["link"], (w["link"],)*2))} (S {fmt(w["S"])}' +
                     (t(", данных нет", ", no data") if not w["records"] else "") + ')</li>' if w and w["S"] < 0.75 else "") +
                    '</ul></div></div>')
+        out.append(link_table(h, x))
         out.append(render_items(x.get("improvements") or [], profs, x.get("room")))
         out.append('</div></details>')
     if rep.get("evolution"):
-        out.append(render_evolution(rep["evolution"], H, profs))
+        views["evo"] = [render_evolution(rep["evolution"], H, profs)]
+    views["src"] = [render_sources(H)]
+    out = views["help"]
     # 5. appendices
-    out.append(f'<h2 id="app">{t("Приложения","Appendices")}</h2>')
+    out.append(f'<h2 id="app">{t("Метод, глоссарий, происхождение","Method, glossary, provenance")}</h2>')
+    out.append(glossary())
     out.append('<details><summary><b>' + t("А. Метод кратко и глоссарий","A. The method in brief and a glossary") + '</b></summary><div class="body prose">' + t(
         "<p><b>Запись</b> — находка из одной статьи по одному звену: дословная цитата, дизайн (от клеточного опыта до РКИ), "
         "размер выборки, величина эффекта, сравнение (между группами, до/после), совпадение условий. Её вес — произведение "
@@ -803,44 +960,6 @@ def render(rep: dict) -> str:
         "the only filter: a link is refuted when an RCT or meta-analysis in the same population is against it and nothing as "
         "strong is for it.</p><p><b>Alternative</b>: a competing explanation of the same result; it counts only with support in "
         "the literature.</p><p>In full: the method manual <code>docs/method-v3-manual.md</code>.</p>") + '</div></details>')
-    out.append('<details><summary><b>' + t("Б. Полное разложение по гипотезам","B. Full breakdown per hypothesis") + '</b></summary><div class="body">')
-    for h in order:
-        x = H[h]
-        if x.get("P") is None:
-            continue
-        out.append(f'<details><summary>{e(x["title"][:110])} <span class="muted mono">{e(h)}</span></summary><div class="body">')
-        out.append(f'<p class="muted">{t("Заявленный эксперимент: ","Stated experiment: ")}{e(x["experiment"]["design"])}, '
-                   f'{e(x["experiment"]["endpoint"] or "—")}; n {e(x["experiment"]["n"] or "—")}; '
-                   f'{t("завершение","completion")} {e(x.get("completion") or "—")}</p>')
-        for c in x["chain"]:
-            out.append(f'<h3 id="b-{e(h)}-{e(c["id"])}">{tn(LINK_NAMES.get(c["link"], (c["link"],)*2))}: {e(c["text"])}</h3>'
-                       f'<p class="mono muted">S {fmt(c["S"],3)} [{fmt(c["lo"])}; {fmt(c["hi"])}] · F {fmt(c["F"],3)} · A {fmt(c["A"],3)} · {e(c["label"])}'
-                       + (f' · {t("признак старения","hallmark")}: {e(c["hallmark"])}' if c["hallmark"] else "") + '</p>')
-            if not c["records"]:
-                out.append(f'<p class="muted">{t("Записей нет: литература до даты оценки не нашла данных по этому звену.","No records: the literature before the date of scoring had no data on this link.")}</p>')
-                continue
-            out.append('<div class="scroll"><table class="tbl"><thead><tr><th>PMID</th><th>' + t("за / против","for / against") +
-                       '</th><th>' + t("вес","weight") + '</th><th>' + t("дизайн","design") + '</th><th>n</th><th>' +
-                       t("эффект","effect") + '</th><th>' + t("цитата","quote") + '</th></tr></thead><tbody>')
-            for r in c["records"][:12]:
-                out.append(f'<tr><td><a href="https://pubmed.ncbi.nlm.nih.gov/{e(r["pmid"])}/" target="_blank" rel="noopener">{e(r["pmid"])}</a></td>'
-                           f'<td><span class="chip {"ok" if r["side"]=="for" else "bad"}">{t("за","for") if r["side"]=="for" else t("против","against")}</span></td>'
-                           f'<td class="n">{fmt(r["w"],3)}</td><td>{e(r["design"])}</td><td class="n">{e(r["n"] or "—")}</td>'
-                           f'<td>{e((r["effect"] or "")[:80])}</td><td><blockquote>{e((r["quote"] or "")[:400])}</blockquote></td></tr>')
-            out.append('</tbody></table></div>')
-            if len(c["records"]) > 12:
-                out.append(f'<p class="muted">… {t("ещё","and")} {len(c["records"]) - 12}</p>')
-        if x["alternatives"]:
-            out.append('<h3>' + t("Альтернативные объяснения","Alternative explanations") + '</h3><ul>' + "".join(
-                f'<li>{e(a["text"])} — {t("поддержка","support")} {fmt(a["support"])}; {t("эксперимент при успехе: ","experiment if positive: ")}{e(a["on_positive"])}<br>'
-                f'<span class="muted">{e(a["why"] or "")}</span></li>' for a in x["alternatives"]) + '</ul>')
-        out.append('<h3>' + t("Остальные показатели (справочно)","Other indicators (for reference)") + '</h3><p class="mono" style="font-size:.85rem">' +
-                   " · ".join(f'{e(i)} {round(v*100) if v is not None else "—"}%' for i, v in sorted(x["pct"].items())) +
-                   f'</p><p class="muted" style="font-size:.85rem">{t("Проценты — доля пула ниже этой гипотезы по показателю.","Percent: share of the pool below this hypothesis on the indicator.")}</p>')
-        if x.get("ai_span"):
-            out.append(f'<p>{t("Роль ИИ — цитата: ","AI role, quote: ")}<blockquote>{e(x["ai_span"])}</blockquote></p>')
-        out.append('</div></details>')
-    out.append('</div></details>')
     out.append('<details><summary><b>' + t("В. Происхождение и ограничения","C. Provenance and limitations") + '</b></summary><div class="body prose"><ul>' +
                "".join(f'<li>{li}</li>' for li in [
                    t(f"Дата оценки {e(m['date'])}; литература — до этой даты.", f"Scored on {e(m['date'])}; literature up to that date."),
@@ -857,8 +976,11 @@ def render(rep: dict) -> str:
                      "The link between P and trial outcomes is not established: AUC 0.61-0.65 on past samples with wide intervals; this pool "
                      "is the prospective test."),
                ]) + '</ul></div></details>')
-    out.append(f'</main><script>{JS}</script></body></html>')
-    return "\n".join(out)
+    body = ["".join(head_out)]
+    for k, _ in VIEWS:
+        body.append(f'<section class="view" data-view="{k}" id="v-{k}">' + "\n".join(views.get(k, [])) + '</section>')
+    body.append(f'</main><div id="tt" role="tooltip"></div><script>{JS}</script></body></html>')
+    return "\n".join(body)
 
 
 EVO_SUFFIX = "+evo"
@@ -871,11 +993,11 @@ def evo_chip(x: dict) -> str:
     if not x.get("parent"):
         return ""
     if x.get("evo_mode") == "free":
-        c = f'<span class="chip ok">{t("свободная эволюция","free evolution")}</span> '
+        c = '<span class="chip ok">' + tip("free", t("свободная эволюция","free evolution")) + '</span> '
         if x.get("new_after"):
             c += f'<span class="chip">{t("новая гипотеза после ","new hypothesis after ")}{e(x["parent"])}</span> '
         return c
-    return f'<span class="chip ok">{t("доработанная версия","tuned version")}</span> '
+    return '<span class="chip ok">' + tip("tuned", t("доработанная версия","tuned version")) + '</span> '
 
 
 
