@@ -403,9 +403,9 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
     cv.evidence += support
     cv.counterevidence += against
     pmids = []
-    if search == "model":                                 # model-written queries, light guard, citation expansion (search.py)
+    if search in ("model", "model_population"):           # model-written queries, light guard, citation expansion (search.py)
         from hyparena.card.search import retrieve
-        pmids = retrieve(client, family, avoid, claim, card, as_of, retmax, log=log)
+        pmids = retrieve(client, family, avoid, claim, card, as_of, retmax, log=log, population_first=search == "model_population")
     else:
         for q in queries(claim, card):
             if q:

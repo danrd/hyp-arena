@@ -119,3 +119,14 @@ def test_room_applies_the_fixable_items_together_and_shows_the_novelty_cost():
     assert rm["score"]["evidence"][1] - rm["score"]["evidence"][0] >= single - 0.02     # together at least the best single item
     nothing = imp.analyse(card([OUT]), [CV(id="c9", evidence=[rec(2, "rct", n=200)])], {}, {"endpoint_clinical": "function"}, K=500)["room"]
     assert nothing["applied"] == [] and nothing["not_computed"] == ["write_mechanism"]
+
+
+def test_population_query_for_a_specific_population_only():
+    from hyparena.card.search import population_query
+    c = card([OUT])
+    c.pico.population.label = "older adults with pre-sarcopenia"
+    c.pico.intervention = [type(c.pico.population).__mro__[0] and __import__("hyparena.card.models", fromlist=["x"]).Intervention(label="squat exercise")]
+    q = population_query(c.claims[0], c)
+    assert q and "presarcopenia[tiab]" in q and '"pre-sarcopenic"[tiab]' in q and "training[tiab]" in q
+    c.pico.population.label = "older adults"
+    assert population_query(c.claims[0], c) is None
