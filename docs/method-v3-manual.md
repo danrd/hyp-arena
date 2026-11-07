@@ -96,6 +96,33 @@ returns records:
   paper is its own group. Several records of one group count once (section 5).
 - Retracted papers weigh nothing (v3.1: also when PubMed itself marks them retracted).
 
+**Reading rules where readers disagree** (added 2026-11-07 after a blind comparison of two readers on the same three trials;
+the verifier prompt `verify_claim/v9` already follows them; a report written by a model from this manual must too):
+
+1. **Same intervention or not** (`intervention_match`). *exact*: the intervention the claim names (the same programme, the
+   same compound); a different dose or schedule of it is exact with dose or regimen "no", which makes the record adjacent.
+   *class*: another intervention of the same kind on the claim's outcome (another resistance programme for a squat
+   programme; another drug of the same class) — it counts, with context 1/3. A programme that merely includes the named
+   intervention among several components (resistance training + nutrition + cognitive training for "squats") is *class*, and
+   only when its result can be read for the exercise arm; otherwise it is not a record for this claim. *Another intervention
+   altogether* (aerobic training for a resistance claim) weighs 0.
+2. **Against means null or opposite, not small.** A record is *against* when the result for the claim's own measure is no
+   effect (not significant against control, or no change in a before-after design) or the opposite direction. A significant
+   effect judged clinically small (below a minimal important difference) is a record *for* with a small effect (weight 1/4),
+   not a record against. A null on another measure of the same study is not against this claim (it may be against another
+   link of the chain).
+3. **Comparison is read from the analysis behind the sentence, not from the number of arms.** "X did not change in either
+   group over 12 weeks" is a within-group (before-after) result, 2/3, even in a two-arm trial; "no difference between groups"
+   is between groups, 1.
+4. **A null primary outcome with positive secondary ones** gives two records: the null primary against, the secondary for
+   with the flag subgroup_only or as a separate measure.
+5. **Population.** A record in the exact population of the trial (pre-sarcopenia for a pre-sarcopenia trial) is exact even
+   when it is small; a record in a neighbouring population (sarcopenia, healthy older adults) is adjacent. Search for the exact
+   population first: in the comparison the most informative record (a null SPPB result of a resistance programme in
+   pre-sarcopenia) was found by one reader and missed by the other.
+6. **Numbers a reader cannot compute are left unknown**, not estimated: the trend of attention and the literature counts are
+   computed by code (section 8); a model-written report marks them "not computed".
+
 ## 5. Weight of a record
 
 `w = design × precision × effect × comparison × context`.
@@ -176,10 +203,18 @@ ranked). Nothing else filters: an undeveloped but promising hypothesis keeps its
   wrote out its mechanism lost a factor of 2 per unchecked link; on the calibration P then ordered the 18 hypotheses with a
   mechanism backwards. The signal of P against trial outcomes came from data against, not from support.
 - **W, scope**, from supported links only: a hallmark of ageing (needs a link at least moderate), an organ or system, else
-  local. A scope that is claimed but not supported counts as local. An indicator of ASPID, not a factor of V.
+  local. A scope that is claimed but not supported counts as local. An indicator of ASPID, not a factor of V. A hallmark is
+  the link's own object (a measured hallmark process: senescent cells, proteostasis markers, mitochondrial function), not
+  something inferred from the kind of intervention: "protein after exercise → muscle protein synthesis" is an organ link,
+  not the hallmark "loss of proteostasis".
 - **I** = 1/3 + 2/3 × min(1, Σ a·d / 1.5) over the proposed alternatives. a = support of the alternative, max(0, 2 (S − 0.5))
   with S its strength; d = what the stated experiment does to it at either outcome (cut off 1, weakened 0.5, unchanged 0).
-  Without supported alternatives I = 1/3: an invented alternative adds nothing.
+  Without supported alternatives I = 1/3: an invented alternative adds nothing. **How d is set** (added 2026-11-07): d = 1
+  only when the experiment has a named arm, control or measurement for which the hypothesis and the alternative predict
+  different results, and one of the possible results contradicts the alternative (an active control matched for attention
+  rules out "any attention helps"); d = 0.5 when the experiment only measures the variable the alternative depends on,
+  without an arm that separates them; d = 0 otherwise. A design label alone ("factorial 2×2", "double-blind") gives nothing
+  until each alternative is named with the arm and the result that would rule it out.
 - **V** = P × I (0 if filtered). **Headroom I** = I if the experiment cut off every supported alternative (d = 1): what
   improving the experiment could add.
 
