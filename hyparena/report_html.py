@@ -99,6 +99,8 @@ TIPS = {
     "top5": ("Вероятность попасть в первую пятёрку пула по этому профилю: доля из 10 000 розыгрышей весов, где гипотеза оказалась в пятёрке. Показывает, насколько место устойчиво к выбору весов.",
              "Probability of being in the pool's top 5 under this profile: the share of 10,000 weight draws in which the hypothesis was in the top 5; how robust the place is to the choice of weights."),
     "place": ("Место по ожидаемой оценке (1 — лучшая).", "Place by the expected score (1 = best)."),
+    "room": ("Запас улучшения в этом профиле: насколько вырастет ожидаемая оценка, если применить вместе все пункты «можно исправить формулировкой» из разбора гипотезы (эксперимент, отсекающий альтернативы; переписанное опровергнутое звено; суженная популяция; клиническая конечная точка). «Выписать механизм» заранее не считается — отмечено звёздочкой. ↓ — улучшение снижает новизну (сдвиг к известному). По запасу выбираются гипотезы для эволюции.",
+             "Room to improve under this profile: how much the expected score would rise if every \"fixable by rewriting\" item of the analysis were applied together (an experiment ruling out the alternatives, a rewritten refuted link, a narrowed population, a clinical endpoint). \"Write the mechanism\" cannot be computed in advance: marked with an asterisk. ↓: the improvement lowers novelty (a move towards the known). Hypotheses for evolution are chosen by the room."),
     "S": ("Сила звена, от 0 до 1: 0.5 — данных нет; 0.83 — умеренная поддержка; около 0.5 с узким интервалом — данные «за» и «против» уравновешены.",
           "Link strength, 0 to 1: 0.5 = no data; 0.83 = moderate support; about 0.5 with a narrow interval = data for and against balance."),
 }
@@ -306,7 +308,8 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
         alts = {a: ClaimVerification.model_validate(v) for a, v in (it.get("v3_alternatives") or {}).items()}
         ext = {k: values[h].get(k) for k in ("feasibility", "best_design_outcome", "independent_outcome", "against_share",
                                              "endpoint_clinical", "trend_pubmed", "ai_role")}
-        hyps[h]["improvements"] = imp.items(card, cvs, alts, ext, values[h].get("I_headroom"))
+        an = imp.analyse(card, cvs, alts, {**ext, "N": values[h].get("N")}, values[h].get("I_headroom"))
+        hyps[h]["improvements"], hyps[h]["room"] = an["items"], an["room"]
     for x in hyps.values():
         x.setdefault("rank", {})
         x.setdefault("p_top5", {})
@@ -401,7 +404,7 @@ ITEM_CLS = {"rewrite": ("Можно исправить формулировко�
             "research": ("Нужны новые данные", "Needs new data")}
 
 
-def render_items(items: list[dict], profs: list[str]) -> str:
+def render_items(items: list[dict], profs: list[str], room: Optional[dict] = None) -> str:
     """The improvement list of one hypothesis (hyparena/card/improvements.py), in two groups, each item with its expected
     effect on the indicators and on the score under each profile."""
     if not items:
@@ -414,6 +417,13 @@ def render_items(items: list[dict], profs: list[str]) -> str:
                (f' · {t("лучший","best")} {g[0]:+.2f} ({tn(PROFILE_NAMES[g[1]])})' if g and g[0] > 0 else "") + '</span>')
     out = [f'<details class="sub"><summary><b>{summary}</b></summary><div class="body"><p class="muted" style="font-size:.85rem">' +
            t("Перечень считает код; «ожидаемо» — если пункт выполнен.", "Computed by code; \"expected\" if the item is done.") + '</p>']
+    if room and room.get("applied"):
+        n0, n1 = room.get("N", [None, None])
+        out.append('<p style="font-size:.9rem"><b>' + t("Запас улучшения", "Room to improve") + '</b> ' +
+                   t("(все исправимые пункты вместе): ", "(all fixable items together): ") + " · ".join(
+                       f'{tn(PROFILE_NAMES[p])} {v[1] - v[0]:+.3f}' for p, v in room["score"].items() if p in PROFILE_NAMES) +
+                   (f'; {t("новизна","novelty")} {tn(NOVELTY_NAMES.get(n0, NOVELTY_NAMES[None]))} → {tn(NOVELTY_NAMES.get(n1, NOVELTY_NAMES[None]))}' if n0 != n1 else "") +
+                   (f'<br><span class="muted">{t("не посчитано заранее: выписать механизм", "not computed in advance: write the mechanism")}</span>' if room.get("not_computed") else "") + '</p>')
     for cls in ("rewrite", "research"):
         group = [i for i in items if i["cls"] == cls]
         if not group:
@@ -425,6 +435,8 @@ def render_items(items: list[dict], profs: list[str]) -> str:
                 def val(k, v):
                     if k == "endpoint_clinical":
                         return tn(ENDPOINT_NAMES.get(v, (str(v),) * 2))
+                    if k == "N":
+                        return tn(NOVELTY_NAMES.get(v, NOVELTY_NAMES[None]))
                     return fmt(v)
                 ind = ", ".join(f'{tn(SHORT.get(k, (k, k)))} {val(k, v[0])} → {val(k, v[1])}' for k, v in i["expected"]["indicators"].items())
                 sc = " · ".join(f'{tn(PROFILE_NAMES[p])} {"+" if v[1] - v[0] >= 0 else ""}{v[1] - v[0]:.2f}'
@@ -607,6 +619,17 @@ def render(rep: dict) -> str:
                "".join(f'<option value="{e(ty)}">{e(" / ".join(TYPE_NAMES.get(ty, (ty, ty))))}</option>' for ty in types) +
                '</select><span class="muted">' + t("клик по заголовку сортирует", "click a header to sort") + '</span></div>')
 
+    def room_cell(x, p):
+        r = x.get("room") or {}
+        a, b = (r.get("score") or {}).get(p, [None, None])
+        if a is None or b is None:
+            return '<td class="n" data-v="-9">—</td>'
+        g = b - a
+        n0, n1 = r.get("N", [None, None])
+        down = n0 in ORDINAL["N"] and n1 in ORDINAL["N"] and ORDINAL["N"].index(n1) < ORDINAL["N"].index(n0)
+        mark = ("*" if r.get("not_computed") else "") + (' <span class="down">↓</span>' if down else "")
+        return f'<td class="n" data-v="{g:.4f}">{"+" if g > 0.0005 else ""}{fmt(g, 3)}{mark}</td>'
+
     def cell(ind, x):
         v = x["values"].get(ind)
         if ind == "P":
@@ -643,7 +666,7 @@ def render(rep: dict) -> str:
             for k, ind in enumerate(inds)) + '</div>')
         out.append('<div class="scroll"><table class="tbl sortable"><thead><tr>' +
                    f'<th>{tip("place","#")}</th><th>{t("Гипотеза","Hypothesis")}</th><th>{tip("score",t("Оценка","Score"))}</th>'
-                   f'<th>{tip("top5",t("Топ-5","Top 5"))}</th>' +
+                   f'<th>{tip("top5",t("Топ-5","Top 5"))}</th><th>{tip("room",t("Запас","Room"))}</th>' +
                    "".join(f'<th data-c="{ind}">{tip(ind, tn(SHORT.get(ind, (ind, ind))))}</th>' for ind in inds) + '</tr></thead><tbody>')
         for h in rep["ranks"][p]:
             x = H[h]
@@ -660,6 +683,7 @@ def render(rep: dict) -> str:
                        f'<a href="#h-{e(h)}">{e(x["title"][:90])}</a><br><span class="muted mono">{e(h)}</span> · '
                        f'<span class="muted">{tn(TYPE_NAMES.get(x.get("type"), ("—","—")))}</span>{why}</td>'
                        f'<td class="n" data-v="{x["aspid"][p]}">{fmt(x["aspid"][p], 3)}</td><td class="n" data-v="{x["p_top5"][p]}">{fmt(x["p_top5"][p])}</td>' +
+                       room_cell(x, p) +
                        "".join(cell(ind, x) for ind in inds) + '</tr>')
         out.append('</tbody></table></div><div class="pager"><button onclick="page(this,-1)">‹</button><span class="pinfo"></span>'
                    '<button onclick="page(this,1)">›</button></div></div>')
@@ -736,7 +760,7 @@ def render(rep: dict) -> str:
                    (f'<li>{t("слабое звено: ","weakest link: ")}{tn(LINK_NAMES.get(w["link"], (w["link"],)*2))} (S {fmt(w["S"])}' +
                     (t(", данных нет", ", no data") if not w["records"] else "") + ')</li>' if w and w["S"] < 0.75 else "") +
                    '</ul></div></div>')
-        out.append(render_items(x.get("improvements") or [], profs))
+        out.append(render_items(x.get("improvements") or [], profs, x.get("room")))
         out.append('</div></details>')
     if rep.get("evolution"):
         out.append(render_evolution(rep["evolution"], H, profs))

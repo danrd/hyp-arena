@@ -46,5 +46,5 @@ def test_the_report_section_shows_the_pair(monkeypatch):
                              "expected": {"indicators": {}, "score": {"evidence": [0.5, 0.6]}}}],
                   "applied": ["i1"], "changes": [{"item": "i1", "what_changed": "added a control arm"}], "child_text": "t", "compare": cmp_},
            "U2": {"items": [], "skipped": "no rewrite item"}}
-    html = rh.render_evolution(evo, {"U1": {"title": "A trial"}}, ["evidence", "evolution", "funding"])
+    html = rh.render_evolution(evo, {"U1": {"title": "A trial"}}, ["evidence", "funding", "frontier"])
     assert "added a control arm" in html and "U2" in html and 'id="ev-U1"' in html

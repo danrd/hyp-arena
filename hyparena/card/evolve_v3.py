@@ -3,6 +3,10 @@ the result the same way (user decision 2026-11-06: the analysis names what to im
 
     ALLOW_PAID=1 python -m hyparena.card.evolve_v3 --pool prospective --n 60 --units NCT1,NCT2 [--items rewrite|i1,i3] \
         [--config configs/v3-flash-n10.yaml]
+    python -m hyparena.card.evolve_v3 --top 10 --profile frontier [--dry]      # choose by the room to improve (free with --dry)
+
+Choosing (user decision 2026-11-07, replaces the evolution profile): `choose` ranks the hypotheses by their room to improve
+under the chosen profile (improvements.room: every computable "fixable by rewriting" item applied together, fixed scales).
 
 For each chosen hypothesis: its improvement items (only the class "rewrite": research items need new data, not a new text)
 -> one model call (prompt evolve_v3/v1) writes the improved text from the parent text and the items' facts -> code rejects a
@@ -126,6 +130,24 @@ def evolve(run: dict, units: list[str], extras: dict[str, dict], config: str, it
     return done
 
 
+def choose(run: dict, extras: dict[str, dict], profile: str, k: int) -> list[dict]:
+    """The k hypotheses with the largest room to improve under `profile` (gain > 0), with the gain and the novelty change."""
+    rows = []
+    for u, r in run.items():
+        it = r["items"][0]
+        if not it.get("card") or not it.get("verification") or "v3" not in it:
+            continue
+        card, cvs, alts = parent_parts(it)
+        rm = imp.room(card, cvs, alts, extras.get(u, {}), it["v3"].get("headroom_I"))
+        if not rm or profile not in rm["score"]:
+            continue
+        a, b = rm["score"][profile]
+        rows.append({"unit": u, "gain": round(b - a, 4), "now": a, "after": b, "N": rm["N"], "applied": rm["applied"],
+                     "not_computed": rm["not_computed"]})
+    rows.sort(key=lambda x: -x["gain"])
+    return [x for x in rows if x["gain"] > 0][:k]
+
+
 def _chain_texts(card: HypothesisCard) -> dict[str, str]:
     return {c.id: f"{c.link}: {c.subject.label} — {c.relation} — {c.object.label}" for c in r3.chain(card)}
 
@@ -167,19 +189,29 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--pool", choices=["prospective"], default="prospective")
     ap.add_argument("--n", type=int, default=60)
-    ap.add_argument("--units", required=True, help="comma-separated unit ids")
+    ap.add_argument("--units", default="", help="comma-separated unit ids (or choose with --top)")
+    ap.add_argument("--top", type=int, default=0, help="choose this many hypotheses by the room to improve")
+    ap.add_argument("--profile", default="evidence", help="profile under which the room is computed")
+    ap.add_argument("--dry", action="store_true", help="only print the choice (free)")
     ap.add_argument("--items", default="rewrite", help="'rewrite' (all fixable items) or item ids, e.g. i1,i3")
     ap.add_argument("--config", default="configs/v3-flash-n10.yaml")
     a = ap.parse_args()
-    if os.environ.get("ALLOW_PAID") != "1":
-        raise SystemExit("paid: set ALLOW_PAID=1")
     from scripts.prospective import OUT
     run = json.loads((OUT / f"run_{a.n}.json").read_text())
     sf = OUT / f"scores_{a.n}_v34.json"
     scores = json.loads((sf if sf.exists() else OUT / f"scores_{a.n}.json").read_text())
-    extras = {u: {k: scores.get(u, {}).get(k) for k in ("endpoint_clinical", "trend_pubmed", "ai_role")} for u in run}
+    extras = {u: {k: scores.get(u, {}).get(k) for k in ("endpoint_clinical", "trend_pubmed", "ai_role", "feasibility")} for u in run}
+    units = [u for u in a.units.split(",") if u]
+    if a.top:
+        picked = choose(run, extras, a.profile, a.top)
+        print(json.dumps(picked, indent=1, ensure_ascii=False))
+        units = [x["unit"] for x in picked]
+    if a.dry or not units:
+        return
+    if os.environ.get("ALLOW_PAID") != "1":
+        raise SystemExit("paid: set ALLOW_PAID=1")
     out = OUT / f"evolution_{a.n}.json"
-    res = evolve(run, a.units.split(","), extras, a.config, a.items, out_path=out)
+    res = evolve(run, units, extras, a.config, a.items, out_path=out)
     print(json.dumps({u: {k: v for k, v in e.items() if k in ("skipped", "applied")} for u, e in res["pairs"].items()}, indent=1))
 
 

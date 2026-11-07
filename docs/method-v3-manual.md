@@ -207,7 +207,7 @@ drawn over its whole range in every draw.
 | Indicator | What it says | Scale |
 |---|---|---|
 | P | plausibility of the chain | log, from 0.01 |
-| I, I_headroom | informativeness of the stated / of an improved experiment | log, 1/3-1 |
+| I | informativeness of the stated experiment (headroom I, of an improved one, feeds the room to improve, section 11) | log, 1/3-1 |
 | W | scope | local < organ < hallmark |
 | feasibility | system, duration, planned n, readiness of the intervention (approved or not a compound 1, in trials 0.5, neither 0) | 0-1 |
 | best_design_outcome | best design among the records of the outcome link | cells … RCT |
@@ -223,9 +223,12 @@ drawn over its whole range in every draw.
 | Profile | Order of importance (tiers) |
 |---|---|
 | evidence | P > support share > I > W > {best design, independent sources, endpoint} |
-| evolution | {headroom I, novelty} > P > {support share, W} > {best design, independent sources} |
 | funding (merged with the investor draft, 2026-11-06) | P > feasibility > {trend, AI role, novelty} > {I, support share} > {W, endpoint, best design, independent sources} |
 | frontier (2026-11-07; exploratory programmes such as ARPA-H, Foresight, early R&D) | novelty > P > {I, feasibility} |
+
+There is no separate "room to grow" profile any more (removed 2026-11-07, user decision): what improving a hypothesis would
+give is computed under every profile as the **room to improve** (section 11), so the profile duplicated it, and only for one
+kind of improvement (a better experiment). Headroom I stays an input of that computation, not an indicator of any profile.
 
 The evidence profile has no novelty on purpose: there novelty and plausibility pull apart by design. The frontier profile has
 no support share on purpose: it rewards the known. Its protection against inflated hypotheses is that unknown novelty is
@@ -263,7 +266,9 @@ Russian and English in one page, style of the project site). Order:
 1. *How to read*: the mechanism, the indicators (each term has hover help), ASPID (order of importance → 10,000 random
    weight sets → expected score, place, probability of the top 5).
 2. *Ranking by profile*: one tab per profile; the table shows the place, the expected score, the probability of the top 5
-   and the profile's indicators in its order of importance (the reader chooses which columns to show); the top 3 are marked
+   the **room to improve** under that profile (section 11; `*` when "write the mechanism" could not be computed, `↓` when the
+   improvements would lower novelty) and the profile's indicators in its order of importance (the reader chooses which
+   columns to show); the top 3 are marked
    with their strengths; pages of 15 rows, search, filter by intervention type. Improved versions (section 11), when
    there are any, are ranked with the rest as their own rows, marked "improved version"; a note at the top of the page
    links to the evolution section.
@@ -281,7 +286,7 @@ Russian and English in one page, style of the project site). Order:
 Reports on private hypotheses stay in the private repository (`longevity-kg`).
 
 **A report written by a model from this manual** (section 0) follows the same order for one hypothesis: summary (P, support
-share, novelty with the record that sets it, I, scope, places under the four profiles if there is a pool), the chain table
+share, novelty with the record that sets it, I, scope, places under the three profiles if there is a pool, and the room to improve under each), the chain table
 (id, type, claim, S with interval, R, F / A, link novelty level, main records), why (what lifts, what lowers, the
 alternatives), what to improve (actions with the score they would give, and the change of novelty they would cost),
 limitations, provenance. The older one-hypothesis report by code (`python -m hyparena.analyze`) still uses the v3 / v3.1
@@ -304,6 +309,24 @@ Items fall into two classes:
 | | clinical_endpoint | the endpoint is a biomarker or a self-report | the score with the endpoint "function" |
 | needs new data | support_link | a link with weak support (0.5 ≤ S < 5/6) | P and support share with the link at 5/6 |
 | | check_link | a link without any record | the same |
+
+**Room to improve** (`improvements.room`, user decision 2026-11-07; replaces the "room to grow" profile). All computable
+"fixable by rewriting" items of a hypothesis applied together (the experiment rules out the supported alternatives; the
+refuted links are rewritten; the populations are narrowed to where the data for are; the endpoint is moved to function), then
+scored under every profile on the fixed scales: the room is the expected score after minus now, per profile. It is shown in
+each profile's ranking table and above the improvement list of each hypothesis, with the change of novelty it would cost
+(narrowing a population moves towards the known). "Write the mechanism" cannot be computed in advance and is marked, not
+counted. Two items are upper bounds, so the room is too: a rewritten refuted link is scored without its records against,
+and an experiment is scored as if it already ruled out the alternatives.
+
+**Choosing hypotheses for evolution** = the largest room under the profile the user names
+(`python -m hyparena.card.evolve_v3 --top 10 --profile frontier --dry` prints the choice free; without `--dry` and with
+`ALLOW_PAID=1` it runs the evolution). On the prospective pool (55 ranked trials): a positive room for 50 (evidence), 51
+(funding) and 45 (frontier); median +0.10, +0.04 and +0.06, largest +0.30, +0.22 and +0.64 (frontier: a refuted link
+rewritten lifts P from low to 1, and P is its second tier). The commonest item is the experiment that rules out the
+alternatives (42 hypotheses), then the endpoint (23) and a refuted link (14). The top 10 by room share 9 hypotheses between
+evidence and frontier: on registry trials the room comes mostly from the same fixes, whatever the profile. Novelty would
+change for one.
 
 **Evolution** (`hyparena/card/evolve_v3.py`, on request) improves chosen hypotheses and scores the improved versions
 the same way as every hypothesis. Two purposes need two modes; as of 2026-11-06 only the first is implemented.
@@ -332,8 +355,8 @@ outcome alone actually rests on. The controlled and free modes above answer the 
 what is already known, because that is where the data are. Each pair is flagged **"moved towards the known"** when the
 child's novelty N is lower than the parent's (both known), or a link kept in the child (same text) has a lower link level
 (for example "only in mice" → "a human trial exists"), or the parent's new link is gone and the child has no new link. The
-child is never excluded: it stays in the ranking, and its lower novelty lowers its score where N is an indicator (evolution,
-funding, frontier). The flag is checked by hand-made drifted pairs (a human trial added on the outcome, a related compound
+child is never excluded: it stays in the ranking, and its lower novelty lowers its score where N is an indicator (funding,
+frontier). The flag is checked by hand-made drifted pairs (a human trial added on the outcome, a related compound
 in place of the intervention's records, the new link removed, a kept link moved down) which must all be flagged, and
 controls (an identical child, support added at the same level, a new link added) which must not (`tests/test_v34.py`). In the
 first run 1 of 10 pairs was flagged (analog → new context). The improvement item "narrow the population" shows its expected
@@ -452,7 +475,6 @@ effect_class_rule_a:
   percent: {medium: 5, large: 20}
 profiles:
   evidence: [[P], [support_share], [I], [W], [best_design_outcome, independent_outcome, endpoint_clinical]]
-  evolution: [[I_headroom, N], [P], [support_share, W], [best_design_outcome, independent_outcome]]
   funding: [[P], [feasibility], [trend_pubmed, ai_role, N], [I, support_share], [W, endpoint_clinical, best_design_outcome, independent_outcome]]
   frontier: [[N], [P], [I, feasibility]]
 ```
