@@ -403,6 +403,8 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
     cv.evidence += support
     cv.counterevidence += against
     pmids = []
+    full_text = search.endswith("+fulltext")              # sources experiment arm B (specs/sources-experiment-2026-11-07.yaml)
+    search = search.replace("+fulltext", "")
     if search in ("model", "model_population"):           # model-written queries, light guard, citation expansion (search.py)
         from hyparena.card.search import retrieve
         pmids = retrieve(client, family, avoid, claim, card, as_of, retmax, log=log, population_first=search == "model_population")
@@ -417,6 +419,12 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
     pmids = list(by_expert) + [p for p in pmids if p not in by_expert]
     pmids, dropped = date_guard(pmids, as_of)
     abstracts = {p: a for p, a in pubmed.fetch(pmids).items() if a.get("abstract")}
+    if full_text:                                         # PMC full text where allowed: methods and results appended; quotes are
+        from hyparena.tools import pmc                    # then checked against abstract + full text
+        for p_, a_ in list(abstracts.items()):
+            ft = pmc.excerpt(p_)
+            if ft:
+                abstracts[p_] = {**a_, "abstract": a_["abstract"] + "\n\n[FULL TEXT: methods and results]\n" + ft}
     if log is not None:
         log.append({"kind": "search", "claim": claim.id, "queries": queries(claim, card), "as_of": as_of,
                     "date_guard_dropped": dropped, "expert_pmids": list(by_expert),

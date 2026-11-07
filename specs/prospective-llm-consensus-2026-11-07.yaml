@@ -1,0 +1,12 @@
+id: prospective-llm-consensus-2026-11-07
+frozen_on: '2026-11-07'
+what: answers of google, deepseek to 'will the hypothesis be confirmed?' (prompt predict_outcome/v1)
+  for the 60 ongoing trials of the prospective pool, before any outcome exists (Eternal
+  Search baseline, specs/llm-consensus-2026-11-07.yaml)
+answers_file: longevity-kg hypothesis_sources/prospective/llm_consensus_60.json
+answers_sha256: a19a7640dc847e9d7e0559321c0a3a32227b6b3a076a82daaa1b31630b152994
+answered: 120
+of: 120
+test_when_outcomes_exist: tied AUC of the models' mean probability and of unanimous
+  yes, next to P (scores_60_v34.json) and to their combination; same outcome labels
+  and rule as specs/prospective-2026-11-06.yaml
