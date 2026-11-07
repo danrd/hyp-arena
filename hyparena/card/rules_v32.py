@@ -112,6 +112,22 @@ def record_weight(rec: EvidenceRecord, claim: Claim, against: bool, v34: bool = 
     return w
 
 
+def weight_factors(rec: EvidenceRecord, claim: Claim, against: bool, v34: bool = True) -> Optional[dict]:
+    """The factors of record_weight, for display: {design, precision, effect, comparison, context: [label, value]}; None when the
+    record does not count."""
+    if not r3.usable(rec, VARIANT_BASE):
+        return None
+    ctx = context_v34(rec, claim) if v34 else r3.context_level(rec)
+    if ctx is None:
+        return None
+    pre = claim.link in r3.PRECLINICAL_LINKS
+    comp = rec.comparison if rec.comparison != "unknown" else "none"
+    return {"design": [r3.record_design(rec), lv.design_weight(r3.record_design(rec), r3.human_claim(claim) and not pre)],
+            "precision": [rec.n_total, PRECLINICAL_PRECISION if (v34 and pre) else precision(rec.n_total)],
+            "effect": ["against" if against else rec.effect_class, effect_weight(rec, against)],
+            "comparison": [comp, lv.weight("comparison", comp)], "context": [ctx, lv.weight("context", ctx)]}
+
+
 def strength(F: float, A: float, c: float = C_ANCHOR) -> tuple[float, float, float]:
     """(mean, 5%, 95%) of Beta(1 + cF, 1 + cA)."""
     from scipy.stats import beta
