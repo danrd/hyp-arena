@@ -135,6 +135,8 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
     client, families = _client(config, fake, max_calls)
     cfg_extra = yaml.safe_load(Path(config).read_text()) or {}
     search_mode = cfg_extra.get("search", "keywords")                  # `search: model` in the config
+    if cfg_extra.get("full_text") == "pmc":                            # sources experiment arm B: read PMC full texts where allowed
+        search_mode += "+fulltext"
     method = cfg_extra.get("method", "v2")                              # `method: v3` (docs/spec/method-v3.md)
     norm_version = cfg_extra.get("normalize_version") or ("v7" if method == "v3" else None)   # v3: v7 or later (`normalize_version`)
     verify_version = cfg_extra.get("verify_version") or ("v6" if method == "v3" else "")   # v3: v6 or later (`verify_version`)
