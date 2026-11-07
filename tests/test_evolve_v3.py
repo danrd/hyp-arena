@@ -48,3 +48,23 @@ def test_the_report_section_shows_the_pair(monkeypatch):
            "U2": {"items": [], "skipped": "no rewrite item"}}
     html = rh.render_evolution(evo, {"U1": {"title": "A trial"}}, ["evidence", "funding", "frontier"])
     assert "added a control arm" in html and "U2" in html and 'id="ev-U1"' in html
+
+
+def test_tuning_and_free_modes_are_named_apart_and_free_marks_a_distant_child():
+    client = GuardedClient(FakeLLMClient(0), rpm=0, max_calls=10)
+    parent = "Title: x improves function in older adults.\n" + "Hypothesis: x activates AMPK and improves function. " * 6
+    items = [{"id": "i1", "type": "experiment_alternatives", "what": ("ru", "rule out exercise"), "facts": []}]
+    v = ev.propose(client, "google", parent, "x activates", items, novel=["x — activates — AMPK"], feedback="N analog -> new_context")
+    assert v is not None
+    f = ev.propose_free(client, "google", parent, items, "frontier", "analog", "2026-11-06")
+    assert f is not None and f["cited_pmids"] == ["12345678"]
+    assert ev.distance(parent, parent) == 0.0 and ev.distance(parent, "a completely different text about yeast " * 10) > ev.NEW_AFTER
+    assert ev.MODES == ("tune", "free")
+    from hyparena import report_html as rh
+    assert "доработанная" in rh.evo_chip({"parent": "U1", "evo_mode": "tune"})
+    assert "свободная" in rh.evo_chip({"parent": "U1", "evo_mode": "free", "new_after": True}) and "U1" in rh.evo_chip(
+        {"parent": "U1", "evo_mode": "free", "new_after": True})
+    from hyparena.prompts import __name__ as _  # noqa: F401
+    from hyparena.card.llm import render
+    assert "TUNING" in render("evolve_v3", "v2", parent="p", items=[], novel=["n"], feedback="f", history_text="")
+    assert "Mechanism: ... (only if" in render("evolve_v3", "v2", parent="p", items=[], novel=[], feedback="", history_text="")

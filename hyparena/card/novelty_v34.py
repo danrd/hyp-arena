@@ -166,6 +166,15 @@ def _texts(card: HypothesisCard) -> dict[str, str]:
     return {c.id: f"{c.link}: {c.subject.label} — {c.relation} — {c.object.label}" for c in r3.chain(card)}
 
 
+def known_share(card: HypothesisCard, cvs: list[ClaimVerification], e: Optional[r32.V32Result] = None) -> float:
+    """Share of the chain's slots with a usable record for before the date: how much of the hypothesis is built from known
+    parts. Shown next to the drift flag (a child can keep its novelty level and still be assembled from known pieces)."""
+    e = e or evaluate(card, cvs)
+    pre, out = slots(card)
+    sl = pre + ([out] if out else [])
+    return round(sum(1 for x in sl if any(e.links[i][3] > 0 for i in x)) / len(sl), 3) if sl else 0.0
+
+
 def drift(parent: tuple[HypothesisCard, list[ClaimVerification]], child: tuple[HypothesisCard, list[ClaimVerification]]) -> dict:
     """The evolution flag: N of the child below N of the parent (both known), a kept link at a lower level, or the parent's
     new link gone with no new link in the child."""
@@ -183,4 +192,5 @@ def drift(parent: tuple[HypothesisCard, list[ClaimVerification]], child: tuple[H
     new_p = [k for k, v in lp.items() if v == "new_link"]
     if new_p and all(tp[k] not in by_text_c for k in new_p) and "new_link" not in lc.values():
         reasons.append("the parent's new link is gone and the child has none")
-    return {"N": [np_, nc], "drift_to_known": bool(reasons), "reasons": reasons}
+    return {"N": [np_, nc], "drift_to_known": bool(reasons), "reasons": reasons,
+            "known_share": [known_share(pc, pcv), known_share(cc, ccv)]}

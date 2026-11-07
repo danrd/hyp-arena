@@ -1,0 +1,54 @@
+You improve one research hypothesis about ageing by applying a given list of improvements. The improvements come from an
+analysis of the hypothesis against the literature; each has the facts it rests on. Apply exactly these improvements and
+nothing else. Use only the facts given and the parent text: do not add findings, numbers or claims from your own knowledge.
+
+Parent hypothesis (as registered):
+<<<PARENT
+{{ parent }}
+PARENT>>>
+
+Improvements to apply:
+{% for i in items %}
+- {{ i.id }} ({{ i.type }}): {{ i.what }}
+{% for f in i.facts %}
+  fact [PMID {{ f.pmid }}, {{ f.side }}]: {{ f.quote }}
+{% endfor %}
+{% endfor %}
+
+How to apply each kind:
+- experiment_alternatives: add to the decisive experiment the arm, control or measurement that tells the hypothesis apart
+  from each named alternative, and say which result would rule the alternative out.
+- rewrite_refuted_link: restate that step of the mechanism so that it no longer claims what the facts against show; narrow
+  it to the conditions of the facts for, or replace it by another step the facts support.
+- narrow_population: restrict the population of the hypothesis (and of its experiment) to the one the facts for come from.
+- write_mechanism: state, as separate steps, how the intervention acts on the outcome (target, pathway, intermediate
+  effect); each step must be a claim that can fail on its own. Base the steps on the parent text and the facts; when they
+  name no mechanism, state the most direct one the parent text implies and do not invent findings.
+- clinical_endpoint: make the primary outcome a functional or clinical measure (performance test, falls, hospital
+  admission) instead of a biomarker or a questionnaire; keep the old one as secondary.
+
+Rules: keep the same intervention and the same broad population (unless narrow_population says otherwise); never state a
+result as established; the text must read as a registered trial description.
+
+This is TUNING, not a new hypothesis: keep what is new in the parent. Do not move the hypothesis towards what is already
+shown (do not replace its outcome, population or mechanism by ones where trials or papers already show the effect, beyond what
+narrow_population asks).{% if novel %} These parts of the parent are new and must stay (or be replaced by something at least as
+new):
+{% for x in novel %}- {{ x }}
+{% endfor %}{% endif %}{% if feedback %}
+A previous version was rejected because it moved towards the known: {{ feedback }}. Rewrite without that move.{% endif %}
+
+Write the improved text in this layout:
+Title: ...
+Hypothesis: ...
+Mechanism: ... (only if the parent states one or write_mechanism is applied; otherwise leave this line out)
+Population: ...
+Decisive experiment: design, arms and controls, primary outcome, duration, planned sample size.
+Prediction: ...
+
+Reply with a single JSON object and nothing else:
+{"text": "", "applied": ["i1"], "changes": [{"item": "i1", "what_changed": "one sentence: what changed in the text and which fact it rests on"}]}
+{% if history_text %}
+
+{{ history_text }}
+{% endif %}

@@ -169,6 +169,12 @@ class FakeLLMClient:
         return json.dumps({"text": parent + "\nDecisive experiment: adds an attention-matched control arm.",
                            "applied": ids, "changes": [{"item": i, "what_changed": "fake change"} for i in ids]})
 
+    def _evolve_free(self, rng, prompt, n):
+        m = re.search(r"<<<PARENT\n(.*?)\nPARENT>>>", prompt, flags=re.S)
+        parent = (m.group(1) if m else "a fake hypothesis").strip()
+        return json.dumps({"text": parent + "\nMechanism: a fake new pathway.\nDecisive experiment: a fake factorial trial.",
+                           "cited_pmids": ["12345678"], "changes": [{"what_changed": "fake", "why": "fake"}]})
+
     def _search_queries(self, rng, prompt, n):
         return json.dumps({"queries": []})                  # no queries: the keyword search fills up (search.py)
 

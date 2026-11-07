@@ -27,7 +27,7 @@ from hyparena.card.models import ClaimVerification, HypothesisCard
 PROFILE_NAMES = {"evidence": ("Доказательность", "Evidence"), "evolution": ("Потенциал развития", "Room to grow"),
                  "funding": ("Финансирование", "Funding"), "frontier": ("Фронтир", "Frontier")}
 IND_NAMES = {
-    "P": ("правдоподобие механизма", "plausibility of the mechanism"),
+    "P": ("неопровергнутость механизма", "non-refutation of the mechanism"),
     "I": ("информативность эксперимента", "informativeness of the experiment"),
     "I_headroom": ("запас информативности", "room for a more informative experiment"),
     "W": ("размах механизма", "scope of the mechanism"),
@@ -68,8 +68,8 @@ ORDINAL = {"W": ("local", "organ", "hallmark"), "endpoint_clinical": ("biomarker
 
 
 TIPS = {
-    "P": ("Правдоподобие механизма, от 0 до 1 (v3.4): насколько цепочка не опровергнута. Звено без данных «против» — 1, данные «против» снижают его, данные «за» смягчают это снижение. Опору литературы показывает отдельная ось «подтверждённость», поэтому первая скромная статья по звену больше не снижает P.",
-          "Plausibility of the mechanism, 0 to 1 (v3.4): how far the chain is not refuted. A link with no data against is 1; data against lower it, data for soften that. Support from the literature is the separate support axis, so a first modest paper on a link no longer lowers P."),
+    "P": ("Неопровергнутость механизма, от 0 до 1 (v3.4; прежнее название — правдоподобие): насколько цепочка не опровергнута. 1 значит «данных против не найдено», а не «гипотеза верна». Звено без данных «против» — 1, данные «против» снижают его, данные «за» смягчают это снижение. Опору литературы показывает отдельная ось «подтверждённость», поэтому первая скромная статья по звену больше не снижает P.",
+          "Non-refutation of the mechanism, 0 to 1 (v3.4; formerly plausibility): how far the chain is not refuted. 1 means \"nothing against was found\", not \"the hypothesis is true\". A link with no data against is 1; data against lower it, data for soften that. Support from the literature is the separate support axis, so a first modest paper on a link no longer lowers P."),
     "N": ("Новизна: насколько гипотеза далека от того, что уже спрашивали до даты оценки. Новый контекст (то же вмешательство и исход уже изучали на людях, в другой популяции или дозе) < перенос (только на другом виде) < аналог (только родственное соединение или класс) < новое сочетание (звенья известны по отдельности, цепочку целиком не проверяли) < новое звено. Неизвестно, если данных нет вовсе: отсутствие данных — не новизна.",
           "Novelty: how far the hypothesis is from what was asked before the date. New context (the same intervention and outcome already studied in humans, another population or dose) < translation (only in another species) < analog (only a related compound or class) < new combination (the links are known one by one, the chain as a whole was not tested) < new link. Unknown when there are no data at all: absence of data is not novelty."),
     "I": ("Информативность эксперимента, от 1/3 до 1: сколько подкреплённых литературой альтернативных объяснений отсечёт заявленный эксперимент. 1/3 — ни одного.",
@@ -197,7 +197,8 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
         it = r["items"][0]
         sc = scores.get(h, {})
         title = next((l[len("Title:"):].strip() for l in texts.get(h, "").splitlines() if l.startswith("Title:")), h)
-        base = {"id": h, "parent": h[:-len(EVO_SUFFIX)] if h.endswith(EVO_SUFFIX) else None, "title": title, "type": unit.get(h, {}).get("type"), "completion": unit.get(h, {}).get("primary_completion"),
+        par = next((h[:-len(sfx)] for sfx in EVO_SUFFIXES.values() if h.endswith(sfx)), None)
+        base = {"id": h, "parent": par, "evo_mode": unit.get(h, {}).get("evo_mode"), "new_after": unit.get(h, {}).get("new_after"), "title": title, "type": unit.get(h, {}).get("type"), "completion": unit.get(h, {}).get("primary_completion"),
                 "outcome": it["outcome"], "scored": "P" in sc}
         if not it.get("card") or "P" not in sc:
             hyps[h] = base
@@ -461,17 +462,25 @@ def render_evolution(evo: dict, H: dict, profs: list[str]) -> str:
     pairs = [(u, p) for u, p in evo.items() if p.get("compare")]
     skipped = [(u, p) for u, p in evo.items() if not p.get("compare")]
     out = [f'<h2 id="evo">{t("Эволюция: улучшенные версии", "Evolution: improved versions")}</h2><p class="prose muted">' + t(
-        "По запросу система применяет к выбранным гипотезам пункты «можно исправить формулировкой» из их разбора; улучшенный текст "
-        "проходит ту же проверку с той же датой отсечения литературы. Эволюция не создаёт новых доказательств: рост P возможен только "
-        "за счёт формулировки под уже найденные данные, рост I — это обещание дизайна. Улучшение пишется по находкам того же "
-        "проверяющего, что его оценивает, поэтому рост оценки — подсказка, что менять, а не доказательство.",
-        "On request the system applies to chosen hypotheses the \"fixable by rewriting\" items of their analysis; the improved text "
-        "goes through the same checks with the same literature cut-off. Evolution makes no new evidence: P can rise only by fitting "
-        "the text to what was found, I is a promise of design. The text is written from the findings of the verifier that then "
-        "scores it, so a rise is a hint of what to change, not proof.") + '</p>']
+        "Два режима, названы раздельно. <b>Доработанная версия</b>: применены только пункты «можно исправить формулировкой» из "
+        "разбора; новые части родителя должны остаться — версия, сдвинутая к известному, возвращается писателю с причиной. "
+        "<b>Свободная эволюция</b>: писатель меняет всё под выбранный профиль и называет статьи, на которые опирается (они "
+        "засчитываются, только если их нашёл проверяющий до даты среза); сдвиг к известному помечается, но не запрещается; версия, "
+        "далёкая от родителя, помечена «новая гипотеза после». Новых доказательств эволюция не создаёт, а улучшение оценивает тот же "
+        "проверяющий, по находкам которого оно написано: рост оценки — подсказка, что менять, а не доказательство.",
+        "Two modes, named apart. <b>Tuned version</b>: only the \"fixable by rewriting\" items of the analysis are applied; the "
+        "parent's new parts must stay, and a version that moved towards the known goes back to the writer with the reason. "
+        "<b>Free evolution</b>: the writer changes anything for the chosen profile and names the papers it relies on (they count "
+        "only if the verifier finds them before the cut-off); a move towards the known is flagged, not forbidden; a version far "
+        "from the parent is marked \"new hypothesis after\". Evolution makes no new evidence, and the improvement is scored by the "
+        "verifier whose findings it was written from: a rise is a hint of what to change, not proof.") + '</p>']
+    def base_id(u):
+        return next((u[:-len(x)] for x in EVO_SUFFIXES.values() if u.endswith(x)), u)
+    def mode_label(p):
+        return t("свободная", "free") if p.get("mode") == "free" else t("доработка", "tuning")
     if pairs:
         out.append('<div class="scroll"><table class="tbl"><thead><tr><th>' + t("Гипотеза", "Hypothesis") + '</th><th>' +
-                   t("Применено", "Applied") + '</th><th>P</th><th>I</th><th>' + tn(SHORT["support_share"]) + '</th><th>' +
+                   t("Режим и пункты", "Mode and items") + '</th><th>P</th><th>I</th><th>' + tn(SHORT["support_share"]) + '</th><th>' +
                    tn(SHORT["N"]) + '</th>' +
                    "".join(f'<th>{tn(PROFILE_NAMES[p])}</th>' for p in profs) + '</tr></thead><tbody>')
         def nov(c):
@@ -487,8 +496,8 @@ def render_evolution(evo: dict, H: dict, profs: list[str]) -> str:
                     return f'{e(a)} → {e(b)}'
                 cls = "up" if b > a + 1e-3 else "down" if b < a - 1e-3 else "muted"
                 return f'<span class="{cls}">{fmt(a)} → {fmt(b)}</span>'
-            out.append(f'<tr><td class="title"><a href="#ev-{e(u)}">{e(H.get(u, {}).get("title", u)[:80])}</a><br><span class="muted mono">{e(u)}</span></td>'
-                       f'<td class="mono">{e(", ".join(p.get("applied", [])))}</td>'
+            out.append(f'<tr><td class="title"><a href="#ev-{e(u)}">{e(H.get(base_id(u), {}).get("title", u)[:80])}</a><br><span class="muted mono">{e(u)}</span></td>'
+                       f'<td class="mono">{mode_label(p)}<br>{e(", ".join(p.get("applied", [])))}</td>'
                        f'<td class="n">{d(*c["indicators"]["P"])}</td><td class="n">{d(*c["indicators"]["I"])}</td>'
                        f'<td class="n">{d(*c["indicators"]["support_share"])}</td>' +
                        f'<td>{nov(c)}</td>' +
@@ -505,7 +514,7 @@ def render_evolution(evo: dict, H: dict, profs: list[str]) -> str:
                 f'{e(k)} {sum(b - a for a, b in v) / len(v):+.3f} (n {len(v)})' for k, v in sorted(by_type.items())) + '</p>')
         for u, p in pairs:
             c = p["compare"]
-            out.append(f'<details id="ev-{e(u)}"><summary>{e(H.get(u, {}).get("title", u)[:110])} <span class="muted mono">{e(u)}</span></summary><div class="body">')
+            out.append(f'<details id="ev-{e(u)}"><summary>{e(H.get(base_id(u), {}).get("title", u)[:110])} <span class="muted mono">{e(u)}</span></summary><div class="body">')
             out.append('<p><b>' + t("Что применено и что изменилось", "What was applied and what changed") + '</b></p><ul>')
             ch = {x.get("item"): x.get("what_changed", "") for x in p.get("changes", [])}
             for i in p["items"]:
@@ -519,6 +528,16 @@ def render_evolution(evo: dict, H: dict, profs: list[str]) -> str:
             out.append('</ul><p class="muted" style="font-size:.88rem">' + t("Получено: ", "Obtained: ") + " · ".join(
                 f'{tn(PROFILE_NAMES[pr])} {(v[1] or 0) - (v[0] or 0):+.2f}' for pr, v in c["score"].items() if pr in PROFILE_NAMES) + '</p>')
             dr = c.get("drift") or {}
+            ks = dr.get("known_share")
+            if ks:
+                out.append('<p class="muted" style="font-size:.88rem">' + t("Доля звеньев с опорой в литературе до даты среза: ", "Share of links with support before the cut-off: ") +
+                           f'{fmt(ks[0])} → {fmt(ks[1])}' + (t(" — версия собрана из уже известных кусков сильнее родителя", " — the version is built from known pieces more than the parent") if ks[1] > ks[0] + 0.25 else "") + '</p>')
+            if p.get("mode") == "free":
+                out.append('<p class="muted" style="font-size:.88rem">' + t("Названо статей: ", "Papers named: ") + f'{len(p.get("cited_pmids", []))}; ' +
+                           t("найдено проверяющим: ", "found by the verifier: ") + f'{len(p.get("cited_found", []))}; ' + t("расстояние от родителя: ", "distance from the parent: ") + f'{fmt(p.get("distance"))}</p>')
+            if p.get("mode", "tune") == "tune" and p.get("attempts", 1) > 1:
+                out.append('<p class="muted" style="font-size:.88rem">' + t("Попыток: ", "Attempts: ") + f'{p["attempts"]}' +
+                           (t(" (первая была сдвинута к известному и возвращена писателю)", " (the first moved towards the known and was sent back)") if p.get("constraint_kept") else t(" — ограничение новизны не удалось выдержать, версия оставлена с флагом", " — the novelty constraint could not be kept, the version stays with the flag")) + '</p>')
             if dr.get("drift_to_known"):
                 out.append('<p class="down"><b>' + t("Сдвиг к известному: ", "Moved towards the known: ") + '</b>' + e("; ".join(dr.get("reasons", []))) +
                            '<br><span class="muted" style="font-size:.85rem">' + t("Версия остаётся в рейтинге; её новизна ниже, и это снижает оценку там, где новизна — показатель профиля.",
@@ -582,19 +601,19 @@ def render(rep: dict) -> str:
         "with a verbatim quote and a weight: a more reliable design, a larger sample, a larger effect and closer conditions "
         "weigh more.") + '</p>')
     out.append('<p>' + t(
-        f"<b>2. Показатели.</b> Из записей код считает {tip('P','P — правдоподобие механизма')}, {tip('I','I — информативность эксперимента')}, "
+        f"<b>2. Показатели.</b> Из записей код считает {tip('P','P — неопровергнутость механизма')}, {tip('I','I — информативность эксперимента')}, "
         f"{tip('W','размах')} и ещё несколько показателей. Наведите на подчёркнутый термин, чтобы увидеть пояснение. Исход испытания "
         "метод <b>не предсказывает</b>: он оценивает, насколько обоснован механизм сейчас и что даст эксперимент.",
-        f"<b>2. Indicators.</b> From the records the code computes {tip('P','P, plausibility of the mechanism')}, "
+        f"<b>2. Indicators.</b> From the records the code computes {tip('P','P, non-refutation of the mechanism')}, "
         f"{tip('I','I, informativeness of the experiment')}, {tip('W','scope')} and a few more. Hover over an underlined term "
         "for its meaning. The method does <b>not</b> predict the trial's result: it measures how well the mechanism is "
         "supported now and what the experiment would teach.") + '</p>')
     out.append('<p>' + t(
         "<b>3. Рейтинг — АСПИД.</b> Одного «правильного» веса у показателей нет: инвестору важнее одно, исследователю — другое. "
-        "Поэтому задаётся только <b>профиль</b> — порядок важности (например, «правдоподобие важнее информативности, та — важнее "
+        "Поэтому задаётся только <b>профиль</b> — порядок важности (например, «неопровергнутость важнее информативности, та — важнее "
         "размаха»), а точные веса разыгрываются:",
         "<b>3. Ranking: ASPID.</b> There is no single right weighting of the indicators: an investor cares about one thing, a "
-        "researcher about another. So only a <b>profile</b> is set, an order of importance (e.g. \"plausibility above "
+        "researcher about another. So only a <b>profile</b> is set, an order of importance (e.g. \"non-refutation above "
         "informativeness, informativeness above scope\"), and the exact weights are drawn:") + '</p></div>')
     out.append('<div class="steps">' + '<span class="arrow">→</span>'.join(f'<span class="st">{x}</span>' for x in [
         t("порядок важности профиля", "the profile's order of importance"),
@@ -603,9 +622,9 @@ def render(rep: dict) -> str:
         t(f"{tip('score','ожидаемая оценка')} → {tip('place','место')}; {tip('top5','вероятность топ-5')}",
           f"{tip('score','expected score')} → {tip('place','place')}; {tip('top5','probability of top 5')}")]) + '</div>')
     out.append('<p class="prose">' + t(
-        "Очень низкое правдоподобие не компенсируется другими показателями. Вероятность топ-5 показывает, насколько место "
+        "Очень низкая неопровергнутость не компенсируется другими показателями. Вероятность топ-5 показывает, насколько место "
         "устойчиво: 0.9 — гипотеза в пятёрке почти при любых весах, 0.2 — только при некоторых.",
-        "A very low plausibility is not compensated by the other indicators. The probability of top 5 shows how robust the place "
+        "A very low non-refutation is not compensated by the other indicators. The probability of top 5 shows how robust the place "
         "is: 0.9 means in the top 5 under almost any weights, 0.2 only under some.") + '</p>')
     # 2. ranking table per profile
     profs = list(m["profiles"])
@@ -679,7 +698,7 @@ def render(rep: dict) -> str:
                       (", ".join(tn(IND_NAMES.get(ind, (ind, ind))) for ind, _ in ups) or "—") + '</span>'
             q = e((x["title"] + " " + h).lower())
             out.append(f'<tr class="{"lead" if lead else ""}" data-type="{e(x.get("type"))}" data-q="{q}"><td class="n" data-v="{rk}">{rk}</td>'
-                       f'<td class="title">' + (f'<span class="chip ok">{t("улучшенная версия","improved version")}</span> ' if x.get("parent") else "") +
+                       f'<td class="title">' + evo_chip(x) +
                        f'<a href="#h-{e(h)}">{e(x["title"][:90])}</a><br><span class="muted mono">{e(h)}</span> · '
                        f'<span class="muted">{tn(TYPE_NAMES.get(x.get("type"), ("—","—")))}</span>{why}</td>'
                        f'<td class="n" data-v="{x["aspid"][p]}">{fmt(x["aspid"][p], 3)}</td><td class="n" data-v="{x["p_top5"][p]}">{fmt(x["p_top5"][p])}</td>' +
@@ -843,6 +862,22 @@ def render(rep: dict) -> str:
 
 
 EVO_SUFFIX = "+evo"
+EVO_SUFFIXES = {"tune": "+evo", "free": "+free"}
+EVO_FILES = {"tune": "evolution_{n}.json", "free": "evolution_free_{n}.json"}
+
+
+def evo_chip(x: dict) -> str:
+    """Tuning and free evolution are named apart (user decision 2026-11-07)."""
+    if not x.get("parent"):
+        return ""
+    if x.get("evo_mode") == "free":
+        c = f'<span class="chip ok">{t("свободная эволюция","free evolution")}</span> '
+        if x.get("new_after"):
+            c += f'<span class="chip">{t("новая гипотеза после ","new hypothesis after ")}{e(x["parent"])}</span> '
+        return c
+    return f'<span class="chip ok">{t("доработанная версия","tuned version")}</span> '
+
+
 
 
 def prospective(n: int = 60) -> tuple[dict, str]:
@@ -861,25 +896,30 @@ def prospective(n: int = 60) -> tuple[dict, str]:
                         "15 per intervention type. Scored before any result; the scores are frozen with a hash."}
     scores = json.loads(sb)
     units = json.loads((d / f"units_{n}.json").read_text())
-    evo_p = d / f"evolution_{n}.json"
-    if evo_p.exists():                                  # improved versions join the ranking as their own rows
-        unit_by = {u["id"]: u for u in units}
-        for u, p in json.loads(evo_p.read_text())["pairs"].items():
+    unit_by = {u["id"]: u for u in units}
+    evos = {}
+    for mode, fname in EVO_FILES.items():
+        f = d / fname.format(n=n)
+        if not f.exists():
+            continue
+        for u, p in json.loads(f.read_text())["pairs"].items():          # improved versions join the ranking as their own rows
+            p.setdefault("mode", mode)
+            evos[(mode, u)] = p
             cr = p.get("child_run") or {}
             child = (cr.get("items") or [{}])[0]
             if not child.get("card"):
                 continue
-            cid = u + EVO_SUFFIX
+            cid = u + EVO_SUFFIXES[mode]
             run = {**run, cid: {"items": [child], "meta": {**cr.get("meta", {}), "as_of": run[u]["meta"].get("as_of")}}}
             scores[cid] = {"endpoint_clinical": p.get("child_endpoint"), "trend_pubmed": scores.get(u, {}).get("trend_pubmed"),
                            "ai_role": child["card"].get("ai_role", "none"), "P": 0}
-            units.append({**unit_by.get(u, {}), "id": cid})
+            units.append({**unit_by.get(u, {}), "id": cid, "evo_mode": mode, "new_after": p.get("new_hypothesis_after")})
             texts[cid] = p.get("child_text", "")
     rep = build(run, scores, units, texts, meta)
-    if evo_p.exists():
+    if evos:
         from hyparena.card import evolve_v3
-        evo = json.loads(evo_p.read_text())["pairs"]
-        for u, p in evo.items():
+        out = {}
+        for (mode, u), p in evos.items():
             child = (p.get("child_run") or {}).get("items", [{}])[0]
             if child and u in rep["hyps"] and "values" in rep["hyps"][u]:
                 v = rep["hyps"][u]["values"]
@@ -887,7 +927,8 @@ def prospective(n: int = 60) -> tuple[dict, str]:
                                             "endpoint_clinical", "trend_pubmed", "ai_role")}
                 ce = {**pe, "endpoint_clinical": p.get("child_endpoint"), "ai_role": (child.get("card") or {}).get("ai_role", pe.get("ai_role"))}
                 p["compare"] = evolve_v3.compare(run[u]["items"][0], child, pe, ce)
-        rep["evolution"] = evo
+            out[u if mode == "tune" else u + EVO_SUFFIXES[mode]] = p
+        rep["evolution"] = out
     return rep, str(d / f"report_{n}.html")
 
 

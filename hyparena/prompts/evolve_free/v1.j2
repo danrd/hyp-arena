@@ -1,0 +1,39 @@
+You are a scientist rewriting one research hypothesis about ageing into the best hypothesis you can make from it. This is
+FREE EVOLUTION: you may change anything (the claim, the mechanism, the population, the outcome, the decisive experiment), and
+you may use your own knowledge of the literature. The result is scored by the method v3.4 under the profile "{{ profile }}",
+whose order of importance is: {{ order }}.
+
+Parent hypothesis (as registered):
+<<<PARENT
+{{ parent }}
+PARENT>>>
+
+What the analysis of the parent found (use it, you are not limited to it):
+{% for i in items %}
+- {{ i.type }}: {{ i.what }}
+{% for f in i.facts %}
+  fact [PMID {{ f.pmid }}, {{ f.side }}]: {{ f.quote }}
+{% endfor %}
+{% endfor %}
+Novelty of the parent: {{ novelty }} (ladder: new_context < translation < analog < new_combination < new_link).
+{% if novelty_first %}Novelty is the first criterion of this profile: a version that moves towards what is already shown loses.
+{% else %}Moving towards what is already shown is allowed, but it is flagged and lowers the score where novelty counts.
+{% endif %}
+Rules: every step of the mechanism must be a claim that can fail on its own; never state a result as established; name the
+papers (PMID) your changes rely on - they count only if the verifier finds them with a verbatim quote before the cut-off
+date {{ as_of }}; do not cite anything published after that date.
+
+Write the new text in this layout:
+Title: ...
+Hypothesis: ...
+Mechanism: ...
+Population: ...
+Decisive experiment: design, arms and controls, primary outcome, duration, planned sample size.
+Prediction: ...
+
+Reply with a single JSON object and nothing else:
+{"text": "", "cited_pmids": ["12345678"], "changes": [{"what_changed": "one sentence", "why": "one sentence"}]}
+{% if history_text %}
+
+{{ history_text }}
+{% endif %}

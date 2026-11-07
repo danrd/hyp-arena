@@ -72,3 +72,15 @@ ceiling_2026_11_07:
     positive far more often (63% vs 38% for blinded), so in them "positive" partly measures the room for bias, not the truth of
     the mechanism; within placebo or sham trials the outcome link reaches 0.75 (n 20, very uncertain). The benchmark
     pre-registration should stratify by blinding and placebo (or make the blinded subset primary).
+
+# Addition 2026-11-07: ablation (scripts/ablation.py -> calibration/ablation.json), free, exploration only, 73 units.
+ablation_2026_11_07:
+  P: {v34: 0.595, v33: 0.600, without_any_one_weight_factor: "0.595-0.598", all_weights_1: 0.602}
+  outcome_link_alone: 0.614
+  support_share: 0.540
+  profiles: {evidence: {all: 0.543, without_P: 0.491, without_I: 0.559}, funding: {all: 0.583, without_P: 0.552, without_I: 0.632, without_trend: 0.606},
+             frontier: {all: 0.553, without_P: 0.502, without_N: 0.588}}
+  reading: >-
+    The record-weight factors carry no signal against trial outcomes (counting records does as well); P's signal is the data
+    against; I is inversely related to a positive result. Only P is meant to track outcomes; the other indicators dilute the
+    profile AUC by design. Decision pending (user): whether P stays as a separate indicator.

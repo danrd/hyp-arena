@@ -33,7 +33,8 @@ Protocol: [`benchmark.md`](benchmark.md), [`specs/benchmark-v2.yaml`](../specs/b
 - Prospective pool: `python -m scripts.prospective pool | pick --n 60 | run | estimand | score | freeze` (paid steps behind
   `ALLOW_PAID=1`; scores frozen with a SHA-256 in `specs/prospective-<date>.yaml`); `score` writes method v3.4 to `scores_<n>_v34.json`
 - Method v3.4 check (free; P v3.4 vs v3.3, admission rule for novelty, leverage, density): `python -m scripts.v34_check`
-- Error analysis (free): `python -m scripts.error_analysis [--v33]`
+- Error analysis (free): `python -m scripts.error_analysis [--v33]`; ablation: `python -m scripts.ablation`; ceiling of the label: `python -m scripts.ceiling`
+- Evolution: `python -m hyparena.card.evolve_v3 --top 10 --profile evidence --dry` (choice, free); `--mode tune` (доработка) or `--mode free --writer FAMILY` (свободная эволюция), paid behind `ALLOW_PAID=1`
 - Analysis report of a hypothesis (by code, no calls): `python -m hyparena.analyze RUN.json [--unit ID]`; reports on private
   hypotheses go to `$KG_DIR/hypothesis_sources/analysis/`
 - Indicator checks (four conditions, criteria in `specs/`): extraction gold `scripts/extraction_gold_v3.py`, normaliser
