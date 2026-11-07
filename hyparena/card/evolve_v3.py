@@ -132,18 +132,23 @@ def _chain_texts(card: HypothesisCard) -> dict[str, str]:
 
 def compare(parent_item: dict, child_item: dict, parent_extras: dict, child_extras: dict) -> Optional[dict]:
     """Per pair: indicators before and after, the score under each profile before and after (fixed scales), links added,
-    removed and changed (S before -> after)."""
+    removed and changed (S before -> after), and the novelty drift (novelty_v34.drift: flagged, never excluding)."""
     if not child_item.get("card") or not child_item.get("verification") or "v3" not in child_item:
         return None
+    from hyparena.card import novelty_v34 as nv
     pc, pcv, pa = parent_parts(parent_item)
     cc, ccv, ca = parent_parts(child_item)
     ep, ec = imp.evaluate(pc, pcv, pa), imp.evaluate(cc, ccv, ca)
+    dr = nv.drift((pc, pcv), (cc, ccv))
+    parent_extras = {**parent_extras, "N": dr["N"][0]}
+    child_extras = {**child_extras, "N": dr["N"][1]}
     pairs = {"parent": imp.axes(ep, parent_item["v3"].get("headroom_I"), parent_extras),
              "child": imp.axes(ec, child_item["v3"].get("headroom_I"), child_extras)}
     sc = imp.scores(pairs, K=10000)
     ind = {}
     for name, a, b in (("P", ep.P, ec.P), ("I", ep.I, ec.I), ("support_share", ep.support_share, ec.support_share),
-                       ("W", ep.scope, ec.scope), ("endpoint_clinical", parent_extras.get("endpoint_clinical"), child_extras.get("endpoint_clinical"))):
+                       ("W", ep.scope, ec.scope), ("endpoint_clinical", parent_extras.get("endpoint_clinical"), child_extras.get("endpoint_clinical")),
+                       ("N", dr["N"][0], dr["N"][1])):
         ind[name] = [a, b]
     pt, ct = _chain_texts(pc), _chain_texts(cc)
     p_by_text = {v: k for k, v in pt.items()}
@@ -155,7 +160,7 @@ def compare(parent_item: dict, child_item: dict, parent_extras: dict, child_extr
             links["added"].append({"text": v, "S": ec.links[k][0], "records": ec.links[k][3] + ec.links[k][4] > 0})
     links["removed"] = [{"text": v, "S": ep.links[k][0]} for k, v in pt.items() if v not in set(ct.values())]
     return {"gate": [ep.gate, ec.gate], "indicators": ind, "score": {p: [sc["parent"].get(p), sc["child"].get(p)] for p in sc["parent"]},
-            "links": links}
+            "links": links, "drift": dr}
 
 
 def main() -> None:
@@ -170,7 +175,8 @@ def main() -> None:
         raise SystemExit("paid: set ALLOW_PAID=1")
     from scripts.prospective import OUT
     run = json.loads((OUT / f"run_{a.n}.json").read_text())
-    scores = json.loads((OUT / f"scores_{a.n}.json").read_text())
+    sf = OUT / f"scores_{a.n}_v34.json"
+    scores = json.loads((sf if sf.exists() else OUT / f"scores_{a.n}.json").read_text())
     extras = {u: {k: scores.get(u, {}).get(k) for k in ("endpoint_clinical", "trend_pubmed", "ai_role")} for u in run}
     out = OUT / f"evolution_{a.n}.json"
     res = evolve(run, a.units.split(","), extras, a.config, a.items, out_path=out)

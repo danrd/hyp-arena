@@ -25,7 +25,7 @@ from hyparena.card import rules_v32 as r32
 from hyparena.card.models import ClaimVerification, HypothesisCard
 
 PROFILE_NAMES = {"evidence": ("Доказательность", "Evidence"), "evolution": ("Потенциал развития", "Room to grow"),
-                 "funding": ("Финансирование", "Funding")}
+                 "funding": ("Финансирование", "Funding"), "frontier": ("Фронтир", "Frontier")}
 IND_NAMES = {
     "P": ("правдоподобие механизма", "plausibility of the mechanism"),
     "I": ("информативность эксперимента", "informativeness of the experiment"),
@@ -39,7 +39,11 @@ IND_NAMES = {
     "trend_pubmed": ("рост внимания в литературе", "rising attention in the literature"),
     "ai_role": ("роль ИИ", "role of AI"),
     "support_share": ("подтверждённость механизма", "how much of the mechanism is supported"),
+    "N": ("новизна", "novelty"),
 }
+NOVELTY_NAMES = {"new_context": ("новый контекст", "new context"), "translation": ("перенос на другой вид", "translation"),
+                 "analog": ("аналог", "analog"), "new_combination": ("новое сочетание", "new combination"),
+                 "new_link": ("новое звено", "new link"), None: ("неизвестно", "unknown")}
 LINK_NAMES = {"delivery": ("доставка", "delivery"), "engagement": ("действие на мишень", "target engagement"),
               "pathway": ("сигнальный путь", "pathway"), "effect": ("промежуточный эффект", "intermediate effect"),
               "outcome": ("исход", "outcome")}
@@ -54,18 +58,20 @@ AI_NAMES = {"none": ("нет", "none"), "analysis": ("анализ данных"
 SHORT = {"P": ("P", "P"), "I": ("I", "I"), "I_headroom": ("Запас I", "I room"), "W": ("Размах", "Scope"),
          "feasibility": ("Реализ.", "Feasib."), "best_design_outcome": ("Дизайн", "Design"), "independent_outcome": ("Источн.", "Sources"),
          "against_share": ("«Против»", "Against"), "endpoint_clinical": ("Кон. точка", "Endpoint"), "trend_pubmed": ("Тренд", "Trend"),
-         "ai_role": ("ИИ", "AI"), "support_share": ("Подтв.", "Supported")}
+         "ai_role": ("ИИ", "AI"), "support_share": ("Подтв.", "Supported"), "N": ("Новизна", "Novelty")}
 DESIGN_NAMES = {"none": ("нет данных", "no data"), "cells": ("клетки", "cells"), "animal": ("животные", "animals"),
                 "observational": ("наблюдательное", "observational"), "review": ("обзор", "review"),
                 "non_randomised": ("нерандомиз.", "non-randomised"), "meta_analysis": ("метаанализ", "meta-analysis"), "rct": ("РКИ", "RCT")}
 ORDINAL = {"W": ("local", "organ", "hallmark"), "endpoint_clinical": ("biomarker", "patient_reported", "function", "clinical_event"),
            "ai_role": ("none", "analysis", "in_the_loop", "intervention"),
-           "best_design_outcome": aspid_v3.SPECS["best_design_outcome"].levels}
+           "best_design_outcome": aspid_v3.SPECS["best_design_outcome"].levels, "N": aspid_v3.SPECS["N"].levels}
 
 
 TIPS = {
-    "P": ("Правдоподобие механизма, от 0 до 1: произведение силы звеньев цепочки. Звено без данных не учитывается (его отражает ось «подтверждённость»); данные «за» поднимают силу звена выше 0.5, «против» — опускают ниже. Под числом — 90%-й интервал: широкий, когда о звеньях мало известно.",
-          "Plausibility of the mechanism, 0 to 1: the product of the links' strengths. A link without data does not count (the support axis carries it); data for raise a link above 0.5, against lower it. Below the number: the 90% interval, wide when little is known."),
+    "P": ("Правдоподобие механизма, от 0 до 1 (v3.4): насколько цепочка не опровергнута. Звено без данных «против» — 1, данные «против» снижают его, данные «за» смягчают это снижение. Опору литературы показывает отдельная ось «подтверждённость», поэтому первая скромная статья по звену больше не снижает P.",
+          "Plausibility of the mechanism, 0 to 1 (v3.4): how far the chain is not refuted. A link with no data against is 1; data against lower it, data for soften that. Support from the literature is the separate support axis, so a first modest paper on a link no longer lowers P."),
+    "N": ("Новизна: насколько гипотеза далека от того, что уже спрашивали до даты оценки. Новый контекст (то же вмешательство и исход уже изучали на людях, в другой популяции или дозе) < перенос (только на другом виде) < аналог (только родственное соединение или класс) < новое сочетание (звенья известны по отдельности, цепочку целиком не проверяли) < новое звено. Неизвестно, если данных нет вовсе: отсутствие данных — не новизна.",
+          "Novelty: how far the hypothesis is from what was asked before the date. New context (the same intervention and outcome already studied in humans, another population or dose) < translation (only in another species) < analog (only a related compound or class) < new combination (the links are known one by one, the chain as a whole was not tested) < new link. Unknown when there are no data at all: absence of data is not novelty."),
     "I": ("Информативность эксперимента, от 1/3 до 1: сколько подкреплённых литературой альтернативных объяснений отсечёт заявленный эксперимент. 1/3 — ни одного.",
           "Informativeness, 1/3 to 1: how many literature-supported alternative explanations the stated experiment rules out. 1/3: none."),
     "I_headroom": ("Запас информативности: какой была бы информативность, если бы эксперимент отсекал все подкреплённые альтернативы. Показывает, сколько можно выиграть, улучшив дизайн.",
@@ -197,7 +203,9 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
         card = HypothesisCard.model_validate(it["card"])
         cvs = [ClaimVerification.model_validate(c) for c in it["verification"]["claims"]]
         alts = {a: ClaimVerification.model_validate(v) for a, v in (it.get("v3_alternatives") or {}).items()}
-        res = r32.evaluate(card, cvs, alts, fold=True, neutral_unverified=True)       # v3.3
+        from hyparena.card import improvements as imp
+        from hyparena.card import novelty_v34 as nv
+        res = imp.evaluate(card, cvs, alts)                                           # v3.4
         labels = r3.evaluate(card, cvs, alts, variant="v3.1").links
         by = {c.id: c for c in cvs}
         chain = []
@@ -206,7 +214,7 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
             recs = []
             for side, lst in (("for", cv.evidence if cv else []), ("against", cv.counterevidence if cv else [])):
                 for rec in lst:
-                    w = r32.record_weight(rec, cl, side == "against")
+                    w = r32.record_weight(rec, cl, side == "against", True)
                     if w <= 0:
                         continue
                     recs.append({"side": side, "pmid": rec.record_id.replace("PMID:", ""), "w": round(w, 3),
@@ -222,8 +230,8 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
             cv = alts.get(alt.id)
             ac = r32.Claim(id=alt.id, subject=alt.subject, relation=alt.relation, object=alt.object, qualifiers=alt.qualifiers,
                            role="premise", source_span="")
-            F = r32.side_weight(cv.evidence if cv else [], ac, False, True)
-            A = r32.side_weight(cv.counterevidence if cv else [], ac, True, True)
+            F = r32.side_weight(cv.evidence if cv else [], ac, False, True, True)
+            A = r32.side_weight(cv.counterevidence if cv else [], ac, True, True, True)
             S = r32.strength(F, A)[0]
             alt_rows.append({"id": alt.id, "text": f"{alt.subject.label} — {alt.relation.replace('_', ' ')} — {alt.object.label}",
                              "why": alt.rationale, "support": round(max(0.0, 2 * (S - 0.5)), 3),
@@ -240,14 +248,9 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
         relevant = [c for c in chain if c["in_P"] and c["checked"]]
         weakest = min(relevant, key=lambda c: c["S"]) if relevant else None
         strongest = max(relevant, key=lambda c: c["S"]) if relevant else None
-        base_S = {c["id"]: (c["S"] if c["checked"] else 1.0) for c in chain}       # v3.3: links without data are neutral
-        best_gain, raise_to, raise_link = 0.0, None, None
-        for c in relevant:
-            if c["S"] >= 5 / 6:
-                continue
-            P_new = p_product(card, {**base_S, c["id"]: 5 / 6})
-            if P_new - res.P > best_gain:
-                best_gain, raise_to, raise_link = P_new - res.P, round(P_new, 3), c["id"]
+        N = nv.novelty(card, cvs, res)
+        lev, _, bott = nv.leverage(card, cvs, res)
+        raise_to, raise_link = None, (bott.split(",")[0] if lev > 0 else None)        # v3.4: support, not P, rises with data
         de = card.decisive_experiment
         hyps[h] = {**base, "plain": card.claim_plain, "P": res.P, "P_lo": res.P_lo, "P_hi": res.P_hi, "I": res.I, "V": res.V,
                    "scope": res.scope, "gate": res.gate, "chain": chain, "alternatives": alt_rows,
@@ -255,9 +258,10 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
                    "P_if_weakest_moderate": raise_to, "raise_link": raise_link, "support_share": res.support_share, "coverage": res.coverage,
                    "unchecked": [c["id"] for c in chain if not c["checked"]], "experiment": {"design": de.design, "endpoint": de.endpoint, "n": de.n_planned},
                    "endpoint_clinical": sc.get("endpoint_clinical"), "trend_pubmed": sc.get("trend_pubmed"), "ai_role": sc.get("ai_role"),
-                   "ai_span": card.ai_role_span, "aspid": {p: sc.get(f"aspid_{p}") for p in profiles},
+                   "ai_span": card.ai_role_span, "aspid": {p: sc.get(f"aspid_{p}") for p in profiles}, "N": N,
+                   "link_levels": nv.link_levels(card, cvs),
                    "flags": res_flags(it)}
-        values[h] = {"P": res.P, "I": res.I, "I_headroom": it["v3"].get("headroom_I"), "W": res.scope, "support_share": res.support_share, "coverage": res.coverage,
+        values[h] = {"P": res.P, "I": res.I, "I_headroom": it["v3"].get("headroom_I"), "W": res.scope, "support_share": res.support_share, "coverage": res.coverage, "N": N,
                      "endpoint_clinical": sc.get("endpoint_clinical"), "trend_pubmed": sc.get("trend_pubmed"), "ai_role": sc.get("ai_role"),
                      **{k: (it.get("extra") or {}).get(k) for k in ()}}
     # extras needed for profile contributions
@@ -282,7 +286,7 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
     scored = [h for h in hyps if hyps[h].get("P") is not None and hyps[h].get("gate") == "pass"]
     ax = {h: ({"P": hyps[h]["P"], "scope": hyps[h]["scope"], "I": hyps[h]["I"], "headroom_I": values[h]["I_headroom"], "gate": "pass"},
               {k: values[h].get(k) for k in ("feasibility", "best_design_outcome", "independent_outcome", "against_share",
-                                              "endpoint_clinical", "trend_pubmed", "ai_role", "support_share")}) for h in scored}
+                                              "endpoint_clinical", "trend_pubmed", "ai_role", "support_share", "N")}) for h in scored}
     ranks = {}
     for p in profiles:
         agg = aspid_v3.rank(ax, p, K=10000)
@@ -346,7 +350,7 @@ html[data-lang="ru"] .l-en,html[data-lang="en"] .l-ru{display:none}
 .barbox .iv{position:absolute;top:0;height:8px;background:var(--accent-soft)}.barbox .pt{position:absolute;top:-2px;width:3px;height:12px;background:var(--accent)}
 details{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin:8px 0}details>summary{cursor:pointer;padding:10px 14px;list-style:none}
 details>summary::-webkit-details-marker{display:none}details>summary::before{content:"▸ ";color:var(--muted)}details[open]>summary::before{content:"▾ "}
-details .body{padding:0 16px 14px}details.sub{border:0;background:transparent;margin:6px 0}details.sub>summary{padding:4px 0}.chip{display:inline-block;border-radius:999px;padding:1px 8px;font-size:.8rem;background:var(--idle-soft);margin:0 4px 4px 0}
+details .body{padding:0 16px 14px}details.sub{border:0;background:transparent;margin:6px 0}details.sub>summary{padding:4px 0}.chip{display:inline-block;border-radius:999px;padding:1px 8px;font-size:.8rem;background:var(--idle-soft);margin:0 4px 4px 0}.chip.bad{background:var(--bad-soft);color:var(--bad)}
 .ok{background:var(--ok-soft)}.bad{background:var(--bad-soft)}.warn{background:var(--warn-soft)}
 .chain{display:flex;flex-wrap:wrap;gap:6px;align-items:stretch;margin:8px 0}.link{border:1px solid var(--line);border-radius:8px;padding:6px 8px;min-width:150px;max-width:260px;font-size:.85rem}
 .arrow{align-self:center;color:var(--muted)}.link .s{font-family:var(--mono)}
@@ -455,8 +459,15 @@ def render_evolution(evo: dict, H: dict, profs: list[str]) -> str:
         "scores it, so a rise is a hint of what to change, not proof.") + '</p>']
     if pairs:
         out.append('<div class="scroll"><table class="tbl"><thead><tr><th>' + t("Гипотеза", "Hypothesis") + '</th><th>' +
-                   t("Применено", "Applied") + '</th><th>P</th><th>I</th><th>' + tn(SHORT["support_share"]) + '</th>' +
+                   t("Применено", "Applied") + '</th><th>P</th><th>I</th><th>' + tn(SHORT["support_share"]) + '</th><th>' +
+                   tn(SHORT["N"]) + '</th>' +
                    "".join(f'<th>{tn(PROFILE_NAMES[p])}</th>' for p in profs) + '</tr></thead><tbody>')
+        def nov(c):
+            a, b = (c.get("drift") or {}).get("N", [None, None])
+            s_ = f'{tn(NOVELTY_NAMES.get(a, NOVELTY_NAMES[None]))} → {tn(NOVELTY_NAMES.get(b, NOVELTY_NAMES[None]))}'
+            if (c.get("drift") or {}).get("drift_to_known"):
+                s_ += '<br><span class="chip bad">' + t("сдвиг к известному", "moved towards the known") + '</span>'
+            return s_
         for u, p in pairs:
             c = p["compare"]
             def d(a, b):
@@ -468,6 +479,7 @@ def render_evolution(evo: dict, H: dict, profs: list[str]) -> str:
                        f'<td class="mono">{e(", ".join(p.get("applied", [])))}</td>'
                        f'<td class="n">{d(*c["indicators"]["P"])}</td><td class="n">{d(*c["indicators"]["I"])}</td>'
                        f'<td class="n">{d(*c["indicators"]["support_share"])}</td>' +
+                       f'<td>{nov(c)}</td>' +
                        "".join(f'<td class="n">{d(*c["score"].get(pr, [None, None]))}</td>' for pr in profs) + '</tr>')
         out.append('</tbody></table></div>')
         by_type: dict = {}
@@ -494,6 +506,11 @@ def render_evolution(evo: dict, H: dict, profs: list[str]) -> str:
                            f'{t("ожидалось: ","expected: ")}{exp_s or t("не рассчитывалось","not computed")}</span></li>')
             out.append('</ul><p class="muted" style="font-size:.88rem">' + t("Получено: ", "Obtained: ") + " · ".join(
                 f'{tn(PROFILE_NAMES[pr])} {(v[1] or 0) - (v[0] or 0):+.2f}' for pr, v in c["score"].items() if pr in PROFILE_NAMES) + '</p>')
+            dr = c.get("drift") or {}
+            if dr.get("drift_to_known"):
+                out.append('<p class="down"><b>' + t("Сдвиг к известному: ", "Moved towards the known: ") + '</b>' + e("; ".join(dr.get("reasons", []))) +
+                           '<br><span class="muted" style="font-size:.85rem">' + t("Версия остаётся в рейтинге; её новизна ниже, и это снижает оценку там, где новизна — показатель профиля.",
+                                                                                  "The version stays in the ranking; its novelty is lower, which lowers its score where novelty is an indicator of the profile.") + '</span></p>')
             L = c["links"]
             if L["added"] or L["removed"]:
                 out.append('<p><b>' + t("Звенья механизма", "Mechanism links") + '</b></p><ul>' +
@@ -593,8 +610,11 @@ def render(rep: dict) -> str:
     def cell(ind, x):
         v = x["values"].get(ind)
         if ind == "P":
-            return (f'<td class="n" data-c="P" data-v="{x["P"]}">{fmt(x["P"])}<br><span class="muted" style="font-size:.78rem">'
-                    f'{fmt(x["P_lo"])}–{fmt(x["P_hi"])}</span></td>')
+            iv = (f'<br><span class="muted" style="font-size:.78rem">{fmt(x["P_lo"])}–{fmt(x["P_hi"])}</span>' if x["P_lo"] != x["P_hi"] else "")
+            return f'<td class="n" data-c="P" data-v="{x["P"]}">{fmt(x["P"])}{iv}</td>'
+        if ind == "N":
+            lv = ORDINAL["N"]
+            return f'<td data-c="N" data-v="{lv.index(v) if v in lv else -1}">{tn(NOVELTY_NAMES.get(v, NOVELTY_NAMES[None]))}</td>'
         if ind == "W":
             return f'<td data-c="W" data-v="{ORDINAL["W"].index(v) if v in ORDINAL["W"] else -1}">{tn(SCOPE_NAMES.get(v, (str(v),)*2))}</td>'
         if ind == "endpoint_clinical":
@@ -695,7 +715,8 @@ def render(rep: dict) -> str:
         out.append('<div class="chain">' + '<span class="arrow">→</span>'.join(parts) + '</div>')
         if len(outs_) > 1:
             out.append(f'<p class="muted" style="font-size:.85rem">{t("Параллельные исходы (масса, сила, функция) — одно звено: в P входит основной исход заявленного эксперимента, а если его нельзя выделить — среднее.","Parallel outcomes (mass, strength, function) are one link: P takes the primary outcome of the stated experiment, or their mean when none can be singled out.")}</p>')
-        rows = [("P", f'<span class="mono">{fmt(x["P"])} [{fmt(x["P_lo"])}; {fmt(x["P_hi"])}]</span>'),
+        rows = [("P", f'<span class="mono">{fmt(x["P"])}' + (f' [{fmt(x["P_lo"])}; {fmt(x["P_hi"])}]' if x["P_lo"] != x["P_hi"] else "") + '</span>'),
+                (t("Новизна","Novelty"), tn(NOVELTY_NAMES.get(x.get("N"), NOVELTY_NAMES[None]))),
                 ("I", f'<span class="mono">{fmt(x["I"])}</span>'), (t("Подтверждённость","Supported"), f'<span class="mono">{fmt(x.get("support_share"))}</span>'), (t("Размах","Scope"), tn(SCOPE_NAMES.get(x["scope"], (x["scope"],)*2))),
                 (t("Конечная точка","Endpoint"), tn(ENDPOINT_NAMES.get(x.get("endpoint_clinical"), ("—","—")))),
                 (t("Роль ИИ","AI role"), tn(AI_NAMES.get(x.get("ai_role") or "none"))),
@@ -804,10 +825,11 @@ def prospective(n: int = 60) -> tuple[dict, str]:
     from scripts.ctgov_outcomes import KG
     d = KG / "hypothesis_sources" / "prospective"
     run = json.loads((d / f"run_{n}.json").read_text())
-    sb = (d / f"scores_{n}.json").read_bytes()
+    sf = d / f"scores_{n}_v34.json"
+    sb = (sf if sf.exists() else d / f"scores_{n}.json").read_bytes()
     texts = {json.loads(l)["id"]: json.loads(l)["text"] for l in open(d / f"texts_{n}.jsonl")}
     meta = {"pool": f"prospective-{n}", "date": "2026-11-06", "sha": hashlib.sha256(sb).hexdigest(),
-            "method": "v3.3 (fold, links without records neutral, support share), normalize_card/v10, verify_claim/v9, ASPID: evidence trial-3, evolution trial-2, funding trial-4",
+            "method": "v3.4 (P = non-refutation, species charged once, constant precision before the outcome, novelty N), normalize_card/v10, verify_claim/v9, ASPID: evidence trial-4, evolution trial-3, funding trial-5, frontier trial-1",
             "title_ru": f"Проспективный пул: {n} идущих испытаний", "title_en": f"Prospective pool: {n} ongoing trials",
             "about_ru": "Испытания на ClinicalTrials.gov, где среди состояний — само старение, с завершением в ноябре 2026 — декабре 2028; "
                         "по 15 на тип вмешательства. Оценены до появления результатов; оценки зафиксированы хешем.",

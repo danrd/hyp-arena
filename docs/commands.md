@@ -31,7 +31,9 @@ Protocol: [`benchmark.md`](benchmark.md), [`specs/benchmark-v2.yaml`](../specs/b
 - Fresh sample (outcomes labelled by hand-run Argon from our tasks, checked by code and Claude): `scripts/fresh_outcomes.py`
   (task, check, expand, expand_registries, units)
 - Prospective pool: `python -m scripts.prospective pool | pick --n 60 | run | estimand | score | freeze` (paid steps behind
-  `ALLOW_PAID=1`; scores frozen with a SHA-256 in `specs/prospective-<date>.yaml`)
+  `ALLOW_PAID=1`; scores frozen with a SHA-256 in `specs/prospective-<date>.yaml`); `score` writes method v3.4 to `scores_<n>_v34.json`
+- Method v3.4 check (free; P v3.4 vs v3.3, admission rule for novelty, leverage, density): `python -m scripts.v34_check`
+- Error analysis (free): `python -m scripts.error_analysis [--v33]`
 - Analysis report of a hypothesis (by code, no calls): `python -m hyparena.analyze RUN.json [--unit ID]`; reports on private
   hypotheses go to `$KG_DIR/hypothesis_sources/analysis/`
 - Indicator checks (four conditions, criteria in `specs/`): extraction gold `scripts/extraction_gold_v3.py`, normaliser

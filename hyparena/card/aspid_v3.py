@@ -42,6 +42,14 @@ SPECS = {
                                        "3 before, net of PubMed growth (specs/trend-genetics-2026-11-06.yaml); clipped to the bounds"),
     "support_share": IndicatorSpec("support_share", "cardinal", bounds=(0.0, 1.0),
                                    note="mean support of the chain's slots, max(0, 2 (S - 0.5)) (v3.3, specs/v33-2026-11-06.yaml)"),
+    "N": IndicatorSpec("N", "ordinal", levels=("new_context", "translation", "analog", "new_combination", "new_link"),
+                       note="novelty: distance to what was asked before the date (v3.4, specs/v34-frontier-2026-11-07.yaml)"),
+    "leverage": IndicatorSpec("leverage", "cardinal", bounds=(0.0, 2 / 3),
+                              note="support share gained if the bottleneck reached S 5/6, times the support of the rest (v3.4)"),
+    "W_potential": IndicatorSpec("W_potential", "ordinal", levels=("local", "organ", "hallmark"),
+                                 note="scope with the bottleneck confirmed (v3.4)"),
+    "literature_density": IndicatorSpec("literature_density", "cardinal", bounds=(0.0, 6.0), higher_is_better=False,
+                                        note="log10(1 + PubMed records on the intervention and the outcome before the date) (v3.4)"),
     "ai_role": IndicatorSpec("ai_role", "ordinal", levels=("none", "analysis", "in_the_loop", "intervention"),
                              note="role of AI in the hypothesis (normalize_card/v10, verbatim span or none)"),
 }
@@ -59,7 +67,8 @@ def values_of(v3: dict, extra: Optional[dict] = None) -> dict:
     e = extra or {}
     return {"P": max(P_FLOOR, v3["P"]), "W": v3["scope"], "I": v3["I"], "I_headroom": v3["headroom_I"],
             **{k: e.get(k) for k in ("feasibility", "best_design_outcome", "independent_outcome", "against_share",
-                                    "endpoint_clinical", "ai_role", "support_share")},
+                                    "endpoint_clinical", "ai_role", "support_share", "N", "leverage",
+                                    "W_potential", "literature_density")},
             "trend_pubmed": None if e.get("trend_pubmed") is None else min(1.5, max(-0.5, e["trend_pubmed"]))}
 
 

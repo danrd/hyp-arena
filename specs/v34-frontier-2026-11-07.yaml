@@ -1,0 +1,103 @@
+id: v34-frontier-2026-11-07
+written_on: 2026-11-07
+status: definitions fixed before any value was computed on the samples
+why: >-
+  An outside review of v3.3 (Argon, 2026-11-07, six points; the user passed it on) and the user's request to control the
+  novelty of hypotheses, above all in evolution, where a model tends to rewrite a hypothesis towards a known result. User
+  decision 2026-11-07: do the free steps 1-3 (no model calls); Frontier is a fourth ASPID profile; an evolved child that moved
+  towards the known is flagged, never excluded. Paid parts (a design-rigour half of I by two families, the regime of an
+  intervention in the verifier, priors from databases) are left for later.
+
+step_1_weights_and_P:
+  P_non_refuted: >-
+    P = product over the chain's slots (as v3.3: a pathway cascade is one slot by the geometric mean of its links, parallel
+    outcomes one slot by the primary or the mean) of R = (1 + cF) / (1 + cF + cA), c = 4 / 0.6. R = 1 when nothing is
+    against, whatever the support; data against lower it, data for soften that. Support is carried by support_share alone.
+    Removes the first-evidence paradox of v3.3 (a first modest record for a link lowered P from 1 to S). Motivation in the
+    data: under v3.2 and v3.3 the signal of P against trial outcomes came from data against (specs/error-analysis-2026-11-06.yaml).
+    No interval: P_lo = P_hi = P (the uncertainty of support is in support_share; of refutation, in the records against).
+  species_once: >-
+    On the outcome link of a claim about humans, a record about another species is charged by the design scale only
+    (cells 1/7, animal 2/7); the context factor no longer charges the species again. Another population, age, sex, dose or
+    comparator still makes it adjacent (2/3). On the links before the outcome the preclinical design scale does not see the
+    species, so the context factor charges it there, once (unchanged).
+  preclinical_precision: >-
+    On the links before the outcome (delivery, engagement, pathway, effect) precision is a constant 1/2 for every record:
+    replicates of cells or animals are not comparable with participants of a trial and are rarely stated in an abstract.
+    The outcome link keeps min(1, ln n / ln 300), floor 1/4.
+  unchanged: gate, fold of independence groups, support_share formula (with the new weights), I, scope.
+  report: >-
+    P v3.4 vs P v3.3 on the 74 calibration units (tied AUC, exploration only: the samples built the method), the Spearman
+    correlation of P v3.4 with support_share and against_share on the 74 + 60 units. against_share leaves the profiles if
+    |rho| with P >= 0.7 (the admission rule's non-redundancy).
+
+step_2_novelty:
+  N: >-
+    Ordinal, low to high: new_context < translation < analog < new_combination < new_link. Computed by code from the
+    usable records found up to the hypothesis's date (either side: a question already asked is not new, whatever the answer).
+    For the outcome slot (the primary outcome claim, else all parallel outcome claims):
+      new_context: a record on the same intervention (intervention_match exact) in the claim's species (for a claim about
+        humans: a human design, i.e. not cells or animal, and species not "no"), whatever the population, age, sex or dose;
+      translation: a record on the same intervention, only in another species;
+      analog: records only on a related compound or class;
+    without any outcome record:
+      new_combination: every slot before the outcome has support (S > 1/2 with a usable record for): the pieces are known,
+        the chain as a whole has not been tested;
+      new_link: at least one slot before the outcome has no usable record and at least one has support;
+      unknown: no usable record anywhere, or no slot before the outcome (absence of evidence is not novelty, 2026-10-23).
+    The exact known result (same intervention, species, sex, age and dose, supported) stays the existing gate (known_result,
+    ranked separately).
+  link_level: the same ladder per link from its own records (new_context / translation / analog / new_link when it has none).
+  literature_density: >-
+    Candidate: log10(1 + PubMed records on the intervention AND the outcome object before the date) (NCBI, free, cached);
+    lower is newer. Kept only if it passes the admission rule and |rho| with N < 0.7; otherwise N alone.
+  evolution_flag: >-
+    In the comparison of a pair: N parent and child; drift_to_known when N of the child is below N of the parent (both known),
+    or a link kept in the child (same text) has a lower link level, or a parent link at new_link is gone and no child link is
+    at new_link. Shown as a flag; the child stays in the ranking (its N lowers its score where N is an indicator).
+  check: >-
+    Hand-made drifted pairs from saved cards (an exact human trial added on the outcome, a related compound replacing the
+    intervention's records, the new link removed) must all be flagged; controls (identical child, support added to a
+    mechanism link, a new link added) must not.
+
+step_3_leverage_and_frontier:
+  leverage: >-
+    Bottleneck = the slot with the lowest support a = max(0, 2 (S - 1/2)) (ties: the one nearer the outcome). leverage =
+    support_share if the bottleneck had S = 5/6 (a synthetic record, as improvements.py) minus support_share now; in [0, 1].
+    Large for a short chain held back by one unchecked or weak link.
+  W_potential: scope (local / organ / hallmark) with the bottleneck at S = 5/6.
+  frontier_profile: >-
+    trial-1: [[N], [leverage, W_potential], [P], [I, feasibility]]. For exploratory programmes (ARPA-H, Foresight, early R&D):
+    novelty first, then what one check would unlock, then that nothing refutes it, then the experiment and its cost.
+    support_share is left out on purpose (it rewards the known).
+  other_profiles: >-
+    If N passes the admission rule: evolution [[I_headroom, N], [P], [support_share, W], [...]] and funding gets N in the
+    tier of trend and AI role. evidence unchanged (novelty and plausibility pull apart there by design).
+  admission_rule: >-
+    Each new indicator (N, literature_density, leverage, W_potential) on the 74 + 60 units: at least 3 values, none above 70%
+    (cardinal: no single value above 70%); |Spearman rho| < 0.7 with every indicator of the same profile; computed by code.
+    A failed indicator stays out of the profiles and the result is recorded here.
+  validation_limit: >-
+    Novelty, leverage and W cannot be checked against trial outcomes; the Frontier profile rests on the admission rule and
+    the protections against inflated hypotheses (gate, alternatives without support weigh 0, scope from supported links,
+    unknown N for a chain with no data).
+
+amendment_before_use:
+  leverage: >-
+    First computed as defined above, it was |rho| 0.80 with support_share and largest for chains with no support at all, so in
+    the frontier profile (which leaves support_share out) it would have rewarded unsupported chains. Amended before any use:
+    the gain is multiplied by the mean support of the other slots (0 for a one-slot chain). Seen: correlations and separation
+    only, no outcome.
+
+result:   # scripts/v34_check.py -> calibration/v34_check.json; 127 units passing the gate (72 calibration + 55 prospective)
+  auc_calibration: {P_v33: 0.589, P_v34: 0.584, support_share_v34: 0.535, N: 0.508, literature_density: 0.494}   # exploration
+  P_v34: "1.0 for 67% of units (nothing against); |rho| with against_share 0.87 -> against_share left every profile"
+  N: {levels: {analog: 50, new_context: 25, new_combination: 5, translation: 3, new_link: 1}, unknown: 43, top_share: 0.595,
+      max_abs_rho: 0.244, admitted: true}
+  leverage: {zero_share: 0.835, admitted: false}
+  W_potential: {top_share: 0.819, admitted: false}
+  literature_density: {zero_share: 0.627, admitted: false,
+                       why: "trials name their programmes in their own words: zero co-occurrence measures wording, not novelty"}
+  profiles: {evidence: trial-4, evolution: trial-3 (N added), funding: trial-5 (N added), frontier: "trial-1 [[N], [P], [I, feasibility]]"}
+  drift_check: "hand-made pairs: 4 drifted flagged, 3 controls not (tests/test_v34.py); first evolution run: 1 of 10 flagged (analog -> new_context)"
+  prospective: "scores_60_v34.json and report_60_v34.html; scores_60.json (frozen) untouched"

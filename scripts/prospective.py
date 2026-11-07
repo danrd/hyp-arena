@@ -132,7 +132,10 @@ def endpoint_clinical(n: int, h: str):
 
 
 def score(n: int = 60) -> dict:
+    """Method v3.4 (specs/v34-frontier-2026-11-07.yaml) -> scores_{n}_v34.json; scores_{n}.json (v3.2, frozen by its hash in
+    specs/prospective-2026-11-06.yaml) is never rewritten."""
     from hyparena.card import aspid_v3, rules_v32, v3_extra
+    from hyparena.card import novelty_v34 as nv
     from hyparena.card.models import ClaimVerification, HypothesisCard
     res = json.loads((OUT / f"run_{n}.json").read_text())
     rows, ax = {}, {}
@@ -144,20 +147,25 @@ def score(n: int = 60) -> dict:
         card = HypothesisCard.model_validate(it["card"])
         claims = [ClaimVerification.model_validate(c) for c in it["verification"]["claims"]]
         alts = {k: ClaimVerification.model_validate(v) for k, v in (it.get("v3_alternatives") or {}).items()}
-        e = rules_v32.evaluate(card, claims, alts, fold=True)
+        e = rules_v32.evaluate(card, claims, alts, v34=True)
         ext = v3_extra.extras(card, claims, it["v3"], r["meta"].get("as_of") or "")
+        ext["support_share"] = e.support_share
+        ext["N"] = nv.novelty(card, claims, e)
+        ext["leverage"], ext["W_potential"], _ = nv.leverage(card, claims, e)
         ext["endpoint_clinical"] = endpoint_clinical(n, h)
         from hyparena.card import trend_genetics as tg
         ext["trend_pubmed"] = tg.trend_pubmed(card, r["meta"].get("as_of") or dt.date.today().isoformat())[0]
         ext["ai_role"] = card.ai_role
         rows[h] = {"outcome": it["outcome"], "gate": e.gate, "P": e.P, "P_lo": e.P_lo, "P_hi": e.P_hi, "I": e.I, "V": e.V,
-                   "scope": e.scope, "ai_role": card.ai_role, "endpoint_clinical": ext["endpoint_clinical"], "trend_pubmed": ext["trend_pubmed"], "links": len(e.links), "weakest": e.weakest}
+                   "scope": e.scope, "ai_role": card.ai_role, "endpoint_clinical": ext["endpoint_clinical"], "trend_pubmed": ext["trend_pubmed"], "links": len(e.links), "weakest": e.weakest,
+                   "support_share": e.support_share, "N": ext["N"], "leverage": ext["leverage"], "W_potential": ext["W_potential"],
+                   "method": "v3.4"}
         ax[h] = ({"P": e.P, "scope": e.scope, "I": e.I, "headroom_I": it["v3"]["headroom_I"], "gate": e.gate}, ext)
     for prof in aspid_v3.load():
         agg = aspid_v3.rank(ax, prof, K=10000)
         for h in (agg.expected if agg else {}):
             rows[h][f"aspid_{prof}"] = round(agg.expected[h], 4)
-    (OUT / f"scores_{n}.json").write_text(json.dumps(rows, indent=1, ensure_ascii=False) + "\n")
+    (OUT / f"scores_{n}_v34.json").write_text(json.dumps(rows, indent=1, ensure_ascii=False) + "\n")
     return {"units": len(rows), "scored": sum(1 for r in rows.values() if "P" in r),
             "outcomes": dict(Counter(r["outcome"] for r in rows.values())),
             "ai_role": dict(Counter(r.get("ai_role") for r in rows.values() if "P" in r))}

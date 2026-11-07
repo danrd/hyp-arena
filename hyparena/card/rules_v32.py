@@ -21,6 +21,11 @@ v3.3 = evaluate(..., fold=True, neutral_unverified=True) (specs/v33-2026-11-06.y
 side counts as 1 in P and its interval instead of 0.5, and `coverage` (share of the chain's slots with a usable record or
 established by approval) is reported; the ASPID indicator is `support_share`, the mean over the slots of
 max(0, 2 (S - 0.5)): how much of the chain is supported, continuous (amendment before scoring, specs/v33-2026-11-06.yaml).
+
+v3.4 = evaluate(..., v34=True) (specs/v34-frontier-2026-11-07.yaml), fold on: P is non-refutation, the product over the
+slots of R = (1 + cF) / (1 + cF + cA) (1 when nothing is against; support is in support_share alone; no interval); on the
+outcome link of a claim about humans another species is charged by the design scale only; on the links before the outcome
+precision is a constant 1/2.
 """
 from __future__ import annotations
 
@@ -42,12 +47,12 @@ def group_key(rec: EvidenceRecord) -> str:
     return rec.reports_trial or rec.lab_or_cohort or rec.record_id
 
 
-def side_weight(recs: list[EvidenceRecord], claim: Claim, against: bool, fold: bool) -> float:
+def side_weight(recs: list[EvidenceRecord], claim: Claim, against: bool, fold: bool, v34: bool = False) -> float:
     if not fold:
-        return sum(record_weight(r, claim, against) for r in recs)
+        return sum(record_weight(r, claim, against, v34) for r in recs)
     groups: dict[str, list[float]] = {}
     for r in recs:
-        groups.setdefault(group_key(r), []).append(record_weight(r, claim, against))
+        groups.setdefault(group_key(r), []).append(record_weight(r, claim, against, v34))
     total = 0.0
     for ws in groups.values():
         ws.sort(reverse=True)
@@ -80,15 +85,27 @@ def effect_weight(rec: EvidenceRecord, against: bool) -> float:
     return 0.25 + 0.75 * min(1.0, d / 0.8)
 
 
-def record_weight(rec: EvidenceRecord, claim: Claim, against: bool) -> float:
+PRECLINICAL_PRECISION = 0.5    # v3.4: replicates of cells or animals are not comparable with trial participants
+
+
+def context_v34(rec: EvidenceRecord, claim: Claim) -> Optional[str]:
+    """v3.4: on the outcome link of a claim about humans, another species is charged by the design scale only."""
+    ctx = r3.context_level(rec)
+    if ctx != "adjacent" or claim.link in r3.PRECLINICAL_LINKS or not r3.human_claim(claim):
+        return ctx
+    no = {k for k, v in rec.qualifiers_match.items() if v == "no" and k != "intervention_match"}
+    return "exact" if no == {"species"} else ctx
+
+
+def record_weight(rec: EvidenceRecord, claim: Claim, against: bool, v34: bool = False) -> float:
     if not r3.usable(rec, VARIANT_BASE):
         return 0.0
-    ctx = r3.context_level(rec)
+    ctx = context_v34(rec, claim) if v34 else r3.context_level(rec)
     if ctx is None:
         return 0.0
     preclinical = claim.link in r3.PRECLINICAL_LINKS
     w = lv.design_weight(r3.record_design(rec), r3.human_claim(claim) and not preclinical)
-    w *= precision(rec.n_total)
+    w *= PRECLINICAL_PRECISION if (v34 and preclinical) else precision(rec.n_total)
     w *= effect_weight(rec, against)
     w *= lv.weight("comparison", rec.comparison if rec.comparison != "unknown" else "none")
     w *= lv.weight("context", ctx)
@@ -100,6 +117,11 @@ def strength(F: float, A: float, c: float = C_ANCHOR) -> tuple[float, float, flo
     from scipy.stats import beta
     a, b = 1 + c * F, 1 + c * A
     return a / (a + b), float(beta.ppf(0.05, a, b)), float(beta.ppf(0.95, a, b))
+
+
+def non_refutation(F: float, A: float, c: float = C_ANCHOR) -> float:
+    """v3.4: R = (1 + cF) / (1 + cF + cA); 1 when nothing is against."""
+    return (1 + c * F) / (1 + c * F + c * A)
 
 
 @dataclass
@@ -122,24 +144,28 @@ class V32Result:
 
 def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
              alt_verifications: Optional[dict[str, ClaimVerification]] = None, c: float = C_ANCHOR,
-             fold: bool = False, neutral_unverified: bool = False) -> V32Result:
+             fold: bool = False, neutral_unverified: bool = False, v34: bool = False) -> V32Result:
     base = r3.evaluate(card, ver_claims, alt_verifications, variant=VARIANT_BASE)     # gate, scope, approval, flags
     res = V32Result(gate=base.gate, scope=base.scope)
+    fold = fold or v34
     by_id = {cv.id: cv for cv in ver_claims}
     links = r3.chain(card)
     if not links:
         return res
     for cl in links:
         cv = by_id.get(cl.id)
-        F = side_weight(cv.evidence if cv else [], cl, False, fold)
-        A = side_weight(cv.counterevidence if cv else [], cl, True, fold)
+        F = side_weight(cv.evidence if cv else [], cl, False, fold, v34)
+        A = side_weight(cv.counterevidence if cv else [], cl, True, fold, v34)
         s, lo, hi = strength(F, A, c)
         if base.links.get(cl.id) == "moderate" and f"{cl.id}_established_by_approval" in base.flags:
             s, lo, hi = max(s, 5 / 6), max(lo, 5 / 6), max(hi, 5 / 6)
         res.links[cl.id] = [round(s, 4), round(lo, 4), round(hi, 4), round(F, 3), round(A, 3)]
     checked = {cl.id for cl in links if res.links[cl.id][3] + res.links[cl.id][4] > 0
                or f"{cl.id}_established_by_approval" in base.flags}
-    tri_of = {k: ([1.0, 1.0, 1.0] if neutral_unverified and k not in checked else v[:3]) for k, v in res.links.items()}
+    if v34:
+        tri_of = {k: [non_refutation(v[3], v[4], c)] * 3 for k, v in res.links.items()}
+    else:
+        tri_of = {k: ([1.0, 1.0, 1.0] if neutral_unverified and k not in checked else v[:3]) for k, v in res.links.items()}
     outs, primary = r3.outcome_group(card, links)
     tri = [1.0, 1.0, 1.0]
     run: list[list[float]] = []
@@ -192,8 +218,8 @@ def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
         cv = (alt_verifications or {}).get(alt.id)
         a_claim = Claim(id=alt.id, subject=alt.subject, relation=alt.relation, object=alt.object, qualifiers=alt.qualifiers,
                         role="premise", source_span="")
-        F = side_weight(cv.evidence if cv else [], a_claim, False, fold)
-        A = side_weight(cv.counterevidence if cv else [], a_claim, True, fold)
+        F = side_weight(cv.evidence if cv else [], a_claim, False, fold, v34)
+        A = side_weight(cv.counterevidence if cv else [], a_claim, True, fold, v34)
         a = max(0.0, 2 * (strength(F, A, c)[0] - 0.5))
         d = max(lv.weight("discrimination", alt.on_positive), lv.weight("discrimination", alt.on_negative))
         supported |= a > 0
