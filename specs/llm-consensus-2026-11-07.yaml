@@ -1,0 +1,25 @@
+id: llm-consensus-2026-11-07
+what: >-
+  Baseline from the Eternal Search Omega preprint (user decision 2026-11-07): two models (google gemini-3.5-flash, deepseek
+  v4.1 flash) asked, from the registry text and "imagine it is T", whether the trial's hypothesis will be confirmed
+  (probability and yes/no) and whether they remember the trial or its result. 74 calibration trials, 148 calls, paid
+  (estimated 0.2-0.4 USD before the run). scripts/llm_consensus.py; data longevity-kg calibration/llm_consensus*.json.
+result_auc:
+  all_74: {P_v34: 0.595, models_mean_probability: 0.798, unanimous_yes: 0.703, gemini: 0.804, deepseek: 0.728}
+  without_remembered_63: {P_v34: 0.588, models: 0.761, unanimous_yes: 0.679}
+  fresh_2023_2026_14: {P_v34: 0.408, models: 0.663, unanimous_yes: 0.643}
+  older_60: {P_v34: 0.645, models: 0.840}
+  paired_bootstrap_models_minus_P: {without_remembered: "+0.17 [0.01; 0.33]", fresh: "+0.26 [-0.16; 0.61]"}
+  remembered_by_self_report: 11
+  rho_models_vs_P: 0.24
+  rho_models_vs_N: 0.12
+reading: >-
+  The models order the trials clearly better than P. Leakage is the main doubt: self-report misses what a model knows
+  without saying so, and the gap is larger on older trials (0.84) than on fresh ones (0.66, n 14, not significant). Their
+  reasons read as field-level priors about trial outcomes ("lifestyle interventions often fail on broad disability
+  measures", "a passive control usually yields significance", "even vs uneven protein distribution failed") - partly design
+  cues our ceiling analysis did not capture as single features, partly knowledge of similar trials. Models' probability is
+  nearly unrelated to our novelty (rho 0.12), so on this set it does not penalise novelty.
+next:
+  - "clean test: ask the same question on the 60 prospective trials now and freeze it with a hash next to our scores (about 0.1-0.2 USD)."
+  - "the benchmark pre-registration should include this baseline (and a combination: P with the models' probability)."
