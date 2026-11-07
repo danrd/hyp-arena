@@ -1,0 +1,25 @@
+id: sources-experiment-2026-11-07
+written_on: 2026-11-07
+status: design and metrics fixed before any of the three runs
+why: >-
+  User decision 2026-11-07: maximum attention to the quality of reading sources and building the card; show whether full
+  texts or a knowledge graph give a real gain over abstracts. Reading and labelling are delegated to an outside reader
+  (Argon); every label is re-checked here (quotes verbatim against the paper, publication date before the cut-off, PMID
+  exists; a hand check of a sample).
+units: ["NCT06160141", "NCT06407583", "NCT03240094", "NCT01365104", "NCT04598464", "NCT03212859", "NCT07864831", "NCT06975540", "NCT02923843", "NCT00935493", "NCT01417663", "NCT06878001", "NCT05685667", "NCT05870046", "NCT02787889"]   # 15 calibration trials (8 positive, 7 null), NCT, not used in the Argon pack 2; SHA-256 order within label
+arms:
+  A_abstracts: the current pipeline (configs/v3-flash-n10.yaml runs already saved) and its next version with the exact-population query (configs/v3-flash-n11.yaml, rerun of these 15: paid, price before the run)
+  B_full_texts: the same pipeline, the verifier reading PMC open-access full texts (methods and results) where they exist, abstracts otherwise; only extracted fields are stored (paid, price before the run)
+  C_graph: Argon's knowledge graph for the same links (pack 3, task C) fed to the same v3.4 rules as records
+gold: Argon's labels of our records (pack 3, task D), re-checked; plus the three hand-labelled extraction sets already used
+metrics_primary:
+  - recall: share of the gold-relevant papers per link (union of A, B, C after re-check) that each arm found
+  - field accuracy against gold: stance, design, n, comparison, population, intervention match, effect number present and its class
+  - share of outcome-slot records with a numeric effect (input of the experiment forecast)
+  - records against found on the outcome slot (the signal of P)
+metrics_secondary:
+  - P v3.4, support share, novelty per arm and their change; AUC on the 15 (direction only) and, if an arm is run on all 74, on the 74
+  - cost per hypothesis (calls, tokens, USD)
+decision_rule: >-
+  an arm is worth adopting if it raises recall or field accuracy by at least 10 points, or the share with a numeric effect
+  by at least 15 points, at a cost below 3x of A; downstream AUC is reported but not used to decide (too few units).
