@@ -1,7 +1,9 @@
 # Method v3 manual: how a hypothesis is scored and how to read the report
 
-Version: rules **v3.3** as of 2026-11-06 (`hyparena/card/rules_v32.py`, `evaluate(..., fold=True, neutral_unverified=True)`,
-on top of `rules_v3.py` variant v3.1 and `v3_levels.py`), aggregation by ASPID over the axes (`hyparena/card/aspid_v3.py`, `configs/profiles_v3.yaml`). The
+Version: rules **v3.4** as of 2026-11-07 (`hyparena/card/rules_v32.py`, `evaluate(..., v34=True)`; novelty, leverage and the
+evolution drift flag in `hyparena/card/novelty_v34.py`; definitions in `specs/v34-frontier-2026-11-07.yaml`), on top of
+`rules_v3.py` variant v3.1 and `v3_levels.py`, aggregation by ASPID over the axes (`hyparena/card/aspid_v3.py`, `configs/profiles_v3.yaml`). v3.3
+(`evaluate(..., fold=True, neutral_unverified=True)`) differs only in P (section 7) and in two record weights (section 5). The
 specification with its history and decisions is `docs/spec/method-v3.md` (in Russian, sections 9-13); this manual is the
 self-contained English description. The constants in section 14 and the numbers of the worked example in section 13 are
 checked against the code by `tests/test_manual.py`: if the code changes, the test fails until this manual is updated. The
@@ -30,7 +32,9 @@ several **profiles** (whose order of importance says what matters to whoever ran
 
 | Axis | Question | Range |
 |---|---|---|
-| P, plausibility | How well is each link of the chain supported by the literature before the date T? | 0-1, product over links, with a 90% interval |
+| P, plausibility | How far is the chain not refuted by the literature before the date T? | 0-1, product over links (v3.4) |
+| support share | How much of the chain is supported by that literature? | 0-1 |
+| N, novelty | How far is the hypothesis from what was already asked before T? | new context < translation < analog < new combination < new link |
 | I, informativeness | Which supported competing explanations does the stated experiment cut off? | 1/3-1 |
 | W, scope | How far does the supported mechanism reach: one condition, an organ or system, a hallmark of ageing? | local, organ, hallmark |
 | V, reference | P × I (0 if filtered): the point of equal weights | 0-1 |
@@ -110,7 +114,15 @@ clear positive. A record about another intervention altogether weighs 0. Retract
 fully, every further record of the group with 1/4. F and A are the folded sums.
 
 The distance to the clinic is charged once: links before the outcome use the preclinical design scale, the outcome link the
-clinical one; the context factor still charges another species or population on every record.
+clinical one. **v3.4** (`specs/v34-frontier-2026-11-07.yaml`, after an outside review):
+
+- on the outcome link of a claim about humans, another species is charged by the design scale only (an animal study 2/7), no
+  longer also by the context factor; another population, age, sex, dose or comparator still makes the record adjacent (2/3).
+  On the links before the outcome the preclinical design scale does not see the species, so the context factor charges it
+  there, once;
+- on the links before the outcome precision is a constant 1/2: replicates of cells or animals are not comparable with trial
+  participants and are rarely stated in an abstract. Under v3.3 a cell study without n weighed 1/3 × 1/4 = 0.083 and a new
+  link needed about eight of them to reach moderate support; now it weighs 1/6.
 
 ## 6. Strength of a link and the gate
 
@@ -121,7 +133,7 @@ nothing against gives 5/6 (the old "moderate"). Its 90% interval comes from the 
 
 | Situation | S | Interval |
 |---|---|---|
-| no record | 0.5, but **not counted in P** (v3.3) | wide (0.05-0.95): nothing is known |
+| no record | 0.5; in P the link counts as 1 (nothing refutes it) | wide (0.05-0.95): nothing is known |
 | for and against about equal | about 0.5 | narrow: data conflict |
 | F = 0.6, nothing against | 0.83 | |
 | F = 1.5, nothing against | 0.92 | |
@@ -142,18 +154,22 @@ ranked). Nothing else filters: an undeveloped but promising hypothesis keeps its
 
 ## 7. Axes
 
-- **P** = product of S over the links **that have at least one usable record** (v3.3), with a 90% interval from the links'
-  intervals. A link with no record counts as 1: it neither raises nor lowers P. Parallel outcomes (mass, strength,
-  function) count once: the one matching the primary outcome of the stated experiment, else their mean. Consecutive pathway
-  links (a cascade written as several steps) are one slot, their geometric mean. P therefore answers "how well do the data
-  that exist fit the chain"; data against any link pull it down.
+- **P** (v3.4) = **non-refutation**: the product over the links of R = (1 + cF) / (1 + cF + cA). R = 1 when nothing is
+  against, whatever the support; data against lower it, data for soften that (F = A = 0.6 gives 0.5). Parallel outcomes
+  (mass, strength, function) count once: the one matching the primary outcome of the stated experiment, else their mean.
+  Consecutive pathway links (a cascade written as several steps) are one slot, their geometric mean. No interval is
+  reported: the uncertainty of the support is in the support share. Why: under v3.3 (P = product of S over the links with a
+  record, a link without one counting 1) a first modest paper for a new link lowered P from 1 to its S (about 0.6), so the
+  first evidence for a new link was a penalty; and P's signal against trial outcomes came from data against anyway. On the
+  calibration P v3.4 orders the trials as v3.3 did (AUC 0.584 vs 0.589, 72 units, exploration). For two thirds of the
+  hypotheses nothing is against, P = 1, and the order among them comes from the other indicators.
 - **Support share** = the mean over the chain's slots (a cascade = one slot, its best link; parallel outcomes = one slot)
   of a = max(0, 2 (S − 0.5)): 0 for a slot without data or with data only against, 2/3 for moderate support (S 5/6), near 1
   for strong support. It carries what P leaves out: a chain of guesses has a high P only because nothing is known, and a low
   support share says so. An ASPID indicator (section 8), right below P in the evidence profile. It replaced a 0/1 share of
   checked slots before any score was used (that one moved with P, |ρ| 0.74, and two thirds of the chains have one slot).
-  Consequence: finding moderate support for an unchecked link lowers P a little (from 1 to S for that link) and raises the
-  support share; under every profile the hypothesis's score goes up (section 13).
+  Consequence (v3.4): finding support for an unchecked link leaves P at 1 and raises the support share; under every profile
+  the hypothesis's score goes up (section 13).
 - Why (specs/error-analysis-2026-11-06.yaml): under v3.2 a link without data multiplied P by 0.5, so a hypothesis that
   wrote out its mechanism lost a factor of 2 per unchecked link; on the calibration P then ordered the 18 hypotheses with a
   mechanism backwards. The signal of P against trial outcomes came from data against, not from support.
@@ -165,8 +181,21 @@ ranked). Nothing else filters: an undeveloped but promising hypothesis keeps its
 - **V** = P × I (0 if filtered). **Headroom I** = I if the experiment cut off every supported alternative (d = 1): what
   improving the experiment could add.
 
+- **N, novelty** (v3.4, `novelty_v34.novelty`): the distance of the hypothesis to what was already asked before T, from the
+  usable records on either side (a question already asked is not new, whatever the answer). On the outcome link, by the
+  closest record: **new context** (the same intervention and outcome in the claim's species, another population, age, sex or
+  dose), **translation** (the same intervention, only in another species), **analog** (only a related compound or class).
+  Without any outcome record: **new combination** (every link before the outcome is supported: the pieces are known, the
+  chain as a whole was not tested), **new link** (at least one link before the outcome has no record and at least one is
+  supported). **Unknown** when there is no data anywhere or the chain is the outcome alone: absence of evidence is not
+  novelty. The exact known result (same intervention, species, sex, age and dose, supported) stays the separate
+  "known result" outcome and is not ranked. The same ladder per link (`link_levels`) feeds the evolution flag (section 11).
+- **Leverage** (defined, in no profile): how much the support share would rise if the bottleneck slot reached S = 5/6,
+  times the mean support of the other slots, so a chain of guesses or one link alone has none. **W potential**: the scope
+  with the bottleneck confirmed.
+
 Protections against inflated hypotheses, by construction: the product over links; alternatives without support weigh 0;
-scope only from supported links; records of one trial or paper count once.
+scope only from supported links; records of one trial or paper count once; novelty is unknown, not high, without data.
 
 ## 8. ASPID: indicators and profiles
 
@@ -181,23 +210,36 @@ drawn over its whole range in every draw.
 | feasibility | system, duration, planned n, readiness of the intervention (approved or not a compound 1, in trials 0.5, neither 0) | 0-1 |
 | best_design_outcome | best design among the records of the outcome link | cells … RCT |
 | independent_outcome | independent sources for the outcome link | 0-5 |
-| against_share | share of the chain's weight against | 0-1, lower better |
+| against_share | share of the chain's weight against (in no profile since v3.4: |ρ| 0.87 with P) | 0-1, lower better |
 | endpoint_clinical | how close the trial's primary endpoint is to a clinical outcome (two model families agree, else unknown) | biomarker < patient-reported < function < clinical event |
 | support_share | how much of the mechanism chain is supported: mean of max(0, 2 (S − 0.5)) over its slots (v3.3) | 0-1 |
 | trend_pubmed | rising attention: PubMed records on the intervention in the last 3 years vs the 3 before, net of PubMed's growth | -0.5 … 1.5 |
 | ai_role | role of AI in the hypothesis | none < analysis < in the loop < AI is the intervention |
+| N | novelty (section 7) | new context < translation < analog < new combination < new link |
+| leverage, W_potential, literature_density | defined in code, failed the admission rule on the trial pools (below) | |
 
 | Profile | Order of importance (tiers) |
 |---|---|
-| evidence | P > support share > I > W > {best design, independent sources, share against, endpoint} |
-| evolution | headroom I > P > {support share, W} > {best design, independent sources, share against} |
-| funding (merged with the investor draft, 2026-11-06) | P > feasibility > {trend, AI role} > {I, support share} > {W, endpoint, best design, independent sources, share against} |
+| evidence | P > support share > I > W > {best design, independent sources, endpoint} |
+| evolution | {headroom I, novelty} > P > {support share, W} > {best design, independent sources} |
+| funding (merged with the investor draft, 2026-11-06) | P > feasibility > {trend, AI role, novelty} > {I, support share} > {W, endpoint, best design, independent sources} |
+| frontier (2026-11-07; exploratory programmes such as ARPA-H, Foresight, early R&D) | novelty > P > {I, feasibility} |
+
+The evidence profile has no novelty on purpose: there novelty and plausibility pull apart by design. The frontier profile has
+no support share on purpose: it rewards the known. Its protection against inflated hypotheses is that unknown novelty is
+drawn over the whole range (not set high), P falls with any data against, and I counts only supported alternatives.
 
 A new indicator enters only when it passes four conditions, checked on saved data before it is used: reliable (computed by
 code, or extracted with a verbatim phrase and agreed by two model families, κ ≥ 0.6); separating (at least three values,
 none above 70%); not redundant (|Spearman| < 0.7 with the existing indicators); its own question. Rejected so far:
 four-axis indirectness (redundant), estimand completeness (unreliable), genetic support of the target (too few values on
-registry trials), trial-registry trend (adds nothing).
+registry trials), trial-registry trend (adds nothing). Checked for v3.4 on 127 units (72 calibration + 55 prospective that pass
+the gate, `scripts/v34_check.py`): N passes (five levels, the largest 60%, unknown for 34%, |ρ| ≤ 0.24 with every indicator);
+leverage fails (83% zero; in its first form, without the factor for the rest of the chain, it was |ρ| 0.80 with the support
+share, i.e. it rewarded unsupported chains); W potential fails (82% local); literature density (PubMed records on the
+intervention and the outcome) fails its own question: 63% zero because trials name their programmes in their own words, so
+it measures wording, not novelty. These may pass on pools of frontier hypotheses with written mechanisms; they are re-checked
+there before use.
 
 ## 9. Flags (inputs for improving the hypothesis)
 
@@ -223,8 +265,8 @@ Russian and English in one page, style of the project site). Order:
    with their strengths; pages of 15 rows, search, filter by intervention type. Improved versions (section 11), when
    there are any, are ranked with the rest as their own rows, marked "improved version"; a note at the top of the page
    links to the evolution section.
-3. *Each hypothesis* (collapsed, one-line verdict): the chain with each link coloured by S (links without data marked "not in
-   P"), P with its interval, I, support share, scope, endpoint, AI role, places; what lifts and what lowers it (the indicators
+3. *Each hypothesis* (collapsed, one-line verdict): the chain with each link coloured by S, P (with its interval under
+   v3.3; none under v3.4), novelty, I, support share, scope, endpoint, AI role, places; what lifts and what lowers it (the indicators
    furthest above or below the middle of the pool, weighted by the profile's order; the strongest and weakest checked link);
    what would raise it: the improvement list of section 11, in two groups, each item with its facts and its expected
    effect on the indicators and on the score under each profile. The list and the facts are collapsed by default under a
@@ -283,8 +325,19 @@ wrote out a mechanism, the chains grew by 2 to 7 links, the new links were check
 fell in 9 of 10 (e.g. 0.93 → 0.26). The useful side: writing the mechanism out shows the links a hypothesis rated well on its
 outcome alone actually rests on. The controlled and free modes above answer the two flaws.
 
-**The report section "Evolution"**: a table parent → improved version (P, I, support share and the score under each
-profile, rises in green, falls in red); per pair, collapsed: the items applied, what changed in the text and on which fact,
+**Novelty control** (v3.4, `novelty_v34.drift`, user decision 2026-11-07): a writer model tends to pull a hypothesis towards
+what is already known, because that is where the data are. Each pair is flagged **"moved towards the known"** when the
+child's novelty N is lower than the parent's (both known), or a link kept in the child (same text) has a lower link level
+(for example "only in mice" → "a human trial exists"), or the parent's new link is gone and the child has no new link. The
+child is never excluded: it stays in the ranking, and its lower novelty lowers its score where N is an indicator (evolution,
+funding, frontier). The flag is checked by hand-made drifted pairs (a human trial added on the outcome, a related compound
+in place of the intervention's records, the new link removed, a kept link moved down) which must all be flagged, and
+controls (an identical child, support added at the same level, a new link added) which must not (`tests/test_v34.py`). In the
+first run 1 of 10 pairs was flagged (analog → new context). The improvement item "narrow the population" shows its expected
+change of novelty next to its gain, so the cost of narrowing towards the known is visible before it is applied.
+
+**The report section "Evolution"**: a table parent → improved version (P, I, support share, novelty with the flag, and the
+score under each profile, rises in green, falls in red); per pair, collapsed: the items applied, what changed in the text and on which fact,
 the expected change of each item against the change obtained, the mechanism links added or removed, the improved text; at
 the end, the mean change of the score by kind of item. Hypotheses without an improved version are listed with the reason.
 The improved versions also appear in the ranking (section 10).
@@ -317,7 +370,10 @@ modes.
 | P vs trial outcome, fresh sample 2000-2022 (26 decisive) | v3 0.534 "no signal"; v3.2 0.64 (not pre-registered) |
 | evolution, first run (pilot top 10) | scores fell for 8 of 10: the mode re-ran the whole pipeline and forced a mechanism; see section 11 |
 | error analysis on the calibration (exploration) | P's signal comes from data against the outcome (AUC 0.63), support does not separate; unchecked links penalised written mechanisms → v3.3 (0.66 on the same data, not a test) |
-| prospective pool: 60 ongoing trials ending 2026-11 … 2028-12 | scores frozen 2026-11-06 with a SHA-256 (`specs/prospective-2026-11-06.yaml`); the clean test of v3.2, when the trials report |
+| prospective pool: 60 ongoing trials ending 2026-11 … 2028-12 | scores frozen 2026-11-06 with a SHA-256 (`specs/prospective-2026-11-06.yaml`); the clean test of v3.2, when the trials report; v3.4 scores in `scores_60_v34.json` (the frozen file is not rewritten) |
+| error analysis, 74 units rerun (normalize v10) under v3.3 | P 0.60, support share 0.54, the outcome link alone 0.61; with a written mechanism P is at chance (0.46, 17 units) |
+| v3.4 (P non-refutation, two weight changes) | P 0.584 vs v3.3 0.589 on the same 72 calibration units: the same order, the paradox removed (exploration) |
+| novelty, leverage, frontier profile | cannot be checked against trial outcomes; they rest on the admission rule and the protections above |
 
 AUC is the tied AUC of P between positive and null trials; the pre-set rule is "signal" at ≥ 0.60 with the lower bound of
 the 95% interval above 0.45, "no signal" below 0.55. The samples are small and the intervals wide.
@@ -334,7 +390,13 @@ c3 (medium effect). One proposed alternative with an observational study of 300 
 | with one mouse study of 40 for c2 | | S 0.842 | | 0.639 | 0.724 | | organ | 0.416 |
 | with one mouse study of 40 against c2 | | S 0.158 | | 0.120 | 0.496 | | | |
 
-The study for c2 lowers P slightly and raises the support share; under every profile the expected score rises (evidence
+| v3.4 | S 0.885 (F 1.000) | no record, R 1 | S 0.839 (F 0.63) | 1.000 | 0.482 | 0.651 | organ | 0.651 |
+| v3.4, with one mouse study of 40 for c2 | | S 0.812 | | 1.000 | 0.691 | | organ | 0.651 |
+| v3.4, with one mouse study of 40 against c2 | | S 0.188 | | 0.231 | 0.482 | | | |
+
+Under v3.4 the c1 records weigh more (precision 1/2 before the outcome), P is 1 until something is against, the study for c2
+raises only the support share, and the study against c2 cuts P to 0.23. Novelty: new context (an RCT on the outcome exists).
+Under v3.3: the study for c2 lowers P slightly and raises the support share; under every profile the expected score rises (evidence
 0.667 → 0.703 on these two alone). A study against c2 cuts P to 0.12: data against are what P is for. Under v3.2 the first row had
 P 0.380 (c2 at 0.5), the penalty for writing out the mechanism that v3.3 removes.
 
@@ -347,6 +409,9 @@ v32:
   precision: {floor: 0.25, full_at_n: 300}
   effect_d_full: 0.8
   p_floor_aspid: 0.01
+v34:
+  preclinical_precision: 0.5
+  novelty_levels: [new_context, translation, analog, new_combination, new_link]
 link_thresholds: {moderate: 0.6, strong: 1.5, strong_min_independent: 2}
 informativeness_cap: 1.5
 effect_unclear_weight: 0.5
@@ -368,9 +433,10 @@ effect_class_rule_a:
   standardised_difference: {medium: 0.5, large: 0.8}
   percent: {medium: 5, large: 20}
 profiles:
-  evidence: [[P], [support_share], [I], [W], [best_design_outcome, independent_outcome, against_share, endpoint_clinical]]
-  evolution: [[I_headroom], [P], [support_share, W], [best_design_outcome, independent_outcome, against_share]]
-  funding: [[P], [feasibility], [trend_pubmed, ai_role], [I, support_share], [W, endpoint_clinical, best_design_outcome, independent_outcome, against_share]]
+  evidence: [[P], [support_share], [I], [W], [best_design_outcome, independent_outcome, endpoint_clinical]]
+  evolution: [[I_headroom, N], [P], [support_share, W], [best_design_outcome, independent_outcome]]
+  funding: [[P], [feasibility], [trend_pubmed, ai_role, N], [I, support_share], [W, endpoint_clinical, best_design_outcome, independent_outcome]]
+  frontier: [[N], [P], [I, feasibility]]
 ```
 
 ## Appendix A. Discrete levels of v3 and v3.1

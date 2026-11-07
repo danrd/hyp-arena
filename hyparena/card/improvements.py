@@ -14,17 +14,18 @@ import copy
 from typing import Optional
 
 from hyparena.card import aspid_v3
+from hyparena.card import novelty_v34 as nv
 from hyparena.card import rules_v3 as r3
 from hyparena.card import rules_v32 as r32
 from hyparena.card.models import ClaimVerification, HypothesisCard
 
-V33 = {"fold": True, "neutral_unverified": True}
+V34 = {"v34": True}       # method v3.4 (specs/v34-frontier-2026-11-07.yaml); v3.3 was {"fold": True, "neutral_unverified": True}
 ENDPOINT_UP = {"biomarker": "function", "patient_reported": "function"}
 ADJ_KEYS = ("population", "age_at_start", "sex")
 
 
 def evaluate(card: HypothesisCard, cvs: list[ClaimVerification], alts: dict) -> r32.V32Result:
-    return r32.evaluate(card, cvs, alts, **V33)
+    return r32.evaluate(card, cvs, alts, **V34)
 
 
 def axes(e: r32.V32Result, headroom_I: Optional[float], extras: dict) -> tuple[dict, dict]:
@@ -52,6 +53,7 @@ def items(card: HypothesisCard, cvs: list[ClaimVerification], alts: dict[str, Cl
     base = evaluate(card, cvs, alts)
     if base.gate != "pass":
         return []
+    extras = {**extras, "N": extras.get("N", nv.novelty(card, cvs, base))}
     links = r3.chain(card)
     by = {c.id: c for c in cvs}
     variants: list[tuple[dict, r32.V32Result, dict]] = []          # (item, modified result, modified extras)
@@ -67,8 +69,8 @@ def items(card: HypothesisCard, cvs: list[ClaimVerification], alts: dict[str, Cl
             continue
         ac = r32.Claim(id=alt.id, subject=alt.subject, relation=alt.relation, object=alt.object, qualifiers=alt.qualifiers,
                        role="premise", source_span="")
-        F = r32.side_weight(cv.evidence, ac, False, True)
-        A = r32.side_weight(cv.counterevidence, ac, True, True)
+        F = r32.side_weight(cv.evidence, ac, False, True, True)
+        A = r32.side_weight(cv.counterevidence, ac, True, True, True)
         if r32.strength(F, A)[0] > 0.5 and "eliminated" not in (alt.on_positive, alt.on_negative):
             open_alts.append((alt, cv))
     if open_alts:
@@ -99,7 +101,7 @@ def items(card: HypothesisCard, cvs: list[ClaimVerification], alts: dict[str, Cl
                  "facts": _facts(cv.counterevidence, "against") + _facts(cv.evidence, "for", 1)}, evaluate(card, cvs2, alts))
         # rewrite: support only in an adjacent population
         adj = [r for r in cv.evidence if any(r.qualifiers_match.get(k) == "no" for k in ADJ_KEYS)
-               and r32.record_weight(r, cl, False) > 0]
+               and r32.record_weight(r, cl, False, True) > 0]
         if adj:
             cvs2 = []
             for c in cvs:
@@ -117,10 +119,11 @@ def items(card: HypothesisCard, cvs: list[ClaimVerification], alts: dict[str, Cl
                 cvs2.append(ClaimVerification(id=c.id, evidence=ev, counterevidence=c.counterevidence))
             e2 = evaluate(card, cvs2, alts)
             if e2.P > base.P + 0.01 or e2.support_share > base.support_share + 0.01:
+                # narrowing to where the data are moves the hypothesis towards the known: its novelty is recomputed and shown
                 add({"cls": "rewrite", "type": "narrow_population", "target": cl.id,
                      "what": (f"сузить популяцию звена «{cl.subject.label} — {cl.object.label}» до той, где получены данные «за»",
                               f"narrow the population of the link \"{cl.subject.label} — {cl.object.label}\" to the one the data for come from"),
-                     "facts": _facts(adj, "for")}, e2)
+                     "facts": _facts(adj, "for")}, e2, {**extras, "N": nv.novelty(card, cvs2, e2)})
         # research: a weakly supported link
         if F > 0 and 0.5 <= S < 5 / 6:
             add({"cls": "research", "type": "support_link", "target": cl.id,
@@ -165,6 +168,8 @@ def items(card: HypothesisCard, cvs: list[ClaimVerification], alts: dict[str, Cl
                     ind[name] = [round(a, 3), round(b, 3)]
             if ext.get("endpoint_clinical") != extras.get("endpoint_clinical"):
                 ind["endpoint_clinical"] = [extras.get("endpoint_clinical"), ext.get("endpoint_clinical")]
+            if ext.get("N") != extras.get("N"):
+                ind["N"] = [extras.get("N"), ext.get("N")]
             item["expected"] = {"indicators": ind, "score": {p: [sc["base"][p], sc[f"v{i}"][p]] for p in sc["base"]}}
         out.append(item)
     return out
@@ -180,7 +185,7 @@ def _with_strength(card, cvs, alts, link_id: str, S_target: float) -> r32.V32Res
                          comparison="between_groups", effect_class="large", quote_role="finding",
                          qualifiers_match={"intervention_match": "exact"})
     cl = next(x for x in r3.chain(card) if x.id == link_id)
-    w = r32.record_weight(rec, cl, False) or 1.0
+    w = r32.record_weight(rec, cl, False, True) or 1.0
     reps = max(1, round(F / w)) if w else 1
     recs = [rec.model_copy(update={"record_id": f"SYNTH:{k}", "lab_or_cohort": f"SYNTH:{k}"}) for k in range(reps)]
     cvs2 = [ClaimVerification(id=x.id, evidence=x.evidence + recs, counterevidence=x.counterevidence) if x.id == link_id else x
