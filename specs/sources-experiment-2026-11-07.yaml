@@ -54,3 +54,18 @@ fixes_2026_11_08:   # user decision: fix the intervention match and the numeric 
     intervention match judged at the level at which the claim names the intervention (a kind -> any study of that kind is
     exact); the effect phrase must not be empty when the abstract gives any number. configs/v3-flash-n11*.yaml use it. Not
     run yet: checked by the rerun of arm A (paid, price before the run).
+
+result_arm_A_2026_11_08:   # v10 prompt + exact-population query, 15 units, same frozen cards; scripts/sources_compare.py
+  link_paper_pairs: {old_v9: 63, arm_A: 63}
+  argon_graph_pairs_found: {old_v9: "44 of 128", arm_A: "23 of 128"}
+  argon_graph_papers_on_outcome_link: {old_v9: "27 of 73", arm_A: "10 of 73"}
+  argon_graph_papers_read_at_all: {old_v9: "61 of 122", arm_A: "45 of 122"}   # searched_pmids
+  turned_into_records: {old_v9: "72% of the graph papers read", arm_A: "51%"}
+  agreement_with_argon: {old_v9: {stance: 0.87, design: 0.91, intervention: 0.81, population: 0.84, numeric_effect: 0.68, n: 63},
+                         arm_A: {stance: 0.93, design: 0.86, intervention: 0.71, population: 0.86, numeric_effect: 0.61, n: 28}}
+  auc_15_direction_only: {old_v9: {P: 0.70, support: 0.66}, arm_A: {P: 0.39, support: 0.41}}
+  reading: >-
+    Arm A is worse, in search (the exact-population query leads the merge and pushes out papers the model queries found) and
+    in reading (fewer of the papers read became records). Not adopted: configs/v3-flash-n11*.yaml are not used further.
+    Caveat: one run each; the model-written queries vary between runs, so part of the drop may be run-to-run noise. Two
+    changes were tested together, so their effects are not separated.
