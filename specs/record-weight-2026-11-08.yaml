@@ -1,0 +1,183 @@
+id: record-weight-2026-11-08
+written_on: 2026-11-08
+status: >-
+  step 0 (definitions, references, menu, decision rules) fixed before any value of steps 3-7 was computed. Steps 1-2 are
+  descriptive; their only numbers seen before writing this file are the shares of the spread of log w and the level counts
+  of design, context and n shown to the user in the conversation of 2026-11-08 (604 records).
+plan: docs/plans/record-weight-2026-11-08.md
+why: >-
+  User request 2026-11-08: work out step by step which factors of the record weight are needed (and whether some are
+  missing), their levels, their relative weights, and how records for and against are folded into a link state; the result
+  must be methodologically clear (GRADE as the frame) without making quality noticeably worse. The trial outcome is too
+  noisy to decide this alone (ablation 2026-11-07: counting records 0.602 vs P 0.595).
+cost: free (no model calls; PubMed E-utilities for dates and abstracts)
+
+records:
+  pool: >-
+    every record of the 73 calibration units (scripts.ablation.units, runs run_<s>_v10, verifier verify_claim/v9) and of the
+    60 prospective trials (prospective/run_60.json) that counts under v3.5 (usable, context not None, weight > 0), on the
+    declared claims of the cards (alternatives excluded); v3.5 = evaluate(..., v34=True, null_power=True).
+  link: one claim of one card. Records of the same paper on two claims are two records.
+
+step1_descriptive:
+  per_factor: level counts (for, against; outcome link vs links before the outcome); mean, min, max of the factor value
+  share_of_spread: >-
+    var(log w) split as cov(log f_k, log w) / var(log w) (the shares sum to 1), for all records, for, against, outcome link,
+    links before the outcome
+  correlations: Spearman between the log factors (does one factor duplicate another)
+  missing: n unknown, effect unclear, comparison unknown, design unknown/other
+  fold: how much the fold by independence group changes F and A (share of records folded, ratio folded / unfolded sum)
+  availability_for_step6: >-
+    share of records with a usable value for each candidate factor: flags open_label, subgroup_only, conflict_of_interest,
+    small_n; marker_validation; endpoint; blinding / placebo words in the abstract (regex, step 6)
+
+step2_extraction_reliability:
+  earlier: >-
+    from specs/extraction-gold-v9-2026-11-05.yaml (16 relevant pairs): design 0.88, comparison 0.88, n_total 0.81,
+    effect_class 0.81 (= constant baseline); from specs/sources-experiment-2026-11-07.yaml: intervention match and effect
+    numbers are the weak fields. No earlier gold for the context label (intervention_match, qualifiers).
+  context_check:
+    sample: >-
+      40 records drawn by SHA-1 of "record_id|card|claim" (lowest first), stratified by the verifier's context label:
+      25 class, 10 adjacent, 5 exact (all if fewer), from the whole pool.
+    labeller: Claude, by hand, from the claim, the quote and the abstract (PubMed), before looking at the record's weight
+    rule: >-
+      manual section 4, reading rules 1 and 5 (verifier prompt v10 wording): the match is judged at the level at which the
+      claim names the intervention; a kind named in the claim makes any study of that kind exact; class only when the claim
+      names a specific product, compound or programme and the study used another member of its kind; adjacent when the
+      population, species, age, sex, dose or comparator differs; none when the intervention is another altogether.
+    measures: agreement with the verifier (share and Cohen kappa over exact / adjacent / class / none); share of class that
+      should be exact; the weight ratio this implies (class 1/3 -> exact 1).
+    decision: >-
+      if 30% or more of the class labels should be exact, the context label carries a systematic error of extraction:
+      steps 4-7 are computed twice, with the verifier's label and with the hand label on the sample (the sample is too
+      small to relabel the pool), and the fix (code rule, or a paid re-run of the verifier with v10) is a separate question
+      to the user.
+    privacy: quotes and abstracts only in longevity-kg (calibration/record_weight_context_check.jsonl); the public spec gets
+      counts.
+
+references:
+  dates: >-
+    PubMed publication year (hyparena.tools.pubmed.fetch gives the year only); "strictly before" = an earlier year (same
+    year is not before); a record without a year is dropped from R1 and R2 and counted.
+  R1_meta_analysis:
+    unit: a link with at least one usable meta-analysis record and at least two primary records (design not meta_analysis,
+      not review) of distinct independence groups published strictly before the earliest such meta-analysis
+    label: 1 if that meta-analysis record is for, 0 if against; links where two meta-analyses before T disagree are left
+      out and counted (a measure of the reference's own noise)
+    score: link state s = 2S - 1 from the earlier primary records only, under each variant
+    measure: tied AUC; sign agreement (s > 0 vs label) reported
+  R2_later_trial:
+    unit: >-
+      every record of design rct or meta_analysis (the target) of a link, given the records of that link of other
+      independence groups published strictly before it, when there are at least two of them; one link may give several
+      targets
+    label: 1 if the target is for, 0 if against
+    score: s from the earlier records only, under each variant
+    measure: tied AUC; the confidence interval by bootstrap over links (targets of one link resampled together)
+    primary: R2 is the main reference (the larger one); R1 confirms
+  R3_trial_outcome:
+    measure: tied AUC of the chain state (v3.5) on the 73 calibration units
+    constraint: a variant may not lower it by more than 0.03 against the current rules
+  R4_pairs_argon: step 5, pack 5, prospective pool only (definitions written before the pack is sent)
+
+menu:   # every variant changes one thing against the current rules (v3.5); steps 4-7 compute all of them
+  current: v3.5 (design 7 levels on the outcome link of a human claim, 3 before it; precision min(1, ln n / ln 300), floor
+    1/4, constant 1/2 before the outcome; effect continuous / class; comparison 1/3, 2/3, 1; context 1/3, 2/3, 1; null by
+    power; fold 1/4; Beta with c = 6.67)
+  step4_factors:
+    drop: for each factor, the factor set to 1
+    design_grade3: RCT and meta-analysis 1; non-randomised and observational 1/2; animal, cells, review, other 1/4 (GRADE
+      high / low / very low); before the outcome unchanged
+    precision_steps3: n < 50 -> 1/4; 50-299 -> 1/2; >= 300 -> 1; unknown 1/4
+    precision_power_both: >-
+      the records for also weigh by the power of the study (d 0.4, as the nulls) instead of precision x effect; a large
+      effect multiplies by 1.5 (GRADE rating up), capped at 1
+    effect_rate_up: >-
+      records for: effect none or small 1/2, everything else (medium, large, unclear) 1; the effect only lowers a small
+      effect
+    comparison_2: between groups 1, else 1/2
+    context_2: exact or class 1, adjacent 1/2 (indirectness charged once, class not charged)
+  step6_new:
+    risk_of_bias: >-
+      a record for from a study without blinding or placebo (abstract words: open-label, unblinded, single-arm, no placebo /
+      sham; and no "double-blind", "placebo", "sham") x 1/2 (GRADE: rate down one level); records against unchanged
+    subgroup_only: a record for flagged subgroup_only x 1/2
+    surrogate: a record for on an unvalidated marker (marker_validation exploratory) x 1/2 on the outcome link
+    admission: a usable value on at least 70% of the records it applies to; else reported and not computed
+  step7_fold:
+    beta_current: S = (cF + 1) / (c(F + A) + 2), s = 2S - 1, c = 6.67
+    loglr_sum: >-
+      L = lambda (F - A), s = tanh(L / 2) (equal to 2 sigmoid(L) - 1); lambda anchored as c is: F = 0.6 alone gives
+      s = 2/3, lambda = 2 atanh(2/3) / 0.6 = 2.68. Each record is evidence with log likelihood ratio lambda w (for) or
+      -lambda w (against)
+    best_evidence: >-
+      s = sign of the heaviest record times its weight (in GRADE the certainty is set by the best evidence), ties by the
+      sum
+    count_diff: s = (nF - nA) / (nF + nA + 1) over independence groups (weights ignored)
+    fold_rest: 1/4 (current), 0 (one record per independence group), 1 (no fold)
+
+decision_rules:
+  simpler_unless_worse: >-
+    a simpler variant (fewer factors or levels) or one closer to GRADE replaces the current one unless it is worse by more
+    than 0.03 on R2 (or on R3); differences inside 0.03 count as equal and the simpler / clearer one wins
+  more_complex_only_if_better: >-
+    a variant that adds a factor or a level is adopted only if it raises R2 by at least 0.03 and lowers neither R1 nor R3
+    by more than 0.03, or if GRADE requires it (risk of bias) and it is not worse by more than 0.03
+  noise: >-
+    with tens of units an AUC moves by about 0.05-0.10 by chance; the rules above choose between equals by clarity, they do
+    not claim significance. Every decision goes to the user before the code of the method changes.
+  one_change_at_a_time: variants are compared one at a time against the current rules; the combination of the chosen ones
+    is computed once at the end and reported, not tuned.
+
+step1:   # python -m scripts.record_weight_check step1 -> calibration/record_weight_step1.json
+  records: "595 (calibration 279, prospective 316; for 453, against 142) on 186 links; outcome link 509, before it 53, null 33"
+  share_of_spread_log_w: {all: {precision: 0.39, effect: 0.18, design: 0.17, comparison: 0.14, context: 0.13},
+                          for: {precision: 0.42, design: 0.21, comparison: 0.16, context: 0.11, effect: 0.10},
+                          against: {precision_as_power: 0.67, context: 0.15, comparison: 0.11, design: 0.07, effect: 0.0},
+                          before_outcome: {comparison: 0.42, design: 0.28, context: 0.15, effect: 0.12, precision: 0.03}}
+  weight: "median 0.13 (10-90%: 0.04-0.29); records for 0.12, against 0.19"
+  levels:
+    design: >-
+      outcome link: RCT 1 (326), meta-analysis 6/7 (80), non-randomised 5/7 (54), observational 3/7 (16), review 4/7 (11);
+      33 outcome-link records sit on the preclinical 3-level scale (observational, non-randomised, animal at 1, meta-analysis
+      2/3) because their claim has no species "human" (card qualifiers missing). Meta-analysis weighs below RCT (6/7), the
+      opposite of GRADE for a meta-analysis of RCTs.
+    precision: "records for: n 50-299 148, < 50 99, unknown 79, >= 300 78, constant 1/2 before the outcome 49; against (power): 50-299 69, < 50 29, >= 300 27, unknown 17"
+    effect: "records for: class unclear (1/2) 352 of 453 (78%), a continuous value 62, a stated class 39; against: always 1"
+    comparison: "between groups 500, within group 78, none 17"
+    context: "class (1/3) 465, adjacent (2/3) 98, exact 32"
+  spearman_log_factors: "all |rho| <= 0.22 except design~comparison 0.31: no factor duplicates another"
+  missing: "n unknown 128 (22%); effect unclear 375 of 453 records for (83%); design other 3"
+  fold: "only 18 records share an independence group with another record of the same link; the fold changes F and A by 1%: the fold rule is moot on these data"
+  availability_for_step6: >-
+    flags on records for: small_n 80, subgroup_only 35, open_label 31, disease_model 3 (open_label is set by the verifier
+    only when an abstract says so; blinding must come from the abstract words); marker_validation n/a on all 453 (the
+    surrogate candidate cannot be computed from it; the field endpoint is filled: healthspan 174, biomarker 119, disease 60,
+    mechanism 48, unknown 52)
+  reading: >-
+    the order of records is set mostly by n (precision, and power for nulls); design hardly varies (most records are RCTs
+    on the outcome link); effect is a constant 1/2 for four records in five; context is nearly constant but lowers the
+    level threefold (78% class). The links before the outcome have 53 records in all: the weights matter almost only on
+    the outcome link.
+step2:   # python -m scripts.record_weight_check step2-sample / step2-score; labels in longevity-kg calibration/record_weight_context_check.jsonl
+  sample: "40 records (25 class, 10 adjacent, 5 exact), labelled blind to the verifier's label, rule of verifier prompt v10 (the records were read with v9)"
+  agreement: {share: 0.575, kappa: 0.38}
+  confusion: {class->class: 13, class->exact: 6, class->adjacent: 5, class->none: 1, adjacent->adjacent: 5, adjacent->exact: 5, exact->exact: 5}
+  class_should_be_exact_share: 0.24
+  class_should_be_higher_share: 0.44
+  weight_ratio_hand_over_verifier: {mean: 1.46, median: 1.0}
+  decision_rule: "formally not triggered (24% < 30% exact); but 11 of 25 class labels should weigh more (exact or adjacent) and 5 of 10 adjacent should be exact"
+  causes:
+    kind_named_in_claim: >-
+      6 of the 12 upgrades: the claim names a kind (probiotics, exercise, heavy resistance training, a nutritional
+      intervention) and v9 called a study of that kind class; verifier prompt v10 fixes this rule (not run on these pools)
+    unfixed_qualifiers: >-
+      4 upgrades: adjacent only because the verifier marked "no" on a qualifier the claim does not fix (sex, dose,
+      population, comparator). In the whole pool 53 of 98 adjacent records are adjacent only on such qualifiers: a free code
+      rule (count "no" only on qualifiers the claim names) removes them
+    other: "2 adjacent kept as adjacent but dose or population really differ; 1 class is no result on the claim at all (both arms got the intervention)"
+  caveats: "one labeller (Claude); records extracted with v9 judged by the v10 rule; two claims of the sample are malformed (subject 'interventions', object 'profit potential')"
+  consequence_for_steps_3_7: >-
+    steps 3-7 are computed with the verifier's context and with the code rule for unfixed qualifiers; the kind-level match
+    needs the v10 verifier (paid re-run) and is the user's decision
