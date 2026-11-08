@@ -35,7 +35,7 @@ def row(it: dict, as_of: str) -> dict:
     lev, wpot, bott = nv.leverage(card, cvs, e34)
     ext = v3_extra.extras(card, cvs, it["v3"], as_of)
     return {"gate": e34.gate, "P33": e33.P, "P34": e34.P, "ss33": e33.support_share, "ss34": e34.support_share, "I": e34.I,
-            "I_headroom": it["v3"].get("headroom_I"), "W": e34.scope, "against_share": ext.get("against_share"),
+            "I_headroom": e34.headroom_I, "W": e34.scope, "against_share": ext.get("against_share"),
             "feasibility": ext.get("feasibility"), "N": nv.novelty(card, cvs, e34), "density": nv.literature_density(card, as_of),
             "leverage": lev, "W_potential": wpot, "bottleneck": bott, "links": len(e34.links)}
 

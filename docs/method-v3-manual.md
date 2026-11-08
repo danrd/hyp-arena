@@ -37,7 +37,7 @@ several **profiles** (whose order of importance says what matters to whoever ran
 | P, non-refutation (named plausibility until v3.3) | How far is the chain not refuted by the literature before the date T? | 0-1, product over links (v3.4) |
 | support share | How much of the chain is supported by that literature? | 0-1 |
 | N, novelty | How far is the hypothesis from what was already asked before T? | new context < translation < analog < new combination < new link |
-| I, informativeness | Which supported competing explanations does the stated experiment cut off? | 1/3-1 |
+| I, informativeness | Which supported competing explanations does the stated experiment cut off? | 0-1 |
 | W, scope | How far does the supported mechanism reach: one condition, an organ or system, a hallmark of ageing? | local, organ, hallmark |
 | V, reference | P × I (0 if filtered): the point of equal weights | 0-1 |
 
@@ -213,9 +213,11 @@ ranked). Nothing else filters: an undeveloped but promising hypothesis keeps its
   the link's own object (a measured hallmark process: senescent cells, proteostasis markers, mitochondrial function), not
   something inferred from the kind of intervention: "protein after exercise → muscle protein synthesis" is an organ link,
   not the hallmark "loss of proteostasis".
-- **I** = 1/3 + 2/3 × min(1, Σ a·d / 1.5) over the proposed alternatives. a = support of the alternative, max(0, 2 (S − 0.5))
+- **I** = min(1, Σ a·d / 1.5) over the proposed alternatives, from 0 to 1 (v3.4, 2026-11-08; until then 1/3 + 2/3 × the same,
+  a floor of 1/3 kept for the log scale and for V; in ASPID the floor had no effect, so it was dropped, and I is now on a
+  linear 0-1 scale). **Headroom I** = the same with d = 1 for every supported alternative. a = support of the alternative, max(0, 2 (S − 0.5))
   with S its strength; d = what the stated experiment does to it at either outcome (cut off 1, weakened 0.5, unchanged 0).
-  Without supported alternatives I = 1/3: an invented alternative adds nothing. **How d is set** (added 2026-11-07): d = 1
+  Without supported alternatives I = 0: an invented alternative adds nothing. **How d is set** (added 2026-11-07): d = 1
   only when the experiment has a named arm, control or measurement for which the hypothesis and the alternative predict
   different results, and one of the possible results contradicts the alternative (an active control matched for attention
   rules out "any attention helps"); d = 0.5 when the experiment only measures the variable the alternative depends on,
@@ -248,7 +250,7 @@ drawn over its whole range in every draw.
 | Indicator | What it says | Scale |
 |---|---|---|
 | P | non-refutation of the chain | log, from 0.01 |
-| I | informativeness of the stated experiment (headroom I, of an improved one, feeds the room to improve, section 11) | log, 1/3-1 |
+| I | informativeness of the stated experiment (headroom I, of an improved one, feeds the room to improve, section 11) | linear, 0-1 |
 | W | scope | local < organ < hallmark |
 | feasibility | system, duration, planned n, readiness of the intervention (approved or not a compound 1, in trials 0.5, neither 0) | 0-1 |
 | best_design_outcome | best design among the records of the outcome link | cells … RCT |
@@ -455,7 +457,7 @@ modes.
 - Novelty is read off the outcome link first: a known effect with a new mechanism counts as new context, not as new.
 
 **Deferred from the outside review (2026-11-07), each paid or an inflation risk:**
-- I depends on alternatives already published, so a new field gets I = 1/3 even for a well-built experiment. Planned: a
+- I depends on alternatives already published, so a new field gets I = 0 even for a well-built experiment. Planned: a
   second half of I for the rigour of the design (controls, blinding, factorial or dose and timing inversion), scored by two
   model families with only agreement counted, since a well-described experiment is cheap to write.
 - Opposite effects in different regimes (timing, dose, polarity) are read as a conflict ("contested"). Planned: the regime
@@ -520,8 +522,8 @@ c3 (medium effect). One proposed alternative with an observational study of 300 
 | with one mouse study of 40 for c2 | | S 0.842 | | 0.639 | 0.724 | | organ | 0.416 |
 | with one mouse study of 40 against c2 | | S 0.158 | | 0.120 | 0.496 | | | |
 
-| v3.4 | S 0.885 (F 1.000) | no record, R 1 | S 0.839 (F 0.63) | 1.000 | 0.482 | 0.651 | organ | 0.651 |
-| v3.4, with one mouse study of 40 for c2 | | S 0.812 | | 1.000 | 0.691 | | organ | 0.651 |
+| v3.4 | S 0.885 (F 1.000) | no record, R 1 | S 0.839 (F 0.63) | 1.000 | 0.482 | 0.476 | organ | 0.476 |
+| v3.4, with one mouse study of 40 for c2 | | S 0.812 | | 1.000 | 0.691 | | organ | 0.476 |
 | v3.4, with one mouse study of 40 against c2 | | S 0.188 | | 0.231 | 0.482 | | | |
 
 Under v3.4 the c1 records weigh more (precision 1/2 before the outcome), P is 1 until something is against, the study for c2
