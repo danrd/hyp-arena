@@ -319,6 +319,10 @@ def v3_fields(rec: EvidenceRecord, r: dict, source: str, review: bool = False) -
     rec.comparison = r.get("comparison") if r.get("comparison") in ("between_groups", "within_group", "none") else "unknown"
     rec.effect_class = effect_class(rec.effect_reported, r.get("effect_class") or "")
     rec.reports_trial = _text(r.get("reports_trial"))
+    if r.get("blinding") in ("double_blind", "single_blind", "assessor_blind", "open", "not_reported", "not_applicable"):
+        rec.blinding = r["blinding"]                      # verify_claim/v11
+    if isinstance(r.get("outcome_subjective"), bool):
+        rec.outcome_subjective = r["outcome_subjective"]
 
 
 RELEVANCE_TEMPLATE = ("relevance_check", "v1")
@@ -405,7 +409,9 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
     pmids = []
     full_text = search.endswith("+fulltext")              # sources experiment arm B (specs/sources-experiment-2026-11-07.yaml)
     search = search.replace("+fulltext", "")
-    if search in ("model", "model_population"):           # model-written queries, light guard, citation expansion (search.py)
+    if search == "fixed":                                 # read again the papers given in expert_pmids only (no search)
+        pass
+    elif search in ("model", "model_population"):           # model-written queries, light guard, citation expansion (search.py)
         from hyparena.card.search import retrieve
         pmids = retrieve(client, family, avoid, claim, card, as_of, retmax, log=log, population_first=search == "model_population")
     else:

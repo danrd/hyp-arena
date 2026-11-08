@@ -284,6 +284,9 @@ class EvidenceRecord(BaseModel):
     comparison: Literal["between_groups", "within_group", "none", "unknown"] = "unknown"
     effect_reported: str = ""                    # the verbatim effect size ("+2.4 kg", "RR 0.79 (0.65-0.96)")
     effect_class: Literal["none", "small", "medium", "large", "unclear"] = "unclear"
+    blinding: Literal["double_blind", "single_blind", "assessor_blind", "open", "not_reported", "not_applicable",
+                      "unknown"] = "unknown"      # verify_claim/v11 (2026-11-08): of the study the finding comes from
+    outcome_subjective: Optional[bool] = None    # verify_claim/v11: the outcome of the quote is self-reported or rated
     reports_trial: str = ""                      # a review restating one trial's result: the trial as named
     primary_record: str = ""                     # the record id of that trial's own paper, when found
     retrieved_at: str = ""

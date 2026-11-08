@@ -402,3 +402,19 @@ lambda_sensitivity:   # user request 2026-11-08; calibration/lambda_sensitivity.
   R3: "0.602, 0.599, 0.593, 0.596, 0.601"
   orders: "Spearman with x1: links 1.000; prospective evidence balance >= 0.999; I >= 0.976"
   reading: "the anchor (F = 0.6 alone gives S = 5/6) sets only the scale; the conclusions do not depend on it"
+reread_v11:   # user decision 2026-11-08 ("do 1-4", item 4); written before any call
+  what: >-
+    the declared chain claims of the 73 calibration and 59 prospective units read again with verify_claim/v11 = v10 (the
+    kind-level intervention_match rule) + two fields per record: blinding (double_blind | single_blind | assessor_blind | open
+    | not_reported | not_applicable) and outcome_subjective (true | false | null). The SAME papers: the PMIDs of each claim's
+    original search log; no new search. Alternatives and analog probes are not re-read (their support a stays).
+  cost: "about 30% of the original verifier tokens: about 1 USD (DeepSeek V4.1 Flash, off-peak); fallback family google"
+  measures:
+    class_label: "kappa of the context label with Argon's (pack 5 records) and with the 40 hand labels (step 2), v9 vs v11"
+    blinding: "agreement of the v11 blinding with Argon's (pack 5 records), and with the abstract-word rule"
+    novelty: "weighted kappa of N with Argon's (pack 7), v9 records vs v11 records (was 0.14)"
+    references: "R2, R3 (v3.6 rules) and R4 tau-b with the v11 records; the order of prospective hypotheses vs the v9 records"
+    rob: "the risk-of-bias factor of step 6 with blinding from the verifier: a record for from a trial that is open or not_reported, on a subjective outcome, x 1/2"
+  adopt_if: >-
+    the v11 records replace the v9 records in the method when the class-label kappa with Argon rises and R2 and R3 are not
+    worse by more than 0.03; the rob factor is adopted when it is not worse by more than 0.03 on R2 and R3 (GRADE clause)
