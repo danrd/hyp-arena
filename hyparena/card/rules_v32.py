@@ -30,6 +30,7 @@ precision is a constant 1/2.
 from __future__ import annotations
 
 import math
+from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
 from typing import Optional
 
@@ -142,7 +143,74 @@ def null_power(n: Optional[int], comparison: str) -> float:
 NULL_POWER = False          # set by evaluate(..., null_power=True); module switch so side_weight need not carry it
 
 
+V36 = False                 # set by evaluate(..., v36=True)
+DESIGN_GRADE3 = {"rct": 1.0, "meta_analysis": 1.0, "non_randomised": 0.5, "observational": 0.5}   # else 1/4
+EFFECT_FULL_FROM = 0.25 + 0.75 * 0.5 / 0.8      # the continuous effect weight of d = 0.5 (medium)
+LOGLR_LAMBDA = 2 * math.atanh(2 / 3) / 0.6      # F = 0.6 alone gives s = 2/3, as c did for the Beta
+
+
+def record_weight_v36(rec: EvidenceRecord, claim: Claim, against: bool) -> float:
+    """v3.6 (specs/record-weight-2026-11-08.yaml, user decision 2026-11-08): GRADE-shaped weight.
+    design: on the outcome link of a human claim RCT and meta-analysis 1, non-randomised and observational 1/2, else 1/4
+    (before the outcome the preclinical scale as before); precision: a null by its power (v3.5), a record for min(1, ln n /
+    ln 300) (1/2 before the outcome); effect: a record for with a stated effect of at least medium size 1, else (small, none,
+    not stated) 1/2; comparison: between groups 1, else 1/2; context: adjacent 1/2, exact and class 1."""
+    if not r3.usable(rec, VARIANT_BASE):
+        return 0.0
+    ctx = context_v34(rec, claim)
+    if ctx is None:
+        return 0.0
+    pre = claim.link in r3.PRECLINICAL_LINKS
+    design = r3.record_design(rec)
+    w = DESIGN_GRADE3.get(design, 0.25) if (r3.human_claim(claim) and not pre) else lv.design_weight(design, False)
+    if against:
+        w *= null_power(rec.n_total, rec.comparison)
+    else:
+        w *= PRECLINICAL_PRECISION if pre else precision(rec.n_total)
+        w *= 1.0 if effect_weight(rec, False) >= EFFECT_FULL_FROM - 1e-9 else 0.5
+    w *= 1.0 if rec.comparison == "between_groups" else 0.5
+    w *= 0.5 if ctx == "adjacent" else 1.0
+    return w
+
+
+@contextmanager
+def method(v36: bool = True):
+    """The current rules for code that weighs records outside evaluate (reports, improvements): v3.6 by default."""
+    global NULL_POWER, V36
+    saved = NULL_POWER, V36
+    NULL_POWER, V36 = True, v36
+    try:
+        yield
+    finally:
+        NULL_POWER, V36 = saved
+
+
+def current_weight(rec: EvidenceRecord, claim: Claim, against: bool) -> float:
+    """The record weight under the current rules (for reports)."""
+    with method():
+        return record_weight(rec, claim, against, True)
+
+
+def current_factors(rec: EvidenceRecord, claim: Claim, against: bool) -> Optional[dict]:
+    with method():
+        return weight_factors(rec, claim, against, True)
+
+
+def current_support(recs_for: list, recs_against: list, claim: Claim) -> float:
+    """a = max(0, 2 (S - 0.5)) of a link or an alternative under the current rules."""
+    with method():
+        F, A = side_weight(recs_for, claim, False, True, True), side_weight(recs_against, claim, True, True, True)
+        return max(0.0, 2 * (link_point(F, A) - 0.5))
+
+
+def link_point(F: float, A: float, c: float = C_ANCHOR) -> float:
+    """The strength S of a link: v3.6 sigmoid(lambda (F - A)) (the log-likelihood sum), else the Beta mean."""
+    return 1 / (1 + math.exp(-LOGLR_LAMBDA * (F - A))) if V36 else strength(F, A, c)[0]
+
+
 def record_weight(rec: EvidenceRecord, claim: Claim, against: bool, v34: bool = False) -> float:
+    if V36:
+        return record_weight_v36(rec, claim, against)
     if not r3.usable(rec, VARIANT_BASE):
         return 0.0
     ctx = context_v34(rec, claim) if v34 else r3.context_level(rec)
@@ -170,6 +238,18 @@ def weight_factors(rec: EvidenceRecord, claim: Claim, against: bool, v34: bool =
         return None
     pre = claim.link in r3.PRECLINICAL_LINKS
     comp = rec.comparison if rec.comparison != "unknown" else "none"
+    if V36:
+        design = r3.record_design(rec)
+        dw = DESIGN_GRADE3.get(design, 0.25) if (r3.human_claim(claim) and not pre) else lv.design_weight(design, False)
+        if against:
+            prec, eff = ["power", null_power(rec.n_total, rec.comparison)], ["against", 1.0]
+        else:
+            prec = [rec.n_total, PRECLINICAL_PRECISION if pre else precision(rec.n_total)]
+            full = effect_weight(rec, False) >= EFFECT_FULL_FROM - 1e-9
+            eff = [rec.effect_class if full else "small or not stated", 1.0 if full else 0.5]
+        return {"design": [design, dw], "precision": prec, "effect": eff,
+                "comparison": [comp, 1.0 if rec.comparison == "between_groups" else 0.5],
+                "context": [ctx, 0.5 if ctx == "adjacent" else 1.0]}
     return {"design": [r3.record_design(rec), lv.design_weight(r3.record_design(rec), r3.human_claim(claim) and not pre)],
             "precision": [rec.n_total, PRECLINICAL_PRECISION if (v34 and pre) else precision(rec.n_total)],
             "effect": ["against" if against else rec.effect_class, effect_weight(rec, against)],
@@ -212,17 +292,19 @@ class V32Result:
 def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
              alt_verifications: Optional[dict[str, ClaimVerification]] = None, c: float = C_ANCHOR,
              fold: bool = False, neutral_unverified: bool = False, v34: bool = False, null_power: bool = False,
-             v35: bool = False) -> V32Result:
+             v35: bool = False, v36: bool = False) -> V32Result:
     """v3.5 (2026-11-08, specs/link-scoring-2026-11-08.yaml) = v3.4 + a null weighted by its power; the profiles use the
     signed chain state (mean of 2S - 1 over the slots) instead of P and the support share."""
-    global NULL_POWER
+    global NULL_POWER, V36
+    if v36:
+        v35 = True
     if v35:
         v34, null_power = True, True
-    NULL_POWER = null_power
+    NULL_POWER, V36 = null_power, v36
     try:
         return _evaluate(card, ver_claims, alt_verifications, c, fold, neutral_unverified, v34)
     finally:
-        NULL_POWER = False
+        NULL_POWER, V36 = False, False
 
 
 def _evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
@@ -240,6 +322,7 @@ def _evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
         F = side_weight(cv.evidence if cv else [], cl, False, fold, v34)
         A = side_weight(cv.counterevidence if cv else [], cl, True, fold, v34)
         s, lo, hi = strength(F, A, c)
+        s = link_point(F, A, c)                       # v3.6: the log-likelihood sum; the interval stays the Beta's (amount of data)
         if base.links.get(cl.id) == "moderate" and f"{cl.id}_established_by_approval" in base.flags:
             s, lo, hi = max(s, 5 / 6), max(lo, 5 / 6), max(hi, 5 / 6)
         res.links[cl.id] = [round(s, 4), round(lo, 4), round(hi, 4), round(F, 3), round(A, 3)]
@@ -308,7 +391,7 @@ def _evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
                         role="premise", source_span="")
         F = side_weight(cv.evidence if cv else [], a_claim, False, fold, v34)
         A = side_weight(cv.counterevidence if cv else [], a_claim, True, fold, v34)
-        a = max(0.0, 2 * (strength(F, A, c)[0] - 0.5))
+        a = max(0.0, 2 * (link_point(F, A, c) - 0.5))
         d = max(lv.weight("discrimination", alt.on_positive), lv.weight("discrimination", alt.on_negative))
         supported |= a > 0
         total += a * d

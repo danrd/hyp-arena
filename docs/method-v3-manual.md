@@ -1,6 +1,8 @@
 # Method v3 manual: how a hypothesis is scored and how to read the report
 
-Version: rules **v3.5** as of 2026-11-08 (v3.4 + one signed axis "chain state" in the profiles and a null record weighted
+Version: rules **v3.6** as of 2026-11-08 (`evaluate(..., v36=True)`, specs/record-weight-2026-11-08.yaml): the record
+weight rebuilt on the GRADE domains with fewer levels, and records for and against folded as a sum of log likelihood ratios
+(sections 5, 5a, 6); the signed axis is named the **evidence balance** (`chain_state` in the code). v3.5 as of 2026-11-08 (v3.4 + one signed axis in the profiles and a null record weighted
 by the power of its study, `evaluate(..., v35=True)`, specs/link-scoring-2026-11-08.yaml); v3.4 as of 2026-11-07 (`hyparena/card/rules_v32.py`, `evaluate(..., v34=True)`; novelty, leverage and the
 evolution drift flag in `hyparena/card/novelty_v34.py`; definitions in `specs/v34-frontier-2026-11-07.yaml`), on top of
 `rules_v3.py` variant v3.1 and `v3_levels.py`, aggregation by ASPID over the axes (`hyparena/card/aspid_v3.py`, `configs/profiles_v3.yaml`). v3.3
@@ -139,6 +141,21 @@ the verifier prompt `verify_claim/v9` already follows them; a report written by 
 
 `w = design × precision × effect × comparison × context`.
 
+**v3.6 (current, 2026-11-08; `rules_v32.record_weight_v36`).** Each factor is one GRADE domain; why each one and each
+level is in section 5a.
+
+| Factor (GRADE domain) | Levels |
+|---|---|
+| design (starting level), outcome link of a claim about humans | RCT and meta-analysis 1; non-randomised and observational 1/2; review, animal, cells, other 1/4 |
+| design, links before the outcome or a claim about animals | cells 1/3, review 2/3, primary study 1 (unchanged) |
+| precision (imprecision) | record for: min(1, ln n / ln 300), at least 1/4, n unknown 1/4; before the outcome 1/2. Record against (a null): the power of its study to detect d = 0.4 (v3.5) |
+| effect (rating up for a large effect) | record for: a stated effect of at least medium size (d ≥ 0.5, ratio ≥ 1.25, ≥ 5%, the authors' "moderate") 1; small, none or not stated 1/2. Record against: 1 |
+| comparison (part of risk of bias) | between groups 1; within group or none 1/2 |
+| context (indirectness) | adjacent 1/2 (another population, age, sex, dose, comparator or species, only on qualifiers the claim states); exact and class 1 |
+
+The fold by independence group is unchanged (the heaviest record of a group fully, the others 1/4). The table below
+(v3.2-v3.5) is kept for earlier runs.
+
 | Factor | Levels (v3.2–v3.4) | |
 |---|---|---|
 | design, claim about humans (outcome link) | cells, animal, observational, review, non-randomised, meta-analysis, RCT | 1/7 … 7/7 |
@@ -165,11 +182,47 @@ clinical one. **v3.4** (`specs/v34-frontier-2026-11-07.yaml`, after an outside r
   participants and are rarely stated in an abstract. Under v3.3 a cell study without n weighed 1/3 × 1/4 = 0.083 and a new
   link needed about eight of them to reach moderate support; now it weighs 1/6.
 
+## 5a. Why each factor and level (v3.6)
+
+The record weight was checked on 595 records of 133 trials against references other than the noisy trial outcome
+(specs/record-weight-2026-11-08.yaml): **R2**, later RCTs and meta-analyses of the same link predicted from the records
+published before them (195 targets on 71 links); **R3**, the trial outcomes, as a constraint (not lower than 0.03 below
+v3.5); **R4**, the order of 80 pairs of records of one link given by an outside reader (Argon), blind to the weights. The
+rule: a simpler variant, or one closer to GRADE, wins unless it is worse by more than 0.03.
+
+- **Design, three levels.** The seven-level scale put a meta-analysis (6/7) below a single RCT; the outside reader put the
+  meta-analysis first in all 7 such pairs, as GRADE does. With both at 1, the larger n decides. Most records on the outcome
+  link are RCTs, so the finer levels below them separated little.
+- **Precision stays continuous.** It sets most of the order of records (42% of the spread of the weights for, 67% for nulls
+  through power); three steps by n broke the R3 constraint (0.573).
+- **Effect as rating up.** The effect is stated in only one record in five; a full weight for a stated medium or large
+  effect, half otherwise, is better than dropping the factor (which lowered both R2 and R3) and than counting "not stated" as
+  full (R2 0.693, R3 0.580, R4 0.065 against 0.712, 0.595, 0.099). Not stated counts as small: when in doubt, the lower level.
+- **Comparison, two levels.** Between groups or not; the within-group / none distinction added nothing.
+- **Context, two levels.** The verifier's "class" label agreed with a hand check at κ 0.38 and with the outside reader at
+  κ 0.10 (it calls class about twice as often as either reader), and charging it 1/3 lowered R2; until the verifier is re-run
+  with the v10 reading rule, class is not charged. Adjacent is charged once, 1/2, and only on qualifiers the claim states.
+- **Not adopted:** risk of bias from abstract words (65% of trial abstracts say nothing about blinding; the
+  subjective-outcome word rule was confirmed by the outside reader on 13 of 29 records) — to return when the verifier
+  extracts blinding; a penalty for subgroup-only results (broke R3).
+- **Fold.** A sum of log likelihood ratios (section 6) beat the Beta mean on R2 (+0.023, the only paired interval of the
+  check above 0) and on R3; the best-evidence rule failed R3; counting papers without weights was the lowest on R2 (0.653)
+  but the highest on R3 (0.622), so against trial outcomes the weights still add nothing over counting.
+- **Overall** (v3.6 against v3.5): R2 0.702 vs 0.657 (paired 95% interval +0.009 to +0.091), R3 0.593 vs 0.608, R4 τ-b 0.099
+  vs 0.043; the order of the 186 links moves moderately (Spearman about 0.92). All numbers are in-sample and the intervals
+  are wide (R2 about ±0.09): the choice rests on GRADE and clarity, the data show that it is not worse.
+
 ## 6. Strength of a link and the gate
 
 F = folded weight of the records for, A = against.
 
-**Strength** S = (cF + 1) / (c(F + A) + 2), the mean of Beta(1 + cF, 1 + cA), with c = 4 / 0.6, so that F = 0.6 with
+**Strength, v3.6** (current): S = 1 / (1 + exp(−λ(F − A))), λ = 2 atanh(2/3) / 0.6 ≈ 2.68: every record is evidence
+with log likelihood ratio λw for the link (for) or −λw (against), and S is the probability after them from even odds.
+F = 0.6 with nothing against gives 5/6, as the Beta did; F = A gives 0.5 whatever their size. Unlike the Beta mean, S
+depends on the difference F − A, not on the ratio: three units for and one against (S 0.995) count more than one for and
+none against (0.936). The 90% interval is still the Beta's: it shows how much data there are, not where the point lies.
+
+**Strength, v3.2-v3.5:** S = (cF + 1) / (c(F + A) + 2), the mean of Beta(1 + cF, 1 + cA), with c = 4 / 0.6, so that F = 0.6 with
 nothing against gives 5/6 (the old "moderate"). Its 90% interval comes from the Beta quantiles. Reading S:
 
 | Situation | S | Interval |
@@ -275,7 +328,8 @@ drawn over its whole range in every draw.
 | funding (merged with the investor draft, 2026-11-06) | P > feasibility > {trend, AI role, novelty} > {I, support share} > {W, endpoint, best design, independent sources} |
 | frontier (2026-11-07; exploratory programmes such as ARPA-H, Foresight, early R&D) | novelty > P > {I, feasibility} |
 
-**v3.5 (2026-11-08): one axis instead of P and the support share.** The **chain state** = the mean over the chain's slots
+**v3.5 (2026-11-08): one axis instead of P and the support share.** The **evidence balance** (named "chain state" until
+v3.6; `chain_state` in the code) = the mean over the chain's slots
 of 2S − 1, from −1 (data against the links) through 0 (nothing known, or for and against balanced) to +1 (supported). It
 replaces P and the support share in every profile: evidence = chain state > I > W > {best design, independent sources,
 endpoint}; funding = chain state > feasibility > {trend, AI role, novelty} > I > {W, endpoint, best design, independent
@@ -545,6 +599,14 @@ c3 (medium effect). One proposed alternative with an observational study of 300 
 | v3.4, with one mouse study of 40 for c2 | | S 0.812 | | 1.000 | 0.691 | | organ | 0.476 |
 | v3.4, with one mouse study of 40 against c2 | | S 0.188 | | 0.231 | 0.482 | | | |
 
+| v3.6 | S 0.936 (F 1.000) | no record | S 0.905 (F 0.839) | evidence balance 0.560 | | 0.581 | organ | |
+| v3.6, with one mouse study of 40 for c2 | | S 0.793 | | evidence balance 0.756 | | | | |
+| v3.6, with one mouse study of 40 against c2 | | S 0.342 | | evidence balance 0.455 | | | | |
+
+Under v3.6 the RCT of 120 with a medium effect weighs 0.839 (its effect counts in full), each link's S comes from F − A,
+and a mouse null of 40 weighs by its power (0.24; preclinical design 1, between groups 1) against 0.5 for the
+mouse study for, so it lowers the balance less than under v3.5 (0.455 vs 0.333).
+
 Under v3.4 the c1 records weigh more (precision 1/2 before the outcome), P is 1 until something is against, the study for c2
 raises only the support share, and the study against c2 cuts P to 0.23. Novelty: new context (an RCT on the outcome exists).
 Under v3.3: the study for c2 lowers P slightly and raises the support share; under every profile the expected score rises (evidence
@@ -560,6 +622,10 @@ v32:
   precision: {floor: 0.25, full_at_n: 300}
   effect_d_full: 0.8
   p_floor_aspid: 0.01
+v36:
+  loglr_lambda: 2.682397     # 2 atanh(2/3) / 0.6
+  design_grade3: {rct: 1.0, meta_analysis: 1.0, non_randomised: 0.5, observational: 0.5, other: 0.25}
+  effect_full_from: 0.71875  # the continuous effect weight of d = 0.5
 v34:
   preclinical_precision: 0.5
   novelty_levels: [new_context, translation, analog, new_combination, new_link]

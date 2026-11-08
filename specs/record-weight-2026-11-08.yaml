@@ -370,3 +370,29 @@ R4_result:   # Argon pack 5 answer 2026-11-08 (longevity-kg reviews/argon-2026-1
     disagreement is the meta-analysis below the RCT, which the candidate's GRADE-3 design removes (both 1, n decides). The
     reader leans on design and directness of the intervention, little on size or effect; the context label of the verifier
     is the weakest field (kappa 0.10). The subjective-outcome word rule is too loose to be a factor.
+correction_effect_rule:   # found 2026-11-08 at step 8, before the code of the method changed
+  what: >-
+    the menu text of effect_rate_up says "unclear 1", but the code of every step (scripts/record_weight_check.py,
+    weight_variant) gave unclear 1/2: the variant actually computed is "a stated medium or large effect 1; small, none or
+    not stated 1/2". All numbers of steps 4-7, the combinations and R4 are for that variant.
+  the_menu_text_variant: >-
+    computed now for comparison (claim_qualifiers context in brackets): R2 0.693 (0.681), interval against v3.5 -0.017..0.085;
+    R3 0.580 (0.579, at the constraint); R4 tau-b 0.065. The computed variant: R2 0.712 (0.702), R3 0.595 (0.593), R4 0.099
+  R4_note: >-
+    the R4 numbers of R4_result for "candidate" include rob_subjective (the key's w_candidate); without it the candidate's
+    tau-b is 0.099 (concordance 0.548), v3.5 0.043; rob_subjective raises it to 0.180, but its word rule is unreliable
+    (Argon confirms 13 of 29) and it is neutral on R2 and R3: left out until the verifier extracts blinding.
+  adopted_v36: >-
+    user decision 2026-11-08 ("accept, go to step 8"): the computed variant, which is better than the menu text on R2, R3
+    and R4. Effect reads: full weight only for a stated effect of at least medium size; not stated counts as small (the
+    manual's rule "when in doubt take the lower level").
+step8:   # 2026-11-08, user: "accept, go to step 8"
+  code: >-
+    rules_v32.evaluate(..., v36=True): record_weight_v36 (GRADE-3 design on the outcome link of a human claim, continuous
+    precision, null by power, effect full from medium, comparison 2 levels, context adjacent 1/2 only on qualifiers the claim
+    states), S = sigmoid(lambda (F - A)) with the Beta interval kept; r32.method() / current_weight / current_factors /
+    current_support for reports and improvements; prospective scores and report v2 on v3.6
+  check: "the method reproduces the check: R2 0.702, R3 0.593 (claim-qualifier context)"
+  prospective: "evidence balance Spearman 0.966 with v3.5; ASPID order 0.949 / 0.944 / 0.986 (evidence / funding / frontier), 9 of the top 10 kept in each"
+  manual: "header, section 5 (v3.6 table), new section 5a (why each factor and level), section 6 (log-likelihood strength), 'evidence balance', worked example and constants; tests/test_manual.py checks both"
+  open: "the verifier re-run with v10 (class label, blinding as a field) is paid and waits for the user; the risk-of-bias factor returns after it"

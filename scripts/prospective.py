@@ -147,7 +147,7 @@ def score(n: int = 60) -> dict:
         card = HypothesisCard.model_validate(it["card"])
         claims = [ClaimVerification.model_validate(c) for c in it["verification"]["claims"]]
         alts = {k: ClaimVerification.model_validate(v) for k, v in (it.get("v3_alternatives") or {}).items()}
-        e = rules_v32.evaluate(card, claims, alts, v35=True)
+        e = rules_v32.evaluate(card, claims, alts, v36=True)
         ext = v3_extra.extras(card, claims, it["v3"], r["meta"].get("as_of") or "")
         ext["support_share"] = e.support_share
         ext["chain_state"] = e.chain_state
@@ -160,7 +160,7 @@ def score(n: int = 60) -> dict:
         rows[h] = {"outcome": it["outcome"], "gate": e.gate, "P": e.P, "P_lo": e.P_lo, "P_hi": e.P_hi, "I": e.I, "V": e.V,
                    "scope": e.scope, "ai_role": card.ai_role, "endpoint_clinical": ext["endpoint_clinical"], "trend_pubmed": ext["trend_pubmed"], "links": len(e.links), "weakest": e.weakest,
                    "support_share": e.support_share, "chain_state": e.chain_state, "N": ext["N"], "leverage": ext["leverage"], "W_potential": ext["W_potential"],
-                   "method": "v3.5"}
+                   "method": "v3.6"}
         ax[h] = ({"P": e.P, "scope": e.scope, "I": e.I, "headroom_I": e.headroom_I, "gate": e.gate}, ext)
     for prof in aspid_v3.load():
         agg = aspid_v3.rank(ax, prof, K=10000)

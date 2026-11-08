@@ -91,8 +91,8 @@ TIPS = {
                           "How close the trial's primary endpoint is to a clinical outcome: biomarker < patient-reported < function < clinical event (falls, hospitalisation, death)."),
     "trend_pubmed": ("Рост внимания: публикации о вмешательстве за 3 года до оценки против 3 лет до них, за вычетом роста всего PubMed. 0 — как вся литература, 0.7 — примерно вдвое быстрее.",
                      "Rising attention: publications on the intervention in the 3 years before scoring vs the 3 before, net of PubMed's growth. 0 = like all literature, 0.7 = about twice as fast."),
-    "chain_state": ("Состояние цепочки, от −1 до +1 (v3.5): среднее по звеньям величины 2S − 1. −1 — данные против звеньев, 0 — ничего не известно или «за» и «против» уравновешены, +1 — звенья подтверждены. Одна ось вместо неопровергнутости и подтверждённости: различает «опровергнуто» и «неизвестно». Нулевой результат маленького исследования весит по его мощности.",
-                    "State of the chain, −1 to +1 (v3.5): the mean over the links of 2S − 1. −1: data against the links; 0: nothing known, or for and against balanced; +1: the links are supported. One axis instead of non-refutation and support; tells refuted from unknown. A null of a small study weighs by its power."),
+    "chain_state": ("Баланс доказательств, от −1 до +1: среднее по звеньям величины 2S − 1. −1 — данные против звеньев, 0 — ничего не известно или «за» и «против» уравновешены, +1 — звенья подтверждены. Одна ось вместо неопровергнутости и подтверждённости: различает «опровергнуто» и «неизвестно». Нулевой результат маленького исследования весит по его мощности.",
+                    "Evidence balance, −1 to +1: the mean over the links of 2S − 1. −1: data against the links; 0: nothing known, or for and against balanced; +1: the links are supported. One axis instead of non-refutation and support; tells refuted from unknown. A null of a small study weighs by its power."),
     "support_share": ("Подтверждённость механизма, от 0 до 1: средняя подтверждённость звеньев цепочки. Звено без данных или с данными только «против» — 0, умеренная поддержка — 0.67, сильная — около 1. Звенья без данных не снижают P, но снижают эту ось: гипотеза из одних догадок не получит высокое место.",
                       "How much of the mechanism is supported, 0 to 1: the mean support of the chain's links. A link without data or with data only against is 0, moderate support 0.67, strong near 1. Links without data do not lower P but lower this axis: a hypothesis made of guesses does not rank high."),
     "ai_role": ("Роль ИИ в гипотезе: нет / анализ данных / ИИ в цикле эксперимента / ИИ — само вмешательство; ставится только по дословной фразе текста.",
@@ -104,7 +104,7 @@ TIPS = {
     "place": ("Место по ожидаемой оценке (1 — лучшая).", "Place by the expected score (1 = best)."),
     "room": ("Запас улучшения в этом профиле: насколько вырастет ожидаемая оценка, если применить вместе все пункты «можно исправить формулировкой» из разбора гипотезы (эксперимент, отсекающий альтернативы; переписанное опровергнутое звено; суженная популяция; клиническая конечная точка). «Выписать механизм» заранее не считается — отмечено звёздочкой. ↓ — улучшение снижает новизну (сдвиг к известному). По запасу выбираются гипотезы для эволюции.",
              "Room to improve under this profile: how much the expected score would rise if every \"fixable by rewriting\" item of the analysis were applied together (an experiment ruling out the alternatives, a rewritten refuted link, a narrowed population, a clinical endpoint). \"Write the mechanism\" cannot be computed in advance: marked with an asterisk. ↓: the improvement lowers novelty (a move towards the known). Hypotheses for evolution are chosen by the room."),
-    "S": ("Сила звена, от 0 до 1: 0.5 — данных нет; 0.83 — умеренная поддержка; около 0.5 с узким интервалом — данные «за» и «против» уравновешены.",
+    "S": ("Сила звена, от 0 до 1: 1 / (1 + e^(−λ(F − A))), «за» с плюсом, «против» с минусом; 0.5 — данных нет или поровну (узкий интервал — поровну); 0.83 — F = 0.6 без «против».",
           "Link strength, 0 to 1: 0.5 = no data; 0.83 = moderate support; about 0.5 with a narrow interval = data for and against balance."),
 }
 
@@ -211,7 +211,7 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
         alts = {a: ClaimVerification.model_validate(v) for a, v in (it.get("v3_alternatives") or {}).items()}
         from hyparena.card import improvements as imp
         from hyparena.card import novelty_v34 as nv
-        res = imp.evaluate(card, cvs, alts)                                           # v3.5
+        res = imp.evaluate(card, cvs, alts)                                           # current rules (v3.6)
         labels = r3.evaluate(card, cvs, alts, variant="v3.1").links
         by = {c.id: c for c in cvs}
         chain = []
@@ -220,11 +220,11 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
             recs = []
             for side, lst in (("for", cv.evidence if cv else []), ("against", cv.counterevidence if cv else [])):
                 for rec in lst:
-                    w = r32.record_weight(rec, cl, side == "against", True)
+                    w = r32.current_weight(rec, cl, side == "against")
                     if w <= 0:
                         continue
                     recs.append({"side": side, "pmid": rec.record_id.replace("PMID:", ""), "w": round(w, 3),
-                                 "f": r32.weight_factors(rec, cl, side == "against", True), "match": rec.qualifiers_match,
+                                 "f": r32.current_factors(rec, cl, side == "against"), "match": rec.qualifiers_match,
                                  "trial": rec.reports_trial, "primary": rec.primary_record,
                                  "design": r3.record_design(rec), "n": rec.n_total, "effect": rec.effect_reported or rec.effect_class,
                                  "quote": rec.quote, "group": r32.group_key(rec)})
@@ -238,11 +238,9 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
             cv = alts.get(alt.id)
             ac = r32.Claim(id=alt.id, subject=alt.subject, relation=alt.relation, object=alt.object, qualifiers=alt.qualifiers,
                            role="premise", source_span="")
-            F = r32.side_weight(cv.evidence if cv else [], ac, False, True, True)
-            A = r32.side_weight(cv.counterevidence if cv else [], ac, True, True, True)
-            S = r32.strength(F, A)[0]
+            support = r32.current_support(cv.evidence if cv else [], cv.counterevidence if cv else [], ac)
             alt_rows.append({"id": alt.id, "text": f"{alt.subject.label} — {alt.relation.replace('_', ' ')} — {alt.object.label}",
-                             "why": alt.rationale, "support": round(max(0.0, 2 * (S - 0.5)), 3),
+                             "why": alt.rationale, "support": round(support, 3),
                              "on_positive": alt.on_positive, "on_negative": alt.on_negative})
         links = r3.chain(card)
         outs, primary = r3.outcome_group(card, links)
@@ -671,7 +669,7 @@ def render_sources(H: dict) -> str:
 
 
 GLOSSARY_EXTRA = {
-    "FA": ("Веса F / A: суммарный вес записей «за» (F) и «против» (A) звена. Вес записи = дизайн × точность × эффект × сравнение × контекст; одна большая РКИ в точной популяции с крупным эффектом весит 1. Несколько записей одной статьи или одного испытания: самая весомая целиком, остальные по 1/4.",
+    "FA": ("Веса F / A: суммарный вес записей «за» (F) и «против» (A) звена. Вес записи = дизайн × точность × эффект × сравнение × контекст (v3.6, по доменам GRADE); одна большая РКИ или метаанализ в точной популяции со средним или крупным эффектом весит 1. Несколько записей одной статьи или одного испытания: самая весомая целиком, остальные по 1/4.",
            "Weights F / A: the summed weight of the records for (F) and against (A) a link. A record's weight = design × precision × effect × comparison × context; one large RCT in the exact population with a large effect weighs 1. Several records of one paper or trial: the heaviest fully, the rest at 1/4."),
     "R": ("Неопровергнутость звена R = (1 + cF) / (1 + cF + cA), c = 6.67: 1, если данных «против» нет; данные «против» снижают её, данные «за» смягчают снижение. P гипотезы — произведение R по звеньям.",
           "Non-refutation of a link R = (1 + cF) / (1 + cF + cA), c = 6.67: 1 when nothing is against; data against lower it, data for soften that. P of the hypothesis is the product of R over the links."),
@@ -687,7 +685,7 @@ GLOSSARY_EXTRA = {
              "For: the finding supports the link; against: a null or opposite result for the same measure. A significant but clinically small effect is for with a small weight, not against."),
     "design": ("Дизайн исследования из аннотации: клетки, животные, наблюдательное, обзор, нерандомизированное, метаанализ, РКИ. Для звена исхода о людях — шкала 1/7 … 7/7; для звеньев до исхода — клетки 1/3, обзор 2/3, первичное исследование 1.",
                "Design from the abstract: cells, animals, observational, review, non-randomised, meta-analysis, RCT. For an outcome link about humans the scale is 1/7 … 7/7; before the outcome: cells 1/3, review 2/3, primary study 1."),
-    "w": ("Вес записи — произведение множителей дизайна, точности (по n; до исхода постоянная 1/2), эффекта, сравнения (между группами 1, до/после 2/3, нет 1/3) и контекста (точный 1, соседний 2/3, родственное вмешательство 1/3).",
+    "w": ("Вес записи (v3.6) — произведение множителей: дизайн (РКИ и метаанализ 1, нерандомизированное и наблюдательное 1/2, прочее 1/4), точность (по n; нулевой результат — по мощности; до исхода 1/2), эффект (средний или крупный 1, иначе 1/2), сравнение (между группами 1, иначе 1/2), контекст (соседний 1/2, иначе 1).",
           "Record weight: the product of design, precision (from n; 1/2 before the outcome), effect, comparison (between groups 1, before/after 2/3, none 1/3) and context (exact 1, adjacent 2/3, related intervention 1/3)."),
     "tuned": ("Доработанная версия: к гипотезе применены только исправимые пункты её разбора; новые части родителя сохранены (версия, сдвинутая к известному, возвращается писателю).",
               "Tuned version: only the fixable items of the analysis were applied; the parent's new parts are kept (a version that moved towards the known goes back to the writer)."),
@@ -1033,7 +1031,7 @@ def prospective(n: int = 60) -> tuple[dict, str]:
     sb = (sf if sf.exists() else d / f"scores_{n}.json").read_bytes()
     texts = {json.loads(l)["id"]: json.loads(l)["text"] for l in open(d / f"texts_{n}.jsonl")}
     meta = {"pool": f"prospective-{n}", "date": "2026-11-06", "sha": hashlib.sha256(sb).hexdigest(),
-            "method": "v3.5 (chain state in the profiles, null by power; v3.4 weights and novelty), normalize_card/v10, verify_claim/v9, ASPID: evidence trial-5, funding trial-6, frontier trial-2",
+            "method": "v3.6 (GRADE-shaped record weight, log-likelihood fold; evidence balance in the profiles, null by power; v3.4 novelty), normalize_card/v10, verify_claim/v9, ASPID: evidence trial-5, funding trial-6, frontier trial-2",
             "title_ru": f"Проспективный пул: {n} идущих испытаний", "title_en": f"Prospective pool: {n} ongoing trials",
             "about_ru": "Испытания на ClinicalTrials.gov, где среди состояний — само старение, с завершением в ноябре 2026 — декабре 2028; "
                         "по 15 на тип вмешательства. Оценены до появления результатов; оценки зафиксированы хешем.",

@@ -19,7 +19,7 @@ from hyparena.card import rules_v3 as r3
 from hyparena.card import rules_v32 as r32
 from hyparena.card.models import ClaimVerification, HypothesisCard
 
-V34 = {"v35": True}      # v3.5 (2026-11-08): v3.4 + null by power; chain state in the profiles (name kept for callers)
+V34 = {"v36": True}      # v3.6 (2026-11-08): GRADE-shaped record weight, log-likelihood fold (name kept for callers)
 _V34_DOC = None       # method v3.4 (specs/v34-frontier-2026-11-07.yaml); v3.3 was {"fold": True, "neutral_unverified": True}
 ENDPOINT_UP = {"biomarker": "function", "patient_reported": "function"}
 ADJ_KEYS = ("population", "age_at_start", "sex")
@@ -86,9 +86,11 @@ def analyse(card: HypothesisCard, cvs: list[ClaimVerification], alts: dict[str, 
             continue
         ac = r32.Claim(id=alt.id, subject=alt.subject, relation=alt.relation, object=alt.object, qualifiers=alt.qualifiers,
                        role="premise", source_span="")
-        F = r32.side_weight(cv.evidence, ac, False, True, True)
-        A = r32.side_weight(cv.counterevidence, ac, True, True, True)
-        if r32.strength(F, A)[0] > 0.5 and "eliminated" not in (alt.on_positive, alt.on_negative):
+        with r32.method():
+            F = r32.side_weight(cv.evidence, ac, False, True, True)
+            A = r32.side_weight(cv.counterevidence, ac, True, True, True)
+            S = r32.link_point(F, A)
+        if S > 0.5 and "eliminated" not in (alt.on_positive, alt.on_negative):
             open_alts.append((alt, cv))
     if open_alts:
         c2 = card.model_copy(deep=True)

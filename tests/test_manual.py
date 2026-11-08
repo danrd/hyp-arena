@@ -100,3 +100,30 @@ def test_manual_worked_example_v34(monkeypatch):
             continue
         r = aspid_v3.rank(pts, prof, K=10000)
         assert r.expected["b"] > r.expected["a"]                     # support found: the score rises
+
+
+def test_manual_worked_example_v36(monkeypatch):
+    from hyparena.card.models import ClaimVerification
+    from tests.test_analyze import _case
+    from tests.test_rules_v3 import rec
+    monkeypatch.setattr(r3, "established_by_approval", lambda claim, card: False)
+    c, cvs, alts = _case()
+    ev = lambda extra=(): r32.evaluate(c, cvs + list(extra), alts, v36=True)
+    e = ev()
+    text = MANUAL.read_text()
+    row = f"| v3.6 | S {e.links['c1'][0]:.3f} (F {e.links['c1'][3]:.3f}) | no record | S {e.links['c3'][0]:.3f} (F {e.links['c3'][3]:.3f}) | " \
+          f"evidence balance {e.chain_state:.3f} | | {e.I:.3f} | {e.scope} | |"
+    assert row in text, row
+    e2 = ev([ClaimVerification(id="c2", evidence=[rec(5, "animal", n=40, effect="large")])])
+    assert f"| v3.6, with one mouse study of 40 for c2 | | S {e2.links['c2'][0]:.3f} | | evidence balance {e2.chain_state:.3f} |" in text
+    e3 = ev([ClaimVerification(id="c2", counterevidence=[rec(6, "animal", n=40, effect="large")])])
+    assert f"| v3.6, with one mouse study of 40 against c2 | | S {e3.links['c2'][0]:.3f} | | evidence balance {e3.chain_state:.3f} |" in text
+
+
+def test_manual_v36_constants_equal_the_code():
+    import yaml
+    block = MANUAL.read_text().split("## 14. Constants (checked against the code)")[1].split("```yaml")[1].split("```")[0]
+    v = yaml.safe_load(block)["v36"]
+    assert abs(v["loglr_lambda"] - r32.LOGLR_LAMBDA) < 1e-5 and abs(v["effect_full_from"] - r32.EFFECT_FULL_FROM) < 1e-9
+    d = dict(v["design_grade3"])
+    assert d.pop("other") == 0.25 and d == r32.DESIGN_GRADE3
