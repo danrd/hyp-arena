@@ -47,3 +47,18 @@ result:   # Argon pack 8 answer 2026-11-08 (longevity-kg reviews/argon-2026-11-0
     search found it (46% of the key papers were read for another link of the same trial), and the reader turns only part
     of the papers it reads for a link into records (31% read, no record). The second reader is generous (a 0.45 mean
     balance against our 0.08) and is no gold standard; the safe direction holds: we never call a refuted link supported.
+pilot_crosslink:   # user decision 2026-11-08 ("run", about 0.9 USD); written before the run
+  sample: "the 30 prospective trials with the most pack-8 key papers (ties by NCT order)"
+  reading: >-
+    every chain link reads the union of the papers retrieved by the chain searches of its trial (its own first, then the
+    others, deduplicated), in batches of at most 10 papers per call (verify_claim/v9, DeepSeek, no new search); the
+    batches' records are merged; then the split reader (relabel_context/v1, Gemini) re-labels intervention_match and the
+    contradicted qualifiers of every record, one call per link
+  compared_with: "on the same 30 trials: the original reading (v9), the second v9 reading (reader noise), and the pilot"
+  measures:
+    recall: "pack-8 key papers that are a counting record on their link (v3.6 weights, judged d irrelevant)"
+    link_and_trial: "Spearman of 2S - 1 per link and of the evidence balance per trial with pack 8"
+    volume: "records per link; papers read per link; tokens and USD"
+  decision: >-
+    go to both pools in full (then R2 / R3 under the 0.03 rule) when recall at least doubles and the link Spearman with
+    pack 8 rises by more than the gap between the two v9 readings
