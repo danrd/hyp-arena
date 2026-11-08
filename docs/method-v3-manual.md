@@ -281,7 +281,12 @@ ranked). Nothing else filters: an undeveloped but promising hypothesis keeps its
   different results, and one of the possible results contradicts the alternative (an active control matched for attention
   rules out "any attention helps"); d = 0.5 when the experiment only measures the variable the alternative depends on,
   without an arm that separates them; d = 0 otherwise. A design label alone ("factorial 2×2", "double-blind") gives nothing
-  until each alternative is named with the arm and the result that would rule it out.
+  until each alternative is named with the arm and the result that would rule it out. **Who sets d** (2026-11-08, `hyparena/card/alternatives_d.py`): until then the model that proposes the alternatives set d
+  from the compressed card, without the registry text, and almost never said "eliminated" (2 of 293 on the prospective
+  pool); an outside reader agreed with it at κ 0.07. Since 2026-11-08 d is judged by `judge_alternatives/v2` from the
+  registry text, writing what the hypothesis and the alternative predict for each named arm, with the separating phrase
+  copied verbatim (an "eliminated" without one becomes "weakened"); on a holdout of 30 trials it agrees with the outside
+  reader at κ 0.35 (specs/informativeness-check-2026-11-08.yaml). The support a is unchanged: from the records found.
 - **V** = P × I (0 if filtered). **Headroom I** = I if the experiment cut off every supported alternative (d = 1): what
   improving the experiment could add.
 
@@ -377,21 +382,31 @@ there before use.
 ## 10. Reports
 
 **Pool report, main layout** (`python -m hyparena.report_v2 prospective --n 60` → `report_<n>_v2.html`; user decision
-2026-11-07: the outside reader's (Argon's) report taken as the base and corrected towards the method). The same numbers as
-below, reshaped by `hyparena/report_v2.py` into one JSON object that the page template `hyparena/templates/pool_report_v2.html`
-renders in the browser (Tailwind from its CDN, version pinned). Russian only. Tabs: *Ranking* (profile tabs; one fixed compact
-table: place, hypothesis with its status chips — original, tuned version, free evolution, new hypothesis after, moved towards
-the known —, score, room to improve with `*` and `↓`, place / probability of top 5, novelty with the PMID that sets it, P in
-red below 1, support share, I with its headroom, scope, feasibility / AI role / endpoint; filters by status and intervention
-type, search, pages of 15; a click opens the card), *Hypothesis cards* (one card per original hypothesis; when it has improved
-versions, buttons switch between "comparison", "original only" and "version only"; the two chains side by side; one table of
-links with rows "original / version": F / A, S with its interval, R, link novelty, record chips whose hover shows every factor
-of the weight and the verbatim quote, a click opens the paper card; what lifts and lowers; the alternatives; the room and the
-improvement list), *Evolution* (every pair: mode, P, support share, novelty with the drift flag, I, scope, the change of the
-score under each profile), *PubMed papers* (every paper with its quote and the hypotheses that use it), *Help* (how to read
-the report, the record weight table, S / R / P / support share, the reading rules, novelty, the experiment and the other
-indicators, the profiles from the configuration, room and evolution, limits and validation status, provenance, and a glossary
-of every parameter). Every column header, chip and number has a hover note that floats above the table.
+2026-11-07: the outside reader's (Argon's) report taken as the base and corrected towards the method; layout as of 2026-11-08).
+The same numbers as below, reshaped by `hyparena/report_v2.py` into one JSON object that the page template
+`hyparena/templates/pool_report_v2.html` renders in the browser (Tailwind from its CDN, version pinned). Russian only.
+
+*Content.* Tabs: *Ranking* (profile tabs with the order of importance written out; one fixed table: place; hypothesis with
+its status chips — original, tuned version, free evolution, new hypothesis after, moved towards the known —; score; **room to
+improve** (one column, with `*` and `↓`; the headroom of I is not a separate column but in the hover note of I); place /
+probability of top 5; novelty with the PMID that sets it; **evidence balance** (−1 … +1, red below −0.05, green above
++0.05); I; scope; feasibility, AI role and endpoint one per line; filters by status and intervention type, search, pages of
+15; a click opens the card), *Hypothesis cards* (one card per original hypothesis; when it has improved versions, buttons
+switch between "comparison", "original only" and "version only"; the two chains side by side; one table of links with rows
+"original / version": F / A, S with its interval, R, link novelty, record chips whose hover shows every factor of the weight
+and the verbatim quote, a click opens the paper card; what lifts and lowers; the alternatives; the room and the improvement
+list), *Evolution* (every pair: mode, P, support share, novelty with the drift flag, I, scope, the change of the score under
+each profile; a placeholder when the pool has no evolution results; no shortcut button elsewhere), *PubMed papers* (every
+paper with its quote and the hypotheses that use it), *Help* (how to read the report, the record weight table of v3.6 with
+its GRADE domains, S as a log-likelihood sum, the evidence balance, R and P, the reading rules, novelty, the experiment and
+the other indicators, the profiles from the configuration, room and evolution, limits and validation status including the
+outside checks (section 12), provenance, and a glossary of every parameter).
+
+*Style* (fixed in the template; change it there): dark green header band (#1E4D40) with the method version badge; serif
+titles (Noto Serif), Inter for text; every column header, chip and number has a hover note that floats above the table; one
+item per line where a cell holds several (no wrapped "a / b / c"); long headers wrap to two lines instead of widening the
+column; the page uses the full window width (up to 1920 px) and a larger base size on desktop (17 px from 1280 px, 18.5 px
+from 1680 px, 20 px from 2200 px). Colours carry meaning only for direction (red against, green for, amber for flags).
 
 **Pool report, first layout** (`python -m hyparena.report_html prospective --n 60`; one HTML page, built by code with fixed wording,
 Russian and English in one page; layout redone 2026-11-07 after the structure of an outside reader's report). A header band
@@ -528,6 +543,23 @@ modes.
 - Novelty depends on the verifier's recall: a paper it missed makes a hypothesis look newer than it is (about 40% of
   relevant papers are missed). Novelty is therefore an upper estimate; the "known result" gate catches only exact matches.
 - Novelty is read off the outcome link first: a known effect with a new mechanism counts as new context, not as new.
+
+**Outside checks by a second reader (Argon, blind; 2026-11-08; specs/record-weight-2026-11-08.yaml,
+informativeness-check, novelty-check, balance-check):**
+
+| What | Agreement | Reading |
+|---|---|---|
+| order of pairs of records (R4) | τ-b 0.10 with v3.6 weights, 0.04 with v3.5 | v3.6 adopted; a meta-analysis now weighs at least as a single RCT |
+| design, n, blinding of a record | 92-96% | reliable fields |
+| context label ("same class") | κ 0.10-0.22 | the weakest field of the verifier: class is not charged in v3.6 |
+| d of the alternatives | κ 0.005-0.07 before, 0.35 after judging from the registry text | adopted 2026-11-08; I and the room recomputed |
+| support a of the alternatives | Spearman 0.28 | the reader is generous (knowledge), ours counts found papers |
+| novelty N | weighted κ 0.14 (0.26 with verifier v11); the reader is nearer the known in 21 of 37 trials, farther in none | N is overstated: read the frontier profile with that caveat |
+| missing competitors | in 78% of trials the reader adds a supported one; a checklist prompt covers 15 of 40 fully, 13 partly | not yet in the method |
+| evidence balance per link | pack 8, pending | |
+
+**Reader noise.** Reading the same papers again moves the evidence balance of the 59 prospective trials (Spearman 0.76
+between two readings); close places in a ranking are within that noise (specs/record-weight-2026-11-08.yaml, reader_noise_v9).
 
 **Deferred from the outside review (2026-11-07), each paid or an inflation risk:**
 - I depends on alternatives already published, so a new field gets I = 0 even for a well-built experiment. Planned: a

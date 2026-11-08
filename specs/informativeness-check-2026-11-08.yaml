@@ -111,3 +111,10 @@ adopted_judged_d:   # user decision 2026-11-08 ("item 1: adopt the judge of d an
     JUDGED_D=0 reproduces earlier numbers. Calibration pool judged: 73 units, 0.045 USD; prospective: the dev + holdout runs
   prospective: "I mean 0.164 -> 0.325, I > 0 in 29 -> 42 trials; ASPID order Spearman 0.936 / 0.982 / 0.965 (evidence / funding / frontier), top 10 kept 7 / 10 / 8"
   room: "mean room to improve 0.147 -> 0.110 (evidence), 0.057 -> 0.047 (funding), 0.072 -> 0.056 (frontier): many experiments already cut off alternatives, so 'an experiment that rules them out' gains less"
+i_recalibration:   # item 3 of 2026-11-08; scripts/i_recalibration.py -> calibration/i_recalibration.json (73 calibration units, v3.6)
+  proposer_d: {I_auc: 0.442, I_positive_share: 0.556, I_mean: 0.184, evidence: {all: 0.558, without_I: 0.564}, funding: {all: 0.601, without_I: 0.609}, frontier: {all: 0.570, without_I: 0.579}}
+  judged_d: {I_auc: 0.509, I_positive_share: 0.764, I_mean: 0.348, evidence: {all: 0.570, without_I: 0.564}, funding: {all: 0.610, without_I: 0.609}, frontier: {all: 0.585, without_I: 0.579}}
+  reading: >-
+    with the proposer's d, I ordered trial outcomes backwards (0.44) and every profile was better without it; with the judged
+    d, I is at chance (0.51) and every profile is a little better WITH it (+0.001 to +0.006). The "I hurts" result of the
+    ablation of 2026-11-07 was an artefact of the d. I is not meant to forecast outcomes; this only removes the reason to drop it.
