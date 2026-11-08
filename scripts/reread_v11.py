@@ -32,13 +32,13 @@ def items(pool: str):
             yield h, r["meta"].get("as_of"), card, cvs, logs
 
 
-def run(pool: str, limit: int = 0) -> dict:
+def run(pool: str, limit: int = 0, version: str = "v11") -> dict:
     if os.environ.get("ALLOW_PAID") != "1":
         raise SystemExit("paid: set ALLOW_PAID=1")
     from hyparena.card import rules_v3 as r3
     from hyparena.card.pipeline import _client
     from hyparena.card.verifier import verify_claim
-    out_p = (PROS if pool == "prospective" else CAL) / "reread_v11.json"
+    out_p = (PROS if pool == "prospective" else CAL) / f"reread_{version}.json"
     done = json.loads(out_p.read_text()) if out_p.exists() else {}
     tasks = []
     for h, as_of, card, cvs, logs in items(pool):
@@ -56,7 +56,7 @@ def run(pool: str, limit: int = 0) -> dict:
         log: list = []
         cv = verify_claim(client, "deepseek", frozenset({"google"}), cl, card, as_of, log=log, fallback="google",
                           expert_pmids=[(p, "re-read of the same papers") for p in pmids], search="fixed",
-                          template_version="v11")
+                          template_version=version)
         with lock:
             done[key] = cv.model_dump()
             tokens["in"] += sum(int(x.get("tokens_in") or 0) for x in log)
@@ -73,5 +73,6 @@ if __name__ == "__main__":
     ap.add_argument("cmd", choices=["run"])
     ap.add_argument("--pool", choices=["calibration", "prospective"], required=True)
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--version", default="v11")
     a = ap.parse_args()
-    print(json.dumps(run(a.pool, a.limit), indent=1))
+    print(json.dumps(run(a.pool, a.limit, a.version), indent=1))

@@ -433,3 +433,12 @@ reread_v11_result:   # 2026-11-08; calibration/reread_v11_analysis.json; python 
     fall cannot be told apart from reader noise: a re-read of the same papers with v9 was not run (it would measure that
     noise, about 0.84 USD)
   keep: "the blinding field of v11 is reliable (95% with Argon) and is kept in the prompt; the rob factor stays out (neutral, few hits)"
+reader_noise_v9:   # user decision 2026-11-08 (item 2), written before the run
+  what: "the same chain claims and papers as reread_v11, read again with verify_claim/v9 (the version of the original runs); about 0.84 USD"
+  measures:
+    noise: "Spearman of the prospective evidence balance: original v9 vs re-read v9 (pure reader noise) next to original v9 vs v11 (0.76)"
+    references: "R2, R3 with the re-read v9 records next to the original (0.702, 0.593) and v11 (0.658, 0.593)"
+    labels: "context kappa with Argon and with the hand labels, re-read v9 vs v11"
+  reading: >-
+    if the re-read v9 moves R2 about as much as v11 did, the v11 drop was reader noise and the v11 records are judged on
+    the class label and blinding alone; if v9 re-read keeps R2 near 0.70, the v11 rule itself costs R2

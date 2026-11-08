@@ -1,0 +1,31 @@
+id: balance-check-2026-11-08
+written_on: 2026-11-08
+status: definitions fixed before the pack was built or sent
+why: >-
+  User request 2026-11-08 ("prepare a new task for Argon"). The evidence balance (mean over the chain of 2S - 1, method v3.6)
+  is the main axis of every profile. It was checked against trial outcomes (R3), later trials of the same link (R2) and the
+  order of pairs of records (R4), but no outside reader has said, link by link, whether the literature before T supports or
+  refutes it. Packs 6 and 7 showed that our inputs (alternatives, class label, search for prior work) were weaker than the
+  rules; this pack asks the same of the links.
+cost: free in money (Argon is the user's outside reader); PubMed (free) to check the PMIDs it gives
+pack: Argon pack 8 (longevity-kg reviews/argon-2026-11-08/pack_8_task.json; hidden key pack_8_key.json)
+
+sample: all 59 scored prospective trials (not the 74 calibration trials); every link of the normalised chain (150 links)
+shown: "the registry text, T, the chain (id, type, subject - relation - object, qualifiers, which link is the outcome). Not shown: our S, F, A, records, balance"
+asked:
+  per_link: >-
+    verdict from papers published on or before T: supported | mixed | refuted | no_evidence; strength of the verdict: weak |
+    moderate | strong (for no_evidence: none); up to 3 PMIDs for and up to 3 against, the most informative ones
+  per_trial: "balance from -1 (the chain is refuted) through 0 (nothing known, or balanced) to +1 (well supported), and one sentence"
+measures:
+  link: >-
+    Argon's signed link score: refuted strong -1, moderate -2/3, weak -1/3; no_evidence and mixed 0; supported weak 1/3,
+    moderate 2/3, strong 1. Spearman with our 2S - 1 (v3.6, judged d irrelevant here) over the 150 links; agreement on the
+    sign (positive / zero / negative, with |2S - 1| < 0.1 as zero); the links Argon calls refuted that we put above 0.33
+  trial: Spearman of our evidence balance with Argon's balance over the 59 trials
+  pmids: "share of Argon's PMIDs that exist and are dated by T's year; share among our records of that link (recall of the key papers)"
+reading:
+  reproducible: "link Spearman >= 0.5 and trial Spearman >= 0.5: the main axis survives a second reader"
+  missed_refutations: "links Argon calls refuted (moderate or strong) that we score above +0.33 are listed one by one: they are the dangerous errors"
+  recall: "if fewer than half of Argon's key PMIDs are among our records, the search is the bottleneck of the balance too"
+  note: "Argon is a second reader with its own knowledge, generous on support in pack 6; decisions go to the user"
