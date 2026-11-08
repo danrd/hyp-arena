@@ -62,7 +62,7 @@
             <h2 class="serif-title text-lg font-bold text-[#1E4D40]">Рейтинг пула по профилям АСПИД</h2>
             <p id="rank-about" class="text-xs text-stone-600 mt-0.5"></p>
           </div>
-          <button id="btn-goto-evo" class="hidden px-3 py-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-semibold">Сравнение «до → после» →</button>
+          <button id="btn-goto-evo" class="hidden px-3 py-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-semibold">Улучшенные версии гипотез: что изменилось →</button>
         </div>
         <div class="mt-3 flex flex-wrap items-center justify-between gap-2">
           <div class="flex flex-wrap gap-1.5" id="profile-tabs"></div>
@@ -304,7 +304,7 @@
     // ---------- 1. ranking
     function rankHead() {
       const H = [['place', 'Место'], [null, 'Гипотеза и статус'], ['score', 'Оценка'], ['room', 'Запас'], ['top5', 'Место / топ-5'], ['N', 'Новизна'],
-        ['P', 'P'], ['support_share', 'Подтв.'], ['I', 'I (запас)'], ['W', 'Размах'], [null, 'Реализ. / ИИ / Кон. точка'], [null, '']];
+        ['P', 'P'], ['support_share', 'Подтв.'], ['I', 'I'], ['I_headroom', 'Запас I'], ['W', 'Размах'], [null, 'Реализ. / ИИ / Кон. точка'], [null, '']];
       document.getElementById('rank-head').innerHTML = H.map(([k, l]) => `<th class="py-2 px-2 whitespace-nowrap">${k ? tipK(k, l) :
         (l === 'Реализ. / ИИ / Кон. точка' ? tip(TIPS.feasibility + ' · ' + TIPS.ai_role + ' · ' + TIPS.endpoint_clinical, l) :
          l === 'Гипотеза и статус' ? tip('Идентификатор, название и статус строки: исходная, доработанная версия или свободная эволюция; флаг сдвига к известному.', l) : l)}</th>`).join('');
@@ -339,7 +339,8 @@
           <td class="py-2.5 px-2">${novChip(r.N)}${r.N_pmid ? `<button data-pmid="${r.N_pmid}" class="block text-[10px] text-blue-800 hover:underline font-semibold mt-0.5">PMID ${r.N_pmid}</button>` : ''}</td>
           <td class="py-2.5 px-2 font-bold ${r.P < 0.999 ? 'text-red-700' : ''}">${tip(pTip, f(r.P))}</td>
           <td class="py-2.5 px-2">${f(r.support_share)}</td>
-          <td class="py-2.5 px-2">${f(r.I)}${r.I_headroom && r.I_headroom > r.I + 0.005 ? `<span class="block text-[10px] text-stone-500">запас ${f(r.I_headroom)}</span>` : ''}</td>
+          <td class="py-2.5 px-2">${f(r.I)}</td>
+          <td class="py-2.5 px-2 ${r.I_headroom && r.I_headroom > r.I + 0.005 ? 'text-emerald-800' : 'text-stone-400'}">${f(r.I_headroom)}</td>
           <td class="py-2.5 px-2">${esc(nm('scope', r.W))}</td>
           <td class="py-2.5 px-2 text-stone-600">${f(r.feasibility, 2)} / ${esc(nm('ai', r.ai_role))} / ${esc(nm('endpoint', r.endpoint || ''))}</td>
           <td class="py-2.5 px-2"><span class="px-2.5 py-1 rounded bg-[#1E4D40] text-white text-xs font-semibold whitespace-nowrap">Карточка →</span></td></tr>`;
@@ -396,7 +397,7 @@
                 <span class="px-2.5 py-0.5 rounded bg-[#1E4D40] text-white text-xs font-bold">${esc(p.id)}${kids.length ? ' → ' + kids.map(k => esc(k.id)).join(', ') : ''}</span>
                 ${novChip(p.N, e && e.N !== p.N ? ` → <span class="px-2 py-0.5 rounded border text-[11px] font-bold ${NOV_CLS[e.N] || ''}">${esc(nm('novelty', e.N || ''))}</span>` : '')}
                 ${e ? statusChips(e) : ''}
-                ${(p.flags || []).map(fl => tipK('flags', esc(nm('flags', fl)), 'px-2 py-0.5 rounded bg-stone-200 text-stone-800 text-[11px]')).join('')}
+                ${(p.flags || []).map(fl => tip(fl.detail || TIPS.flags, '⚑ ' + esc(fl.name), 'px-2 py-0.5 rounded bg-stone-200 text-stone-800 text-[11px]')).join('')}
               </div>
               <h3 class="serif-title font-bold text-base">${esc(p.title)}</h3>
               <div class="text-xs text-stone-600">P ${f(p.P)} · подтверждённость ${f(p.support_share)} · I ${f(p.I)} (запас ${f(p.I_headroom)}) · размах ${esc(nm('scope', p.W))} ·

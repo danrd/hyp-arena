@@ -92,7 +92,7 @@ def data(rep: dict) -> dict:
             "plain": x.get("plain"), "P": x["P"], "support_share": x.get("support_share"), "N": x.get("N"), "N_pmid": x.get("N_pmid"),
             "I": x["I"], "I_headroom": v.get("I_headroom"), "W": x["scope"], "feasibility": v.get("feasibility"),
             "endpoint": x.get("endpoint_clinical"), "ai_role": x.get("ai_role") or "none", "trend": x.get("trend_pubmed"),
-            "best_design": v.get("best_design_outcome"), "independent": v.get("independent_outcome"), "flags": x.get("flags", []),
+            "best_design": v.get("best_design_outcome"), "independent": v.get("independent_outcome"), "flags": flag_details(x),
             "experiment": x.get("experiment"), "completion": x.get("completion"),
             "links": [_link(c, levels) for c in x["chain"]],
             "alternatives": x.get("alternatives", []),
@@ -132,10 +132,51 @@ def data(rep: dict) -> dict:
     }
 
 
+def flag_details(x: dict) -> list[dict]:
+    """Each flag of a hypothesis with the concrete reason in this hypothesis (user request 2026-11-08: not the general idea of
+    the flag)."""
+    chain = {c["id"]: c for c in x.get("chain", [])}
+    out = []
+    for fl in x.get("flags", []):
+        code, detail = fl, ""
+        if fl == "build_mechanism":
+            detail = ("В цепочке только исход: мишень, путь и промежуточный эффект не выписаны, поэтому механизм не проверялся; "
+                      "оценка держится на одном звене «" + (next(iter(chain.values()))["text"] if chain else "") + "».")
+        elif fl == "contested_link":
+            bad = [c for c in chain.values() if c["A"] > 0 and c["A"] >= c["F"] / 2]
+            detail = "; ".join(f"звено «{c['text']}»: вес «за» {c['F']:.2f}, «против» {c['A']:.2f} (против: " +
+                               ", ".join("PMID " + r["pmid"] for r in c["records"] if r["side"] == "against") + ")" for c in bad)
+        elif fl == "improve_experiment":
+            open_ = [a for a in x.get("alternatives", []) if a["support"] > 0 and "eliminated" not in (a["on_positive"], a["on_negative"])]
+            detail = ("Эксперимент не отсекает подкреплённые альтернативы: " + "; ".join(
+                f"«{a['text']}» (опора {a['support']:.2f}; при успехе — {rh.DISC.get(a['on_positive'], (a['on_positive'],))[0]}, "
+                f"при неудаче — {rh.DISC.get(a['on_negative'], (a['on_negative'],))[0]})" for a in open_) +
+                f". Если отсекать их все, I выросла бы с {x['I']:.2f} до {(x.get('values') or {}).get('I_headroom') or x['I']:.2f}.")
+        elif fl == "name_supported_alternatives":
+            n = len(x.get("alternatives", []))
+            detail = (f"Ни у одной из {n} предложенных альтернатив нет опоры в литературе до даты среза, поэтому эксперимент "
+                      "ничего не отсекает и I равна нижней границе.") if n else "Альтернативные объяснения не предложены."
+        elif fl == "find_primary_report":
+            recs = [r for c in chain.values() for r in c["records"] if r.get("trial") and not r.get("primary")]
+            detail = "; ".join(f"обзор PMID {r['pmid']} пересказывает испытание «{r['trial']}», статья самого испытания не найдена" for r in recs) \
+                or "Обзор пересказывает испытание, статья самого испытания не найдена."
+        elif fl == "retracted_source_dropped":
+            detail = "Среди найденных статей была отозванная; она исключена и веса не получила."
+        elif fl.endswith("_established_by_approval"):
+            cid = fl[: -len("_established_by_approval")]
+            c = chain.get(cid)
+            code = "established_by_approval"
+            detail = (f"Звено «{c['text']}» принято как умеренно подтверждённое без поиска: вещество одобрено (ChEMBL, фаза 4) "
+                      "и действует на названную в звене мишень.") if c else ""
+        out.append({"code": code, "name": FLAG_NAMES.get(code, (code,))[0], "detail": detail})
+    return out
+
+
 FLAG_NAMES = {
     "build_mechanism": ("механизм не выписан", ""), "name_supported_alternatives": ("нет подкреплённых альтернатив", ""),
     "improve_experiment": ("эксперимент оставляет альтернативы", ""), "find_primary_report": ("найти статью самого испытания", ""),
     "contested_link": ("спорное звено", ""), "retracted_source_dropped": ("отозванная статья исключена", ""),
+    "established_by_approval": ("звено принято по одобрению", ""),
 }
 
 

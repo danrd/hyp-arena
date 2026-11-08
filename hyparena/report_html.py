@@ -222,6 +222,7 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
                         continue
                     recs.append({"side": side, "pmid": rec.record_id.replace("PMID:", ""), "w": round(w, 3),
                                  "f": r32.weight_factors(rec, cl, side == "against", True), "match": rec.qualifiers_match,
+                                 "trial": rec.reports_trial, "primary": rec.primary_record,
                                  "design": r3.record_design(rec), "n": rec.n_total, "effect": rec.effect_reported or rec.effect_class,
                                  "quote": rec.quote, "group": r32.group_key(rec)})
             recs.sort(key=lambda x: -x["w"])
