@@ -309,7 +309,8 @@
     function rankHead() {
       const H = [['place', 'Место'], [null, 'Гипотеза и статус'], ['score', 'Оценка'], ['room', 'Запас'], ['top5', 'Место / топ-5'], ['N', 'Новизна'],
         ['chain_state', 'Баланс доказательств'], ['I', 'I'], ['W', 'Размах'], [null, 'Реализ. / ИИ / Кон. точка'], [null, '']];
-      document.getElementById('rank-head').innerHTML = H.map(([k, l]) => `<th class="py-2 px-2 whitespace-nowrap">${k ? tipK(k, l) :
+      const WRAP = new Set(['Баланс доказательств', 'Реализ. / ИИ / Кон. точка', 'Место / топ-5']);
+      document.getElementById('rank-head').innerHTML = H.map(([k, l]) => `<th class="py-2 px-2 align-bottom ${WRAP.has(l) ? 'whitespace-normal leading-tight w-24' : 'whitespace-nowrap'}">${k ? tipK(k, l) :
         (l === 'Реализ. / ИИ / Кон. точка' ? tip(TIPS.feasibility + ' · ' + TIPS.ai_role + ' · ' + TIPS.endpoint_clinical, l) :
          l === 'Гипотеза и статус' ? tip('Идентификатор, название и статус строки: исходная, доработанная версия или свободная эволюция; флаг сдвига к известному.', l) : l)}</th>`).join('');
     }

@@ -41,3 +41,25 @@ reading:
   I_unreproducible: "Spearman of our I with (ii) below 0.5: I does not survive a second reader"
   generator_gaps: "recall of missing supported alternatives in half the trials or more: propose_alternatives misses the main competitors"
   note: "Argon is a second reader, not a gold standard; decisions go to the user"
+result:   # Argon pack 6 answer 2026-11-08 (longevity-kg reviews/argon-2026-11-08/pack_6_answer.json); python -m scripts.pack6_analysis
+  coverage: "59 trials, 293 alternatives, all answered"
+  d: >-
+    weighted kappa 0.07 (threshold 0.4): our d is not reproduced. The disagreement is one-sided: Argon calls 124 alternatives
+    eliminated (each with a verbatim separating registry phrase: a placebo, a sham, an active or attention-matched control,
+    a measured mediator), our check calls 2; confusion ours->Argon: 0->0.5 79, 0.5->1 74, 0->1 48, 0->0 42, 0.5->0.5 33,
+    0.5->0 15, 1->1 2. Our check_alternatives almost never applies "eliminated", even where the manual's rule is met.
+  genuine: "yes 213, partly 39, no 41 (14%); the 'no' alternatives carry 13% of our sum a*d"
+  a: >-
+    Spearman of our a with Argon's support 0.28; Argon calls every alternative at least weakly supported (moderate or strong
+    for most), our verifier finds records for 110 of 293: Argon's support is its knowledge, generous; ours is what the
+    search and the verifier found
+  I: >-
+    our I vs I with Argon's d and our a: Spearman 0.63; vs I with Argon's d and Argon's support: 0.03 (threshold 0.5: not
+    passed; that I sits at the cap, mean 0.91); vs Argon's own informativeness 0.03; Argon's own two measures agree at 0.59
+  recall: "in 78% of trials Argon adds a missing alternative with moderate or strong support that the experiment weakens or eliminates"
+  readings_triggered: "d_unreliable (kappa 0.07); I_unreproducible ((ii) 0.03; (i) 0.63 passes); generator_gaps (78%)"
+  reading: >-
+    I as computed does not survive a second reader. The main cause is d: our checker reads "eliminated" far more strictly than
+    the manual's own rule (a named arm or measurement for which the two predict different results). The support a is the
+    second, smaller cause, in the other direction (Argon's knowledge vs found records). The generator misses competitors
+    in most trials. With Argon's d and our a the order of trials is kept moderately (0.63): the fix is first in d.
