@@ -253,3 +253,27 @@ combination_preview:   # 2026-11-08, at the user's request after step 4 (earlier
     both inside the noise. Dropping effect costs most on R3 (0.580, at the limit). Counting papers without weights is the
     lowest on R2 (0.653). Candidate: continuous precision + design_grade3 + comparison_2 + context_2 + effect_rate_up
     (R2 0.689, R3 0.589); step 6 (risk of bias) and step 7 (fold) to be computed on top of it.
+step6_step7_definitions:   # written 2026-11-08 before steps 6-7 were computed (user agreed: risk of bias by variants 1 and 2, then the fold)
+  base: "candidate = continuous precision + design_grade3 + comparison_2 + context_2 + effect_rate_up; every variant below is the candidate plus one change; both context variants"
+  applies_to: "records on the outcome link whose design is rct or non_randomised (trials); observational, meta-analyses, reviews, animal and cell studies unchanged"
+  words: >-
+    from the PubMed title + abstract, lower case: blinded = double-blind | triple-blind | placebo | sham | assessor-blind |
+    blinded assessor | blinded outcome; open = open-label | unblinded | non-blinded | not blinded | single-arm | no blinding
+    (blinded wins when both)
+  rob_words3: "records for: blinded 1, open 1/2, no words 2/3"
+  rob_words3_both_sides: "the same factor on records against too"
+  rob_subjective: >-
+    records for: x 1/2 when not blinded (open or no words) and the outcome is subjective; subjective = the claim's measure,
+    object or the record's quote contains quality of life | QoL | pain | fatigue | self-report | questionnaire | perceived |
+    mood | depress | anxiety | sleep quality | satisfaction | well-being | wellbeing | PSQI | SF-36 | VAS
+  subgroup_only: "records for flagged subgroup_only x 1/2"
+  surrogate: "not computed: marker_validation is n/a on every record (step 1)"
+  admission: "every trial record has a value for rob (no words is a level), so rob passes the 70% availability rule"
+  step7_fold:
+    on: "the candidate weights (rob only if step 6 adopts it)"
+    beta_current: "S = (cF + 1) / (c(F + A) + 2)"
+    loglr_sum: "S = sigmoid(lambda (F - A)), lambda = 2.68 (s = tanh(lambda (F - A) / 2))"
+    best_evidence: "per link the heaviest record for (Fmax) and against (Amax), both after the fold; s = Fmax if Fmax > Amax, -Amax if Amax > Fmax, 0 if equal (ties by the sum are not separated)"
+    count_diff: "s = (nF - nA) / (nF + nA + 1), n = independence groups with a usable record on that side"
+    fold_rest: "0 and 1 against the current 1/4"
+    r3: "the chain state with the link's S replaced accordingly; the gate unchanged"
