@@ -118,3 +118,30 @@ i_recalibration:   # item 3 of 2026-11-08; scripts/i_recalibration.py -> calibra
     with the proposer's d, I ordered trial outcomes backwards (0.44) and every profile was better without it; with the judged
     d, I is at chance (0.51) and every profile is a little better WITH it (+0.001 to +0.006). The "I hurts" result of the
     ablation of 2026-11-07 was an artefact of the d. I is not meant to forecast outcomes; this only removes the reason to drop it.
+cap_check:   # user request 2026-11-08 ("check the 1.5"); written before computing; free
+  values: "I = min(1, sum a*d / cap) for cap 0.5, 0.75, 1, 1.5 (current), 2, 3, and no cap: sum a*d itself (order only)"
+  inputs: "v3.6 rules, the judged d (method since 2026-11-08), our support a"
+  measures:
+    saturation: "share of hypotheses with I = 1 and with I = 0 (prospective + calibration that pass the gate)"
+    outside: "Spearman of I with Argon's informativeness (pack 6) and with I computed from Argon's d and our a, over the 59 prospective trials"
+    outcomes: "AUC of I and of the three ASPID profiles on the 73 calibration units (exploration)"
+    rankings: "Spearman of the prospective ASPID scores with the current cap; top 10 kept"
+  reading: >-
+    the cap only matters through saturation: a cap that sends many hypotheses to I = 1 throws away order. Prefer the cap
+    with the highest agreement with the outside reader at little saturation; change it only if it beats 1.5 by more than
+    0.05 on the outside Spearman (the order-only 'no cap' is the ceiling of what any cap can give)
+cap_check_result:   # scripts/i_cap_check.py -> calibration/i_cap_check.json
+  table:   # cap: share I=1 / Spearman with I from Argon's d (our a) / ASPID ranks vs 1.5 (rho evidence, funding, frontier; top 10 kept) / calibration AUC of I and of the profiles
+    "0.5":  "0.41 / 0.719 / 0.955, 0.983, 0.979; 8, 9, 10 / I 0.511; 0.557, 0.595, 0.558"
+    "0.75": "0.29 / 0.790 / 0.976, 0.989, 0.985; 9, 9, 10 / I 0.512; 0.559, 0.598, 0.569"
+    "1.0":  "0.12 / 0.800 / 0.990, 0.995, 0.989; 9, 9, 9 / I 0.514; 0.573, 0.600, 0.578"
+    "1.5":  "0.07 / 0.822 / reference / I 0.509; 0.570, 0.610, 0.585"
+    "2.0":  "0.02 / 0.822 / 0.996, 0.998, 0.995; 10, 10, 9 / I 0.509; 0.576, 0.606, 0.586"
+    "3.0":  "0.00 / 0.822 / 0.981, 0.994, 0.974; 8, 10, 8 / I 0.510; 0.582, 0.610, 0.588"
+  no_cap: "not valid: I is rounded to 4 decimals, so sum / 1e6 became 0 for every hypothesis; dropped"
+  I_zero: "29% of hypotheses have I = 0 under every cap (no supported alternative, or none the experiment touches)"
+  argon_informativeness: "Spearman 0.02-0.09 under every cap: Argon's overall informativeness does not follow our sum a*d whatever the cap (with Argon's own support instead of our a it was 0.59): the difference is in a, not in the cap"
+  reading: >-
+    the cap matters only through saturation. Below 1.5 more hypotheses sit at I = 1 and the agreement with I from Argon's d
+    falls (0.72-0.80); from 1.5 up it stays at 0.822 and rankings barely move. 1.5 is kept: the smallest cap with almost no
+    saturation (7%), so I still means "one and a half well-supported alternatives cut off is the most an experiment does".
