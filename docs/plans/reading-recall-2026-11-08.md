@@ -45,3 +45,40 @@ The search is not the bottleneck. Two reading steps are:
 1. Cross-link reading raises the reading cost about 2-3x per trial. Pilot on 30 trials first (price before the run)?
 2. Should the split reader (Gemini re-labels the context; κ 0.40 vs 0.13) be run on both pools now (about 1.8 USD) and
    checked on R2 / R3, or wait until cross-link reading is settled, since both change the records?
+
+## Diagnostics (free, done 2026-11-08; `scripts/reading_recall.py` -> calibration/reading_recall.json)
+
+**Why papers read for their own link leave no record** (169 key papers of pack 8):
+
+| Reason | Papers |
+|---|---|
+| not mentioned in the reader's reply at all | 109 (64%) |
+| returned as background or speculation, not a finding | 22 |
+| read, stance "neither" | 20 |
+| in the reply, dropped by code (quote not verbatim, invalid fields) | 17 |
+| refused by code (endpoint mismatch) | 1 |
+
+The main loss is silent: with about 20 abstracts in one call, the reader reports some and skips the rest. Reading more papers
+per call (cross-link reading) would make this worse, so the two fixes go together: more papers per link, fewer per call.
+
+**Where the "read for another link" papers come from** (216): another chain link's search 152, only an alternative's or an
+analog probe's search 64. The union of the chain searches catches 70% of them.
+
+**Reading volume** (DeepSeek V4.1 Flash, off-peak, about 600-670 tokens per paper):
+
+| Pool | Links | Papers per link now | Union of chain searches | Union of all searches | USD now / chain union / all |
+|---|---|---|---|---|---|
+| prospective | 150 | 19.5 | 48.7 | 119.5 | 0.33 / 0.82 / 2.02 |
+| calibration | 177 | 19.2 | 48.9 | 112.5 | 0.34 / 0.87 / 2.01 |
+
+Batches of at most 10 papers per call repeat the prompt (about 2 k tokens) about 5 times per link: about +0.25 USD per pool.
+
+## Proposed pilot (paid, price before the run)
+
+- 30 prospective trials with the most key papers of pack 8; every chain link reads the union of the chain searches of its
+  trial, in batches of at most 10 papers (prompt verify_claim/v9, DeepSeek); then the split reader re-labels the context.
+- Measures: recall of pack 8 key papers on the right link (now 19%), the share silently skipped, link and trial Spearman
+  with pack 8 (now 0.24 / 0.39), records per link; the same on the 30 trials without batching as a control is not run
+  (cost); the reader noise (Spearman 0.81) is the yardstick.
+- Price: about 0.5 USD for the reading and about 0.4 USD for the split reader, about 0.9 USD in all.
+- Then, if it helps, both pools in full (about 2.5-3 USD) and R2 / R3 under the 0.03 rule, the two changes checked together.
