@@ -1,0 +1,40 @@
+id: reader-model-2026-11-08
+written_on: 2026-11-08
+status: definitions fixed before the run
+why: >-
+  User decision 2026-11-08 (item 4, about 0.9 USD named and approved): is a stronger model a cheaper fix of the reader's
+  weak fields (context label, missed findings) than more prompt work? The reader is DeepSeek V4.1 Flash (0.15 / 0.60 USD per
+  million tokens); the candidate is Gemini 3.5 Flash (1.50 / 9.00), the family the config already has (it writes the cards).
+sample: >-
+  30 prospective chain claims, each with at least two records that Argon labelled in pack 5, the first 30 by SHA-1 of
+  "reader|<NCT>|<claim>"; the same papers as the original reading (its search log), no search
+prompt: verify_claim/v9 (the method's reader), so only the model differs
+compared: >-
+  Gemini 3.5 Flash once; DeepSeek original reading and DeepSeek second reading (reread_v9) on the same claims, so the gap
+  can be set against the reader noise of DeepSeek
+measures:
+  coverage: "share of the Argon-labelled papers of these claims that the reader turned into a counting record"
+  context: "Cohen kappa of the context label (claim-qualifier rule) with Argon's"
+  design_n: "agreement of design and of n_total with Argon's"
+  stance: "agreement of for / against with the original DeepSeek reading on the papers both read"
+  cost: "tokens and USD of the run, per claim"
+caveat: >-
+  the cards were written by the google family; a google reader breaks the method's rule that the reader is not the writer.
+  Acceptable for this comparison only; the verdict says whether to switch, and with which writer.
+decision: >-
+  worth switching when the context kappa rises by at least 0.15 over both DeepSeek readings with coverage, design and n not
+  worse by more than 0.05, and the user accepts the price multiple
+result:   # 2026-11-08; prospective/reader_gemini.json, calibration/reader_model.json; python -m scripts.reader_model score
+  run: "28 of the 30 claims read (two had no search log), 362 k tokens in, 26 k out: 0.78 USD at list price (about 0.028 USD per claim vs 0.0025 for DeepSeek: 11x)"
+  argon_labelled_records: 97
+  deepseek_original: {coverage: 1.00, context_kappa: 0.13, design: 0.95, n: 0.90}   # coverage 1 by construction (the pack was sampled from this reading)
+  deepseek_second:   {coverage: 0.77, context_kappa: 0.18, design: 0.93, n: 0.91, stance_with_original: 0.96}
+  gemini:            {coverage: 0.55, context_kappa: 0.46, design: 0.96, n: 0.89, stance_with_original: 0.93}
+  records_on_the_sample: "DeepSeek original 165, DeepSeek second 143, Gemini 92: Gemini keeps far fewer findings"
+  decision_rule: >-
+    not met: the context kappa rises by 0.27 (more than 0.15), design and n are equal, but coverage falls by 0.22 against the
+    second DeepSeek reading (more than 0.05). Gemini reads the intervention match much better and keeps fewer findings.
+  reading: >-
+    the weak field (context) is a model limit, not only a prompt one: a stronger model fixes it where prompt v10/v11 did
+    not (0.18-0.22). Recall goes the other way. A split reader is the cheaper candidate: DeepSeek extracts the records,
+    Gemini only re-labels intervention_match and the qualifiers of each record (one short call per claim) — to be priced
