@@ -29,7 +29,7 @@ from hyparena.card import rules_v32 as r32
 from scripts.ablation import units
 from scripts.v34_check import CAL, PROS, parts
 
-_CTX = r32.context_v34
+_CTX = r32.context_v34_verifier      # the verifier's label as is (the method uses the claim-qualifier rule since 2026-11-08)
 
 
 def context_claim_qualifiers(rec, claim):
@@ -49,12 +49,12 @@ def context_claim_qualifiers(rec, claim):
 @contextmanager
 def context_variant(name: str):
     """'verifier' (v3.5 as is) or 'claim_qualifiers'; patches the context used by record_weight and weight_factors."""
-    if name == "claim_qualifiers":
-        r32.context_v34 = context_claim_qualifiers
+    method = r32.context_v34
+    r32.context_v34 = _CTX if name == "verifier" else context_claim_qualifiers
     try:
         yield
     finally:
-        r32.context_v34 = _CTX
+        r32.context_v34 = method
 
 
 VARIANTS = ("verifier", "claim_qualifiers")
@@ -137,6 +137,7 @@ def level(k: str, r: dict) -> str:
     return f"{lab}"
 
 
+@context_variant("verifier")      # as recorded in the spec (the verifier's context label)
 def step1() -> dict:
     rows = pool()
     out = {"records": len(rows), "by_sample": Counter(r["sample"] for r in rows),
@@ -185,6 +186,7 @@ def sha(s: str) -> str:
     return hashlib.sha1(s.encode()).hexdigest()
 
 
+@context_variant("verifier")      # as recorded in the spec (the verifier's context label)
 def step2_sample() -> list[dict]:
     """40 records stratified by the verifier's context label (25 class, 10 adjacent, 5 exact), by SHA-1 order."""
     from hyparena.tools import pubmed
@@ -599,6 +601,7 @@ def _logw(f: dict) -> dict:
     return {k: math.log(f[k][1]) for k in FACTORS}
 
 
+@context_variant("verifier")      # as recorded in the spec (the verifier's context label)
 def pack5() -> dict:
     """Pack 5 for Argon: pairs of records of one prospective link (spec references.R4_pairs_argon)."""
     from hyparena.tools import pubmed

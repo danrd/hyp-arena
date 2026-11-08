@@ -341,3 +341,7 @@ final_combinations:   # vs the current rules; R2 / dR2 95% CI / R3 / R1 / Spearm
     the simplified GRADE-shaped weights with the log-likelihood fold beat the current rules on R2 by about 0.045 (interval
     above 0) and stay within the R3 constraint (0.594-0.606 vs 0.609); the link order moves moderately (rho about 0.90).
     Decision on adoption and on the risk-of-bias variant: the user (step 8).
+decision_claim_qualifiers:   # user, 2026-11-08
+  adopted: "the claim-qualifier context rule is part of v3.5 (rules_v32.context_v34; the earlier rule kept as context_v34_verifier); manual section 4, reading rule 5"
+  prospective: "rescored: chain state changed for 7 of 59 scored trials; ASPID order Spearman 1.0 / 0.998 / 1.0 (evidence / funding / frontier) against the scores before"
+  this_check: "steps 1, 2 and pack 5 stay on the verifier's label (as recorded); steps 3-7 report both"

@@ -40,7 +40,8 @@ def test_species_charged_once_on_the_outcome_and_constant_precision_before_it():
     mouse = rec(1, "animal", n=40, qm={"species": "no"})
     assert r32.record_weight(mouse, o, False, True) == pytest.approx(r32.record_weight(mouse, o, False) * 3 / 2)
     both = rec(2, "animal", n=40, qm={"species": "no", "population": "no"})
-    assert r32.record_weight(both, o, False, True) == pytest.approx(r32.record_weight(both, o, False))
+    o_pop = o.model_copy(update={"qualifiers": {**o.qualifiers, "disease": "sarcopenia"}})   # the claim fixes the population
+    assert r32.record_weight(both, o_pop, False, True) == pytest.approx(r32.record_weight(both, o_pop, False))
     m = mech_card().claims[0]
     assert r32.record_weight(rec(3, "cells", n=None), m, False, True) == r32.record_weight(rec(4, "cells", n=10 ** 6), m, False, True)
     assert r32.record_weight(rec(3, "cells", n=None), m, False, True) == pytest.approx(r32.record_weight(rec(3, "cells"), m, False) * 2)
@@ -136,3 +137,14 @@ def test_effect_parser_reads_formats_found_in_the_blind_comparison():
     from hyparena.card.effect_class import from_phrase
     assert from_phrase("SMD = .67 ± .57") == "medium"
     assert from_phrase("- 1.20 standardised mean difference (SMD), 95% CI") == "large"
+
+
+def test_only_qualifiers_the_claim_fixes_count():
+    """v3.5 amendment 2026-11-08 (specs/record-weight-2026-11-08.yaml): a "no" on a qualifier the claim does not state is
+    ignored; on one it states, the record stays adjacent."""
+    o = card([OUT]).claims[0]                                      # fixes species (human) only
+    r = rec(1, "rct", n=100, qm={"sex": "no", "dose": "no", "population": "no"})
+    assert r32.context_v34(r, o) == "exact" and r32.context_v34_verifier(r, o) == "adjacent"
+    o_sex = o.model_copy(update={"qualifiers": {**o.qualifiers, "sex": "female"}})
+    assert r32.context_v34(r, o_sex) == "adjacent"
+    assert r32.context_v34(rec(2, "rct", n=100, qm={"intervention_match": "class", "sex": "no"}), o) == "class"

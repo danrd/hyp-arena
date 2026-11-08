@@ -123,11 +123,16 @@ the verifier prompt `verify_claim/v9` already follows them; a report written by 
    is between groups, 1.
 4. **A null primary outcome with positive secondary ones** gives two records: the null primary against, the secondary for
    with the flag subgroup_only or as a separate measure.
-5. **Population.** A record in the exact population of the trial (pre-sarcopenia for a pre-sarcopenia trial) is exact even
+5. **Only what the claim fixes** (2026-11-08, `rules_v32.only_claim_qualifiers`, specs/record-weight-2026-11-08.yaml): a
+   record is adjacent only on a qualifier the claim itself states (population, disease or age; sex; dose; comparator;
+   species, which a claim about humans always fixes). A study in women for a claim that says nothing about sex is exact. Before
+   this rule the verifier's "no" on unstated qualifiers made 53 of 98 adjacent records adjacent; on the references the
+   change is neutral.
+6. **Population.** A record in the exact population of the trial (pre-sarcopenia for a pre-sarcopenia trial) is exact even
    when it is small; a record in a neighbouring population (sarcopenia, healthy older adults) is adjacent. Search for the exact
    population first: in the comparison the most informative record (a null SPPB result of a resistance programme in
    pre-sarcopenia) was found by one reader and missed by the other.
-6. **Numbers a reader cannot compute are left unknown**, not estimated: the trend of attention and the literature counts are
+7. **Numbers a reader cannot compute are left unknown**, not estimated: the trend of attention and the literature counts are
    computed by code (section 8); a model-written report marks them "not computed".
 
 ## 5. Weight of a record

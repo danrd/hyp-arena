@@ -96,8 +96,32 @@ def effect_weight(rec: EvidenceRecord, against: bool) -> float:
 PRECLINICAL_PRECISION = 0.5    # v3.4: replicates of cells or animals are not comparable with trial participants
 
 
+def _claim_fixes(claim: Claim, key: str) -> bool:
+    """Does the claim itself fix this qualifier? (population: population, disease or age; species: a species or a human claim)"""
+    q = claim.qualifiers or {}
+    if key == "population":
+        return any(q.get(x) for x in ("population", "disease", "age_at_start"))
+    if key == "species":
+        return bool(q.get("species")) or r3.human_claim(claim)
+    return bool(q.get(key))
+
+
+def only_claim_qualifiers(rec: EvidenceRecord, claim: Claim) -> EvidenceRecord:
+    """v3.5 amendment (user decision 2026-11-08, specs/record-weight-2026-11-08.yaml context_variants.claim_qualifiers): a
+    "no" in qualifiers_match counts only on a qualifier the claim fixes; the verifier marked sex, dose or population "no"
+    for claims that say nothing about them (53 of 98 adjacent records)."""
+    qm = {k: v for k, v in rec.qualifiers_match.items() if k == "intervention_match" or v != "no" or _claim_fixes(claim, k)}
+    return rec if qm == rec.qualifiers_match else rec.model_copy(update={"qualifiers_match": qm})
+
+
 def context_v34(rec: EvidenceRecord, claim: Claim) -> Optional[str]:
-    """v3.4: on the outcome link of a claim about humans, another species is charged by the design scale only."""
+    """v3.4: on the outcome link of a claim about humans, another species is charged by the design scale only. Since
+    2026-11-08 only the qualifiers the claim fixes count (only_claim_qualifiers); context_v34_verifier is the earlier rule."""
+    return context_v34_verifier(only_claim_qualifiers(rec, claim), claim)
+
+
+def context_v34_verifier(rec: EvidenceRecord, claim: Claim) -> Optional[str]:
+    """The v3.4 context with every "no" of the verifier counted (before 2026-11-08)."""
     ctx = r3.context_level(rec)
     if ctx != "adjacent" or claim.link in r3.PRECLINICAL_LINKS or not r3.human_claim(claim):
         return ctx
