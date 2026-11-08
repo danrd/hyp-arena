@@ -8,6 +8,10 @@
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif:wght@600;700&display=swap" rel="stylesheet">
   <style>
+    /* desktop: larger base size (Tailwind sizes are in rem) and the full window width */
+    @media (min-width: 1280px) { html { font-size: 17px; } }
+    @media (min-width: 1680px) { html { font-size: 18.5px; } }
+    @media (min-width: 2200px) { html { font-size: 20px; } }
     body { font-family: 'Inter', system-ui, sans-serif; background-color: #F8F7F2; color: #1A202C; }
     .serif-title { font-family: 'Noto Serif', Georgia, serif; }
     .tab-active { background-color: #1E4D40; color: #FFFFFF; font-weight: 600; }
@@ -28,7 +32,7 @@
   <div id="tt" class="fixed z-[9999] hidden pointer-events-none max-w-xs sm:max-w-md bg-[#1A202C] text-white text-xs leading-relaxed px-3 py-2.5 rounded-lg shadow-xl border border-emerald-500/30"></div>
 
   <header class="sticky top-0 z-40 bg-[#1E4D40] text-white shadow-md">
-    <div class="max-w-7xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
+    <div class="max-w-[1920px] mx-auto px-4 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-3">
       <div class="min-w-0">
         <div class="flex flex-wrap items-center gap-2">
           <span id="hdr-badge" class="text-[11px] uppercase tracking-widest px-2 py-0.5 bg-emerald-800 rounded text-emerald-100 font-semibold">Метод v3.5 · АСПИД</span>
@@ -47,12 +51,12 @@
   </header>
 
   <div class="bg-[#EFECE4] border-b border-stone-300">
-    <div class="max-w-7xl mx-auto px-4 py-1.5 text-[11px] text-stone-600">
+    <div class="max-w-[1920px] mx-auto px-4 lg:px-8 py-1.5 text-[11px] text-stone-600">
       Наведите курсор на термин с пунктирным подчёркиванием — откроется справка. Полный глоссарий и формулы — во вкладке «Справка».
     </div>
   </div>
 
-  <main class="max-w-7xl w-full mx-auto px-4 py-4 flex-1">
+  <main class="max-w-[1920px] w-full mx-auto px-4 lg:px-8 py-4 flex-1">
 
     <!-- 1. RANKING -->
     <section id="view-ranking" class="space-y-4">
@@ -62,7 +66,6 @@
             <h2 class="serif-title text-lg font-bold text-[#1E4D40]">Рейтинг пула по профилям АСПИД</h2>
             <p id="rank-about" class="text-xs text-stone-600 mt-0.5"></p>
           </div>
-          <button id="btn-goto-evo" class="hidden px-3 py-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-semibold">Улучшенные версии гипотез: что изменилось →</button>
         </div>
         <div class="mt-3 flex flex-wrap items-center justify-between gap-2">
           <div class="flex flex-wrap gap-1.5" id="profile-tabs"></div>
@@ -118,7 +121,7 @@
             <tbody id="evo-tbody" class="divide-y divide-stone-200 text-xs"></tbody>
           </table>
         </div>
-        <p id="evo-empty" class="text-xs text-stone-500 mt-2 hidden">Эволюция для этого пула не запускалась.</p>
+        <p id="evo-empty" class="text-sm text-stone-500 mt-3 p-4 rounded-lg bg-stone-50 border border-dashed border-stone-300 hidden">Результатов эволюции для этого пула пока нет. Они появятся здесь после прогона в режиме «доработка» или «свободная эволюция».</p>
       </div>
     </section>
 
@@ -166,7 +169,7 @@
             <ul>
               <li><b>F / A</b> — суммы весов «за» и «против».</li>
               <li><b>Сила S</b> = (1 + cF) / (2 + c(F + A)), c = 6.67: 0.5 без данных, 0.83 при F = 0.6, около 0.5 при равных «за» и «против». В скобках — 90% интервал.</li>
-              <li><b>Состояние цепочки</b> (v3.5, главный показатель в профилях) = среднее по звеньям величины 2S − 1: −1 — данные против, 0 — ничего не известно или «за» и «против» уравновешены, +1 — подтверждено. Нулевой результат маленького исследования весит по его мощности.</li>
+              <li><b>Баланс доказательств</b> (v3.5, главный показатель в профилях; в коде <code>chain_state</code>) = среднее по звеньям величины 2S − 1: −1 — данные против, 0 — ничего не известно или «за» и «против» уравновешены, +1 — подтверждено. Нулевой результат маленького исследования весит по его мощности.</li>
               <li><b>Неопровергнутость R</b> = (1 + cF) / (1 + cF + cA): 1, пока данных «против» нет. <b>P</b> — произведение R по звеньям (каскад пути — одно место, параллельные исходы — основной). P = 1 значит «против ничего не найдено», а не «гипотеза верна».</li>
               <li><b>Подтверждённость</b> — средняя опора звеньев: max(0, 2(S − 0.5)); 0 без данных, 0.67 при умеренной опоре, около 1 при сильной.</li>
             </ul>
@@ -305,7 +308,7 @@
     // ---------- 1. ranking
     function rankHead() {
       const H = [['place', 'Место'], [null, 'Гипотеза и статус'], ['score', 'Оценка'], ['room', 'Запас'], ['top5', 'Место / топ-5'], ['N', 'Новизна'],
-        ['chain_state', 'Состояние'], ['I', 'I'], ['I_headroom', 'Запас I'], ['W', 'Размах'], [null, 'Реализ. / ИИ / Кон. точка'], [null, '']];
+        ['chain_state', 'Баланс доказательств'], ['I', 'I'], ['W', 'Размах'], [null, 'Реализ. / ИИ / Кон. точка'], [null, '']];
       document.getElementById('rank-head').innerHTML = H.map(([k, l]) => `<th class="py-2 px-2 whitespace-nowrap">${k ? tipK(k, l) :
         (l === 'Реализ. / ИИ / Кон. точка' ? tip(TIPS.feasibility + ' · ' + TIPS.ai_role + ' · ' + TIPS.endpoint_clinical, l) :
          l === 'Гипотеза и статус' ? tip('Идентификатор, название и статус строки: исходная, доработанная версия или свободная эволюция; флаг сдвига к известному.', l) : l)}</th>`).join('');
@@ -332,15 +335,14 @@
         const pTip = 'P — произведение R по звеньям: ' + r.links.filter(l => l.in_P).map(l => `${nm('link', l.type)} R=${f(l.R)}`).join(' × ');
         return `<tr class="hover:bg-stone-100/80 cursor-pointer" data-jump="${r.id}">
           <td class="py-2.5 px-2 font-bold">${a.place ?? '—'}</td>
-          <td class="py-2.5 px-2 max-w-md"><div class="flex flex-wrap items-center gap-1.5"><span class="font-bold text-[#1E4D40]">${esc(r.id)}</span>${statusChips(r)}</div>
+          <td class="py-2.5 px-2 max-w-md xl:max-w-xl"><div class="flex flex-wrap items-center gap-1.5"><span class="font-bold text-[#1E4D40]">${esc(r.id)}</span>${statusChips(r)}</div>
             <div class="text-xs text-stone-600 line-clamp-1 mt-0.5">${esc(r.title)}</div><div class="text-[10px] text-stone-400">${esc(r.type_ru)}</div></td>
           <td class="py-2.5 px-2 font-extrabold text-sm text-[#1E4D40]">${tip(others, f(a.score))}</td>
           <td class="py-2.5 px-2 font-semibold ${room > 0.05 ? 'text-emerald-800' : 'text-stone-500'}">${tip('Запас по профилям: ' + PROFS.map(p => `${p.label} +${f(r.room[p.key])}`).join(', '), (room > 0.0005 ? '+' : '') + f(room))}${roomMark}</td>
           <td class="py-2.5 px-2 text-stone-700 whitespace-nowrap">${a.place}/${a.of} · ${f(a.p_top5, 2)}</td>
           <td class="py-2.5 px-2">${novChip(r.N)}${r.N_pmid ? `<button data-pmid="${r.N_pmid}" class="block text-[10px] text-blue-800 hover:underline font-semibold mt-0.5">PMID ${r.N_pmid}</button>` : ''}</td>
-          <td class="py-2.5 px-2 font-bold ${r.chain_state < -0.05 ? 'text-red-700' : r.chain_state > 0.05 ? 'text-emerald-800' : 'text-stone-600'}">${tip(pTip + ' · подтверждённость ' + f(r.support_share) + ' · состояние = среднее по звеньям (2S − 1)', (r.chain_state > 0 ? '+' : '') + f(r.chain_state, 2))}</td>
-          <td class="py-2.5 px-2">${f(r.I)}</td>
-          <td class="py-2.5 px-2 ${r.I_headroom && r.I_headroom > r.I + 0.005 ? 'text-emerald-800' : 'text-stone-400'}">${f(r.I_headroom)}</td>
+          <td class="py-2.5 px-2 font-bold ${r.chain_state < -0.05 ? 'text-red-700' : r.chain_state > 0.05 ? 'text-emerald-800' : 'text-stone-600'}">${tip(pTip + ' · подтверждённость ' + f(r.support_share) + ' · баланс = среднее по звеньям (2S − 1): от −1 (данные против) через 0 (ничего не известно или поровну) до +1 (подтверждено)', (r.chain_state > 0 ? '+' : '') + f(r.chain_state, 2))}</td>
+          <td class="py-2.5 px-2">${r.I_headroom && r.I_headroom > r.I + 0.005 ? tip('Если бы эксперимент отсекал все подкреплённые альтернативы, I была бы ' + f(r.I_headroom) + ' (это входит в «Запас»).', f(r.I)) : f(r.I)}</td>
           <td class="py-2.5 px-2">${esc(nm('scope', r.W))}</td>
           <td class="py-2.5 px-2 text-stone-600">${f(r.feasibility, 2)} / ${esc(nm('ai', r.ai_role))} / ${esc(nm('endpoint', r.endpoint || ''))}</td>
           <td class="py-2.5 px-2"><span class="px-2.5 py-1 rounded bg-[#1E4D40] text-white text-xs font-semibold whitespace-nowrap">Карточка →</span></td></tr>`;
@@ -400,7 +402,7 @@
                 ${(p.flags || []).map(fl => tip(fl.detail || TIPS.flags, '⚑ ' + esc(fl.name), 'px-2 py-0.5 rounded bg-stone-200 text-stone-800 text-[11px]')).join('')}
               </div>
               <h3 class="serif-title font-bold text-base">${esc(p.title)}</h3>
-              <div class="text-xs text-stone-600">состояние цепочки ${(p.chain_state > 0 ? '+' : '') + f(p.chain_state, 2)} · P ${f(p.P)} · подтверждённость ${f(p.support_share)} · I ${f(p.I)} (запас ${f(p.I_headroom)}) · размах ${esc(nm('scope', p.W))} ·
+              <div class="text-xs text-stone-600">баланс доказательств ${(p.chain_state > 0 ? '+' : '') + f(p.chain_state, 2)} · P ${f(p.P)} · подтверждённость ${f(p.support_share)} · I ${f(p.I)} (запас ${f(p.I_headroom)}) · размах ${esc(nm('scope', p.W))} ·
                 запас улучшения: ${PROFS.map(pr => `${pr.label} +${f(p.room[pr.key])}`).join(', ')}${p.room_N && p.room_N[0] !== p.room_N[1] ? ` (↓ новизна → ${esc(nm('novelty', p.room_N[1]))})` : ''}</div>
             </div>
             <div class="flex items-center gap-3"><div class="text-right text-xs space-y-0.5">${PROFS.map(pr => `<div class="${pr.key === curProfile ? 'font-bold text-[#1E4D40]' : 'text-stone-600'}">${scoreLine(pr)}</div>`).join('')}</div>
@@ -447,7 +449,7 @@
     function renderEvolution() {
       const kids = DATA.results.filter(r => r.is_evolved && r.scored);
       document.getElementById('evo-empty').classList.toggle('hidden', kids.length > 0);
-      if (kids.length) document.getElementById('btn-goto-evo').classList.remove('hidden');
+      document.getElementById('evo-head').closest('table').classList.toggle('hidden', !kids.length);
       document.getElementById('evo-head').innerHTML = ['Пара', 'Режим', 'P', 'Подтверждённость', 'Новизна и флаг', 'I', 'Размах', ...PROFS.map(p => 'Δ ' + p.label), ''].map(h => `<th class="py-2 px-2 whitespace-nowrap">${h}</th>`).join('');
       document.getElementById('evo-tbody').innerHTML = kids.map(e => {
         const p = byId[e.parent_id]; if (!p || !p.scored) return '';
@@ -502,7 +504,6 @@
       document.getElementById('search-cards').addEventListener('input', renderCards);
       document.getElementById('search-pubmed').addEventListener('input', () => { pubPage = 0; renderPubmed(); });
       document.querySelectorAll('#main-nav .nav-btn').forEach(b => b.onclick = () => switchView(b.dataset.view));
-      document.getElementById('btn-goto-evo').onclick = () => switchView('evolution');
       document.getElementById('btn-expand-all').onclick = () => { DATA.results.filter(r => !r.is_evolved && r.scored).forEach(p => openCards.add(p.id)); renderCards(); };
       document.getElementById('btn-collapse-all').onclick = () => { openCards.clear(); renderCards(); };
       const close = () => { const md = document.getElementById('pmid-modal'); md.classList.add('hidden'); md.classList.remove('flex'); };

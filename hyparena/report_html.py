@@ -39,7 +39,7 @@ IND_NAMES = {
     "trend_pubmed": ("рост внимания в литературе", "rising attention in the literature"),
     "ai_role": ("роль ИИ", "role of AI"),
     "support_share": ("подтверждённость механизма", "how much of the mechanism is supported"),
-    "chain_state": ("состояние цепочки", "state of the chain"),
+    "chain_state": ("баланс доказательств", "evidence balance"),
     "N": ("новизна", "novelty"),
 }
 NOVELTY_NAMES = {"new_context": ("новый контекст", "new context"), "translation": ("перенос на другой вид", "translation"),
