@@ -38,6 +38,6 @@ admission: graded
 # v3 rules (rules_v3: P, W, I, V, gate). verify_claim/v9 since 2026-11-05: extraction accepted on design, comparison and n
 # (specs/extraction-gold-v9-2026-11-05.yaml; relevance recall about 0.6, precision 1.0; the second relevance question is not used).
 method: v3
-verify_version: v9
+verify_version: v10
 normalize_version: v10   # normalize_card/v10 (2026-11-06): v9 + AI-role tag, endpoint and registry population by code
 full_text: pmc

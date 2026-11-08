@@ -90,7 +90,10 @@ returns records:
 | the authors' word | small, modest, slight | moderate | large, substantial, marked |
 
   Raw units ("+2.4 kg"), test statistics and p values alone are "unclear". A null result for the outcome closest to the claim
-  is "none".
+  is "none". Since 2026-11-08 the parser also reads a ratio written as "hazard ratio [HR], 0.82", percent changes written
+  as "Mean Δ% = 40.4%", "ΔEG/CG: 29.67%" or "increases from baseline of 21%", and a raw difference with its 95% interval
+  when n is known: SE = (hi − lo) / 3.92, SD = SE·√n / 2 between two groups (SE·√n before-after), d = |difference| / SD
+  (`effect_class.d_from_ci`), used by the record weight and by the experiment forecast.
 - A review restating one trial counts as that trial (an RCT of unknown size until the trial's own paper is found).
 - **Independence group**: a paper whose abstract names exactly one trial id (NCT, ISRCTN) belongs to that trial; else the
   paper is its own group. Several records of one group count once (section 5).
@@ -102,7 +105,10 @@ the verifier prompt `verify_claim/v9` already follows them; a report written by 
 1. **Same intervention or not** (`intervention_match`). *exact*: the intervention the claim names (the same programme, the
    same compound); a different dose or schedule of it is exact with dose or regimen "no", which makes the record adjacent.
    *class*: another intervention of the same kind on the claim's outcome (another resistance programme for a squat
-   programme; another drug of the same class) — it counts, with context 1/3. A programme that merely includes the named
+   programme; another drug of the same class) — it counts, with context 1/3. The match is judged at the level at which the
+   claim names the intervention (verifier prompt v10, 2026-11-08): when the claim names a kind ("resistance training",
+   "adequate protein intake", "a home-based exercise programme"), any study of that kind is exact; class only when the claim
+   names a specific product, compound or programme and the study used another member of its kind. A programme that merely includes the named
    intervention among several components (resistance training + nutrition + cognitive training for "squats") is *class*, and
    only when its result can be read for the exercise arm; otherwise it is not a record for this claim. *Another intervention
    altogether* (aerobic training for a resistance claim) weighs 0.

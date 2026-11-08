@@ -66,7 +66,12 @@ def expected_effect(u: dict) -> tuple[float, bool, float]:
                 w = r32.record_weight(r, claims[i], side == "against", True)
                 if w <= 0:
                     continue
-                d = 0.0 if side == "against" else d_of(r.effect_reported)
+                if side == "against":
+                    d = 0.0
+                else:
+                    from hyparena.card.effect_class import d_from_ci
+                    d = d_of(r.effect_reported)
+                    d = d if d is not None else d_from_ci(r.effect_reported, r.n_total, r.comparison)
                 if d is None:
                     continue
                 num += w * d
