@@ -1,0 +1,48 @@
+id: novelty-check-2026-11-08
+written_on: 2026-11-08
+status: definitions fixed before the pack was built or sent
+why: >-
+  User request 2026-11-08 ("the next task for Argon"). Novelty N (manual section 7) cannot be checked against trial
+  outcomes; it rests on the admission rule and on the verifier's records. It drives the Frontier profile (N first) and the
+  drift flag of evolution. N on the outcome link is set by the closest record before T: new context (same intervention,
+  another population / age / sex / dose) < translation (same intervention, only another species) < analog (only a related
+  compound or class); without an outcome record: new combination (every link before the outcome supported) or new link (one
+  has no record); unknown without data. On the 59 scored prospective trials: analog 22, unknown 21, new context 11, new
+  combination 3, new link 2. Expected bias, written before the answer: "analog" comes from the verifier's class label,
+  which Argon read as class far less often (pack 5, kappa 0.10), so our analog should be over-called.
+cost: free in money (Argon is the user's outside reader); PubMed E-utilities (free) to check the PMIDs Argon gives
+pack: Argon pack 7 (longevity-kg reviews/argon-2026-11-08/pack_7_task.json; hidden key pack_7_key.json)
+
+sample: all 59 scored prospective trials (not the 74 calibration trials)
+shown: >-
+  the registry text, the date T (literature only up to T counts), the hypothesis chain as the method normalised it (each
+  link: id, type, subject - relation - object, qualifiers; which link is the outcome). Not shown: our N, the PMID that sets
+  it, the per-link levels, our records.
+asked:
+  per_trial:
+    novelty: "new_context | translation | analog | new_combination | new_link | unknown, by the ladder above, from papers published on or before T"
+    defining_pmids: "up to 3 PMIDs (published on or before T) that set the level; empty only for new_link with no record or unknown"
+    known_result: "true when the exact result (same intervention, species, population, dose and outcome, positive) was already published before T, with its PMID"
+  per_link:
+    level: "new_context | translation | analog | new_link (no paper on this link before T), with up to 2 PMIDs"
+measures:
+  outcome_N: >-
+    linear-weighted Cohen kappa over the five ordered levels (new_context 0 ... new_link 4) on trials where neither reader
+    says unknown; agreement on unknown vs a level; confusion table; share of our "analog" that Argon calls new_context or
+    translation (the expected bias)
+  direction: "share of trials where Argon's level is nearer the known than ours (lower on the ladder) vs farther"
+  pmids: >-
+    every PMID Argon gives is fetched from PubMed: exists, published in or before T's year, and whether our verifier had it
+    among the trial's records; share of Argon's defining PMIDs that are valid and before T
+  links: weighted kappa of the per-link levels (new_context 0, translation 1, analog 2, new_link 3)
+  known_result: "trials Argon calls a known result (our method found none among the 59)"
+reading:
+  N_unreproducible: "weighted kappa below 0.4: N does not survive a second reader"
+  overstated: >-
+    Argon nearer the known in at least twice as many trials as farther, with valid pre-T PMIDs: our N overstates novelty
+    (the Frontier profile rewards it); the fix is in the class label and in the search for the closest prior work
+  leakage: "Argon's PMIDs after T or not found are reported and excluded from the direction measure"
+  note: "Argon is a second reader, not a gold standard; decisions go to the user"
+built:   # python -m scripts.pack7_novelty build
+  pack: "59 trials, 150 links, T = 2026-11-06 for all"
+  key_N: "computed under the current rules (v3.6 weights): analog 22, unknown 22, new context 11, new combination 3, new link 1 (one trial moves from new link to unknown against the scores file)"
