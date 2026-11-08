@@ -13,3 +13,14 @@ layers_3_4:
   convergence: kinds of evidence and independent sources do not separate (0.50-0.56) and are redundant with each other (|rho| >= 0.86).
   surprise: the inverse of the models' probability, 0.20, i.e. the models' 0.80 read the other way; not a separate signal.
   admission: none admitted; weakest_support redundant with support_share (rho 0.82).
+layers_1_2_protocol_review:   # scripts/protocol_review.py, 148 calls (gemini flash, deepseek flash), estimate ~0.2 USD before the run
+  agreement_of_two_families: {endpoint_snr: 0.73, add_on_ceiling: 0.49, time_window: 0.77, power_realism: 0.82,
+                              population_enrichment: 0.85, delivery: 0.55, bias_room: 0.73}
+  auc_when_agreed: {endpoint_snr: 0.515, add_on_ceiling: 0.435, time_window: 0.494, power_realism: 0.521,
+                    population_enrichment: 0.478, delivery: 0.50, bias_room: 0.624}
+  auc_sum_of_factors: 0.507
+  reading: >-
+    Only the room for bias separates (0.62, the same signal as blinding and placebo in the ceiling analysis). Endpoint noise,
+    add-on ceiling, time window, power, enrichment and delivery, as judged by the models from the registry text, do not;
+    add-on ceiling and delivery are also unreliable (the two families agree on half). So the models' 0.76-0.80 on "will it be
+    confirmed" does not come from these protocol factors: it comes from field knowledge of similar trials (and possibly leakage).
