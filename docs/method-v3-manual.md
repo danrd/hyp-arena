@@ -556,7 +556,7 @@ informativeness-check, novelty-check, balance-check):**
 | support a of the alternatives | Spearman 0.28 | the reader is generous (knowledge), ours counts found papers |
 | novelty N | weighted κ 0.14 (0.26 with verifier v11); the reader is nearer the known in 21 of 37 trials, farther in none | N is overstated: read the frontier profile with that caveat |
 | missing competitors | in 78% of trials the reader adds a supported one; a checklist prompt covers 15 of 40 fully, 13 partly | not yet in the method |
-| evidence balance per link | pack 8, pending | |
+| evidence balance per link | Spearman 0.24 per link, 0.39 per trial; no refuted link called supported | the reader is generous (mean 0.45 vs ours 0.08); we hold 19% of its key papers: 46% were read only for another link of the trial, 31% read without a record (docs/plans/reading-recall-2026-11-08.md) |
 
 **Reader noise.** Reading the same papers again with the same prompt moves the evidence balance of the 59 prospective
 trials (Spearman 0.81 between two readings; R2 and R3 do not move): close places in a ranking are within that noise

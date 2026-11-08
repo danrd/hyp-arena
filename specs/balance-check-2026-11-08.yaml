@@ -29,3 +29,21 @@ reading:
   missed_refutations: "links Argon calls refuted (moderate or strong) that we score above +0.33 are listed one by one: they are the dangerous errors"
   recall: "if fewer than half of Argon's key PMIDs are among our records, the search is the bottleneck of the balance too"
   note: "Argon is a second reader with its own knowledge, generous on support in pack 6; decisions go to the user"
+result:   # Argon pack 8 answer 2026-11-08 (longevity-kg reviews/argon-2026-11-08/pack_8_answer.json); python -m scripts.pack8_analysis
+  verdicts: "Argon: supported 106, mixed 36, refuted 5, no evidence 3 of 150 links"
+  link: "Spearman of our 2S - 1 with Argon's signed score 0.24; sign agreement 0.41; ours 0 -> Argon supported 56, ours negative -> Argon supported 12"
+  trial: "Spearman of the evidence balance 0.39; mean balance ours 0.08, Argon 0.45"
+  readings: "not reproducible (both below 0.5); no missed refutation (no link Argon calls moderately or strongly refuted that we put above +0.33); recall triggered"
+  pmids: "310 distinct, all in PubMed and dated by 2026"
+  recall: "88 of Argon's 474 key papers (19%) are among our records of that link"
+  where_lost:   # free diagnostic after the answer: each key paper against the search logs of the trial
+    record_on_this_link: 88
+    read_for_this_link_no_record: 147
+    read_only_for_another_link_of_the_trial: 216
+    never_retrieved: 23
+  reading: >-
+    the main axis does not survive a second reader at the level of a link, and the cause is located: not the search (95%
+    of the key papers were retrieved) and not the rules, but the reading. A paper is read only against the claim whose
+    search found it (46% of the key papers were read for another link of the same trial), and the reader turns only part
+    of the papers it reads for a link into records (31% read, no record). The second reader is generous (a 0.45 mean
+    balance against our 0.08) and is no gold standard; the safe direction holds: we never call a refuted link supported.
