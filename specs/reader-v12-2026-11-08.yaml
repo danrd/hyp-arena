@@ -27,3 +27,16 @@ dev_revisions:   # on dev numbers only (pack 9 links); costs in USD
   rev0: "filter v1 + reader v12: kept 2.0 of 20 papers per link; gold findings dropped by the filter 10 of 21 (call 8, rule 2); recall 6/21 = 0.29, precision 0.75, direction 6/6; every PMID answered; 0.009"
   rev1: "filter v2 ('no' only for a clear absence of an own result) + rule with result words: kept 8.1 per link, no gold finding dropped; recall 7/21 = 0.33, precision 0.78, direction 7/7; the reader answered 'none' for all 14 gold findings it missed, 10 of them for an intervention of the same kind; 0.022"
   rev2: "reader verify_claim/v13 = v12 + the manual's reading rules 1-2 restated in the per-paper answer (a same-kind intervention, another population or animals is for / against with intervention_match class; a between-group null is against); filter v2 unchanged"
+dev_rev2_result: "filter v2 + reader v13: kept 7.8 of 20 per link, no gold finding filtered; recall 11/21 = 0.52, precision 11/15 = 0.73, direction 11/11; every PMID answered, no skip; 0.022 USD"
+holdout_result:   # run once, filter v2 + reader v13, 102 links of the 30 pilot trials, own searches; 0.257 USD
+  volume: "19.7 papers per link, 9.7 kept (filter drops 946, rule 71); every PMID answered, no skip"
+  pack8: "key papers on their link 63/327 = 0.19 (original 0.16, cross-link pilot 0.24); link Spearman 0.20 (original 0.19); trial Spearman 0.20 (original 0.44)"
+  pass: "not met: dev recall 0.52 < 0.65; holdout recall 0.19 < 0.24; link Spearman +0.01 (< 0.03); trial order worse"
+  cost_total: "0.31 USD (dev 0.053, holdout 0.257; named about 0.5)"
+  reading: >-
+    the per-paper answer removes silent skips and the filter halves what the reader reads without losing gold findings;
+    on the per-paper gold the reader becomes more precise (0.50 -> 0.73) and finds more (0.38-0.48 -> 0.52). But against
+    pack 8 (Argon's key papers per link) almost nothing changes, and the trial order gets worse: two thirds of Argon's key
+    papers are not in a link's own search at all (pack 8 diagnostics), so a better reader of the same papers cannot reach
+    them, and fewer, more precise records move the balance of whole trials. The two outside references reward different
+    things: pack 9 the reading of what was found, pack 8 the literature Argon knows. Not adopted.
