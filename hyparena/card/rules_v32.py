@@ -105,6 +105,19 @@ def context_v34(rec: EvidenceRecord, claim: Claim) -> Optional[str]:
     return "exact" if no == {"species"} else ctx
 
 
+NULL_POWER_D, NULL_POWER_N_UNKNOWN = 0.4, 40     # specs/link-scoring-2026-11-08.yaml, B
+
+
+def null_power(n: Optional[int], comparison: str) -> float:
+    """Power of a study to detect d = 0.4 at two-sided 5% (B): the weight of its null result."""
+    n = n if n and n > 1 else NULL_POWER_N_UNKNOWN
+    z = NULL_POWER_D * math.sqrt(n / 4 if comparison == "between_groups" else n) - 1.96
+    return 0.5 * (1 + math.erf(z / math.sqrt(2)))
+
+
+NULL_POWER = False          # set by evaluate(..., null_power=True); module switch so side_weight need not carry it
+
+
 def record_weight(rec: EvidenceRecord, claim: Claim, against: bool, v34: bool = False) -> float:
     if not r3.usable(rec, VARIANT_BASE):
         return 0.0
@@ -113,8 +126,11 @@ def record_weight(rec: EvidenceRecord, claim: Claim, against: bool, v34: bool = 
         return 0.0
     preclinical = claim.link in r3.PRECLINICAL_LINKS
     w = lv.design_weight(r3.record_design(rec), r3.human_claim(claim) and not preclinical)
-    w *= PRECLINICAL_PRECISION if (v34 and preclinical) else precision(rec.n_total)
-    w *= effect_weight(rec, against)
+    if against and NULL_POWER:                            # B: the null weighs by the study's power (replaces precision and effect)
+        w *= null_power(rec.n_total, rec.comparison)
+    else:
+        w *= PRECLINICAL_PRECISION if (v34 and preclinical) else precision(rec.n_total)
+        w *= effect_weight(rec, against)
     w *= lv.weight("comparison", rec.comparison if rec.comparison != "unknown" else "none")
     w *= lv.weight("context", ctx)
     return w
@@ -161,6 +177,8 @@ class V32Result:
     weakest: str = ""
     coverage: float = 0.0                                             # share of slots with data (reported)
     support_share: float = 0.0                                        # mean support of the slots (v3.3 indicator)
+    chain_state: float = 0.0                                          # A: mean of 2S - 1 over the slots
+    silent_share: float = 0.0                                         # G: slots read but with no stance and no record
     headroom_I: Optional[float] = None                                # v3.4: I if the experiment cut off every supported alternative
 
     def as_dict(self) -> dict:
@@ -169,7 +187,18 @@ class V32Result:
 
 def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
              alt_verifications: Optional[dict[str, ClaimVerification]] = None, c: float = C_ANCHOR,
-             fold: bool = False, neutral_unverified: bool = False, v34: bool = False) -> V32Result:
+             fold: bool = False, neutral_unverified: bool = False, v34: bool = False, null_power: bool = False) -> V32Result:
+    global NULL_POWER
+    NULL_POWER = null_power
+    try:
+        return _evaluate(card, ver_claims, alt_verifications, c, fold, neutral_unverified, v34)
+    finally:
+        NULL_POWER = False
+
+
+def _evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
+              alt_verifications: Optional[dict[str, ClaimVerification]], c: float,
+              fold: bool, neutral_unverified: bool, v34: bool) -> V32Result:
     base = r3.evaluate(card, ver_claims, alt_verifications, variant=VARIANT_BASE)     # gate, scope, approval, flags
     res = V32Result(gate=base.gate, scope=base.scope)
     fold = fold or v34
@@ -237,6 +266,10 @@ def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
             return sum(res.links[i][0] for i in sl) / len(sl)          # parallel outcomes without a primary: their mean
         return max(res.links[i][0] for i in sl)                         # a cascade: its best link
     res.support_share = round(sum(max(0.0, 2 * (slot_S(sl) - 0.5)) for sl in slots) / len(slots), 4) if slots else 0.0
+    res.chain_state = round(sum(2 * slot_S(sl) - 1 for sl in slots) / len(slots), 4) if slots else 0.0
+    silent = [sl for sl in slots if all(res.links[i][3] + res.links[i][4] == 0 for i in sl)
+              and any(by_id.get(i) is not None and by_id[i].no_stance for i in sl)]
+    res.silent_share = round(len(silent) / len(slots), 4) if slots else 0.0
     total = 0.0
     total_all = 0.0
     supported = False

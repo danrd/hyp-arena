@@ -1,0 +1,36 @@
+id: link-scoring-2026-11-08
+written_on: 2026-11-08
+status: definitions fixed before any value was computed
+why: >-
+  User decision 2026-11-08 after a walk-through of how a link is scored: (A) one signed axis instead of P plus support share,
+  (B) a null record weighted by the power of its study, then (G) a separate state for links whose papers were read but take
+  no position. Exploration on the 73 calibration trials; admission rule on 73 + 55 prospective.
+A_chain_state:
+  link: s = 2S - 1 (S the v3.4 strength), from -1 (refuted) through 0 (nothing known, or for and against balanced) to +1.
+  slot: as v3.4 (a pathway cascade by its best link, parallel outcomes by the primary or the mean).
+  chain_state: mean of the slot values; filtered hypotheses (gate) get -1.
+  replaces: P (non-refutation) and support share in the profiles if admitted; the gate stays.
+B_null_power:
+  rule: >-
+    for a record against, the effect factor (now always 1) and the precision factor are replaced by the power of that study
+    to detect a standardised effect of 0.4 at two-sided 5%: between groups Phi(0.4 * sqrt(n / 4) - 1.96), before-after
+    Phi(0.4 * sqrt(n) - 1.96); n unknown -> n = 40. A small null weighs little, a large null fully.
+  unchanged: records for, design, comparison, context, fold.
+G_silent_links:
+  state: >-
+    a link is "silent" when it has no usable record on either side but the verifier returned at least one finding with no
+    stance on it (papers about the link that neither support nor refute it); "empty" when there is nothing at all.
+  indicator: silent_share = share of the chain's slots that are silent (reported; tested by the admission rule).
+report: AUC on the calibration of chain_state (with and without B), P with B, support share; separation and |rho| < 0.7
+  against the other indicators on 73 + 55.
+
+result:   # scripts/link_scoring_check.py -> calibration/link_scoring_check.json; AUC on 73 calibration, admission on 127 (73 + 55 passing the gate)
+  auc: {P: 0.595, support_share: 0.548, chain_state_A: 0.597, P_with_B: 0.599, chain_state_A_with_B: 0.609, silent_share_G: 0.461}
+  separation_top_share: {P: 0.669, support_share: 0.543, chain_state: 0.331, silent_share: 0.748}
+  rho: {chain_state~support_share: 0.886, chain_state~P: 0.596, chain_state_B~chain_state: 0.956, P_B~P: 0.994}
+  silent: "32 of 127 hypotheses have at least one silent slot"
+  reading: >-
+    A: the signed chain state orders the trials as P does (0.60) and separates far better (largest value 33% vs 67% for P);
+    it is nearly the support share (rho 0.89) with refutation added, so it can replace both. B: weighting a null by its power
+    changes little (0.599 / 0.609, inside the noise); kept as the more defensible rule. G: silent links fail the admission rule
+    (75% of hypotheses have none) and do not separate (0.46): shown in the report as a state, not an indicator.
