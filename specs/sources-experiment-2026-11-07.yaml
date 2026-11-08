@@ -69,3 +69,24 @@ result_arm_A_2026_11_08:   # v10 prompt + exact-population query, 15 units, same
     in reading (fewer of the papers read became records). Not adopted: configs/v3-flash-n11*.yaml are not used further.
     Caveat: one run each; the model-written queries vary between runs, so part of the drop may be run-to-run noise. Two
     changes were tested together, so their effects are not separated.
+graph_v36_2026_11_08:   # user decision 2026-11-08 (item 3), written before computing; free
+  what: >-
+    Argon's graph (pack 3, task C; edges that passed the quote and date checks) scored by the v3.6 rules on the same 15
+    calibration trials, three sources: ours (the verifier's records), graph, union (ours plus graph edges for papers we do
+    not have on that link)
+  measures: >-
+    R2 on the links of the 15 trials (later RCT / meta-analysis of a link predicted from the earlier records of that source;
+    years from PubMed); AUC of the evidence balance on the 15 trials (direction only, 8 positive, 7 null); records per link
+  reading: >-
+    exploration: 15 trials and a few dozen R2 targets; the question is whether a fuller literature makes the balance a better
+    predictor of later trials of the same link (R2), the reference the record weight was chosen on, not the trial outcome
+graph_v36_result:   # scripts/graph_r2.py -> calibration/graph_r2.json
+  ours:  {records: 68,  R2: 0.757, R2_targets: 22, against_targets: 4,  balance_auc_15: 0.634}
+  graph: {records: 128, R2: 0.542, R2_targets: 49, against_targets: 9,  balance_auc_15: 0.661}
+  union: {records: 147, R2: 0.619, R2_targets: 61, against_targets: 13, balance_auc_15: 0.661}
+  reading: >-
+    on v3.6 the graph and ours order the 15 trials alike (0.66 vs 0.63; under v3.4 the gap was 0.59 vs 0.70: the record
+    weight and the fold, not the graph, made the difference). R2 is lower with the graph, but the target sets differ (the
+    graph adds 27 later trials, 5 of them against, that our search never found): on the harder set of a fuller literature
+    the balance predicts later trials less well. Too small to decide a source (22-61 targets on 15 trials); no reason
+    found to replace the search by a curated graph, and no reason to think it hurts.
