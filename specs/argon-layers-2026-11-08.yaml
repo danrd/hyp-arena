@@ -1,0 +1,15 @@
+id: argon-layers-2026-11-08
+what: >-
+  Argon's proposed layers, tested on the 73 calibration trials (exploration: these samples built the method). Layers 3-4
+  free (scripts/chain_layers.py -> calibration/chain_layers.json); layers 1-2 as a protocol review by two model families
+  (scripts/protocol_review.py, paid ~0.2 USD).
+layers_3_4:
+  auc: {P_v34: 0.595, support_share: 0.548, weakest_support: 0.604, product_of_slot_S: 0.742, kinds_of_evidence: 0.518,
+        human_kinds: 0.498, independent_sources: 0.562, surprise_1_minus_models: 0.202}
+  product_of_slot_S_check: >-
+    mostly a chain-length effect: "fewer slots" alone gives 0.639; all 8 trials with 3 or more slots are null; within the
+    56 one-slot trials product_S equals P (0.67). The weakest-link gate adds nothing beyond that; the earlier finding stands
+    (a written mechanism goes with a null result, error analysis 2026-11-06).
+  convergence: kinds of evidence and independent sources do not separate (0.50-0.56) and are redundant with each other (|rho| >= 0.86).
+  surprise: the inverse of the models' probability, 0.20, i.e. the models' 0.80 read the other way; not a separate signal.
+  admission: none admitted; weakest_support redundant with support_share (rho 0.82).

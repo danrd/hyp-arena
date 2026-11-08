@@ -178,6 +178,11 @@ class FakeLLMClient:
     def _predict_outcome(self, rng, prompt, n):
         return json.dumps({"confirmed": "yes", "probability": 0.6, "reason": "fake", "knows_result": "no"})
 
+    def _protocol_review(self, rng, prompt, n):
+        return json.dumps({k: {"level": v, "quote": ""} for k, v in (("endpoint_snr", "medium"), ("add_on_ceiling", "unclear"),
+                           ("time_window", "adequate"), ("power_realism", "unclear"), ("population_enrichment", "heterogeneous"),
+                           ("delivery", "not_applicable"), ("bias_room", "some"))})
+
     def _search_queries(self, rng, prompt, n):
         return json.dumps({"queries": []})                  # no queries: the keyword search fills up (search.py)
 
