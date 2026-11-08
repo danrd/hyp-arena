@@ -42,7 +42,7 @@ def all_units(version: str) -> list[dict]:
     for h, r in json.loads((PROS / "run_60.json").read_text()).items():
         it = r["items"][0]
         if it.get("card") and it.get("verification") and "v3" in it:
-            card, cvs, alts = parts(it)
+            card, cvs, alts = parts(it, h)
             out.append({"id": h, "label": None, "card": card, "cvs": swap(cvs, rp.get(h, {})), "alts": alts, "sample": "prospective"})
     return out
 

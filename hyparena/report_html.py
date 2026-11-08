@@ -73,7 +73,7 @@ TIPS = {
           "Non-refutation of the mechanism, 0 to 1 (v3.4; formerly plausibility): how far the chain is not refuted. 1 means \"nothing against was found\", not \"the hypothesis is true\". A link with no data against is 1; data against lower it, data for soften that. Support from the literature is the separate support axis, so a first modest paper on a link no longer lowers P."),
     "N": ("Новизна: насколько гипотеза далека от того, что уже спрашивали до даты оценки. Новый контекст (то же вмешательство и исход уже изучали на людях, в другой популяции или дозе) < перенос (только на другом виде) < аналог (только родственное соединение или класс) < новое сочетание (звенья известны по отдельности, цепочку целиком не проверяли) < новое звено. Неизвестно, если данных нет вовсе: отсутствие данных — не новизна. ⚠ Внешняя проверка (2026-11-08): второй читатель согласен слабо (κ 0.14) и ставит уровень ближе к известному в 21 из 37 испытаний — наша новизна завышена.",
           "Novelty: how far the hypothesis is from what was asked before the date. New context (the same intervention and outcome already studied in humans, another population or dose) < translation (only in another species) < analog (only a related compound or class) < new combination (the links are known one by one, the chain as a whole was not tested) < new link. Unknown when there are no data at all: absence of data is not novelty."),
-    "I": ("Информативность эксперимента, от 0 до 1: сколько подкреплённых литературой альтернативных объяснений отсечёт заявленный эксперимент. 0 — ни одного. ⚠ Внешняя проверка (2026-11-08): в этих оценках I второй читатель не воспроизводит (κ по d 0.005–0.07); исправленная оценка d по тексту реестра даёт κ 0.35 и пока не внедрена.",
+    "I": ("Информативность эксперимента, от 0 до 1: сколько подкреплённых литературой альтернативных объяснений отсечёт заявленный эксперимент. 0 — ни одного. ⚠ Внешняя проверка (2026-11-08): d альтернатив с 2026-11-08 оценивается по тексту реестра (κ с внешним читателем 0.35 вместо 0.005 у прежней оценки); опора альтернатив a — по найденным статьям.",
           "Informativeness, 0 to 1: how many literature-supported alternative explanations the stated experiment rules out. 0: none."),
     "I_headroom": ("Запас информативности: какой была бы информативность, если бы эксперимент отсекал все подкреплённые альтернативы. Показывает, сколько можно выиграть, улучшив дизайн.",
                    "Room for informativeness: what it would be if the experiment ruled out every supported alternative; what a better design could add."),
@@ -206,7 +206,8 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
         if not it.get("card") or "P" not in sc:
             hyps[h] = base
             continue
-        card = HypothesisCard.model_validate(it["card"])
+        from hyparena.card import alternatives_d
+        card = alternatives_d.apply(h, HypothesisCard.model_validate(it["card"]))
         cvs = [ClaimVerification.model_validate(c) for c in it["verification"]["claims"]]
         alts = {a: ClaimVerification.model_validate(v) for a, v in (it.get("v3_alternatives") or {}).items()}
         from hyparena.card import improvements as imp
@@ -308,7 +309,8 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
     for h in scored:
         hyps[h]["values"] = values[h]
         it = run[h]["items"][0]
-        card = HypothesisCard.model_validate(it["card"])
+        from hyparena.card import alternatives_d
+        card = alternatives_d.apply(h, HypothesisCard.model_validate(it["card"]))
         cvs = [ClaimVerification.model_validate(c) for c in it["verification"]["claims"]]
         alts = {a: ClaimVerification.model_validate(v) for a, v in (it.get("v3_alternatives") or {}).items()}
         ext = {k: values[h].get(k) for k in ("feasibility", "best_design_outcome", "independent_outcome", "against_share",

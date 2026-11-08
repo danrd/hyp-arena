@@ -104,3 +104,10 @@ fix_step2_result:   # 2026-11-08; prospective/alternatives_v2_holdout.json, alte
   still_missed: "design-specific competitors (a change of protocol midway, the calcium in a calcium-HMB salt, co-contraction during mental effort, trigeminal stimulation by a forehead electrode, practice effects on a cognitive screen)"
   open: "the support a of the new alternatives needs search and the verifier (about 0.3-0.5 USD for 59 trials); not run"
   caveat: "one labeller (Claude); 'partly' is a judgement call"
+adopted_judged_d:   # user decision 2026-11-08 ("item 1: adopt the judge of d and recompute I and the room")
+  code: >-
+    hyparena/card/alternatives_d.py: the d of judge_alternatives/v2 replaces on_positive / on_negative where saved runs are
+    read (scripts.v34_check.parts(it, unit_id), scripts.ablation.units, scripts.prospective.score, the report builder);
+    JUDGED_D=0 reproduces earlier numbers. Calibration pool judged: 73 units, 0.045 USD; prospective: the dev + holdout runs
+  prospective: "I mean 0.164 -> 0.325, I > 0 in 29 -> 42 trials; ASPID order Spearman 0.936 / 0.982 / 0.965 (evidence / funding / frontier), top 10 kept 7 / 10 / 8"
+  room: "mean room to improve 0.147 -> 0.110 (evidence), 0.057 -> 0.047 (funding), 0.072 -> 0.056 (frontier): many experiments already cut off alternatives, so 'an experiment that rules them out' gains less"

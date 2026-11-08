@@ -21,15 +21,18 @@ PROS = KG / "hypothesis_sources" / "prospective"
 W_ORDER = ("local", "organ", "hallmark")
 
 
-def parts(it: dict):
-    card = HypothesisCard.model_validate(it["card"])
+def parts(it: dict, unit_id: str = ""):
+    """card, claim verifications, alternative verifications of a saved run item; with `unit_id` the alternatives carry
+    the d judged from the registry text (hyparena/card/alternatives_d.py, the method since 2026-11-08)."""
+    from hyparena.card import alternatives_d
+    card = alternatives_d.apply(unit_id, HypothesisCard.model_validate(it["card"]))
     cvs = [ClaimVerification.model_validate(c) for c in it["verification"]["claims"]]
     alts = {a: ClaimVerification.model_validate(v) for a, v in (it.get("v3_alternatives") or {}).items()}
     return card, cvs, alts
 
 
-def row(it: dict, as_of: str) -> dict:
-    card, cvs, alts = parts(it)
+def row(it: dict, as_of: str, unit_id: str = "") -> dict:
+    card, cvs, alts = parts(it, unit_id)
     e33 = r32.evaluate(card, cvs, alts, fold=True, neutral_unverified=True)
     e34 = r32.evaluate(card, cvs, alts, v34=True)
     lev, wpot, bott = nv.leverage(card, cvs, e34)
@@ -49,12 +52,12 @@ def units() -> list[dict]:
             if not it.get("card") or not it.get("verification") or "v3" not in it:
                 continue
             as_of = r["meta"].get("as_of") or us.get(h, {}).get("written_on") or ""
-            out.append({"id": h, "sample": f"calibration_{s}", "label": us.get(h, {}).get("label"), **row(it, as_of)})
+            out.append({"id": h, "sample": f"calibration_{s}", "label": us.get(h, {}).get("label"), **row(it, as_of, h)})
     for h, r in json.loads((PROS / "run_60.json").read_text()).items():
         it = r["items"][0]
         if not it.get("card") or not it.get("verification") or "v3" not in it:
             continue
-        out.append({"id": h, "sample": "prospective", "label": None, **row(it, r["meta"].get("as_of") or "")})
+        out.append({"id": h, "sample": "prospective", "label": None, **row(it, r["meta"].get("as_of") or "", h)})
     return out
 
 

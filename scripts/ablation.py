@@ -68,7 +68,8 @@ def units() -> list[dict]:
             it = r["items"][0]
             if us.get(h, {}).get("label") not in (0, 1) or not it.get("card") or not it.get("verification") or "v3" not in it:
                 continue
-            card = HypothesisCard.model_validate(it["card"])
+            from hyparena.card import alternatives_d
+            card = alternatives_d.apply(h, HypothesisCard.model_validate(it["card"]))
             cvs = [ClaimVerification.model_validate(c) for c in it["verification"]["claims"]]
             alts = {a: ClaimVerification.model_validate(v) for a, v in (it.get("v3_alternatives") or {}).items()}
             out.append({"id": h, "label": us[h]["label"], "card": card, "cvs": cvs, "alts": alts, "v3": it["v3"],

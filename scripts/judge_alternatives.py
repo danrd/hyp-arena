@@ -2,6 +2,8 @@
 Paid (DeepSeek V4.1 Flash through CometAPI), one call per trial.
 
     ALLOW_PAID=1 python -m scripts.judge_alternatives run --part dev|holdout   # -> prospective/judge_alternatives_<part>.json
+    ALLOW_PAID=1 python -m scripts.judge_alternatives pool --pool calibration   # every unit -> <pool>/judge_alternatives_v2.json
+    python -m scripts.judge_alternatives merge                                  # prospective dev + holdout -> judge_alternatives_v2.json
     python -m scripts.judge_alternatives score --part dev|holdout               # weighted kappa with Argon (pack 6), free
 """
 from __future__ import annotations
@@ -112,7 +114,62 @@ def score(part: str) -> dict:
             "I_with_our_a_spearman_new_vs_argon_d": round(float(spearmanr(I_new, I_arg).statistic), 3)}
 
 
+def pool_run(pool: str) -> dict:
+    """judge_alternatives/v2 on every scored unit of the calibration pool (the method's d since 2026-11-08)."""
+    if os.environ.get("ALLOW_PAID") != "1":
+        raise SystemExit("paid: set ALLOW_PAID=1")
+    from hyparena.card.llm import ask
+    from hyparena.card.pipeline import _client
+    from scripts.v34_check import CAL
+    assert pool == "calibration"
+    texts = {}
+    for s_ in (1, 2, 3, 4, 5):
+        for l in (CAL / f"texts_{s_}.jsonl").read_text().splitlines():
+            if l.strip():
+                d = json.loads(l)
+                texts[d["id"]] = d["text"]
+    out_p = CAL / "judge_alternatives_v2.json"
+    done = json.loads(out_p.read_text()) if out_p.exists() else {}
+    todo = []
+    for s_ in (1, 2, 3, 4, 5):
+        for h, r in json.loads((CAL / f"run_{s_}_v10.json").read_text()).items():
+            it = r["items"][0]
+            if h not in done and it.get("card") and it.get("verification") and "v3" in it and h in texts:
+                todo.append((h, it))
+    client, _ = _client(CONFIG, False, len(todo) * 3 + 5)
+    for h, it in todo:
+        card, _, _ = parts(it)
+        alts = [{"id": a.id, "claim": f"{a.subject.label} - {a.relation.replace('_', ' ')} - {a.object.label}",
+                 "rationale": a.rationale} for a in card.proposed_alternatives]
+        if not alts:
+            done[h] = {"d": {}, "tokens_in": 0, "tokens_out": 0}
+            continue
+        log: list = []
+        value, fam = ask(client, role="judge_alternatives", family="deepseek", template="judge_alternatives", version="v2",
+                         variables={"registry_text": texts[h], "claim_plain": card.claim_plain, "alternatives": alts},
+                         validate=lambda v: [] if isinstance(v.get("alternatives"), list) else ['an "alternatives" list'],
+                         rounds=2, log=log)
+        done[h] = {"family": fam, "d": apply_rules(value, texts[h], [a["id"] for a in alts]),
+                   "tokens_in": sum(int(x.get("tokens_in") or 0) for x in log), "tokens_out": sum(int(x.get("tokens_out") or 0) for x in log)}
+        out_p.write_text(json.dumps(done, indent=1, ensure_ascii=False) + "\n")
+    tin, tout = sum(v["tokens_in"] for v in done.values()), sum(v["tokens_out"] for v in done.values())
+    return {"units": len(done), "usd_offpeak": round(tin * 0.15e-6 + tout * 0.6e-6, 4)}
+
+
+def merge() -> dict:
+    out = {}
+    for part in ("dev", "holdout"):
+        for h, v in json.loads((PROS / f"judge_alternatives_{part}_v2.json").read_text()).items():
+            out[h] = {"d": v["d"], "tokens_in": v["tokens_in"], "tokens_out": v["tokens_out"]}
+    (PROS / "judge_alternatives_v2.json").write_text(json.dumps(out, indent=1, ensure_ascii=False) + "\n")
+    return {"units": len(out)}
+
+
 if __name__ == "__main__":
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] in ("pool", "merge"):
+        print(json.dumps(pool_run(sys.argv[3]) if sys.argv[1] == "pool" else merge(), indent=1))
+        raise SystemExit
     ap = argparse.ArgumentParser()
     ap.add_argument("cmd", choices=["run", "score"])
     ap.add_argument("--part", choices=["dev", "holdout"], required=True)

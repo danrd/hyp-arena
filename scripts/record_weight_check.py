@@ -86,7 +86,7 @@ def pool() -> list[dict]:
     for h, r in json.loads((PROS / "run_60.json").read_text()).items():
         it = r["items"][0]
         if it.get("card") and it.get("verification") and "v3" in it:
-            card, cvs, _ = parts(it)
+            card, cvs, _ = parts(it, h)
             items.append(("prospective", h, card, cvs))
     out = []
     for sample, uid, card, cvs in items:

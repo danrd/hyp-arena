@@ -32,7 +32,7 @@ def main() -> dict:
     for h, r in json.loads((PROS / "run_60.json").read_text()).items():
         it = r["items"][0]
         if it.get("card") and it.get("verification") and "v3" in it:
-            rows.append({"id": h, "sample": "prospective", "label": None, **vals(*parts(it))})
+            rows.append({"id": h, "sample": "prospective", "label": None, **vals(*parts(it, h))})
     cal = [r for r in rows if r["label"] in (0, 1)]
 
     def auc(k):

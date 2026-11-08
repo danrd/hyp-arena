@@ -144,7 +144,8 @@ def score(n: int = 60) -> dict:
         if not it.get("card") or not it.get("verification") or "v3" not in it:
             rows[h] = {"outcome": it["outcome"]}
             continue
-        card = HypothesisCard.model_validate(it["card"])
+        from hyparena.card import alternatives_d
+        card = alternatives_d.apply(h, HypothesisCard.model_validate(it["card"]))
         claims = [ClaimVerification.model_validate(c) for c in it["verification"]["claims"]]
         alts = {k: ClaimVerification.model_validate(v) for k, v in (it.get("v3_alternatives") or {}).items()}
         e = rules_v32.evaluate(card, claims, alts, v36=True)
