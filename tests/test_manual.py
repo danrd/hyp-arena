@@ -68,7 +68,7 @@ def test_manual_worked_example_is_what_the_code_gives(monkeypatch):
     e3 = ev([ClaimVerification(id="c2", counterevidence=[rec(6, "animal", n=40, effect="large")])])
     assert f"| S {e3.links['c2'][0]:.3f} | | {e3.P:.3f} | {e3.support_share:.3f} |" in text
     from hyparena.card import aspid_v3
-    pts = {k: ({"P": x.P, "scope": x.scope, "I": x.I, "headroom_I": x.I, "gate": "pass"}, {"support_share": x.support_share}) for k, x in (("a", e), ("b", e2))}
+    pts = {k: ({"P": x.P, "scope": x.scope, "I": x.I, "headroom_I": x.I, "gate": "pass"}, {"support_share": x.support_share, "chain_state": x.chain_state}) for k, x in (("a", e), ("b", e2))}
     for prof in ("evidence", "funding"):
         r = aspid_v3.rank(pts, prof, K=10000)
         assert r.expected["b"] > r.expected["a"]                     # support found: the score rises under every profile
@@ -94,9 +94,9 @@ def test_manual_worked_example_v34(monkeypatch):
     assert nv.novelty(c, cvs, e) == "new_context" and "Novelty: new context" in text
     from hyparena.card import aspid_v3
     pts = {k: ({"P": x.P, "scope": x.scope, "I": x.I, "headroom_I": x.I, "gate": "pass"},
-               {"support_share": x.support_share, "N": "new_context"}) for k, x in (("a", e), ("b", e2))}
+               {"support_share": x.support_share, "chain_state": x.chain_state, "N": "new_context"}) for k, x in (("a", e), ("b", e2))}
     for prof, (p, ids) in aspid_v3.load().items():
-        if "support_share" not in ids:
-            continue                                                 # frontier leaves support out on purpose
+        if "support_share" not in ids and "chain_state" not in ids:
+            continue
         r = aspid_v3.rank(pts, prof, K=10000)
         assert r.expected["b"] > r.expected["a"]                     # support found: the score rises

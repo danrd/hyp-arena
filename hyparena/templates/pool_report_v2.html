@@ -31,7 +31,7 @@
     <div class="max-w-7xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
       <div class="min-w-0">
         <div class="flex flex-wrap items-center gap-2">
-          <span id="hdr-badge" class="text-[11px] uppercase tracking-widest px-2 py-0.5 bg-emerald-800 rounded text-emerald-100 font-semibold">Метод v3.4 · АСПИД</span>
+          <span id="hdr-badge" class="text-[11px] uppercase tracking-widest px-2 py-0.5 bg-emerald-800 rounded text-emerald-100 font-semibold">Метод v3.5 · АСПИД</span>
           <span id="hdr-meta" class="text-xs text-emerald-200"></span>
         </div>
         <h1 id="hdr-title" class="serif-title text-base md:text-lg font-bold mt-0.5"></h1>
@@ -166,6 +166,7 @@
             <ul>
               <li><b>F / A</b> — суммы весов «за» и «против».</li>
               <li><b>Сила S</b> = (1 + cF) / (2 + c(F + A)), c = 6.67: 0.5 без данных, 0.83 при F = 0.6, около 0.5 при равных «за» и «против». В скобках — 90% интервал.</li>
+              <li><b>Состояние цепочки</b> (v3.5, главный показатель в профилях) = среднее по звеньям величины 2S − 1: −1 — данные против, 0 — ничего не известно или «за» и «против» уравновешены, +1 — подтверждено. Нулевой результат маленького исследования весит по его мощности.</li>
               <li><b>Неопровергнутость R</b> = (1 + cF) / (1 + cF + cA): 1, пока данных «против» нет. <b>P</b> — произведение R по звеньям (каскад пути — одно место, параллельные исходы — основной). P = 1 значит «против ничего не найдено», а не «гипотеза верна».</li>
               <li><b>Подтверждённость</b> — средняя опора звеньев: max(0, 2(S − 0.5)); 0 без данных, 0.67 при умеренной опоре, около 1 при сильной.</li>
             </ul>
@@ -304,7 +305,7 @@
     // ---------- 1. ranking
     function rankHead() {
       const H = [['place', 'Место'], [null, 'Гипотеза и статус'], ['score', 'Оценка'], ['room', 'Запас'], ['top5', 'Место / топ-5'], ['N', 'Новизна'],
-        ['P', 'P'], ['support_share', 'Подтв.'], ['I', 'I'], ['I_headroom', 'Запас I'], ['W', 'Размах'], [null, 'Реализ. / ИИ / Кон. точка'], [null, '']];
+        ['chain_state', 'Состояние'], ['I', 'I'], ['I_headroom', 'Запас I'], ['W', 'Размах'], [null, 'Реализ. / ИИ / Кон. точка'], [null, '']];
       document.getElementById('rank-head').innerHTML = H.map(([k, l]) => `<th class="py-2 px-2 whitespace-nowrap">${k ? tipK(k, l) :
         (l === 'Реализ. / ИИ / Кон. точка' ? tip(TIPS.feasibility + ' · ' + TIPS.ai_role + ' · ' + TIPS.endpoint_clinical, l) :
          l === 'Гипотеза и статус' ? tip('Идентификатор, название и статус строки: исходная, доработанная версия или свободная эволюция; флаг сдвига к известному.', l) : l)}</th>`).join('');
@@ -337,8 +338,7 @@
           <td class="py-2.5 px-2 font-semibold ${room > 0.05 ? 'text-emerald-800' : 'text-stone-500'}">${tip('Запас по профилям: ' + PROFS.map(p => `${p.label} +${f(r.room[p.key])}`).join(', '), (room > 0.0005 ? '+' : '') + f(room))}${roomMark}</td>
           <td class="py-2.5 px-2 text-stone-700 whitespace-nowrap">${a.place}/${a.of} · ${f(a.p_top5, 2)}</td>
           <td class="py-2.5 px-2">${novChip(r.N)}${r.N_pmid ? `<button data-pmid="${r.N_pmid}" class="block text-[10px] text-blue-800 hover:underline font-semibold mt-0.5">PMID ${r.N_pmid}</button>` : ''}</td>
-          <td class="py-2.5 px-2 font-bold ${r.P < 0.999 ? 'text-red-700' : ''}">${tip(pTip, f(r.P))}</td>
-          <td class="py-2.5 px-2">${f(r.support_share)}</td>
+          <td class="py-2.5 px-2 font-bold ${r.chain_state < -0.05 ? 'text-red-700' : r.chain_state > 0.05 ? 'text-emerald-800' : 'text-stone-600'}">${tip(pTip + ' · подтверждённость ' + f(r.support_share) + ' · состояние = среднее по звеньям (2S − 1)', (r.chain_state > 0 ? '+' : '') + f(r.chain_state, 2))}</td>
           <td class="py-2.5 px-2">${f(r.I)}</td>
           <td class="py-2.5 px-2 ${r.I_headroom && r.I_headroom > r.I + 0.005 ? 'text-emerald-800' : 'text-stone-400'}">${f(r.I_headroom)}</td>
           <td class="py-2.5 px-2">${esc(nm('scope', r.W))}</td>
@@ -400,7 +400,7 @@
                 ${(p.flags || []).map(fl => tip(fl.detail || TIPS.flags, '⚑ ' + esc(fl.name), 'px-2 py-0.5 rounded bg-stone-200 text-stone-800 text-[11px]')).join('')}
               </div>
               <h3 class="serif-title font-bold text-base">${esc(p.title)}</h3>
-              <div class="text-xs text-stone-600">P ${f(p.P)} · подтверждённость ${f(p.support_share)} · I ${f(p.I)} (запас ${f(p.I_headroom)}) · размах ${esc(nm('scope', p.W))} ·
+              <div class="text-xs text-stone-600">состояние цепочки ${(p.chain_state > 0 ? '+' : '') + f(p.chain_state, 2)} · P ${f(p.P)} · подтверждённость ${f(p.support_share)} · I ${f(p.I)} (запас ${f(p.I_headroom)}) · размах ${esc(nm('scope', p.W))} ·
                 запас улучшения: ${PROFS.map(pr => `${pr.label} +${f(p.room[pr.key])}`).join(', ')}${p.room_N && p.room_N[0] !== p.room_N[1] ? ` (↓ новизна → ${esc(nm('novelty', p.room_N[1]))})` : ''}</div>
             </div>
             <div class="flex items-center gap-3"><div class="text-right text-xs space-y-0.5">${PROFS.map(pr => `<div class="${pr.key === curProfile ? 'font-bold text-[#1E4D40]' : 'text-stone-600'}">${scoreLine(pr)}</div>`).join('')}</div>

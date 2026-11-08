@@ -187,8 +187,13 @@ class V32Result:
 
 def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
              alt_verifications: Optional[dict[str, ClaimVerification]] = None, c: float = C_ANCHOR,
-             fold: bool = False, neutral_unverified: bool = False, v34: bool = False, null_power: bool = False) -> V32Result:
+             fold: bool = False, neutral_unverified: bool = False, v34: bool = False, null_power: bool = False,
+             v35: bool = False) -> V32Result:
+    """v3.5 (2026-11-08, specs/link-scoring-2026-11-08.yaml) = v3.4 + a null weighted by its power; the profiles use the
+    signed chain state (mean of 2S - 1 over the slots) instead of P and the support share."""
     global NULL_POWER
+    if v35:
+        v34, null_power = True, True
     NULL_POWER = null_power
     try:
         return _evaluate(card, ver_claims, alt_verifications, c, fold, neutral_unverified, v34)

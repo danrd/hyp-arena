@@ -22,9 +22,9 @@ TEMPLATE = Path(__file__).resolve().parent / "templates" / "pool_report_v2.html"
 
 PROFILE_LABEL = {"evidence": "Доказательность", "funding": "Финансирование", "frontier": "Фронтир"}
 PROFILE_ABOUT = {
-    "evidence": "Насколько механизм обоснован литературой сейчас: неопровергнутость, затем подтверждённость, затем что даст эксперимент.",
-    "funding": "Готовность к финансированию: неопровергнутость, реализуемость, затем рост внимания, роль ИИ и новизна.",
-    "frontier": "Поисковые программы (ARPA-H, Foresight, ранние R&D): новизна первой, затем неопровергнутость, затем эксперимент и его цена. Подтверждённость не учитывается: она вознаграждает известное.",
+    "evidence": "Насколько механизм обоснован литературой сейчас: состояние цепочки (опровергнуто / неизвестно / подтверждено), затем что даст эксперимент, затем размах.",
+    "funding": "Готовность к финансированию: состояние цепочки, реализуемость, затем рост внимания, роль ИИ и новизна.",
+    "frontier": "Поисковые программы (ARPA-H, Foresight, ранние R&D): новизна первой, затем состояние цепочки, затем эксперимент и его цена.",
 }
 
 
@@ -89,7 +89,7 @@ def data(rep: dict) -> dict:
         lowers = sorted({i for p in profiles for i, _ in x["contrib"][p]["down"]})
         room = x.get("room") or {}
         base.update({
-            "plain": x.get("plain"), "P": x["P"], "support_share": x.get("support_share"), "N": x.get("N"), "N_pmid": x.get("N_pmid"),
+            "plain": x.get("plain"), "P": x["P"], "support_share": x.get("support_share"), "chain_state": v.get("chain_state"), "N": x.get("N"), "N_pmid": x.get("N_pmid"),
             "I": x["I"], "I_headroom": v.get("I_headroom"), "W": x["scope"], "feasibility": v.get("feasibility"),
             "endpoint": x.get("endpoint_clinical"), "ai_role": x.get("ai_role") or "none", "trend": x.get("trend_pubmed"),
             "best_design": v.get("best_design_outcome"), "independent": v.get("independent_outcome"), "flags": flag_details(x),
