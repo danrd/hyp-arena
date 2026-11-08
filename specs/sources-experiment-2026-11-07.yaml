@@ -43,3 +43,14 @@ result_arm_C_and_gold:   # scripts/argon_check.py -> calibration/argon_pack3_che
     literature makes the description better (numbers, populations, the papers we miss), not the forecast. Our extraction is
     sound on stance, design, n and comparison (84-93% agreement); the weak fields are the intervention match (55%, ours too
     narrow) and numeric effects (we miss them in 46% of records).
+
+fixes_2026_11_08:   # user decision: fix the intervention match and the numeric effects
+  code_effect_parser: >-
+    ratio "hazard ratio [HR], 0.82"; percent "Mean Δ% = 40.4%", "ΔEG/CG: 29.67%", "increases from baseline of 21%"; a raw
+    difference with its 95% CI and n -> d (effect_class.d_from_ci), used in the record weight and the forecast. On the saved
+    records: agreement with Argon on "has a numeric effect" 46 -> 60 of 86; trials with a numeric expected effect 31 -> 32
+    of 73; P AUC unchanged (0.595). The rest of the gap is phrases the verifier did not copy.
+  verifier_prompt_v10: >-
+    intervention match judged at the level at which the claim names the intervention (a kind -> any study of that kind is
+    exact); the effect phrase must not be empty when the abstract gives any number. configs/v3-flash-n11*.yaml use it. Not
+    run yet: checked by the rerun of arm A (paid, price before the run).
