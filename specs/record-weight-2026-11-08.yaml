@@ -418,3 +418,18 @@ reread_v11:   # user decision 2026-11-08 ("do 1-4", item 4); written before any 
   adopt_if: >-
     the v11 records replace the v9 records in the method when the class-label kappa with Argon rises and R2 and R3 are not
     worse by more than 0.03; the rob factor is adopted when it is not worse by more than 0.03 on R2 and R3 (GRADE clause)
+reread_v11_result:   # 2026-11-08; calibration/reread_v11_analysis.json; python -m scripts.reread_analysis
+  run: "177 calibration + 149 prospective chain claims re-read on the same papers; 4.15 M tokens in, 0.35 M out: 0.84 USD (plus a 3-claim pilot, 0.009)"
+  class_label: >-
+    kappa of the context label with Argon (pack 5 records; claim-qualifier rule for both) 0.17 (v9) -> 0.22 (v11), class
+    share 0.77 -> 0.69; with the 40 hand labels 0.38 -> 0.47 (34 of 40 records found again)
+  blinding: "v11 blinding agrees with Argon on 73 of 77 trial records (95%); 209 of 376 trial records are not_reported, 69 double-blind, 23 open"
+  novelty: "weighted kappa of N with Argon 0.14 (v9) -> 0.26 (v11); Argon nearer the known in 21 -> 15 trials, farther in 0; still overstated"
+  references: "R2 0.702 (v9, 195 targets) -> 0.658 (v11, 185 targets); R3 0.593 -> 0.593; R4 tau-b 0.099 -> 0.087 (60 pairs matched)"
+  rob: "with the verifier's blinding: 12 records for hit (open or not reported, subjective outcome); R2 0.656, R3 0.598: neutral"
+  reader_noise: "the evidence balance of the 59 prospective trials moves with the re-read: Spearman 0.76 between v9 and v11 records"
+  decision_rule: >-
+    not met: the class kappa rises, but R2 falls by 0.044 (> 0.03). The v11 records do not replace v9 in the method. The
+    fall cannot be told apart from reader noise: a re-read of the same papers with v9 was not run (it would measure that
+    noise, about 0.84 USD)
+  keep: "the blinding field of v11 is reliable (95% with Argon) and is kept in the prompt; the rob factor stays out (neutral, few hits)"
