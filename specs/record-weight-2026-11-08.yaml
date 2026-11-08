@@ -277,3 +277,43 @@ step6_step7_definitions:   # written 2026-11-08 before steps 6-7 were computed (
     count_diff: "s = (nF - nA) / (nF + nA + 1), n = independence groups with a usable record on that side"
     fold_rest: "0 and 1 against the current 1/4"
     r3: "the chain state with the link's S replaced accordingly; the gate unchanged"
+step6:   # python -m scripts.record_weight_check step67 -> calibration/record_weight_step67.json; verifier context (claim_qualifiers about -0.01 on R2, same reading)
+  trial_records: "392 trial records on the outcome link: blinded 129, open stated 10, no words 253; subjective outcome 70 (unblinded subjective 50)"
+  R2_R3_R1:   # vs the candidate (R2 0.689, R3 0.589, R1 0.756)
+    rob_words3:            [0.687, 0.584, 0.778]
+    rob_words3_both_sides: [0.693, 0.594, 0.778]
+    rob_subjective:        [0.691, 0.583, 0.778]
+    subgroup_only:         [0.695, 0.578, 0.756]
+  reading: >-
+    no risk-of-bias variant moves R2 or R3 by more than 0.01 against the candidate (every paired interval contains 0); all
+    pass the GRADE clause (required by the frame, not worse by more than 0.03). Abstract words leave 65% of trial records
+    "no words": the factor is mostly "unknown", so a verifier field is needed for it to mean much. subgroup_only lowers R3
+    to 0.578, beyond the constraint against the current rules (0.579): not adopted.
+step7:   # on the candidate weights
+  R2_R3_R1:
+    beta_current:  [0.689, 0.589, 0.756]
+    loglr_sum:     [0.712, 0.595, 0.733]
+    best_evidence: [0.685, 0.565, 0.311]
+    count_diff:    [0.653, 0.622, 0.822]
+    fold_rest_0:   [0.689, 0.589, 0.756]
+    fold_rest_1:   [0.689, 0.588, 0.756]
+  dR2_vs_candidate: {loglr_sum: [0.003, 0.049], best_evidence: [-0.063, 0.048], count_diff: [-0.088, 0.018]}
+  reading: >-
+    the sum of log likelihood ratios (for minus against, then tanh) is the only variant of the whole check whose paired
+    interval excludes 0 (+0.023 on R2) and it also raises R3; with about twenty intervals computed, one excluding 0 can be
+    chance, so it is read as "not worse and clearer", which the rules already suffice for. Best evidence fails R3 (0.565).
+    Counting papers is lowest on R2 (0.653) but highest on R3 (0.622): on trial outcomes the weights still add nothing
+    over counting. The fold rest (0, 1/4, 1) is moot.
+final_combinations:   # vs the current rules; R2 / dR2 95% CI / R3 / R1 / Spearman of the 186 link states vs current
+  verifier_context:
+    candidate_loglr:                [0.712, [0.011, 0.092], 0.595, 0.733, 0.911]
+    candidate_rob_subjective_loglr: [0.717, [0.016, 0.097], 0.594, 0.778, 0.909]
+    candidate_rob_words3_both_loglr: [0.710, [0.010, 0.087], 0.606, 0.800, 0.899]
+  claim_qualifiers_context:
+    candidate_loglr:                [0.702, [0.009, 0.091], 0.593, 0.756, 0.918]
+    candidate_rob_subjective_loglr: [0.706, [0.015, 0.094], 0.593, 0.778, 0.917]
+    candidate_rob_words3_both_loglr: [0.698, [0.009, 0.081], 0.604, 0.800, 0.903]
+  reading: >-
+    the simplified GRADE-shaped weights with the log-likelihood fold beat the current rules on R2 by about 0.045 (interval
+    above 0) and stay within the R3 constraint (0.594-0.606 vs 0.609); the link order moves moderately (rho about 0.90).
+    Decision on adoption and on the risk-of-bias variant: the user (step 8).

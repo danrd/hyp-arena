@@ -5,6 +5,7 @@ PubMed E-utilities for years and abstracts, cached in data/cache/pubmed).
     python -m scripts.record_weight_check step2-sample   # -> calibration/record_weight_context_check.jsonl (to label by hand)
     python -m scripts.record_weight_check step2-score    # agreement of the hand labels with the verifier
     python -m scripts.record_weight_check step4          # each factor: drop / flatten / coarsen (menu step4_factors)
+    python -m scripts.record_weight_check step67         # risk of bias and subgroup on top of the candidate; the fold
     python -m scripts.record_weight_check step3          # references R1, R2 (years from PubMed), R3; current rules, both context variants
 """
 from __future__ import annotations
@@ -340,6 +341,32 @@ def step3() -> dict:
 
 
 _WF, _RW = r32.weight_factors, r32.record_weight
+CANDIDATE = "design_grade3+comparison_2+context_2+effect_rate_up"
+BLIND = re.compile(r"double[- ]blind|triple[- ]blind|placebo|sham|assessor[- ]blind|blinded assessor|blinded outcome")
+OPEN = re.compile(r"open[- ]label|unblinded|non[- ]blinded|not blinded|single[- ]arm|no blinding")
+SUBJ = re.compile(r"quality of life|\bqol\b|pain|fatigue|self[- ]report|questionnaire|perceived|mood|depress|anxiety|"
+                  r"sleep quality|satisfaction|well[- ]?being|psqi|sf-36|\bvas\b")
+_ABS: dict = {}
+
+
+def blinding(rec) -> str:
+    """blinded / open / none, from the PubMed title and abstract (spec step6_step7_definitions.words)."""
+    m = re.fullmatch(r"PMID:(\d+)", rec.record_id or "")
+    if not m:
+        return "none"
+    p = m.group(1)
+    if p not in _ABS:
+        from hyparena.tools import pubmed
+        _ABS.update({k: (v.get("title", "") + " " + v.get("abstract", "")).lower() for k, v in pubmed.fetch([p]).items()})
+    a = _ABS.get(p, "")
+    return "blinded" if BLIND.search(a) else "open" if OPEN.search(a) else "none"
+
+
+def subjective(rec, claim) -> bool:
+    txt = " ".join([str(claim.qualifiers.get("measure", "")), claim.object.label, rec.quote]).lower()
+    return bool(SUBJ.search(txt))
+
+
 GRADE3 = {"rct": 1.0, "meta_analysis": 1.0, "non_randomised": 0.5, "observational": 0.5}
 
 
@@ -371,6 +398,14 @@ def weight_variant(rec, claim, against: bool, var: str) -> float:
             v["comparison"] = 1.0 if (rec.comparison == "between_groups") else 0.5
         elif one == "context_2":
             v["context"] = 0.5 if f["context"][0] == "adjacent" else 1.0
+        elif one.startswith("rob_") and not pre and r3.record_design(rec) in ("rct", "non_randomised"):
+            b = blinding(rec)
+            if one == "rob_words3" and not against or one == "rob_words3_both_sides":
+                v["rob"] = {"blinded": 1.0, "open": 0.5, "none": 2 / 3}[b]
+            elif one == "rob_subjective" and not against and b != "blinded" and subjective(rec, claim):
+                v["rob"] = 0.5
+        elif one == "subgroup_only" and not against and "subgroup_only" in rec.flags:
+            v["subgroup"] = 0.5
     return math.prod(v.values())
 
 
@@ -400,6 +435,98 @@ def paired_diff(units_: list[dict], s_new, s_old, n: int = 2000, seed: int = 1) 
             vals.append(a - b)
     vals.sort()
     return [round(vals[int(0.025 * len(vals))], 3), round(vals[int(0.975 * len(vals)) - 1], 3)]
+
+
+FOLDS = ("beta_current", "loglr_sum", "best_evidence", "count_diff", "fold_rest_0", "fold_rest_1")
+LAMBDA = 2 * math.atanh(2 / 3) / 0.6
+
+
+def s_of(F: float, A: float, mode: str, c: float = r32.C_ANCHOR) -> float:
+    if mode == "loglr_sum":
+        return math.tanh(LAMBDA * (F - A) / 2)
+    if mode == "best_evidence":
+        return F if F > A else -A if A > F else 0.0
+    if mode == "count_diff":
+        return (F - A) / (F + A + 1)
+    return 2 * (c * F + 1) / (c * (F + A) + 2) - 1
+
+
+def link_state_mode(rows: list[dict], mode: str) -> float:
+    side = {"for": defaultdict(list), "against": defaultdict(list)}
+    for r in rows:
+        side[r["side"]][r["group"]].append(r["w"])
+    rest = {"fold_rest_0": 0.0, "fold_rest_1": 1.0}.get(mode, r32.FOLD_REST)
+    if mode == "count_diff":
+        F, A = len(side["for"]), len(side["against"])
+    elif mode == "best_evidence":
+        F, A = (max((max(ws) + rest * (sum(ws) - max(ws)) for ws in side[k].values()), default=0.0) for k in ("for", "against"))
+    else:
+        F, A = (sum(max(ws) + rest * (sum(ws) - max(ws)) for ws in side[k].values()) for k in ("for", "against"))
+    return s_of(F, A, mode)
+
+
+@contextmanager
+def fold_rule(mode: str):
+    """R3 under a fold: side_weight and strength of rules_v32 patched (the gate is computed by rules_v3, unchanged)."""
+    sw, st, fr = r32.side_weight, r32.strength, r32.FOLD_REST
+    if mode in ("fold_rest_0", "fold_rest_1"):
+        r32.FOLD_REST = {"fold_rest_0": 0.0, "fold_rest_1": 1.0}[mode]
+    if mode == "count_diff":
+        r32.side_weight = lambda recs, claim, against, fold, v34=False: float(len(
+            {r32.group_key(r) for r in recs if r32.record_weight(r, claim, against, v34) > 0}))
+    if mode == "best_evidence":
+        def best(recs, claim, against, fold, v34=False):
+            g = defaultdict(list)
+            for r in recs:
+                g[r32.group_key(r)].append(r32.record_weight(r, claim, against, v34))
+            return max((max(ws) + r32.FOLD_REST * (sum(ws) - max(ws)) for ws in g.values()), default=0.0)
+        r32.side_weight = best
+    if mode in ("loglr_sum", "best_evidence", "count_diff"):
+        def strength(F, A, c=r32.C_ANCHOR):
+            S = (1 + s_of(F, A, mode, c)) / 2
+            return S, S, S
+        r32.strength = strength
+    try:
+        yield
+    finally:
+        r32.side_weight, r32.strength, r32.FOLD_REST = sw, st, fr
+
+
+STEP6 = (CANDIDATE, CANDIDATE + "+rob_words3", CANDIDATE + "+rob_words3_both_sides", CANDIDATE + "+rob_subjective",
+         CANDIDATE + "+subgroup_only")
+
+
+def step67() -> dict:
+    out = {}
+    for cv in VARIANTS:
+        with context_variant(cv):
+            rows = with_years(pool())
+            refs = build_refs(rows)
+            cnt = Counter((blinding(r["rec"]), subjective(r["rec"], r["claim_obj"])) for r in rows
+                          if not r["pre"] and r3.record_design(r["rec"]) in ("rct", "non_randomised"))
+            res = {"trial_records_blinding_x_subjective": {f"{b}|{'subjective' if s_ else 'objective'}": n for (b, s_), n in cnt.items()}}
+
+            def scorer(var, mode="beta_current"):
+                ws = {id(r): weight_variant(r["rec"], r["claim_obj"], r["side"] == "against", var) for r in rows}
+                return lambda u: link_state_mode([{**r, "w": ws[id(r)]} for r in u["records"]], mode)
+            cur = scorer("current")
+            base = scorer(CANDIDATE)
+            for var in ("current", *STEP6):
+                f = scorer(var)
+                with weight_rule(var):
+                    r3a = r3_auc()
+                res[var] = {"R2": auc(refs["R2"], f), "R1": auc(refs["R1"], f), "R3": r3a,
+                            "dR2_vs_current": None if var == "current" else paired_diff(refs["R2"], f, cur),
+                            "dR2_vs_candidate": None if var in ("current", CANDIDATE) else paired_diff(refs["R2"], f, base)}
+            for mode in FOLDS[1:]:
+                f = scorer(CANDIDATE, mode)
+                with weight_rule(CANDIDATE), fold_rule(mode):
+                    r3a = r3_auc()
+                res["fold:" + mode] = {"R2": auc(refs["R2"], f), "R1": auc(refs["R1"], f), "R3": r3a,
+                                       "dR2_vs_candidate": paired_diff(refs["R2"], f, base)}
+            out[cv] = res
+    (CAL / "record_weight_step67.json").write_text(json.dumps(out, indent=1, ensure_ascii=False) + "\n")
+    return out
 
 
 def step4(variants=STEP4) -> dict:
@@ -432,5 +559,5 @@ def step4(variants=STEP4) -> dict:
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "step1"
     res = {"step1": step1, "step2-sample": lambda: f"{len(step2_sample())} records -> {CHECK}", "step2-score": step2_score,
-           "step3": step3, "step4": step4}[cmd]()
+           "step3": step3, "step4": step4, "step67": step67}[cmd]()
     print(json.dumps(res, indent=1, ensure_ascii=False, default=str))
