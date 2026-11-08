@@ -1,0 +1,24 @@
+id: reading-gold-2026-11-08
+written_on: 2026-11-08
+status: definitions fixed before the pack was built or sent
+why: >-
+  The reading, not the search, loses most of the key papers (pack 8 diagnostics: 64% of the lost ones are silently skipped).
+  The earlier relevance gold had 42 pairs (2026-11-05). This pack gives a larger gold of "does this abstract report a
+  finding on this claim", to measure the reader's recall and precision for the original reading, a second reading and the
+  cross-link pilot.
+pack: Argon pack 9 (longevity-kg reviews/argon-2026-11-08/pack_9_task.json; hidden key pack_9_key.json)
+sample: >-
+  10 chain links from the 30 pilot trials (pilot_crosslink), the first 10 by SHA-1 of "gold|<NCT>|<link>" among links whose
+  own search read at least 10 papers; every paper of the link's own search log (about 20 per link, about 200 pairs; cut from 15 links to keep the pack at the size of earlier ones)
+shown: "the claim with its qualifiers, T, and each paper's PMID, title and abstract. Not shown: our records, stances, weights"
+asked: >-
+  per pair: finding = for | against | none (a result of the study itself on the claim's relation, in any population or
+  with a related intervention; background and other outcomes are none); a verbatim quote of the finding; design;
+  intervention_match exact | class | other
+measures:
+  recall: "share of Argon's for/against pairs that a reading turned into a record of that link (any weight), per reading: original, second v9, pilot"
+  precision: "share of a reading's records on these pairs that Argon calls for/against"
+  stance: "agreement on for vs against where both have a finding"
+  skipped: "Argon's findings the reading did not mention at all (from the saved replies where available)"
+reading:
+  note: "Argon is a second reader, not a gold standard; with recall below 0.6 on this gold the reader is the bottleneck, as pack 8 suggested"
