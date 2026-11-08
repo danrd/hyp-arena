@@ -345,3 +345,28 @@ decision_claim_qualifiers:   # user, 2026-11-08
   adopted: "the claim-qualifier context rule is part of v3.5 (rules_v32.context_v34; the earlier rule kept as context_v34_verifier); manual section 4, reading rule 5"
   prospective: "rescored: chain state changed for 7 of 59 scored trials; ASPID order Spearman 1.0 / 0.998 / 1.0 (evidence / funding / frontier) against the scores before"
   this_check: "steps 1, 2 and pack 5 stay on the verifier's label (as recorded); steps 3-7 report both"
+R4_result:   # Argon pack 5 answer 2026-11-08 (longevity-kg reviews/argon-2026-11-08/pack_5_answer.json); scripts/pack5_analysis.py
+  answers: "95 items, 132 records; Argon never answered 'equal' (0 of 80); the 15 swapped repeats agree 15 of 15"
+  order:
+    v35:       {tau_b: 0.043, concordance_non_tied: 0.522, n: 69, per_stratum: {design: 3/13, precision: 7/13, effect: 8/13, comparison: 8/13, context: 7/13, near_tie: 3/4}}
+    candidate: {tau_b: 0.180, concordance_non_tied: 0.587, n: 63, per_stratum: {design: 5/12, precision: 7/12, effect: 8/12, comparison: 7/12, context: 8/9, near_tie: 2/6}}
+  design_stratum: >-
+    7 of the 13 design pairs are a meta-analysis against an RCT: Argon puts the meta-analysis first in all 7, v3.5 puts the
+    RCT first in all 7 (meta-analysis 6/7, or 2/3 on the preclinical scale when the claim lacks species human). Below 0.5
+    for both weightings: the reader orders this level the other way, as GRADE does
+  main_reasons: {design: 31, directness_intervention: 18, finding_misread: 7, directness_outcome: 7, directness_population: 6, sample_size: 4, comparison: 4, risk_of_bias: 2, effect_size: 1}
+  finding_misread: "10 of 80 pairs name a misread finding (quote or for / against) of our reader"
+  labels:
+    design: "127 of 132 agree with the verifier"
+    n_total: "122 of 132 agree; 7 where the verifier had none and Argon a number"
+    context: >-
+      kappa 0.10 with the verifier (agreement 0.39); of the verifier's 101 'class' Argon calls 41 adjacent, 37 class, 20
+      exact, 3 none: Argon reads class far less often (43 of 132), as the hand check of step 2 did
+    blinding_trials: "abstract 'no words' -> Argon not_reported 40, open 7, assessor-blind 5, single-blind 4; 'blinded' words -> double 13, assessor 6, single 3, not_reported 7"
+    subjective: "the word rule flags 29, Argon agrees on 13 (16 false positives); Argon finds none the rule missed"
+  reading: >-
+    with v3.5 the weights order pairs of records no better than chance against an outside reader (tau-b 0.04); the
+    candidate does better (0.18, concordance 0.59): the candidate is not contradicted, it is preferred. The clearest single
+    disagreement is the meta-analysis below the RCT, which the candidate's GRADE-3 design removes (both 1, n decides). The
+    reader leans on design and directness of the intervention, little on size or effect; the context label of the verifier
+    is the weakest field (kappa 0.10). The subjective-outcome word rule is too loose to be a factor.
