@@ -62,3 +62,19 @@ pilot_crosslink:   # user decision 2026-11-08 ("run", about 0.9 USD); written be
   decision: >-
     go to both pools in full (then R2 / R3 under the 0.03 rule) when recall at least doubles and the link Spearman with
     pack 8 rises by more than the gap between the two v9 readings
+pilot_crosslink_result:   # 2026-11-08; prospective/pilot_crosslink.json, calibration/pilot_crosslink.json; python -m scripts.pilot_crosslink score
+  run: "102 links of 30 trials, 57.4 papers read per link; DeepSeek 4.46 M in / 0.29 M out, Gemini 0.26 M / 0.01 M: 1.34 USD (named about 0.9: the union was larger than estimated)"
+  same_30_trials:   # recall of pack-8 key papers on their link / link Spearman / trial Spearman / counting papers per link / mean balance
+    original:              "0.16 (53/327) / 0.19 / 0.44 / 1.9 / -0.03"
+    second_v9:             "0.15 (50/327) / 0.22 / 0.47 / 1.8 / 0.01"
+    pilot_with_relabel:    "0.19 (62/327) / 0.26 / 0.28 / 2.8 / 0.08"
+    pilot_without_relabel: "0.24 (77/327) / 0.29 / 0.48 / 3.6 / 0.16"
+  decision_rule: >-
+    not met: recall rises 1.5x (0.16 -> 0.24), not 2x; the link Spearman rises by 0.10, more than the gap between two v9
+    readings (0.03). No run on both pools.
+  reading: >-
+    cross-link reading in small batches helps (more records, more key papers, better agreement per link) but far less than
+    the 46% of key papers read only for another link promised: the reader still leaves three key papers in four without a
+    record even when it reads them for the right link. The split reader lowers recall further (it drops records as other
+    interventions) and spoils the trial order (0.48 -> 0.28): not adopted. The bottleneck is the reader's recall on what it
+    reads; pack 9 (a per-paper gold on 10 of these links) will say whether the papers it skips hold findings at all.
