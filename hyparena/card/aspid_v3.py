@@ -21,8 +21,8 @@ P_FLOOR = 0.01                    # P below this (a long unsupported chain) sits
 SPECS = {
     "P": IndicatorSpec("P", "cardinal", bounds=(P_FLOOR, 1.0), log=True, note="plausibility, product over the chain"),
     "W": IndicatorSpec("W", "ordinal", levels=("local", "organ", "hallmark"), note="scope from supported links"),
-    "I": IndicatorSpec("I", "cardinal", bounds=(1 / 3, 1.0), log=True, note="informativeness of the stated experiment"),
-    "I_headroom": IndicatorSpec("I_headroom", "cardinal", bounds=(1 / 3, 1.0), log=True,
+    "I": IndicatorSpec("I", "cardinal", bounds=(0.0, 1.0), note="informativeness of the stated experiment (v3.4: 0-1, linear)"),
+    "I_headroom": IndicatorSpec("I_headroom", "cardinal", bounds=(0.0, 1.0),
                                 note="informativeness if the experiment cut off every supported alternative"),
     "feasibility": IndicatorSpec("feasibility", "cardinal", bounds=(0.0, 1.0),
                                  note="section 9.4: system, duration, planned n, readiness of the intervention (v3_extra)"),

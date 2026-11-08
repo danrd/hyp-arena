@@ -29,7 +29,8 @@ def evaluate(card: HypothesisCard, cvs: list[ClaimVerification], alts: dict) -> 
 
 
 def axes(e: r32.V32Result, headroom_I: Optional[float], extras: dict) -> tuple[dict, dict]:
-    return ({"P": e.P, "scope": e.scope, "I": e.I, "headroom_I": headroom_I if headroom_I is not None else e.I, "gate": e.gate},
+    h = e.headroom_I if e.headroom_I is not None else (headroom_I if headroom_I is not None else e.I)   # v3.4: own 0-1 headroom
+    return ({"P": e.P, "scope": e.scope, "I": e.I, "headroom_I": h, "gate": e.gate},
             {**extras, "support_share": e.support_share})
 
 

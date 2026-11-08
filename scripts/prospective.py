@@ -160,7 +160,7 @@ def score(n: int = 60) -> dict:
                    "scope": e.scope, "ai_role": card.ai_role, "endpoint_clinical": ext["endpoint_clinical"], "trend_pubmed": ext["trend_pubmed"], "links": len(e.links), "weakest": e.weakest,
                    "support_share": e.support_share, "N": ext["N"], "leverage": ext["leverage"], "W_potential": ext["W_potential"],
                    "method": "v3.4"}
-        ax[h] = ({"P": e.P, "scope": e.scope, "I": e.I, "headroom_I": it["v3"]["headroom_I"], "gate": e.gate}, ext)
+        ax[h] = ({"P": e.P, "scope": e.scope, "I": e.I, "headroom_I": e.headroom_I, "gate": e.gate}, ext)
     for prof in aspid_v3.load():
         agg = aspid_v3.rank(ax, prof, K=10000)
         for h in (agg.expected if agg else {}):

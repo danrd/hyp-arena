@@ -161,6 +161,7 @@ class V32Result:
     weakest: str = ""
     coverage: float = 0.0                                             # share of slots with data (reported)
     support_share: float = 0.0                                        # mean support of the slots (v3.3 indicator)
+    headroom_I: Optional[float] = None                                # v3.4: I if the experiment cut off every supported alternative
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -237,6 +238,7 @@ def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
         return max(res.links[i][0] for i in sl)                         # a cascade: its best link
     res.support_share = round(sum(max(0.0, 2 * (slot_S(sl) - 0.5)) for sl in slots) / len(slots), 4) if slots else 0.0
     total = 0.0
+    total_all = 0.0
     supported = False
     for alt in card.proposed_alternatives:
         cv = (alt_verifications or {}).get(alt.id)
@@ -248,6 +250,11 @@ def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
         d = max(lv.weight("discrimination", alt.on_positive), lv.weight("discrimination", alt.on_negative))
         supported |= a > 0
         total += a * d
-    res.I = round(1 / 3 + 2 / 3 * min(1.0, total / r3.I_CAP), 4) if supported else round(1 / 3, 4)
+        total_all += a
+    if v34:                                               # 2026-11-08 (user): I on 0-1, no floor of 1/3
+        res.I = round(min(1.0, total / r3.I_CAP), 4) if supported else 0.0
+        res.headroom_I = round(min(1.0, total_all / r3.I_CAP), 4) if supported else 0.0
+    else:
+        res.I = round(1 / 3 + 2 / 3 * min(1.0, total / r3.I_CAP), 4) if supported else round(1 / 3, 4)
     res.V = round(res.P * res.I, 6) if res.gate == "pass" else 0.0
     return res

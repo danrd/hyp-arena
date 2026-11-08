@@ -122,7 +122,7 @@ def indicators(us) -> dict[str, tuple[dict, dict]]:
                     "trend_pubmed": tg.trend_pubmed(u["card"], u["as_of"])[0], "endpoint_clinical": None})
         ep = endpoint(u["id"])
         ext["endpoint_clinical"] = None if ep is None else ("biomarker", "patient_reported", "function", "clinical_event")[int(ep)]
-        ax[u["id"]] = ({"P": e.P, "scope": e.scope, "I": e.I, "headroom_I": u["v3"].get("headroom_I"), "gate": "pass"}, ext)
+        ax[u["id"]] = ({"P": e.P, "scope": e.scope, "I": e.I, "headroom_I": e.headroom_I, "gate": "pass"}, ext)
     return ax
 
 

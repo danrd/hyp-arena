@@ -72,8 +72,8 @@ TIPS = {
           "Non-refutation of the mechanism, 0 to 1 (v3.4; formerly plausibility): how far the chain is not refuted. 1 means \"nothing against was found\", not \"the hypothesis is true\". A link with no data against is 1; data against lower it, data for soften that. Support from the literature is the separate support axis, so a first modest paper on a link no longer lowers P."),
     "N": ("Новизна: насколько гипотеза далека от того, что уже спрашивали до даты оценки. Новый контекст (то же вмешательство и исход уже изучали на людях, в другой популяции или дозе) < перенос (только на другом виде) < аналог (только родственное соединение или класс) < новое сочетание (звенья известны по отдельности, цепочку целиком не проверяли) < новое звено. Неизвестно, если данных нет вовсе: отсутствие данных — не новизна.",
           "Novelty: how far the hypothesis is from what was asked before the date. New context (the same intervention and outcome already studied in humans, another population or dose) < translation (only in another species) < analog (only a related compound or class) < new combination (the links are known one by one, the chain as a whole was not tested) < new link. Unknown when there are no data at all: absence of data is not novelty."),
-    "I": ("Информативность эксперимента, от 1/3 до 1: сколько подкреплённых литературой альтернативных объяснений отсечёт заявленный эксперимент. 1/3 — ни одного.",
-          "Informativeness, 1/3 to 1: how many literature-supported alternative explanations the stated experiment rules out. 1/3: none."),
+    "I": ("Информативность эксперимента, от 0 до 1: сколько подкреплённых литературой альтернативных объяснений отсечёт заявленный эксперимент. 0 — ни одного.",
+          "Informativeness, 0 to 1: how many literature-supported alternative explanations the stated experiment rules out. 0: none."),
     "I_headroom": ("Запас информативности: какой была бы информативность, если бы эксперимент отсекал все подкреплённые альтернативы. Показывает, сколько можно выиграть, улучшив дизайн.",
                    "Room for informativeness: what it would be if the experiment ruled out every supported alternative; what a better design could add."),
     "W": ("Размах: как широко действует подтверждённая литературой часть механизма — локально, на орган или систему, на признак старения.",
@@ -267,7 +267,7 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
                    "N_pmid": nv.novelty_source(card, cvs),
                    "link_levels": nv.link_levels(card, cvs),
                    "flags": res_flags(it)}
-        values[h] = {"P": res.P, "I": res.I, "I_headroom": it["v3"].get("headroom_I"), "W": res.scope, "support_share": res.support_share, "coverage": res.coverage, "N": N,
+        values[h] = {"P": res.P, "I": res.I, "I_headroom": res.headroom_I if res.headroom_I is not None else it["v3"].get("headroom_I"), "W": res.scope, "support_share": res.support_share, "coverage": res.coverage, "N": N,
                      "endpoint_clinical": sc.get("endpoint_clinical"), "trend_pubmed": sc.get("trend_pubmed"), "ai_role": sc.get("ai_role"),
                      **{k: (it.get("extra") or {}).get(k) for k in ()}}
     # extras needed for profile contributions
