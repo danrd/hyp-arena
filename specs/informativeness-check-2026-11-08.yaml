@@ -1,0 +1,43 @@
+id: informativeness-check-2026-11-08
+written_on: 2026-11-08
+status: definitions fixed before the pack was built or sent
+why: >-
+  User request 2026-11-08: check I (informativeness of the stated experiment), the part of the method never checked by any
+  reference. I = min(1, sum a*d / 1.5) over the proposed alternatives (manual section 7): a = the alternative's support in
+  the literature (v3.6: max(0, 2 (S - 0.5))), d = what the stated experiment does to it (eliminated 1, weakened 0.5,
+  unchanged 0, the larger of the positive and the null result). Both a and d come from models (propose_alternatives,
+  check_alternatives, the verifier); nobody outside has read them. On the 59 scored prospective trials 2 of 293
+  alternatives are "eliminated", 122 "weakened"; I > 0 for 29 trials.
+cost: free in money (Argon is the user's outside reader); no model calls on our side
+pack: Argon pack 6 (longevity-kg reviews/argon-2026-11-08/pack_6_task.json; hidden key pack_6_key.json)
+
+sample: all 59 scored prospective trials (the 74 calibration trials are not used for blind checks with Argon), every proposed alternative (293)
+shown:
+  per_trial: the registry text the method read (title, conditions, interventions, arms, outcomes, design; CT.gov, public)
+  per_alternative: "id, subject - relation - object, qualifiers, the rationale our model wrote, the PMIDs our model cited for it"
+  not_shown: our d (on_positive, on_negative), our support a, I, the records our verifier found
+asked:
+  per_alternative:
+    d_positive / d_negative: "eliminated | weakened | unchanged: what a positive / a null result of the stated experiment does to the alternative (manual rule: eliminated only with a named arm, control or measurement for which the two predict different results)"
+    separating_feature: "the verbatim registry phrase (arm, control, measurement) that separates them, or null"
+    genuine: "yes | partly | no: would the alternative, if true, produce the result the trial expects without the hypothesis' mechanism"
+    support: "none | weak | moderate | strong: support of the alternative in the literature as Argon knows it, with up to 3 PMIDs"
+  per_trial:
+    missing_alternatives: "up to 3 important alternatives we did not list, each with d_positive, d_negative, support"
+    informativeness: "0-1: how much the result of this experiment, whatever it is, would change a reviewer's belief about the mechanism"
+    best_change: "the one change of design that would raise it most (one sentence)"
+measures:
+  d: >-
+    d = max of the two, on 0 / 0.5 / 1; linear-weighted Cohen kappa of ours vs Argon's; confusion table; share where
+    Argon names a separating feature for "eliminated"
+  genuine: share of our alternatives Argon calls "no"; how much of our sum a*d comes from them
+  a: Spearman of our a (v3.6) with Argon's support (0, 1/3, 2/3, 1); agreement on "supported" (a > 0 vs support >= weak)
+  I: >-
+    per trial, I recomputed (i) with Argon's d and our a, (ii) with Argon's d and Argon's support, (iii) (ii) plus Argon's
+    missing alternatives; Spearman of each with our I over the 59 trials; Spearman of our I with Argon's informativeness
+  recall: share of trials where Argon adds a missing alternative with support >= moderate and d >= weakened
+reading:
+  d_unreliable: "weighted kappa below 0.4: the d of check_alternatives is not reproducible; revise the d rule or the prompt before I is used for ranking"
+  I_unreproducible: "Spearman of our I with (ii) below 0.5: I does not survive a second reader"
+  generator_gaps: "recall of missing supported alternatives in half the trials or more: propose_alternatives misses the main competitors"
+  note: "Argon is a second reader, not a gold standard; decisions go to the user"
