@@ -46,3 +46,22 @@ reading:
 built:   # python -m scripts.pack7_novelty build
   pack: "59 trials, 150 links, T = 2026-11-06 for all"
   key_N: "computed under the current rules (v3.6 weights): analog 22, unknown 22, new context 11, new combination 3, new link 1 (one trial moves from new link to unknown against the scores file)"
+result:   # Argon pack 7 answer 2026-11-08 (longevity-kg reviews/argon-2026-11-08/pack_7_answer.json); python -m scripts.pack7_analysis
+  outcome_N: >-
+    weighted kappa 0.14 on the 37 trials both readers levelled (threshold 0.4: not reproduced). Confusion ours->Argon:
+    analog->new_context 18, unknown->new_context 15, new_context->new_context 11, unknown->analog 5, analog->analog 4,
+    new_combination->new_context 2, new_combination->new_combination 1, unknown->new_combination 1, new_link->new_context 1,
+    unknown->unknown 1
+  expected_bias: "confirmed: 18 of our 22 'analog' are 'new context' for Argon (the class label of the verifier)"
+  direction: "Argon nearer the known in 21 of 37, farther in 0, the same in 16: reading 'overstated' triggered"
+  unknown: "21 of our 22 'unknown' get a level from Argon (15 new context): our search does not find the closest prior work"
+  pmids: >-
+    227 distinct PMIDs, all exist in PubMed and are dated 2026 or earlier (PubMed gives the year only, so a 2026 paper after
+    T cannot be excluded this way); 54 of Argon's 175 defining PMIDs are among our records for the trial
+  links: "weighted kappa 0.06 over 150 links"
+  known_result: "Argon calls 3 trials a known result (our method: none)"
+  reading: >-
+    N overstates novelty systematically and never understates it. Two causes: the verifier's class label turns an exact
+    prior trial into an 'analog', and the search misses the closest prior work (only 31% of Argon's defining papers were
+    found). The Frontier profile, which puts N first, rewards these errors. The class fix is in the verifier re-run (v10);
+    the search gap needs a search aimed at prior work on the same intervention and outcome.
