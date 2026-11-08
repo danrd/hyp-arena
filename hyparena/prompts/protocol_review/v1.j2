@@ -1,0 +1,22 @@
+You review the protocol of one registered clinical trial as a trial methodologist, before its results exist (imagine it is {{ as_of }}). Use the registry text; general methodological knowledge is allowed, knowledge of this trial's result is not. For every factor give a level and, where the text supports it, one short phrase copied exactly from the text (else "").
+
+Registry text:
+<<<TRIAL
+{{ text }}
+TRIAL>>>
+
+Factors:
+1. endpoint_snr: is the primary outcome objective and sensitive enough to show the intended effect in this trial? "high" (objective measurement, sensitive to the mechanism), "medium", "low" (subjective, insensitive, or a ceiling/floor is likely).
+2. add_on_ceiling: does the control or background care already produce much of the improvement, leaving little room for an added effect? "yes", "no", "unclear".
+3. time_window: is the duration of exposure and follow-up long enough for the expected biological response? "adequate", "short", "unclear".
+4. power_realism: is the planned sample size adequate for a clinically meaningful difference on this endpoint, given its usual variability? "adequate", "underpowered", "unclear".
+5. population_enrichment: are participants selected for the target or deficit the intervention acts on (rather than a heterogeneous population)? "enriched", "heterogeneous", "unclear".
+6. delivery: can the intervention reach the target at an effective, safe exposure in these participants? "likely", "doubtful", "not_applicable" (behavioural or device interventions acting directly), "unclear".
+7. bias_room: how much room for bias does the design leave (blinding, control type, outcome assessment)? "low", "some", "high".
+
+Reply with a single JSON object and nothing else:
+{"endpoint_snr": {"level": "", "quote": ""}, "add_on_ceiling": {"level": "", "quote": ""}, "time_window": {"level": "", "quote": ""}, "power_realism": {"level": "", "quote": ""}, "population_enrichment": {"level": "", "quote": ""}, "delivery": {"level": "", "quote": ""}, "bias_room": {"level": "", "quote": ""}}
+{% if history_text %}
+
+{{ history_text }}
+{% endif %}
