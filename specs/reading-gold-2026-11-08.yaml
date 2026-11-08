@@ -22,3 +22,18 @@ measures:
   skipped: "Argon's findings the reading did not mention at all (from the saved replies where available)"
 reading:
   note: "Argon is a second reader, not a gold standard; with recall below 0.6 on this gold the reader is the bottleneck, as pack 8 suggested"
+result:   # Argon pack 9 answer 2026-11-08 (longevity-kg reviews/argon-2026-11-08/pack_9_answer.json); python -m scripts.pack9_analysis
+  gold: "200 pairs on 10 links: own finding on the claim in 21 (for 15, against 6); 179 none (reviews without a result, other outcomes, other interventions)"
+  original:  {recall: "8/21 = 0.38", precision: "8/16 = 0.50", stance: "8/8"}
+  second_v9: {recall: "9/21 = 0.43", precision: "9/18 = 0.50", stance: "9/9"}
+  pilot:     {recall: "10/21 = 0.48", precision: "10/22 = 0.45", stance: "10/10"}
+  missed_by_all: "9 of 21: 4 meta-analyses or reviews with a pooled result, 4 RCTs, 1 animal study; 5 of them on one link (L05) where Argon counts other supplements of the kind as findings"
+  reading: >-
+    nine papers in ten that the search returns for a link hold no finding on it: the search is wide and shallow. On the
+    ones that do, the reader keeps 0.38-0.48 (the cross-link pilot is the best, within one or two papers) and half of its
+    records are, for the outside reader, not own findings on the claim (mostly review sentences and other outcomes);
+    whenever both have a finding, the direction agrees (27 of 27). Together with pack 8: the reader is the bottleneck in
+    both directions (misses half of the findings, half of what it keeps is not one), the direction it reads is right.
+    Two fixes follow: (1) a relevance filter before reading (drop reviews without a result, other outcomes) so the reader
+    sees fewer, better papers; (2) a reader that must answer for every paper (a closed list per PMID: finding for /
+    against / none), so a skip is visible and countable.
