@@ -558,8 +558,9 @@ informativeness-check, novelty-check, balance-check):**
 | missing competitors | in 78% of trials the reader adds a supported one; a checklist prompt covers 15 of 40 fully, 13 partly | not yet in the method |
 | evidence balance per link | pack 8, pending | |
 
-**Reader noise.** Reading the same papers again moves the evidence balance of the 59 prospective trials (Spearman 0.76
-between two readings); close places in a ranking are within that noise (specs/record-weight-2026-11-08.yaml, reader_noise_v9).
+**Reader noise.** Reading the same papers again with the same prompt moves the evidence balance of the 59 prospective
+trials (Spearman 0.81 between two readings; R2 and R3 do not move): close places in a ranking are within that noise
+(specs/record-weight-2026-11-08.yaml, reader_noise_v9_result). Averaging two readings is the remedy where a ranking matters.
 
 **Deferred from the outside review (2026-11-07), each paid or an inflation risk:**
 - I depends on alternatives already published, so a new field gets I = 0 even for a well-built experiment. Planned: a

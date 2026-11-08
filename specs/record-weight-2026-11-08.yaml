@@ -442,3 +442,13 @@ reader_noise_v9:   # user decision 2026-11-08 (item 2), written before the run
   reading: >-
     if the re-read v9 moves R2 about as much as v11 did, the v11 drop was reader noise and the v11 records are judged on
     the class label and blinding alone; if v9 re-read keeps R2 near 0.70, the v11 rule itself costs R2
+reader_noise_v9_result:   # 2026-11-08; calibration/reader_noise_v9.json; python -m scripts.reread_analysis noise; 0.807 USD
+  balance_spearman: "original v9 ~ re-read v9 0.81 (pure reader noise); original v9 ~ v11 0.76; re-read v9 ~ v11 0.75"
+  references: "re-read v9: R2 0.706 (202 targets), R3 0.592, R4 tau-b 0.095 — the same as the original v9 (0.702, 0.593, 0.099)"
+  labels: "context kappa with Argon: original v9 0.17, re-read v9 0.20, v11 0.22; N weighted kappa: 0.14, 0.16, 0.26"
+  reading: >-
+    reading the same papers twice with the same prompt moves the evidence balance of a trial noticeably (rho 0.81): places
+    close in a ranking are within noise. R2 does not move with the re-read (0.706), so the fall under v11 (0.658) is the v11
+    rule, not noise; v11's gain on the class label is inside the noise (0.17-0.20 for two v9 readings), its gain on novelty
+    is not (0.26). Decision rule of reread_v11 stands: v11 is not adopted. The blinding fields can be added to v9 alone (a
+    v12 = v9 + blinding) without the kind-level rule.

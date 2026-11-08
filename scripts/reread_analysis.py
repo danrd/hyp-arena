@@ -22,8 +22,8 @@ from scripts.v34_check import CAL, PROS, parts
 ARGON = CAL.parents[1] / "reviews" / "argon-2026-11-08"
 
 
-def reread(pool: str) -> dict[str, dict[str, ClaimVerification]]:
-    p = (PROS if pool == "prospective" else CAL) / "reread_v11.json"
+def reread(pool: str, version: str = "v11") -> dict[str, dict[str, ClaimVerification]]:
+    p = (PROS if pool == "prospective" else CAL) / f"reread_{version}.json"
     out: dict = defaultdict(dict)
     for k, v in json.loads(p.read_text()).items():
         h, cid = k.split("|")
@@ -37,7 +37,8 @@ def swap(cvs: list, new: dict) -> list:
 
 def all_units(version: str) -> list[dict]:
     """Calibration units (with label) and prospective units (label None), with the v9 or the v11 chain records."""
-    rc, rp = (reread("calibration"), reread("prospective")) if version == "v11" else ({}, {})
+    rv = {"v11": "v11", "v9r": "v9"}.get(version)
+    rc, rp = (reread("calibration", rv), reread("prospective", rv)) if rv else ({}, {})
     out = [{**u, "cvs": swap(u["cvs"], rc.get(u["id"], {})), "sample": "calibration"} for u in units()]
     for h, r in json.loads((PROS / "run_60.json").read_text()).items():
         it = r["items"][0]
@@ -215,5 +216,24 @@ def main() -> dict:
     return out
 
 
+def noise() -> dict:
+    """Reader noise (reader_noise_v9): the same papers read again with v9, next to the original v9 and to v11."""
+    us = {v: all_units(v) for v in ("v9", "v9r", "v11")}
+    bal = {v: {u["id"]: r32.evaluate(u["card"], u["cvs"], u["alts"], v36=True).chain_state for u in us[v] if u["sample"] == "prospective"}
+           for v in us}
+    ks = sorted(bal["v9"])
+    rho = lambda a, b: round(float(spearmanr([bal[a][k] for k in ks], [bal[b][k] for k in ks]).statistic), 3)
+    lab = labels(us["v9"], us["v9r"])
+    out = {"balance_spearman": {"v9~v9r (noise)": rho("v9", "v9r"), "v9~v11": rho("v9", "v11"), "v9r~v11": rho("v9r", "v11")},
+           "references_v9r": r2_r3(us["v9r"]), "context_kappa_argon_v9r": lab["v9r" if "v9r" in lab else "v11"],
+           "novelty_v9r": novelty(us["v9"], us["v9r"])["v11"], "R4_v9r": r4(us["v9r"])}
+    (CAL / "reader_noise_v9.json").write_text(json.dumps(out, indent=1, ensure_ascii=False) + "\n")
+    return out
+
+
 if __name__ == "__main__":
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == "noise":
+        print(json.dumps(noise(), indent=1, ensure_ascii=False))
+        raise SystemExit
     print(json.dumps(main(), indent=1, ensure_ascii=False))
