@@ -4,6 +4,7 @@ PubMed E-utilities for years and abstracts, cached in data/cache/pubmed).
     python -m scripts.record_weight_check step1          # -> calibration/record_weight_step1.json, prints the summary
     python -m scripts.record_weight_check step2-sample   # -> calibration/record_weight_context_check.jsonl (to label by hand)
     python -m scripts.record_weight_check step2-score    # agreement of the hand labels with the verifier
+    python -m scripts.record_weight_check step3          # references R1, R2 (years from PubMed), R3; current rules, both context variants
 """
 from __future__ import annotations
 
@@ -11,17 +12,49 @@ import hashlib
 import json
 import math
 import re
+import random
 import sys
-from collections import Counter
+from collections import Counter, defaultdict
+from contextlib import contextmanager
 
 import numpy as np
 from scipy.stats import spearmanr
 
+from hyparena.backtest import tied_auc
 from hyparena.card import rules_v3 as r3
 from hyparena.card import rules_v32 as r32
 from scripts.ablation import units
 from scripts.v34_check import CAL, PROS, parts
 
+_CTX = r32.context_v34
+
+
+def context_claim_qualifiers(rec, claim):
+    """Context variant claim_qualifiers (spec): a "no" counts only on a qualifier the claim fixes."""
+    q = claim.qualifiers or {}
+
+    def fixed(k: str) -> bool:
+        if k == "population":
+            return any(q.get(x) for x in ("population", "disease", "age_at_start"))
+        if k == "species":
+            return bool(q.get("species")) or r3.human_claim(claim)
+        return bool(q.get(k))
+    qm = {k: v for k, v in rec.qualifiers_match.items() if k == "intervention_match" or v != "no" or fixed(k)}
+    return _CTX(rec.model_copy(update={"qualifiers_match": qm}), claim)
+
+
+@contextmanager
+def context_variant(name: str):
+    """'verifier' (v3.5 as is) or 'claim_qualifiers'; patches the context used by record_weight and weight_factors."""
+    if name == "claim_qualifiers":
+        r32.context_v34 = context_claim_qualifiers
+    try:
+        yield
+    finally:
+        r32.context_v34 = _CTX
+
+
+VARIANTS = ("verifier", "claim_qualifiers")
 FACTORS = ("design", "precision", "effect", "comparison", "context")
 CHECK = CAL / "record_weight_context_check.jsonl"
 
@@ -206,7 +239,107 @@ def step2_score() -> dict:
             "weight_ratio_hand_over_verifier": {"mean": round(float(np.mean(ratio)), 3), "median": round(float(np.median(ratio)), 3)}}
 
 
+def with_years(rows: list[dict]) -> list[dict]:
+    from hyparena.tools import pubmed
+    meta = pubmed.fetch(sorted({r["pmid"] for r in rows if r["pmid"]}))
+    for r in rows:
+        y = (meta.get(r["pmid"], {}).get("year") or "")[:4]
+        r["year"] = int(y) if y.isdigit() else None
+        r["dsg"] = r3.record_design(r["rec"])
+    return rows
+
+
+def link_state(rows: list[dict], c: float = r32.C_ANCHOR) -> float:
+    """s = 2S - 1 of a set of records of one link (v3.5 Beta, fold by independence group)."""
+    side = {"for": defaultdict(list), "against": defaultdict(list)}
+    for r in rows:
+        side[r["side"]][r["group"]].append(r["w"])
+    F, A = (sum(max(ws) + r32.FOLD_REST * (sum(ws) - max(ws)) for ws in side[k].values()) for k in ("for", "against"))
+    return 2 * (c * F + 1) / (c * (F + A) + 2) - 1
+
+
+def build_refs(rows: list[dict]) -> dict:
+    links = defaultdict(list)
+    for r in rows:
+        links[(r["unit"], r["claim"])].append(r)
+    r1, r2, cnt = [], [], Counter()
+    for key, rs in links.items():
+        dated = [r for r in rs if r["year"]]
+        cnt["records_without_year"] += len(rs) - len(dated)
+        mas = [r for r in dated if r["dsg"] == "meta_analysis"]
+        if mas:
+            cnt["links_with_meta_analysis"] += 1
+            if len({r["side"] for r in mas}) > 1:
+                cnt["r1_excluded_meta_analyses_disagree"] += 1
+            else:
+                y0 = min(r["year"] for r in mas)
+                prim = [r for r in dated if r["dsg"] not in ("meta_analysis", "review") and r["year"] < y0]
+                if len({r["group"] for r in prim}) >= 2:
+                    r1.append({"link": key, "label": int(mas[0]["side"] == "for"), "records": prim})
+                else:
+                    cnt["r1_excluded_fewer_than_2_earlier_primary"] += 1
+        for t in dated:
+            if t["dsg"] not in ("rct", "meta_analysis"):
+                continue
+            prev = [r for r in dated if r["group"] != t["group"] and r["year"] < t["year"]]
+            if len(prev) >= 2:
+                r2.append({"link": key, "label": int(t["side"] == "for"), "records": prev, "target": t["rec"].record_id})
+    return {"R1": r1, "R2": r2, "counts": dict(cnt)}
+
+
+def auc(units_: list[dict], score) -> float | None:
+    pos = [(score(u), 0) for u in units_ if u["label"] == 1]
+    neg = [(score(u), 0) for u in units_ if u["label"] == 0]
+    return round(tied_auc(pos, neg), 3) if pos and neg else None
+
+
+def boot_ci(units_: list[dict], score, n: int = 2000, seed: int = 0) -> list[float]:
+    by = defaultdict(list)
+    for u in units_:
+        by[u["link"]].append(u)
+    keys, rnd, vals = list(by), random.Random(seed), []
+    for _ in range(n):
+        smp = [u for k in (rnd.choice(keys) for _ in keys) for u in by[k]]
+        a = auc(smp, score)
+        if a is not None:
+            vals.append(a)
+    vals.sort()
+    return [round(vals[int(0.025 * len(vals))], 3), round(vals[int(0.975 * len(vals)) - 1], 3)]
+
+
+def r3_auc() -> float:
+    pos, neg = [], []
+    for u in units():
+        e = r32.evaluate(u["card"], u["cvs"], u["alts"], v35=True)
+        v = -1.0 if e.gate != "pass" else e.chain_state
+        (pos if u["label"] == 1 else neg).append((v, 0))
+    return round(tied_auc(pos, neg), 3)
+
+
+def step3() -> dict:
+    out = {}
+    for var in VARIANTS:
+        with context_variant(var):
+            rows = with_years(pool())
+            refs = build_refs(rows)
+            sc = lambda u: link_state(u["records"])
+            r1, r2 = refs["R1"], refs["R2"]
+            out[var] = {
+                "records": len(rows), "counts": refs["counts"],
+                "R1": {"links": len(r1), "label_for": sum(u["label"] for u in r1), "auc": auc(r1, sc),
+                       "sign_agreement": round(sum((sc(u) > 0) == bool(u["label"]) for u in r1) / len(r1), 3) if r1 else None},
+                "R2": {"targets": len(r2), "links": len({u["link"] for u in r2}), "label_for": sum(u["label"] for u in r2),
+                       "auc": auc(r2, sc), "ci95": boot_ci(r2, sc),
+                       "links_whose_targets_disagree": sum(1 for k in {u["link"] for u in r2}
+                                                           if len({u["label"] for u in r2 if u["link"] == k}) > 1),
+                       "earlier_records_median": sorted(len(u["records"]) for u in r2)[len(r2) // 2] if r2 else None},
+                "R3": {"auc_chain_state": r3_auc()}}
+    (CAL / "record_weight_step3.json").write_text(json.dumps(out, indent=1, ensure_ascii=False, default=str) + "\n")
+    return out
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "step1"
-    res = {"step1": step1, "step2-sample": lambda: f"{len(step2_sample())} records -> {CHECK}", "step2-score": step2_score}[cmd]()
+    res = {"step1": step1, "step2-sample": lambda: f"{len(step2_sample())} records -> {CHECK}", "step2-score": step2_score,
+           "step3": step3}[cmd]()
     print(json.dumps(res, indent=1, ensure_ascii=False, default=str))

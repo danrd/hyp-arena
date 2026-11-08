@@ -81,6 +81,15 @@ references:
     constraint: a variant may not lower it by more than 0.03 against the current rules
   R4_pairs_argon: step 5, pack 5, prospective pool only (definitions written before the pack is sent)
 
+context_variants:   # user decision 2026-11-08: steps 3-7 computed under both (written before step 3 was computed)
+  verifier: the context label as the verifier set it (v3.5)
+  claim_qualifiers: >-
+    a "no" in qualifiers_match counts only when the claim fixes that qualifier: population when the claim names population,
+    disease or age_at_start; age_at_start, sex, dose, comparator when the claim names them; species when the claim names a
+    species or is a claim about humans (rules_v3.human_claim). Other "no" are ignored; then the v3.4 rule (species alone on
+    the outcome link of a human claim is exact) as before. intervention_match unchanged. Records that did not count only
+    because of an ignored "no" now count. The gate is unchanged (rules_v3).
+
 menu:   # every variant changes one thing against the current rules (v3.5); steps 4-7 compute all of them
   current: v3.5 (design 7 levels on the outcome link of a human claim, 3 before it; precision min(1, ln n / ln 300), floor
     1/4, constant 1/2 before the outcome; effect continuous / class; comparison 1/3, 2/3, 1; context 1/3, 2/3, 1; null by
@@ -181,3 +190,20 @@ step2:   # python -m scripts.record_weight_check step2-sample / step2-score; lab
   consequence_for_steps_3_7: >-
     steps 3-7 are computed with the verifier's context and with the code rule for unfixed qualifiers; the kind-level match
     needs the v10 verifier (paid re-run) and is the user's decision
+step3:   # python -m scripts.record_weight_check step3 -> calibration/record_weight_step3.json; current rules (v3.5)
+  years: "all 595 records have a PubMed year"
+  R1: >-
+    55 links have a meta-analysis; 9 left out because their meta-analyses disagree, 28 because fewer than two primary
+    records of distinct groups came before the first meta-analysis; 18 links remain, 15 for and 3 against. AUC 0.756, sign
+    agreement 0.72; with 3 negatives the AUC is not informative: R1 is reported, decisions rest on R2 and R3
+  R1_noise: "9 of 27 links with a meta-analysis and enough history have meta-analyses that disagree (one third): the meta-analysis verdict is itself a noisy label"
+  R2: "195 targets on 71 links (146 for, 49 against), median 3 earlier records per target; AUC 0.666 (95% CI by links 0.57-0.75)"
+  R2_noise: "in 26 of the 71 links later trials disagree among themselves"
+  R3: "chain state AUC 0.609 on the 73 calibration units (as specs/link-scoring-2026-11-08.yaml)"
+  context_variants: >-
+    claim_qualifiers: one more record counts (596); R1 the same, R2 0.657 (0.56-0.75), R3 0.608: inside 0.03 of the
+    verifier's label, i.e. equal by the decision rule
+  reading: >-
+    R2 is usable: the link state from earlier records orders later trials better than chance (0.67), more clearly than the
+    trial outcome does (0.61); its interval is about +-0.09, so the 0.03 rule chooses between equals by clarity. The
+    meta-analysis reference is too small and itself noisy.
