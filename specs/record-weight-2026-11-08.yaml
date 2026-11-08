@@ -207,3 +207,31 @@ step3:   # python -m scripts.record_weight_check step3 -> calibration/record_wei
     R2 is usable: the link state from earlier records orders later trials better than chance (0.67), more clearly than the
     trial outcome does (0.61); its interval is about +-0.09, so the 0.03 rule chooses between equals by clarity. The
     meta-analysis reference is too small and itself noisy.
+step4:   # python -m scripts.record_weight_check step4 -> calibration/record_weight_step4.json; one change at a time against v3.5
+  notes: >-
+    design_grade3 applies where the 7-level clinical scale applied (outcome link of a human claim); precision_steps3 and
+    precision_power_both change records for on the outcome link (nulls keep their power); dR2 = paired bootstrap over
+    links (2000), variant minus current
+  verifier_context:   # R2 / dR2 95% CI / R3 / R1 / Spearman of the 186 link states vs current
+    current:              [0.666, null, 0.609, 0.756, 1.0]
+    drop_design:          [0.665, [-0.010, 0.008], 0.621, 0.756, 0.990]
+    drop_precision:       [0.659, [-0.046, 0.036], 0.602, 0.800, 0.948]
+    drop_effect:          [0.650, [-0.031, 0.000], 0.594, 0.756, 0.986]
+    drop_comparison:      [0.665, [-0.008, 0.006], 0.625, 0.756, 0.994]
+    drop_context:         [0.675, [-0.017, 0.039], 0.607, 0.756, 0.977]
+    design_grade3:        [0.669, [-0.004, 0.010], 0.598, 0.778, 0.997]
+    precision_steps3:     [0.674, [-0.013, 0.028], 0.587, 0.800, 0.982]
+    precision_power_both: [0.663, [-0.033, 0.026], 0.619, 0.733, 0.962]
+    effect_rate_up:       [0.669, [-0.005, 0.012], 0.605, 0.778, 0.999]
+    comparison_2:         [0.666, [-0.004, 0.004], 0.599, 0.756, 0.999]
+    context_2:            [0.683, [-0.015, 0.057], 0.606, 0.711, 0.957]
+  claim_qualifiers_context: "the same picture shifted by about -0.01 on R2 (current 0.657; context_2 0.672, drop_context 0.675, drop_effect 0.643); R3 identical within 0.002"
+  reading: >-
+    every single change stays inside 0.03 of the current rules on R2 and on R3 (lowest R3 0.587, precision_steps3), and
+    every paired interval contains 0: by the decision rule all are equal to the current rules. The order of the links
+    hardly moves (Spearman >= 0.95 for every change; precision moves it most). The only factor whose removal lowers both
+    R2 and R3 is effect (-0.016, -0.015); removing or flattening context raises R2 (+0.009, +0.017), consistent with the
+    unreliable class label of step 2; removing design or comparison raises R3 a little (+0.012, +0.016). The references
+    cannot tell the factors apart: this is a limit of power (R2 interval about +-0.09), not evidence that the factors are
+    useless; the choice between equals is made by clarity and GRADE (decision of the user, step 8), and the combination is
+    computed once (step 8), with counting records (step 7, count_diff) as the counterfactual.

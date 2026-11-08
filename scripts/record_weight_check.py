@@ -4,6 +4,7 @@ PubMed E-utilities for years and abstracts, cached in data/cache/pubmed).
     python -m scripts.record_weight_check step1          # -> calibration/record_weight_step1.json, prints the summary
     python -m scripts.record_weight_check step2-sample   # -> calibration/record_weight_context_check.jsonl (to label by hand)
     python -m scripts.record_weight_check step2-score    # agreement of the hand labels with the verifier
+    python -m scripts.record_weight_check step4          # each factor: drop / flatten / coarsen (menu step4_factors)
     python -m scripts.record_weight_check step3          # references R1, R2 (years from PubMed), R3; current rules, both context variants
 """
 from __future__ import annotations
@@ -338,8 +339,97 @@ def step3() -> dict:
     return out
 
 
+_WF, _RW = r32.weight_factors, r32.record_weight
+GRADE3 = {"rct": 1.0, "meta_analysis": 1.0, "non_randomised": 0.5, "observational": 0.5}
+
+
+def weight_variant(rec, claim, against: bool, var: str) -> float:
+    """The record weight under one variant of the menu (step4_factors); 'current' = v3.5."""
+    f = _WF(rec, claim, against, v34=True)
+    if not f:
+        return 0.0
+    v = {k: float(f[k][1]) for k in FACTORS}
+    pre = claim.link in r3.PRECLINICAL_LINKS
+    clinical_scale = r3.human_claim(claim) and not pre
+    if against:
+        v["precision"], v["effect"] = r32.null_power(rec.n_total, rec.comparison), 1.0
+    if var.startswith("drop_"):
+        v[var[5:]] = 1.0
+    elif var == "design_grade3" and clinical_scale:
+        v["design"] = GRADE3.get(r3.record_design(rec), 0.25)
+    elif var == "precision_steps3" and not against and not pre:
+        n = rec.n_total
+        v["precision"] = 0.25 if not n or n < 50 else 0.5 if n < 300 else 1.0
+    elif var == "precision_power_both" and not against and not pre:
+        large = v["effect"] >= 1.0
+        v["precision"], v["effect"] = r32.null_power(rec.n_total, rec.comparison), 1.0
+        v["precision"] = min(1.0, v["precision"] * (1.5 if large else 1.0))
+    elif var == "effect_rate_up" and not against:
+        v["effect"] = 0.5 if v["effect"] < 0.25 + 0.75 * 0.5 / 0.8 - 1e-9 else 1.0      # below "medium" (d < 0.5) -> 1/2
+    elif var == "comparison_2":
+        v["comparison"] = 1.0 if (rec.comparison == "between_groups") else 0.5
+    elif var == "context_2":
+        v["context"] = 0.5 if f["context"][0] == "adjacent" else 1.0
+    return math.prod(v.values())
+
+
+STEP4 = ("current", *(f"drop_{k}" for k in FACTORS), "design_grade3", "precision_steps3", "precision_power_both",
+         "effect_rate_up", "comparison_2", "context_2")
+
+
+@contextmanager
+def weight_rule(var: str):
+    r32.record_weight = lambda rec, claim, against, v34=False: (weight_variant(rec, claim, against, var)
+                                                                 if r3.usable(rec, r32.VARIANT_BASE) else 0.0)
+    try:
+        yield
+    finally:
+        r32.record_weight = _RW
+
+
+def paired_diff(units_: list[dict], s_new, s_old, n: int = 2000, seed: int = 1) -> list[float]:
+    by = defaultdict(list)
+    for u in units_:
+        by[u["link"]].append(u)
+    keys, rnd, vals = list(by), random.Random(seed), []
+    for _ in range(n):
+        smp = [u for k in (rnd.choice(keys) for _ in keys) for u in by[k]]
+        a, b = auc(smp, s_new), auc(smp, s_old)
+        if a is not None and b is not None:
+            vals.append(a - b)
+    vals.sort()
+    return [round(vals[int(0.025 * len(vals))], 3), round(vals[int(0.975 * len(vals)) - 1], 3)]
+
+
+def step4(variants=STEP4) -> dict:
+    out = {}
+    for cv in VARIANTS:
+        with context_variant(cv):
+            rows = with_years(pool())
+            refs = build_refs(rows)
+            links = defaultdict(list)
+            for r in rows:
+                links[(r["unit"], r["claim"])].append(r)
+            keys = sorted(links)
+            score = {}
+            for var in variants:                       # the weight of every record under the variant
+                ws = {id(r): weight_variant(r["rec"], r["claim_obj"], r["side"] == "against", var) for r in rows}
+                score[var] = lambda u, ws=ws: link_state([{**r, "w": ws[id(r)]} for r in u["records"]])
+                score[var + "_links"] = [link_state([{**r, "w": ws[id(r)]} for r in links[k]]) for k in keys]
+            res = {}
+            for var in variants:
+                with weight_rule(var):
+                    r3a = r3_auc()
+                res[var] = {"R2": auc(refs["R2"], score[var]), "R1": auc(refs["R1"], score[var]), "R3": r3a,
+                            "R2_diff_ci95": None if var == "current" else paired_diff(refs["R2"], score[var], score["current"]),
+                            "rho_links_vs_current": round(float(spearmanr(score[var + "_links"], score["current_links"]).statistic), 3)}
+            out[cv] = res
+    (CAL / "record_weight_step4.json").write_text(json.dumps(out, indent=1, ensure_ascii=False) + "\n")
+    return out
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "step1"
     res = {"step1": step1, "step2-sample": lambda: f"{len(step2_sample())} records -> {CHECK}", "step2-score": step2_score,
-           "step3": step3}[cmd]()
+           "step3": step3, "step4": step4}[cmd]()
     print(json.dumps(res, indent=1, ensure_ascii=False, default=str))
