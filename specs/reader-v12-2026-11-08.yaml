@@ -1,0 +1,29 @@
+id: reader-v12-2026-11-08
+written_on: 2026-11-08
+status: definitions fixed before any call
+plan: docs/plans/reader-v12-2026-11-08.md
+user_decision: "2026-11-08: run the pilot (about 0.5 USD); 'unsure' papers of the filter go to the reader"
+changes:
+  filter_rule: >-
+    a paper whose PubMed publication type is Review, Systematic Review, Editorial or Comment passes only when its abstract
+    states a quantitative result (a 95% CI, a p value, or WMD / SMD / MD / OR / RR / HR with a number); Meta-Analysis passes
+  filter_call: >-
+    relevance_filter/v1 (DeepSeek), one call per link: title and the first 600 characters of each abstract; own_result
+    yes / no / unsure for every PMID (a missing PMID counts as unsure); yes and unsure go on
+  reader: >-
+    verify_claim/v12 = v9 + "papers": one entry per PMID given (finding for / against / none); batches of at most 10
+    papers; PMIDs missing from "papers" are asked again once in their own call; a PMID still missing is counted as a skip
+papers: "each link's own search log (the papers its original reading had); no cross-link reading in this pilot"
+dev: "the 10 links of Argon pack 9; at most two prompt revisions, on dev numbers only"
+holdout: "the 102 links of the 30 pilot trials (pilot_crosslink sample), run once with the final prompts"
+measures:
+  dev: "recall and precision of own findings against pack 9 (a paper counts as found when it has a record on the link), direction agreement, share of PMIDs answered, gold findings dropped by the filter (rule and call separately), papers per link after the filter"
+  holdout: "pack-8 key papers that are a counting record on their link (v3.6), link and trial Spearman with pack 8, next to original (0.16 / 0.19 / 0.44), second v9 and cross-link pilot"
+  cost: "tokens and USD per step; stop if a step exceeds its line of the plan (dev run 0.03, revisions 0.06, holdout 0.40)"
+pass: >-
+  dev recall >= 0.65 and precision >= 0.65 with direction agreement kept and at most 1 of the 21 gold findings dropped by
+  the filter; holdout key-paper recall >= 0.24 (1.5x the original 0.16) and link Spearman above the original by more than 0.03
+dev_revisions:   # on dev numbers only (pack 9 links); costs in USD
+  rev0: "filter v1 + reader v12: kept 2.0 of 20 papers per link; gold findings dropped by the filter 10 of 21 (call 8, rule 2); recall 6/21 = 0.29, precision 0.75, direction 6/6; every PMID answered; 0.009"
+  rev1: "filter v2 ('no' only for a clear absence of an own result) + rule with result words: kept 8.1 per link, no gold finding dropped; recall 7/21 = 0.33, precision 0.78, direction 7/7; the reader answered 'none' for all 14 gold findings it missed, 10 of them for an intervention of the same kind; 0.022"
+  rev2: "reader verify_claim/v13 = v12 + the manual's reading rules 1-2 restated in the per-paper answer (a same-kind intervention, another population or animals is for / against with intervention_match class; a between-group null is against); filter v2 unchanged"

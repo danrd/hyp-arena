@@ -1,0 +1,16 @@
+You sort search results before a careful reader reads them. Do not judge whether the claim is true.
+
+Claim: {{ claim.subject.label }} — {{ claim.relation }} — {{ claim.object.label }}
+Qualifiers the claim states: {{ qualifiers or "none" }}
+
+For each paper below (title and the start of its abstract), answer: does the study report its OWN result on this claim's outcome for this intervention or one of the same kind (in any population or species)?
+- yes: it reports such a result (a trial, a cohort, an animal or cell experiment, or a meta-analysis with a pooled result);
+- no: it does not (a narrative review, a protocol, another outcome, another intervention altogether, a methods paper);
+- unsure: the start of the abstract does not say.
+
+{% for p in papers %}[PMID {{ p.pmid }}] {{ p.title }}
+{{ p.start }}
+
+{% endfor %}
+Answer for EVERY PMID above. Reply with a single JSON object and nothing else:
+{"papers": [{"pmid": "", "own_result": "yes | no | unsure"}]}
