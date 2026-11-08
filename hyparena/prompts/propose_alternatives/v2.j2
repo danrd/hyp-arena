@@ -1,0 +1,40 @@
+You help judge how informative a test of a research hypothesis on ageing would be. List the competing explanations (alternatives) of the same phenomenon that a careful scientist would weigh, and say what the stated experiment would do to each. Do not judge whether the hypothesis is true.
+
+Literature date: only findings published on or before {{ as_of }} exist for this task.
+
+Hypothesis: {{ claim_plain }}
+Mechanism chain stated by the hypothesis:
+{% for c in chain %}- {{ c.id }}{% if c.link %} [{{ c.link }}]{% endif %}: {{ c.subject.label }} — {{ c.relation }} — {{ c.object.label }}
+{% endfor %}
+Stated experiment: {{ experiment }}
+{% if registry_text %}
+The experiment as registered:
+"""
+{{ registry_text }}
+"""
+{% endif %}
+Abstracts already found for this hypothesis (the only allowed support):
+{% for a in abstracts %}[PMID {{ a.pmid }}] {{ a.year }}. {{ a.title }}
+{{ a.abstract }}
+
+{% endfor %}
+Return up to 5 alternatives. Each is a claim in the same form as the chain: {id (p1, p2, ...), subject {label}, relation (closed list: {{ relations }}), object {label}, qualifiers (optional), rationale (one sentence), support_pmids (PMIDs from the list above whose findings support this alternative; [] if none), on_positive and on_negative: what a positive and a negative result of the stated experiment would do to this alternative: eliminated | weakened | unchanged}.
+Before choosing, go through these kinds of competitor and keep those that apply to THIS design (most designs have at least two):
+- expectation, placebo response or unblinding (participants or assessors know the arm; the intervention is felt or seen);
+- attention, contact, supervision or social interaction that comes with the intervention;
+- co-interventions or other components of the product or programme (another ingredient, diet, exercise, care given alongside);
+- selection, allocation or attrition (who is enrolled, how arms are formed, who stays);
+- measurement and learning effects (practice on the test, a surrogate that moves without the outcome, assessor bias);
+- regression to the mean, natural course or seasonal change;
+- a different biological route to the same outcome than the stated chain.
+Rules:
+- An alternative explains the same observation differently (another cause, another mechanism, the effect being a consequence rather than a cause, a confounder); it is not a restatement or a detail of the hypothesis.
+- support_pmids only from the list above; never cite other papers or results you know. An alternative with no support in the list is allowed but gets [] (it will weigh nothing).
+- No alternative can be eliminated by both outcomes. Judge on_positive and on_negative from the stated experiment as it is (its design, control and outcome), not from a better experiment.
+
+Reply with a single JSON object and nothing else:
+{"alternatives": [{"id": "p1", "subject": {"label": ""}, "relation": "other", "object": {"label": ""}, "qualifiers": {}, "rationale": "", "support_pmids": [], "on_positive": "unchanged", "on_negative": "unchanged"}]}
+{% if history_text %}
+
+{{ history_text }}
+{% endif %}

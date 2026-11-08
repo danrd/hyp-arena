@@ -25,19 +25,20 @@ def _experiment(card: HypothesisCard) -> str:
 
 
 def propose(client, family: str, card: HypothesisCard, abstracts: dict[str, dict], as_of: Optional[str],
-            avoid=frozenset(), log: Optional[list] = None) -> list[ProposedAlternative]:
+            avoid=frozenset(), log: Optional[list] = None, version: str = "v1",
+            registry_text: str = "") -> list[ProposedAlternative]:
     """`abstracts`: PMID -> {title, abstract, year} of the papers read for this hypothesis (already dated by T)."""
     allowed = {str(p) for p in abstracts}
     items = [{"pmid": p, "year": a.get("year", ""), "title": a.get("title", ""), "abstract": a.get("abstract", "")[:1500]}
              for p, a in list(abstracts.items())[:MAX_ABSTRACTS]]
     chain = [c for c in card.claims if c.link or c.role in ("outcome", "mechanism", "premise")]
     variables = {"as_of": as_of or "today", "claim_plain": card.claim_plain, "chain": chain, "experiment": _experiment(card) or "not stated",
-                 "abstracts": items, "relations": ", ".join(typing.get_args(Relation))}
+                 "abstracts": items, "relations": ", ".join(typing.get_args(Relation)), "registry_text": registry_text}
 
     def validate(v):
         alts = v.get("alternatives")
         return [] if isinstance(alts, list) else ['the reply must be an object with an "alternatives" list']
-    value, _ = ask(client, role="propose_alternatives", family=family, template="propose_alternatives", version="v1",
+    value, _ = ask(client, role="propose_alternatives", family=family, template="propose_alternatives", version=version,
                    variables=variables, validate=validate, rounds=2, avoid=avoid, log=log)
     out: list[ProposedAlternative] = []
     for i, raw in enumerate((value or {}).get("alternatives") or [], start=1):
