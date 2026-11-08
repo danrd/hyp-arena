@@ -63,3 +63,37 @@ result:   # Argon pack 6 answer 2026-11-08 (longevity-kg reviews/argon-2026-11-0
     the manual's own rule (a named arm or measurement for which the two predict different results). The support a is the
     second, smaller cause, in the other direction (Argon's knowledge vs found records). The generator misses competitors
     in most trials. With Argon's d and our a the order of trials is kept moderately (0.63): the fix is first in d.
+fix_d:   # user decision 2026-11-08 ("do 1-4"); written before any call
+  cause_found: >-
+    in method v3 the d of an alternative is set by propose_alternatives/v1 itself, which sees only the card's compressed
+    experiment (system, design, control label, n, primary outcome, endpoint, duration), not the registry text; named arms
+    such as a placebo memory-exercise arm or a thermoneutral immersion control are not in it. Argon saw the registry text.
+  step1_judge: >-
+    new prompt judge_alternatives/v1, one call per trial (DeepSeek V4.1 Flash, temperature 0): the registry text the method
+    read and the trial's alternatives (claim and rationale); per alternative d_positive, d_negative (eliminated / weakened /
+    unchanged by the manual's rule) and separating_feature, a verbatim phrase of the registry text. Code: an "eliminated"
+    whose phrase is not verbatim in the text becomes "weakened"; the support a is not touched.
+  split: >-
+    the 59 trials by SHA-1 of "judge|<NCT>": the lower 29 are dev, the other 30 holdout. The prompt may be revised once after
+    the dev run (on dev numbers only, never on holdout answers, no Argon text in the prompt); the holdout is run once.
+  measure: "weighted kappa of max(d) with Argon's on the holdout; also on dev; and I recomputed with the new d and our a vs Argon's I with our a"
+  adopt_if: "holdout weighted kappa >= 0.4 (the threshold of this spec); then the judge replaces the d of propose_alternatives in the method"
+  step2_propose: >-
+    propose_alternatives/v2: v1 plus the registry text and a checklist of competitor kinds the model must consider
+    (expectation / unblinding, attention and contact, co-interventions or other components of the product, selection and
+    attrition, measurement and learning effects, regression to the mean); d comes from the judge. Measured: how many of
+    Argon's missing alternatives (pack 6) are covered, judged by hand by Claude on the holdout trials. The support a of
+    new alternatives needs the verifier (search + verify), priced separately before it runs.
+  cost: "judge about 0.02-0.05 USD for 59 calls; propose v2 about 0.05-0.1 USD (DeepSeek V4.1 Flash 0.15 / 0.60 USD per million tokens, off-peak)"
+fix_d_result:   # 2026-11-08; prospective/judge_alternatives_<part>_<version>.json; python -m scripts.judge_alternatives score
+  dev_v1: "weighted kappa 0.22 (old d on the same trials 0.14); 16 eliminated; main gap: ours weakened where Argon eliminated (45 of 143)"
+  revision: >-
+    one revision on dev numbers only: judge_alternatives/v2 makes the model write what the hypothesis and the alternative
+    predict for each named arm before deciding, and states that a better experiment is no reason to lower "eliminated"
+  dev_v2: "weighted kappa 0.36; 22 eliminated; Spearman of I (our a) with the new d vs with Argon's d 0.78"
+  holdout_v2: "weighted kappa 0.35 (old d on the same trials 0.005); 33 eliminated; Spearman of I with the new d vs with Argon's d 0.84; no 'eliminated' needed a downgrade (all phrases verbatim)"
+  cost: "0.052 USD (three runs of 29-30 calls, 179 k tokens in, 43 k out, off-peak)"
+  reading: >-
+    the registry text and the two-step rule move d from chance (0.005 on the holdout) to fair agreement (0.35), just under
+    the 0.4 of this spec, and the order of trials by I becomes close to the one Argon's d gives (0.84). Formally not
+    adopted (threshold); the decision goes to the user.

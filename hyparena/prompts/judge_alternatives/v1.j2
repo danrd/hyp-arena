@@ -1,0 +1,25 @@
+You judge what a planned experiment would do to competing explanations of its expected result. Do not judge whether the hypothesis or the alternatives are true.
+
+The experiment, as registered:
+"""
+{{ registry_text }}
+"""
+
+The hypothesis the experiment tests: {{ claim_plain }}
+
+Competing explanations (alternatives) of the result the experiment expects:
+{% for a in alternatives %}- {{ a.id }}: {{ a.claim }}. Why it competes: {{ a.rationale }}
+{% endfor %}
+For each alternative decide, from the registered design as written above:
+- d_positive: what a POSITIVE result of this experiment would do to the alternative;
+- d_negative: what a NULL result would do to it.
+Use exactly one of:
+- eliminated: the registered design has a named arm, control, comparator or measurement for which the hypothesis and the alternative predict DIFFERENT results, so this result contradicts the alternative. Examples: a placebo, sham or attention-matched control eliminates "expectation or attention alone explains the benefit" on a positive result; a control that receives the same co-intervention eliminates "the co-intervention explains it"; a measured mediator that does not move eliminates "the effect runs through that mediator" on a null of the mediator.
+- weakened: the design only measures something the alternative depends on, or makes it less likely, without an arm or measurement that separates the two.
+- unchanged: the result is equally expected under the alternative.
+A design label alone ("randomised", "double-blind") counts only when it is the feature that separates the two (blinding does separate "the participants' expectation explains it").
+For every "eliminated", give separating_feature: a phrase copied VERBATIM from the registered text above (an arm, control or measurement). If you cannot copy such a phrase, the answer is not "eliminated".
+An alternative cannot be eliminated by both results.
+
+Reply with a single JSON object and nothing else:
+{"alternatives": [{"id": "p1", "d_positive": "eliminated | weakened | unchanged", "d_negative": "eliminated | weakened | unchanged", "separating_feature": "verbatim phrase or null"}]}
