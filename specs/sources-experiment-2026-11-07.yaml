@@ -23,3 +23,23 @@ metrics_secondary:
 decision_rule: >-
   an arm is worth adopting if it raises recall or field accuracy by at least 10 points, or the share with a numeric effect
   by at least 15 points, at a cost below 3x of A; downstream AUC is reported but not used to decide (too few units).
+
+result_arm_C_and_gold:   # scripts/argon_check.py -> calibration/argon_pack3_check.json; Argon's answers in longevity-kg reviews/argon-2026-11-07/task_cd.json
+  recheck: {items: 222, pmid_exists: 222, quote_verbatim: 213, before_cutoff: 222}   # 96% of quotes verbatim (abstract or PMC full text)
+  gold_vs_our_extraction_86_records:
+    stance: "72 agree; 9 ours for -> Argon not about the link; 5 ours against -> Argon for"
+    design: 80 agree
+    n_total: 74 agree
+    comparison: 79 agree
+    population: 71 agree
+    intervention: "47 agree; ours narrower in 23 (class or dose/regimen differs -> Argon exact); related_compound vs class is a naming difference (same weight)"
+    numeric_effect: "46 agree; Argon has a number where our parser has none in 39 records, the reverse in 1"
+  recall_link_paper_pairs: {ours: 84, graph_valid: 128, both: 47}   # the graph adds 81 pairs we did not find; we have 37 it left out
+  outcome_slot_numeric_effects_graph: 42
+  auc_15_direction_only: {P_ours: 0.696, P_graph: 0.589, support_ours: 0.661, support_graph: 0.536}
+  reading: >-
+    A fuller, hand-curated literature (Argon's graph) finds 1.5x the link-paper pairs and numbers for most effects, but does
+    not separate the 15 trials better: it adds data against to three positive trials (their P falls to 0.3-0.45). More
+    literature makes the description better (numbers, populations, the papers we miss), not the forecast. Our extraction is
+    sound on stance, design, n and comparison (84-93% agreement); the weak fields are the intervention match (55%, ours too
+    narrow) and numeric effects (we miss them in 46% of records).
