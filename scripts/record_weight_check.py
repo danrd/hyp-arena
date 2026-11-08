@@ -353,23 +353,24 @@ def weight_variant(rec, claim, against: bool, var: str) -> float:
     clinical_scale = r3.human_claim(claim) and not pre
     if against:
         v["precision"], v["effect"] = r32.null_power(rec.n_total, rec.comparison), 1.0
-    if var.startswith("drop_"):
-        v[var[5:]] = 1.0
-    elif var == "design_grade3" and clinical_scale:
-        v["design"] = GRADE3.get(r3.record_design(rec), 0.25)
-    elif var == "precision_steps3" and not against and not pre:
-        n = rec.n_total
-        v["precision"] = 0.25 if not n or n < 50 else 0.5 if n < 300 else 1.0
-    elif var == "precision_power_both" and not against and not pre:
-        large = v["effect"] >= 1.0
-        v["precision"], v["effect"] = r32.null_power(rec.n_total, rec.comparison), 1.0
-        v["precision"] = min(1.0, v["precision"] * (1.5 if large else 1.0))
-    elif var == "effect_rate_up" and not against:
-        v["effect"] = 0.5 if v["effect"] < 0.25 + 0.75 * 0.5 / 0.8 - 1e-9 else 1.0      # below "medium" (d < 0.5) -> 1/2
-    elif var == "comparison_2":
-        v["comparison"] = 1.0 if (rec.comparison == "between_groups") else 0.5
-    elif var == "context_2":
-        v["context"] = 0.5 if f["context"][0] == "adjacent" else 1.0
+    for one in var.split("+"):                 # a combination is several menu items joined by "+"
+        if one.startswith("drop_"):
+            v[one[5:]] = 1.0
+        elif one == "design_grade3" and clinical_scale:
+            v["design"] = GRADE3.get(r3.record_design(rec), 0.25)
+        elif one == "precision_steps3" and not against and not pre:
+            n = rec.n_total
+            v["precision"] = 0.25 if not n or n < 50 else 0.5 if n < 300 else 1.0
+        elif one == "precision_power_both" and not against and not pre:
+            large = v["effect"] >= 1.0
+            v["precision"], v["effect"] = r32.null_power(rec.n_total, rec.comparison), 1.0
+            v["precision"] = min(1.0, v["precision"] * (1.5 if large else 1.0))
+        elif one == "effect_rate_up" and not against:
+            v["effect"] = 0.5 if v["effect"] < 0.25 + 0.75 * 0.5 / 0.8 - 1e-9 else 1.0      # below "medium" (d < 0.5) -> 1/2
+        elif one == "comparison_2":
+            v["comparison"] = 1.0 if (rec.comparison == "between_groups") else 0.5
+        elif one == "context_2":
+            v["context"] = 0.5 if f["context"][0] == "adjacent" else 1.0
     return math.prod(v.values())
 
 

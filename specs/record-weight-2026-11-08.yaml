@@ -235,3 +235,21 @@ step4:   # python -m scripts.record_weight_check step4 -> calibration/record_wei
     cannot tell the factors apart: this is a limit of power (R2 interval about +-0.09), not evidence that the factors are
     useless; the choice between equals is made by clarity and GRADE (decision of the user, step 8), and the combination is
     computed once (step 8), with counting records (step 7, count_diff) as the counterfactual.
+combination_preview:   # 2026-11-08, at the user's request after step 4 (earlier than planned: several combinations were looked at, not one)
+  simplified: "design_grade3 + comparison_2 + context_2, with precision steps3 or continuous, and effect rate-up / dropped / as now"
+  verifier_context:   # R2 / dR2 95% CI / R3 / R1
+    current:                               [0.666, null, 0.609, 0.756]
+    steps3_effect_rate_up:                 [0.685, [-0.018, 0.058], 0.573, 0.778]
+    steps3_no_effect:                      [0.676, [-0.033, 0.055], 0.583, 0.756]
+    steps3_effect_as_now:                  [0.683, [-0.021, 0.058], 0.582, 0.778]
+    continuous_precision_effect_rate_up:   [0.689, [-0.009, 0.065], 0.589, 0.756]
+    continuous_precision_no_effect:        [0.678, [-0.024, 0.054], 0.580, 0.733]
+    continuous_precision_effect_as_now:    [0.686, [-0.013, 0.061], 0.593, 0.756]
+    count_of_papers_no_weights:            [0.653, [-0.061, 0.040], null, 0.822]
+  claim_qualifiers_context: "the same order, R2 about 0.01 lower"
+  reading: >-
+    the small R3 losses of single changes add up: with precision in three steps R3 falls to 0.573 (beyond the -0.03
+    constraint); with continuous precision kept the simplified set raises R2 by about 0.02 and lowers R3 by about 0.02,
+    both inside the noise. Dropping effect costs most on R3 (0.580, at the limit). Counting papers without weights is the
+    lowest on R2 (0.653). Candidate: continuous precision + design_grade3 + comparison_2 + context_2 + effect_rate_up
+    (R2 0.689, R3 0.589); step 6 (risk of bias) and step 7 (fold) to be computed on top of it.
