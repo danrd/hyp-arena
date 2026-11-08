@@ -6,6 +6,7 @@ PubMed E-utilities for years and abstracts, cached in data/cache/pubmed).
     python -m scripts.record_weight_check step2-score    # agreement of the hand labels with the verifier
     python -m scripts.record_weight_check step4          # each factor: drop / flatten / coarsen (menu step4_factors)
     python -m scripts.record_weight_check step67         # risk of bias and subgroup on top of the candidate; the fold
+    python -m scripts.record_weight_check pack5          # pack 5 for Argon (R4), to longevity-kg reviews/argon-2026-11-08
     python -m scripts.record_weight_check step3          # references R1, R2 (years from PubMed), R3; current rules, both context variants
 """
 from __future__ import annotations
@@ -556,8 +557,134 @@ def step4(variants=STEP4) -> dict:
     return out
 
 
+PACK5_DIR = CAL.parents[1] / "reviews" / "argon-2026-11-08"
+PACK5_INSTRUCTIONS = """You are reviewing evidence the way an evidence-based-medicine reviewer would (GRADE-style judgement).
+
+Each item is a CLAIM from a hypothesis about an intervention in older adults, and TWO PUBLISHED RECORDS (A and B) that a
+reader found for that claim: PMID, title, abstract, the sentence the reader took as the finding (quote) and whether the
+reader read it as evidence FOR or AGAINST the claim.
+
+Part 1, pairs. For each pair decide which record is STRONGER EVIDENCE ABOUT THE CLAIM, whatever its direction: which one
+should move a careful reviewer's belief in the claim more (up if it is for, down if it is against). Consider the study
+design, its size, the comparison, the size of the effect, how directly it tests the claim's intervention, population and
+outcome, and the risk of bias (blinding, placebo or sham, self-reported outcomes). Answer A, B or equal; equal when you
+would not order them. Give a confidence 1 (unsure) to 3 (clear) and up to three reason codes, the first being the main one:
+design, sample_size, effect_size, comparison, directness_intervention, directness_population, directness_outcome,
+risk_of_bias, finding_misread, other. Use finding_misread when the reader's quote or its for / against reading is wrong.
+Some pairs appear twice with A and B swapped; judge each item on its own.
+
+Part 2, records. For each record id in `records`, label from the title and abstract:
+- design: rct | non_randomised | observational | animal | cells | review | meta_analysis | other
+- n_total: the number of participants (or animals) analysed, if the abstract states one number; else null
+- context, relative to the claim it belongs to (see `claim_of_record`):
+  exact = the intervention the claim names, in the claim's population (a claim that names a kind - "resistance training",
+  "probiotics" - is matched exactly by any study of that kind); adjacent = the same intervention but another population,
+  age, sex, species, dose or schedule, or another comparator than the claim fixes (only qualifiers the claim states count);
+  class = the claim names a specific product, compound or programme and the study used another member of its kind;
+  none = another intervention altogether, or no result on the claim
+- blinding: double_blind | single_blind | assessor_blind | open | not_reported | not_applicable
+- outcome_subjective: true when the outcome of the quote is self-reported or rated by the participant (quality of life,
+  pain, fatigue, mood, sleep questionnaires), false for measured outcomes, null when unclear
+- effect_phrase: the verbatim phrase giving the size of the effect (a ratio, a standardised difference, a percent or mean
+  difference with its interval), or null
+
+Answer with one JSON object, nothing else:
+{"task": "pairs", "pairs": [{"id": "P01", "stronger": "A" | "B" | "equal", "confidence": 1 | 2 | 3, "reasons": ["design", ...],
+  "note": "one sentence"}], "records": [{"id": "R001", "design": "...", "n_total": 120 | null, "context": "...",
+  "blinding": "...", "outcome_subjective": true | false | null, "effect_phrase": "..." | null}]}
+"""
+
+
+def _logw(f: dict) -> dict:
+    return {k: math.log(f[k][1]) for k in FACTORS}
+
+
+def pack5() -> dict:
+    """Pack 5 for Argon: pairs of records of one prospective link (spec references.R4_pairs_argon)."""
+    from hyparena.tools import pubmed
+    rows = [r for r in pool() if r["sample"] == "prospective"]
+    links = defaultdict(list)
+    for r in rows:
+        links[(r["unit"], r["claim"])].append(r)
+    cand = []
+    for key, rs in links.items():
+        for i, a in enumerate(rs):
+            for b in rs[i + 1:]:
+                if a["pmid"] == b["pmid"]:
+                    continue
+                la, lb = _logw(a), _logw(b)
+                diff = {k: abs(la[k] - lb[k]) for k in FACTORS}
+                dlw = abs(math.log(a["w"] / b["w"]))
+                stratum = "near_tie" if dlw < 0.15 else max(diff, key=diff.get)
+                cand.append({"key": key, "a": a, "b": b, "stratum": stratum, "dlogw": dlw,
+                             "h": sha(f"pack5|{a['pmid']}|{b['pmid']}|{key}")})
+    cand.sort(key=lambda c: c["h"])
+    want = {**{k: 13 for k in FACTORS}, "near_tie": 15}
+    picked, per_link = [], Counter()
+    for c in cand:
+        if want.get(c["stratum"], 0) > 0 and per_link[c["key"]] < 3:
+            picked.append(c)
+            want[c["stratum"]] -= 1
+            per_link[c["key"]] += 1
+    short = {k: v for k, v in want.items() if v > 0}
+    for c in cand:                                   # fill the shortfall from the other strata
+        if len(picked) >= 80:
+            break
+        if c not in picked and per_link[c["key"]] < 3:
+            picked.append(c)
+            per_link[c["key"]] += 1
+    recs, rid = {}, {}
+    for c in picked:
+        for r in (c["a"], c["b"]):
+            k = (r["pmid"], r["unit"], r["claim"], r["rec"].quote)
+            if k not in rid:
+                rid[k] = f"R{len(rid) + 1:03d}"
+                recs[rid[k]] = r
+    meta = pubmed.fetch(sorted({r["pmid"] for r in recs.values()}))
+    claims, cid = {}, {}
+    for c in picked:
+        if c["key"] not in cid:
+            cid[c["key"]] = f"C{len(cid) + 1:02d}"
+            cl = c["a"]["claim_obj"]
+            claims[cid[c["key"]]] = {"subject": cl.subject.label, "relation": cl.relation, "object": cl.object.label,
+                                     "qualifiers": cl.qualifiers}
+    items = []
+    for i, c in enumerate(picked):
+        items.append({"id": None, "claim": cid[c["key"]], "A": rid[(c["a"]["pmid"], c["a"]["unit"], c["a"]["claim"], c["a"]["rec"].quote)],
+                      "B": rid[(c["b"]["pmid"], c["b"]["unit"], c["b"]["claim"], c["b"]["rec"].quote)], "src": i, "swapped": False})
+    for i in range(15):
+        x = items[i]
+        items.append({**x, "A": x["B"], "B": x["A"], "swapped": True})
+    items.sort(key=lambda x: sha(f"pack5-order|{x['src']}|{x['swapped']}"))
+    for n, x in enumerate(items, 1):
+        x["id"] = f"P{n:02d}"
+    rec_of = {v: k for k, v in rid.items()}
+    task = {"task": "pairs", "instructions": PACK5_INSTRUCTIONS, "claims": claims,
+            "records": {i: {"pmid": r["pmid"], "title": meta.get(r["pmid"], {}).get("title", ""),
+                            "abstract": meta.get(r["pmid"], {}).get("abstract", ""), "quote": r["rec"].quote,
+                            "reader_reading": "for" if r["side"] == "for" else "against"} for i, r in sorted(recs.items())},
+            "claim_of_record": {i: cid[(r["unit"], r["claim"])] for i, r in sorted(recs.items())},
+            "pairs": [{"id": x["id"], "claim": x["claim"], "A": x["A"], "B": x["B"]} for x in items]}
+    cw = lambda r: weight_variant(r["rec"], r["claim_obj"], r["side"] == "against", CANDIDATE + "+rob_subjective")
+    key = {"pairs": [{"id": x["id"], "src": x["src"], "swapped": x["swapped"], "stratum": picked[x["src"]]["stratum"],
+                      "link": list(picked[x["src"]]["key"]),
+                      "w_v35": [round(recs[x["A"]]["w"], 4), round(recs[x["B"]]["w"], 4)],
+                      "w_candidate": [round(cw(recs[x["A"]]), 4), round(cw(recs[x["B"]]), 4)]} for x in items],
+           "records": {i: {"unit": r["unit"], "claim": r["claim"], "side": r["side"], "factors_v35": {k: r[k] for k in FACTORS},
+                           "verifier_context": r["context"][0], "design": r["rec"].design, "n_total": r["rec"].n_total,
+                           "blinding_words": blinding(r["rec"]), "subjective_rule": subjective(r["rec"], r["claim_obj"])}
+                       for i, r in sorted(recs.items())},
+           "strata_short": short}
+    PACK5_DIR.mkdir(parents=True, exist_ok=True)
+    (PACK5_DIR / "pack_5_task.json").write_text(json.dumps(task, indent=1, ensure_ascii=False) + "\n")
+    (PACK5_DIR / "pack_5_key.json").write_text(json.dumps(key, indent=1, ensure_ascii=False, default=str) + "\n")
+    return {"pairs": len(items), "unique_pairs": len(picked), "records": len(recs), "claims": len(claims),
+            "strata": Counter(c["stratum"] for c in picked), "strata_short": short,
+            "size_kb": round((PACK5_DIR / "pack_5_task.json").stat().st_size / 1024)}
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "step1"
     res = {"step1": step1, "step2-sample": lambda: f"{len(step2_sample())} records -> {CHECK}", "step2-score": step2_score,
-           "step3": step3, "step4": step4, "step67": step67}[cmd]()
+           "step3": step3, "step4": step4, "step67": step67, "pack5": pack5}[cmd]()
     print(json.dumps(res, indent=1, ensure_ascii=False, default=str))

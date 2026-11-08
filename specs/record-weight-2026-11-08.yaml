@@ -79,7 +79,31 @@ references:
   R3_trial_outcome:
     measure: tied AUC of the chain state (v3.5) on the 73 calibration units
     constraint: a variant may not lower it by more than 0.03 against the current rules
-  R4_pairs_argon: step 5, pack 5, prospective pool only (definitions written before the pack is sent)
+  R4_pairs_argon:   # pack 5; defined 2026-11-08 before the pack was built or sent
+    pool: >-
+      prospective records only (the 74 calibration trials are no longer used for blind checks with Argon), verifier context;
+      pairs of records of one link with distinct PMIDs
+    strata: >-
+      the factor with the largest |log ratio| between the two records under v3.5 (design, precision, effect, comparison,
+      context): 13 pairs each, plus 15 near-ties (|log wA/wB| < 0.15 under v3.5); at most 3 pairs per link; order by SHA-1
+      of "pack5|pmidA|pmidB|link"; a stratum short of pairs is filled from the others and reported
+    repeats: the first 15 pairs again with A and B swapped, under new ids, in a shuffled order (repeatability)
+    shown: >-
+      the claim (subject, relation, object, qualifiers); for each record PMID, title, abstract, the quote our reader took
+      and whether it read it as for or against. Not shown: weights, factors, levels
+    asked_per_pair: "stronger as evidence about the claim, whatever its direction: A / B / equal; confidence 1-3; reason codes from a closed list"
+    asked_per_record: "design, n, context (manual reading rules 1 and 5), blinding, whether the outcome of the quote is subjective, the stated effect phrase"
+    measures:
+      order: >-
+        Kendall tau-b between Argon's order (A 1, equal 0, B -1) and sign(log wA/wB) with |log wA/wB| < 0.1 as a tie, for
+        v3.5 and for the candidate weights (candidate + rob_subjective); concordance among pairs Argon did not call equal;
+        per stratum
+      repeatability: agreement of the 15 swapped repeats (the ceiling of the order measures)
+      labels: Cohen kappa of Argon's context with the verifier's (and with the 40 hand labels where they overlap); blinding vs the abstract-word rule
+    reading: >-
+      the candidate is not contradicted when its tau-b is not lower than v3.5's by more than 0.05; a stratum whose
+      concordance is below 0.5 for both weightings means the reader orders that factor the other way: reviewed with the
+      user. Argon's labels are a second reader, not a gold standard.
 
 context_variants:   # user decision 2026-11-08: steps 3-7 computed under both (written before step 3 was computed)
   verifier: the context label as the verifier set it (v3.5)
