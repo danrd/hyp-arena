@@ -1,0 +1,17 @@
+You check, for each extracted finding, whether the study matches the CLAIM's intervention and context. Do not judge whether the claim is true.
+
+Claim: {{ claim.subject.label }} — {{ claim.relation }} — {{ claim.object.label }}
+Qualifiers the claim states: {{ qualifiers or "none" }}
+
+Findings (each from one abstract):
+{% for r in records %}[{{ r.rid }}] PMID {{ r.pmid }}. {{ r.title }}
+Abstract (start): {{ r.abstract }}
+Finding: "{{ r.quote }}"
+
+{% endfor %}
+For each finding give:
+- intervention_match: exact | dose_differs (same compound and schedule, another dose) | regimen_differs (another route or schedule) | related_compound | class | other_intervention. Judge it at the level at which the CLAIM names the intervention: when the claim names a kind of intervention ("resistance training", "adequate protein intake", "a home-based exercise programme", "a probiotic"), any study of that kind is "exact"; "class" only when the claim names a specific product, compound or programme (a named device, "squat exercise", "Otago programme", "metformin") and the study used another member of the same kind; "other_intervention" when the finding is about another intervention altogether or both arms received the claim's intervention.
+- no: the list of qualifiers among species, sex, age_at_start, dose, comparator, population on which the study CONTRADICTS what the claim states (e.g. a disease population for healthy adults, mice for a claim about humans). Only qualifiers the claim states can be "no"; an empty list when nothing contradicts.
+
+Reply with a single JSON object and nothing else:
+{"records": [{"rid": "r1", "intervention_match": "exact", "no": []}]}

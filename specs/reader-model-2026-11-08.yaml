@@ -38,3 +38,18 @@ result:   # 2026-11-08; prospective/reader_gemini.json, calibration/reader_model
     the weak field (context) is a model limit, not only a prompt one: a stronger model fixes it where prompt v10/v11 did
     not (0.18-0.22). Recall goes the other way. A split reader is the cheaper candidate: DeepSeek extracts the records,
     Gemini only re-labels intervention_match and the qualifiers of each record (one short call per claim) — to be priced
+split_reader:   # user decision 2026-11-08 (item 1, "measure the price on 30 claims, about 0.1-0.2 USD"); written before the run
+  what: >-
+    DeepSeek's original records of the same claims; Gemini 3.5 Flash re-labels only intervention_match and the contradicted
+    qualifiers, one call per claim with each finding's quote, title and the first 1200 characters of its abstract
+    (prompt relabel_context/v1, the v10 kind-level rule); 'other_intervention' drops the record
+  measures: "context kappa with Argon on the Argon-labelled records: DeepSeek's labels vs the split reader's; tokens and USD per claim"
+  decision: "worth adopting when the kappa rises by at least 0.15 at a cost below 0.01 USD per claim"
+split_reader_result:   # prospective/split_reader.json, calibration/split_reader.json
+  run: "30 claims, 89 k tokens in, 3.6 k out: 0.166 USD (0.0055 per claim)"
+  context_kappa_with_argon: "DeepSeek labels 0.13 (class 75%) -> split reader 0.40 (class 25%), 97 Argon-labelled records"
+  dropped: "19 of the 97 records called 'other intervention' by Gemini (Argon: 3 'none'); counted as 'none' in the kappa"
+  decision_rule: "met (+0.26 at 0.0055 USD per claim)"
+  caveat: >-
+    the drops are aggressive; before adoption the split reader must run on every chain claim of both pools (about 326
+    claims, about 1.8 USD) and pass R2 / R3 (not worse by more than 0.03) like any change of the records
