@@ -1,6 +1,7 @@
 # Method v3 manual: how a hypothesis is scored and how to read the report
 
-Version: rules **v3.4** as of 2026-11-07 (`hyparena/card/rules_v32.py`, `evaluate(..., v34=True)`; novelty, leverage and the
+Version: rules **v3.5** as of 2026-11-08 (v3.4 + one signed axis "chain state" in the profiles and a null record weighted
+by the power of its study, `evaluate(..., v35=True)`, specs/link-scoring-2026-11-08.yaml); v3.4 as of 2026-11-07 (`hyparena/card/rules_v32.py`, `evaluate(..., v34=True)`; novelty, leverage and the
 evolution drift flag in `hyparena/card/novelty_v34.py`; definitions in `specs/v34-frontier-2026-11-07.yaml`), on top of
 `rules_v3.py` variant v3.1 and `v3_levels.py`, aggregation by ASPID over the axes (`hyparena/card/aspid_v3.py`, `configs/profiles_v3.yaml`). v3.3
 (`evaluate(..., fold=True, neutral_unverified=True)`) differs only in P (section 7) and in two record weights (section 5). The
@@ -268,6 +269,19 @@ drawn over its whole range in every draw.
 | evidence | P > support share > I > W > {best design, independent sources, endpoint} |
 | funding (merged with the investor draft, 2026-11-06) | P > feasibility > {trend, AI role, novelty} > {I, support share} > {W, endpoint, best design, independent sources} |
 | frontier (2026-11-07; exploratory programmes such as ARPA-H, Foresight, early R&D) | novelty > P > {I, feasibility} |
+
+**v3.5 (2026-11-08): one axis instead of P and the support share.** The **chain state** = the mean over the chain's slots
+of 2S − 1, from −1 (data against the links) through 0 (nothing known, or for and against balanced) to +1 (supported). It
+replaces P and the support share in every profile: evidence = chain state > I > W > {best design, independent sources,
+endpoint}; funding = chain state > feasibility > {trend, AI role, novelty} > I > {W, endpoint, best design, independent
+sources}; frontier = novelty > chain state > {I, feasibility}. Why: the support share gave 0 both to a refuted link and to an
+unknown one; P told them apart but was 1 for two thirds of the hypotheses. The chain state orders the calibration trials
+as P does (AUC 0.597-0.609 vs 0.595) and separates far better (its most common value covers 33% of hypotheses, P's 67%).
+It is linear, so a refuted chain is compensated a little more than under P's log scale; strong refutation is still
+filtered by the gate. **A null record weighs by the power of its study** to detect d = 0.4 (two-sided 5%; between groups
+Φ(0.4·√(n/4) − 1.96), before-after Φ(0.4·√n − 1.96), n unknown → 40), replacing its precision and effect factors: a null
+of 20 people weighs little, a null of 300 fully. P and the support share are still computed and shown. On the prospective
+pool the rankings move moderately (Spearman 0.88-0.95 with v3.4, 7-9 of the top 10 kept).
 
 There is no separate "room to grow" profile any more (removed 2026-11-07, user decision): what improving a hypothesis would
 give is computed under every profile as the **room to improve** (section 11), so the profile duplicated it, and only for one
@@ -565,9 +579,9 @@ effect_class_rule_a:
   standardised_difference: {medium: 0.5, large: 0.8}
   percent: {medium: 5, large: 20}
 profiles:
-  evidence: [[P], [support_share], [I], [W], [best_design_outcome, independent_outcome, endpoint_clinical]]
-  funding: [[P], [feasibility], [trend_pubmed, ai_role, N], [I, support_share], [W, endpoint_clinical, best_design_outcome, independent_outcome]]
-  frontier: [[N], [P], [I, feasibility]]
+  evidence: [[chain_state], [I], [W], [best_design_outcome, independent_outcome, endpoint_clinical]]
+  funding: [[chain_state], [feasibility], [trend_pubmed, ai_role, N], [I], [W, endpoint_clinical, best_design_outcome, independent_outcome]]
+  frontier: [[N], [chain_state], [I, feasibility]]
 ```
 
 ## Appendix A. Discrete levels of v3 and v3.1

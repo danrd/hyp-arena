@@ -13,19 +13,21 @@
 # no profile.
 # 2026-11-07 (user decision): the evolution profile is removed; the room to improve is computed under every profile from the
 # improvement list (improvements.room) and chooses the hypotheses for evolution.
+# v3.5 (2026-11-08, specs/link-scoring-2026-11-08.yaml): one signed axis, chain_state, replaces P and support_share in every
+# profile (same AUC as P, far better separation); a null record weighs by the power of its study; the gate stays.
 profiles:
   evidence:
-    version: "trial-4"
-    description: "Plausibility of the mechanism first, then how much of it is supported, then what the experiment teaches, then reach."
-    indicators: [P, support_share, I, W, best_design_outcome, independent_outcome, endpoint_clinical]
-    tiers: [[P], [support_share], [I], [W], [best_design_outcome, independent_outcome, endpoint_clinical]]
-  funding:
     version: "trial-5"
-    description: "Ready to fund (merged with the investor draft, user decision 2026-11-06): plausibility, then feasibility, then rising attention, the role of AI and novelty, then informativeness, then reach and the refinements."
-    indicators: [P, feasibility, trend_pubmed, ai_role, N, I, support_share, W, endpoint_clinical, best_design_outcome, independent_outcome]
-    tiers: [[P], [feasibility], [trend_pubmed, ai_role, N], [I, support_share], [W, endpoint_clinical, best_design_outcome, independent_outcome]]
+    description: "How well the literature supports the mechanism now (refuted < unknown < supported), then what the experiment teaches, then reach."
+    indicators: [chain_state, I, W, best_design_outcome, independent_outcome, endpoint_clinical]
+    tiers: [[chain_state], [I], [W], [best_design_outcome, independent_outcome, endpoint_clinical]]
+  funding:
+    version: "trial-6"
+    description: "Ready to fund: the state of the chain, then feasibility, then rising attention, the role of AI and novelty, then informativeness, then reach and the refinements."
+    indicators: [chain_state, feasibility, trend_pubmed, ai_role, N, I, W, endpoint_clinical, best_design_outcome, independent_outcome]
+    tiers: [[chain_state], [feasibility], [trend_pubmed, ai_role, N], [I], [W, endpoint_clinical, best_design_outcome, independent_outcome]]
   frontier:
-    version: "trial-1"
-    description: "Exploratory programmes (ARPA-H, Foresight, early R&D; user decision 2026-11-07): novelty first, then that nothing refutes it, then what the experiment teaches and its cost. Support share is left out on purpose: it rewards the known."
-    indicators: [N, P, I, feasibility]
-    tiers: [[N], [P], [I, feasibility]]
+    version: "trial-2"
+    description: "Exploratory programmes (ARPA-H, Foresight, early R&D): novelty first, then the state of the chain, then what the experiment teaches and its cost."
+    indicators: [N, chain_state, I, feasibility]
+    tiers: [[N], [chain_state], [I, feasibility]]

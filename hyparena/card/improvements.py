@@ -19,7 +19,8 @@ from hyparena.card import rules_v3 as r3
 from hyparena.card import rules_v32 as r32
 from hyparena.card.models import ClaimVerification, HypothesisCard
 
-V34 = {"v34": True}       # method v3.4 (specs/v34-frontier-2026-11-07.yaml); v3.3 was {"fold": True, "neutral_unverified": True}
+V34 = {"v35": True}      # v3.5 (2026-11-08): v3.4 + null by power; chain state in the profiles (name kept for callers)
+_V34_DOC = None       # method v3.4 (specs/v34-frontier-2026-11-07.yaml); v3.3 was {"fold": True, "neutral_unverified": True}
 ENDPOINT_UP = {"biomarker": "function", "patient_reported": "function"}
 ADJ_KEYS = ("population", "age_at_start", "sex")
 
@@ -31,7 +32,7 @@ def evaluate(card: HypothesisCard, cvs: list[ClaimVerification], alts: dict) -> 
 def axes(e: r32.V32Result, headroom_I: Optional[float], extras: dict) -> tuple[dict, dict]:
     h = e.headroom_I if e.headroom_I is not None else (headroom_I if headroom_I is not None else e.I)   # v3.4: own 0-1 headroom
     return ({"P": e.P, "scope": e.scope, "I": e.I, "headroom_I": h, "gate": e.gate},
-            {**extras, "support_share": e.support_share})
+            {**extras, "support_share": e.support_share, "chain_state": e.chain_state})
 
 
 def scores(pairs: dict[str, tuple[dict, dict]], K: int = 4000) -> dict[str, dict[str, float]]:
@@ -191,7 +192,8 @@ def analyse(card: HypothesisCard, cvs: list[ClaimVerification], alts: dict[str, 
     sc = scores(pairs, K=K)
     if comb["applied"]:
         ind = {name: [round(a, 3), round(b, 3)] for name, a, b in (("P", base.P, ec.P), ("I", base.I, ec.I),
-                                                                   ("support_share", base.support_share, ec.support_share))
+                                                                   ("support_share", base.support_share, ec.support_share),
+                                                                   ("chain_state", base.chain_state, ec.chain_state))
                if abs(b - a) > 1e-4}
         if cext.get("endpoint_clinical") != extras.get("endpoint_clinical"):
             ind["endpoint_clinical"] = [extras.get("endpoint_clinical"), cext.get("endpoint_clinical")]
@@ -208,7 +210,7 @@ def analyse(card: HypothesisCard, cvs: list[ClaimVerification], alts: dict[str, 
             item["expected"] = None
         else:
             ind = {}
-            for name, a, b in (("P", base.P, e_mod.P), ("I", base.I, e_mod.I), ("support_share", base.support_share, e_mod.support_share)):
+            for name, a, b in (("chain_state", base.chain_state, e_mod.chain_state), ("P", base.P, e_mod.P), ("I", base.I, e_mod.I), ("support_share", base.support_share, e_mod.support_share)):
                 if abs(b - a) > 1e-4:
                     ind[name] = [round(a, 3), round(b, 3)]
             if ext.get("endpoint_clinical") != extras.get("endpoint_clinical"):

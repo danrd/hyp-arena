@@ -1,9 +1,10 @@
 from hyparena.card import aspid_v3 as a
 
 
-def _r(P, scope, I, H=None, gate="pass", feas=None):
+def _r(P, scope, I, H=None, gate="pass", feas=None, state=None):
+    state = state if state is not None else 2 * P - 1          # v3.5: the chain state stands in for P in the profiles
     return ({"P": P, "scope": scope, "I": I, "headroom_I": H if H is not None else I, "gate": gate},
-            {"support_share": 1.0, **({"feasibility": float(feas)} if feas is not None else {})})
+            {"support_share": 1.0, "chain_state": state, **({"feasibility": float(feas)} if feas is not None else {})})
 
 
 def test_profiles_load_and_a_low_plausibility_is_not_compensated():
@@ -14,7 +15,7 @@ def test_profiles_load_and_a_low_plausibility_is_not_compensated():
         out = a.rank(res, p, K=3000)
         assert "F" not in out.expected                         # the gate's filtered hypotheses are not ranked
         assert out.expected["A"] > out.expected["B"]
-    assert a.rank(res, "evidence", K=3000).pairwise["A"]["B"] > 0.95
+    assert a.rank(res, "evidence", K=3000).pairwise["A"]["B"] > 0.9   # v3.5: chain state is linear (P was on a log scale)
 
 
 def test_expected_value_does_not_depend_on_the_pool():

@@ -39,6 +39,7 @@ IND_NAMES = {
     "trend_pubmed": ("рост внимания в литературе", "rising attention in the literature"),
     "ai_role": ("роль ИИ", "role of AI"),
     "support_share": ("подтверждённость механизма", "how much of the mechanism is supported"),
+    "chain_state": ("состояние цепочки", "state of the chain"),
     "N": ("новизна", "novelty"),
 }
 NOVELTY_NAMES = {"new_context": ("новый контекст", "new context"), "translation": ("перенос на другой вид", "translation"),
@@ -58,7 +59,7 @@ AI_NAMES = {"none": ("нет", "none"), "analysis": ("анализ данных"
 SHORT = {"P": ("P", "P"), "I": ("I", "I"), "I_headroom": ("Запас I", "I room"), "W": ("Размах", "Scope"),
          "feasibility": ("Реализ.", "Feasib."), "best_design_outcome": ("Дизайн", "Design"), "independent_outcome": ("Источн.", "Sources"),
          "against_share": ("«Против»", "Against"), "endpoint_clinical": ("Кон. точка", "Endpoint"), "trend_pubmed": ("Тренд", "Trend"),
-         "ai_role": ("ИИ", "AI"), "support_share": ("Подтв.", "Supported"), "N": ("Новизна", "Novelty")}
+         "ai_role": ("ИИ", "AI"), "support_share": ("Подтв.", "Supported"), "chain_state": ("Состояние", "State"), "N": ("Новизна", "Novelty")}
 DESIGN_NAMES = {"none": ("нет данных", "no data"), "cells": ("клетки", "cells"), "animal": ("животные", "animals"),
                 "observational": ("наблюдательное", "observational"), "review": ("обзор", "review"),
                 "non_randomised": ("нерандомиз.", "non-randomised"), "meta_analysis": ("метаанализ", "meta-analysis"), "rct": ("РКИ", "RCT")}
@@ -90,6 +91,8 @@ TIPS = {
                           "How close the trial's primary endpoint is to a clinical outcome: biomarker < patient-reported < function < clinical event (falls, hospitalisation, death)."),
     "trend_pubmed": ("Рост внимания: публикации о вмешательстве за 3 года до оценки против 3 лет до них, за вычетом роста всего PubMed. 0 — как вся литература, 0.7 — примерно вдвое быстрее.",
                      "Rising attention: publications on the intervention in the 3 years before scoring vs the 3 before, net of PubMed's growth. 0 = like all literature, 0.7 = about twice as fast."),
+    "chain_state": ("Состояние цепочки, от −1 до +1 (v3.5): среднее по звеньям величины 2S − 1. −1 — данные против звеньев, 0 — ничего не известно или «за» и «против» уравновешены, +1 — звенья подтверждены. Одна ось вместо неопровергнутости и подтверждённости: различает «опровергнуто» и «неизвестно». Нулевой результат маленького исследования весит по его мощности.",
+                    "State of the chain, −1 to +1 (v3.5): the mean over the links of 2S − 1. −1: data against the links; 0: nothing known, or for and against balanced; +1: the links are supported. One axis instead of non-refutation and support; tells refuted from unknown. A null of a small study weighs by its power."),
     "support_share": ("Подтверждённость механизма, от 0 до 1: средняя подтверждённость звеньев цепочки. Звено без данных или с данными только «против» — 0, умеренная поддержка — 0.67, сильная — около 1. Звенья без данных не снижают P, но снижают эту ось: гипотеза из одних догадок не получит высокое место.",
                       "How much of the mechanism is supported, 0 to 1: the mean support of the chain's links. A link without data or with data only against is 0, moderate support 0.67, strong near 1. Links without data do not lower P but lower this axis: a hypothesis made of guesses does not rank high."),
     "ai_role": ("Роль ИИ в гипотезе: нет / анализ данных / ИИ в цикле эксперимента / ИИ — само вмешательство; ставится только по дословной фразе текста.",
@@ -208,7 +211,7 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
         alts = {a: ClaimVerification.model_validate(v) for a, v in (it.get("v3_alternatives") or {}).items()}
         from hyparena.card import improvements as imp
         from hyparena.card import novelty_v34 as nv
-        res = imp.evaluate(card, cvs, alts)                                           # v3.4
+        res = imp.evaluate(card, cvs, alts)                                           # v3.5
         labels = r3.evaluate(card, cvs, alts, variant="v3.1").links
         by = {c.id: c for c in cvs}
         chain = []
@@ -267,7 +270,7 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
                    "N_pmid": nv.novelty_source(card, cvs),
                    "link_levels": nv.link_levels(card, cvs),
                    "flags": res_flags(it)}
-        values[h] = {"P": res.P, "I": res.I, "I_headroom": res.headroom_I if res.headroom_I is not None else it["v3"].get("headroom_I"), "W": res.scope, "support_share": res.support_share, "coverage": res.coverage, "N": N,
+        values[h] = {"P": res.P, "chain_state": res.chain_state, "I": res.I, "I_headroom": res.headroom_I if res.headroom_I is not None else it["v3"].get("headroom_I"), "W": res.scope, "support_share": res.support_share, "coverage": res.coverage, "N": N,
                      "endpoint_clinical": sc.get("endpoint_clinical"), "trend_pubmed": sc.get("trend_pubmed"), "ai_role": sc.get("ai_role"),
                      **{k: (it.get("extra") or {}).get(k) for k in ()}}
     # extras needed for profile contributions
@@ -292,7 +295,7 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
     scored = [h for h in hyps if hyps[h].get("P") is not None and hyps[h].get("gate") == "pass"]
     ax = {h: ({"P": hyps[h]["P"], "scope": hyps[h]["scope"], "I": hyps[h]["I"], "headroom_I": values[h]["I_headroom"], "gate": "pass"},
               {k: values[h].get(k) for k in ("feasibility", "best_design_outcome", "independent_outcome", "against_share",
-                                              "endpoint_clinical", "trend_pubmed", "ai_role", "support_share", "N")}) for h in scored}
+                                              "endpoint_clinical", "trend_pubmed", "ai_role", "support_share", "chain_state", "N")}) for h in scored}
     ranks = {}
     for p in profiles:
         agg = aspid_v3.rank(ax, p, K=10000)
@@ -1030,7 +1033,7 @@ def prospective(n: int = 60) -> tuple[dict, str]:
     sb = (sf if sf.exists() else d / f"scores_{n}.json").read_bytes()
     texts = {json.loads(l)["id"]: json.loads(l)["text"] for l in open(d / f"texts_{n}.jsonl")}
     meta = {"pool": f"prospective-{n}", "date": "2026-11-06", "sha": hashlib.sha256(sb).hexdigest(),
-            "method": "v3.4 (P = non-refutation, species charged once, constant precision before the outcome, novelty N), normalize_card/v10, verify_claim/v9, ASPID: evidence trial-4, evolution trial-3, funding trial-5, frontier trial-1",
+            "method": "v3.5 (chain state in the profiles, null by power; v3.4 weights and novelty), normalize_card/v10, verify_claim/v9, ASPID: evidence trial-5, funding trial-6, frontier trial-2",
             "title_ru": f"Проспективный пул: {n} идущих испытаний", "title_en": f"Prospective pool: {n} ongoing trials",
             "about_ru": "Испытания на ClinicalTrials.gov, где среди состояний — само старение, с завершением в ноябре 2026 — декабре 2028; "
                         "по 15 на тип вмешательства. Оценены до появления результатов; оценки зафиксированы хешем.",
