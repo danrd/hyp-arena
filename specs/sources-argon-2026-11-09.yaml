@@ -26,3 +26,16 @@ fix_found: >-
   hyparena/tools/pmc.is_open called the PMC OA web service at a URL that now answers 404, so every paper looked closed and
   arm B (full texts) would have read none; it now uses Europe PMC's isOpenAccess flag (checked: PMC11191791 open, its
   methods and results excerpt 5.3 k characters)
+result:   # Argon pack 10 answer 2026-11-09 (longevity-kg reviews/argon-2026-11-08/pack_10_answer.json); python -m scripts.pack10_analysis
+  full_text: "28 of 31 read in PMC, 3 unavailable"
+  changed_fields: "design 14, population 10, effect 6, n 5, stance 2, adds a finding 1; nothing changed in 11 of 28"
+  critical: "2 of 28 papers (7%): PMID 38911477 none -> against (the LISA trial's abstract omits its primary outcome, leg extensor power, which the full text reports as null); PMID 31121926 for -> against (the abstract's gain is a first-cycle subgroup; the whole cohort did not change)"
+  links: "verdict A -> B changes in 2 of 12 links (17%), both from supported or no evidence to refuted; B -> C (Argon's own knowledge) 0 of 12"
+  ours: "the sign of our 2S - 1 agrees with Argon's verdict in 9 of 12 links (A, B and C alike); S04 is a dangerous error: ours +0.97, full text and Argon's knowledge: refuted (moderate)"
+  rule: "not met (7% < 15% of papers, 17% < 20% of links): abstracts stay the default"
+  reading: >-
+    the full text rarely changes what a paper says about a link, but when it does it turns a positive into a null: an
+    abstract that leaves out a null primary outcome, or reports a subgroup as the result. Both are recognisable from the
+    abstract (a primary outcome named in the methods but missing from the results; a positive result restricted to a
+    subgroup), so a targeted full-text reading of such records is cheaper than a full-text arm for all. C added nothing
+    over B here, but the sample was built from Argon's own key papers, so that comparison is biased towards agreement.
