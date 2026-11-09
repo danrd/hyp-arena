@@ -20,7 +20,9 @@ from scripts.v34_check import CAL, PROS
 
 CHANGE = ("no", "not_measured")
 KNOWN_IN_SAMPLE = ["29227175", "40011687", "36316421", "39764482"]
-STOP_USD = 0.15
+STOP_USD = float(os.environ.get("STOP_USD", "0.15"))
+VERSION = os.environ.get("CVR_VERSION", "v2")      # v1: the first 35 records; v2 adds outcomes_quote
+SECOND = os.environ.get("CVR_SECOND", "0") == "1"   # user choice 2026-11-09 (variant V): no second model, Argon checks the changes
 
 
 def _norm(s: str) -> str:
@@ -33,7 +35,7 @@ def verbatim(q, text: str) -> bool:
 
 def _ask(client, family, k, p, meta, res, log):
     from hyparena.card.llm import ask
-    v, _ = ask(client, role="claim_vs_results", family=family, template="claim_vs_results", version="v1",
+    v, _ = ask(client, role="claim_vs_results", family=family, template="claim_vs_results", version=VERSION,
                variables={"claim": k, "qualifiers": ", ".join(f"{a}: {b}" for a, b in k.qualifiers.items() if b), "pmid": p,
                           "title": meta.get("title", ""), "abstract": meta.get("abstract", ""), "results": res},
                validate=lambda x: [] if x.get("y_between_groups") in ("yes", "no", "not_measured", "unclear") else ['"y_between_groups"'],
@@ -61,8 +63,9 @@ def run() -> dict:
             res = pmc.results_excerpt(p) or ""
             log: list = []
             a = _ask(client, "deepseek", k, p, meta, res, log)
-            rec = {"first": a, "first_verbatim": verbatim(a.get("quote"), res), "results_chars": len(res)}
-            if a.get("y_between_groups") in CHANGE:
+            rec = {"version": VERSION, "first": a, "first_verbatim": verbatim(a.get("quote"), res), "results_chars": len(res),
+                   "outcomes_verbatim": verbatim(a.get("outcomes_quote"), res + "\n" + meta.get("abstract", ""))}
+            if SECOND and a.get("y_between_groups") in CHANGE and (rec["first_verbatim"] or a.get("y_between_groups") == "not_measured"):
                 b = _ask(client, "google", k, p, meta, res, log)
                 rec["second"] = b
                 rec["second_verbatim"] = verbatim(b.get("quote"), res)
@@ -78,12 +81,15 @@ def run() -> dict:
 
 def verdict(r: dict) -> str:
     """'for' (unchanged) | 'null' (moved to against, weighed by power) | 'drop' (removed from the link)."""
-    a, b = r.get("first") or {}, r.get("second") or {}
-    if a.get("y_between_groups") not in CHANGE or not r.get("first_verbatim"):
-        return "for"
-    if b.get("y_between_groups") not in CHANGE or not r.get("second_verbatim"):
-        return "for"
-    return "drop" if a["y_between_groups"] == b["y_between_groups"] == "not_measured" else "null"
+    """Variant V (user 2026-11-09): the first reading alone, checked by code; the changes go to Argon.
+    'no' with a verbatim results quote -> null; 'not_measured' with a verbatim quote listing the measured outcomes -> drop."""
+    a = r.get("first") or {}
+    y = a.get("y_between_groups")
+    if y == "no" and r.get("first_verbatim"):
+        return "null"
+    if y == "not_measured" and r.get("outcomes_verbatim"):
+        return "drop"
+    return "for"
 
 
 def replaced(pool: str) -> dict:
@@ -117,8 +123,11 @@ def score() -> dict:
                      "second_asked": sum("second" in r for r in cr.values()),
                      "verdict": dict(Counter(verdict(r) for r in cr.values())),
                      "results_empty": sum(r.get("results_chars", 0) == 0 for r in cr.values())}
-    by_p = {k.split("|")[2]: v for k, v in verdicts.items()}
-    out["known_cases"] = {p: by_p.get(p, "not in sample") for p in KNOWN_IN_SAMPLE}
+    out["known_cases"] = {p: sorted({f"{k.split('|')[1]}: {v}" for k, v in verdicts.items() if k.endswith("|" + p)}) or "not in sample"
+                          for p in KNOWN_IN_SAMPLE}
+    out["proposed_not_counted"] = sum(1 for p_ in (PROS, CAL) if (p_ / "claim_results.json").exists()
+                                      for r in json.loads((p_ / "claim_results.json").read_text()).values()
+                                      if (r.get("first") or {}).get("y_between_groups") in CHANGE and verdict(r) == "for")
     a = json.loads((ARGON / "pack_11_answer.json").read_text())["items"]
     key = json.loads((ARGON / "pack_11_key.json").read_text())
     c = Counter()

@@ -80,3 +80,9 @@ claim_vs_results_partial:   # 2026-11-09 11:23-11:40 UTC; stopped by the 0.15 US
   known_cases: "36316421 caught on its outcome link c1 (no between-group effect on DLPFC activity; its GABA link c2 stays 'for', right); 39764482 'not_measured' by both families but not counted (the rule above); 40011687 not reached"
   vs_pack11: "16 of 19 overlapping papers the same as Argon's full-text finding (full re-read: 31 of 44 on the larger set)"
   status: "paused for the user's decision on the two rule defects and the cost"
+claim_vs_results_amendment:   # 2026-11-09, user choice "В" after the partial run; written before the rest of the run
+  second_model: "dropped: no Gemini reading; the code checks the quotes and Argon checks every change (a pack on all changed and proposed records)"
+  not_measured: "prompt v2 adds outcomes_quote (verbatim sentence or table row listing the measured outcomes); 'not_measured' removes the record only with it. The first 35 records were read with v1 and have none: their 'not_measured' answers go to Argon, uncounted"
+  rule: "'no' with a verbatim results quote -> null (weighed by power); 'not_measured' with a verbatim outcomes quote -> removed; otherwise unchanged"
+  note: "the not_measured rule was changed after seeing the partial run (it could never fire as written); stated here as such"
+  stop_usd: 0.05

@@ -1,0 +1,24 @@
+You check one randomised trial against one CLAIM of a research hypothesis. Do not judge whether the claim is true in general; say only what THIS trial's results show.
+
+Claim: {{ claim.subject.label }} — {{ claim.relation }} — {{ claim.object.label }}
+Qualifiers the claim states: {{ qualifiers or "none" }}
+The outcome of the claim (Y): {{ claim.object.label }}
+
+[PMID {{ pmid }}] {{ title }}
+ABSTRACT:
+{{ abstract }}
+
+RESULTS AND TABLES OF THE FULL TEXT:
+{{ results }}
+
+Questions, answered from the RESULTS AND TABLES above (not from the abstract):
+1. y_between_groups: is there a statistically significant difference BETWEEN the randomised groups on Y (or a directly equivalent measure of Y) at the primary time point?
+   "yes" | "no" (measured, no significant between-group difference) | "not_measured" (Y is not among the trial's outcomes) | "unclear" (the results above do not let you tell).
+   A within-group change (before vs after in one arm) is NOT a between-group difference.
+2. quote: the sentence or table row, copied EXACTLY from the results above, that answers question 1 (null if unclear).
+3. other_outcomes_significant: the outcomes that DID differ significantly between groups, if the answer to 1 is "no" or "not_measured" (short names), else [].
+4. outcomes_quote: if the answer to 1 is "not_measured", the sentence or table row, copied EXACTLY from the text above, that lists the outcomes the trial measured (so a reader can see Y is not among them); else null.
+5. abstract_overstates: true when the abstract presents the trial as supporting the claim but the results above answer 1 with "no" or "not_measured".
+
+Reply with a single JSON object and nothing else:
+{"y_between_groups": "unclear", "quote": null, "other_outcomes_significant": [], "outcomes_quote": null, "abstract_overstates": false}
