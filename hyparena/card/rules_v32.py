@@ -29,6 +29,8 @@ precision is a constant 1/2.
 """
 from __future__ import annotations
 
+import os
+
 import math
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
@@ -289,6 +291,9 @@ class V32Result:
         return asdict(self)
 
 
+EMPTY_SLOTS = os.environ.get("EMPTY_SLOTS", "count")      # "count" (v3.6) | "skip" (candidate, specs/empty-slots-2026-11-09.yaml)
+
+
 def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
              alt_verifications: Optional[dict[str, ClaimVerification]] = None, c: float = C_ANCHOR,
              fold: bool = False, neutral_unverified: bool = False, v34: bool = False, null_power: bool = False,
@@ -377,8 +382,11 @@ def _evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
         if len(sl) > 1 and outs and sl[0] in {o.id for o in outs}:
             return sum(res.links[i][0] for i in sl) / len(sl)          # parallel outcomes without a primary: their mean
         return max(res.links[i][0] for i in sl)                         # a cascade: its best link
-    res.support_share = round(sum(max(0.0, 2 * (slot_S(sl) - 0.5)) for sl in slots) / len(slots), 4) if slots else 0.0
-    res.chain_state = round(sum(2 * slot_S(sl) - 1 for sl in slots) / len(slots), 4) if slots else 0.0
+    # EMPTY_SLOTS = "skip" (candidate, user 2026-11-09): a slot none of whose links has a counting record is left out of the
+    # balance and the support share ("nothing known" is not averaged in; gaps show in coverage and the improvement list)
+    sl_used = [sl for sl in slots if any(res.links[i][3] + res.links[i][4] > 0 for i in sl)] if EMPTY_SLOTS == "skip" else slots
+    res.support_share = round(sum(max(0.0, 2 * (slot_S(sl) - 0.5)) for sl in sl_used) / len(sl_used), 4) if sl_used else 0.0
+    res.chain_state = round(sum(2 * slot_S(sl) - 1 for sl in sl_used) / len(sl_used), 4) if sl_used else 0.0
     silent = [sl for sl in slots if all(res.links[i][3] + res.links[i][4] == 0 for i in sl)
               and any(by_id.get(i) is not None and by_id[i].no_stance for i in sl)]
     res.silent_share = round(len(silent) / len(slots), 4) if slots else 0.0

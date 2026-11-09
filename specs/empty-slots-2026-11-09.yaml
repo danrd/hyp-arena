@@ -1,0 +1,20 @@
+id: empty-slots-2026-11-09
+written_on: 2026-11-09
+status: written before the computation (free)
+user_decision: "2026-11-09: try variant (b): a slot with no counting record is left out of the evidence balance and the support share"
+why: >-
+  under v3.6 a slot with no record (S = 0.5) enters the mean as 0: an added untested link lowers a positive balance by
+  k/(k+1), raises a negative one towards 0, and costs nothing when it is a 'pathway' next to another 'pathway' (a cascade
+  is one slot whose S is its best link). The effect depends on the sign of the balance and on the link type the writer
+  chooses; an outside reader (Argon) also applied it inconsistently (3 of 4 versions)
+variant: "EMPTY_SLOTS=skip in rules_v32.evaluate: slots whose links have F + A = 0 are excluded from both means; if all are empty, 0; coverage and the improvement list still show the gaps"
+measures:
+  R3: "tied AUC of the balance against trial outcomes on the calibration pool, v3.6 vs skip (R2 is per link and does not change)"
+  pack8: "Spearman of the trial balance with Argon's pack 8 balance (59 prospective trials)"
+  movement: "units whose balance changes; Spearman of the prospective ranking under each profile and top-10 overlap"
+adopt_if: "R3 not worse by more than 0.03 and pack 8 trial Spearman not lower by more than 0.05; the user decides on meaning"
+result:   # python -m scripts.empty_slots -> calibration/empty_slots.json
+  R3: "0.593 (count) -> 0.586 (skip): -0.007, inside 0.03"
+  pack8_trial_spearman: "0.393 -> 0.398"
+  prospective: "12 of 59 units change their balance; mean balance 0.156 -> 0.185; rankings: Spearman 0.996 / 0.992 / 0.997 (evidence / funding / frontier), top 10 kept 9 / 9 / 10"
+  adopt_rule: "met; adoption is the user's decision"
