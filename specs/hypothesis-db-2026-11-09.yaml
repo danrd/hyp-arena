@@ -69,3 +69,22 @@ open_questions:
   - "the rights for the site (above): the user's decision with the operators"
   - "whether OHF and Omega share their hypotheses"
   - "the embedding model for the text clusters (local, free) and the cluster threshold (fixed on the hand sample)"
+
+argon_pack14_triage:   # Argon pack 14 answer 2026-11-09 (longevity-kg reviews/argon-2026-11-08/pack_14_answer.json): 24 sets; Argon's counts, terms and URLs are unverified until we open each
+  rows_with_outcomes:   # written before a result, dated, outcome known: the best rows (the same use as the registry benchmark)
+    - "NIA ITP: ~97 cohort tests 2004-2025, mouse lifespan outcomes for ~74, public domain; we already used ITP as a backtest (data/backtest): its rationale texts are in the cohort papers"
+    - "NIA CITP: 77 compounds 2013-2024 in worms, outcomes for 69, CC BY; also used as a backtest before"
+    - "trial registries we lack (WHO ICTRP export, EU-CTR / CTIS, jRCT / UMIN, ChiCTR, CTRI, CRIS): the same pipeline as the benchmark; ChiCTR, CTRI and CRIS were closed to automatic access when the benchmark was built, so only the WHO ICTRP export (its own terms) is a route; no bypass"
+  rows_without_outcomes:   # prospective texts, few or no outcomes; terms mostly not stated -> private use only until permission
+    - "VitaDAO funding proposals (~40-60, Discourse JSON, dated, terms not stated)"
+    - "Impetus Grants (146 projects, outputs linked for many; the directory needs JavaScript)"
+    - "Hevolution / AFAR grant abstracts (~60-100), NAM Healthy Longevity Catalyst winners (~550, about half biological), XPRIZE Healthspan semifinalists and finalists (60), Longevity Prize winners (6)"
+    - "ClockBase Agent (15 013 AI-scored hypotheses, CC BY; outcomes are ageing-clock effects in mouse datasets, 26 with lifespan in GenAge / DrugAge): large, AI-written, a separate source kind"
+    - "PandaOmics dual-purpose targets (ranked tables, not prose)"
+  not_rows:   # knowledge of tested results or general benchmarks: inputs for novelty and checks, not hypotheses
+    - "Open Genes, Geroprotectors.org, DrugAge / GenAge, LongevityBench, theories-of-ageing compendia, Foresight tech tree"
+    - "BioVerge, HypoBench, HypoKG, CoDHy: general biomedical; only an ageing filter would give rows"
+  next: >-
+    open each listed source (URL, count, terms) before any export; first candidates: the WHO ICTRP ageing export (extends
+    the benchmark), ITP and CITP rationale texts (dated, with outcomes), VitaDAO (API, dated); the rest after the terms
+    are read. Nothing is exported or published without the user's go

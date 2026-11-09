@@ -631,6 +631,39 @@ A gap between the expected and the obtained change points at the improvement lis
 rewrite (the item was not applied as asked); both are shown. "Needs new data" items are never applied by the first two
 modes.
 
+## 11a. Generation and the hypothesis database (specified, not implemented)
+
+**Generation** (`specs/generation-2026-11-09.yaml`, user decision 2026-11-09) is a separate command,
+`python -m hyparena.card.generate --mode free|structured|profile --topic ... [--profile P] [--n K] [--writer F] [--as-of T]
+[--fields FILE] [--from-texts FILE] [--dry]`. It is evolution without a parent: after the text the pipeline is the same
+(card, search before T, reading, alternatives, endpoint, v3.6 rules, ASPID under every profile on fixed scales). The number
+of hypotheses and the writer model are parameters; texts written in a chat with an outside model enter through
+`--from-texts` and go through the same checks; `--dry` names the calls and the price.
+
+| Mode | The writer gets | Accepted by code when |
+|---|---|---|
+| free | the topic, T, the hypotheses already in the database on the topic ("do not repeat") | an intervention and an outcome are named; not a duplicate |
+| structured | as free, plus the card template (intervention, population, mechanism links, outcome, decisive experiment); fields fixed by the user must be kept | as free, plus every fixed field survives normalisation, the mechanism is written as links, the experiment has a system, a design and an endpoint |
+| profile | as structured, plus the profile's order and what raises its top tiers | as structured, plus the profile's target: frontier = the checks of directed evolution (one new link between supported neighbours, PubMed absence count); funding = feasibility and a functional or clinical endpoint; evidence = known records on every link and an experiment that separates the supported alternatives |
+
+**Diversity** is controlled within a run and against the database: typed proximity of the cards (duplicate, variant,
+analog, competitor; `hyparena/card/proximity.py`) and text distance; a duplicate is rejected and rewritten once, a duplicate
+of a database row is linked to it, not added. Each run reports the share of variant and analog pairs and the number of
+distinct interventions and outcomes. With T = today there is no outcome to test against: the outside check (Argon: novel
+before T, plausible, testable, on topic, best profile; its grouping against ours) is part of the mode.
+
+**The hypothesis database** (`specs/hypothesis-db-2026-11-09.yaml`) holds every hypothesis version from every source
+(registry trials, Bio Arena, other arenas and public sets, our generated and evolved ones), privately in `longevity-kg`:
+text, source and terms, author kind (no names), the date written (T of its scoring), parent, outcome if known, the
+source's own scores apart from ours, our card, scores with method version and date, the history of re-scorings, and its
+cluster. Families are connected components over duplicate, variant and analog; topics are clusters of a text embedding
+with a threshold fixed on a hand-checked sample. Scoring runs: the registry rows first (no cost), then Bio Arena (a sample
+of 100 by cluster first). The site shows the database with the living arena's re-scoring (method-v3.md section 10); texts
+of other authors appear there only with their operators' permission.
+
+Public sets found by the outside reader (Argon pack 14, 2026-11-09, `longevity-kg reviews/argon-2026-11-08/pack_14_answer.json`)
+are checked by us before any export; the triage is in the database spec.
+
 ## 12. What the method does not do, its known limits and its validation status
 
 - It does not predict whether a trial will succeed; trials are run where support exists but the question is open.
