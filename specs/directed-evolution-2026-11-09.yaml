@@ -78,3 +78,33 @@ pilot:
 implementation:   # after the user's go
   code: "hyparena/card/evolve_v3.py: MODES gains 'directed'; propose_directed + directed_problems (the checks above); prompt evolve_directed/v1; tests on hand-made pairs (a child with a new link between supported neighbours passes; with a known link, two new links, unsupported neighbours, another intervention, or drift fails)"
   manual: "section 11, the modes table gains the row 'directed'"
+
+argon_trial_2026_11_09:   # Argon applied this spec by hand to 4 prospective trials (report sent by the user; data read by Claude)
+  result: >-
+    all four children reach 'new link' and the top of every profile (frontier +0.40 ... +0.57; evidence 0.47 -> 0.83 for
+    NCT07726758), with P = 1.0 and W = hallmark in all four; room after ~0.01
+  what_drove_it:
+    against_records_gone: "every record against of the parents (10 of them, up to weight 0.84) is absent in the children; P -> 1.0 in all four: the 'rewrite refuted link' upper bound taken as a fact, not a re-reading"
+    context_rewritten_to_fit: "the same papers move from 'adjacent' to 'exact' because the child's claims are narrowed to the papers' populations (e.g. 29508134 0.125 -> 0.25, 36324034 0.25 -> 0.5, 22770932 0.36 -> 0.72)"
+    records_moved: "records moved from the outcome link to another link (NCT07726758: RCTs 34127610, 42297625 put on the morphometric link c2)"
+    links_rewritten: "every parent link is rewritten (types changed: effect -> engagement, effect -> pathway), against kept_links"
+    scope_relabelled: "W -> hallmark in all four through rewritten supported links naming a hallmark (loss of proteostasis)"
+    experiment_inflated: "I up to 0.78-0.88 through 2x2(x2) factorial designs with biopsies, HD-sEMG, imaging; feasibility barely moves (0.85 -> 0.82): feasibility does not see the number of arms or invasive measures"
+    pubmed_absence_by_conjunction: >-
+      the 'PubMed <= T = 0' counts come from 3-4-way AND queries written by the writer (intervention form AND mediator AND
+      population). Recounted by Claude (E-utilities, pdat <= T): the link's own subject AND object give 80 / 37
+      (eccentric or resistance training AND Piezo1 / agrin / CAF22), 21 (galvanic vestibular stimulation AND hippocampus /
+      theta), 136 (HIIT AND BDNF), 19 (vitamin D / VDR AND mitochondria AND skeletal muscle, before 2014-11-01)
+    data_errors: "every record carries year 2024 whatever its publication year"
+  amendments:   # to the checks above, before implementation
+    pubmed_query_by_code: "the absence count is built by code from the new link's subject and object (labels and synonyms of the card), never by the writer; no third facet"
+    reread_not_remove: "the child's records come only from the pipeline's own reading of the child (the same papers re-read against the child's claims); a parent record against disappears only if the code-checked context of the child no longer matches it, and the report lists each such disappearance with the reason"
+    no_record_moves: "a record is never moved between links by the writer; links take findings by matching (paper skeleton)"
+    kept_links_enforced: "parent links with S > 1/2 must be in the child with the same subject, relation, object and qualifiers; any change fails the check"
+    scope_from_parent_links: "W of the child is computed from the kept links and the parent's supported links only; a rewritten link cannot raise W"
+    narrowing_flagged: "narrowing a claim's context so that adjacent records become exact is reported as 'fitted to the found papers' with the records it lifts (it is the narrow_population item, which costs novelty)"
+    experiment_cost: "feasibility gains the number of arms and invasive or specialised measures (biopsy, imaging, HD-sEMG); to be specified with the test-model work"
+  reading: >-
+    the spec's targets were met on paper but by the moves the checks were meant to stop; the mode is not adopted in this
+    form; the amendments above go in before any implementation, and the Argon pack for the children asks for the
+    against-records and the pair count explicitly
