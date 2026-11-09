@@ -26,3 +26,19 @@ measures:
 next: >-
   a cheap model check of each abstract (DeepSeek: is the between-group result of the named primary outcome given? is the
   positive result restricted to a subgroup?) is scored against this gold before any full-text re-read is run; priced then
+result:   # Argon pack 11 answer 2026-11-09 (longevity-kg reviews/argon-2026-11-08/pack_11_answer.json); python -m scripts.pack11_analysis
+  targeted: "full text read 26 of 28; overstates 12/26, of serious kinds (primary omitted, subgroup, secondary as main, within as between) 8/26; stance for -> null or against 2/26"
+  control:  "full text read 18 of 20; overstates 11/18, serious 6/18; stance flips 2/18"
+  kinds_all: "other 14, per-protocol only 12 (mostly attrition), within-group as between 10, secondary as main 3, primary omitted 3, subgroup 2"
+  rule_v0: "no enrichment: the crude rule flags papers that overstate less often than the ones it leaves out (46% vs 61%): useless as a filter"
+  flips: >-
+    4 of 44 papers (9%) change from for to null or against with the full text (pack 10: 2 of 28); two of the four (PMID
+    29227175: the abstract itself says the primary and secondary outcomes did not differ and only a post hoc subgroup moved;
+    PMID 40011687: between-group comparisons non-significant in the abstract's own words) are visible in the abstract: our
+    reader misread it; the other two (PMID 36316421, PMID 39764482) need the full text
+  reading: >-
+    overstatement is common and not concentrated where a code cue points: a third of the RCT papers our reader takes as
+    evidence for a claim overstate it in a serious way, and about one in ten turns into a null or a negative with the full
+    text. A filter by cues does not work; what works is (1) the reader's own between-group rule on the abstract (v13 restates
+    it) and (2) a full-text re-read of every 'for' record from an RCT on the outcome link where PMC allows it, which is cheap
+    (about half of 231 records)
