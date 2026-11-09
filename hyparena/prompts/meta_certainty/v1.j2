@@ -1,0 +1,17 @@
+You read one meta-analysis for one CLAIM of a research hypothesis. Do not judge whether the claim is true.
+
+Claim: {{ claim.subject.label }} — {{ claim.relation }} — {{ claim.object.label }}
+Qualifiers the claim states: {{ qualifiers or "none" }}
+
+[PMID {{ pmid }}] {{ title }}
+{{ text }}
+
+Answer from this text only:
+- claim_outcome_pooled: yes when the meta-analysis reports a pooled result for the claim's outcome (or a directly equivalent measure); no when it pools only other outcomes;
+- certainty: the GRADE certainty the authors give for the claim's outcome: high | moderate | low | very_low | not_reported;
+- risk_of_bias: the overall risk of bias of the included trials as the authors judge it: low | some_concerns | high | not_reported;
+- i2: the I2 (percent) of the pooled result for the claim's outcome, or null;
+- quote: the sentence, copied exactly, that gives the certainty or, if none, the pooled result for the claim's outcome.
+
+Reply with a single JSON object and nothing else:
+{"claim_outcome_pooled": "yes", "certainty": "not_reported", "risk_of_bias": "not_reported", "i2": null, "quote": ""}

@@ -45,3 +45,15 @@ result:   # Argon pack 12 answer 2026-11-09 (longevity-kg reviews/argon-2026-11-
     took another outcome). In v3.6 every meta-analysis weighs 1, as much as a large RCT. A certainty-aware weight (high or
     moderate 1, low 1/2, very low 1/4; not reported: by the risk of bias or I2) needs the certainty of every meta-analysis
     record: GRADE is often in the abstract, else a short model call on the abstract (and the full text where open)
+meta_certainty:   # user decision 2026-11-09 ("do it"); written before any call; about 0.02-0.05 USD
+  records: "every meta-analysis record 'for' on the outcome link of both pools"
+  free_step: "GRADE certainty from the abstract by code (high / moderate / low / very low certainty or quality of evidence, near GRADE)"
+  model_step: >-
+    meta_certainty/v1 (DeepSeek), one call per paper and claim: the abstract, plus the PMC methods and results excerpt
+    where open; claim_outcome_pooled, certainty, risk_of_bias, I2, a verbatim quote (checked)
+  weight_variants:   # the design factor of a meta-analysis record, everything else v3.6
+    current: "1"
+    certainty: "high or moderate 1, low 1/2, very low 1/4; not reported: risk of bias low 1, some concerns 3/4, high 1/2, not reported 3/4"
+    certainty_and_pooled: "as certainty, and a record whose claim outcome is not pooled is dropped (the reader took another outcome)"
+  measures: "R2 and R3 (v3.6, 0.03 rule) for each variant; R4 tau-b on pack 5; how many records change and by how much"
+  adopt_if: "not worse than current by more than 0.03 on R2 and R3 (GRADE clause: certainty is GRADE's own rule); the user decides between the two variants"
