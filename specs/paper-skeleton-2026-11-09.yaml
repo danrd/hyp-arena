@@ -1,0 +1,68 @@
+id: paper-skeleton-2026-11-09
+written_on: 2026-11-09
+status: specification; the extraction is not run; Codex task for the code (longevity-kg reviews/codex-2026-11-09-skeleton/TASK.md)
+user_decisions: >-
+  2026-11-09: reading moves to the level of the paper now (the core of the knowledge graph): each paper is parsed once into a
+  fixed format, as fully as possible, so that it rarely has to be read again; a link of a hypothesis takes only the part it
+  needs. Storage: tables (JSONL / SQLite) in the private longevity-kg (quotes); full-text results and tables for every open
+  paper; quality checked through Argon or Codex, not a second model; Codex starts at once and first lists what can be re-used.
+why: >-
+  outside checks put the loss in reading, not search: of Argon's key papers per link (pack 8) 19% are records on the link,
+  31% were read for it with no record, 46% were read only for another link of the same trial, 5% never retrieved; reading
+  every chain paper for every link (cross-link) and reader v13 raise the share only to 0.24 and 0.29; the reader skips papers
+  silently (64% of the losses on pack 9) and confuses context (14 of 35 'for' records in pack 13 were about another
+  intervention or population). The cause: one question mixes "what did the paper find" with "does it match this claim",
+  asked per link on batches of 10-50 papers.
+
+design:
+  step_1_parse: "one call per paper, independent of any hypothesis: the paper skeleton below, every value with a verbatim quote checked by code"
+  step_2_match: "a link of a hypothesis is matched to findings by code (entity ids, relation family, context rules); a model only for ambiguous pairs; the records of v3.6 are built from the matched findings, so the rules and weights do not change"
+  reuse: "a parsed paper is never read again for a new link or hypothesis; a new paper adds rows; re-scoring reads only new papers"
+
+skeleton:   # v1; extends the observation schema of KB Projects/Open Longevity/Knowledge_Graph.md 3.1 and the fields of EvidenceRecord
+  paper: "pmid, doi, pub_date, publication types, title, text_used (abstract | abstract+results_excerpt), retracted, preprint"
+  study:
+    design: "rct | non_randomised | observational | animal | cells | review | meta_analysis | other"
+    randomised: "yes | no | n/a, with quote"
+    blinding: "double | single | assessor | open | not_reported"
+    control: "placebo | sham | active | usual_care | no_treatment | historical | none"
+    n_total: "with quote"
+    duration: "as reported"
+    registration: "trial ids named in the paper"
+  context: "species, strain, sex, age at start, population or condition, disease model flag (with the sentence), setting"
+  arms: "per arm: name, intervention entity (label + id when resolved), dose, route, regimen, co-interventions"
+  outcomes: "per outcome: name, primary | secondary | exploratory, time points, measure, subjective or not"
+  results:   # one row per outcome x comparison x time point x stratum: the core
+    comparison: "which arms, between_groups | within_group | interaction"
+    direction: "increase | decrease | no_effect | unclear (in the outcome's own terms)"
+    significance: "significant | not_significant | not_tested"
+    effect_reported: "verbatim (MD, RR, %, CI)"
+    effect_class: "none | small | medium | large | unclear"
+    stratum: "all | sex | age group | dose | post hoc subgroup (flag)"
+    location: "abstract | results | table | figure"
+    quote: "verbatim; code checks it in the text used"
+  mechanistic_findings: "subject - relation - object in the closed vocabulary (Hypothesis_Card_Spec 5), with context and quote, role finding | background | speculation"
+  meta_analysis_extra: "pooled outcome, k trials, participants, I2, GRADE certainty per outcome, risk of bias, with quotes"
+  abstract_vs_results: "for each claim of the abstract's conclusion: the results row it rests on, or 'not in results' (pack 13)"
+  provenance: "extractor (prompt version, model family), extracted_at, text hash"
+
+text: "abstract + pmc.results_excerpt (Results and tables, 20 000 characters) for every open paper (about a third), else the abstract"
+model: "DeepSeek (cost); quality is checked by Argon packs and by Codex reviews of samples, not by a second model (user)"
+
+checks:   # free, by code
+  quotes: "every quote verbatim in the text used; a value whose quote fails is dropped"
+  consistency: "n_total within the arms' n; a 'significant' result has a p, CI or wording that says so in its quote"
+  coverage: "share of papers with at least one results row; share of results rows with an effect"
+
+evaluation:
+  stage_0: >-
+    the papers of the 10 links of Argon pack 9 (a per-paper gold): does the matched finding set reproduce Argon's per-paper
+    findings (recall, precision, direction) against reader v13 (0.57 / 0.75) on the same papers; about 300-500 papers,
+    about 0.3-0.5 USD with full texts; the exact count and price from a dry run before the call
+  stage_1: >-
+    the 30 trials of the cross-link pilot (3 290 distinct papers): key-paper recall of pack 8 against 0.16 / 0.24 / 0.29,
+    link and trial Spearman with pack 8, context errors on the pack 13 records; about 3-5 USD; then the whole prospective
+    pool (6 135 papers) and the calibration pool, R2 / R3 under the 0.03 rule
+  reference_extraction: "the known-facts test (Open Genes / GenAge experiments with PMIDs, docs/backlog.md) and DrugAge rows as field-level gold (species, strain, sex, dose, direction, significance)"
+  outside: "an Argon pack of 30 parsed papers (the skeleton against the paper) and a Codex review of the code and of a sample"
+adopt_if: "stage 1: key-paper recall at least 0.35 and the link Spearman with pack 8 above the cross-link reading (0.29) by more than the reader noise; then R2 / R3 not worse by more than 0.03"
