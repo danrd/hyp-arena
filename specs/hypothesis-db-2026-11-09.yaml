@@ -1,0 +1,71 @@
+id: hypothesis-db-2026-11-09
+written_on: 2026-11-09
+status: specification only; not implemented, no call made
+user_decisions: >-
+  2026-11-09: one database of every hypothesis we have or collect: the registry benchmark, Bio Arena, the other hypothesis
+  arena we looked at, our generated and evolved ones; proximity and clusters over it; then score them all and put them on
+  the site with the re-scoring feature discussed (the living arena, method-v3.md section 10); the collection can be given to
+  Argon
+where: "the rows and texts in the private repository (longevity-kg hypothesis_db/), the schema and the code in hyp-arena; nothing goes to the site before the rights check below"
+
+sources:   # first set; Argon is asked for more (below)
+  registry_benchmark: "237 benchmark units + 74 calibration + the 60 prospective trials scored (673 in the prospective pool): longevity-kg hypothesis_sources (texts, dates, outcomes where known)"
+  bio_arena: "985 accepted hypotheses of the 2026-10-19 export (data/bioarena/2026-10-19: text, dossier, rating with interval, matches); human and organisation authors already anonymised in the export"
+  ohf_hypothesis_arena: "OHF (Hypothesis Arena, a separate company project, Working_Notes 2026-11): 29 ageing cards seen on staging; to be exported only with the project's consent"
+  omega_point: "the 60 selected hypotheses Eternal Search keeps with timestamps (Working_Notes 7n), if the team shares them"
+  ours: "every generated (specs/generation-2026-11-09.yaml) and evolved hypothesis (tuning, free, directed), with its parent"
+  chatgpt_set: "data/chatgpt_hypotheses.json (earlier test set)"
+  to_check: "PersonaAI (114 hypotheses over 12 hallmarks, bioRxiv 2026) and any public set Argon finds"
+
+row:   # one row per hypothesis version
+  id: "stable id: source prefix + source id (bioarena:<uuid>, ctgov:NCT..., gen:<run>/<k>, evo:<parent>/<mode>/<k>)"
+  text: "the text as given by the source (private)"
+  source: "source name, source URL or file, date collected, licence or permission note"
+  author_kind: "human | AI agent | model | organisation | unknown (no personal names)"
+  written_on: "the date the hypothesis was written or registered (T of the scoring)"
+  parent: "for evolved and regenerated rows: the parent id and the mode"
+  outcome: "for registry and other dated hypotheses: the outcome label when known, with its source; else null"
+  source_scores: "what the source itself gives (Bio Arena rating and interval, OHF judge result), kept apart from ours"
+  card: "our normalised card (pipeline output), versioned"
+  scores: "v3.6 axes and ASPID under every profile, with the method version, the date and the record set they were computed from"
+  history: "every re-scoring: date, method version, what changed (link levels, gate, axes), the papers that caused it"
+  cluster: "cluster id and the typed relations to its neighbours"
+
+proximity_and_clusters:
+  typed: "hyparena/card/proximity.py on the cards: duplicate, duplicate_approx, variant, competitor, contradiction, analog, analog_weak, mechanism_neighbour (buckets, cheap for thousands)"
+  text: "an embedding of the text (an open biomedical sentence model, e.g. SapBERT already used for aliases, or a general one) for hypotheses whose card is not built yet, and as a second view"
+  clusters: >-
+    families = connected components over duplicate / duplicate_approx / variant / analog (hyparena/diversity.py
+    FAMILY_TYPES); topics = clusters of the text embedding (HDBSCAN or agglomerative, threshold fixed on a hand-checked
+    sample of 50 pairs before use); each cluster is labelled by its commonest intervention and outcome object
+  dedup_across_sources: "a duplicate across sources is one idea with several rows (both kept, linked); counts of distinct ideas are reported per source and overall"
+  check: "a hand-checked sample of 50 pairs (Claude) and, later, an Argon pack of pairs: precision of 'duplicate' and 'variant' and the agreement of the topic clusters"
+
+scoring_runs:
+  order: "1 the registry rows already scored (no cost); 2 Bio Arena's 985 (cards and verification are paid: about 0.05 USD each off-peak, about 50 USD for all; first a sample of 100 by cluster); 3 the rest as they arrive"
+  cut: "each row is scored with T = its written_on date (Bio Arena: the submission date, 2026-10-14..17), so the literature after T is not used"
+  comparison: "Bio Arena: Spearman of our ASPID scores with its Bradley-Terry rating, overall and within clusters; where they differ most, an Argon pack (why)"
+
+site:   # after the scoring runs and the rights check
+  what: "the database on the site (hyparena/site.py): search, filters by source, cluster, profile and status; each hypothesis with its card, links, records, scores under every profile and its history"
+  rescoring: >-
+    the living arena of method-v3.md section 10: watched queries per claim, new papers read weekly, rules re-run, a change
+    log per hypothesis (link level before and after, the paper and its date), gate events shown; small moves not shown
+  rights: >-
+    before anything leaves the private repository: Bio Arena texts are public through its API but authored by others, so
+    the site shows them only with the operators' permission (or links to bioarena.ru and shows our scores only); OHF and
+    Omega rows only with consent; publisher quotes are never shown beyond short citations; the decision is the user's
+
+argon_collection:   # the user's idea; Claude builds the task after the user's go
+  ask: >-
+    find public sets of hypotheses on ageing and healthy lifespan (arenas, benchmarks, papers listing generated or
+    expert hypotheses, registries other than ClinicalTrials.gov), per set: name, URL, how many hypotheses, the format, the
+    date the hypotheses were written, whether outcomes are known, the licence or terms of use, how to export (API, file,
+    page), and whether texts are written before results
+  rules: "only public sources, no access restrictions bypassed (user rule), no personal data; Argon returns a list, the export is done by us after the user's go"
+  check: "every set Argon names is opened by us before any export (the URL and the count are checked)"
+
+open_questions:
+  - "the rights for the site (above): the user's decision with the operators"
+  - "whether OHF and Omega share their hypotheses"
+  - "the embedding model for the text clusters (local, free) and the cluster threshold (fixed on the hand sample)"

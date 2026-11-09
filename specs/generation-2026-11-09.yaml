@@ -1,0 +1,67 @@
+id: generation-2026-11-09
+written_on: 2026-11-09
+status: specification only; not implemented, no call made
+user_decisions: >-
+  2026-11-09: a hypothesis generation mode so that the user can start testing; a separate command (not a mode of
+  evolution), sharing its code; three modes: free by topic, structured by the card's fields, by profile on a topic; the
+  number of hypotheses and the model are parameters (in a chat with an outside model the user sets them there); diversity
+  is controlled; every generated hypothesis goes to the hypothesis database (specs/hypothesis-db-2026-11-09.yaml); the
+  user tests through Argon
+relation_to_evolution: >-
+  generation is evolution without a parent: after the text the pipeline is the same (card, PubMed search before T, reading,
+  alternatives, endpoint, v3.6 rules, ASPID under every profile on fixed scales), and the profile mode reuses the checks of
+  directed evolution (specs/directed-evolution-2026-11-09.yaml)
+
+command:
+  cli: "python -m hyparena.card.generate --mode free|structured|profile --topic TEXT [--profile P] [--n K] [--writer FAMILY] [--as-of DATE] [--fields FILE] [--dry]"
+  n: "number of hypotheses per run (default 5)"
+  writer: "model family of the writer (default google; any family of the config); several families may be listed, assigned in turn, for diversity"
+  as_of: "the date cut T; default today (no outcome test exists then: only outside checks and, later, real trials)"
+  dry: "prints the prompt and the plan of calls with the named price, makes no call"
+  outside_model: "the same prompt templates can be pasted into a chat with an outside model; its texts enter through --from-texts FILE (no writer call), and go through the same checks and pipeline"
+
+modes:
+  free:
+    writer_gets: "the topic, T, the list of hypotheses already in the database on this topic (one-line titles, nearest first, at most 30) with 'do not repeat these'"
+    writes: "a hypothesis text (claim, rationale, the experiment that would test it), at most 3 000 characters, and the papers it relies on"
+    checks: "text length; an intervention and an outcome are named; not a duplicate (below)"
+  structured:
+    writer_gets: "as free, plus the card template: intervention, population (species, age, sex), mechanism chain as links (delivery, engagement, pathway, effect, outcome), outcome, the decisive experiment (system, design, n, duration, primary endpoint); the fields the user fixes in --fields are given and must be kept"
+    writes: "the text and the filled fields"
+    checks: "as free, plus: after normalisation every fixed field is in the card unchanged; the mechanism is written as links (at least one link before the outcome); the experiment has a system, a design and an endpoint"
+  profile:
+    writer_gets: "as structured, plus the profile's order (configs/profiles_v3.yaml) and what raises its top tiers"
+    targets:
+      frontier: "a new link between supported pieces (directed evolution's frontier target and checks: one link at 'new link', neighbours with S > 1/2, PubMed absence count under the threshold)"
+      funding: "feasibility (cheap system, short duration, an approved or non-compound intervention) and an endpoint at function or a clinical event"
+      evidence: "a chain whose links each have a known human or animal record (the balance), with an experiment that separates the supported alternatives (I)"
+    checks: "as structured, plus the target checks of that profile after the pipeline; a failure goes back to the writer once, then the hypothesis is kept with 'target not reached'"
+
+diversity:   # controlled within a run and against the database
+  within_run: >-
+    the writer is told the hypotheses already written in this run; after the pipeline, typed proximity
+    (hyparena/card/proximity.py: duplicate, variant, analog, competitor) and text distance (1 - Jaccard of content words)
+    are computed for every pair; a duplicate or duplicate_approx of an earlier one is rejected and rewritten once
+  against_database: "the same against every card of the database on the topic; a duplicate of an existing hypothesis is not added, it is linked to it (the database records 'regenerated')"
+  report: "per run: the share of pairs that are variants or analogs, the number of distinct interventions and of distinct outcome objects, and the families of the 'top without relatives' (hyparena/diversity.py)"
+  writers: "with several writer families, the share of each family among the accepted hypotheses is reported (self-preference of a judge is no issue here: the scores are rules, not a judge)"
+
+output:
+  files: "longevity-kg hypothesis_sources/generated/<date>_<mode>_<topic-slug>.json (texts, cards, verification, scores; private), and the database rows"
+  report: "the pool report (report_v2) of the run, with the mode, the topic and the writer of each hypothesis, and the diversity figures"
+
+outside_check:   # the user runs it through Argon; Claude builds the pack after a run
+  shown: "the topic, T, the hypothesis texts (no scores, no writer names)"
+  asked_per_hypothesis: "novel before T: no | partly | yes (up to 3 PMIDs of the nearest prior work); plausible: yes | weak | no; testable by the stated experiment: yes | partly | no; on topic: yes | no; which profile it fits best"
+  asked_per_run: "how many distinct ideas the run holds (Argon's own grouping); the best hypothesis under each profile"
+  measures: "agreement of Argon's grouping with ours (proximity families); Spearman of our scores with Argon's choice per profile; shares novel, plausible, testable"
+
+cost: "per accepted hypothesis about 20-25 calls (card, search, reading, alternatives, endpoint) plus 1-2 writer calls: about 0.05-0.1 USD off-peak; named with the exact count before each run (--dry)"
+limits: >-
+  with T = today there is no outcome to test against; scores of generated hypotheses are as good as the reader (key-paper
+  recall 0.2-0.3) and novelty is overstated (pack 7, kappa 0.14), so the outside check and the PubMed absence count are
+  part of the mode, not an extra
+implementation:   # after the user's go
+  code: "hyparena/card/generate.py (shared helpers with evolve_v3); prompts generate_free/v1, generate_structured/v1, generate_profile/v1; tests on fixed writer replies (a duplicate is rejected, a missing fixed field fails, a profile target failure is flagged)"
+  reuse: "hyparena/agents/generate.py (the first arena's generator with strategies literature, debate, assumptions, expansion) as the free mode's strategies"
+  manual: "a new section 'Generation' next to section 11"
