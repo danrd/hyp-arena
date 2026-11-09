@@ -1,0 +1,28 @@
+id: abstract-overstates-2026-11-09
+written_on: 2026-11-09
+status: definitions fixed before the pack was built or sent
+why: >-
+  Argon pack 10: the full text changed the stance of 2 of 28 papers, both a positive abstract turning into a null result
+  (a primary outcome named but its null result left out; a positive result restricted to a subgroup); one of them was a
+  dangerous error of ours (link +0.97, refuted by the full text). User 2026-11-09: plan a targeted full-text re-read of such
+  records and extend the test through Argon to catch more.
+records: "records 'for' from RCTs on the outcome link of both pools (231 records); abstracts from PubMed"
+rule_v0: >-
+  code flags a record when its quote has a subgroup cue (subgroup, post hoc, per-protocol, completers, "among / in those
+  who") or the record is flagged subgroup_only, or its abstract names a primary outcome or end point (98 of 231 records,
+  69 distinct papers; the primary-outcome cue alone is broad)
+pack: Argon pack 11 (longevity-kg reviews/argon-2026-11-08/pack_11_task.json; hidden key pack_11_key.json)
+sample:
+  targeted: "the distinct papers flagged by rule_v0 whose full text is open in PMC (Europe PMC isOpenAccess), up to 40, by SHA-1 of 'over|<pmid>'"
+  control: "papers of the same records NOT flagged by rule_v0 and open in PMC, up to 20, by the same order"
+asked: >-
+  per paper, with the claim it was used for: the finding from the abstract (A) and from the full text (B) as in pack 10, and
+  abstract_overstates yes / no with the kind (primary_omitted, subgroup, secondary_as_main, within_group_as_between,
+  per_protocol_only, other) and the full-text sentence that shows it
+measures:
+  prevalence: "share of papers where the abstract overstates (targeted, control)"
+  rule_v0: "precision (overstating among targeted) and the overstating papers it misses (control rate times the unflagged pool)"
+  kinds: "which kinds occur, to sharpen the rule (code cue or a model check of the abstract)"
+next: >-
+  a cheap model check of each abstract (DeepSeek: is the between-group result of the named primary outcome given? is the
+  positive result restricted to a subgroup?) is scored against this gold before any full-text re-read is run; priced then
