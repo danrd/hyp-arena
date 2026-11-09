@@ -108,3 +108,18 @@ argon_trial_2026_11_09:   # Argon applied this spec by hand to 4 prospective tri
     the spec's targets were met on paper but by the moves the checks were meant to stop; the mode is not adopted in this
     form; the amendments above go in before any implementation, and the Argon pack for the children asks for the
     against-records and the pair count explicitly
+
+argon_trial_2_2026_11_09:   # Argon's second hand run with the manual's section 11 rules (report sent by the user)
+  rules_kept: >-
+    every parent link kept with its records (records against included: P unchanged in all four); no record moved; W
+    unchanged (organ); one new link per version between supported neighbours; the PubMed count on the link's own subject and
+    object (rechecked by Claude: 0, 2, 0, 1 before T; Argon gave 1, 2, 0, 0, all under 5); feasibility lowered for arms and
+    invasive measures (0.85 -> 0.72, 0.82 -> 0.70, 0.74 -> 0.66, 0.88 -> 0.72)
+  result: "frontier score +0.04, 0.00, -0.01, +0.05; evidence +0.08, +0.01, -0.01, +0.10 (from I); funding -0.05 ... -0.07"
+  structural_finding: >-
+    under the method as written a new mechanistic link cannot raise a frontier score on a trial whose outcome link has
+    records: N is read from the outcome link (new_combination / new_link only without any outcome record), so it stays; and
+    the new link's slot (S = 0.5, nothing known) enters the evidence balance as 0, diluting it (NCT07726758: 0.527 x 3/4 =
+    0.395 exactly). With feasibility charged, directed evolution towards the frontier can only add I. The first run's gains
+    all came from breaking the rules.
+  decision_needed: "whether mechanism novelty (a supported-neighbour new link) should count for the frontier, and whether an untested inserted slot should dilute the balance; for the user"
