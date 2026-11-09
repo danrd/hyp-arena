@@ -121,7 +121,8 @@ def data(rep: dict) -> dict:
     return {
         "meta": {"title": m["title_ru"], "about": m["about_ru"], "date": m["date"], "method": m["method"], "sha": m["sha"],
                  "n": m["n"], "n_scored": m["n_scored"], "outcomes": m["outcomes"]},
-        "profiles": [{"key": p, "label": PROFILE_LABEL.get(p, p), "about": PROFILE_ABOUT.get(p, ""), "order": _order_text(prof.tiers)}
+        "profiles": [{"key": p, "label": PROFILE_LABEL.get(p, p), "about": PROFILE_ABOUT.get(p, ""), "order": _order_text(prof.tiers),
+                      "tiers": [[_ind_name(k) for k in t] for t in prof.tiers]}
                      for p, (prof, _) in profiles.items()],
         "names": {"novelty": {k or "": v[0] for k, v in rh.NOVELTY_NAMES.items()}, "scope": {k: v[0] for k, v in rh.SCOPE_NAMES.items()},
                   "endpoint": {(k or ""): v[0] for k, v in rh.ENDPOINT_NAMES.items()}, "ai": {k: v[0] for k, v in rh.AI_NAMES.items()},

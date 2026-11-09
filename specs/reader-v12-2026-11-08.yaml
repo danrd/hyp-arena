@@ -48,3 +48,12 @@ crosslink_v13:   # user decision 2026-11-09 (option 1: v13 on top of cross-link 
     key-paper recall >= 0.30 (cross-link alone 0.24, original 0.16), link Spearman >= 0.32 (cross-link alone 0.29 + 0.03),
     trial Spearman >= 0.39 (original 0.44 - 0.05), and pack-9 recall >= 0.52 with precision >= 0.65; then both pools in
     full and R2 / R3 under the 0.03 rule
+crosslink_v13_result:   # 2026-11-09 10:06-10:50 UTC (off-peak); prospective/reader_v12_crosslink_v13.json; python -m scripts.reader_v12 score --part crosslink --rev v13
+  run: "102 links of 30 trials; 57.4 papers per link, 21.9 kept by rule + filter v2 (filter drop 3400, rule drop 226, yes 1845, unsure 385); every kept PMID answered; 0.57 USD"
+  pack8: "key-paper recall 0.29 (95/327; cross-link alone 0.24, original 0.16); link Spearman 0.306 (0.29); trial Spearman 0.319 (original 0.44)"
+  pack9: "recall 0.57 (12/21), precision 0.75 (12/16), direction 12/12; no gold finding dropped by the filter"
+  pass_rule: "not met: recall 0.29 < 0.30, link Spearman 0.306 < 0.32, trial Spearman 0.319 < 0.39; pack-9 recall and precision pass"
+  reading: >-
+    v13 on top of the cross-link union gives the best recall of any reader so far (0.16 -> 0.29 of the key papers, pack-9
+    recall 0.57 at precision 0.75), but the trial order against the second reader falls (0.44 -> 0.32): more records per
+    link do not yet order the trials better. Not adopted for both pools; no run on the full pools.

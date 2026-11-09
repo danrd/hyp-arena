@@ -189,6 +189,7 @@
               <li><b>Размах W</b> — по подтверждённым звеньям: локальный &lt; орган / система &lt; признак старения (объект самого звена, а не тип вмешательства).</li>
               <li><b>Реализуемость</b> — среднее цены системы, длительности, плановой выборки и готовности вмешательства (0–1).</li>
               <li><b>Конечная точка</b>: биомаркер &lt; самоотчёт &lt; функция &lt; клиническое событие (две модели должны согласиться).</li>
+              <li><b>Лучший дизайн по исходу</b> — самый сильный дизайн среди засчитанных записей «за» на звене исхода (клетки &lt; животные &lt; наблюдательное &lt; обзор &lt; нерандомизированное &lt; метаанализ &lt; РКИ). <b>Независимые источники по исходу</b> — сколько независимых групп (разные авторы, выборки) среди этих записей, 0–5.</li>
               <li><b>Тренд</b> — рост публикаций о вмешательстве за 3 года против 3 предыдущих, за вычетом роста PubMed. <b>Роль ИИ</b> — только по дословной фразе текста.</li>
             </ul>
             <h3>7. Профили АСПИД</h3>
@@ -485,7 +486,13 @@
 
     // ---------- 5. help (dynamic parts)
     function renderHelp() {
-      document.getElementById('help-profiles').innerHTML = '<ul>' + PROFS.map(p => `<li><b>${esc(p.label)}</b>: ${esc(p.order)}. ${esc(p.about)}</li>`).join('') + '</ul>';
+      const inds = [];
+      PROFS.forEach(p => (p.tiers || []).flat().forEach(k => { if (!inds.includes(k)) inds.push(k); }));
+      const lvl = (p, k) => { const i = (p.tiers || []).findIndex(t => t.includes(k)); return i < 0 ? '—' : `<b>${i + 1}</b>`; };
+      const matrix = `<p>Цифра — уровень важности в профиле (1 — главный); внутри уровня признаки равноправны, веса разыгрываются под этим порядком; «—» — признак в профиле не участвует.</p>
+        <div class="overflow-x-auto"><table><thead><tr><th>Признак</th>${PROFS.map(p => `<th>${esc(p.label)}</th>`).join('')}</tr></thead>
+        <tbody>${inds.map(k => `<tr><td>${esc(k)}</td>${PROFS.map(p => `<td style="text-align:center">${lvl(p, k)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+      document.getElementById('help-profiles').innerHTML = matrix + '<ul>' + PROFS.map(p => `<li><b>${esc(p.label)}</b>: ${esc(p.order)}. ${esc(p.about)}</li>`).join('') + '</ul>';
       document.getElementById('glossary').innerHTML = DATA.glossary.map(g => `<dt class="font-semibold">${esc(g.term)}</dt><dd class="text-stone-600">${esc(g.text)}</dd>`).join('');
       const m = DATA.meta;
       document.getElementById('help-prov').textContent = `Дата среза ${m.date}; литература — только до неё. Метод: ${m.method}. Оценено ${m.n_scored} из ${m.n}; исходы прогона: ${JSON.stringify(m.outcomes)}. Хеш оценок SHA-256 ${m.sha}.`;

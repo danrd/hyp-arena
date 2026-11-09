@@ -327,11 +327,33 @@ drawn over its whole range in every draw.
 | N | novelty (section 7) | new context < translation < analog < new combination < new link |
 | leverage, W_potential, literature_density | defined in code, failed the admission rule on the trial pools (below) | |
 
-| Profile | Order of importance (tiers) |
-|---|---|
-| evidence | P > support share > I > W > {best design, independent sources, endpoint} |
-| funding (merged with the investor draft, 2026-11-06) | P > feasibility > {trend, AI role, novelty} > {I, support share} > {W, endpoint, best design, independent sources} |
-| frontier (2026-11-07; exploratory programmes such as ARPA-H, Foresight, early R&D) | novelty > P > {I, feasibility} |
+Profiles as of v3.6 (`configs/profiles_v3.yaml`). The number is the tier (1 = most important); within a tier the
+indicators are of equal rank and ASPID draws their weights under the order; "—" = not in the profile. The same table is
+in the report's help (built from the config).
+
+| Indicator | evidence (trial-5) | funding (trial-6) | frontier (trial-2) |
+|---|:-:|:-:|:-:|
+| evidence balance (`chain_state`) | 1 | 1 | 2 |
+| novelty N | — | 3 | 1 |
+| feasibility | — | 2 | 3 |
+| I | 2 | 4 | 3 |
+| W | 3 | 5 | — |
+| trend_pubmed | — | 3 | — |
+| ai_role | — | 3 | — |
+| best_design_outcome | 4 | 5 | — |
+| independent_outcome | 4 | 5 | — |
+| endpoint_clinical | 4 | 5 | — |
+
+Not in any profile: P and support_share (replaced by the balance in v3.5, still shown), against_share (|ρ| 0.87 with P),
+leverage, W_potential, literature_density (failed the admission rule, below), I_headroom (an input of the room to improve).
+Earlier orders (v3.4 and before): evidence P > support share > I > W > {…}; funding P > feasibility > {trend, AI role,
+novelty} > {I, support share} > {…}; frontier trial-1 N > {leverage, W_potential} > P > {I, feasibility}.
+
+**Definitions of the three rejected frontier candidates** (`specs/v34-frontier-2026-11-07.yaml`): **leverage** — how much
+the support share would grow if the weakest slot of the chain (the bottleneck) were checked and supported (S = 5/6), times
+the mean support of the other slots: large for a chain held back by one unchecked link. **W_potential** — the scope the
+mechanism would have with that bottleneck supported (local / organ / hallmark). **literature_density** — log10(1 + PubMed
+records on the intervention and the outcome before T): a proxy of how much is already known (lower = newer).
 
 **v3.5 (2026-11-08): one axis instead of P and the support share.** The **evidence balance** (named "chain state" until
 v3.6; `chain_state` in the code) = the mean over the chain's slots
