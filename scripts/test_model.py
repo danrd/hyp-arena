@@ -77,6 +77,14 @@ def compute(v: dict, text: str, alt_ids: list[str]) -> dict:
     rows = {m.get("row"): {k: s for k, s in (m.get("cells") or {}).items() if k in comps}
             for m in v.get("matrix") or [] if isinstance(m, dict)}
     H = rows.get("H", {})
+    if "held_equal" in v:   # v2: a competitor's "0" against H's sign on arms counts only with a verbatim phrase that the factor is held equal
+        held = {(x.get("row"), x.get("comparison")) for x in v.get("held_equal") or [] if isinstance(x, dict) and verbatim(x.get("phrase"), text)}
+        for aid, cells in rows.items():
+            if aid == "H":
+                continue
+            for k in list(cells):
+                if cells[k] == "0" and H.get(k) in ("+", "-") and comps[k].get("type") == "arms" and (aid, k) not in held:
+                    cells[k] = H[k]
     d = {}
     for aid in alt_ids + [k["id"] for k in CHECKLIST]:
         A = rows.get(aid, {})
