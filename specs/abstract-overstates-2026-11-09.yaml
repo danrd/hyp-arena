@@ -51,3 +51,15 @@ fulltext_reread:   # user decision 2026-11-09 ("go"); written before the run; ab
     pack 11); agreement of the new stance with pack 11's full-text finding where the papers overlap; pack 8 link and trial
     Spearman; R2 / R3 under the 0.03 rule
   adopt_if: "R2 and R3 not worse by more than 0.03 and the known cases caught; then the full-text re-read of 'for' RCT records becomes a step of the method"
+fulltext_reread_result:   # 2026-11-09 10:49-11:00 UTC off-peak; {prospective,calibration}/fulltext_reread.json; python -m scripts.fulltext_reread score
+  cost_usd: "prospective 0.053, calibration 0.029: 0.082 (named 0.05-0.08)"
+  sample: "77 'for' RCT records on the outcome link with an open paper (52 prospective, 25 calibration) of 231"
+  new_stance: "for 56, none 12, against 9: 22 of 77 (29%) leave 'for', but 'none' is partly the reader dropping a record (the known recall loss), not a null"
+  known_cases: "1 of 6 caught (29227175); LISA 38911477 and 31121926 were not in the sample (closed or not a 'for' RCT record on the outcome link); the 3 prospective pack-11 flips (40011687, 36316421, 39764482) stay 'for'"
+  vs_pack11_full_text: "44 overlapping papers that Argon read in full: same stance 31 (for 28, against 3); Argon against -> ours for 3; Argon none -> ours for 5; Argon for -> ours none 4, against 1"
+  references: "R2 0.695 (before 0.702, 180 targets vs 195), R3 0.581 (before 0.593): both inside the 0.03 rule"
+  decision: >-
+    not adopted: the references hold, but the known cases are not caught (1 of 6) and the reader keeps 'for' where the full
+    text shows the claim's outcome was not significant (40011687: only knee-extensor strength and one SF-36 domain). The
+    full text is read, the overstatement is not seen: the same reader reads the same text the same way. A check aimed at the
+    gap between the abstract's claim and the results table (a question, not a re-read) is the next candidate.
