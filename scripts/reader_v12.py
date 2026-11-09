@@ -113,7 +113,11 @@ def run(part: str, rev: str) -> dict:
         cv = merge(parts_, cl.id)
         with lock:
             done[k] = {"cv": cv.model_dump(), "decision": decision, "answered": answered,
-                       "skipped": [p for p in kept if p not in answered], "papers": len(papers), "kept": len(kept)}
+                       "skipped": [p for p in kept if p not in answered], "papers": len(papers), "kept": len(kept),
+                       "tokens": {f"{x.get('family') or ''}_{d}": 0 for x in log for d in ("in", "out")}}
+            for x in log:
+                for d in ("in", "out"):
+                    done[k]["tokens"][f"{x.get('family') or ''}_{d}"] += int(x.get(f"tokens_{d}") or 0)
             for x in log:
                 tok[f"{x.get('family') or ''}_in"] += int(x.get("tokens_in") or 0)
                 tok[f"{x.get('family') or ''}_out"] += int(x.get("tokens_out") or 0)
