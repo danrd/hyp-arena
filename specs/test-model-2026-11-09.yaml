@@ -1,0 +1,28 @@
+id: test-model-2026-11-09
+written_on: 2026-11-09
+status: definitions fixed before any call
+plan: docs/plans/test-model-2026-11-09.md
+user_decisions: "2026-11-09: rigour enters I as a part, both forms computed; the matrix replaces judge_alternatives only if it holds up in numbers AND in meaning (hand review); no probability of a positive report"
+call: "test_model/v1, one call per trial (DeepSeek V4.1 Flash): the registry text, the chain, the proposed alternatives and six checklist rows (expectation or unblinding, attention and contact, co-interventions, selection or attrition, measurement or learning, natural course or regression)"
+code:
+  verbatim: "arm, outcome, blinding and rigour phrases are checked against the registry text; an arm or outcome without a verbatim phrase is dropped with its comparisons; a rigour item without one is absent"
+  d: >-
+    per proposed alternative: 1 when some 'arms' comparison has different predictions for H and the alternative
+    (one of +, 0, - against another; 'nt' never counts); 0.5 when they differ only on a 'mediator' comparison; 0 otherwise
+  R: "share of the four rigour items present with a verbatim phrase (0, 1/4, ... 1)"
+  I_alt: "min(1, sum a*d / 1.5) with our a (v3.6) and the matrix d"
+  I_a: "min(1, (sum a*d + 0.5 R) / 1.5)"
+  I_b: "1 - (1 - I_alt) (1 - R / 2)"
+  criteria: "for the primary arms comparison: a result as H predicts rules out the competitors that predict otherwise there; a null rules out those that predict a difference; written by code"
+split: "the 59 prospective trials by SHA-1 of 'testmodel|<NCT>': lower 29 dev (one prompt revision allowed, on dev only), 30 holdout run once; the 73 calibration trials once with the final prompt (for R against outcomes, reported only)"
+measures:
+  numbers: >-
+    holdout: weighted kappa of the matrix d with Argon's d (pack 6) next to judge_alternatives v2 on the same trials; Spearman
+    of I_alt, I_a, I_b with Argon's informativeness and with I from Argon's d; share of verbatim phrases; R distribution;
+    calibration: AUC of R, I_a and I_b against outcomes (expected to run the other way for R; never tuned on it)
+  meaning: >-
+    hand review by Claude of 10 holdout trials (SHA order): for each, is the matrix's account of what the trial separates
+    right (agree / partly / no, with a sentence), compared with judge_alternatives' d; and add_arm vs Argon's best_change
+    (same / partly / different) on all 30 holdout trials
+decision: "the matrix replaces judge_alternatives when its holdout kappa is not lower and the hand review finds it right at least as often; otherwise it stays a report-only description; the choice between I_a and I_b goes to the user with both columns"
+cost: "about 0.0015 USD per trial; dev 29 + holdout 30 + calibration 73 about 0.2 USD, a revision about 0.05; run off-peak"

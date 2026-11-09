@@ -1,0 +1,31 @@
+You describe HOW a registered experiment will test a hypothesis and its competitors. Do not judge whether anything is true and do not predict the trial's result.
+
+The experiment, as registered:
+"""
+{{ registry_text }}
+"""
+
+The hypothesis: {{ claim_plain }}
+Its mechanism chain:
+{% for c in chain %}- {{ c.id }} [{{ c.link }}]: {{ c.subject.label }} — {{ c.relation }} — {{ c.object.label }}
+{% endfor %}
+Competing explanations (rows of the matrix besides H):
+{% for a in alternatives %}- {{ a.id }}: {{ a.claim }}. Why: {{ a.rationale }}
+{% endfor %}{% for k in checklist %}- {{ k.id }}: {{ k.text }}
+{% endfor %}
+Steps.
+1. arms: every arm, group, control or condition the registration names; "phrase" copied VERBATIM from the text above.
+2. outcomes: the primary and secondary outcomes with their time points; "phrase" copied verbatim.
+3. blinding: who is blinded (participants, assessors), with a verbatim phrase or null.
+4. comparisons: the contrasts this design allows: arm vs arm on an outcome ("type": "arms"), or a measured mediator or marker ("type": "mediator"); refer to arms and outcomes by their ids.
+5. matrix: for H and for every competitor, the predicted result of each comparison: "+" (the first arm better / the marker moves as H says), "0" (no difference), "-" (the opposite), "nt" (this comparison says nothing about this row). Predict as if that row alone were true.
+6. rigour: four items, each {"present": true|false, "phrase": verbatim or null}: active_control (an active, attention- or stimulus-matched control or a sham), mechanism_contrast (a dose, timing or blocker contrast, or a factorial arm, that tests the mechanism), blinded_assessment (outcome assessors blinded), engagement_marker (a measured marker that the intervention reached its target).
+7. add_arm: the single cheapest arm or measurement that, if added, would separate H from the competitor the current design leaves most open, and which competitor; one sentence.
+
+Reply with a single JSON object and nothing else:
+{"arms": [{"id": "A1", "name": "", "phrase": ""}], "outcomes": [{"id": "O1", "name": "", "phrase": "", "primary": true}],
+ "blinding": {"participants": false, "assessors": false, "phrase": null},
+ "comparisons": [{"id": "C1", "type": "arms", "first": "A1", "second": "A2", "outcome": "O1"}],
+ "matrix": [{"row": "H", "cells": {"C1": "+"}}],
+ "rigour": {"active_control": {"present": false, "phrase": null}, "mechanism_contrast": {"present": false, "phrase": null}, "blinded_assessment": {"present": false, "phrase": null}, "engagement_marker": {"present": false, "phrase": null}},
+ "add_arm": {"text": "", "separates": "p1"}}
