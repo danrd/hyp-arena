@@ -73,4 +73,4 @@ meta_certainty_result:   # 2026-11-09 10:56-11:00 UTC off-peak; calibration/meta
   reading: >-
     both variants are inside the 0.03 rule and neither gains. Because GRADE is found for 14 of 75, the certainty variant is
     mostly a flat 0.75 on meta-analyses (risk of bias not reported); the pooled clause removes 18 records and 16 R2 targets.
-    R4 on pack 5 was not computed (no meta-analysis pair of pack 5 changes weight by more than the fold). Decision to the user.
+    R4 on pack 5 was not computed in this run. Decision to the user.
