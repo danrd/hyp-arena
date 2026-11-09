@@ -88,3 +88,4 @@ argon_pack14_triage:   # Argon pack 14 answer 2026-11-09 (longevity-kg reviews/a
     open each listed source (URL, count, terms) before any export; first candidates: the WHO ICTRP ageing export (extends
     the benchmark), ITP and CITP rationale texts (dated, with outcomes), VitaDAO (API, dated); the rest after the terms
     are read. Nothing is exported or published without the user's go
+  status: "deferred by the user 2026-11-09 (docs/backlog.md)"
