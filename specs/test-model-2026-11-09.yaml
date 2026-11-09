@@ -26,3 +26,40 @@ measures:
     (same / partly / different) on all 30 holdout trials
 decision: "the matrix replaces judge_alternatives when its holdout kappa is not lower and the hand review finds it right at least as often; otherwise it stays a report-only description; the choice between I_a and I_b goes to the user with both columns"
 cost: "about 0.0015 USD per trial; dev 29 + holdout 30 + calibration 73 about 0.2 USD, a revision about 0.05; run off-peak"
+result:   # 2026-11-09 10:22-10:45 UTC off-peak; prospective/test_model_{dev,holdout}_v{1,2}.json, calibration/test_model_calibration_v2.json
+  cost_usd: "dev v1 0.025, dev v2 0.033, holdout v2 0.034, calibration v2 0.072: 0.164"
+  dev_v1: "kappa of the matrix d with Argon 0.23 (judge v2 on the same trials 0.40); matrix d = 1 for 92 of 144: a competitor read as 'the intervention does nothing' and given 0 where H has +"
+  revision_v2: >-
+    a competitor is another explanation of the same result: it predicts H's sign on an arms comparison unless the registration
+    holds its factor equal, and a competitor's 0 against H's sign counts only with a verbatim held_equal phrase (code turns an
+    unsupported 0 into H's sign). Dev v2: kappa 0.28 (judge 0.40); d = 1 for 33 of 144
+  holdout_v2:
+    kappa_d: "matrix 0.19, judge v2 on the same trials 0.27"
+    verbatim: "arms 63/63, outcomes 130/130"
+    R: "0: 13, 1/4: 10, 1/2: 6, 3/4: 1 of 30; active control 9, mechanism contrast 3, blinded assessment 4, engagement marker 9"
+    spearman_with_argon_informativeness: {I_alt: 0.29, I_a: 0.18, I_b: 0.18}
+    spearman_with_I_from_argon_d: {I_alt: 0.63, I_a: 0.49, I_b: 0.49}
+    note: "on dev rigour raised the agreement with Argon's informativeness (0.44 -> 0.74); on the holdout it lowers it: not stable"
+  calibration_auc:   # reported only, never tuned on; 72 units passing the gate + 1 filtered
+    R: 0.429
+    I_judged_current: 0.512
+    I_alt_matrix: 0.459
+    I_a: 0.483
+    I_b: 0.488
+  hand_review_10:   # Claude, meaning, SHA order of 'review|<NCT>'
+    matrix: "agree 4 (NCT07687316, NCT03370224, NCT05307666, NCT07910292), partly 5 (NCT07857707, NCT02123641, NCT07351877, NCT06688578, NCT05830942), no 1 (NCT05266976: primary taken as CTX while the claim is P1NP, so the endurance competitor counts as not tested)"
+    systematic_error: >-
+      the matrix holds natural course, regression to the mean, practice and expectation equal for the checklist rows
+      (k_course, k_expect ...) but not for the proposed competitors that say the same thing (NCT07857707 p5, NCT02123641 p2,
+      NCT06688578 p2, NCT05830942 p4, NCT07351877 p4): a randomised or sham control rules them out, the matrix says it does not
+    against_judge: >-
+      where the two differ the matrix is right in about as many places as the judge (matrix: NCT07351877 p2 no sham, so attention
+      is not separated; NCT07910292 p4 / p5 a positive result does rule out 'no effect at this age'; judge: the cases above,
+      where it gives 'weakened' and Argon 'eliminated'): a draw in meaning, behind in numbers
+    criteria: "the code-written criteria (what a result as predicted, and a null, rules out) read correctly in 9 of 10; NCT05266976 inherits the wrong primary"
+  add_arm_vs_argon_best_change_30: "same 10, partly 11, different 9 (the matrix's add_arm is usually an attention- or sham-matched arm; Argon's more often a measurement or a mechanism arm)"
+  decision: >-
+    by the rule written before the run: the matrix does not replace judge_alternatives (holdout kappa lower, 0.19 vs 0.27; the
+    hand review a draw). It stays a report-only description (arms, criteria, add_arm). Rigour does not enter I in either form
+    for now: its effect on agreement is not stable between dev and holdout, and on outcomes R runs the other way (AUC 0.43)
+    as expected. The choice between I_a and I_b is moot until rigour is adopted; both columns are above.
