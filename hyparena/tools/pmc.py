@@ -45,8 +45,15 @@ def pmcid(pmid: str) -> Optional[str]:
 
 
 def is_open(pmc: str) -> bool:
-    r = _get("https://pmc.ncbi.nlm.nih.gov/tools/oa-service/oa.fcgi/", {"id": pmc})
-    return bool(r) and "<record " in r.text and "error" not in r.text[:400].lower()
+    """Open access by Europe PMC's isOpenAccess flag (2026-11-09: the PMC OA web service URL used before answers 404, so
+    every paper looked closed)."""
+    r = _get("https://www.ebi.ac.uk/europepmc/webservices/rest/search",
+             {"query": f"PMCID:{pmc}", "format": "json", "resultType": "lite"})
+    try:
+        res = (r.json().get("resultList") or {}).get("result") or [] if r else []
+    except ValueError:
+        return False
+    return bool(res) and res[0].get("isOpenAccess") == "Y"
 
 
 def _text(el) -> str:

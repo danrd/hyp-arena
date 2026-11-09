@@ -1,0 +1,28 @@
+id: sources-argon-2026-11-09
+written_on: 2026-11-09
+status: definitions fixed before the pack was built or sent
+why: >-
+  User request 2026-11-09: let Argon run the sources test (abstract vs full text vs knowledge graph) that our paid arm B
+  (PMC full texts, specs/sources-experiment-2026-11-07.yaml) never ran. Question: how much does reading the full text change
+  what a paper says about a link (stance, effect size, n, design, population), and how much does a curated knowledge graph
+  add beyond the papers, link by link.
+pack: Argon pack 10 (longevity-kg reviews/argon-2026-11-08/pack_10_task.json; hidden key pack_10_key.json)
+sample: >-
+  chain links of the 30 pilot trials (prospective) whose pack-8 key papers include at least two with an open-access full
+  text in PMC (pmc.is_open); up to 12 links by SHA-1 of "sources10|<NCT>|<link>", up to 5 open-access key papers per link
+access: "open-access PMC full texts only (the pack gives the PMCID); no other source for the full-text arm; nothing that bypasses a site's access rules"
+asked:
+  per_paper_A_abstract: "finding for / against / none on the claim, verbatim quote, design, n, comparison, effect size phrase, population"
+  per_paper_B_full_text: "the same fields from the PMC full text (methods and results), and what changed versus A (none / stance / effect / n / population / design / adds a finding the abstract lacks)"
+  per_link_C_graph: "the link's verdict (supported / mixed / refuted / no evidence, strength) from the literature Argon knows up to T, with up to 5 key PMIDs and an effect size per PMID where known; and the verdict from A alone and from B alone over the given papers"
+measures:
+  paper: "share of papers where B changes A, by field; share where B turns none into a finding or flips the stance (the critical changes)"
+  link: "verdict A vs B vs C agreement; our 2S - 1 (v3.6) vs each; papers C adds that are not in the pack, and how many our search had retrieved"
+reading: >-
+  full text is worth a paid reading arm when B flips stance or turns none into a finding in at least 15% of papers, or moves
+  link verdicts in at least a fifth of links; otherwise abstracts stay the default (rule 12 of longevity-kg)
+built: "12 links, 31 open-access papers, 70 KB"
+fix_found: >-
+  hyparena/tools/pmc.is_open called the PMC OA web service at a URL that now answers 404, so every paper looked closed and
+  arm B (full texts) would have read none; it now uses Europe PMC's isOpenAccess flag (checked: PMC11191791 open, its
+  methods and results excerpt 5.3 k characters)
