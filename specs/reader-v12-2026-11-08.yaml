@@ -40,3 +40,11 @@ holdout_result:   # run once, filter v2 + reader v13, 102 links of the 30 pilot 
     papers are not in a link's own search at all (pack 8 diagnostics), so a better reader of the same papers cannot reach
     them, and fewer, more precise records move the balance of whole trials. The two outside references reward different
     things: pack 9 the reading of what was found, pack 8 the literature Argon knows. Not adopted.
+crosslink_v13:   # user decision 2026-11-09 (option 1: v13 on top of cross-link reading, about 0.7-0.9 USD); written before the run
+  papers: "each chain link of the 30 pilot trials reads the union of the chain searches of its trial (as pilot_crosslink), then filter v2 + rule, then reader v13 in batches of 10 with an answer for every PMID"
+  run: "once, off-peak (not 01-04 or 06-10 UTC on weekdays); stop if the cost passes 1.0 USD"
+  measures: "pack 8 (key papers on their link, link and trial Spearman) on the 102 links; pack 9 (recall, precision, direction) on its 10 links, which are among them"
+  pass: >-
+    key-paper recall >= 0.30 (cross-link alone 0.24, original 0.16), link Spearman >= 0.32 (cross-link alone 0.29 + 0.03),
+    trial Spearman >= 0.39 (original 0.44 - 0.05), and pack-9 recall >= 0.52 with precision >= 0.65; then both pools in
+    full and R2 / R3 under the 0.03 rule

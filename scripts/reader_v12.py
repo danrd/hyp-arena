@@ -50,9 +50,13 @@ def targets(part: str) -> list[tuple]:
     for h, as_of, card, cvs, logs in items("prospective"):
         if h not in trials:
             continue
-        for cl in r3.chain(card):
+        chain = list(r3.chain(card))
+        for cl in chain:
             if (want is None or (h, cl.id) in want) and logs.get(cl.id):
-                out.append((f"{h}|{cl.id}", h, as_of, card, cl, logs[cl.id]))
+                papers = logs[cl.id]
+                if part == "crosslink":                  # the union of the chain searches of the trial, own papers first
+                    papers = list(dict.fromkeys(papers + [p for c in chain for p in logs.get(c.id, [])]))
+                out.append((f"{h}|{cl.id}", h, as_of, card, cl, papers))
     return out
 
 
@@ -127,7 +131,17 @@ def score(part: str, rev: str) -> dict:
            "decisions": dict(Counter(d for v in res.values() for d in v["decision"].values())),
            "answered_share": round(sum(len(v["answered"]) for v in res.values()) / max(1, sum(v["kept"] for v in res.values())), 3),
            "skipped_after_retry": sum(len(v["skipped"]) for v in res.values())}
+    if part == "crosslink":
+        out = score_pack8(res)
+        out["pack9"] = score_pack9(res)
+        return {**vol, **out}
     if part == "dev":
+        return {**vol, **score_pack9(res)}
+    return {**vol, **score_pack8(res)}
+
+
+def score_pack9(res: dict) -> dict:
+    if True:
         ans = {i["id"]: i for i in json.loads((ARGON / "pack_9_answer.json").read_text())["items"]}
         key = json.loads((ARGON / "pack_9_key.json").read_text())
         tp = fn = fp = ok = 0
@@ -152,8 +166,11 @@ def score(part: str, rev: str) -> dict:
                         fn += 1
                 elif p["pmid"] in recs:
                     fp += 1
-        return {**vol, "recall": f"{tp}/{tp + fn} = {tp / (tp + fn):.2f}", "precision": f"{tp}/{tp + fp} = {tp / max(1, tp + fp):.2f}",
+        return {"recall": f"{tp}/{tp + fn} = {tp / (tp + fn):.2f}", "precision": f"{tp}/{tp + fp} = {tp / max(1, tp + fp):.2f}",
                 "direction": f"{ok}/{tp}", "gold_findings_dropped": dict(drop)}
+
+
+def score_pack8(res: dict) -> dict:
     from scipy.stats import spearmanr
     from scripts.pack8_analysis import signed
     from scripts.v34_check import parts
@@ -178,14 +195,14 @@ def score(part: str, rev: str) -> dict:
             kp = set(l.get("pmids_for", []) + l.get("pmids_against", []))
             hits += len(kp & cnt)
             keys += len(kp)
-    return {**vol, "recall_key_papers": f"{hits}/{keys} = {hits / keys:.2f}",
+    return {"recall_key_papers": f"{hits}/{keys} = {hits / keys:.2f}",
             "link_spearman": round(float(spearmanr(ours, theirs).statistic), 3), "trial_spearman": round(float(spearmanr(bo, ba).statistic), 3)}
 
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("cmd", choices=["run", "score"])
-    ap.add_argument("--part", choices=["dev", "holdout"], required=True)
+    ap.add_argument("--part", choices=["dev", "holdout", "crosslink"], required=True)
     ap.add_argument("--rev", default="v12")
     a = ap.parse_args()
     res = run(a.part, a.rev) if a.cmd == "run" else score(a.part, a.rev)
