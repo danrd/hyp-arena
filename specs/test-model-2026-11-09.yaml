@@ -63,3 +63,14 @@ result:   # 2026-11-09 10:22-10:45 UTC off-peak; prospective/test_model_{dev,hol
     hand review a draw). It stays a report-only description (arms, criteria, add_arm). Rigour does not enter I in either form
     for now: its effect on agreement is not stable between dev and holdout, and on outcomes R runs the other way (AUC 0.43)
     as expected. The choice between I_a and I_b is moot until rigour is adopted; both columns are above.
+fixcheck_2026_11_09:   # user request "проверь"; free, saved v2 answers; scripts/test_model_fixcheck.py
+  rule: "a proposed competitor whose claim names a checklist kind (natural course, expectation, practice, attention, selection, co-intervention) inherits that row's held_equal and cells"
+  kappa: "dev 0.28 -> 0.28, holdout 0.19 -> 0.20 (judge 0.40 / 0.27)"
+  five_known_errors: >-
+    1 of 5 fixed (NCT02123641 p2). In the other four the checklist row itself is not held equal (NCT07857707 and NCT07351877:
+    k_course 'nt' in a randomised trial; NCT06688578 k_course 'nt' with a sham; NCT05830942 k_expect '+' with a sham control):
+    the model does not see what randomisation and a sham hold equal, so there is nothing to inherit.
+  next: >-
+    the facts randomised / concurrent control / sham or placebo / masking are structured fields of the registry; a code rule
+    from them (randomised concurrent control -> natural course and regression held equal on arms comparisons; sham or placebo
+    with participant masking -> expectation held equal) would not depend on the model. Needs a new holdout (the 30 are spent).
