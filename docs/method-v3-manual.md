@@ -331,13 +331,13 @@ Profiles as of v3.6 (`configs/profiles_v3.yaml`). The number is the tier (1 = mo
 indicators are of equal rank and ASPID draws their weights under the order; "—" = not in the profile. The same table is
 in the report's help (built from the config).
 
-| Indicator | evidence (trial-5) | funding (trial-6) | frontier (trial-2) |
+| Indicator | evidence (trial-5) | funding (trial-7) | frontier (trial-3) |
 |---|:-:|:-:|:-:|
 | evidence balance (`chain_state`) | 1 | 1 | 2 |
 | novelty N | — | 3 | 1 |
-| feasibility | — | 2 | 3 |
+| feasibility | — | 2 | 4 |
 | I | 2 | 4 | 3 |
-| W | 3 | 5 | — |
+| W | 3 | 4 | 5 |
 | trend_pubmed | — | 3 | — |
 | ai_role | — | 3 | — |
 | best_design_outcome | 4 | 5 | — |
@@ -346,6 +346,11 @@ in the report's help (built from the config).
 
 Not in any profile: P and support_share (replaced by the balance in v3.5, still shown), against_share (|ρ| 0.87 with P),
 leverage, W_potential, literature_density (failed the admission rule, below), I_headroom (an input of the room to improve).
+2026-11-09 (user decision, `scripts/profile_variants.py`, calibration/profile_variants.json): funding W moved from tier 5
+to tier 4 next to I (investors weigh reach); frontier I above feasibility and W added last. On the registry pools both
+change little (Spearman with the previous order 0.99 and 0.98, 9 of the top 10 kept; AUC 0.611 vs 0.610 and 0.575 vs
+0.584, inside the 0.03 rule), because W is local for 48 of 55 prospective hypotheses; they matter on pools with written
+mechanisms, where scope varies. Funding trial-6 and frontier trial-2 were the orders before.
 Earlier orders (v3.4 and before): evidence P > support share > I > W > {…}; funding P > feasibility > {trend, AI role,
 novelty} > {I, support share} > {…}; frontier trial-1 N > {leverage, W_potential} > P > {I, feasibility}.
 
@@ -706,8 +711,8 @@ effect_class_rule_a:
   percent: {medium: 5, large: 20}
 profiles:
   evidence: [[chain_state], [I], [W], [best_design_outcome, independent_outcome, endpoint_clinical]]
-  funding: [[chain_state], [feasibility], [trend_pubmed, ai_role, N], [I], [W, endpoint_clinical, best_design_outcome, independent_outcome]]
-  frontier: [[N], [chain_state], [I, feasibility]]
+  funding: [[chain_state], [feasibility], [trend_pubmed, ai_role, N], [I, W], [endpoint_clinical, best_design_outcome, independent_outcome]]
+  frontier: [[N], [chain_state], [I], [feasibility], [W]]
 ```
 
 ## Appendix A. Discrete levels of v3 and v3.1

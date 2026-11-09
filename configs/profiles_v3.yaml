@@ -21,13 +21,13 @@ profiles:
     description: "How well the literature supports the mechanism now (refuted < unknown < supported), then what the experiment teaches, then reach."
     indicators: [chain_state, I, W, best_design_outcome, independent_outcome, endpoint_clinical]
     tiers: [[chain_state], [I], [W], [best_design_outcome, independent_outcome, endpoint_clinical]]
-  funding:
-    version: "trial-6"
-    description: "Ready to fund: the state of the chain, then feasibility, then rising attention, the role of AI and novelty, then informativeness, then reach and the refinements."
+  funding:   # trial-7 (user decision 2026-11-09): W up one tier, next to I (investors weigh reach); scripts/profile_variants.py
+    version: "trial-7"
+    description: "Ready to fund: the state of the chain, then feasibility, then rising attention, the role of AI and novelty, then informativeness and reach, then the refinements."
     indicators: [chain_state, feasibility, trend_pubmed, ai_role, N, I, W, endpoint_clinical, best_design_outcome, independent_outcome]
-    tiers: [[chain_state], [feasibility], [trend_pubmed, ai_role, N], [I], [W, endpoint_clinical, best_design_outcome, independent_outcome]]
-  frontier:
-    version: "trial-2"
-    description: "Exploratory programmes (ARPA-H, Foresight, early R&D): novelty first, then the state of the chain, then what the experiment teaches and its cost."
-    indicators: [N, chain_state, I, feasibility]
-    tiers: [[N], [chain_state], [I, feasibility]]
+    tiers: [[chain_state], [feasibility], [trend_pubmed, ai_role, N], [I, W], [endpoint_clinical, best_design_outcome, independent_outcome]]
+  frontier:   # trial-3 (user decision 2026-11-09): I above feasibility, W last; scripts/profile_variants.py
+    version: "trial-3"
+    description: "Exploratory programmes (ARPA-H, Foresight, early R&D): novelty first, then the state of the chain, then what the experiment teaches, then its cost, then reach."
+    indicators: [N, chain_state, I, feasibility, W]
+    tiers: [[N], [chain_state], [I], [feasibility], [W]]
