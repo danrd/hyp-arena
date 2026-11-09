@@ -22,6 +22,7 @@ section 10. Rules for a model writing such a report:
 - Use the scales and formulas of sections 5-7 exactly; show the arithmetic for P, the support share, I and V, and the record
   that sets the novelty level.
 - Do not predict the outcome of the trial; P is non-refutation of the mechanism given the literature, not a forecast.
+- When you evolve or improve a hypothesis, keep the rules of section 11 ("Rules every improved version keeps"): no record copied, edited, moved or dropped by hand, supported links kept, novelty-by-absence counted on the link's own subject and object.
 - When in doubt between two levels, take the lower one and say why. For novelty, take the level nearer the known: a paper you
   were not given may exist, and missing data are never novelty.
 - Use the names and the help section of section 10a: no code shown alone, no new names for existing terms.
@@ -317,7 +318,7 @@ drawn over its whole range in every draw.
 | P | non-refutation of the chain | log, from 0.01 |
 | I | informativeness of the stated experiment (headroom I, of an improved one, feeds the room to improve, section 11) | linear, 0-1 |
 | W | scope | local < organ < hallmark |
-| feasibility | system, duration, planned n, readiness of the intervention (approved or not a compound 1, in trials 0.5, neither 0) | 0-1 |
+| feasibility | system, duration, planned n, readiness of the intervention (approved or not a compound 1, in trials 0.5, neither 0) | 0-1; does not yet count arms or invasive measures (section 11, rule 7) |
 | best_design_outcome | best design among the records of the outcome link | cells … RCT |
 | independent_outcome | independent sources for the outcome link | 0-5 |
 | against_share | share of the chain's weight against (in no profile since v3.4: |ρ| 0.87 with P) | 0-1, lower better |
@@ -586,7 +587,7 @@ tuned version is the same hypothesis with its fixable defects repaired; a free v
 |---|---|---|---|---|---|---|
 | tune (доработка), `--mode tune` | repair the "fixable by rewriting" items | only what the items say, from their facts; the parent's new parts (links at "analog" or "new link") must stay | **constraint**: a version that moved towards the known (`novelty_v34.drift`) goes back to the writer with the reason, once (`retries`); if it still drifts it is kept with the flag and "constraint not kept" | the whole pipeline again on the new text, parent's cut-off | "tuned version" | implemented (prompt `evolve_v3/v2`), not yet run; the first run (below) was this mode before the constraint, with prompt v1 |
 | free (свободная эволюция), `--mode free --profile P --writer F` | get the best hypothesis for the profile P | everything (claim, mechanism, population, outcome, experiment); the writer is told the profile's order and whether novelty comes first; it names the papers it relies on | **flag only**: a move towards the known is shown, not forbidden | the whole pipeline again; the papers it named count only if the verifier finds them with a verbatim quote before the cut-off (named / found are reported); distance from the parent = 1 − Jaccard of content words; above 0.7 the version is marked "new hypothesis after" the parent | "free evolution" (+ "new hypothesis after") | implemented (prompt `evolve_free/v1`), not yet run; for current pools only (the writer knows literature past the cut-off); the user's preferred mode for improving |
-| directed (направленная эволюция), `--mode directed --profile frontier` | reach the target of a profile; first frontier: one new link | keep the intervention and every supported link; add exactly one new link between supported neighbours, with an experiment that tests it | **target**: N not lower, one link at "new link", no drift, and a PubMed count of the new link's subject and object before T under a threshold (guard against reader misses) | the whole pipeline again, parent's cut-off; failed checks go back to the writer once, then kept with "target not reached" | "directed evolution (frontier)" | specified (`specs/directed-evolution-2026-11-09.yaml`), not implemented; checked through Argon |
+| directed (направленная эволюция), `--mode directed --profile frontier` | reach the target of a profile; first frontier: one new link | keep the intervention and every supported link; add exactly one new link between supported neighbours, with an experiment that tests it | **target**: N not lower, one link at "new link", no drift, and a PubMed count of the new link's subject and object before T under a threshold (guard against reader misses) | the whole pipeline again, parent's cut-off; failed checks go back to the writer once, then kept with "target not reached" | "directed evolution (frontier)" | specified (`specs/directed-evolution-2026-11-09.yaml`), not implemented; an outside reader's hand run met every target by moves the rules below forbid; checked through Argon |
 | controlled | test whether the list predicts the gain | one item at a time | — | the parent's card, records and alternatives are kept; only what the item changes is re-checked | — | planned |
 
 Both modes report, next to the drift flag, the **share of links with support before the cut-off**, parent → child: a version can
@@ -603,6 +604,37 @@ were proposed anew, not the same ones); (2) the prompt's layout asked for a mech
 wrote out a mechanism, the chains grew by 2 to 7 links, the new links were checked and often found weak or contested, and P
 fell in 9 of 10 (e.g. 0.93 → 0.26). The useful side: writing the mechanism out shows the links a hypothesis rated well on its
 outcome alone actually rests on. The controlled and free modes above answer the two flaws.
+
+**Rules every improved version keeps (all modes; user decision 2026-11-09).** They are part of the method, not advice: the
+code checks them, and a model or outside reader that evolves a hypothesis from this manual (section 0) applies them the
+same way. A version that breaks one is shown with the broken rule, not scored as improved. They come from an outside
+reader's hand run of directed evolution (`specs/directed-evolution-2026-11-09.yaml`, `argon_trial_2026_11_09`), where
+every target was met by exactly these moves.
+
+1. **Records come only from reading the version.** The version's claims are read again against the papers (and the
+   search) before its cut-off; a record is never copied, edited or deleted by the writer. A record against of the parent
+   disappears only when the version's claim no longer matches its context by the rules of section 5 (another species,
+   population, dose ...), and the report lists every such disappearance with the reason. Upper bounds of the improvement
+   list (section 11 above: a rewritten refuted link "scored without its records against") are expectations, never scores of
+   a version.
+2. **Records are not moved between links.** A paper's finding counts on the link whose claim it matches; a writer cannot
+   assign it to another link.
+3. **Supported links are kept.** Every parent link with S > 1/2 is in the version with the same subject, relation, object
+   and qualifiers (directed and tuning modes; free mode reports the change instead).
+4. **Scope is not raised by rewording.** W of a version comes from links supported by its own reading; a link rewritten to
+   name a hallmark raises W only if its records support the hallmark claim itself.
+5. **Narrowing to the found papers is shown.** When a version narrows a claim's context so that records of the parent move
+   from adjacent to exact (weight ×2), the report marks the link "fitted to the papers found", lists the records it lifted,
+   and the novelty cost is applied (narrowing moves towards the known).
+6. **Novelty by absence is counted by code.** The PubMed count that guards a new link uses the link's own subject AND
+   object (card labels and synonyms) before T, never a query written by the writer and never a third term (intervention
+   form, population, outcome): a conjunction of three narrow terms is empty for almost anything. In the outside reader's
+   run, four "0 papers" new links had 19-136 papers on their own subject and object.
+7. **A bigger experiment costs feasibility.** Arms, invasive or specialised measures (biopsy, imaging, high-density EMG)
+   are part of feasibility (section 8); an experiment that rules out more alternatives by adding arms and measures must
+   show its cost. Until feasibility counts them (backlog), the report shows the number of arms and such measures next to I.
+8. **A rise in every profile at once is a warning,** not a result: when a version gains in all three profiles with P = 1 and
+   the room near zero, the report says which of the rules above it was checked against.
 
 **Novelty control** (v3.4, `novelty_v34.drift`, user decision 2026-11-07): a writer model tends to pull a hypothesis towards
 what is already known, because that is where the data are. Each pair is flagged **"moved towards the known"** when the
