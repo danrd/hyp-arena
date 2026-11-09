@@ -1,0 +1,80 @@
+id: directed-evolution-2026-11-09
+written_on: 2026-11-09
+status: specification only; not implemented, no call made
+user_decisions: >-
+  2026-11-09: evolution steered towards a profile, first towards novelty (a new link), which also blocks the drift to the
+  known; a separate third mode next to tuning and free evolution; the user tests it through Argon (outside reader), so this
+  spec also fixes what the outside reader is given and asked
+why: >-
+  Tuning repairs the fixable defects of the same hypothesis; free evolution may produce another hypothesis and only flags a
+  move towards the known. Neither has a target. Directed evolution gives the writer the target of a profile and accepts a
+  child by code only if it reaches that target without breaking what is already supported.
+
+mode:
+  name: "directed (направленная эволюция), --mode directed --profile frontier"
+  first_profile: frontier
+  target_frontier: "the child adds exactly one new link (no record of either sign before T) between pieces that are supported, and its novelty N is not lower than the parent's"
+  later_profiles:   # same scheme, other targets; not specified further until the frontier pilot is read
+    evidence: "raise the evidence balance (close to tuning: rewrite refuted links, narrow to the supported context)"
+    funding: "raise feasibility (cheaper system, shorter duration, approved intervention) and move the endpoint towards function or a clinical event"
+
+writer_input:   # one call per attempt; the parent's text and the facts below, no other literature
+  - "the parent text and its normalised chain (id, type, subject - relation - object, qualifiers)"
+  - "per link: S, its novelty level (novelty_v34.link_levels) and the PMIDs of the records that set it"
+  - "the record that sets N (novelty_v34.novelty_source) and the parent's N"
+  - "the frontier profile's order: N > evidence balance > I > feasibility > W"
+  - >-
+    the task: keep the intervention and every link with S > 1/2; add ONE new link - a new mediator between two known
+    pieces, or a new outcome for a supported mechanism - that, as far as the writer knows, was not studied before T;
+    name the two neighbouring links it connects; state the experiment that would test the new link
+  - "the writer names the papers it relies on (as in free mode); they count only if the verifier finds them before T with a verbatim quote"
+
+pipeline: "the child runs the whole pipeline with the parent's cut-off T (card, search, reading, alternatives, endpoint), as in the other modes"
+
+acceptance_by_code:   # a child failing any check goes back to the writer with the reason, once; if it fails again it is kept with the flag "target not reached" and ranked as its own row
+  same_intervention: "the parent's intervention is named in the child (evolve_v3.problems)"
+  new_link: "exactly one link of the child's chain is at the level new_link (no record of either sign before T)"
+  novelty_not_lower: "N child >= N parent on the ladder (unknown never counts as higher)"
+  neighbours_supported: "the links on both sides of the new link have S > 1/2: a new piece between known pieces, not a chain of guesses"
+  kept_links: "every parent link with S > 1/2 is in the child with the same text, or its balance contribution drops by at most 0.1"
+  no_drift: "novelty_v34.drift(parent, child) is false"
+  pubmed_absence: >-
+    a separate PubMed count for the new link: records with the subject AND the object of the link (labels and synonyms
+    from the card) published before T; above a threshold (fixed before the pilot, proposed 5) the link is not new and the
+    child fails. Guards against 'new' meaning only that our reader missed the papers (key-paper recall 0.2-0.3, N
+    overstated, kappa 0.14 in pack 7)
+
+scoring: "the child is scored like every hypothesis (v3.6, ASPID under every profile on fixed scales); the report shows it as 'directed evolution (frontier)' next to the parent, with the new link marked and the PubMed count beside it"
+
+outside_check:   # the user runs it through Argon; Claude builds the pack after a run
+  pack: "every accepted child and every child kept with 'target not reached'; per child: parent text, child text, T, the new link (subject - relation - object), its two neighbours with their PMIDs"
+  not_shown: "our S, N, balance, the PubMed count, the scores"
+  asked_per_child:
+    new_link_known_before_T: "was this link studied before T: no | partly (a related pair) | yes, with up to 3 PMIDs"
+    plausible: "is the new link biologically plausible given its neighbours: yes | weak | no, one sentence"
+    same_hypothesis: "is the child still a version of the parent (same intervention and question) or another hypothesis"
+    testable: "does the stated experiment test the new link itself: yes | partly | no"
+    better_for_frontier: "would an exploratory programme prefer the child or the parent, one sentence"
+  measures: >-
+    share of new links Argon calls not studied before T (the main measure: true novelty, not reader misses); agreement of
+    our PubMed count with Argon's verdict; plausible and testable shares; share 'another hypothesis'; Argon's preference
+    against our frontier score change
+  reading_rule: >-
+    the mode is worth keeping when at least 2/3 of the accepted new links are 'not studied before T' by Argon and at least
+    2/3 'plausible'; if the PubMed count disagrees with Argon on more than 1/3 of the links, its threshold or the synonym
+    list is the next fix; decisions go to the user
+
+pilot:
+  pool: "prospective (the writer knows the literature up to about T)"
+  units: "the 10 hypotheses with the largest room to improve under the frontier profile (evolve_v3 --top 10 --profile frontier --dry, free)"
+  writer: "Gemini (as free mode); open to the user's choice"
+  cost: "about 21 calls per child, up to twice with a retry, about 0.05-0.1 USD per child off-peak: about 0.5-1 USD for 10; named again with the exact count before the run"
+  limits: >-
+    as for the other modes: evolution makes no new evidence; the new link is by design unsupported, so the balance of the
+    child is at most the parent's on the old links and 0 on the new one; the child is written and scored by the same
+    pipeline (circular), so a rise is a hint, not proof. Novelty rests on our search and reader; the PubMed count and the
+    outside check are the guard.
+
+implementation:   # after the user's go
+  code: "hyparena/card/evolve_v3.py: MODES gains 'directed'; propose_directed + directed_problems (the checks above); prompt evolve_directed/v1; tests on hand-made pairs (a child with a new link between supported neighbours passes; with a known link, two new links, unsupported neighbours, another intervention, or drift fails)"
+  manual: "section 11, the modes table gains the row 'directed'"
