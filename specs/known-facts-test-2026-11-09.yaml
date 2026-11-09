@@ -1,0 +1,48 @@
+id: known-facts-test-2026-11-09
+written_on: 2026-11-09
+status: specification; no call made
+user_decision: "2026-11-09: a reading test on known facts (not a foresight test): the true fact against changed ones"
+why: >-
+  the loss is in reading (pack 8: 19% of key papers are records on their link; cross-link and reader v13 reach 0.29), and
+  every check of reading so far is a sample read by an outside reader (packs 8, 9, 11, 13). Curated databases give
+  thousands of facts with the paper that shows each one, so recall, direction and context can be measured by code, cheaply,
+  for the current reader, the paper skeleton (specs/paper-skeleton-2026-11-09.yaml) and a future specialised reader
+what_it_is_not: >-
+  not a test of choosing hypotheses that later succeed (that is the registry benchmark and the prospective pool) and not
+  the negative-sampling test of 2026-10 (date cut before the finding, which leaves the finding unverifiable): there is no
+  date cut here, the question is whether the pipeline finds and reads a paper that exists
+
+facts:
+  first: >-
+    DrugAge rows already in longevity-kg gold/ (664 PMIDs; compound, species, strain, sex, dose, lifespan change,
+    significance per row): one fact = one row with a named compound, species and a significance stated
+  second: "Open Genes lifespan experiments (gene, intervention type, species, sex, effect, PMID; open API, MPL-2.0 / CC BY) after the first works"
+  sample_pilot: "50 facts stratified by species (mouse, worm, fly), significance (significant, not significant) and direction (extends, shortens, no effect); fixed by a SHA-1 order before any call"
+
+claims:   # each fact gives one true claim and up to four changed ones, written by code from the row, never by a model
+  true: "the row as a claim link: <compound> <extends | shortens | no effect on> lifespan in <species> (qualifiers: sex, strain, dose when the row gives them)"
+  changes:
+    species: "another species of the three, where DrugAge has no row for the compound"
+    direction: "the opposite direction (extends <-> shortens; a significant row against 'no effect')"
+    sex: "the other sex, only when the row is sex-specific and DrugAge has no row for the other sex"
+    neighbour: "a compound sharing the ChEMBL target and ATC level 4 (the analog rule of proximity.py) with no DrugAge row in that species"
+  guard: "a changed claim is kept only if the whole DrugAge release has no row supporting it (so a change is not secretly true); the count of dropped changes is reported"
+
+run:
+  pipeline: "the current verifier on each claim (search and reading as in v3.6, as_of = today), then the paper skeleton when it exists: the gold paper is parsed once and serves the true and all changed claims of its fact"
+  cost: "about 0.01 USD per claim with the current reader (search + reading batches, DeepSeek off-peak): 50 facts x up to 5 claims, about 2-2.5 USD; with the skeleton, one parse per gold paper plus matching by code; the exact count and price by a dry run before the call"
+
+measures:
+  retrieval: "share of true claims whose search returns the gold PMID"
+  recall: "share of true claims with the gold PMID as a counting record of the right stance (for when the row is significant in the claim's direction; against when not significant)"
+  fields: "agreement of the record with the row on species, sex, dose and significance (field-level accuracy)"
+  specificity: "per change type, share of changed claims where the gold paper does NOT count as an exact-context record for the claim; the changes the reader cannot see are listed"
+  separation: "AUC of S (and of the evidence balance of a one-link chain) between true and changed claims, per change type"
+  noise: "a second reading of 20 claims (the same reader) for the reader noise on this test"
+  use: "the same set scores the paper skeleton (stage 0 / 1) and any specialised reader: one table per reader"
+
+limits: >-
+  DrugAge is a lifespan database of model organisms; human, healthspan and mechanism links are not covered (Open Genes and
+  later sources widen it a little). Models remember well-known facts, but a record counts only with a verbatim quote from
+  the retrieved paper, so memory cannot produce a record; it can only make the reader more willing to accept one.
+next: "after the user's go: build the 50 facts and claims (free), dry run, named price"

@@ -239,7 +239,9 @@ def _chain_texts(card: HypothesisCard) -> dict[str, str]:
     return {c.id: f"{c.link}: {c.subject.label} — {c.relation} — {c.object.label}" for c in r3.chain(card)}
 
 
-def compare(parent_item: dict, child_item: dict, parent_extras: dict, child_extras: dict) -> Optional[dict]:
+def compare(parent_item: dict, child_item: dict, parent_extras: dict, child_extras: dict, mode: str = "tune",
+            parent_logs: Optional[dict] = None, child_logs: Optional[dict] = None, as_of: str = "",
+            child_text: str = "") -> Optional[dict]:
     """Per pair: indicators before and after, the score under each profile before and after (fixed scales), links added,
     removed and changed (S before -> after), and the novelty drift (novelty_v34.drift: flagged, never excluding)."""
     if not child_item.get("card") or not child_item.get("verification") or "v3" not in child_item:
@@ -268,8 +270,12 @@ def compare(parent_item: dict, child_item: dict, parent_extras: dict, child_extr
         else:
             links["added"].append({"text": v, "S": ec.links[k][0], "records": ec.links[k][3] + ec.links[k][4] > 0})
     links["removed"] = [{"text": v, "S": ep.links[k][0]} for k, v in pt.items() if v not in set(ct.values())]
-    return {"gate": [ep.gate, ec.gate], "indicators": ind, "score": {p: [sc["parent"].get(p), sc["child"].get(p)] for p in sc["parent"]},
-            "links": links, "drift": dr}
+    from hyparena.card import evolution_rules as er          # manual section 11: rules every version keeps; the two parts
+    score = {p: [sc["parent"].get(p), sc["child"].get(p)] for p in sc["parent"]}
+    rules = er.check((pc, pcv, parent_logs or {}), (cc, ccv, child_logs or {}), mode=mode, as_of=as_of,
+                     child_experiment_text=child_text, parent_alts=pa, child_alts=ca, scores=score, pubmed=bool(as_of))
+    return {"gate": [ep.gate, ec.gate], "indicators": ind, "score": score, "links": links, "drift": dr,
+            "decomposition": er.decompose(pairs["parent"], pairs["child"]), "rules": rules}
 
 
 def main() -> None:
