@@ -51,7 +51,7 @@ fulltext_reread:   # user decision 2026-11-09 ("go"); written before the run; ab
     pack 11); agreement of the new stance with pack 11's full-text finding where the papers overlap; pack 8 link and trial
     Spearman; R2 / R3 under the 0.03 rule
   adopt_if: "R2 and R3 not worse by more than 0.03 and the known cases caught; then the full-text re-read of 'for' RCT records becomes a step of the method"
-fulltext_reread_result:   # 2026-11-09 10:49-11:00 UTC off-peak; {prospective,calibration}/fulltext_reread.json; python -m scripts.fulltext_reread score
+fulltext_reread_result:   # 2026-11-09 10:49-10:55 UTC off-peak; {prospective,calibration}/fulltext_reread.json; python -m scripts.fulltext_reread score
   cost_usd: "prospective 0.053, calibration 0.029: 0.082 (named 0.05-0.08)"
   sample: "77 'for' RCT records on the outcome link with an open paper (52 prospective, 25 calibration) of 231"
   new_stance: "for 56, none 12, against 9: 22 of 77 (29%) leave 'for', but 'none' is partly the reader dropping a record (the known recall loss), not a null"

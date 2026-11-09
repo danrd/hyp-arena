@@ -57,3 +57,20 @@ meta_certainty:   # user decision 2026-11-09 ("do it"); written before any call;
     certainty_and_pooled: "as certainty, and a record whose claim outcome is not pooled is dropped (the reader took another outcome)"
   measures: "R2 and R3 (v3.6, 0.03 rule) for each variant; R4 tau-b on pack 5; how many records change and by how much"
   adopt_if: "not worse than current by more than 0.03 on R2 and R3 (GRADE clause: certainty is GRADE's own rule); the user decides between the two variants"
+meta_certainty_result:   # 2026-11-09 10:56-11:00 UTC off-peak; calibration/meta_certainty.json, meta_certainty_score.json
+  cost_usd: 0.026
+  records: "75 meta-analysis records 'for' on human links of both pools; quote verbatim 69 of 75"
+  certainty: "GRADE named (regex on the abstract, else the model on abstract + PMC excerpt): high 2, moderate 5, low 4, very low 3; not reported 61"
+  risk_of_bias: "high 6, some concerns 9, not reported 60"
+  claim_outcome_pooled: "yes 57, no 18"
+  vs_pack12: >-
+    18 overlapping meta-analyses Argon read in full: Argon gives a GRADE level for 10, we for 1 (very low vs our low); the
+    full text holds the certainty table, our excerpt does not reach it. Outcome not pooled: Argon 7, ours 7, both 4
+  references:
+    current: {R2: 0.702, R3: 0.593}
+    certainty: {R2: 0.697, R3: 0.582}
+    certainty_and_pooled: {R2: 0.687, R2_targets: 179, R3: 0.582}
+  reading: >-
+    both variants are inside the 0.03 rule and neither gains. Because GRADE is found for 14 of 75, the certainty variant is
+    mostly a flat 0.75 on meta-analyses (risk of bias not reported); the pooled clause removes 18 records and 16 R2 targets.
+    R4 on pack 5 was not computed (no meta-analysis pair of pack 5 changes weight by more than the fold). Decision to the user.

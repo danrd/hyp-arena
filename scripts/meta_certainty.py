@@ -91,7 +91,7 @@ def score() -> dict:
     import scripts.record_weight_check as m
     from scripts.reread_analysis import all_units, r2_r3
     cert = json.loads(OUT.read_text())
-    out = {"records": len(cert), "certainty": dict(Counter(v.get("grade_regex") or v.get("certainty") for v in cert.values())),
+    out = {"records": len(cert), "certainty_levels": dict(Counter(v.get("grade_regex") or v.get("certainty") for v in cert.values())),
            "risk_of_bias": dict(Counter(v.get("risk_of_bias") for v in cert.values())),
            "claim_outcome_pooled": dict(Counter(v.get("claim_outcome_pooled") for v in cert.values())),
            "quote_verbatim": sum(bool(v.get("quote_verbatim")) for v in cert.values())}
