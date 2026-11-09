@@ -24,3 +24,24 @@ reading: >-
   if a fifth or more of the meta-analyses are low or very low certainty, the design weight of a meta-analysis should follow
   its certainty (GRADE), to be tested on R2 / R3; if a fifth or more of the nulls are underpowered, the power weight of
   nulls (v3.5) is checked against the full-text sample size calculations
+result:   # Argon pack 12 answer 2026-11-09 (longevity-kg reviews/argon-2026-11-08/pack_12_answer.json); python -m scripts.pack12_analysis
+  meta_analyses_for: >-
+    18 of 20 read; the abstract overstates in 17 (the reader is generous: 'other' 14; of the named kinds high heterogeneity 9,
+    a subgroup 8, the claim's outcome not pooled 7, low certainty not in the abstract 4, small-study bias 3); GRADE reported
+    in 10: high 2, moderate 4, low 3, very low 1 (low or very low 4 of 18 read, 22%); risk of bias of the included trials
+    high 6, some concerns 9, low 3
+  rct_against: >-
+    15 of 16 read; the claim's outcome was primary in 14; the planned sample was not analysed in 8; the abstract understates
+    in 9 (underpowered 8, positive in ITT or a secondary outcome 2)
+  our_null_weights: >-
+    the v3.5 power weight already tracks it: the nulls Argon calls understated carry power 0.10-0.51 (median about 0.24),
+    the others 0.24-0.87; no change needed for nulls
+  rule: >-
+    meta-analyses: met (low or very low certainty in 22% >= a fifth): the design weight of a meta-analysis should follow its
+    certainty, to be tested on R2 / R3; nulls: the power check is done above and agrees
+  reading: >-
+    a meta-analysis is not one level of evidence: two in ten that our reader takes as 'for' are low or very low certainty,
+    most pool trials at some or high risk of bias, and in seven the claim's own outcome is not pooled at all (our reader
+    took another outcome). In v3.6 every meta-analysis weighs 1, as much as a large RCT. A certainty-aware weight (high or
+    moderate 1, low 1/2, very low 1/4; not reported: by the risk of bias or I2) needs the certainty of every meta-analysis
+    record: GRADE is often in the abstract, else a short model call on the abstract (and the full text where open)
