@@ -102,3 +102,41 @@ def excerpt(pmid: str) -> Optional[str]:
                 text = None
     f.write_text(json.dumps({"pmid": pmid, "pmcid": pmc, "text": text}))
     return text
+
+
+_RES = re.compile(r"result|finding|outcome|efficacy|effect", re.I)
+RES_LIMIT = 20000
+
+
+def results_excerpt(pmid: str) -> Optional[str]:
+    """The Results sections and every table of the open-access full text (methods left out), at most RES_LIMIT characters;
+    None when not open access (2026-11-09: the methods-first excerpt often cut the results tables off)."""
+    CACHE.mkdir(parents=True, exist_ok=True)
+    f = CACHE / f"{pmid}.results.json"
+    if f.exists():
+        return json.loads(f.read_text()).get("text")
+    pmc = pmcid(pmid)
+    text = None
+    if pmc:
+        r = _get("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi", {"db": "pmc", "id": pmc, "retmode": "xml", "tool": "hyp-arena"})
+        if r is not None:
+            try:
+                root = ET.fromstring(r.text)
+                body = root.find(".//body")
+                paras, tables = [], []
+                if body is not None:
+                    for sec in body.findall("sec"):
+                        title = (sec.findtext("title") or "") + " " + (sec.get("sec-type") or "")
+                        if _RES.search(title) and not _SKIP.search(title):
+                            paras += [_text(x) for x in sec.iter("p")]
+                for tw in root.iter("table-wrap"):
+                    cap = _text(tw.find("caption")) if tw.find("caption") is not None else ""
+                    rows = [" | ".join(_text(c) for c in tr) for tr in tw.iter("tr")]
+                    tables.append(("Table: " + cap + " " + " / ".join(rows))[:4000])
+                uniq = lambda xs: list(dict.fromkeys(x for x in xs if x))
+                tab = "\n".join(uniq(tables))[:RES_LIMIT // 2]          # tables keep at least half of the room
+                text = ("\n".join(uniq(paras))[:RES_LIMIT - len(tab)] + "\n" + tab).strip() or None
+            except ET.ParseError:
+                text = None
+    f.write_text(json.dumps({"pmid": pmid, "pmcid": pmc, "text": text}))
+    return text

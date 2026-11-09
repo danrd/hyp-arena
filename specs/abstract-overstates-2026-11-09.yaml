@@ -63,3 +63,12 @@ fulltext_reread_result:   # 2026-11-09 10:49-10:55 UTC off-peak; {prospective,ca
     text shows the claim's outcome was not significant (40011687: only knee-extensor strength and one SF-36 domain). The
     full text is read, the overstatement is not seen: the same reader reads the same text the same way. A check aimed at the
     gap between the abstract's claim and the results table (a question, not a re-read) is the next candidate.
+claim_vs_results:   # user decision 2026-11-09 ("запускай", about 0.07 USD, stop at 0.15); written before the run
+  why: "the full-text re-read kept 'for' where the claim's outcome was not significant: the same reader reads the same text the same way; a narrow question is asked instead"
+  sample: "the same 77 'for' RCT records on the outcome link with an open paper (scripts.fulltext_reread.targets)"
+  text: "abstract + a new Results-and-tables excerpt (pmc.results_excerpt: Results sections, then every table with at least half of 20 000 characters; methods left out)"
+  question: "claim_vs_results/v1, DeepSeek: is there a significant BETWEEN-GROUP difference on the claim's outcome Y at the primary time point: yes | no | not_measured | unclear; a verbatim quote from the results; which outcomes did differ"
+  second_family: "every 'no' or 'not_measured' with a verbatim quote is asked again of Gemini; a change counts only when both say no / not_measured with verbatim quotes"
+  rule: "both 'no' -> the record moves to against (a null, weighed by the power of its study, as every null); both 'not_measured' -> the record is removed from the link; otherwise unchanged"
+  measures: "the 4 known cases in the sample (29227175, 40011687, 36316421, 39764482); agreement with pack 11's full-text finding on the overlapping papers (full re-read: 31 of 44); R2 / R3"
+  adopt_if: "R2 and R3 not worse by more than 0.03, at least 3 of the 4 known cases caught, and agreement with pack 11 above 31 of 44; then a step of the method for 'for' RCT records with an open paper"
