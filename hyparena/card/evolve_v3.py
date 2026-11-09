@@ -257,7 +257,7 @@ def compare(parent_item: dict, child_item: dict, parent_extras: dict, child_extr
              "child": imp.axes(ec, child_item["v3"].get("headroom_I"), child_extras)}
     sc = imp.scores(pairs, K=10000)
     ind = {}
-    for name, a, b in (("P", ep.P, ec.P), ("I", ep.I, ec.I), ("support_share", ep.support_share, ec.support_share),
+    for name, a, b in (("chain_state", ep.chain_state, ec.chain_state), ("I", ep.I, ec.I), ("support_share", ep.support_share, ec.support_share),
                        ("W", ep.scope, ec.scope), ("endpoint_clinical", parent_extras.get("endpoint_clinical"), child_extras.get("endpoint_clinical")),
                        ("N", dr["N"][0], dr["N"][1])):
         ind[name] = [a, b]

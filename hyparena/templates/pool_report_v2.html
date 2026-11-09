@@ -99,7 +99,7 @@
       <div class="bg-white rounded-xl p-4 shadow-sm border border-stone-200 flex flex-wrap items-center justify-between gap-3">
         <div class="max-w-4xl">
           <h2 class="serif-title text-lg font-bold text-[#1E4D40]">Карточки гипотез: звенья, записи, что улучшить</h2>
-          <p class="text-xs text-stone-600 mt-0.5">Для каждого звена — веса <span data-tip-key="FA">F / A</span>, <span data-tip-key="S">сила S</span> с 90% интервалом, <span data-tip-key="R">неопровергнутость R</span>, <span data-tip-key="link_N">новизна звена</span> и <span data-tip-key="records">записи PubMed</span> с весом (наведите на запись — множители веса и цитата, клик — карточка статьи). Если у гипотезы есть улучшенная версия, карточка показывает сравнение «до → после».</p>
+          <p class="text-xs text-stone-600 mt-0.5">Для каждого звена — веса <span data-tip-key="FA">F / A</span>, <span data-tip-key="S">сила S</span> с 90% интервалом, <span data-tip-key="link_N">новизна звена</span> и <span data-tip-key="records">записи PubMed</span> с весом (наведите на запись — множители веса и цитата, клик — карточка статьи). Если у гипотезы есть улучшенная версия, карточка показывает сравнение «до → после».</p>
         </div>
         <div class="flex flex-wrap gap-2 items-center">
           <input id="search-cards" type="text" placeholder="Поиск карточки…" class="text-xs border border-stone-300 rounded-lg px-2.5 py-1.5 bg-white w-44">
@@ -150,7 +150,7 @@
             <ul>
               <li>Каждая гипотеза разложена на <b>цепочку звеньев</b> от вмешательства к исходу (доставка → мишень → путь → промежуточный эффект → исход).</li>
               <li>Для каждого звена найдены статьи PubMed до даты среза; каждая находка — <b>запись</b> с дословной цитатой и весом.</li>
-              <li>Из записей код считает показатели: <b>неопровергнутость P</b>, <b>подтверждённость</b>, <b>новизну N</b>, <b>информативность I</b>, <b>размах W</b> и другие.</li>
+              <li>Из записей код считает показатели: <b>баланс доказательств</b>, <b>новизну N</b>, <b>информативность I</b>, <b>размах W</b> и другие.</li>
               <li><b>АСПИД</b> сводит показатели в оценку по профилю: задан только порядок важности, точные веса разыгрываются 10 000 раз. Оценка — среднее, место — по оценке, вероятность топ-5 — устойчивость места.</li>
               <li>Исход испытания метод <b>не предсказывает</b>: он говорит, насколько механизм обоснован сейчас, нов ли вопрос и что даст эксперимент.</li>
             </ul>
@@ -165,13 +165,13 @@
               <tr><th>контекст (непрямота)</th><td>соседняя популяция, возраст, пол, доза, вид — 1/2 (только то, что названо в утверждении); иначе 1. Метка «родственное вмешательство» пока не штрафуется: верификатор ставит её ненадёжно</td></tr>
             </tbody></table>
             <p>Несколько записей одной статьи или одного испытания: самая весомая целиком, остальные по 1/4.</p>
-            <h3>3. Сила звена, баланс доказательств, неопровергнутость</h3>
+            <h3>3. Сила звена и баланс доказательств</h3>
             <ul>
               <li><b>F / A</b> — суммы весов «за» и «против».</li>
               <li><b>Сила S</b> = 1 / (1 + e<sup>−λ(F − A)</sup>), λ = 2.68: «за» складываются с плюсом, «против» с минусом (сумма логарифмов отношений правдоподобия). 0.5 без данных или при равных «за» и «против», 0.83 при F = 0.6. В скобках — 90% интервал по количеству данных (Beta).</li>
-              <li><b>Баланс доказательств</b> (главный показатель в профилях; в коде <code>chain_state</code>) = среднее по звеньям величины 2S − 1: −1 — данные против, 0 — ничего не известно или «за» и «против» уравновешены, +1 — подтверждено.</li>
-              <li><b>Неопровергнутость R</b> = (1 + cF) / (1 + cF + cA): 1, пока данных «против» нет. <b>P</b> — произведение R по звеньям (каскад пути — одно место, параллельные исходы — основной). P = 1 значит «против ничего не найдено», а не «гипотеза верна».</li>
-              <li><b>Подтверждённость</b> — средняя опора звеньев: max(0, 2(S − 0.5)); 0 без данных, 0.67 при умеренной опоре, около 1 при сильной.</li>
+              <li><b>Баланс доказательств</b> (главный показатель в профилях; в коде <code>chain_state</code>) = среднее величины 2S − 1 по местам цепочки, <b>у которых есть данные</b>: −1 — данные против, 0 — «за» и «против» уравновешены, +1 — подтверждено. Место — одно звено; несколько звеньев «путь» подряд — одно место (берётся лучшее S); параллельные исходы — основной. Место без единой записи в среднее не входит (v3.7): пробелы видны в покрытии и в пункте «проверить звено».</li>
+              <li><b>Подтверждённость</b> (справочно, в профили не входит) — средняя опора тех же мест: max(0, 2(S − 0.5)); 0.67 при умеренной опоре, около 1 при сильной.</li>
+              <li>Неопровергнутость P из профилей убрана в v3.5 (была 1 у двух третей гипотез) и в отчёте не показывается; опровержение по-прежнему проверяют ворота.</li>
             </ul>
             <h3>4. Правила прочтения записи</h3>
             <ul>
@@ -335,7 +335,6 @@
         const roomMark = (r.room_not_computed ? tip('Пункт «выписать механизм» заранее не считается — запас может быть больше.', '*') : '') +
           (nDown ? tip(`Применение улучшений снизит новизну: ${nm('novelty', r.room_N[0])} → ${nm('novelty', r.room_N[1])}`, '<span class="text-amber-700 font-bold">↓</span>') : '');
         const others = PROFS.map(p => `${p.label}: ${f(r.aspid[p.key].score)} (место ${r.aspid[p.key].place})`).join(' · ');
-        const pTip = 'P — произведение R по звеньям: ' + r.links.filter(l => l.in_P).map(l => `${nm('link', l.type)} R=${f(l.R)}`).join(' × ');
         return `<tr class="hover:bg-stone-100/80 cursor-pointer" data-jump="${r.id}">
           <td class="py-2.5 px-2 font-bold">${a.place ?? '—'}</td>
           <td class="py-2.5 px-2 max-w-md xl:max-w-xl"><div class="flex flex-wrap items-center gap-1.5"><span class="font-bold text-[#1E4D40]">${esc(r.id)}</span>${statusChips(r)}</div>
@@ -344,7 +343,7 @@
           <td class="py-2.5 px-2 font-semibold ${room > 0.05 ? 'text-emerald-800' : 'text-stone-500'}">${tip('Запас по профилям: ' + PROFS.map(p => `${p.label} +${f(r.room[p.key])}`).join(', '), (room > 0.0005 ? '+' : '') + f(room))}${roomMark}</td>
           <td class="py-2.5 px-2 text-stone-700 whitespace-nowrap">${a.place}/${a.of} · ${f(a.p_top5, 2)}</td>
           <td class="py-2.5 px-2">${novChip(r.N)}${r.N_pmid ? `<button data-pmid="${r.N_pmid}" class="block text-[10px] text-blue-800 hover:underline font-semibold mt-0.5">PMID ${r.N_pmid}</button>` : ''}</td>
-          <td class="py-2.5 px-2 font-bold ${r.chain_state < -0.05 ? 'text-red-700' : r.chain_state > 0.05 ? 'text-emerald-800' : 'text-stone-600'}">${tip(pTip + ' · подтверждённость ' + f(r.support_share) + ' · баланс = среднее по звеньям (2S − 1): от −1 (данные против) через 0 (ничего не известно или поровну) до +1 (подтверждено)', (r.chain_state > 0 ? '+' : '') + f(r.chain_state, 2))}</td>
+          <td class="py-2.5 px-2 font-bold ${r.chain_state < -0.05 ? 'text-red-700' : r.chain_state > 0.05 ? 'text-emerald-800' : 'text-stone-600'}">${tip('подтверждённость ' + f(r.support_share) + ' · баланс = среднее (2S − 1) по местам цепочки с данными: от −1 (данные против) через 0 (поровну) до +1 (подтверждено)', (r.chain_state > 0 ? '+' : '') + f(r.chain_state, 2))}</td>
           <td class="py-2.5 px-2">${r.I_headroom && r.I_headroom > r.I + 0.005 ? tip('Если бы эксперимент отсекал все подкреплённые альтернативы, I была бы ' + f(r.I_headroom) + ' (это входит в «Запас»).', f(r.I)) : f(r.I)}</td>
           <td class="py-2.5 px-2 whitespace-nowrap">${esc(nm('scope', r.W))}</td>
           <td class="py-2.5 px-2 text-stone-600 whitespace-nowrap leading-snug"><div><span class="text-stone-400">реализ.</span> ${f(r.feasibility, 2)}</div><div><span class="text-stone-400">ИИ:</span> ${esc(nm('ai', r.ai_role).replace(/^ИИ\s*—\s*/, ''))}</div><div><span class="text-stone-400">точка:</span> ${esc(nm('endpoint', r.endpoint || ''))}</div></td>
@@ -359,8 +358,8 @@
     const sCls = l => !l.checked ? 'bg-purple-50 text-purple-900 border-purple-300' : (l.S <= 0.5 || l.A > 0 && l.A >= l.F / 2) ? 'bg-red-100 text-red-900 border-red-300' : l.S >= 0.83 ? 'bg-emerald-100 text-emerald-900 border-emerald-300' : 'bg-amber-100 text-amber-900 border-amber-300';
     function chain(links) {
       return `<div class="flex flex-wrap items-center gap-2 my-2">${links.map((l, i) => `<div class="flex items-center gap-1.5">
-        ${tip(`${nm('link', l.type)} · S ${f(l.S)} [${f(l.ci[0], 2)}; ${f(l.ci[1], 2)}] · R ${f(l.R)} · F ${f(l.F)} / A ${f(l.A)}` + (l.checked ? '' : ' · данных нет') + (l.parallel ? (l.primary ? ' · основной исход' : ' · параллельный исход') : ''),
-          `<div class="px-2.5 py-1.5 rounded-lg border text-xs ${sCls(l)}"><div class="font-bold">${esc(nm('link', l.type))}: S ${f(l.S, 2)} · R ${f(l.R, 2)}</div><div class="text-[11px] opacity-90 max-w-[220px] line-clamp-1">${esc(l.claim)}</div></div>`)}
+        ${tip(`${nm('link', l.type)} · S ${f(l.S)} [${f(l.ci[0], 2)}; ${f(l.ci[1], 2)}] · F ${f(l.F)} / A ${f(l.A)}` + (l.checked ? '' : ' · данных нет') + (l.parallel ? (l.primary ? ' · основной исход' : ' · параллельный исход') : ''),
+          `<div class="px-2.5 py-1.5 rounded-lg border text-xs ${sCls(l)}"><div class="font-bold">${esc(nm('link', l.type))}: S ${f(l.S, 2)}</div><div class="text-[11px] opacity-90 max-w-[220px] line-clamp-1">${esc(l.claim)}</div></div>`)}
         ${i < links.length - 1 ? '<span class="text-stone-400 font-bold">→</span>' : ''}</div>`).join('')}</div>`;
     }
     const recBtn = r => {
@@ -377,7 +376,7 @@
           <td class="py-2 px-2 whitespace-nowrap font-bold">${lp ? tip(TIPS.link, esc(nm('link', lp.type))) : '—'}${le && (!lp || le.type !== lp.type) ? `<br><span class="text-[#1E4D40]">→ ${esc(nm('link', le.type))}</span>` : ''}</td>
           <td class="py-2 px-2">${lp ? row(lp, 'Исх') + esc(lp.claim) + (lp.hallmark ? ` <span class="text-stone-500">(признак старения: ${esc(lp.hallmark)})</span>` : '') + '</div>' : ''}${le ? row(le, 'Версия') + esc(le.claim) + '</div>' : ''}</td>
           <td class="py-2 px-2 whitespace-nowrap">${lp ? row(lp, 'Исх') + `${f(lp.F)} / ${f(lp.A)}</div>` : ''}${le ? row(le, 'Версия') + `${f(le.F)} / ${f(le.A)}</div>` : ''}</td>
-          <td class="py-2 px-2 whitespace-nowrap">${[[lp, 'Исх'], [le, 'Версия']].filter(x => x[0]).map(([l, tg]) => row(l, tg) + `S <b>${f(l.S)}</b> [${f(l.ci[0], 2)}; ${f(l.ci[1], 2)}] · R <b class="${l.R < 0.999 ? 'text-red-700' : ''}">${f(l.R)}</b></div>`).join('')}</td>
+          <td class="py-2 px-2 whitespace-nowrap">${[[lp, 'Исх'], [le, 'Версия']].filter(x => x[0]).map(([l, tg]) => row(l, tg) + `S <b>${f(l.S)}</b> [${f(l.ci[0], 2)}; ${f(l.ci[1], 2)}]</div>`).join('')}</td>
           <td class="py-2 px-2 whitespace-nowrap">${[[lp, 'Исх'], [le, 'Версия']].filter(x => x[0]).map(([l, tg]) => row(l, tg) + novChip(l.novelty) + '</div>').join('')}</td>
           <td class="py-2 px-2">${[[lp, 'Исх'], [le, 'Версия']].filter(x => x[0]).map(([l, tg]) => row(l, tg) + (l.records.length ? l.records.map(recBtn).join('') : '<span class="text-stone-400">записей нет</span>') + '</div>').join('')}</td></tr>`;
       }
@@ -405,7 +404,7 @@
                 ${(p.flags || []).map(fl => tip(fl.detail || TIPS.flags, '⚑ ' + esc(fl.name), 'px-2 py-0.5 rounded bg-stone-200 text-stone-800 text-[11px]')).join('')}
               </div>
               <h3 class="serif-title font-bold text-base">${esc(p.title)}</h3>
-              <div class="text-xs text-stone-600">баланс доказательств ${(p.chain_state > 0 ? '+' : '') + f(p.chain_state, 2)} · P ${f(p.P)} · подтверждённость ${f(p.support_share)} · I ${f(p.I)} (запас ${f(p.I_headroom)}) · размах ${esc(nm('scope', p.W))} ·
+              <div class="text-xs text-stone-600">баланс доказательств ${(p.chain_state > 0 ? '+' : '') + f(p.chain_state, 2)} · подтверждённость ${f(p.support_share)} · I ${f(p.I)} (запас ${f(p.I_headroom)}) · размах ${esc(nm('scope', p.W))} ·
                 запас улучшения: ${PROFS.map(pr => `${pr.label} +${f(p.room[pr.key])}`).join(', ')}${p.room_N && p.room_N[0] !== p.room_N[1] ? ` (↓ новизна → ${esc(nm('novelty', p.room_N[1]))})` : ''}</div>
             </div>
             <div class="flex items-center gap-3"><div class="text-right text-xs space-y-0.5">${PROFS.map(pr => `<div class="${pr.key === curProfile ? 'font-bold text-[#1E4D40]' : 'text-stone-600'}">${scoreLine(pr)}</div>`).join('')}</div>
@@ -418,16 +417,16 @@
               ${kids.map(k => `<button data-mode="${p.id}" data-val="${k.id}" class="mode-btn px-3 py-1 rounded text-xs font-semibold ${mode === k.id ? 'bg-[#1E4D40] text-white' : 'bg-stone-200'}">Только ${k.evo_mode === 'free' ? 'свободная эволюция' : 'доработанная версия'}</button>`).join('')}
             </div>` : ''}
             <div class="grid grid-cols-1 ${e && showP ? 'lg:grid-cols-2' : ''} gap-3">
-              ${showP ? `<div class="p-3 rounded-xl bg-stone-50 border border-stone-200"><div class="text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">Исходная · P ${f(p.P)} · подтверждённость ${f(p.support_share)} · новизна: ${esc(nm('novelty', p.N || ''))}</div>
+              ${showP ? `<div class="p-3 rounded-xl bg-stone-50 border border-stone-200"><div class="text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">Исходная · баланс ${f(p.chain_state, 2)} · подтверждённость ${f(p.support_share)} · новизна: ${esc(nm('novelty', p.N || ''))}</div>
                 <p class="text-xs text-stone-700 mb-1">${esc(p.plain || '')}</p>${chain(p.links)}
                 <p class="text-[11px] text-stone-500">Заявленный эксперимент: ${esc((p.experiment || {}).design || '—')}, ${esc((p.experiment || {}).endpoint || '—')}, n ${esc((p.experiment || {}).n || '—')}${p.N_pmid ? ` · статья, задающая новизну: <button data-pmid="${p.N_pmid}" class="text-blue-800 underline">PMID ${p.N_pmid}</button>` : ''}</p></div>` : ''}
-              ${e ? `<div class="p-3 rounded-xl bg-emerald-50/50 border border-emerald-800/20"><div class="text-xs font-bold text-[#1E4D40] uppercase tracking-wider mb-1">${e.evo_mode === 'free' ? 'Свободная эволюция' : 'Доработанная версия'} · P ${f(e.P)} · подтверждённость ${f(e.support_share)} · новизна: ${esc(nm('novelty', e.N || ''))}</div>
+              ${e ? `<div class="p-3 rounded-xl bg-emerald-50/50 border border-emerald-800/20"><div class="text-xs font-bold text-[#1E4D40] uppercase tracking-wider mb-1">${e.evo_mode === 'free' ? 'Свободная эволюция' : 'Доработанная версия'} · баланс ${f(e.chain_state, 2)} · подтверждённость ${f(e.support_share)} · новизна: ${esc(nm('novelty', e.N || ''))}</div>
                 <p class="text-xs text-stone-800 mb-1">${esc(e.plain || '')}</p>${chain(e.links)}
                 ${e.drift ? `<p class="text-[11px] text-stone-600">Доля звеньев с опорой до даты среза: ${f((e.drift.known_share || [])[0], 2)} → ${f((e.drift.known_share || [])[1], 2)}${e.drift.applied && e.drift.applied.length ? ' · применено: ' + esc(e.drift.applied.join(', ')) : ''}${e.drift.distance != null ? ' · расстояние от родителя ' + f(e.drift.distance, 2) : ''}${e.drift.cited ? ` · статей названо ${e.drift.cited.length}, найдено ${(e.drift.cited_found || []).length}` : ''}</p>` : ''}</div>` : ''}
             </div>
             <div class="overflow-x-auto"><table class="w-full text-left border-collapse text-xs"><thead><tr class="border-b-2 border-[#1E4D40] text-[#1E4D40] bg-stone-50 font-bold">
               <th class="py-2 px-2">${tipK('link', 'Звено')}</th><th class="py-2 px-2">Утверждение</th><th class="py-2 px-2">${tipK('FA', 'F / A')}</th>
-              <th class="py-2 px-2">${tipK('S', 'S [90%]')} · ${tipK('R', 'R')}</th><th class="py-2 px-2">${tipK('link_N', 'Новизна звена')}</th><th class="py-2 px-2">${tipK('records', 'Записи PubMed (за / против, вес)')}</th>
+              <th class="py-2 px-2">${tipK('S', 'S [90%]')}</th><th class="py-2 px-2">${tipK('link_N', 'Новизна звена')}</th><th class="py-2 px-2">${tipK('records', 'Записи PubMed (за / против, вес)')}</th>
             </tr></thead><tbody class="divide-y divide-stone-200">${linkRows(showP ? p : e, showP ? e : null)}</tbody></table></div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
               <div class="p-3 rounded-lg bg-stone-50 border border-stone-200 space-y-1.5">
@@ -453,12 +452,12 @@
       const kids = DATA.results.filter(r => r.is_evolved && r.scored);
       document.getElementById('evo-empty').classList.toggle('hidden', kids.length > 0);
       document.getElementById('evo-head').closest('table').classList.toggle('hidden', !kids.length);
-      document.getElementById('evo-head').innerHTML = ['Пара', 'Режим', 'P', 'Подтверждённость', 'Новизна и флаг', 'I', 'Размах', ...PROFS.map(p => 'Δ ' + p.label), ''].map(h => `<th class="py-2 px-2 whitespace-nowrap">${h}</th>`).join('');
+      document.getElementById('evo-head').innerHTML = ['Пара', 'Режим', 'Баланс', 'Подтверждённость', 'Новизна и флаг', 'I', 'Размах', ...PROFS.map(p => 'Δ ' + p.label), ''].map(h => `<th class="py-2 px-2 whitespace-nowrap">${h}</th>`).join('');
       document.getElementById('evo-tbody').innerHTML = kids.map(e => {
         const p = byId[e.parent_id]; if (!p || !p.scored) return '';
         return `<tr class="hover:bg-stone-50"><td class="py-2.5 px-2 font-bold text-[#1E4D40]">${esc(p.id)}<div class="font-normal text-stone-500 line-clamp-1 max-w-xs">${esc(p.title)}</div></td>
           <td class="py-2.5 px-2">${e.evo_mode === 'free' ? tipK('free', 'свободная') : tipK('tuned', 'доработка')}</td>
-          <td class="py-2.5 px-2">${f(p.P)} → ${f(e.P)}</td><td class="py-2.5 px-2">${f(p.support_share)} → ${f(e.support_share)}</td>
+          <td class="py-2.5 px-2">${f(p.chain_state, 2)} → ${f(e.chain_state, 2)}</td><td class="py-2.5 px-2">${f(p.support_share)} → ${f(e.support_share)}</td>
           <td class="py-2.5 px-2">${esc(nm('novelty', p.N || ''))} → ${esc(nm('novelty', e.N || ''))}${e.drift && e.drift.drift_to_known ? `<br>${tip(TIPS.drift + ' Причина: ' + e.drift.reasons.join('; '), '⚠ сдвиг к известному', 'px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 text-[10px] font-semibold')}` : ''}</td>
           <td class="py-2.5 px-2">${f(p.I)} → ${f(e.I)}</td><td class="py-2.5 px-2">${esc(nm('scope', p.W))} → ${esc(nm('scope', e.W))}</td>
           ${PROFS.map(pr => `<td class="py-2.5 px-2">${delta(e.aspid[pr.key].score - p.aspid[pr.key].score)}</td>`).join('')}

@@ -291,7 +291,7 @@ class V32Result:
         return asdict(self)
 
 
-EMPTY_SLOTS = os.environ.get("EMPTY_SLOTS", "count")      # "count" (v3.6) | "skip" (candidate, specs/empty-slots-2026-11-09.yaml)
+EMPTY_SLOTS = os.environ.get("EMPTY_SLOTS", "skip")       # v3.7 (user 2026-11-09, specs/empty-slots-2026-11-09.yaml): "skip"; "count" = v3.6
 
 
 def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
@@ -382,7 +382,7 @@ def _evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
         if len(sl) > 1 and outs and sl[0] in {o.id for o in outs}:
             return sum(res.links[i][0] for i in sl) / len(sl)          # parallel outcomes without a primary: their mean
         return max(res.links[i][0] for i in sl)                         # a cascade: its best link
-    # EMPTY_SLOTS = "skip" (candidate, user 2026-11-09): a slot none of whose links has a counting record is left out of the
+    # EMPTY_SLOTS = "skip" (v3.7, user 2026-11-09): a slot none of whose links has a counting record is left out of the
     # balance and the support share ("nothing known" is not averaged in; gaps show in coverage and the improvement list)
     sl_used = [sl for sl in slots if any(res.links[i][3] + res.links[i][4] > 0 for i in sl)] if EMPTY_SLOTS == "skip" else slots
     res.support_share = round(sum(max(0.0, 2 * (slot_S(sl) - 0.5)) for sl in sl_used) / len(sl_used), 4) if sl_used else 0.0

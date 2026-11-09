@@ -51,6 +51,7 @@ def test_manual_v32_constants_and_profiles_equal_the_code():
 
 
 def test_manual_worked_example_is_what_the_code_gives(monkeypatch):
+    monkeypatch.setattr(r32, "EMPTY_SLOTS", "count")                     # history: v3.3-v3.6 averaged empty slots in
     from hyparena.card import rules_v3 as r3
     from hyparena.card.models import ClaimVerification
     from tests.test_analyze import _case
@@ -75,6 +76,7 @@ def test_manual_worked_example_is_what_the_code_gives(monkeypatch):
 
 
 def test_manual_worked_example_v34(monkeypatch):
+    monkeypatch.setattr(r32, "EMPTY_SLOTS", "count")                     # history: v3.3-v3.6 averaged empty slots in
     from hyparena.card import novelty_v34 as nv
     from hyparena.card.models import ClaimVerification
     from tests.test_analyze import _case
@@ -103,6 +105,7 @@ def test_manual_worked_example_v34(monkeypatch):
 
 
 def test_manual_worked_example_v36(monkeypatch):
+    monkeypatch.setattr(r32, "EMPTY_SLOTS", "count")                     # history: v3.3-v3.6 averaged empty slots in
     from hyparena.card.models import ClaimVerification
     from tests.test_analyze import _case
     from tests.test_rules_v3 import rec
@@ -127,6 +130,7 @@ def test_manual_v36_constants_equal_the_code():
     assert abs(v["loglr_lambda"] - r32.LOGLR_LAMBDA) < 1e-5 and abs(v["effect_full_from"] - r32.EFFECT_FULL_FROM) < 1e-9
     d = dict(v["design_grade3"])
     assert d.pop("other") == 0.25 and d == r32.DESIGN_GRADE3
+    assert yaml.safe_load(block)["v37"]["empty_slots"] == r32.EMPTY_SLOTS
 
 
 def test_manual_names_table_matches_code():
@@ -139,3 +143,18 @@ def test_manual_names_table_matches_code():
     pairs += [(k or "unknown", v[0]) for k, v in rh.NOVELTY_NAMES.items()] + list(r2.PROFILE_LABEL.items())
     for code, ru in pairs:
         assert f"| `{code}` | {ru} |" in sec, (code, ru)
+
+
+def test_manual_worked_example_v37(monkeypatch):
+    """v3.7: a slot with no record is left out of the balance."""
+    from hyparena.card.models import ClaimVerification
+    from tests.test_analyze import _case
+    from tests.test_rules_v3 import rec
+    monkeypatch.setattr(r3, "established_by_approval", lambda claim, card: False)
+    monkeypatch.setattr(r32, "EMPTY_SLOTS", "skip")
+    c, cvs, alts = _case()
+    e = r32.evaluate(c, cvs, alts, v36=True)
+    text = MANUAL.read_text()
+    assert f"| v3.7 | S {e.links['c1'][0]:.3f} (F {e.links['c1'][3]:.3f}) | no record, not averaged | S {e.links['c3'][0]:.3f} (F {e.links['c3'][3]:.3f}) | evidence balance {e.chain_state:.3f} |" in text
+    e2 = r32.evaluate(c, cvs + [ClaimVerification(id="c2", evidence=[rec(5, "animal", n=40, effect="large")])], alts, v36=True)
+    assert f"| v3.7, with one mouse study of 40 for c2 | | S {e2.links['c2'][0]:.3f} | | evidence balance {e2.chain_state:.3f} |" in text

@@ -32,4 +32,5 @@ def test_report_v2_renders_an_empty_pool_and_keeps_the_template_hooks():
     html = r2.render(rep)
     assert "__DATA__" not in html and '"profiles"' in html and "Фронтир" in html
     d = r2.data(rep)
-    assert {g["term"] for g in d["glossary"]} >= {"запас улучшения", "новизна", "неопровергнутость механизма", "сдвиг к известному"}
+    assert {g["term"] for g in d["glossary"]} >= {"запас улучшения", "новизна", "баланс доказательств", "сдвиг к известному"}
+    assert "неопровергнутость механизма" not in {g["term"] for g in d["glossary"]}

@@ -91,7 +91,7 @@ TIPS = {
                           "How close the trial's primary endpoint is to a clinical outcome: biomarker < patient-reported < function < clinical event (falls, hospitalisation, death)."),
     "trend_pubmed": ("Рост внимания: публикации о вмешательстве за 3 года до оценки против 3 лет до них, за вычетом роста всего PubMed. 0 — как вся литература, 0.7 — примерно вдвое быстрее.",
                      "Rising attention: publications on the intervention in the 3 years before scoring vs the 3 before, net of PubMed's growth. 0 = like all literature, 0.7 = about twice as fast."),
-    "chain_state": ("Баланс доказательств, от −1 до +1: среднее по звеньям величины 2S − 1. −1 — данные против звеньев, 0 — ничего не известно или «за» и «против» уравновешены, +1 — звенья подтверждены. Одна ось вместо неопровергнутости и подтверждённости: различает «опровергнуто» и «неизвестно». Нулевой результат маленького исследования весит по его мощности.",
+    "chain_state": ("Баланс доказательств, от −1 до +1: среднее величины 2S − 1 по местам цепочки, у которых есть данные (место без записей в среднее не входит, v3.7). −1 — данные против звеньев, 0 — «за» и «против» уравновешены, +1 — звенья подтверждены. Одна ось вместо неопровергнутости и подтверждённости: различает «опровергнуто» и «неизвестно». Нулевой результат маленького исследования весит по его мощности.",
                     "Evidence balance, −1 to +1: the mean over the links of 2S − 1. −1: data against the links; 0: nothing known, or for and against balanced; +1: the links are supported. One axis instead of non-refutation and support; tells refuted from unknown. A null of a small study weighs by its power."),
     "support_share": ("Подтверждённость механизма, от 0 до 1: средняя подтверждённость звеньев цепочки. Звено без данных или с данными только «против» — 0, умеренная поддержка — 0.67, сильная — около 1. Звенья без данных не снижают P, но снижают эту ось: гипотеза из одних догадок не получит высокое место.",
                       "How much of the mechanism is supported, 0 to 1: the mean support of the chain's links. A link without data or with data only against is 0, moderate support 0.67, strong near 1. Links without data do not lower P but lower this axis: a hypothesis made of guesses does not rank high."),
@@ -513,7 +513,7 @@ def render_evolution(evo: dict, H: dict, profs: list[str]) -> str:
         return t("свободная", "free") if p.get("mode") == "free" else t("доработка", "tuning")
     if pairs:
         out.append('<div class="scroll"><table class="tbl"><thead><tr><th>' + t("Гипотеза", "Hypothesis") + '</th><th>' +
-                   t("Режим и пункты", "Mode and items") + '</th><th>P</th><th>I</th><th>' + tn(SHORT["support_share"]) + '</th><th>' +
+                   t("Режим и пункты", "Mode and items") + '</th><th>' + t("Баланс", "Balance") + '</th><th>I</th><th>' + tn(SHORT["support_share"]) + '</th><th>' +
                    tn(SHORT["N"]) + '</th>' +
                    "".join(f'<th>{tn(PROFILE_NAMES[p])}</th>' for p in profs) + '</tr></thead><tbody>')
         def nov(c):
@@ -531,7 +531,7 @@ def render_evolution(evo: dict, H: dict, profs: list[str]) -> str:
                 return f'<span class="{cls}">{fmt(a)} → {fmt(b)}</span>'
             out.append(f'<tr><td class="title"><a href="#ev-{e(u)}">{e(H.get(base_id(u), {}).get("title", u)[:80])}</a><br><span class="muted mono">{e(u)}</span></td>'
                        f'<td class="mono">{mode_label(p)}<br>{e(", ".join(p.get("applied", [])))}</td>'
-                       f'<td class="n">{d(*c["indicators"]["P"])}</td><td class="n">{d(*c["indicators"]["I"])}</td>'
+                       f'<td class="n">{d(*c["indicators"]["chain_state"])}</td><td class="n">{d(*c["indicators"]["I"])}</td>'
                        f'<td class="n">{d(*c["indicators"]["support_share"])}</td>' +
                        f'<td>{nov(c)}</td>' +
                        "".join(f'<td class="n">{d(*c["score"].get(pr, [None, None]))}</td>' for pr in profs) + '</tr>')

@@ -18,3 +18,4 @@ result:   # python -m scripts.empty_slots -> calibration/empty_slots.json
   pack8_trial_spearman: "0.393 -> 0.398"
   prospective: "12 of 59 units change their balance; mean balance 0.156 -> 0.185; rankings: Spearman 0.996 / 0.992 / 0.997 (evidence / funding / frontier), top 10 kept 9 / 9 / 10"
   adopt_rule: "met; adoption is the user's decision"
+decision: "adopted 2026-11-09 (user): v3.7, EMPTY_SLOTS default skip; manual sections 7, 13, 14; P removed from the report v2"

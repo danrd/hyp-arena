@@ -142,7 +142,7 @@ def analyse(card: HypothesisCard, cvs: list[ClaimVerification], alts: dict[str, 
                     ev.append(r)
                 cvs2.append(ClaimVerification(id=c.id, evidence=ev, counterevidence=c.counterevidence))
             e2 = evaluate(card, cvs2, alts)
-            if e2.P > base.P + 0.01 or e2.support_share > base.support_share + 0.01:
+            if e2.chain_state > base.chain_state + 0.01 or e2.support_share > base.support_share + 0.01:
                 mod = next(c for c in cvs2 if c.id == cl.id)
                 comb["cvs"][cl.id] = ClaimVerification(id=cl.id, evidence=mod.evidence, counterevidence=comb["cvs"][cl.id].counterevidence)
                 comb["applied"].append("narrow_population")
@@ -193,7 +193,7 @@ def analyse(card: HypothesisCard, cvs: list[ClaimVerification], alts: dict[str, 
         pairs["combined"] = axes(ec, headroom_I, cext)
     sc = scores(pairs, K=K)
     if comb["applied"]:
-        ind = {name: [round(a, 3), round(b, 3)] for name, a, b in (("P", base.P, ec.P), ("I", base.I, ec.I),
+        ind = {name: [round(a, 3), round(b, 3)] for name, a, b in (("I", base.I, ec.I),
                                                                    ("support_share", base.support_share, ec.support_share),
                                                                    ("chain_state", base.chain_state, ec.chain_state))
                if abs(b - a) > 1e-4}
@@ -212,7 +212,7 @@ def analyse(card: HypothesisCard, cvs: list[ClaimVerification], alts: dict[str, 
             item["expected"] = None
         else:
             ind = {}
-            for name, a, b in (("chain_state", base.chain_state, e_mod.chain_state), ("P", base.P, e_mod.P), ("I", base.I, e_mod.I), ("support_share", base.support_share, e_mod.support_share)):
+            for name, a, b in (("chain_state", base.chain_state, e_mod.chain_state), ("I", base.I, e_mod.I), ("support_share", base.support_share, e_mod.support_share)):
                 if abs(b - a) > 1e-4:
                     ind[name] = [round(a, 3), round(b, 3)]
             if ext.get("endpoint_clinical") != extras.get("endpoint_clinical"):

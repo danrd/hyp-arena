@@ -40,7 +40,7 @@ def _expected_text(i: dict) -> str:
     ex = i.get("expected")
     if not ex:
         return "ожидаемый эффект заранее не считается"
-    names = {"P": "P", "I": "I", "support_share": "подтверждённость", "endpoint_clinical": "конечная точка", "N": "новизна"}
+    names = {"chain_state": "баланс доказательств", "I": "I", "support_share": "подтверждённость", "endpoint_clinical": "конечная точка", "N": "новизна"}
     def v(k, x):
         if k == "endpoint_clinical":
             return rh.ENDPOINT_NAMES.get(x, (str(x),))[0]
@@ -117,7 +117,9 @@ def data(rep: dict) -> dict:
                 e["sides"].add(r["side"])
     for e in pubmed.values():
         e["sides"] = sorted(e["sides"])
-    glossary = [{"term": n, "text": rh.t_ru(v)} for n, v in rh.glossary_items()]
+    hidden = ("P", "R")       # non-refutation left the profiles in v3.5 and the report in v3.7 (user 2026-11-09)
+    names = {**rh.IND_NAMES, **rh.GLOSSARY_NAMES}
+    glossary = [{"term": names.get(k, (k, k))[0], "text": rh.t_ru(v)} for k, v in {**rh.TIPS, **rh.GLOSSARY_EXTRA}.items() if k not in hidden]
     return {
         "meta": {"title": m["title_ru"], "about": m["about_ru"], "date": m["date"], "method": m["method"], "sha": m["sha"],
                  "n": m["n"], "n_scored": m["n_scored"], "outcomes": m["outcomes"]},
@@ -128,7 +130,7 @@ def data(rep: dict) -> dict:
                   "endpoint": {(k or ""): v[0] for k, v in rh.ENDPOINT_NAMES.items()}, "ai": {k: v[0] for k, v in rh.AI_NAMES.items()},
                   "link": {k: v[0] for k, v in rh.LINK_NAMES.items()}, "design": {k: v[0] for k, v in rh.DESIGN_NAMES.items()},
                   "disc": {k: v[0] for k, v in rh.DISC.items()}, "flags": {k: v[0] for k, v in FLAG_NAMES.items()}},
-        "tips": {k: rh.t_ru(v) for k, v in {**rh.TIPS, **rh.GLOSSARY_EXTRA}.items()},
+        "tips": {k: rh.t_ru(v) for k, v in {**rh.TIPS, **rh.GLOSSARY_EXTRA}.items() if k not in hidden},
         "results": results, "pubmed": sorted(pubmed.values(), key=lambda e: e["pmid"]), "glossary": glossary,
     }
 

@@ -171,7 +171,8 @@ def check(parent: tuple, child: tuple, mode: str = "tune", as_of: str = "", chil
     warn8 = False
     if scores:
         ups = [b is not None and a is not None and b > a for a, b in scores.values()]
-        warn8 = bool(ups) and all(ups) and ec.P >= 0.999 and (room_after is None or max(room_after.values() or [0]) < 0.02)
+        no_against = not any(side == "against" for rows in cr.values() for _, side, _, _ in rows)
+        warn8 = bool(ups) and all(ups) and no_against and (room_after is None or max(room_after.values() or [0]) < 0.02)
     rules.append({"rule": 8, "name": "rise in every profile is a warning", "warning": warn8, "violation": False})
 
     return {"rules": rules, "violations": [r["rule"] for r in rules if r.get("violation")],

@@ -1,6 +1,8 @@
 # Method v3 manual: how a hypothesis is scored and how to read the report
 
-Version: rules **v3.6** as of 2026-11-08 (`evaluate(..., v36=True)`, specs/record-weight-2026-11-08.yaml): the record
+Version: rules **v3.7** as of 2026-11-09 = v3.6 with a slot that has no record left out of the evidence balance and the
+support share (`rules_v32.EMPTY_SLOTS = "skip"`, specs/empty-slots-2026-11-09.yaml; section 7), and non-refutation P no
+longer shown in the report (it left the profiles in v3.5; the gate still filters refuted chains). v3.6 as of 2026-11-08 (`evaluate(..., v36=True)`, specs/record-weight-2026-11-08.yaml): the record
 weight rebuilt on the GRADE domains with fewer levels, and records for and against folded as a sum of log likelihood ratios
 (sections 5, 5a, 6); the signed axis is named the **evidence balance** (`chain_state` in the code). v3.5 as of 2026-11-08 (v3.4 + one signed axis in the profiles and a null record weighted
 by the power of its study, `evaluate(..., v35=True)`, specs/link-scoring-2026-11-08.yaml); v3.4 as of 2026-11-07 (`hyparena/card/rules_v32.py`, `evaluate(..., v34=True)`; novelty, leverage and the
@@ -250,7 +252,17 @@ ranked). Nothing else filters: an undeveloped but promising hypothesis keeps its
 
 ## 7. Axes
 
-- **P** (v3.4) = **non-refutation**: the product over the links of R = (1 + cF) / (1 + cF + cA). R = 1 when nothing is
+- **Evidence balance** (v3.7; `chain_state`), the main axis of every profile = the mean of 2S − 1 over the chain's **slots that
+  have at least one counting record**, from −1 (the data are against the links) through 0 (for and against balanced) to +1
+  (supported). A slot is one link; consecutive pathway links are one slot (its best link); parallel outcomes are one slot
+  (the primary, else their mean). A slot with no record is not averaged in (v3.7, user decision 2026-11-09): under v3.6 it
+  entered as 0, so an added untested link lowered a positive balance by k/(k+1), raised a negative one towards 0, and cost
+  nothing when written as a pathway next to another pathway; the result depended on the sign and on the link type chosen.
+  Gaps are shown by the coverage (share of slots with data) and the improvement item "check the link", not by the balance.
+  Check (specs/empty-slots-2026-11-09.yaml): R3 0.593 → 0.586, agreement with the outside reader's trial balance 0.393 →
+  0.398, 12 of 59 prospective units move, rankings Spearman ≥ 0.99. A consequence to read correctly: the balance is the
+  state of what is known, so a first modest record on a link that had none can lower it (worked example, section 13).
+- **P** (v3.4; not in any profile since v3.5, not shown in the report since v3.7; kept for the gate and the history) = **non-refutation**: the product over the links of R = (1 + cF) / (1 + cF + cA). R = 1 when nothing is
   against, whatever the support; data against lower it, data for soften that (F = A = 0.6 gives 0.5). Parallel outcomes
   (mass, strength, function) count once: the one matching the primary outcome of the stated experiment, else their mean.
   Consecutive pathway links (a cascade written as several steps) are one slot, their geometric mean. No interval is
@@ -315,7 +327,7 @@ drawn over its whole range in every draw.
 
 | Indicator | What it says | Scale |
 |---|---|---|
-| P | non-refutation of the chain | log, from 0.01 |
+| P | non-refutation of the chain (in no profile since v3.5; not shown since v3.7) | log, from 0.01 |
 | I | informativeness of the stated experiment (headroom I, of an improved one, feeds the room to improve, section 11) | linear, 0-1 |
 | W | scope | local < organ < hallmark |
 | feasibility | system, duration, planned n, readiness of the intervention (approved or not a compound 1, in trials 0.5, neither 0) | 0-1; does not yet count arms or invasive measures (section 11, rule 7) |
@@ -427,7 +439,7 @@ and the verbatim quote, a click opens the paper card; what lifts and lowers; the
 list), *Evolution* (every pair: mode, P, support share, novelty with the drift flag, I, scope, the change of the score under
 each profile; a placeholder when the pool has no evolution results; no shortcut button elsewhere), *PubMed papers* (every
 paper with its quote and the hypotheses that use it), *Help* (how to read the report, the record weight table of v3.6 with
-its GRADE domains, S as a log-likelihood sum, the evidence balance, R and P, the reading rules, novelty, the experiment and
+its GRADE domains, S as a log-likelihood sum, the evidence balance (slots with data, v3.7), the reading rules, novelty, the experiment and
 the other indicators, the profiles from the configuration, room and evolution, limits and validation status including the
 outside checks (section 12), provenance, and a glossary of every parameter).
 
@@ -485,7 +497,7 @@ hard to compare (user note 2026-11-09). The code report is the reference; anothe
 - **Flags** (section 9) are shown by their names below, with the link or alternative they concern; the code may follow in
   parentheses.
 - **The help section** has the same parts as the code report's «Справка», in this order: 1 the report in a minute; 2 the
-  weight of a record (v3.6, GRADE domains); 3 link strength, evidence balance, non-refutation; 4 rules for reading a record;
+  weight of a record (v3.6, GRADE domains); 3 link strength and evidence balance; 4 rules for reading a record;
   5 novelty N; 6 the experiment, scope and the rest; 7 the ASPID profiles, with the table of tiers (section 8); 8 room to
   improve and evolution; 9 limits and validation status; provenance (date cut, method version, scores hash); a glossary of
   every parameter shown. A part may be short, but none is left out, and the numbers in it are this manual's (section 14).
@@ -633,8 +645,8 @@ every target was met by exactly these moves.
 7. **A bigger experiment costs feasibility.** Arms, invasive or specialised measures (biopsy, imaging, high-density EMG)
    are part of feasibility (section 8); an experiment that rules out more alternatives by adding arms and measures must
    show its cost. Until feasibility counts them (backlog), the report shows the number of arms and such measures next to I.
-8. **A rise in every profile at once is a warning,** not a result: when a version gains in all three profiles with P = 1 and
-   the room near zero, the report says which of the rules above it was checked against.
+8. **A rise in every profile at once is a warning,** not a result: when a version gains in all three profiles with no
+   record against left and the room near zero, the report says which of the rules above it was checked against.
 
 **Novelty control** (v3.4, `novelty_v34.drift`, user decision 2026-11-07): a writer model tends to pull a hypothesis towards
 what is already known, because that is where the data are. Each pair is flagged **"moved towards the known"** when the
@@ -802,6 +814,14 @@ c3 (medium effect). One proposed alternative with an observational study of 300 
 | v3.6, with one mouse study of 40 for c2 | | S 0.793 | | evidence balance 0.756 | | | | |
 | v3.6, with one mouse study of 40 against c2 | | S 0.342 | | evidence balance 0.455 | | | | |
 
+| v3.7 | S 0.936 (F 1.000) | no record, not averaged | S 0.905 (F 0.839) | evidence balance 0.841 | | 0.581 | organ | |
+| v3.7, with one mouse study of 40 for c2 | | S 0.793 | | evidence balance 0.756 | | | | |
+| v3.7, with one mouse study of 40 against c2 | | S 0.342 | | evidence balance 0.455 | | | | |
+
+Under v3.7 the empty c2 is not averaged in, so the balance is that of c1 and c3 (0.841, against 0.560 under v3.6, where c2
+counted as 0). A mouse study of 40 for c2 then adds a slot weaker than the other two and lowers the balance to 0.756: the
+balance says how strong what is known is, and the coverage (2 of 3 slots → 3 of 3) says how much is known.
+
 Under v3.6 the RCT of 120 with a medium effect weighs 0.839 (its effect counts in full), each link's S comes from F − A,
 and a mouse null of 40 weighs by its power (0.24; preclinical design 1, between groups 1) against 0.5 for the
 mouse study for, so it lowers the balance less than under v3.5 (0.455 vs 0.333).
@@ -821,6 +841,8 @@ v32:
   precision: {floor: 0.25, full_at_n: 300}
   effect_d_full: 0.8
   p_floor_aspid: 0.01
+v37:
+  empty_slots: skip          # a slot with no record is not averaged into the balance or the support share
 v36:
   loglr_lambda: 2.682397     # 2 atanh(2/3) / 0.6
   design_grade3: {rct: 1.0, meta_analysis: 1.0, non_randomised: 0.5, observational: 0.5, other: 0.25}
