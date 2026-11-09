@@ -72,3 +72,11 @@ claim_vs_results:   # user decision 2026-11-09 ("запускай", about 0.07 U
   rule: "both 'no' -> the record moves to against (a null, weighed by the power of its study, as every null); both 'not_measured' -> the record is removed from the link; otherwise unchanged"
   measures: "the 4 known cases in the sample (29227175, 40011687, 36316421, 39764482); agreement with pack 11's full-text finding on the overlapping papers (full re-read: 31 of 44); R2 / R3"
   adopt_if: "R2 and R3 not worse by more than 0.03, at least 3 of the 4 known cases caught, and agreement with pack 11 above 31 of 44; then a step of the method for 'for' RCT records with an open paper"
+claim_vs_results_partial:   # 2026-11-09 11:23-11:40 UTC; stopped by the 0.15 USD cap after 35 of 77 records (prospective only)
+  cost_usd: "0.152 for 35 records (named about 0.07 for 77: my estimate of the Gemini second reading was wrong, about 6-7 k tokens per call at 1.5 USD per million in)"
+  first: "yes 15, no 7, not_measured 11, unclear 2; verbatim quote 20 of 35"
+  second_asked: "18 (the code asked Gemini for every no / not_measured, also without a verbatim first quote: against the spec)"
+  verdict: "null 4, unchanged 31; no record removed: a 'not_measured' has no quote to be verbatim, so the rule as written can never remove one"
+  known_cases: "36316421 caught on its outcome link c1 (no between-group effect on DLPFC activity; its GABA link c2 stays 'for', right); 39764482 'not_measured' by both families but not counted (the rule above); 40011687 not reached"
+  vs_pack11: "16 of 19 overlapping papers the same as Argon's full-text finding (full re-read: 31 of 44 on the larger set)"
+  status: "paused for the user's decision on the two rule defects and the cost"
