@@ -95,3 +95,22 @@ claim_vs_results_result:   # 2026-11-09 11:36-11:50 UTC; all 77 records; python 
   references: "R2 0.682 (before 0.702, 189 targets vs 195), R3 0.610 (before 0.593): both inside the 0.03 rule"
   adopt_rule: "met (R2 / R3 inside 0.03, 3 of 4 known cases, 35 > 31 of 44)"
   decision: "adoption waits for Argon pack 13 (all 35 changed or proposed records, reviews/argon-2026-11-08/pack_13_task.json), as variant V requires; the user decides"
+pack13_result:   # Argon pack 13 answer 2026-11-09 (longevity-kg reviews/argon-2026-11-08/pack_13_answer.json); 35 of 35 answered
+  argon: "no 12, not_measured 11 (a fair stand-in for Y in 4), yes 11, full text unavailable 1"
+  argon_action: "no -> null; not_measured without a fair stand-in -> removed; not_measured with one, or yes -> stays 'for'"
+  counted_changes_19: "Argon agrees the record should leave 'for' in 10 (3 removed as removed, 4 null as null, 2 removed that Argon makes null, 1 null that Argon removes), disagrees in 8 (5 nulls where Argon finds a between-group effect, 3 removals where a fair stand-in was measured), 1 unknown: precision 10 of 18"
+  uncounted_16: "Argon would change 10 (6 null, 4 removed), keep 6: the verbatim filter does not pick the right ones (10/18 counted vs 10/16 uncounted)"
+  model_as_flag: "the model's no / not_measured is right that the record should not stay 'for' in 20 of 34 (59%)"
+  disagreements: >-
+    mostly what Y is: an interaction effect counted as no between-group difference (94e72e9d), significance only on a
+    secondary or a component measure (ea6b3559 primary frailty null, secondary function positive; c1bfc729 free but not
+    total testosterone), and a near measure the model did not accept as a stand-in (30-s chair stand for muscle power)
+  side_finding: >-
+    in 14 of 35 notes Argon says the paper tested another intervention or population than the claim (not mSMT, not
+    STEP@Home, not Meritene, other ages): the record was 'for' an exact context it does not have, a reading error before
+    this check; it feeds the context-label work (intervention_match), not this step
+  decision: >-
+    not adopted as a weight change: precision 10 of 18 is too low for an automatic step and the code filter does not
+    select. Kept as a report flag 'the trial's results may not support this record' on 'for' RCT records with an open
+    paper (59% right), for a reader to check; a v3 of the question would separate interaction, primary vs secondary and
+    stand-in measures before a new holdout
