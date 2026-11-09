@@ -42,3 +42,12 @@ result:   # Argon pack 11 answer 2026-11-09 (longevity-kg reviews/argon-2026-11-
     text. A filter by cues does not work; what works is (1) the reader's own between-group rule on the abstract (v13 restates
     it) and (2) a full-text re-read of every 'for' record from an RCT on the outcome link where PMC allows it, which is cheap
     (about half of 231 records)
+fulltext_reread:   # user decision 2026-11-09 ("go"); written before the run; about 0.05-0.08 USD
+  records: "every record 'for' from an RCT on the outcome link of both pools (231) whose paper is open in PMC (Europe PMC isOpenAccess)"
+  reading: "reader verify_claim/v13 on that one paper with the abstract plus the PMC methods and results excerpt (verifier search mode 'fixed+fulltext'); DeepSeek, off-peak"
+  replace: "the paper's records on that link are replaced by the full-text reading; papers that are closed keep their records"
+  measures: >-
+    flips (for -> against / none) and their share; the known cases caught (LISA 38911477, 31121926, and the 4 flips of
+    pack 11); agreement of the new stance with pack 11's full-text finding where the papers overlap; pack 8 link and trial
+    Spearman; R2 / R3 under the 0.03 rule
+  adopt_if: "R2 and R3 not worse by more than 0.03 and the known cases caught; then the full-text re-read of 'for' RCT records becomes a step of the method"

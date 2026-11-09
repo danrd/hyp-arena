@@ -1,0 +1,26 @@
+id: meta-and-nulls-2026-11-09
+written_on: 2026-11-09
+status: definitions fixed before the pack was built or sent
+why: >-
+  User 2026-11-09: what else to check in the direction of pack 11. Two record kinds pack 11 did not cover: (1) meta-analyses
+  read as FOR a claim, which weigh as an RCT (1) in v3.6 although the full text may report low GRADE certainty, high
+  heterogeneity or high risk of bias of the included trials; (2) RCTs read as AGAINST a claim (nulls), whose abstract may
+  understate (an underpowered null, a positive primary or claim outcome left out, a null only in a per-protocol analysis).
+pack: Argon pack 12 (longevity-kg reviews/argon-2026-11-08/pack_12_task.json; hidden key pack_12_key.json)
+sample: >-
+  records on the outcome link of both pools, open in PMC (Europe PMC isOpenAccess): up to 20 meta-analyses 'for' and up to 20
+  RCTs 'against', distinct papers, by SHA-1 of 'mn|<pmid>'; mixed, the kind told (the questions differ)
+asked:
+  meta_analysis_for: >-
+    from the full text, for the claim's outcome: trials and participants pooled, the pooled effect with its interval, I2,
+    GRADE certainty if reported, risk of bias of the included trials, and abstract_overstates yes / no with kinds
+    (low_certainty_not_in_abstract, high_heterogeneity, small_study_or_publication_bias, outcome_not_pooled, subgroup, other)
+  rct_against: >-
+    from the full text: was the claim's outcome the primary one, the sample size calculation and whether it was reached,
+    the result with its interval, adherence, and abstract_understates yes / no with kinds (underpowered,
+    positive_on_claim_outcome_left_out, positive_in_itt_or_secondary, equivalence_or_noninferiority, other)
+measures: "share of meta-analyses that overstate (and of the serious kinds); share of nulls that understate; how many change the stance or should change the weight (a low-certainty meta-analysis at RCT weight; an underpowered null)"
+reading: >-
+  if a fifth or more of the meta-analyses are low or very low certainty, the design weight of a meta-analysis should follow
+  its certainty (GRADE), to be tested on R2 / R3; if a fifth or more of the nulls are underpowered, the power weight of
+  nulls (v3.5) is checked against the full-text sample size calculations
