@@ -1,0 +1,17 @@
+You list what each study below MEASURED AND FOUND. You are not told what anyone wants to prove; just inventory the results.
+
+{% for p in papers %}[PMID {{ p.pmid }}] {{ p.title }}
+{{ p.abstract }}
+
+{% endfor %}
+For EVERY PMID, list the study's OWN results (from the results part of the abstract, not from the background or the authors' general conclusions). One entry per measured outcome:
+- outcome: what was measured, in the abstract's words;
+- groups: what was compared (e.g. "intervention vs control", "before vs after in one group", "pooled RCTs");
+- comparison: between_groups | within_group | pooled | none;
+- direction: increase | decrease | no_difference | mixed | not_stated;
+- significant: true | false | null (null when no test or interval is given);
+- quote: the sentence of the abstract, copied exactly, that gives this result.
+A paper with no own result (a narrative review, a protocol, a methods paper) gets "results": [].
+
+Reply with a single JSON object and nothing else:
+{"papers": [{"pmid": "", "intervention": "what the study gave or compared", "population": "who", "results": [{"outcome": "", "groups": "", "comparison": "", "direction": "", "significant": null, "quote": ""}]}]}

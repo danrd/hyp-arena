@@ -1,0 +1,19 @@
+You match the results other readers listed for each study against ONE claim of a research hypothesis. Do not judge whether the hypothesis is true.
+
+Claim: {{ claim.subject.label }} — {{ claim.relation }} — {{ claim.object.label }}
+Qualifiers the claim states: {{ qualifiers or "none" }}
+
+Studies and their listed results:
+{% for p in papers %}[PMID {{ p.pmid }}] intervention: {{ p.intervention }}; population: {{ p.population }}
+{% for r in p.results %}  - r{{ loop.index }}: {{ r.outcome }} | {{ r.groups }} | {{ r.comparison }} | {{ r.direction }} | significant: {{ r.significant }}
+{% endfor %}{% if not p.results %}  (no own result)
+{% endif %}
+{% endfor %}
+For EVERY PMID decide:
+- finding: for (an own result on the claim's outcome in the claim's direction), against (an own result on that outcome with no difference between groups, or the opposite direction), none (no listed result is on the claim's outcome);
+- result: the r-number used (null for none). Prefer a between-groups or pooled result over a within-group one: a within-group improvement with no between-group difference is "against".
+- intervention_match: exact | class | other. A study of an intervention of the same kind as the claim's (another supplement, programme, diet or drug of the class), or in another population or species, still gives for / against with "class"; "other" only for an unrelated intervention (then finding is none).
+- outcome_match: exact | surrogate | other.
+
+Reply with a single JSON object and nothing else:
+{"papers": [{"pmid": "", "finding": "for | against | none", "result": "r1", "intervention_match": "exact", "outcome_match": "exact"}]}

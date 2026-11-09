@@ -37,3 +37,18 @@ result:   # Argon pack 9 answer 2026-11-08 (longevity-kg reviews/argon-2026-11-0
     Two fixes follow: (1) a relevance filter before reading (drop reviews without a result, other outcomes) so the reader
     sees fewer, better papers; (2) a reader that must answer for every paper (a closed list per PMID: finding for /
     against / none), so a skip is visible and countable.
+two_step_test:   # user decision 2026-11-09 ("yes": a cheap test of Argon's two-step reading); written before the run
+  what: >-
+    the papers the filter v2 kept for the 10 pack-9 links (the same set reader v13 read); step A results_inventory/v1 lists
+    each paper's own results without seeing the claim (batches of 10); step B claim_match/v1 matches the listed results to
+    the claim and gives for / against / none per PMID, with a between-group preference rule. DeepSeek V4.1 Flash
+  measures: "per-paper recall and precision of own findings and direction agreement against pack 9, next to reader v13's per-paper answers on the same papers"
+  cost: "a few cents (about 20 calls)"
+  reading: "two-step is worth a holdout when it beats v13 on recall or precision by at least 0.10 without losing the other"
+two_step_result:   # prospective/two_step_reading.json, calibration/two_step_reading.json; 0.035 USD, 05:46-05:50 UTC (off-peak)
+  v13_per_paper: {recall: "11/21 = 0.52", precision: "11/15 = 0.73", direction: "11/11"}
+  two_step:      {recall: "6/21 = 0.29", precision: "6/15 = 0.40", direction: "6/6"}
+  reading: >-
+    worse on both: listing results without the claim and matching afterwards loses findings (the inventory names outcomes
+    in the abstract's words, and the match then misses them) and adds false ones. Not taken to a holdout; reader v13
+    stays the best reader of the per-paper gold.
