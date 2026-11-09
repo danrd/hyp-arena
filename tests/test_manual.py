@@ -127,3 +127,15 @@ def test_manual_v36_constants_equal_the_code():
     assert abs(v["loglr_lambda"] - r32.LOGLR_LAMBDA) < 1e-5 and abs(v["effect_full_from"] - r32.EFFECT_FULL_FROM) < 1e-9
     d = dict(v["design_grade3"])
     assert d.pop("other") == 0.25 and d == r32.DESIGN_GRADE3
+
+
+def test_manual_names_table_matches_code():
+    """Section 10a lists every display name the code uses (user note 2026-11-09: outside reports must use the same names)."""
+    from hyparena import report_html as rh
+    from hyparena import report_v2 as r2
+    text = (Path(__file__).resolve().parents[1] / "docs" / "method-v3-manual.md").read_text(encoding="utf-8")
+    sec = text[text.index("## 10a."):text.index("## 11.")]
+    pairs = [(k, v[0]) for d in (rh.IND_NAMES, rh.LINK_NAMES, rh.DESIGN_NAMES, rh.DISC, r2.FLAG_NAMES) for k, v in d.items()]
+    pairs += [(k or "unknown", v[0]) for k, v in rh.NOVELTY_NAMES.items()] + list(r2.PROFILE_LABEL.items())
+    for code, ru in pairs:
+        assert f"| `{code}` | {ru} |" in sec, (code, ru)

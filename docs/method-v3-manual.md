@@ -24,6 +24,7 @@ section 10. Rules for a model writing such a report:
 - Do not predict the outcome of the trial; P is non-refutation of the mechanism given the literature, not a forecast.
 - When in doubt between two levels, take the lower one and say why. For novelty, take the level nearer the known: a paper you
   were not given may exist, and missing data are never novelty.
+- Use the names and the help section of section 10a: no code shown alone, no new names for existing terms.
 - A report written this way is an approximation. The authoritative report is the one the code builds
   (`python -m hyparena.analyze RUN.json`), from the same rules and the records the verifier extracted.
 
@@ -468,6 +469,78 @@ share, novelty with the record that sets it, I, scope, places under the three pr
 alternatives), what to improve (actions with the score they would give, and the change of novelty they would cost),
 limitations, provenance. The older one-hypothesis report by code (`python -m hyparena.analyze`) still uses the v3 / v3.1
 levels.
+
+## 10a. Names and the help section of a report
+
+A report written outside the code (by an outside reader such as Argon, or by a model from section 0) tends to keep codes
+untranslated, coin its own names for the same thing, or shorten the help section. Both make two reports of the same pool
+hard to compare (user note 2026-11-09). The code report is the reference; another report follows it:
+
+- **Names.** Use the Russian name of the table below in a Russian report and the English one in an English report. Never
+  show a code alone (`chain_state`, `contested_link`); a code may follow the name in parentheses. Do not rename: if a term
+  is not in the table, describe it in words and give the code, not a new name. The renamings already made are final:
+  "баланс доказательств" (not "состояние цепочки" or "проверенность"), one column "Запас" (room to improve; I headroom only
+  in its note).
+- **Flags** (section 9) are shown by their names below, with the link or alternative they concern; the code may follow in
+  parentheses.
+- **The help section** has the same parts as the code report's «Справка», in this order: 1 the report in a minute; 2 the
+  weight of a record (v3.6, GRADE domains); 3 link strength, evidence balance, non-refutation; 4 rules for reading a record;
+  5 novelty N; 6 the experiment, scope and the rest; 7 the ASPID profiles, with the table of tiers (section 8); 8 room to
+  improve and evolution; 9 limits and validation status; provenance (date cut, method version, scores hash); a glossary of
+  every parameter shown. A part may be short, but none is left out, and the numbers in it are this manual's (section 14).
+- **Check**: an outside report is read against this table and list before its content is compared with the code report.
+
+The table is the code's own (`hyparena/report_html.py` IND_NAMES, LINK_NAMES, NOVELTY_NAMES, DESIGN_NAMES, DISC;
+`hyparena/report_v2.py` FLAG_NAMES, PROFILE_LABEL); `tests/test_manual.py` checks that every entry is here.
+
+| Kind | Code | Russian | English |
+|---|---|---|---|
+| indicator | `P` | неопровергнутость механизма | non-refutation of the mechanism |
+| indicator | `I` | информативность эксперимента | informativeness of the experiment |
+| indicator | `I_headroom` | запас информативности | room for a more informative experiment |
+| indicator | `W` | размах механизма | scope of the mechanism |
+| indicator | `feasibility` | реализуемость | feasibility |
+| indicator | `best_design_outcome` | лучший дизайн по исходу | best design for the outcome |
+| indicator | `independent_outcome` | независимые источники по исходу | independent sources for the outcome |
+| indicator | `against_share` | доля данных «против» | share of evidence against |
+| indicator | `endpoint_clinical` | клиничность конечной точки | how clinical the endpoint is |
+| indicator | `trend_pubmed` | рост внимания в литературе | rising attention in the literature |
+| indicator | `ai_role` | роль ИИ | role of AI |
+| indicator | `support_share` | подтверждённость механизма | how much of the mechanism is supported |
+| indicator | `chain_state` | баланс доказательств | evidence balance |
+| indicator | `N` | новизна | novelty |
+| link type | `delivery` | доставка | delivery |
+| link type | `engagement` | действие на мишень | target engagement |
+| link type | `pathway` | сигнальный путь | pathway |
+| link type | `effect` | промежуточный эффект | intermediate effect |
+| link type | `outcome` | исход | outcome |
+| novelty level | `new_context` | новый контекст | new context |
+| novelty level | `translation` | перенос на другой вид | translation |
+| novelty level | `analog` | аналог | analog |
+| novelty level | `new_combination` | новое сочетание | new combination |
+| novelty level | `new_link` | новое звено | new link |
+| novelty level | `unknown` | неизвестно | unknown |
+| design | `none` | нет данных | no data |
+| design | `cells` | клетки | cells |
+| design | `animal` | животные | animals |
+| design | `observational` | наблюдательное | observational |
+| design | `review` | обзор | review |
+| design | `non_randomised` | нерандомиз. | non-randomised |
+| design | `meta_analysis` | метаанализ | meta-analysis |
+| design | `rct` | РКИ | RCT |
+| what the experiment does to an alternative (d) | `eliminated` | отсекает | rules it out |
+| what the experiment does to an alternative (d) | `weakened` | ослабляет | weakens it |
+| what the experiment does to an alternative (d) | `unchanged` | не различает | does not tell apart |
+| flag | `build_mechanism` | механизм не выписан | mechanism not written |
+| flag | `name_supported_alternatives` | нет подкреплённых альтернатив | no supported alternatives |
+| flag | `improve_experiment` | эксперимент оставляет альтернативы | experiment leaves alternatives standing |
+| flag | `find_primary_report` | найти статью самого испытания | find the trial's own paper |
+| flag | `contested_link` | спорное звено | contested link |
+| flag | `retracted_source_dropped` | отозванная статья исключена | retracted paper dropped |
+| flag | `established_by_approval` | звено принято по одобрению | link accepted by approval |
+| profile | `evidence` | Доказательность | Evidence |
+| profile | `funding` | Финансирование | Funding |
+| profile | `frontier` | Фронтир | Frontier |
 
 ## 11. Improvements and evolution
 
