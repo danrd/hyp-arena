@@ -101,3 +101,8 @@ stage_0_amended_2026_11_10:   # user decision 2026-11-10: include the ambiguous-
   no_tuning: "the parse and ambiguous-pair prompts are written before the run and not revised on pack 9's positives; a fix of a schema or code bug is allowed and recorded"
   go_to_stage_1_if: "recall at least reader v13's (0.52) and precision not lower than 0.65; with 21 positives the interval is wide, so the loss attribution decides what to change"
   cost: "estimated 0.6-1.0 USD (189 papers; 0.15 / 0.60 USD per million tokens off-peak; the output with a quote per field dominates); the exact count from a dry run of the real prompts before any call; run only with the user's consent, off-peak"
+  dry_run_2026_11_10: >-
+    188 papers (one book of conference abstracts skipped), 66 with PMC Results and tables, 46 in PMC without an open
+    licence (Results not stored), 65 without PMC, 11 other; parse prompt about 817 000 tokens in (schema and rules about 2 900
+    per call); output not measured yet: 0.43 USD at 1 500 / 4 000 tokens per abstract / full text, 0.73 USD at 3 000 / 8 000;
+    ambiguous pairs about 0.11 USD; total about 0.55-0.85 USD (longevity-kg reviews/codex-2026-11-09-skeleton/stage0-dry.json)

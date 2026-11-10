@@ -7,7 +7,7 @@ source: >-
   vulnerabilities" are errors of Argon's own reports (d_w = 3.0, year 2024, pool count), and it changes v3.6 decisions
   without checks. Ideas that address real gaps are taken below as candidates C1-C7, each with a free check; the rest is
   listed under not_taken with the reason.
-user_decision: "2026-11-10: write the candidates as a spec; include the proportionality rule (Argon: 'dScore_I <= dScore_substantive')"
+user_decision: "2026-11-10: write the candidates as a spec; include the proportionality of the experiment gain (C6, variant b; Argon's formula not needed)"
 
 candidates:
 
@@ -55,18 +55,17 @@ candidates:
       hypothesis_part: "evolution_rules.decompose 'hypothesis' (balance, N, W, best design, sources, trend, AI role)"
       experiment_part: "decompose 'experiment' (I, feasibility, endpoint); Argon's d_I is I alone"
     variants:
-      a_cap: "counted change = hypothesis part + min(experiment part, max(hypothesis part, 0)) (Argon's rule)"
       b_label_and_cost: >-
         no cap; a version with a total rise and a hypothesis part <= 0.005 (noise) is labelled 'experiment improved, not the
         hypothesis' in the report and the ranking; in directed and free evolution and in generation-by-profile it does not count
         as reaching the profile's target; feasibility counts arms and invasive or specialised measures (backlog item), so the
         experiment part pays for them
-    known_problem_of_a: "the tuning item 'experiment rules out the supported alternatives' improves only the experiment (hypothesis part 0): under a it is worth 0 although the improvement is real; a needs an exemption for that item"
+    not_taken_a_cap: "counted change = hypothesis part + min(experiment part, max(hypothesis part, 0)) (Argon's formula): the tuning item 'experiment rules out the supported alternatives' improves only the experiment and would be worth 0; dropped by the user 2026-11-10"
     open_question: "for generated hypotheses without a parent there is no change to split; reference = the source text the writer started from when there is one (Bio Arena, a registry row), else only the feasibility cost applies"
     measures:
-      saved_pairs: "on the 10 saved pairs and Argon's G1-G5 (both versions): labels, counted changes and ranking under a and b"
-      fixtures: "tests: a version that adds arms and measures only (must be labelled / capped); a tuning version with the experiment item (must keep its gain under b; shows the problem of a); a version with a real hypothesis gain (unchanged)"
-    adopt_if: "on meaning (user); recommended b, with a kept as a report column if the user wants the number"
+      saved_pairs: "on the 10 saved evolution pairs: labels and ranking under b"
+      fixtures: "tests: a version that adds arms and measures only (must be labelled); a tuning version with the experiment item (keeps its gain); a version with a real hypothesis gain (unchanged)"
+    adopt_if: "on meaning (user); variant b only (user 2026-11-10: Argon's version not needed)"
 
   C7_outside_report_checks:
     idea: "for reports written outside the code (manual section 10a): the year of every record from PubMed, one pool count and one method version in every header, filter and help"
