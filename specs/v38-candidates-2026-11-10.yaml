@@ -1,0 +1,89 @@
+id: v38-candidates-2026-11-10
+written_on: 2026-11-10
+status: written before any computation (free); nothing adopted; the manual changes only after the results and the user's decision
+source: >-
+  an outside "Method v3.8" patch prepared from Argon runs (2026-11-10, not stored here). Reviewed against the code and the
+  manual: it names modules that do not exist (hyparena/evidence/*, score/indicators.py, audit.py), its three "v3.7
+  vulnerabilities" are errors of Argon's own reports (d_w = 3.0, year 2024, pool count), and it changes v3.6 decisions
+  without checks. Ideas that address real gaps are taken below as candidates C1-C7, each with a free check; the rest is
+  listed under not_taken with the reason.
+user_decision: "2026-11-10: write the candidates as a spec; include the proportionality rule (Argon: 'dScore_I <= dScore_substantive')"
+
+candidates:
+
+  C1_context_by_code:
+    idea: "the reader does not output the context label; code computes it from the claim's stated qualifiers and the paper's own context"
+    status: "covered by the paper skeleton (specs/paper-skeleton-2026-11-09.yaml): the skeleton stores the paper's context, longevity-kg tools/skeleton/match.py computes qualifiers_match and calls rules_v32.only_claim_qualifiers / context_v34 unchanged"
+    check: "none separate; adopted or not with the skeleton (its stage 1 and R2 / R3)"
+
+  C2_same_finding_on_several_links:
+    gap: "the independence fold runs per link and side (rules_v32.py, FOLD_REST): one paper counts in full on every link it is recorded on, so one finding can raise several slots of one chain"
+    variants:
+      a: "the same finding (same PMID and the same quote) counts in full on one link only, the one where its weight is largest; on the others it weighs 0 (it is the same evidence); different findings of one paper on different links are different evidence and keep their weight (GRADE has no rule against that)"
+      b: "the patch as written: any reuse of a PMID on a second link of the chain x 0.25"
+    measures:
+      prevalence: "share of chains with a PMID on two or more slots, and with the same quote on two or more links (calibration and prospective pools)"
+      R3: "tied AUC of the balance against trial outcomes (calibration)"
+      pack8: "trial Spearman with Argon's pack 8 balance"
+      movement: "units whose balance changes; ranking Spearman and top-10 overlap per profile"
+    adopt_if: "a: a protection on meaning; adopted if R3 and pack 8 are not worse by more than 0.03 / 0.05. b only if better than a on both"
+
+  C3_hallmark_needs_two_groups:
+    gap: "W = hallmark needs one link at least moderate (F >= 0.6); one animal paper plus a second paper pulled in can reach it"
+    variant: "W = hallmark only when the hallmark link is at least moderate AND has records for from at least 2 independence groups; otherwise organ if the link is supported"
+    measures: {movement: "units whose W changes (expected few on registry pools: W local for 48 of 55)", R3: "as C2", profiles: "ranking Spearman per profile"}
+    adopt_if: "not worse than 0.03 on R3; on meaning (scope from one source is not scope)"
+
+  C4_coverage_next_to_balance:
+    gap: "under v3.7 an empty slot is left out of the balance; a reader can take a high balance for a checked chain (backlog item)"
+    variant: "the report shows coverage k of n slots next to every balance, and 'not checked (0 records)' on every empty slot; a note in the help"
+    check: "report test only (no change of any score)"
+
+  C5_parent_records_kept_on_unchanged_links:
+    gap: "evolution re-reads the whole version; a link with the same text gets other records by reader noise alone (two readings: Spearman 0.81)"
+    variant: "a link of the version whose subject, relation, object, qualifiers and cut-off are identical to the parent's takes the parent's records unchanged; only changed or new links are read. Consistent with section 11 rules 1-3 (the parent's reading IS the reading of that link); with the paper skeleton this comes from matching by code anyway"
+    measures: {saved_pairs: "on longevity-kg prospective/evolution_check_evolution_60.json and Argon's hand-run pairs: how many inherited links got different records and how much of each score change that explains"}
+    adopt_if: "on meaning; a new rule 9 of section 11 if adopted"
+
+  C6_proportionality_of_the_experiment_gain:
+    gap: >-
+      a version can rise in the ranking on the experiment alone: in 2 of the 10 saved evolution pairs the score rose while the
+      hypothesis part fell (evidence +0.064 = -0.066 hypothesis + 0.130 experiment; frontier +0.034 = -0.026 + 0.060;
+      evolution_rules.decompose). Argon's second run of generation G1-G5 found the same (frontier led by I = 0.605 from 4 arms,
+      3 specialised measures, every alternative cut off) and introduced 'dScore_I <= dScore_substantive'.
+    definitions:
+      hypothesis_part: "evolution_rules.decompose 'hypothesis' (balance, N, W, best design, sources, trend, AI role)"
+      experiment_part: "decompose 'experiment' (I, feasibility, endpoint); Argon's d_I is I alone"
+    variants:
+      a_cap: "counted change = hypothesis part + min(experiment part, max(hypothesis part, 0)) (Argon's rule)"
+      b_label_and_cost: >-
+        no cap; a version with a total rise and a hypothesis part <= 0.005 (noise) is labelled 'experiment improved, not the
+        hypothesis' in the report and the ranking; in directed and free evolution and in generation-by-profile it does not count
+        as reaching the profile's target; feasibility counts arms and invasive or specialised measures (backlog item), so the
+        experiment part pays for them
+    known_problem_of_a: "the tuning item 'experiment rules out the supported alternatives' improves only the experiment (hypothesis part 0): under a it is worth 0 although the improvement is real; a needs an exemption for that item"
+    open_question: "for generated hypotheses without a parent there is no change to split; reference = the source text the writer started from when there is one (Bio Arena, a registry row), else only the feasibility cost applies"
+    measures:
+      saved_pairs: "on the 10 saved pairs and Argon's G1-G5 (both versions): labels, counted changes and ranking under a and b"
+      fixtures: "tests: a version that adds arms and measures only (must be labelled / capped); a tuning version with the experiment item (must keep its gain under b; shows the problem of a); a version with a real hypothesis gain (unchanged)"
+    adopt_if: "on meaning (user); recommended b, with a kept as a report column if the user wants the number"
+
+  C7_outside_report_checks:
+    idea: "for reports written outside the code (manual section 10a): the year of every record from PubMed, one pool count and one method version in every header, filter and help"
+    check: "added to the section 10a checklist; no score changes"
+
+not_taken:
+  outcome_design_scale: "1 / 0.85 / 0.70 / 0.40 / 0.25 / 0.10 puts a meta-analysis below an RCT again; v3.6 removed that (Argon pack 5: meta-analysis first in 7 of 7 pairs; R2 up)"
+  precision_formula: "ln(1 + n/25) / ln 5 saturates at n = 100 instead of 300 and sets unknown n to 1/3; no check offered; v3.6 tested three-step precision and it broke R3"
+  forced_adjacent: "young animals, invertebrates, disease models forced to 'adjacent' whatever the claim states: against v3.6 (adjacent only on qualifiers the claim states) and v3.4 (another species on the outcome link is charged once, by the design scale)"
+  class_levels: "class 1 on mechanism links and 1/2 on the outcome: class is not charged in v3.6 until the v10 reader is re-run (its label agrees with Argon at kappa 0.10)"
+  dual_anchor_zero_weight: >-
+    both anchors as verbatim substrings or weight 0: reading recall is the bottleneck, substrings miss synonyms, and 10 of the 21
+    own findings of Argon pack 9 match the intervention only by class; another tissue is 'adjacent' (1/2) under v3.6, not 0.
+    May return as a flag; free measure if wanted: share of pack 9 positives that would fail the substring anchors
+  cross_hypothesis_pmid_ban: "one paper legitimately serves many hypotheses"
+  max_I_to_substantive_gain_ratio: "undefined in the patch (a config key only); replaced by C6"
+  d_w_and_year_validators: "errors of Argon's reports, not of the code (design weights come from rules_v32, the year from PubMed); kept as C7 for outside reports"
+
+order: "C4 and C7 (report only), C2, C3, C5, C6 on saved data; one free script, scripts/v38_candidates.py; results appended here"
+result: "pending"

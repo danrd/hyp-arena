@@ -66,3 +66,38 @@ evaluation:
   reference_extraction: "the known-facts test (Open Genes / GenAge experiments with PMIDs, docs/backlog.md) and DrugAge rows as field-level gold (species, strain, sex, dose, direction, significance)"
   outside: "an Argon pack of 30 parsed papers (the skeleton against the paper) and a Codex review of the code and of a sample"
 adopt_if: "stage 1: key-paper recall at least 0.35 and the link Spearman with pack 8 above the cross-link reading (0.29) by more than the reader noise; then R2 / R3 not worse by more than 0.03"
+
+codex_delivery_2026_11_10: >-
+  Codex delivered the inventory and the code in longevity-kg (tools/skeleton: schema, store, checks, match, backfill, eval,
+  text; 47 tests) and a free evaluation of the old records converted to skeleton rows: pack 9 0 of 21 own findings, pack 8 0
+  of 474 key papers. The findings graph task of 2026-11-08 was not implemented (no findings.db).
+
+backfill_diagnosis_2026_11_10:   # free; the 21 own findings of pack 9 traced through the db
+  cause: >-
+    the converted rows carry no intervention per arm, no direction and almost never an outcome name (the old records were
+    claim-conditioned; Codex did not infer them from the old stance, by design), and 5 of the 21 pairs have no result row at
+    all. The zero is a property of the backfill, not a measure of the matcher or of a new extraction.
+  matcher_risk: >-
+    the code matcher accepts a result only when the arm's intervention matches the link's subject exactly (reviewed aliases)
+    and the outcome name equals the link's object; 10 of the 21 own findings match the intervention only by class (a
+    programme vs 'multimodal supervised exercise'), and objects such as 'cancer-related sarcopenia', 'metabolic biomarkers',
+    'muscle growth' are reported as lean mass, HbA1c, muscle strength. Most true pairs of a new extraction will be ambiguous,
+    so stage 0 without the ambiguous-pair model would measure the matcher's strictness, not reading.
+
+stage_0_amended_2026_11_10:   # user decision 2026-11-10: include the ambiguous-pair model in stage 0
+  parse: "one call per paper (parse_paper with the session's model callable: DeepSeek V4.1 Flash, thinking off, temperature 0, through the hyp-arena client and CometAPI), text = abstract + PMC Results and tables when open (E-utilities only, cached)"
+  match: "code first (tools/skeleton/match.py, unchanged rules)"
+  ambiguous_pairs: >-
+    one call per link with all its ambiguous (finding, link) pairs, after the code; the model sees the link (subject,
+    relation, object, stated qualifiers) and each finding row (arm intervention, outcome name and measure, direction,
+    significance, context, quote) and answers per pair: intervention exact | class | other; outcome same | narrower measure
+    of the object | broader | other; stance for | against | none; a one-line reason. It writes no quote and changes no
+    field: a 'for' or 'against' pair becomes a record built by code from the stored row (rules unchanged; class is not
+    charged as in v3.6; 'narrower measure' counts as the object, 'broader' and 'other' do not)
+  measures: >-
+    on the 200 pairs of pack 9: recall, precision and direction against Argon, beside reader v13 on the same pairs
+    (0.524 / 0.733 / 1.0 in Codex's evaluation); each loss attributed to its step: not in the skeleton (parse), quote
+    dropped by the check, excluded by code, ambiguous and rejected by the model, wrong stance
+  no_tuning: "the parse and ambiguous-pair prompts are written before the run and not revised on pack 9's positives; a fix of a schema or code bug is allowed and recorded"
+  go_to_stage_1_if: "recall at least reader v13's (0.52) and precision not lower than 0.65; with 21 positives the interval is wide, so the loss attribution decides what to change"
+  cost: "estimated 0.6-1.0 USD (189 papers; 0.15 / 0.60 USD per million tokens off-peak; the output with a quote per field dominates); the exact count from a dry run of the real prompts before any call; run only with the user's consent, off-peak"
