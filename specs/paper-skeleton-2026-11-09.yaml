@@ -106,3 +106,12 @@ stage_0_amended_2026_11_10:   # user decision 2026-11-10: include the ambiguous-
     licence (Results not stored), 65 without PMC, 11 other; parse prompt about 817 000 tokens in (schema and rules about 2 900
     per call); output not measured yet: 0.43 USD at 1 500 / 4 000 tokens per abstract / full text, 0.73 USD at 3 000 / 8 000;
     ambiguous pairs about 0.11 USD; total about 0.55-0.85 USD (longevity-kg reviews/codex-2026-11-09-skeleton/stage0-dry.json)
+  result_2026_11_10: >-
+    paid about 0.51 USD (parse v1 trial on 10 papers 0.04, parse v2 0.36, ambiguous pairs 0.11). parse_v2 changes output
+    size only (v1 hit the output limit on 2 of 10 papers); 184 of 188 parsed. Code matching accepted 0 pairs, so all 1 725
+    went to the model. On the 200 pairs of pack 9: recall 0.52 (11 of 21; reader v13 0.52), precision 0.85 (v13 0.73),
+    direction 9 of 11 (v13 11 of 11). Every own finding Argon marked was in the skeleton; the 10 losses were rejected by the
+    ambiguous-pair model, about half on the intervention class (Argon took chromium, cinnamon, NMN, creatine as a
+    'multi-component nutritional formula', a Mediterranean diet as 'nutritional supplements'), two look like incomplete
+    parses (only control comparisons). go_to_stage_1 rule met (recall >= 0.52, precision >= 0.65); stage 1 needs the
+    user's go and a named price
