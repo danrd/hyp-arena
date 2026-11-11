@@ -660,12 +660,13 @@ def verify(client, families: list[str], writer: str, card: HypothesisCard, as_of
            log: Optional[list] = None, map_fn=map,
            expert_sources: Optional[dict[str, list[tuple[str, str]]]] = None,
            fallback_families: Optional[list[str]] = None, disease_restore: frozenset = frozenset(),
-           search: str = "keywords", template_version: str = "") -> Verification:
+           search: str = "keywords", template_version: str = "", probes: bool = True) -> Verification:
     """All declared claims, the rejected alternatives of a contrast (checked like claims, spec 7), plus analog
     probes; the verifier's family is never the writer's (its records feed the ranking)."""
     log = log if log is not None else []                  # its search entries give searched_pmids
     allowed = [f for f in families if f != writer] or families
-    probes = analog_probes(card)
+    # mouse probes are method v2 (effect level below the human rungs); method v3 does not use them (H49 walkthrough 2026-11-11)
+    probes = analog_probes(card) if probes else []
     claims = card.claims + card.rejected_alternatives + probes
     # the family asked when the first returns nothing: the next verifier, else another family of the config (a
     # provider content filter blocks some abstracts: DeepSeek on PMID 22587563, 2026-10-21)

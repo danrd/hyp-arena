@@ -209,10 +209,13 @@ def build(layers: list[str]) -> str:
     gx = X0 + 2 * BW + GAP_X + GAP_X // 2          # the gap between the second and the third column
     out.append(edge("e_loop", ids[9], ids[1], "dashed=1;exitX=1;exitY=0.25;entryX=0.5;entryY=0;strokeColor=#B7791F;",
                     [(gx, row_y[2] + 30), (gx, Y0 - 20), (X0 + BW + GAP_X + BW // 2, Y0 - 20)]))
+    # alternatives proposed at stage 7 go back to search and reading (stages 3-4) like claims (user 2026-11-11)
+    out.append(edge("e_alt", ids[6], ids[2], "dashed=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;strokeColor=#5A6FB0;"))
     out.append(edge("e_final", ids[8], ids[10], "exitX=0.5;exitY=1;entryX=0.5;entryY=1;strokeColor=#555555;dashed=1;"))
     legend = ("<span style='background:#E8ECFA;border:1px solid #5A6FB0;padding:0 8px'>&nbsp;</span> языковая модель, её ответ "
               "проверяет код &nbsp;&nbsp; <span style='border:1px solid #8A8A80;padding:0 8px'>&nbsp;</span> только код &nbsp;&nbsp; "
               "<span style='color:#B7791F'>- - →</span> версия гипотезы проходит этапы заново &nbsp;&nbsp; "
+              "<span style='color:#5A6FB0'>- - →</span> альтернативы ищутся и читаются, как звенья &nbsp;&nbsp; "
               "<span style='color:#555'>- - →</span> оценки пула закрепляются до результатов")
     out.append(cell("legend", legend, X0, y, total_w, 26, "text;html=1;fontSize=12;align=left;fontColor=#333;fillColor=none;strokeColor=none;"))
     y += 30

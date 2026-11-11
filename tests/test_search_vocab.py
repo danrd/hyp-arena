@@ -29,3 +29,12 @@ def test_light_guard_keeps_topic_widening_and_drops_steering():
                               'OR NCT01234567 OR Smith J[au]) AND muscle mass[tiab]', v)
     assert "dementia[tiab]" in q and "AKG[tiab]" in q
     assert sorted(dropped) == sorted(['"no effect"[tiab]', "improved[tiab]", "SPRINT[tiab]", "NCT01234567", "Smith J[au]"])
+
+
+def test_the_light_guard_keeps_anatomy_and_still_drops_direction_words():
+    from hyparena.card.search_vocab import term_allowed_light
+    vocab = {"words": set(), "phrases": set(), "card_words": set()}
+    assert term_allowed_light('"lower limb exercise"[tiab]', vocab)            # H49: was dropped as a direction word
+    assert term_allowed_light('"lower extremity resistance"[tiab]', vocab)
+    assert not term_allowed_light('"lower mortality"[tiab]', vocab)
+    assert not term_allowed_light("improves[tiab]", vocab)

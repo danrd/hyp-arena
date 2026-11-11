@@ -139,6 +139,9 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
         search_mode += "+fulltext"
     method = cfg_extra.get("method", "v2")                              # `method: v3` (docs/archive/spec/method-v3.md)
     norm_version = cfg_extra.get("normalize_version") or ("v7" if method == "v3" else None)   # v3: v7 or later (`normalize_version`)
+    # method v2 layers that v3 does not score (mouse probes, the checklist alternatives and their checks): off under v3
+    # unless the config asks (`legacy_v2_checks: true`); user decision 2026-11-11, H49 walkthrough
+    legacy = bool(cfg_extra.get("legacy_v2_checks", method != "v3"))
     norm_runs = int(cfg_extra.get("normalize_runs", 1))               # v3.9: 2 = union of two parses (user decision 2026-11-11)
     verify_version = cfg_extra.get("verify_version") or ("v6" if method == "v3" else "")   # v3: v6 or later (`verify_version`)
     from hyparena.card import rules as _rules
@@ -201,7 +204,7 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
         ver = verify(client, verifiers or families, writer, card, as_of=as_of, log=log, map_fn=pool.map, search=search_mode,
                      template_version=verify_version,
                      expert_sources=ex.sources(layer, card.id), fallback_families=families,
-                     disease_restore=ex.restored_records(layer, card.id))
+                     disease_restore=ex.restored_records(layer, card.id), probes=legacy)
         ver.alternatives += alternatives.competitor_rows(
             [by_card[h] for h in rivals.get(card.id, []) if h not in dup_of])
         if method == "v3":                                  # alternatives proposed over the abstracts read for this card
@@ -225,7 +228,7 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
                                       search=search_mode, template_version=verify_version)
             x["v3"] = rules_v3.evaluate(card, x["verification"].claims, alt_ver).as_dict()
             x["v3_alternatives"] = {k: v.model_dump(by_alias=True) for k, v in alt_ver.items()}
-        if check_alternatives and x["verification"].evidence_profile.gate == "pass":
+        if check_alternatives and legacy and x["verification"].evidence_profile.gate == "pass":
             alternatives.check(client, checker, card, x["verification"], avoid=frozenset({writer}), log=log)
         x["extra"] = _extra(card, as_of)
         if informativeness and x["verification"].evidence_profile.gate == "pass":      # one call: alternatives the experiment discriminates
@@ -253,7 +256,7 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
     # a dedicated search per open checklist alternative, only for strong hypotheses (spec 8c, before debates)
     strong = {h for r in (ranking.by_profile.values() if ranking else []) for h, p in r.p_topk.items() if p >= 0.5}
     for x in items:
-        if check_alternatives and x.get("verification") and x["card"].id in strong and x["outcome"] == "ranked":
+        if check_alternatives and legacy and x.get("verification") and x["card"].id in strong and x["outcome"] == "ranked":
             alternatives.deep_check(client, checker, x["card"], x["verification"], as_of=as_of,
                                     avoid=frozenset({writer}), log=log)
     view = lambda r: {"order": r.order, "expected": r.expected, "std": r.std, "quantiles": r.quantiles,

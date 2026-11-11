@@ -92,6 +92,18 @@ A model (the normaliser) turns the text into a card:
 - **Population** (for registries taken from the registry fields).
 - **The stated experiment**: design, control, planned n, primary outcome.
 - **Alternatives**: competing explanations, proposed by a second model call from the literature found, each with its support.
+  They are proposed after the first search and reading (up to 25 abstracts found for the hypothesis; prompt
+  `propose_alternatives`: up to 5, after going through seven kinds of competitor — expectation and placebo; attention and
+  supervision; co-interventions; selection and attrition; measurement and learning; regression to the mean and natural
+  course; another biological route), then searched and read like claims (their support comes from the records found, the
+  model's PMIDs only seed the search), and what the experiment does to each is judged from the registry text (section 7).
+  **Asymmetry, on purpose** (user decision 2026-11-11): the mechanism is taken strictly from the text (the hypothesis is
+  scored as written), while competitors are looked for more widely than the author named them; their weight still comes
+  only from literature found before T.
+- **Method v2 layers off under v3** (2026-11-11, config `legacy_v2_checks`, default off for `method: v3`): the mouse probes
+  ("the same intervention extends lifespan / improves healthspan in mice", added to every human hypothesis) and the
+  checklist alternatives with their checks. v3 scores neither; on H49 they cost 4 + 2 calls (about 36 thousand tokens) and
+  gave nothing.
 - **AI role** (normaliser v10): none / AI analyses the data / AI in the experiment loop / AI is the intervention, with a
   verbatim phrase of the text; without one the code sets "none". An indicator of the investor profile only.
 

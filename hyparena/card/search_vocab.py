@@ -116,6 +116,8 @@ def vocabulary(card) -> dict:
 DIRECTION = re.compile(r"^(improv|benefi|effective|efficac|reduc|decreas|increas|lower|higher|prevent|protect|harm|adverse|worse|"
                        r"better|fail|negative|positive|superior|inferior|significan|null|ineffective)", re.I)
 REGISTRY = re.compile(r"\b(NCT\d{6,}|ISRCTN\d+|ACTRN\d+|DRKS\d+|NTR\d+|UMIN\d+|ChiCTR)", re.I)
+ANATOMY = {"limb", "limbs", "extremity", "extremities", "body", "back", "leg", "legs", "urinary", "respiratory", "airway",
+           "airways", "abdomen", "abdominal", "jaw", "lip", "eyelid", "esophageal", "gastrointestinal", "motor"}
 AUTHOR = re.compile(r"\[(au|auth|author|1au|lastau)\]", re.I)
 
 
@@ -125,8 +127,12 @@ def term_allowed_light(term: str, vocab: dict) -> bool:
     t = TAG.sub("", term).strip().strip('"')
     if re.search(r"\bno (effect|benefit|difference|change)\b", t, re.I):
         return False
-    for w in re.findall(r"[A-Za-z][A-Za-z0-9\-']*", t):
+    words = re.findall(r"[A-Za-z][A-Za-z0-9\-']*", t)
+    for k, w in enumerate(words):
         lw = w.lower()
+        nxt = words[k + 1].lower() if k + 1 < len(words) else ""
+        if lw in ("lower", "upper", "higher") and nxt in ANATOMY:
+            continue                                     # "lower limb", "lower extremity": anatomy, not a direction (H49, 2026-11-11)
         if DIRECTION.match(lw) and lw not in vocab.get("card_words", set()):
             return False
         if re.fullmatch(r"[A-Z][A-Z0-9\-]{3,}", w) and lw not in vocab["words"] and lw not in vocab["phrases"]:
