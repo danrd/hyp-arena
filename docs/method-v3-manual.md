@@ -476,7 +476,7 @@ and is searchable. An outside report uses the same ids.
      three lines), under it the registry title in small grey type (one line); a button "текст полностью" expands both; then
      the origin chips (original; tuned; free evolution; directed evolution; "new hypothesis" when a version is far from its
      parent; a warning chip "moved towards the known" when the drift flag is set). The statement opens the card.
-   - Then **Балл** (score, three decimals), **В топ-5** (per cent), and exactly the profile's indicators, one column each in
+   - Then **Балл** (score, two decimals: the third varies by about 0.002 between runs of 10 000 draws, user decision 2026-11-11), **В топ-5** (per cent), and exactly the profile's indicators, one column each in
      the order of importance, each header captioned "ранг важности N" (equal ranks share N). The evidence balance has the
      coverage as a caption ("покрыто 3 из 4"). Every number opens the hypothesis in the evaluation tab.
    - Under the table, the hypotheses not ranked and why (refuted by data; known result; not scored).
@@ -494,7 +494,7 @@ and is searchable. An outside report uses the same ids.
    - A button "Оценка →" to the same hypothesis in the evaluation tab. No plain-language analysis (user decision 2026-11-11).
 3. **Оценка гипотез (Evaluation of hypotheses)**, numbers, one collapsible block per hypothesis in the order of the current
    profile, with a link "← Карточка" back:
-   - **Оценка в профилях**: per profile the score (three decimals), the place, the top-5 probability, the room to improve.
+   - **Оценка в профилях**: per profile the score (two decimals), the place, the top-5 probability, the room to improve.
    - **Показатели**: evidence balance, coverage, novelty with the paper that sets it (opens the paper card), I, I headroom,
      scope, feasibility, how clinical the endpoint is, role of AI, rising attention, best design for the outcome,
      independent sources for the outcome.
