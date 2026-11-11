@@ -15,4 +15,4 @@ Documents kept for their ideas and history, not as a description of the current 
 | [approach.md](approach.md), [architecture.md](architecture.md) | The Co-Scientist-style approach and multi-agent graph | the Elo / TrueSkill baselines still in the code |
 | [comparison.md](comparison.md), [negative-sampling.md](negative-sampling.md), [evolution-experiment.md](evolution-experiment.md) | Protocols of the v2-era tests | their criteria are in `specs/validation-criteria.yaml` |
 | [demo.md](demo.md) | The Gradio demo of v2 | the demo app still runs v2 |
-| [handoffs/](handoffs/) | Hand-offs between sessions, 2026-10-29 … 11-08 | the chain of decisions |
+| [handoffs/](handoffs/) | Hand-offs between sessions, 2026-10-29 … 11-09 | the chain of decisions |
