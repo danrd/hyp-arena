@@ -68,3 +68,8 @@ def test_the_reader_is_told_a_competitor_counts_only_by_its_own_part():
                 claim_plain="x", population="p", intervention="i", comparator="c", abstracts=[], history_text="")
     assert "COMPETING EXPLANATION" in render("verify_claim", "v9", competitor=True, **base)
     assert "COMPETING EXPLANATION" not in render("verify_claim", "v9", competitor=False, **base)
+
+
+def test_estimand_v2_takes_the_least_clinical_of_several_primary_outcomes():
+    from hyparena.llm.prompts import render
+    assert "the LEAST clinical of them" in render("estimand", "v2", text="x", history_text="")

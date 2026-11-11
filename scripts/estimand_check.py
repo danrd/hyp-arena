@@ -23,6 +23,9 @@ ATTRS = {"population": ("healthy_older", "older_with_condition", "other"),
 FAMILIES = ("google", "deepseek")
 
 
+VERSION = "v2"     # 2026-11-11 (user): with several primary outcomes the least clinical one (v1: the first named)
+
+
 def _norm(s: str) -> str:
     return " ".join(s.lower().split())
 
@@ -64,7 +67,7 @@ def run() -> None:
             if key in done:
                 continue
             log: list = []
-            value, got = ask(client, role="verify_claim", family=fam, template="estimand", version="v1", variables={"text": t["text"]},
+            value, got = ask(client, role="verify_claim", family=fam, template="estimand", version=VERSION, variables={"text": t["text"]},
                              validate=problems, rounds=2, log=log)
             done[key] = {"family_asked": fam, "family": got, "raw": value, "clean": clean(value, t["text"]),
                          "calls": len(log), "tokens": sum((x.get("tokens_in") or 0) + (x.get("tokens_out") or 0) for x in log)}

@@ -373,7 +373,7 @@ drawn over its whole range in every draw.
 | best_design_outcome | best design among the records of the outcome link | cells … RCT |
 | independent_outcome | independent sources for the outcome link | 0-5 |
 | against_share | share of the chain's weight against (in no profile since v3.4: |ρ| 0.87 with P) | 0-1, lower better |
-| endpoint_clinical | how close the trial's primary endpoint is to a clinical outcome (two model families agree, else unknown) | biomarker < patient-reported < function < clinical event |
+| endpoint_clinical | how close the trial's primary endpoint is to a clinical outcome (two model families agree, else unknown); with several primary outcomes the least clinical of them (prompt `estimand/v2`, user decision 2026-11-11: when in doubt, the lower level; v1 took the first named) | biomarker < patient-reported < function < clinical event |
 | support_share | how much of the mechanism chain is supported: mean of max(0, 2 (S − 0.5)) over its slots (v3.3) | 0-1 |
 | trend_pubmed | rising attention: PubMed records on the intervention in the last 3 years vs the 3 before, net of PubMed's growth | -0.5 … 1.5 |
 | ai_role | role of AI in the hypothesis | none < analysis < in the loop < AI is the intervention |
