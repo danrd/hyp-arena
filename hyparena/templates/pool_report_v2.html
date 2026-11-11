@@ -33,7 +33,7 @@
     .rank-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid #e7e5e4; border-radius: .6rem; background: #fff; }
     .rank-tbl { min-width: 760px; width: 100%; border-collapse: collapse; }
     .rank-tbl th.hy, .rank-tbl td.hy { position: sticky; left: 0; background: #fff; z-index: 1; min-width: 280px; max-width: 380px; box-shadow: 1px 0 0 #e7e5e4; }
-    @media (max-width: 760px) { .rank-tbl th.hy, .rank-tbl td.hy { min-width: 190px; max-width: 220px; } .rank-tbl td.hy:not(.open) .ttl { display: none; } .rank-tbl .pl { display: none; } }
+    @media (max-width: 760px) { .rank-tbl th.hy, .rank-tbl td.hy { min-width: 190px; max-width: 220px; } .rank-tbl td.hy:not(.open) .ttl { display: none; }  }
     .cap { font-size: .68rem; color: #78716c; white-space: nowrap; margin-top: 2px; }
     .step { border-left: 3px solid #1E4D40; }
   </style>
@@ -68,7 +68,7 @@
           <option value="all">Все гипотезы</option><option value="orig">Только исходные</option><option value="ver">Только версии</option>
         </select>
         <select id="filter-type" class="text-xs border border-stone-300 rounded-lg px-2.5 py-1.5 bg-white"></select>
-        <input id="search-ranking" type="text" placeholder="Поиск по названию или номеру" class="text-xs border border-stone-300 rounded-lg px-2.5 py-1.5 bg-white w-56">
+        <input id="search-ranking" type="text" placeholder="Поиск: H07, слово из текста" class="text-xs border border-stone-300 rounded-lg px-2.5 py-1.5 bg-white w-56">
       </div>
       <div class="rank-wrap"><table class="rank-tbl text-sm"><thead><tr id="rank-head" class="bg-stone-50"></tr></thead><tbody id="rank-body"></tbody></table></div>
       <div class="flex items-center gap-2 text-xs text-stone-600" id="rank-pager"></div>
@@ -208,6 +208,15 @@
     let curProfile = PROFS.find(p => p.key === 'frontier') ? 'frontier' : PROFS[0].key, rankPage = 0;
     const PAGE = 15;
     const byId = Object.fromEntries(DATA.results.map(r => [r.id, r]));
+    // short ids: originals H01, H02 ... by registry id; a version adds the letter of its mode to its parent's id
+    (function () {
+      const orig = DATA.results.filter(r => !r.is_evolved).map(r => r.id).sort();
+      const w = String(orig.length).length < 2 ? 2 : String(orig.length).length;
+      const sid = Object.fromEntries(orig.map((id, i) => [id, 'H' + String(i + 1).padStart(w, '0')]));
+      const L = {tune: 'д', free: 'с', directed: 'н'};
+      DATA.results.forEach(r => { r.sid = r.is_evolved ? (sid[r.parent_id] || 'H?') + (L[r.evo_mode] || 'в') : sid[r.id]; });
+    })();
+    const sidChip = r => `<span class="font-mono text-[11px] px-1.5 py-0.5 rounded bg-stone-100 text-stone-700">${esc(r.sid)}</span>`;
     const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     const f = (x, d = 2) => (x === null || x === undefined || Number.isNaN(x)) ? '—' : Number(x).toFixed(d);
     const sg = (x, d = 2) => x === null || x === undefined ? '—' : (x > 0 ? '+' : '') + Number(x).toFixed(d);
@@ -273,7 +282,7 @@
       document.getElementById('modal-pmid').textContent = 'PMID ' + p.pmid;
       document.getElementById('modal-meta').textContent = `Дизайн: ${nm('design', p.design)} · n: ${p.n ?? 'не указано'} · ${p.sides.map(s => s === 'for' ? 'за' : 'против').join(' и ')}`;
       document.getElementById('modal-quote').textContent = '«' + (p.quote || '') + '»';
-      document.getElementById('modal-used').textContent = 'Используется в: ' + p.used_in.join(', ');
+      document.getElementById('modal-used').textContent = 'Используется в: ' + p.used_in.map(id => (byId[id] || {}).sid || id).join(', ');
       document.getElementById('modal-link').href = 'https://pubmed.ncbi.nlm.nih.gov/' + p.pmid + '/';
       const m = document.getElementById('pmid-modal'); m.classList.remove('hidden'); m.classList.add('flex');
     }
@@ -284,7 +293,7 @@
       const P = PROFS.find(p => p.key === curProfile);
       document.getElementById('profile-order').innerHTML = `<span class="text-stone-500">Порядок важности:</span> ${esc(orderText(P))}`;
       const cols = []; P.tier_keys.forEach((t, i) => t.forEach(k => cols.push([k, i + 1])));
-      const H = [['pl', '#'], ['hy', 'Гипотеза'], ['', 'Балл'], ['', 'В топ-5']];
+      const H = [['hy', 'Гипотеза'], ['', 'Балл'], ['', 'В топ-5']];
       const tipOf = k => TIPS[{trend: 'trend_pubmed', best_design: 'best_design_outcome', independent: 'independent_outcome', endpoint: 'endpoint_clinical'}[k] || k] || '';
       document.getElementById('rank-head').innerHTML = H.map(([c, l]) => `<th class="${c} py-2 px-2 text-xs font-bold text-[#1E4D40] align-bottom">${l === 'Балл' ? tip(TIPS.score || 'Средний балл гипотезы по 10 000 розыгрышей весов профиля (см. «Справка» → АСПИД)', l) : l === 'В топ-5' ? tip('Доля розыгрышей весов, в которых гипотеза входит в пятёрку лучших пула', l) : l}</th>`).join('') +
         cols.map(([k, rank]) => `<th class="py-2 px-2 text-xs font-bold text-[#1E4D40] align-bottom">${tip(tipOf(k), esc(cap1(NM.ind[k] || k)))}<div class="font-normal text-stone-500">ранг важности ${rank}</div></th>`).join('');
@@ -293,14 +302,13 @@
       let items = scored();
       if (og === 'orig') items = items.filter(r => !r.is_evolved); if (og === 'ver') items = items.filter(r => r.is_evolved);
       if (ty) items = items.filter(r => r.type === ty);
-      if (q) items = items.filter(r => (r.id + ' ' + r.title + ' ' + (r.plain || '')).toLowerCase().includes(q));
+      if (q) items = items.filter(r => (r.sid + ' ' + r.id + ' ' + r.title + ' ' + (r.plain || '')).toLowerCase().includes(q));
       items.sort((a, b) => (b.aspid[curProfile].score ?? -1) - (a.aspid[curProfile].score ?? -1));
       const pages = Math.max(1, Math.ceil(items.length / PAGE)); rankPage = Math.min(rankPage, pages - 1);
       document.getElementById('rank-body').innerHTML = items.slice(rankPage * PAGE, rankPage * PAGE + PAGE).map(r => {
         const a = r.aspid[curProfile];
         return `<tr class="border-t border-stone-200 align-top">
-          <td class="pl py-2.5 px-2 text-stone-500">${a.place ?? '—'}</td>
-          <td class="hy py-2.5 px-2"><a href="#" data-card="${esc(r.id)}" class="txt block text-sm text-stone-900 hover:underline clamp3">${esc(r.plain || r.title)}</a>
+          <td class="hy py-2.5 px-2"><div class="flex items-center gap-1.5 mb-0.5"><span class="text-xs font-bold text-[#1E4D40]">${a.place ?? '—'} место</span>${sidChip(r)}</div><a href="#" data-card="${esc(r.id)}" class="txt block text-sm text-stone-900 hover:underline clamp3">${esc(r.plain || r.title)}</a>
             <div class="ttl text-xs text-stone-500 mt-0.5 clamp1">${esc(r.title)}</div>
             <button class="more text-[11px] text-emerald-800 underline" data-more>текст полностью</button>
             <div class="mt-1 flex flex-wrap gap-1">${origin(r)}</div></td>
@@ -325,7 +333,7 @@
     }
     function renderCards() {
       const q = document.getElementById('search-cards').value.trim().toLowerCase();
-      const items = scored().filter(r => !q || (r.id + ' ' + r.title + ' ' + (r.text || '')).toLowerCase().includes(q))
+      const items = scored().filter(r => !q || (r.sid + ' ' + r.id + ' ' + r.title + ' ' + (r.text || '')).toLowerCase().includes(q))
         .sort((a, b) => (a.aspid[curProfile].place ?? 999) - (b.aspid[curProfile].place ?? 999));
       document.getElementById('cards').innerHTML = items.map(r => {
         const c = r.card_view || {}, pop = c.population || {}, ex = c.experiment || {};
@@ -333,10 +341,10 @@
         const parent = r.is_evolved ? byId[r.parent_id] : null;
         const changes = r.drift && r.drift.changes ? r.drift.changes.map(x => x.what_changed).filter(Boolean) : [];
         return `<details id="card-${esc(r.id)}" class="bg-white rounded-xl border border-stone-200 shadow-sm">
-          <summary class="p-4 cursor-pointer"><span class="font-semibold text-[#1E4D40]">${esc(r.title)}</span> <span class="ml-1">${origin(r)}</span></summary>
+          <summary class="p-4 cursor-pointer">${sidChip(r)} <span class="font-semibold text-[#1E4D40]">${esc(r.title)}</span> <span class="ml-1">${origin(r)}</span></summary>
           <div class="px-4 pb-4 grid grid-cols-1 lg:grid-cols-2 gap-5 prose-r">
             <div><h3>Текст гипотезы</h3>${textBlock(r.text) || `<p>${esc(r.plain || '')}</p>`}
-              ${parent ? `<h3>Чем отличается от исходной</h3><p>Это версия гипотезы «<a href="#" data-card="${esc(parent.id)}" class="underline">${esc(parent.title)}</a>», режим — ${esc(MODE[r.evo_mode] || 'версия')}.</p>${changes.map(x => `<p>${esc(x)}</p>`).join('')}` : ''}</div>
+              ${parent ? `<h3>Чем отличается от исходной</h3><p>Это версия гипотезы ${esc(parent.sid)} «<a href="#" data-card="${esc(parent.id)}" class="underline">${esc(parent.title)}</a>», режим — ${esc(MODE[r.evo_mode] || 'версия')}.</p>${changes.map(x => `<p>${esc(x)}</p>`).join('')}` : ''}</div>
             <div><h3>Как гипотеза понята</h3><ul>
                 ${kv('Вмешательство', (c.interventions || []).map(i => i.label + (i.regimen && i.regimen !== 'unknown' ? ', ' + i.regimen : '')).join('; '))}
                 ${kv('Популяция', [pop.label, pop.sex && pop.sex !== 'unknown' ? pop.sex : '', pop.age_at_start && pop.age_at_start !== 'unknown' ? pop.age_at_start : ''].filter(Boolean).join(', '))}
@@ -357,7 +365,7 @@
       const ks = d.known_share || [];
       const drift = d.drift_to_known ? `да: ${esc((d.reasons || []).join('; '))}` : 'нет';
       return `<h4 class="font-bold text-[#1E4D40] mt-4 mb-1">Сравнение с исходной гипотезой</h4>
-        <p class="text-sm mb-1">Эта гипотеза — версия «<a href="#" data-eval="${esc(parent.id)}" class="underline">${esc(parent.title)}</a>», режим — ${esc(MODE[d.mode] || MODE[r.evo_mode] || 'версия')}. Что изменено в тексте — в карточке.</p>
+        <p class="text-sm mb-1">Эта гипотеза — версия ${esc(parent.sid)} «<a href="#" data-eval="${esc(parent.id)}" class="underline">${esc(parent.title)}</a>», режим — ${esc(MODE[d.mode] || MODE[r.evo_mode] || 'версия')}. Что изменено в тексте — в карточке.</p>
         <div class="overflow-x-auto"><table class="tbl w-full text-sm"><thead><tr><th>Показатель</th><th>Исходная</th><th>Версия</th><th>Что это значит</th></tr></thead><tbody>
           ${PROFS.map(p => row('Балл, ' + esc(p.label), f(parent.aspid[p.key].score, 3), f(r.aspid[p.key].score, 3), 'рост — версия лучше по этому профилю')).join('')}
           ${row('Баланс доказательств', sg(parent.chain_state), sg(r.chain_state), 'насколько подтверждено то, что о звеньях известно')}
@@ -371,7 +379,7 @@
     }
     function renderEval() {
       const q = document.getElementById('search-eval').value.trim().toLowerCase();
-      const items = scored().filter(r => !q || (r.id + ' ' + r.title).toLowerCase().includes(q))
+      const items = scored().filter(r => !q || (r.sid + ' ' + r.id + ' ' + r.title).toLowerCase().includes(q))
         .sort((a, b) => (a.aspid[curProfile].place ?? 999) - (b.aspid[curProfile].place ?? 999));
       document.getElementById('evals').innerHTML = items.map(r => {
         const parent = r.is_evolved ? byId[r.parent_id] : null;
@@ -397,7 +405,7 @@
         const flags = (r.flags || []).length ? `<ul class="list-disc pl-5 text-sm">${r.flags.map(x => `<li><b>${esc(x.name)}</b>${x.detail ? ': ' + esc(x.detail) : ''}</li>`).join('')}</ul>` : '<p class="text-sm text-stone-500">Флагов нет.</p>';
         const imps = (r.improvements || []).length ? `<ul class="list-disc pl-5 text-sm">${r.improvements.map(i => `<li><b>${i.cls === 'rewrite' ? 'исправить формулировкой' : 'нужны новые данные'}:</b> ${esc(i.what)} <span class="text-emerald-900">${esc(i.expected)}</span>${i.facts.length ? ` <span class="text-stone-500">(${esc(i.facts.join(', '))})</span>` : ''}</li>`).join('')}</ul>` : '<p class="text-sm text-stone-500">Пунктов нет.</p>';
         return `<details id="eval-${esc(r.id)}" class="bg-white rounded-xl border border-stone-200 shadow-sm">
-          <summary class="p-4 cursor-pointer"><span class="font-semibold text-[#1E4D40]">${esc(r.title)}</span> <span class="ml-1">${origin(r)}</span></summary>
+          <summary class="p-4 cursor-pointer">${sidChip(r)} <span class="font-semibold text-[#1E4D40]">${esc(r.title)}</span> <span class="ml-1">${origin(r)}</span></summary>
           <div class="px-4 pb-4 space-y-3">
             <p><a href="#" data-card="${esc(r.id)}" class="text-xs underline">← Карточка</a></p>
             <div class="grid grid-cols-1 xl:grid-cols-2 gap-4"><div><h4 class="font-bold text-[#1E4D40] mb-1">Оценка в профилях</h4>${prof}</div>
