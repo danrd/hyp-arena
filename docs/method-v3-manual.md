@@ -221,7 +221,7 @@ labels of v3 / v3.1 are in `archive/method-history.md`.
 named in the link is taken as at least 5/6 without search.
 
 **Gate (the only filter).** A key link is refuted when there is a record against of the top design (RCT or meta-analysis),
-between groups, in the hypothesis's population, and no record for of that level. Then the hypothesis is filtered (V = 0, not
+between groups, in the hypothesis's population, and no record for of that level. Then the hypothesis is filtered (not
 ranked). Nothing else filters: an undeveloped but promising hypothesis keeps its score and gets flags.
 
 ## 7. Axes
