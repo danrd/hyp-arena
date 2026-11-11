@@ -1,0 +1,57 @@
+id: mechanism-chain-comparison-2026-11-11
+written_on: 2026-11-11
+status: specification; definitions and pass rules fixed before any call; no call made
+user_decision: >-
+  2026-11-11 (H49 walkthrough, stage 2): check whether the typed mechanism chain is better than other ways to break a
+  hypothesis into checkable parts; variant D (the chain completed from the model's knowledge or the knowledge graph) is not
+  tested: the hypothesis is scored as written.
+why: >-
+  Method v3 (2026-11-03) replaced v2's unconnected claims with a typed chain (delivery -> engagement -> pathway -> effect ->
+  outcome). The step v2 -> v3 (outcome AUC 0.46 -> about 0.59) changed many things at once; on registry trials the chain is
+  rarely written (10 of 30 calibration cards) and written chains of 3+ slots went with null results
+  (specs/argon-layers-2026-11-08.yaml). No comparison with another decomposition was made. docs/walkthrough/H49.md, stage 2.
+
+variants:   # the same text, the same date T, the same search, reader and weights after the card; only the decomposition differs
+  A_outcome_only: "the card's outcome claims only (parallel outcomes kept); no links before the outcome"
+  B_free_chain: >-
+    the model writes the steps the text states, in its own words, as an ordered list from the intervention to the outcome,
+    each with a verbatim span; no link types, no closed relation list (a new prompt, mechanism_free/v1); each step is then
+    weighted with the human outcome scale if it names a human outcome, else with the preclinical scale
+  C_typed_chain: "the current card (normalize_card/v10, union of two parses, method v3.9)"
+
+texts:   # 30, fixed before any call, listed in mechanism_comparison_texts.json (longevity-kg, private) by a seeded draw
+  - "10 registry trials whose text states a reason (a hand label 'reason stated' from the calibration and prospective pools)"
+  - "10 registry trials without a stated reason (control: the chain should add nothing)"
+  - "10 hypothesis texts with written mechanisms (frontier-nine input texts, ITP rationales written before the result, generated texts)"
+
+gold:   # Argon pack, blind to our cards; publisher texts and answers only in longevity-kg
+  per_text: >-
+    the mechanism steps the text states (each with its verbatim span), their order, a link type for each, and the step on
+    which the hypothesis rests most (the weakest step: least supported in the literature before T), with the PMIDs
+    behind that judgement
+  labelled_by_us: "none; Argon's answer is the reference, our own reading is not used as gold"
+
+measures:
+  M1_reproducibility: >-
+    two independent parses of each text per variant (C as two single parses before the union): share of shared steps
+    (shared / all, steps matched by a verbatim-span overlap of at least half the shorter span); also C across two model
+    families (gemini flash, deepseek flash)
+  M2_fidelity: >-
+    precision and recall of the steps against the gold (same matching); for C, agreement of the link type with Argon's
+    (Cohen kappa over the five types)
+  M3_weakest_step: "share of texts where the variant's weakest slot (lowest S among slots with a record, else first empty slot) is Argon's weakest step"
+  M4_later_trials: >-
+    R2 per step: on the steps of the 20 registry texts, do the records published before T predict later RCTs and
+    meta-analyses of the same step (as specs/record-weight-2026-11-08.yaml); per variant AUC
+  M5_cost: "calls and USD per text"
+  not_a_criterion: "the trial outcome (written chains go with null results on calibration; the comparison would reward A)"
+
+pass_rules:   # written now; the 0.03 rule of the method: the simpler variant wins unless the other is better by more than 0.03
+  C_over_A: "C is kept as the default if it is not worse than A by more than 0.03 on M4 and is better on M3 (A has no steps before the outcome, so M3 for A is 'the outcome is the weakest')"
+  C_over_B: "C is kept if M1 and M2 recall are not worse than B by more than 0.03 and kappa of the link type with Argon is at least 0.4; if kappa is under 0.4 the types are unreliable and B (untyped) is proposed to the user"
+  report_anyway: "every measure with numerators and denominators, also when the result is not better"
+
+cost_estimate: >-
+  parses: 30 texts x (2 C + 2 C other family + 2 B) = 180 calls of about 5 000 tokens, about 1 USD off-peak; search and
+  reading of the new steps of B: about 2 USD; Argon pack: no API cost. Price named again after a dry run.
+next: "build the text list (free), write mechanism_free/v1, dry run with the named price, Argon pack; user's go before the paid part"
