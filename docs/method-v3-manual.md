@@ -67,7 +67,11 @@ it costs, whatever the result; N says how far the question is from what was alre
 
 - The hypothesis text as written (a registry entry, a grant proposal, a pitch).
 - The date T: only papers public on or before T count (the evaluation is "as of T").
-- For registry hypotheses, the registry fields (population, design, control, planned n, primary outcome).
+- For registry hypotheses, the registry fields (population, design, control, planned n, primary outcome). For
+  ClinicalTrials.gov the text given to the card now carries them (user decision 2026-11-11, `scripts/benchmark_run._ctgov_design`):
+  allocation, model, masking and purpose; the arms with their type and description; the planned enrollment only while the
+  registry gives it as planned (an actual count is written after recruitment). Texts built before 2026-11-11 lacked them (the
+  prospective pool: design, control and n "unknown", so the judge of d had no arm to name); frozen scores are not changed.
 
 ## 3. The card
 

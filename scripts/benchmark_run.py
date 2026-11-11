@@ -81,6 +81,25 @@ def _ctgov(nct: str, cache: dict) -> dict:
     return cache[nct]
 
 
+def _ctgov_design(p: dict) -> list[tuple[str, str]]:
+    """Design fields of a ClinicalTrials.gov protocol (user decision 2026-11-11): allocation, model, masking and purpose; the
+    arms with their type and description; the planned enrollment only when the registry still gives it as planned
+    (ESTIMATED): an ACTUAL count is written after recruitment and is not what the authors stated at T."""
+    d, a = p.get("designModule") or {}, p.get("armsInterventionsModule") or {}
+    info = d.get("designInfo") or {}
+    mask = (info.get("maskingInfo") or {})
+    who = ", ".join(w.lower().replace("_", " ") for w in mask.get("whoMasked", []))
+    parts = [info.get("allocation"), info.get("interventionModel"),
+             f"masking {mask['masking']}" + (f" ({who})" if who else "") if mask.get("masking") else None,
+             f"primary purpose {info['primaryPurpose']}" if info.get("primaryPurpose") else None]
+    design = ", ".join(x.lower().replace("_", " ") for x in parts if x)
+    arms = "; ".join(f"{g.get('label', '')}" + (f" ({g['type'].lower().replace('_', ' ')})" if g.get("type") else "")
+                     + (f": {_clip(g['description'])}" if g.get("description") else "") for g in a.get("armGroups", []))
+    enr = d.get("enrollmentInfo") or {}
+    planned = str(enr["count"]) if enr.get("count") and enr.get("type") == "ESTIMATED" else ""
+    return [("Design", design), ("Arms", arms), ("Planned enrollment", planned)]
+
+
 def _text(fields: list[tuple[str, str]]) -> str:
     return "\n".join(f"{k}: {v}" for k, v in fields if v and v.lower() not in ("not provided at time of registration", "no entry"))
 
@@ -99,6 +118,7 @@ def build_texts(units: list[dict] | None = None, out_path: Path | None = None) -
                  ("Interventions", "; ".join(f"{i.get('name')} ({i.get('type', '').lower()})" + (f": {_clip(i['description'])}" if i.get("description") else "")
                                              for i in a.get("interventions", []))),
                  ("Summary", _clip(d.get("briefSummary"))), ("Description", _clip(d.get("detailedDescription"))),
+                 *_ctgov_design(p),
                  ("Primary outcomes", "; ".join(_clip(x.get("measure", "") + (f" ({x['timeFrame']})" if x.get("timeFrame") else ""))
                                                for x in o.get("primaryOutcomes", [])))]
         elif s == "isrctn":
