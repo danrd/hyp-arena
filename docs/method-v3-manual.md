@@ -25,6 +25,17 @@ section 10. Rules for a model writing such a report:
 - When in doubt between two levels, take the lower one and say why. For novelty, take the level nearer the known: a paper you
   were not given may exist, and missing data are never novelty.
 - Use the names and the help section of section 10a: no code shown alone, no new names for existing terms.
+- **What the experiment does to an alternative (d) comes only from the registry text as it stood at T** (section 7): never
+  from the trial's own publications or anything published after T, and never from a design label alone ("randomised",
+  "placebo-controlled", "factorial"): name the arm and the result that would rule the alternative out, or give at most
+  "weakened".
+- **Numbers only code computes** are written "не вычислено" unless you ran the count yourself and show the query, the date
+  and the number: rising attention in the literature, every PubMed count (novelty by absence, rule 6 of section 11, and the
+  level "new mechanism of a known effect"), literature density. Feasibility is computed by the formula of section 8, not
+  estimated.
+- **A version is scored on its own links**: every indicator of a version (balance, coverage, support share, I, scope,
+  novelty) is recomputed from the version's chain; nothing is copied from the parent.
+- **Use the short ids you are given** (section 10, the hypothesis database); do not number hypotheses yourself.
 - A report written this way is an approximation. The authoritative report is the one the code builds
   (`python -m hyparena.analyze RUN.json`), from the same rules and the records the verifier extracted.
 
@@ -261,7 +272,9 @@ ranked). Nothing else filters: an undeveloped but promising hypothesis keeps its
   from the compressed card, without the registry text, and almost never said "eliminated" (2 of 293 on the prospective
   pool); an outside reader agreed with it at κ 0.07. Since 2026-11-08 d is judged by `judge_alternatives/v2` from the
   registry text, writing what the hypothesis and the alternative predict for each named arm, with the separating phrase
-  copied verbatim (an "eliminated" without one becomes "weakened"); on a holdout of 30 trials it agrees with the outside
+  copied verbatim (an "eliminated" without one becomes "weakened"); the registry text is the one current at T (for a
+  retrospective trial, the version registered before T), never the trial's publications or other texts after T (an outside
+  report took the separating phrase from a trial's results paper, 2026-11-11); on a holdout of 30 trials it agrees with the outside
   reader at κ 0.35 (specs/informativeness-check-2026-11-08.yaml). The support a is unchanged: from the records found.
 - **Headroom I** = I if the experiment cut off every supported alternative (d = 1): what improving the experiment could
   add; an input of the room to improve (section 11).
@@ -299,7 +312,7 @@ drawn over its whole range in every draw.
 |---|---|---|
 | I | informativeness of the stated experiment (headroom I, of an improved one, feeds the room to improve, section 11) | linear, 0-1 |
 | W | scope | local < organ < hallmark |
-| feasibility | system, duration, planned n, readiness of the intervention (approved or not a compound 1, in trials 0.5, neither 0) | 0-1; does not yet count arms or invasive measures (section 11, rule 7) |
+| feasibility | the mean of the known parts (an unknown part is left out): system (data analysis and cells 1, yeast 0.9, worm and fly 0.85, mouse and rat 0.5, human 0), duration (weeks 1, months 2/3, years 1/3, decades 0), planned n (under 50: 1, under 200: 2/3, under 1000: 1/3, more: 0), readiness of the intervention (approved or not a compound 1, in trials 0.5, neither 0); `v3_extra.feasibility` | 0-1; does not yet count arms or invasive measures (section 11, rule 7) |
 | best_design_outcome | best design among the records of the outcome link | cells … RCT |
 | independent_outcome | independent sources for the outcome link | 0-5 |
 | against_share | share of the chain's weight against (in no profile since v3.4: |ρ| 0.87 with P) | 0-1, lower better |
@@ -381,7 +394,9 @@ hypothesis, its origin, what it claims, what changed); a number cell holds one n
 "organ / system") and nothing else. Explanations of a number live in its hover note, in the evaluation tab and in the help,
 never in the cell. Audit trails (which records were dropped, which rule was checked) live only in the evaluation tab.
 Internal codes (profile ids such as "trial-3", indicator codes, module names, prompt versions, method tags in titles) are
-never shown; names follow section 10a. Russian only.
+never shown; names follow section 10a. Russian only. **A report holds exactly what this section lists**: no columns of
+earlier method versions, no axes that left the profiles (non-refutation P, support share, share against), no notes of the
+writer's own on records or rules.
 
 **Pool report** (`python -m hyparena.report_v2 prospective --n 60` → `report_<n>_v2.html`; data shaped by
 `hyparena/report_v2.py`, page `hyparena/templates/pool_report_v2.html`). A header band (pool title, cut-off date, how many
@@ -448,7 +463,7 @@ and is searchable. An outside report uses the same ids.
      the trial; the clean test is the prospective pool).
    - *Second level*, collapsed sections, each a table: **the weight of a record** (factor, what it accounts for, values; the
      null weighted by power; the fold of one paper or trial); **link strength, evidence balance and coverage** (quantity,
-     formula, how to read); **reading rules** (situation, how it is read); **novelty** (level, when); **the experiment, scope,
+     formula, how to read); **reading rules** (situation, how it is read; all seven rules of section 4); **novelty** (level, when); **the experiment, scope,
      feasibility** (indicator, how it is computed, scale); **profiles, ranks of importance and ASPID** (the table of ranks per
      profile, each profile's order, ASPID explained plainly and then formally: scales, weights, the draw, the score, place
      and top-5); **improvements and versions** (term, meaning); **provenance** (cut-off date, method version, scores hash);
@@ -476,6 +491,9 @@ hard to compare (user note 2026-11-09). The code report is the reference; anothe
   is not in the table, describe it in words and give the code, not a new name. The renamings already made are final:
   "баланс доказательств" (not "состояние цепочки" or "проверенность"), one column "Запас" (room to improve; I headroom only
   in its note).
+- **Ids of links and alternatives** (c1, alt2, p3) and link-type codes ("outcome") are never shown: a link is named by its
+  triple or its type in words ("звено исхода «приседания — улучшают — SPPB»"). Levels are shown by their names everywhere,
+  the version comparison included ("аналог → новый контекст", not "analog → new_context").
 - **Flags** (section 9) are shown by their names below, with the link or alternative they concern; the code may follow in
   parentheses.
 - **The tabs and the help section** are those of section 10, in that order: the ranking, the hypothesis cards (words
@@ -598,7 +616,8 @@ every target was met by exactly these moves.
    disappears only when the version's claim no longer matches its context by the rules of section 5 (another species,
    population, dose ...), and the report lists every such disappearance with the reason. Upper bounds of the improvement
    list (section 11 above: a rewritten refuted link "scored without its records against") are expectations, never scores of
-   a version.
+   a version. Every indicator of a version (balance, coverage, support share, I, scope, novelty, feasibility) is computed on
+   the version's own chain and experiment; none is copied from the parent.
 2. **Records are not moved between links.** A paper's finding counts on the link whose claim it matches; a writer cannot
    assign it to another link.
 3. **Supported links are kept.** Every parent link with S > 1/2 is in the version with the same subject, relation, object
@@ -777,6 +796,10 @@ v36:
 v34:
   preclinical_precision: 0.5
   novelty_levels: [new_context, translation, analog, new_mechanism, new_combination, new_link]
+feasibility:
+  system: {data_analysis: 1.0, cells: 1.0, yeast: 0.9, worm: 0.85, fly: 0.85, mouse: 0.5, rat: 0.5, human: 0.0}
+  duration: {weeks: 1.0, months: 0.666667, years: 0.333333, decades: 0.0}
+  n_bands: [[50, 1.0], [200, 0.666667], [1000, 0.333333]]   # n under the bound gets the score; more: 0
 link_thresholds: {moderate: 0.6, strong: 1.5, strong_min_independent: 2}
 informativeness_cap: 1.5
 effect_unclear_weight: 0.5

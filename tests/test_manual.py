@@ -53,6 +53,13 @@ def test_manual_v32_constants_and_profiles_equal_the_code():
     assert {k: p.tiers for k, (p, _) in aspid_v3.load().items()} == c["profiles"]
     from hyparena.card import novelty_v34 as nv
     assert c["v34"] == {"preclinical_precision": r32.PRECLINICAL_PRECISION, "novelty_levels": list(nv.LEVELS)}
+    from hyparena.card import v3_extra as vx                   # feasibility, written out after an outside report (2026-11-11)
+    f = c["feasibility"]
+    assert f["system"] == vx.SYSTEM_COST
+    assert {k: round(v, 6) for k, v in vx.DURATION_COST.items()} == f["duration"]
+    for bound, score in f["n_bands"]:
+        assert abs(vx._n_score(bound - 1) - score) < 1e-6 and vx._n_score(bound) < score
+    assert vx._n_score(1000) == 0.0
 
 
 def test_manual_worked_example_is_what_the_code_gives(monkeypatch):
