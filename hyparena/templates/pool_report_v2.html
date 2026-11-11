@@ -29,6 +29,7 @@
     .help p, .help li { font-size: .85rem; line-height: 1.55; color: #374151; }
     .help ul { list-style: disc; padding-left: 1.2rem; }
     .tbl td, .tbl th { border-bottom: 1px solid #e7e5e4; padding: 6px 8px; text-align: left; vertical-align: top; }
+    @media (max-width: 760px) { .tbl td, .tbl th { padding: 5px 5px; } }
     .tbl th { font-size: .72rem; color: #1E4D40; font-weight: 700; }
     .rank-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid #e7e5e4; border-radius: .6rem; background: #fff; }
     .rank-tbl { min-width: 760px; width: 100%; border-collapse: collapse; }
@@ -36,6 +37,11 @@
     @media (max-width: 760px) { .rank-tbl th.hy, .rank-tbl td.hy { min-width: 190px; max-width: 220px; } .rank-tbl td.hy:not(.open) .ttl { display: none; }  }
     .cap { font-size: .68rem; color: #78716c; white-space: nowrap; margin-top: 2px; }
     .step { border-left: 3px solid #1E4D40; }
+    /* a link as a triple: subject and object as two differently tinted plates, the relation between them */
+    .subj, .obj { padding: 0 .35em; border-radius: .35em; border: 1px solid; -webkit-box-decoration-break: clone; box-decoration-break: clone; line-height: 1.75; }
+    .subj { background: #E7F0FA; border-color: #A9C7E8; color: #173B5E; }
+    .obj { background: #FBF1DE; border-color: #E6C68B; color: #5B3B0A; }
+    .rel { font-style: italic; color: #1E4D40; white-space: nowrap; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -325,7 +331,7 @@
 
     // ---------- 2. cards (words only); a link is shown as a triple: subject, relation, object
     const sentence = l => `${l.subject} ${nm('relation', l.relation)} ${l.object}`;
-    const triplet = l => `<span class="font-semibold">${esc(l.subject)}</span> <span class="italic text-emerald-800">${esc(nm('relation', l.relation))}</span> <span class="font-semibold">${esc(l.object)}</span>`;
+    const triplet = l => `<span class="subj">${esc(l.subject)}</span> <span class="rel">${esc(nm('relation', l.relation))} →</span> <span class="obj">${esc(l.object)}</span>`;
     const cardLink = (r, l) => ((r.card_view || {}).links || []).find(x => x.id === l.id);
     function textBlock(t) {
       const lines = String(t || '').split(/\n+/).map(s => s.trim()).filter(Boolean);
@@ -349,7 +355,7 @@
                 ${kv('Вмешательство', (c.interventions || []).map(i => i.label + (i.regimen && i.regimen !== 'unknown' ? ', ' + i.regimen : '')).join('; '))}
                 ${kv('Популяция', [pop.label, pop.sex && pop.sex !== 'unknown' ? pop.sex : '', pop.age_at_start && pop.age_at_start !== 'unknown' ? pop.age_at_start : ''].filter(Boolean).join(', '))}
                 ${kv('Сравнение', c.comparator)}${kv('Исход', c.outcome)}</ul>
-              <h3>Механизм по шагам</h3><ol>${(c.links || []).map(l => `<li><span class="text-stone-500">${esc(nm('link', l.type))}:</span> ${triplet(l)}${l.hallmark ? ` <span class="text-stone-500">(признак старения: ${esc(l.hallmark)})</span>` : ''}</li>`).join('')}</ol>
+              <h3>Механизм по шагам</h3><p class="text-xs text-stone-500 mb-1"><span class="subj">что действует</span> <span class="rel">как →</span> <span class="obj">на что</span></p><ol>${(c.links || []).map(l => `<li><span class="text-stone-500">${esc(nm('link', l.type))}:</span> ${triplet(l)}${l.hallmark ? ` <span class="text-stone-500">(признак старения: ${esc(l.hallmark)})</span>` : ''}</li>`).join('')}</ol>
               <h3>Заявленный эксперимент</h3><p>${esc(cap1(nm('exp_design', ex.design)))}${ex.control && ex.control !== 'unknown' ? ', контроль: ' + esc(nm('control', ex.control)) : ''}${ex.n_planned ? ', плановая выборка ' + esc(ex.n_planned) : ''}${ex.primary_outcome && ex.primary_outcome !== 'unknown' ? '. Главный исход: ' + esc(ex.primary_outcome) : ''}.</p>
               ${(c.alternatives || []).length ? `<h3>Альтернативные объяснения</h3><ul>${c.alternatives.map(a => `<li>${triplet(a)}</li>`).join('')}</ul>` : ''}
               <p class="mt-3"><a href="#" data-eval="${esc(r.id)}" class="px-3 py-1.5 rounded-lg bg-[#1E4D40] text-white text-xs font-semibold no-underline">Оценка →</a></p></div>
@@ -361,20 +367,39 @@
     const recBtn = r => `<button data-pmid="${r.pmid}" data-tip="${esc((r.side === 'for' ? 'ЗА' : 'ПРОТИВ') + ' · вес ' + f(r.w, 3) + ' · «' + (r.quote || '') + '»')}" class="inline-block mr-1 mb-1 px-2 py-0.5 rounded border text-xs ${r.side === 'for' ? 'bg-emerald-50 text-emerald-900 border-emerald-300' : 'bg-red-50 text-red-900 border-red-300'}">${r.side === 'for' ? 'за' : 'против'} ${r.pmid} · ${f(r.w)}</button>`;
     function versionBlock(r, parent) {
       const d = r.drift || {};
-      const row = (name, a, b, mean) => `<tr><td>${name}</td><td>${a}</td><td>${b}</td><td class="text-stone-600">${mean}</td></tr>`;
+      const NOV = ['new_context', 'translation', 'analog', 'new_combination', 'new_link'], SC = ['local', 'organ', 'hallmark'];
+      const row = (name, a, b, what) => `<tr><td class="text-stone-600">${name}</td><td class="whitespace-nowrap">${a} → ${b}</td><td>${what}</td></tr>`;
+      // scores: one line that says where the version gained or lost
+      const ds = PROFS.map(p => [p.label, (r.aspid[p.key].score ?? 0) - (parent.aspid[p.key].score ?? 0)]);
+      const up = ds.filter(x => x[1] > 0.005), dn = ds.filter(x => x[1] < -0.005);
+      const best = ds.slice().sort((a, b) => b[1] - a[1])[0];
+      const scoreText = up.length === ds.length ? `выросли во всех профилях, сильнее всего — «${best[0]}» (${sg(best[1], 3)})`
+        : !up.length && !dn.length ? 'почти не изменились'
+        : `${up.length ? 'выросли: ' + up.map(x => `«${x[0]}» ${sg(x[1], 3)}`).join(', ') : ''}${up.length && dn.length ? '; ' : ''}${dn.length ? 'упали: ' + dn.map(x => `«${x[0]}» ${sg(x[1], 3)}`).join(', ') : ''}`;
+      const db = (r.chain_state ?? 0) - (parent.chain_state ?? 0);
+      const balText = Math.abs(db) < 0.05 ? 'почти не изменился' : db > 0 ? 'вырос: известное о звеньях версии подтверждено сильнее' : 'снизился: звенья версии подтверждены слабее, чем у исходной';
+      const [k0, n0] = parent.cover || [0, 0], [k1, n1] = r.cover || [0, 0];
+      const covText = n1 > n0 ? `в версии выписан механизм подробнее: мест в цепочке ${n0} → ${n1}, данные есть у ${k1}` : n1 < n0 ? `цепочка короче: мест ${n0} → ${n1}` : k1 > k0 ? 'появились данные по ранее пустому месту' : k1 < k0 ? 'одно из мест осталось без данных' : 'не изменилось';
       const ks = d.known_share || [];
+      const ksText = ks.length < 2 ? '—' : ks[1] > ks[0] + 0.01 ? 'версия собрана из более изученных частей' : ks[1] < ks[0] - 0.01 ? 'в версии есть звенья, которых литература ещё не касалась' : 'не изменилась';
+      const n0i = NOV.indexOf(parent.N), n1i = NOV.indexOf(r.N);
+      const novText = n0i < 0 || n1i < 0 ? 'нельзя сравнить: у одной из гипотез новизна неизвестна' : n1i > n0i ? 'версия дальше от уже изученного' : n1i < n0i ? 'версия ближе к уже изученному' : 'не изменилась';
+      const di = (r.I ?? 0) - (parent.I ?? 0);
+      const iText = Math.abs(di) < 0.05 ? 'почти не изменилась' : di > 0 ? 'эксперимент версии отсекает больше подкреплённых альтернатив' : 'эксперимент версии отсекает меньше альтернатив';
+      const w0 = SC.indexOf(parent.W), w1 = SC.indexOf(r.W);
+      const wText = w1 > w0 ? 'подтверждённый механизм версии затрагивает более широкий уровень' : w1 < w0 ? 'подтверждённый механизм уже, чем у исходной' : 'не изменился';
       const drift = d.drift_to_known ? `да: ${esc((d.reasons || []).join('; '))}` : 'нет';
       return `<h4 class="font-bold text-[#1E4D40] mt-4 mb-1">Сравнение с исходной гипотезой</h4>
         <p class="text-sm mb-1">Эта гипотеза — версия ${esc(parent.sid)} «<a href="#" data-eval="${esc(parent.id)}" class="underline">${esc(parent.title)}</a>», режим — ${esc(MODE[d.mode] || MODE[r.evo_mode] || 'версия')}. Что изменено в тексте — в карточке.</p>
-        <div class="overflow-x-auto"><table class="tbl w-full text-sm"><thead><tr><th>Показатель</th><th>Исходная</th><th>Версия</th><th>Что это значит</th></tr></thead><tbody>
-          ${PROFS.map(p => row('Балл, ' + esc(p.label), f(parent.aspid[p.key].score, 3), f(r.aspid[p.key].score, 3), 'рост — версия лучше по этому профилю')).join('')}
-          ${row('Баланс доказательств', sg(parent.chain_state), sg(r.chain_state), 'насколько подтверждено то, что о звеньях известно')}
-          ${row('Покрытие', parent.cover ? parent.cover.join(' из ') : '—', r.cover ? r.cover.join(' из ') : '—', 'сколько мест цепочки имеют данные')}
-          ${row('Звенья, уже подтверждённые статьями', ks.length ? Math.round(ks[0] * 100) + '%' : '—', ks.length > 1 ? Math.round(ks[1] * 100) + '%' : '—', 'рост значит, что версия собрана из уже известных частей')}
-          ${row('Новизна', esc(nm('novelty', parent.N || '')), esc(nm('novelty', r.N || '')), 'ниже — версия ближе к изученному')}
-          ${row('Информативность эксперимента', f(parent.I), f(r.I), 'сколько альтернатив отсекает эксперимент версии')}
-          ${row('Размах механизма', esc(nm('scope', parent.W)), esc(nm('scope', r.W)), 'как далеко идёт подтверждённый механизм')}
-        </tbody></table></div>
+        <table class="tbl w-full text-sm"><thead><tr><th>Показатель</th><th>Исходная → версия</th><th>Что изменилось</th></tr></thead><tbody>
+          <tr><td class="text-stone-600">Баллы</td><td>${PROFS.map(p => `<div class="whitespace-nowrap">${esc(p.label)}: ${f(parent.aspid[p.key].score, 3)} → ${f(r.aspid[p.key].score, 3)}</div>`).join('')}</td><td>${scoreText}</td></tr>
+          ${row('Баланс доказательств', sg(parent.chain_state), sg(r.chain_state), balText)}
+          ${row('Покрытие', `${k0} из ${n0}`, `${k1} из ${n1}`, covText)}
+          ${row('Звенья с опорой в литературе', ks.length ? Math.round(ks[0] * 100) + '%' : '—', ks.length > 1 ? Math.round(ks[1] * 100) + '%' : '—', ksText)}
+          ${row('Новизна', esc(nm('novelty', parent.N || '')), esc(nm('novelty', r.N || '')), novText)}
+          ${row('Информативность', f(parent.I), f(r.I), iText)}
+          ${row('Размах механизма', esc(nm('scope', parent.W)), esc(nm('scope', r.W)), wText)}
+        </tbody></table>
         <p class="text-sm mt-1">Сдвиг к известному: ${drift}.</p>`;
     }
     function renderEval() {
@@ -416,6 +441,8 @@
             <div class="grid grid-cols-1 xl:grid-cols-2 gap-4"><div><h4 class="font-bold text-[#1E4D40] mb-1">Флаги</h4>${flags}</div><div><h4 class="font-bold text-[#1E4D40] mb-1">Что поднимет оценку</h4>${imps}</div></div>
           </div></details>`;
       }).join('');
+      // every table of a hypothesis scrolls inside its own frame on a narrow screen
+      document.querySelectorAll('#evals table').forEach(t => { if (!t.parentElement.classList.contains('overflow-x-auto')) { const w = document.createElement('div'); w.className = 'overflow-x-auto'; t.replaceWith(w); w.appendChild(t); } });
     }
 
     // ---------- 4. scheme: what each step does and how it is implemented (LLM or code)
