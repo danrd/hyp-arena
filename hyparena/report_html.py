@@ -268,7 +268,17 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
                    "ai_span": card.ai_role_span, "aspid": {p: sc.get(f"aspid_{p}") for p in profiles}, "N": N,
                    "N_pmid": nv.novelty_source(card, cvs),
                    "link_levels": nv.link_levels(card, cvs),
-                   "flags": res_flags(it)}
+                   "flags": res_flags(it),
+                   # text and the normalised card as words (report v2: the cards tab shows text only, user 2026-11-11)
+                   "text": texts.get(h, ""),
+                   "card_view": {"population": card.pico.population.model_dump(include={"label", "sex", "age_at_start", "strain"}),
+                                 "interventions": [i.model_dump(include={"label", "regimen", "route"}) for i in card.pico.intervention],
+                                 "comparator": card.pico.comparator.label, "outcome": card.pico.outcome.metric,
+                                 "experiment": de.model_dump(include={"design", "control", "n_planned", "primary_outcome", "endpoint", "system"}),
+                                 "links": [{"id": cl.id, "type": cl.link, "subject": cl.subject.label, "relation": cl.relation,
+                                            "object": cl.object.label, "hallmark": cl.object.hallmark} for cl in r3.chain(card)],
+                                 "alternatives": [{"subject": a.subject.label, "relation": a.relation, "object": a.object.label}
+                                                  for a in card.proposed_alternatives]}}
         values[h] = {"P": res.P, "chain_state": res.chain_state, "I": res.I, "I_headroom": res.headroom_I if res.headroom_I is not None else it["v3"].get("headroom_I"), "W": res.scope, "support_share": res.support_share, "coverage": res.coverage, "N": N,
                      "endpoint_clinical": sc.get("endpoint_clinical"), "trend_pubmed": sc.get("trend_pubmed"), "ai_role": sc.get("ai_role"),
                      **{k: (it.get("extra") or {}).get(k) for k in ()}}
@@ -1033,7 +1043,7 @@ def prospective(n: int = 60) -> tuple[dict, str]:
     sb = (sf if sf.exists() else d / f"scores_{n}.json").read_bytes()
     texts = {json.loads(l)["id"]: json.loads(l)["text"] for l in open(d / f"texts_{n}.jsonl")}
     meta = {"pool": f"prospective-{n}", "date": "2026-11-06", "sha": hashlib.sha256(sb).hexdigest(),
-            "method": "v3.6 (GRADE-shaped record weight, log-likelihood fold; evidence balance in the profiles, null by power; v3.4 novelty), normalize_card/v10, verify_claim/v9, ASPID: evidence trial-5, funding trial-6, frontier trial-2",
+            "method": "v3.7: вес записи по доменам GRADE, сила звена как сумма логарифмов отношений правдоподобия, баланс доказательств по местам цепочки с данными, новизна v3.4; профили АСПИД «Доказательность», «Финансирование», «Фронтир»",
             "title_ru": f"Проспективный пул: {n} идущих испытаний", "title_en": f"Prospective pool: {n} ongoing trials",
             "about_ru": "Испытания на ClinicalTrials.gov, где среди состояний — само старение, с завершением в ноябре 2026 — декабре 2028; "
                         "по 15 на тип вмешательства. Оценены до появления результатов; оценки зафиксированы хешем.",

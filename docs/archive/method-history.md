@@ -279,3 +279,44 @@ precision in bands (unknown or < 30, 30-99, 100-299, ≥ 300: 1/4 … 4/4) and t
 | strong | F ≥ 1.5 and at least two independent sources | 1 | 1 |
 
 In v3 and v3.1, V = P × W × I with W = 1/3, 2/3, 1; in v3.1 the alternative's support a is weak 1/3, moderate 2/3, strong 1.
+
+## Section 10: the report layout of 2026-11-08 (replaced 2026-11-11)
+
+**Pool report, main layout** (`python -m hyparena.report_v2 prospective --n 60` → `report_<n>_v2.html`; user decision
+2026-11-07: the outside reader's (Argon's) report taken as the base and corrected towards the method; layout as of 2026-11-08).
+The same numbers as below, reshaped by `hyparena/report_v2.py` into one JSON object that the page template
+`hyparena/templates/pool_report_v2.html` renders in the browser (Tailwind from its CDN, version pinned). Russian only.
+
+*Content.* Tabs: *Ranking* (profile tabs with the order of importance written out; one fixed table: place; hypothesis with
+its status chips — original, tuned version, free evolution, new hypothesis after, moved towards the known —; score; **room to
+improve** (one column, with `*` and `↓`; the headroom of I is not a separate column but in the hover note of I); place /
+probability of top 5; novelty with the PMID that sets it; **evidence balance** (−1 … +1, red below −0.05, green above
++0.05); I; scope; feasibility, AI role and endpoint one per line; filters by status and intervention type, search, pages of
+15; a click opens the card), *Hypothesis cards* (one card per original hypothesis; when it has improved versions, buttons
+switch between "comparison", "original only" and "version only"; the two chains side by side; one table of links with rows
+"original / version": F / A, S with its interval, R, link novelty, record chips whose hover shows every factor of the weight
+and the verbatim quote, a click opens the paper card; what lifts and lowers; the alternatives; the room and the improvement
+list), *Evolution* (every pair: mode, the indicators of both versions, novelty with the drift flag, the change of the score under
+each profile; a placeholder when the pool has no evolution results; no shortcut button elsewhere), *PubMed papers* (every
+paper with its quote and the hypotheses that use it), *Help* (how to read the report, the record weight table of v3.6 with
+its GRADE domains, S as a log-likelihood sum, the evidence balance (slots with data, v3.7), the reading rules, novelty, the experiment and
+the other indicators, the profiles from the configuration, room and evolution, limits and validation status including the
+outside checks (section 12), provenance, and a glossary of every parameter).
+
+*Style* (fixed in the template; change it there): dark green header band (#1E4D40) with the method version badge; serif
+titles (Noto Serif), Inter for text; every column header, chip and number has a hover note that floats above the table; one
+item per line where a cell holds several (no wrapped "a / b / c"); long headers wrap to two lines instead of widening the
+column; the page uses the full window width (up to 1920 px) and a larger base size on desktop (17 px from 1280 px, 18.5 px
+from 1680 px, 20 px from 2200 px). Colours carry meaning only for direction (red against, green for, amber for flags).
+
+The first layout (`python -m hyparena.report_html prospective --n 60`, bilingual, 2026-11-07) is kept in the code; its
+description is in `archive/method-history.md`.
+
+Reports on private hypotheses stay in the private repository (`longevity-kg`).
+
+**A report written by a model from this manual** (section 0) follows the same order for one hypothesis: summary (evidence balance and
+coverage, novelty with the record that sets it, I, scope, places under the three profiles if there is a pool, and the room to improve under each), the chain table
+(id, type, claim, S with interval, R, F / A, link novelty level, main records), why (what lifts, what lowers, the
+alternatives), what to improve (actions with the score they would give, and the change of novelty they would cost),
+limitations, provenance. The older one-hypothesis report by code (`python -m hyparena.analyze`) still uses the v3 / v3.1
+levels.

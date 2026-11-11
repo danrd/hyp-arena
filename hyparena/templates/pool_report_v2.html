@@ -3,522 +3,382 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>__TITLE__ — отчёт по пулу (метод v3.7)</title>
-  <!-- Layout after the outside reader's (Argon) report, 2026-11-07; data and wording: hyparena/report_v2.py -->
+  <title>__TITLE__ — отчёт по пулу</title>
+  <!-- Layout: method manual section 10 (2026-11-11): ranking, hypothesis cards (text only), evaluation (numbers), how it
+       works, help in two levels; text and numbers kept apart. Data and wording: hyparena/report_v2.py -->
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif:wght@600;700&display=swap" rel="stylesheet">
   <style>
-    /* desktop: larger base size (Tailwind sizes are in rem) and the full window width */
     @media (min-width: 1280px) { html { font-size: 17px; } }
-    @media (min-width: 1680px) { html { font-size: 18.5px; } }
-    @media (min-width: 2200px) { html { font-size: 20px; } }
+    @media (min-width: 1680px) { html { font-size: 18px; } }
     body { font-family: 'Inter', system-ui, sans-serif; background-color: #F8F7F2; color: #1A202C; }
     .serif-title { font-family: 'Noto Serif', Georgia, serif; }
     .tab-active { background-color: #1E4D40; color: #FFFFFF; font-weight: 600; }
     .tab-inactive { background-color: #EAE7DC; color: #2D3748; }
-    .tab-inactive:hover { background-color: #DDD9C8; }
-    [data-tip] { cursor: help; border-bottom: 1px dashed rgba(30,77,64,.55); border-radius: 2px; padding: 0 1px; }
-    [data-tip]:hover { background-color: rgba(30,77,64,.08); border-bottom-color: #1E4D40; }
-    .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
-    code { font-size: .92em; }
-    .help h3 { font-weight: 700; color: #1E4D40; margin: 1rem 0 .35rem; font-size: .95rem; }
+    [data-tip] { cursor: help; border-bottom: 1px dashed rgba(30,77,64,.55); }
+    .num a, a.num { color: inherit; text-decoration: none; border-bottom: 1px dotted #6b7280; cursor: pointer; }
+    .clamp1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+    .clamp2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .prose-r p, .prose-r li { font-size: .9rem; line-height: 1.6; color: #2d3748; }
+    .prose-r h3 { font-weight: 700; color: #1E4D40; margin: 1rem 0 .3rem; font-size: .95rem; }
+    .prose-r ul, .prose-r ol { padding-left: 1.2rem; } .prose-r ul { list-style: disc; } .prose-r ol { list-style: decimal; }
+    .help details { border-top: 1px solid #e7e5e4; padding: .55rem 0; }
+    .help summary { cursor: pointer; font-weight: 600; color: #1E4D40; }
     .help p, .help li { font-size: .85rem; line-height: 1.55; color: #374151; }
     .help ul { list-style: disc; padding-left: 1.2rem; }
-    .help table td, .help table th { border-bottom: 1px solid #e7e5e4; padding: 4px 8px; font-size: .8rem; text-align: left; vertical-align: top; }
+    .tbl td, .tbl th { border-bottom: 1px solid #e7e5e4; padding: 6px 8px; text-align: left; vertical-align: top; }
+    .tbl th { font-size: .72rem; color: #1E4D40; font-weight: 700; }
+    .rank-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid #e7e5e4; border-radius: .6rem; background: #fff; }
+    .rank-tbl { min-width: 760px; width: 100%; border-collapse: collapse; }
+    .rank-tbl th.hy, .rank-tbl td.hy { position: sticky; left: 0; background: #fff; z-index: 1; min-width: 280px; max-width: 380px; box-shadow: 1px 0 0 #e7e5e4; }
+    @media (max-width: 760px) { .rank-tbl th.hy, .rank-tbl td.hy { min-width: 170px; max-width: 190px; } .rank-tbl .hy .line { display: none; } .rank-tbl .pl { display: none; } }
+    .cap { font-size: .68rem; color: #78716c; white-space: nowrap; margin-top: 2px; }
+    .step { border-left: 3px solid #1E4D40; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
+  <div id="tt" class="fixed z-[9999] hidden pointer-events-none max-w-xs sm:max-w-md bg-[#1A202C] text-white text-xs leading-relaxed px-3 py-2.5 rounded-lg shadow-xl"></div>
 
-  <div id="tt" class="fixed z-[9999] hidden pointer-events-none max-w-xs sm:max-w-md bg-[#1A202C] text-white text-xs leading-relaxed px-3 py-2.5 rounded-lg shadow-xl border border-emerald-500/30"></div>
-
-  <header class="sticky top-0 z-40 bg-[#1E4D40] text-white shadow-md">
-    <div class="max-w-[1920px] mx-auto px-4 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-3">
+  <header class="md:sticky top-0 z-40 bg-[#1E4D40] text-white shadow-md">
+    <div class="max-w-[1600px] mx-auto px-4 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-3">
       <div class="min-w-0">
-        <div class="flex flex-wrap items-center gap-2">
-          <span id="hdr-badge" class="text-[11px] uppercase tracking-widest px-2 py-0.5 bg-emerald-800 rounded text-emerald-100 font-semibold">Метод v3.7 · АСПИД</span>
-          <span id="hdr-meta" class="text-xs text-emerald-200"></span>
-        </div>
+        <div id="hdr-meta" class="text-xs text-emerald-200"></div>
         <h1 id="hdr-title" class="serif-title text-base md:text-lg font-bold mt-0.5"></h1>
       </div>
       <nav class="flex flex-wrap gap-1.5" id="main-nav">
         <button data-view="ranking" class="nav-btn px-3 py-1.5 rounded text-xs">Рейтинг</button>
         <button data-view="cards" class="nav-btn px-3 py-1.5 rounded text-xs">Карточки гипотез</button>
-        <button data-view="evolution" class="nav-btn px-3 py-1.5 rounded text-xs">Эволюция</button>
-        <button data-view="pubmed" class="nav-btn px-3 py-1.5 rounded text-xs">Статьи PubMed</button>
-        <button data-view="method" class="nav-btn px-3 py-1.5 rounded text-xs">Справка</button>
+        <button data-view="eval" class="nav-btn px-3 py-1.5 rounded text-xs">Оценка карточек</button>
+        <button data-view="scheme" class="nav-btn px-3 py-1.5 rounded text-xs">Схема работы</button>
+        <button data-view="help" class="nav-btn px-3 py-1.5 rounded text-xs">Справка</button>
       </nav>
     </div>
   </header>
 
-  <div class="bg-[#EFECE4] border-b border-stone-300">
-    <div class="max-w-[1920px] mx-auto px-4 lg:px-8 py-1.5 text-[11px] text-stone-600">
-      Наведите курсор на термин с пунктирным подчёркиванием — откроется справка. Полный глоссарий и формулы — во вкладке «Справка».
-    </div>
-  </div>
+  <main class="max-w-[1600px] w-full mx-auto px-4 lg:px-8 py-4 flex-1">
 
-  <main class="max-w-[1920px] w-full mx-auto px-4 lg:px-8 py-4 flex-1">
-
-    <!-- 1. RANKING -->
-    <section id="view-ranking" class="space-y-4">
-      <div class="bg-white rounded-xl p-4 shadow-sm border border-stone-200">
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 pb-3">
-          <div class="max-w-4xl">
-            <h2 class="serif-title text-lg font-bold text-[#1E4D40]">Рейтинг пула по профилям АСПИД</h2>
-            <p id="rank-about" class="text-xs text-stone-600 mt-0.5"></p>
-          </div>
-        </div>
-        <div class="mt-3 flex flex-wrap items-center justify-between gap-2">
-          <div class="flex flex-wrap gap-1.5" id="profile-tabs"></div>
-          <div class="flex flex-wrap items-center gap-2">
-            <select id="filter-status" class="text-xs border border-stone-300 rounded-lg px-2.5 py-1.5 bg-stone-50">
-              <option value="all">Все строки</option>
-              <option value="parent">Только исходные</option>
-              <option value="tune">Только доработанные</option>
-              <option value="free">Только свободная эволюция</option>
-            </select>
-            <select id="filter-type" class="text-xs border border-stone-300 rounded-lg px-2.5 py-1.5 bg-stone-50"></select>
-            <input id="search-ranking" type="text" placeholder="Поиск: NCT, слово из названия…" class="text-xs border border-stone-300 rounded-lg px-2.5 py-1.5 bg-white w-52">
-          </div>
-        </div>
-        <div id="profile-order" class="mt-2.5 px-3 py-1.5 rounded-lg bg-stone-100 text-xs text-stone-700"></div>
-        <div class="mt-3 overflow-x-auto">
-          <table class="w-full text-left border-collapse">
-            <thead>
-              <tr class="border-b-2 border-[#1E4D40] text-xs font-bold text-[#1E4D40] bg-stone-50" id="rank-head"></tr>
-            </thead>
-            <tbody id="ranking-tbody" class="divide-y divide-stone-200 text-xs"></tbody>
-          </table>
-        </div>
-        <div class="flex items-center gap-2 mt-2 text-xs text-stone-600" id="rank-pager"></div>
-        <p id="unscored" class="text-[11px] text-stone-500 mt-2"></p>
+    <!-- 1. RANKING: text of the hypothesis, its origin, the score and the profile's indicators (numbers only) -->
+    <section id="view-ranking" class="space-y-3">
+      <div class="flex flex-wrap gap-1.5" id="profile-tabs"></div>
+      <p id="profile-order" class="text-sm text-stone-700"></p>
+      <div class="flex flex-wrap items-center gap-2">
+        <select id="filter-origin" class="text-xs border border-stone-300 rounded-lg px-2.5 py-1.5 bg-white">
+          <option value="all">Все гипотезы</option><option value="orig">Только исходные</option><option value="ver">Только версии</option>
+        </select>
+        <select id="filter-type" class="text-xs border border-stone-300 rounded-lg px-2.5 py-1.5 bg-white"></select>
+        <input id="search-ranking" type="text" placeholder="Поиск по названию или номеру" class="text-xs border border-stone-300 rounded-lg px-2.5 py-1.5 bg-white w-56">
       </div>
+      <div class="rank-wrap"><table class="rank-tbl text-sm"><thead><tr id="rank-head" class="bg-stone-50"></tr></thead><tbody id="rank-body"></tbody></table></div>
+      <div class="flex items-center gap-2 text-xs text-stone-600" id="rank-pager"></div>
+      <p id="unscored" class="text-xs text-stone-500"></p>
     </section>
 
-    <!-- 2. CARDS -->
-    <section id="view-cards" class="space-y-4 hidden">
-      <div class="bg-white rounded-xl p-4 shadow-sm border border-stone-200 flex flex-wrap items-center justify-between gap-3">
-        <div class="max-w-4xl">
-          <h2 class="serif-title text-lg font-bold text-[#1E4D40]">Карточки гипотез: звенья, записи, что улучшить</h2>
-          <p class="text-xs text-stone-600 mt-0.5">Для каждого звена — веса <span data-tip-key="FA">F / A</span>, <span data-tip-key="S">сила S</span> с 90% интервалом, <span data-tip-key="link_N">новизна звена</span> и <span data-tip-key="records">записи PubMed</span> с весом (наведите на запись — множители веса и цитата, клик — карточка статьи). Если у гипотезы есть улучшенная версия, карточка показывает сравнение «до → после».</p>
-        </div>
-        <div class="flex flex-wrap gap-2 items-center">
-          <input id="search-cards" type="text" placeholder="Поиск карточки…" class="text-xs border border-stone-300 rounded-lg px-2.5 py-1.5 bg-white w-44">
-          <button id="btn-expand-all" class="px-3 py-1.5 rounded-lg bg-stone-200 hover:bg-stone-300 text-xs font-semibold">Развернуть все</button>
-          <button id="btn-collapse-all" class="px-3 py-1.5 rounded-lg bg-stone-200 hover:bg-stone-300 text-xs font-semibold">Свернуть все</button>
-        </div>
-      </div>
-      <div id="cards-container" class="space-y-3"></div>
+    <!-- 2. CARDS: text only -->
+    <section id="view-cards" class="space-y-3 hidden">
+      <p class="text-sm text-stone-700 max-w-3xl">Каждая гипотеза — её текст и то, как он разобран в карточку: вмешательство, популяция, звенья механизма, заявленный эксперимент. Числа оценки — во вкладке «Оценка карточек».</p>
+      <input id="search-cards" type="text" placeholder="Поиск" class="text-xs border border-stone-300 rounded-lg px-2.5 py-1.5 bg-white w-56">
+      <div id="cards" class="space-y-3"></div>
     </section>
 
-    <!-- 3. EVOLUTION -->
-    <section id="view-evolution" class="space-y-4 hidden">
-      <div class="bg-white rounded-xl p-4 shadow-sm border border-stone-200">
-        <h2 class="serif-title text-lg font-bold text-[#1E4D40]">Эволюция: улучшенные версии и контроль сдвига к известному</h2>
-        <p class="text-xs text-stone-600 mt-1 max-w-5xl">Два режима названы раздельно. <span data-tip-key="tuned" class="font-semibold">Доработанная версия</span> — применены только исправимые пункты разбора, новые части родителя сохранены. <span data-tip-key="free" class="font-semibold">Свободная эволюция</span> — меняется всё под выбранный профиль. <span data-tip-key="drift" class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-semibold">Сдвиг к известному</span> помечается, но версия остаётся в рейтинге. Эволюция не создаёт новых доказательств: рост оценки — подсказка, что менять, а не доказательство.</p>
-        <div class="mt-3 overflow-x-auto">
-          <table class="w-full text-left border-collapse">
-            <thead><tr class="border-b-2 border-[#1E4D40] text-xs font-bold text-[#1E4D40] bg-stone-50" id="evo-head"></tr></thead>
-            <tbody id="evo-tbody" class="divide-y divide-stone-200 text-xs"></tbody>
-          </table>
-        </div>
-        <p id="evo-empty" class="text-sm text-stone-500 mt-3 p-4 rounded-lg bg-stone-50 border border-dashed border-stone-300 hidden">Результатов эволюции для этого пула пока нет. Они появятся здесь после прогона в режиме «доработка» или «свободная эволюция».</p>
-      </div>
+    <!-- 3. EVALUATION: numbers -->
+    <section id="view-eval" class="space-y-3 hidden">
+      <p class="text-sm text-stone-700 max-w-3xl">Все числа по каждой гипотезе: оценка в профилях, показатели, звенья цепочки с записями из статей, альтернативные объяснения, что поднимет оценку; у версий — проверки правил эволюции. Нажмите на запись — откроется статья с цитатой.</p>
+      <input id="search-eval" type="text" placeholder="Поиск" class="text-xs border border-stone-300 rounded-lg px-2.5 py-1.5 bg-white w-56">
+      <div id="evals" class="space-y-3"></div>
     </section>
 
-    <!-- 4. PUBMED -->
-    <section id="view-pubmed" class="space-y-4 hidden">
-      <div class="bg-white rounded-xl p-4 shadow-sm border border-stone-200">
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 pb-3">
-          <div>
-            <h2 class="serif-title text-lg font-bold text-[#1E4D40]" id="pub-title">Статьи PubMed</h2>
-            <p class="text-xs text-stone-600 mt-0.5">Только статьи до даты среза; цитата — дословно из аннотации; у каждой — гипотезы, где она использована.</p>
-          </div>
-          <input id="search-pubmed" type="text" placeholder="PMID, NCT или слово из цитаты…" class="text-xs border border-stone-300 rounded-lg px-3 py-1.5 bg-stone-50 w-64">
-        </div>
-        <div id="pubmed-list" class="mt-3 space-y-2.5"></div>
-        <div class="flex items-center gap-2 mt-2 text-xs text-stone-600" id="pub-pager"></div>
-      </div>
+    <!-- 4. SCHEME -->
+    <section id="view-scheme" class="space-y-3 hidden">
+      <p class="text-sm text-stone-700 max-w-3xl">Как система приходит к оценке: шаг за шагом, что делает каждый шаг и чем он проверен. Подробная схема с обоснованиями — в репозитории метода, папка docs/system.</p>
+      <div id="scheme" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
     </section>
 
-    <!-- 5. HELP -->
-    <section id="view-method" class="space-y-4 hidden">
-      <div class="bg-white rounded-xl p-5 shadow-sm border border-stone-200 help">
-        <h2 class="serif-title text-lg font-bold text-[#1E4D40]">Справка: как читать отчёт и как считаются показатели (метод v3.7)</h2>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-8">
-          <div>
-            <h3>1. Отчёт за минуту</h3>
-            <ul>
-              <li>Каждая гипотеза разложена на <b>цепочку звеньев</b> от вмешательства к исходу (доставка → мишень → путь → промежуточный эффект → исход).</li>
-              <li>Для каждого звена найдены статьи PubMed до даты среза; каждая находка — <b>запись</b> с дословной цитатой и весом.</li>
-              <li>Из записей код считает показатели: <b>баланс доказательств</b>, <b>новизну N</b>, <b>информативность I</b>, <b>размах W</b> и другие.</li>
-              <li><b>АСПИД</b> сводит показатели в оценку по профилю: задан только порядок важности, точные веса разыгрываются 10 000 раз. Оценка — среднее, место — по оценке, вероятность топ-5 — устойчивость места.</li>
-              <li>Исход испытания метод <b>не предсказывает</b>: он говорит, насколько механизм обоснован сейчас, нов ли вопрос и что даст эксперимент.</li>
-            </ul>
-            <h3>2. Вес записи (v3.6, по доменам GRADE)</h3>
-            <p><code>вес = дизайн × точность × эффект × сравнение × контекст</code>; одна большая РКИ или метаанализ в точной популяции со средним или крупным эффектом весит 1. Каждый множитель — один домен GRADE; уровни выбраны проверкой <code>specs/record-weight-2026-11-08.yaml</code> (поздние испытания того же звена, исходы испытаний, порядок пар записей у внешнего читателя).</p>
-            <table class="w-full my-1"><tbody>
-              <tr><th>дизайн, звено исхода о людях (GRADE: исходный уровень)</th><td>РКИ и метаанализ 1; нерандомизированное и наблюдательное 1/2; остальное (обзор, животные, клетки) 1/4</td></tr>
-              <tr><th>дизайн, звенья до исхода</th><td>клетки 1/3, обзор 2/3, первичное исследование 1</td></tr>
-              <tr><th>точность (неточность)</th><td>запись «за»: min(1, ln n / ln 300), не ниже 1/4 (n неизвестно — 1/4); до исхода — 1/2. Запись «против» (нулевой результат): мощность исследования обнаружить эффект d = 0.4</td></tr>
-              <tr><th>эффект (повышение за эффект)</th><td>указан средний или крупный эффект — 1; малый, нулевой или не указан — 1/2</td></tr>
-              <tr><th>сравнение (часть риска смещения)</th><td>между группами 1, иначе 1/2</td></tr>
-              <tr><th>контекст (непрямота)</th><td>соседняя популяция, возраст, пол, доза, вид — 1/2 (только то, что названо в утверждении); иначе 1. Метка «родственное вмешательство» пока не штрафуется: верификатор ставит её ненадёжно</td></tr>
-            </tbody></table>
-            <p>Несколько записей одной статьи или одного испытания: самая весомая целиком, остальные по 1/4.</p>
-            <h3>3. Сила звена и баланс доказательств</h3>
-            <ul>
-              <li><b>F / A</b> — суммы весов «за» и «против».</li>
-              <li><b>Сила S</b> = 1 / (1 + e<sup>−λ(F − A)</sup>), λ = 2.68: «за» складываются с плюсом, «против» с минусом (сумма логарифмов отношений правдоподобия). 0.5 без данных или при равных «за» и «против», 0.83 при F = 0.6. В скобках — 90% интервал по количеству данных (Beta).</li>
-              <li><b>Баланс доказательств</b> (главный показатель в профилях; в коде <code>chain_state</code>) = среднее величины 2S − 1 по местам цепочки, <b>у которых есть данные</b>: −1 — данные против, 0 — «за» и «против» уравновешены, +1 — подтверждено. Место — одно звено; несколько звеньев «путь» подряд — одно место (берётся лучшее S); параллельные исходы — основной. Место без единой записи в среднее не входит: пробелы видны в покрытии и в пункте «проверить звено».</li>
-              <li><b>Подтверждённость</b> (справочно, в профили не входит) — средняя опора тех же мест: max(0, 2(S − 0.5)); 0.67 при умеренной опоре, около 1 при сильной.</li>
-            </ul>
-            <h3>4. Правила прочтения записи</h3>
-            <ul>
-              <li>«Против» — нулевой или противоположный результат по тому же показателю. Значимый, но клинически малый эффект — «за» с малым весом.</li>
-              <li>Сравнение читается по анализу: «не изменилось ни в одной группе» — до/после, даже в двухгрупповом испытании.</li>
-              <li>Родственное вмешательство (другая силовая программа для «приседаний») учитывается с полным весом (метка пока не штрафуется: она ненадёжна); совсем другое — не учитывается.</li>
-            </ul>
-          </div>
-          <div>
-            <h3>5. Новизна N</h3>
-            <p>Насколько гипотеза далека от того, что уже спрашивали до даты среза (по записям любого знака). По звену исхода: <b>новый контекст</b> (то же вмешательство и исход у того же вида, другая популяция или доза) &lt; <b>перенос</b> (только на другом виде) &lt; <b>аналог</b> (только родственное вмешательство). Без записей на исходе: <b>новое сочетание</b> (звенья известны по отдельности) &lt; <b>новое звено</b>. «Неизвестно» — данных нет вовсе: отсутствие данных — не новизна. Проверяющий находит около 60% статей, поэтому новизна — оценка сверху. Рядом показан PMID статьи, задающей ступень.</p>
-            <h3>6. Эксперимент, размах и прочее</h3>
-            <ul>
-              <li><b>I, информативность</b> = min(1, Σ a·d / 1.5) по альтернативам, от 0 до 1: a — их опора в литературе, d — что делает эксперимент (отсекает 1, ослабляет 0.5, не различает 0). d = 1 только при названной группе или измерении, где гипотеза и альтернатива предсказывают разное. <b>Запас I</b> — если бы эксперимент отсекал все подкреплённые альтернативы.</li>
-              <li><b>Размах W</b> — по подтверждённым звеньям: локальный &lt; орган / система &lt; признак старения (объект самого звена, а не тип вмешательства).</li>
-              <li><b>Реализуемость</b> — среднее цены системы, длительности, плановой выборки и готовности вмешательства (0–1).</li>
-              <li><b>Конечная точка</b>: биомаркер &lt; самоотчёт &lt; функция &lt; клиническое событие (две модели должны согласиться).</li>
-              <li><b>Лучший дизайн по исходу</b> — самый сильный дизайн среди засчитанных записей «за» на звене исхода (клетки &lt; животные &lt; наблюдательное &lt; обзор &lt; нерандомизированное &lt; метаанализ &lt; РКИ). <b>Независимые источники по исходу</b> — сколько независимых групп (разные авторы, выборки) среди этих записей, 0–5.</li>
-              <li><b>Тренд</b> — рост публикаций о вмешательстве за 3 года против 3 предыдущих, за вычетом роста PubMed. <b>Роль ИИ</b> — только по дословной фразе текста.</li>
-            </ul>
-            <h3>7. Профили АСПИД</h3>
-            <div id="help-profiles"></div>
-            <h3>8. Запас улучшения и эволюция</h3>
-            <ul>
-              <li><b>Запас</b> — насколько вырастет оценка в профиле, если применить вместе все исправимые пункты разбора: эксперимент, отсекающий альтернативы; переписанное опровергнутое звено; суженная популяция; клиническая конечная точка. «*» — пункт «выписать механизм» заранее не считается; «↓» — улучшение снижает новизну. Запас — оценка сверху. По нему выбираются гипотезы для эволюции.</li>
-              <li><b>Доработанная версия</b>: только исправимые пункты; если версия сдвинулась к известному, она возвращается писателю с причиной.</li>
-              <li><b>Свободная эволюция</b>: меняется всё; названные писателем статьи засчитываются, только если их нашёл проверяющий до даты среза; далёкая от родителя версия помечена «новая гипотеза после».</li>
-              <li><b>Сдвиг к известному</b>: у версии ниже новизна, или сохранённое звено стало ближе к показанному, или пропало новое звено. Рядом — доля звеньев с опорой до даты среза у родителя и у версии.</li>
-            </ul>
-            <h3>9. Ограничения и статус проверки</h3>
-            <ul>
-              <li>Только аннотации статей; проверяющий находит около 60% относящихся к делу работ, сильнее недосчитывая программы и поведенческие вмешательства.</li>
-              <li>На калибровке баланс доказательств даёт AUC около 0.59 против исходов испытаний, а две языковые модели, спрошенные напрямую, — 0.76 (утечка знаний не исключена); веса записей сигнала против исходов не добавляют, зато упорядочивают более поздние испытания того же звена (AUC 0.70); открытые испытания позитивны чаще (63% против 38%), то есть метка «испытание позитивно» сама шумная. Чистая проверка — этот проспективный пул, когда испытания завершатся.</li>
-              <li>Новизну, запас и профиль «Фронтир» по исходам испытаний проверить нельзя: они держатся на правиле допуска показателей и защитах от раздутых гипотез.</li>
-              <li><b>Внешняя проверка (2026-11-08, второй читатель вслепую).</b> Веса записей упорядочивают пары записей ближе к второму читателю, чем прежние (τ 0.10 против 0.04). <b>I</b>: то, что эксперимент «отсекает» альтернативу, прежняя модель отмечала почти никогда, потому что не видела текста реестра; с 2026-11-08 d оценивается по тексту реестра (согласие κ 0.35 вместо 0.005), из-за этого I выросла, а запас улучшения уменьшился. <b>Новизна N</b> не воспроизводится (κ 0.14) и завышена: «аналог» в 18 из 22 случаев оказывается «новым контекстом», а ближайшие прежние работы поиск находит лишь в трети случаев. Профиль «Фронтир», где новизна первая, читать с этой оговоркой.</li>
-            </ul>
-            <h3>Происхождение</h3>
-            <p id="help-prov" class="text-xs"></p>
-          </div>
+    <!-- 5. HELP: first level in words, second level collapsed -->
+    <section id="view-help" class="hidden">
+      <div class="bg-white rounded-xl p-5 shadow-sm border border-stone-200 help max-w-4xl">
+        <h2 class="serif-title text-lg font-bold text-[#1E4D40]">Как читать отчёт</h2>
+        <div class="prose-r">
+          <p>Отчёт ранжирует гипотезы о старении и здоровом долголетии. Каждая гипотеза разобрана на цепочку шагов от вмешательства к результату («упражнение → сила мышц → функция у пожилых»), и каждый шаг проверен по статьям, опубликованным до даты среза: что в них подтверждает шаг, что ему противоречит.</p>
+          <p><b>Рейтинг.</b> Профиль задаёт, что важнее: «Доказательность» — насколько механизм уже обоснован; «Финансирование» — готовность к проекту; «Фронтир» — новизна для поисковых программ. Балл — средняя оценка при разных допустимых весах показателей; «в топ-5» — как часто гипотеза оказывается среди пяти лучших. Колонки — показатели профиля по рангу важности.</p>
+          <p><b>Карточка гипотезы</b> — текст и то, как он понят: что за вмешательство, у кого, через какие шаги. <b>Оценка</b> — числа: насколько подтверждён каждый шаг, что нового, что покажет эксперимент, что поднимет оценку.</p>
+          <p><b>Чего отчёт не утверждает.</b> Это не прогноз исхода испытания: оценка говорит, насколько гипотеза обоснована литературой сейчас, нова ли она и насколько полезен предложенный эксперимент. Чистая проверка — проспективный пул: оценки заморожены до того, как испытания сообщат результаты.</p>
         </div>
-        <h3 class="mt-4">Глоссарий: все параметры отчёта</h3>
-        <dl id="glossary" class="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-x-4 gap-y-1.5 text-xs"></dl>
+        <h3 class="mt-5 text-sm font-bold text-stone-500 uppercase tracking-wider">Подробнее</h3>
+        <details><summary>Вес записи из статьи</summary>
+          <p>Каждая находка в статье — запись с дословной цитатой. Её вес = дизайн × точность × эффект × сравнение × контекст (домены GRADE): РКИ и метаанализ 1, нерандомизированное и наблюдательное 1/2, остальное 1/4 (до звена исхода: клетки 1/3, обзор 2/3, первичное исследование 1); точность растёт с размером выборки до n = 300; указанный средний или крупный эффект 1, иначе 1/2; сравнение между группами 1, иначе 1/2; другая популяция, возраст, пол, доза, вид (если звено их называет) или только та же широкая категория вмешательства — 1/2. Нулевой результат весит по мощности исследования. Несколько записей одной статьи или испытания: самая весомая целиком, остальные по 1/4.</p></details>
+        <details><summary>Сила звена, баланс доказательств и покрытие</summary>
+          <p>Сила звена S = 1 / (1 + e<sup>−2.68(F − A)</sup>), где F и A — суммы весов «за» и «против»: 0.5 без данных или при равенстве, 0.83 при F = 0.6. Баланс доказательств — среднее 2S − 1 по местам цепочки с данными: от −1 (против) через 0 до +1 (подтверждено); место без записей в среднее не входит. Покрытие — сколько мест цепочки имеют хоть одну запись: баланс говорит, насколько сильно то, что известно, покрытие — сколько известно.</p></details>
+        <details><summary>Правила прочтения записи</summary>
+          <ul><li>«Против» — нулевой или противоположный результат по тому же показателю; значимый, но малый эффект — «за» с малым весом.</li>
+            <li>Сравнение читается по анализу: «не изменилось ни в одной группе» — до/после.</li>
+            <li>Вмешательство: то же; узкий класс (другая форма того же вещества, программа того же рода) — полный вес; только та же широкая категория — 1/2; другое — не учитывается.</li>
+            <li>Смежный контекст засчитывается, только если звено само называет популяцию, пол, дозу или вид.</li></ul></details>
+        <details><summary>Новизна</summary>
+          <p>Насколько гипотеза далека от того, что уже спрашивали до даты среза: новый контекст &lt; перенос на другой вид &lt; аналог &lt; новое сочетание известных звеньев &lt; новое звено. «Неизвестно» — данных нет вовсе. Поиск находит не все статьи, поэтому новизна — оценка сверху; рядом указана статья, задающая ступень.</p></details>
+        <details><summary>Эксперимент, размах и реализуемость</summary>
+          <ul><li>Информативность I: какие подкреплённые альтернативные объяснения отсекает заявленный эксперимент, от 0 до 1; отсекает — только при названной группе или измерении, где гипотеза и альтернатива предсказывают разное. Запас I — если бы отсекал все.</li>
+            <li>Размах: локальный &lt; орган или система &lt; признак старения — по подтверждённым звеньям.</li>
+            <li>Реализуемость: система, длительность, плановая выборка, готовность вмешательства (0–1).</li>
+            <li>Конечная точка: биомаркер &lt; самоотчёт &lt; функция &lt; клиническое событие.</li></ul></details>
+        <details open><summary>Профили и ранги важности</summary><div id="help-profiles"></div></details>
+        <details><summary>Что поднимет оценку и эволюция гипотез</summary>
+          <ul><li>Запас — насколько вырастет балл, если применить все исправимые пункты разбора (эксперимент, отсекающий альтернативы; переписанное опровергнутое звено; суженная популяция; клиническая конечная точка). Это оценка сверху.</li>
+            <li>Версии гипотез: доработка (только исправимые пункты), свободная и направленная эволюция. Версия, сдвинувшаяся к уже известному, помечается. Эволюция не создаёт новых доказательств: рост балла подсказывает, что менять.</li></ul></details>
+        <details><summary>Ограничения и статус проверки</summary>
+          <ul><li>Читаются аннотации и открытые разделы результатов; поиск находит не все статьи, сильнее недосчитывая программы и поведенческие вмешательства.</li>
+            <li>Против исходов прошлых испытаний баланс доказательств различает слабо (AUC около 0.59); языковые модели, спрошенные напрямую, — 0.76, но они могли помнить результаты. Веса записей хорошо упорядочивают более поздние испытания того же звена (AUC 0.70).</li>
+            <li>Новизна и информативность сверены со вторым читателем: новизна завышена, профиль «Фронтир» читать с этой оговоркой.</li></ul></details>
+        <details><summary>Происхождение отчёта</summary><p id="help-prov"></p></details>
+        <details><summary>Словарь параметров</summary><dl id="glossary" class="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-x-4 gap-y-1.5 text-xs mt-2"></dl></details>
       </div>
     </section>
   </main>
 
   <div id="pmid-modal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
-    <div class="bg-white rounded-xl max-w-2xl w-full p-5 shadow-2xl border border-stone-200 space-y-3">
+    <div class="bg-white rounded-xl max-w-2xl w-full p-5 shadow-2xl space-y-3">
       <div class="flex items-start justify-between gap-3 border-b border-stone-200 pb-3">
-        <div>
-          <span id="modal-pmid" class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-900"></span>
-          <p id="modal-meta" class="text-xs text-stone-600 mt-1"></p>
-        </div>
-        <button id="modal-close" class="px-2.5 py-1 rounded bg-stone-200 hover:bg-stone-300 text-xs font-bold">Закрыть ✕</button>
+        <div><span id="modal-pmid" class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-900"></span><p id="modal-meta" class="text-xs text-stone-600 mt-1"></p></div>
+        <button id="modal-close" class="px-2.5 py-1 rounded bg-stone-200 text-xs font-bold">Закрыть ✕</button>
       </div>
-      <div id="modal-quote" class="p-3.5 rounded-lg bg-stone-50 border-l-4 border-[#1E4D40] text-xs md:text-sm italic text-stone-800 leading-relaxed"></div>
-      <div class="flex flex-wrap items-center justify-between gap-2 pt-2">
-        <span id="modal-used" class="text-xs text-stone-600"></span>
-        <a id="modal-link" href="#" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-lg bg-[#1E4D40] text-white text-xs font-semibold hover:bg-emerald-800">Открыть на PubMed ↗</a>
-      </div>
+      <div id="modal-quote" class="p-3.5 rounded-lg bg-stone-50 border-l-4 border-[#1E4D40] text-sm italic text-stone-800 leading-relaxed"></div>
+      <div class="flex flex-wrap items-center justify-between gap-2"><span id="modal-used" class="text-xs text-stone-600"></span>
+        <a id="modal-link" href="#" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-lg bg-[#1E4D40] text-white text-xs font-semibold">Открыть на PubMed ↗</a></div>
     </div>
   </div>
 
   <script>
     const DATA = __DATA__;
-    const NM = DATA.names, TIPS = DATA.tips;
-    const PROFS = DATA.profiles;
-    let curProfile = PROFS[0].key, rankPage = 0, pubPage = 0;
-    const PAGE = 15, PUB_PAGE = 30;
-    const openCards = new Set(), cardMode = {};
+    const NM = DATA.names, TIPS = DATA.tips, PROFS = DATA.profiles;
+    let curProfile = PROFS.find(p => p.key === 'frontier') ? 'frontier' : PROFS[0].key, rankPage = 0;
+    const PAGE = 15;
     const byId = Object.fromEntries(DATA.results.map(r => [r.id, r]));
-    const childrenOf = {};
-    DATA.results.filter(r => r.is_evolved).forEach(c => (childrenOf[c.parent_id] = childrenOf[c.parent_id] || []).push(c));
-
     const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    const f = (x, d = 3) => (x === null || x === undefined || Number.isNaN(x)) ? '—' : Number(x).toFixed(d);
+    const f = (x, d = 2) => (x === null || x === undefined || Number.isNaN(x)) ? '—' : Number(x).toFixed(d);
+    const sg = (x, d = 2) => x === null || x === undefined ? '—' : (x > 0 ? '+' : '') + Number(x).toFixed(d);
     const nm = (g, k) => (NM[g] && NM[g][k ?? '']) || (k ?? '—');
     const tip = (text, inner, cls = '') => `<span data-tip="${esc(text)}" class="${cls}">${inner}</span>`;
-    const tipK = (key, inner, cls = '') => tip(TIPS[key] || '', inner, cls);
-    const NOV_CLS = {new_link: 'bg-purple-100 text-purple-900 border-purple-300', new_combination: 'bg-indigo-100 text-indigo-900 border-indigo-300',
-      analog: 'bg-blue-100 text-blue-900 border-blue-300', translation: 'bg-teal-100 text-teal-900 border-teal-300', new_context: 'bg-stone-200 text-stone-800 border-stone-300'};
-    const novChip = (n, extra = '') => tipK('N', `<span class="px-2 py-0.5 rounded border text-[11px] font-bold whitespace-nowrap ${NOV_CLS[n] || 'bg-stone-100 text-stone-600 border-stone-200'}">${esc(nm('novelty', n || ''))}</span>${extra}`, '');
-    const delta = v => v === null || v === undefined ? '—' : (v >= 0 ? `<span class="text-emerald-800 font-bold">+${v.toFixed(3)}</span>` : `<span class="text-red-700 font-bold">${v.toFixed(3)}</span>`);
-    const statusChips = r => {
-      let s = '';
-      if (!r.is_evolved) s = tip('Исходная гипотеза: запись реестра в том виде, как её получил конвейер.', 'исходная', 'px-1.5 py-0.5 rounded bg-stone-200 text-stone-800 text-[11px]');
-      else if (r.evo_mode === 'free') s = tipK('free', 'свободная эволюция', 'px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-900 font-semibold text-[11px]') +
-        (r.new_after ? ' ' + tip('Версия далека от родителя (расстояние по словам больше 0.7): по сути новая гипотеза.', 'новая гипотеза после ' + esc(r.parent_id), 'px-1.5 py-0.5 rounded bg-stone-100 text-stone-700 text-[11px]') : '');
-      else s = tipK('tuned', 'доработанная версия', 'px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-900 font-semibold text-[11px]');
-      if (r.drift && r.drift.drift_to_known) s += ' ' + tip(TIPS.drift + ' Причина: ' + (r.drift.reasons || []).join('; '), '⚠ сдвиг к известному', 'px-1.5 py-0.5 rounded bg-amber-50 border border-amber-300 text-amber-900 text-[10px] font-semibold');
+    const scored = () => DATA.results.filter(r => r.scored);
+    const cap1 = s => { s = String(s || ''); return s.charAt(0).toUpperCase() + s.slice(1); };
+
+    // ---- origin chips (words only)
+    const MODE = {tune: 'доработка', free: 'свободная эволюция', directed: 'направленная эволюция'};
+    function origin(r) {
+      let s = r.is_evolved ? `<span class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-900 text-[11px]">${esc(MODE[r.evo_mode] || 'версия')}</span>`
+                           : '<span class="px-2 py-0.5 rounded-full bg-stone-100 text-stone-700 text-[11px]">исходная</span>';
+      if (r.new_after) s += ' <span class="px-2 py-0.5 rounded-full bg-stone-100 text-stone-700 text-[11px]">новая гипотеза</span>';
+      if (r.drift && r.drift.drift_to_known) s += ' ' + tip(TIPS.drift || '', 'сдвиг к известному', 'px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[11px]');
       return s;
-    };
-
-    // floating tooltip
-    const TT = document.getElementById('tt'); let ttTarget = null;
-    function ttPlace(t) {
-      if (!t) return; const r = t.getBoundingClientRect(); const w = TT.offsetWidth || 280, h = TT.offsetHeight || 80;
-      let top = r.top - h - 8; if (top < 64) top = r.bottom + 8; if (top + h > innerHeight - 8) top = Math.max(8, innerHeight - h - 8);
-      let left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)); TT.style.top = top + 'px'; TT.style.left = left + 'px';
     }
-    document.addEventListener('mouseover', e => {
-      const t = e.target.closest('[data-tip],[data-tip-key]');
-      const text = t && (t.getAttribute('data-tip') || TIPS[t.getAttribute('data-tip-key')]);
-      if (t && text) { ttTarget = t; TT.textContent = text; TT.classList.remove('hidden'); ttPlace(t); return; }
-      if (ttTarget) { TT.classList.add('hidden'); ttTarget = null; }
-    });
-    addEventListener('scroll', () => ttTarget && ttPlace(ttTarget), true);
-    document.querySelectorAll('[data-tip-key]').forEach(el => el.style.cssText += 'cursor:help;border-bottom:1px dashed rgba(30,77,64,.55)');
+    const short = (t, n) => { t = String(t || '').trim(); return t.length <= n ? t : t.slice(0, n).replace(/\s+\S*$/, '') + '…'; };
 
+    // ---- one indicator as a number or a level (no text around it)
+    function indVal(r, k) {
+      switch (k) {
+        case 'chain_state': return sg(r.chain_state);
+        case 'N': return esc(nm('novelty', r.N || ''));
+        case 'I': return f(r.I);
+        case 'W': return esc(nm('scope', r.W));
+        case 'feasibility': return f(r.feasibility);
+        case 'trend': return sg(r.trend);
+        case 'ai_role': return esc(nm('ai', r.ai_role));
+        case 'best_design': return esc(nm('design', r.best_design));
+        case 'independent': return r.independent ?? '—';
+        case 'endpoint': return esc(nm('endpoint', r.endpoint || ''));
+      }
+      return '—';
+    }
+
+    // ---- tooltip
+    const TT = document.getElementById('tt'); let ttT = null;
+    function ttPlace(t) { const r = t.getBoundingClientRect(), w = TT.offsetWidth || 280, h = TT.offsetHeight || 80;
+      let top = r.top - h - 8; if (top < 64) top = r.bottom + 8; TT.style.top = top + 'px'; TT.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px'; }
+    document.addEventListener('mouseover', e => { const t = e.target.closest('[data-tip]'); const x = t && t.getAttribute('data-tip');
+      if (t && x) { ttT = t; TT.textContent = x; TT.classList.remove('hidden'); ttPlace(t); return; } if (ttT) { TT.classList.add('hidden'); ttT = null; } });
+
+    // ---- navigation
     function switchView(v) {
-      ['ranking', 'cards', 'evolution', 'pubmed', 'method'].forEach(x => document.getElementById('view-' + x).classList.toggle('hidden', x !== v));
+      ['ranking', 'cards', 'eval', 'scheme', 'help'].forEach(x => document.getElementById('view-' + x).classList.toggle('hidden', x !== v));
       document.querySelectorAll('#main-nav .nav-btn').forEach(b => b.className = 'nav-btn px-3 py-1.5 rounded text-xs ' +
-        (b.dataset.view === v ? 'font-semibold bg-white text-[#1E4D40] shadow-sm' : 'font-medium bg-emerald-900/70 text-emerald-100 hover:bg-emerald-800'));
-      scrollTo({top: 0});
+        (b.dataset.view === v ? 'font-semibold bg-white text-[#1E4D40]' : 'bg-emerald-900/70 text-emerald-100 hover:bg-emerald-800'));
     }
-    function jumpToCard(id, mode) {
-      const r = byId[id]; const pid = r && r.is_evolved ? r.parent_id : id;
-      openCards.add(pid); if (mode) cardMode[pid] = mode; else if (r && r.is_evolved) cardMode[pid] = 'both:' + r.id;
-      document.getElementById('search-cards').value = ''; renderCards(); switchView('cards');
-      setTimeout(() => { const el = document.getElementById('card-' + pid); if (el) el.scrollIntoView({block: 'start'}); }, 30);
+    function goTo(view, id) {
+      switchView(view);
+      const el = document.getElementById((view === 'cards' ? 'card-' : 'eval-') + id);
+      if (el) { if (el.tagName === 'DETAILS') el.open = true; setTimeout(() => el.scrollIntoView({block: 'start'}), 20); }
     }
+    document.addEventListener('click', e => {
+      const p = e.target.closest('[data-pmid]'); if (p) { e.preventDefault(); openPmid(p.dataset.pmid); return; }
+      const c = e.target.closest('[data-card]'); if (c) { e.preventDefault(); goTo('cards', c.dataset.card); return; }
+      const v = e.target.closest('[data-eval]'); if (v) { e.preventDefault(); goTo('eval', v.dataset.eval); }
+    });
     function openPmid(pmid) {
       const p = DATA.pubmed.find(x => x.pmid === String(pmid)); if (!p) return;
       document.getElementById('modal-pmid').textContent = 'PMID ' + p.pmid;
-      document.getElementById('modal-meta').textContent = `Дизайн: ${nm('design', p.design)} · n: ${p.n ?? 'не указано'} · в пуле: ${p.sides.map(s => s === 'for' ? 'за' : 'против').join(' и ')}`;
+      document.getElementById('modal-meta').textContent = `Дизайн: ${nm('design', p.design)} · n: ${p.n ?? 'не указано'} · ${p.sides.map(s => s === 'for' ? 'за' : 'против').join(' и ')}`;
       document.getElementById('modal-quote').textContent = '«' + (p.quote || '') + '»';
       document.getElementById('modal-used').textContent = 'Используется в: ' + p.used_in.join(', ');
       document.getElementById('modal-link').href = 'https://pubmed.ncbi.nlm.nih.gov/' + p.pmid + '/';
       const m = document.getElementById('pmid-modal'); m.classList.remove('hidden'); m.classList.add('flex');
     }
-    document.addEventListener('click', e => {
-      const b = e.target.closest('[data-pmid]'); if (b) { e.stopPropagation(); openPmid(b.dataset.pmid); return; }
-      const j = e.target.closest('[data-jump]'); if (j) { e.stopPropagation(); jumpToCard(j.dataset.jump, j.dataset.mode); }
-    }, true);
 
     // ---------- 1. ranking
-    function rankHead() {
-      const H = [['place', 'Место'], [null, 'Гипотеза и статус'], ['score', 'Оценка'], ['room', 'Запас'], ['top5', 'Место / топ-5'], ['N', 'Новизна'],
-        ['chain_state', 'Баланс доказательств'], ['I', 'I'], ['W', 'Размах'], [null, 'Реализ. / ИИ / Кон. точка'], [null, '']];
-      const WRAP = new Set(['Баланс доказательств', 'Реализ. / ИИ / Кон. точка', 'Место / топ-5']);
-      document.getElementById('rank-head').innerHTML = H.map(([k, l]) => `<th class="py-2 px-2 align-bottom ${WRAP.has(l) ? 'whitespace-normal leading-tight w-24' : 'whitespace-nowrap'}">${k ? tipK(k, l) :
-        (l === 'Реализ. / ИИ / Кон. точка' ? tip(TIPS.feasibility + ' · ' + TIPS.ai_role + ' · ' + TIPS.endpoint_clinical, l) :
-         l === 'Гипотеза и статус' ? tip('Идентификатор, название и статус строки: исходная, доработанная версия или свободная эволюция; флаг сдвига к известному.', l) : l)}</th>`).join('');
-    }
     function renderRanking() {
       const P = PROFS.find(p => p.key === curProfile);
-      document.getElementById('profile-order').innerHTML = `<b>Порядок важности:</b> ${esc(P.order)}<br><span class="text-stone-500">${esc(P.about)}</span>`;
-      const st = document.getElementById('filter-status').value, ty = document.getElementById('filter-type').value;
+      document.getElementById('profile-order').innerHTML = `${esc(P.about)}`;
+      const cols = []; P.tier_keys.forEach((t, i) => t.forEach(k => cols.push([k, i + 1])));
+      const H = [['pl', '#'], ['hy', 'Гипотеза'], ['', 'Балл'], ['', 'В топ-5']];
+      document.getElementById('rank-head').innerHTML = H.map(([c, l]) => `<th class="${c} py-2 px-2 text-xs font-bold text-[#1E4D40] align-bottom">${l === 'Балл' ? tip(TIPS.score || '', l) : l === 'В топ-5' ? tip(TIPS.top5 || 'Как часто гипотеза среди пяти лучших при разных допустимых весах', l) : l}</th>`).join('') +
+        cols.map(([k, rank]) => `<th class="py-2 px-2 text-xs font-bold text-[#1E4D40] align-bottom">${tip(TIPS[k === 'trend' ? 'trend_pubmed' : k === 'best_design' ? 'best_design_outcome' : k === 'independent' ? 'independent_outcome' : k === 'endpoint' ? 'endpoint_clinical' : k] || '', esc(cap1(NM.ind[k] || k)))}<div class="font-normal text-stone-500">ранг важности ${rank}</div></th>`).join('');
+      const og = document.getElementById('filter-origin').value, ty = document.getElementById('filter-type').value;
       const q = document.getElementById('search-ranking').value.trim().toLowerCase();
-      let items = DATA.results.filter(r => r.scored);
-      if (st === 'parent') items = items.filter(r => !r.is_evolved);
-      if (st === 'tune') items = items.filter(r => r.is_evolved && r.evo_mode !== 'free');
-      if (st === 'free') items = items.filter(r => r.evo_mode === 'free');
+      let items = scored();
+      if (og === 'orig') items = items.filter(r => !r.is_evolved); if (og === 'ver') items = items.filter(r => r.is_evolved);
       if (ty) items = items.filter(r => r.type === ty);
-      if (q) items = items.filter(r => (r.id + ' ' + r.title).toLowerCase().includes(q));
+      if (q) items = items.filter(r => (r.id + ' ' + r.title + ' ' + (r.plain || '')).toLowerCase().includes(q));
       items.sort((a, b) => (b.aspid[curProfile].score ?? -1) - (a.aspid[curProfile].score ?? -1));
       const pages = Math.max(1, Math.ceil(items.length / PAGE)); rankPage = Math.min(rankPage, pages - 1);
-      document.getElementById('ranking-tbody').innerHTML = items.slice(rankPage * PAGE, rankPage * PAGE + PAGE).map(r => {
-        const a = r.aspid[curProfile], room = r.room[curProfile];
-        const nDown = r.room_N && r.room_N[0] && r.room_N[1] && r.room_N[0] !== r.room_N[1];
-        const roomMark = (r.room_not_computed ? tip('Пункт «выписать механизм» заранее не считается — запас может быть больше.', '*') : '') +
-          (nDown ? tip(`Применение улучшений снизит новизну: ${nm('novelty', r.room_N[0])} → ${nm('novelty', r.room_N[1])}`, '<span class="text-amber-700 font-bold">↓</span>') : '');
-        const others = PROFS.map(p => `${p.label}: ${f(r.aspid[p.key].score)} (место ${r.aspid[p.key].place})`).join(' · ');
-        return `<tr class="hover:bg-stone-100/80 cursor-pointer" data-jump="${r.id}">
-          <td class="py-2.5 px-2 font-bold">${a.place ?? '—'}</td>
-          <td class="py-2.5 px-2 max-w-md xl:max-w-xl"><div class="flex flex-wrap items-center gap-1.5"><span class="font-bold text-[#1E4D40]">${esc(r.id)}</span>${statusChips(r)}</div>
-            <div class="text-xs text-stone-600 line-clamp-1 mt-0.5">${esc(r.title)}</div><div class="text-[10px] text-stone-400">${esc(r.type_ru)}</div></td>
-          <td class="py-2.5 px-2 font-extrabold text-sm text-[#1E4D40]">${tip(others, f(a.score))}</td>
-          <td class="py-2.5 px-2 font-semibold ${room > 0.05 ? 'text-emerald-800' : 'text-stone-500'}">${tip('Запас по профилям: ' + PROFS.map(p => `${p.label} +${f(r.room[p.key])}`).join(', '), (room > 0.0005 ? '+' : '') + f(room))}${roomMark}</td>
-          <td class="py-2.5 px-2 text-stone-700 whitespace-nowrap">${a.place}/${a.of} · ${f(a.p_top5, 2)}</td>
-          <td class="py-2.5 px-2">${novChip(r.N)}${r.N_pmid ? `<button data-pmid="${r.N_pmid}" class="block text-[10px] text-blue-800 hover:underline font-semibold mt-0.5">PMID ${r.N_pmid}</button>` : ''}</td>
-          <td class="py-2.5 px-2 font-bold ${r.chain_state < -0.05 ? 'text-red-700' : r.chain_state > 0.05 ? 'text-emerald-800' : 'text-stone-600'}">${tip('подтверждённость ' + f(r.support_share) + ' · баланс = среднее (2S − 1) по местам цепочки с данными: от −1 (данные против) через 0 (поровну) до +1 (подтверждено)', (r.chain_state > 0 ? '+' : '') + f(r.chain_state, 2))}</td>
-          <td class="py-2.5 px-2">${r.I_headroom && r.I_headroom > r.I + 0.005 ? tip('Если бы эксперимент отсекал все подкреплённые альтернативы, I была бы ' + f(r.I_headroom) + ' (это входит в «Запас»).', f(r.I)) : f(r.I)}</td>
-          <td class="py-2.5 px-2 whitespace-nowrap">${esc(nm('scope', r.W))}</td>
-          <td class="py-2.5 px-2 text-stone-600 whitespace-nowrap leading-snug"><div><span class="text-stone-400">реализ.</span> ${f(r.feasibility, 2)}</div><div><span class="text-stone-400">ИИ:</span> ${esc(nm('ai', r.ai_role).replace(/^ИИ\s*—\s*/, ''))}</div><div><span class="text-stone-400">точка:</span> ${esc(nm('endpoint', r.endpoint || ''))}</div></td>
-          <td class="py-2.5 px-2"><span class="px-2.5 py-1 rounded bg-[#1E4D40] text-white text-xs font-semibold whitespace-nowrap">Карточка →</span></td></tr>`;
+      document.getElementById('rank-body').innerHTML = items.slice(rankPage * PAGE, rankPage * PAGE + PAGE).map(r => {
+        const a = r.aspid[curProfile];
+        return `<tr class="border-t border-stone-200 align-top">
+          <td class="pl py-2.5 px-2 text-stone-500">${a.place ?? '—'}</td>
+          <td class="hy py-2.5 px-2"><a href="#" data-card="${esc(r.id)}" class="font-semibold text-[#1E4D40] hover:underline clamp2">${esc(short(r.title, 110))}</a>
+            <div class="line text-xs text-stone-600 clamp2 mt-0.5">${esc(r.plain || '')}</div><div class="mt-1 flex flex-wrap gap-1">${origin(r)}</div></td>
+          <td class="py-2.5 px-2 font-bold num"><a data-eval="${esc(r.id)}">${f(a.score)}</a></td>
+          <td class="py-2.5 px-2 num"><a data-eval="${esc(r.id)}">${a.p_top5 == null ? '—' : Math.round(a.p_top5 * 100) + '%'}</a></td>
+          ${cols.map(([k]) => `<td class="py-2.5 px-2 num whitespace-nowrap"><a data-eval="${esc(r.id)}">${indVal(r, k)}</a>${k === 'chain_state' && r.cover ? `<div class="cap">покрыто ${r.cover[0]} из ${r.cover[1]}</div>` : ''}</td>`).join('')}</tr>`;
       }).join('');
-      document.getElementById('rank-pager').innerHTML = `<button id="rp-prev" class="px-2 py-0.5 rounded border">‹</button><span>${rankPage + 1} / ${pages} · строк: ${items.length}</span><button id="rp-next" class="px-2 py-0.5 rounded border">›</button>`;
+      document.getElementById('rank-pager').innerHTML = `<button id="rp-prev" class="px-2 py-0.5 rounded border">‹</button><span>${rankPage + 1} / ${pages} · гипотез: ${items.length}</span><button id="rp-next" class="px-2 py-0.5 rounded border">›</button>`;
       document.getElementById('rp-prev').onclick = () => { rankPage = Math.max(0, rankPage - 1); renderRanking(); };
       document.getElementById('rp-next').onclick = () => { rankPage = Math.min(pages - 1, rankPage + 1); renderRanking(); };
     }
 
-    // ---------- 2. cards
-    const sCls = l => !l.checked ? 'bg-purple-50 text-purple-900 border-purple-300' : (l.S <= 0.5 || l.A > 0 && l.A >= l.F / 2) ? 'bg-red-100 text-red-900 border-red-300' : l.S >= 0.83 ? 'bg-emerald-100 text-emerald-900 border-emerald-300' : 'bg-amber-100 text-amber-900 border-amber-300';
-    function chain(links) {
-      return `<div class="flex flex-wrap items-center gap-2 my-2">${links.map((l, i) => `<div class="flex items-center gap-1.5">
-        ${tip(`${nm('link', l.type)} · S ${f(l.S)} [${f(l.ci[0], 2)}; ${f(l.ci[1], 2)}] · F ${f(l.F)} / A ${f(l.A)}` + (l.checked ? '' : ' · данных нет') + (l.parallel ? (l.primary ? ' · основной исход' : ' · параллельный исход') : ''),
-          `<div class="px-2.5 py-1.5 rounded-lg border text-xs ${sCls(l)}"><div class="font-bold">${esc(nm('link', l.type))}: S ${f(l.S, 2)}</div><div class="text-[11px] opacity-90 max-w-[220px] line-clamp-1">${esc(l.claim)}</div></div>`)}
-        ${i < links.length - 1 ? '<span class="text-stone-400 font-bold">→</span>' : ''}</div>`).join('')}</div>`;
-    }
-    const recBtn = r => {
-      const fct = r.f ? `дизайн ${nm('design', r.f.design[0])} (${f(r.f.design[1], 2)}) × точность ${r.f.precision[0] ? 'n ' + r.f.precision[0] : 'n не указано'} (${f(r.f.precision[1], 2)}) × эффект ${r.f.effect[0] === 'against' ? 'запись «против»' : r.f.effect[0]} (${f(r.f.effect[1], 2)}) × сравнение ${({between_groups: 'между группами', within_group: 'до/после', none: 'нет'})[r.f.comparison[0]] || r.f.comparison[0]} (${f(r.f.comparison[1], 2)}) × контекст ${({exact: 'точный', adjacent: 'соседний', 'class': 'родственное вмешательство'})[r.f.context[0]] || r.f.context[0]} (${f(r.f.context[1], 2)})` : '';
-      const t = `${r.side === 'for' ? 'ЗА' : 'ПРОТИВ'} · ${fct} = вес ${f(r.w)}. «${r.quote || ''}»`;
-      return `<button data-pmid="${r.pmid}" data-tip="${esc(t)}" class="inline-block mr-1 mb-1 px-2 py-0.5 rounded border font-semibold ${r.side === 'for' ? 'bg-emerald-50 text-emerald-900 border-emerald-300' : 'bg-red-50 text-red-900 border-red-300'}">${r.side === 'for' ? 'за' : 'против'} ${r.pmid} · ${f(r.w, 2)}</button>`;
-    };
-    function linkRows(p, e) {
-      const n = Math.max(p.links.length, e ? e.links.length : 0); let out = '';
-      for (let i = 0; i < n; i++) {
-        const lp = p.links[i], le = e ? e.links[i] : null;
-        const row = (l, tag) => l ? `<div class="${tag === 'Версия' ? 'mt-1 font-semibold text-[#1E4D40]' : ''}">${e ? `<span class="text-stone-500">${tag}:</span> ` : ''}` : '';
-        out += `<tr>
-          <td class="py-2 px-2 whitespace-nowrap font-bold">${lp ? tip(TIPS.link, esc(nm('link', lp.type))) : '—'}${le && (!lp || le.type !== lp.type) ? `<br><span class="text-[#1E4D40]">→ ${esc(nm('link', le.type))}</span>` : ''}</td>
-          <td class="py-2 px-2">${lp ? row(lp, 'Исх') + esc(lp.claim) + (lp.hallmark ? ` <span class="text-stone-500">(признак старения: ${esc(lp.hallmark)})</span>` : '') + '</div>' : ''}${le ? row(le, 'Версия') + esc(le.claim) + '</div>' : ''}</td>
-          <td class="py-2 px-2 whitespace-nowrap">${lp ? row(lp, 'Исх') + `${f(lp.F)} / ${f(lp.A)}</div>` : ''}${le ? row(le, 'Версия') + `${f(le.F)} / ${f(le.A)}</div>` : ''}</td>
-          <td class="py-2 px-2 whitespace-nowrap">${[[lp, 'Исх'], [le, 'Версия']].filter(x => x[0]).map(([l, tg]) => row(l, tg) + `S <b>${f(l.S)}</b> [${f(l.ci[0], 2)}; ${f(l.ci[1], 2)}]</div>`).join('')}</td>
-          <td class="py-2 px-2 whitespace-nowrap">${[[lp, 'Исх'], [le, 'Версия']].filter(x => x[0]).map(([l, tg]) => row(l, tg) + novChip(l.novelty) + '</div>').join('')}</td>
-          <td class="py-2 px-2">${[[lp, 'Исх'], [le, 'Версия']].filter(x => x[0]).map(([l, tg]) => row(l, tg) + (l.records.length ? l.records.map(recBtn).join('') : '<span class="text-stone-400">записей нет</span>') + '</div>').join('')}</td></tr>`;
-      }
-      return out;
+    // ---------- 2. cards (words only)
+    const sentence = l => `${l.subject} ${nm('relation', l.relation)} ${l.object}`;
+    const linkText = (r, l) => { const c = ((r.card_view || {}).links || []).find(x => x.id === l.id); return c ? sentence(c) : l.claim; };
+    function textBlock(t) {
+      const lines = String(t || '').split(/\n+/).map(s => s.trim()).filter(Boolean);
+      return lines.map(s => { const m = s.match(/^([A-Z][A-Za-z ]{2,30}):\s*(.*)$/); return m ? `<p><span class="text-stone-500">${esc(m[1])}:</span> ${esc(m[2])}</p>` : `<p>${esc(s)}</p>`; }).join('');
     }
     function renderCards() {
       const q = document.getElementById('search-cards').value.trim().toLowerCase();
-      const parents = DATA.results.filter(r => !r.is_evolved && (!q || (r.id + ' ' + r.title).toLowerCase().includes(q)));
-      parents.sort((a, b) => (a.aspid ? -(a.aspid[curProfile].score ?? -1) : 1) - (b.aspid ? -(b.aspid[curProfile].score ?? -1) : 1));
-      document.getElementById('cards-container').innerHTML = parents.map(p => {
-        if (!p.scored) return `<div class="bg-white rounded-xl border border-stone-200 p-3 text-xs"><b>${esc(p.id)}</b> — ${esc(p.title)} <span class="text-stone-500">· не оценена (${esc(p.outcome)})</span></div>`;
-        const kids = childrenOf[p.id] || [];
-        let mode = cardMode[p.id] || (kids.length ? 'both:' + kids[0].id : 'parent');
-        if (mode.startsWith('both') && !mode.includes(':') && kids.length) mode = 'both:' + kids[0].id;
-        const e = mode.startsWith('both:') ? byId[mode.slice(5)] : (byId[mode] && byId[mode].is_evolved ? byId[mode] : null);
-        const showP = mode !== (e && e.id), isOpen = openCards.has(p.id);
-        const scoreLine = pr => e ? `${pr.label}: ${f(p.aspid[pr.key].score)} → ${f(e.aspid[pr.key].score)} (${delta(e.aspid[pr.key].score - p.aspid[pr.key].score)})` : `${pr.label}: ${f(p.aspid[pr.key].score)} (место ${p.aspid[pr.key].place}/${p.aspid[pr.key].of})`;
-        return `<div id="card-${p.id}" class="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden">
-          <div data-toggle="${p.id}" class="p-4 bg-stone-50/70 hover:bg-stone-100/70 cursor-pointer flex flex-wrap items-center justify-between gap-3 border-b border-stone-200">
-            <div class="space-y-1 max-w-3xl">
-              <div class="flex flex-wrap items-center gap-2">
-                <span class="px-2.5 py-0.5 rounded bg-[#1E4D40] text-white text-xs font-bold">${esc(p.id)}${kids.length ? ' → ' + kids.map(k => esc(k.id)).join(', ') : ''}</span>
-                ${novChip(p.N, e && e.N !== p.N ? ` → <span class="px-2 py-0.5 rounded border text-[11px] font-bold ${NOV_CLS[e.N] || ''}">${esc(nm('novelty', e.N || ''))}</span>` : '')}
-                ${e ? statusChips(e) : ''}
-                ${(p.flags || []).map(fl => tip(fl.detail || TIPS.flags, '⚑ ' + esc(fl.name), 'px-2 py-0.5 rounded bg-stone-200 text-stone-800 text-[11px]')).join('')}
-              </div>
-              <h3 class="serif-title font-bold text-base">${esc(p.title)}</h3>
-              <div class="text-xs text-stone-600">баланс доказательств ${(p.chain_state > 0 ? '+' : '') + f(p.chain_state, 2)} · подтверждённость ${f(p.support_share)} · I ${f(p.I)} (запас ${f(p.I_headroom)}) · размах ${esc(nm('scope', p.W))} ·
-                запас улучшения: ${PROFS.map(pr => `${pr.label} +${f(p.room[pr.key])}`).join(', ')}${p.room_N && p.room_N[0] !== p.room_N[1] ? ` (↓ новизна → ${esc(nm('novelty', p.room_N[1]))})` : ''}</div>
-            </div>
-            <div class="flex items-center gap-3"><div class="text-right text-xs space-y-0.5">${PROFS.map(pr => `<div class="${pr.key === curProfile ? 'font-bold text-[#1E4D40]' : 'text-stone-600'}">${scoreLine(pr)}</div>`).join('')}</div>
-              <span class="w-7 h-7 rounded-full bg-stone-200 flex items-center justify-center font-bold">${isOpen ? '−' : '+'}</span></div>
-          </div>
-          ${isOpen ? `<div class="p-4 space-y-4">
-            ${kids.length ? `<div class="flex flex-wrap items-center gap-2 border-b border-stone-200 pb-2.5">
-              ${kids.map(k => `<button data-mode="${p.id}" data-val="both:${k.id}" class="mode-btn px-3 py-1 rounded text-xs font-semibold ${mode === 'both:' + k.id ? 'bg-[#1E4D40] text-white' : 'bg-stone-200'}">Сравнение: исходная и ${k.evo_mode === 'free' ? 'свободная эволюция' : 'доработанная версия'}</button>`).join('')}
-              <button data-mode="${p.id}" data-val="parent" class="mode-btn px-3 py-1 rounded text-xs font-semibold ${mode === 'parent' ? 'bg-[#1E4D40] text-white' : 'bg-stone-200'}">Только исходная</button>
-              ${kids.map(k => `<button data-mode="${p.id}" data-val="${k.id}" class="mode-btn px-3 py-1 rounded text-xs font-semibold ${mode === k.id ? 'bg-[#1E4D40] text-white' : 'bg-stone-200'}">Только ${k.evo_mode === 'free' ? 'свободная эволюция' : 'доработанная версия'}</button>`).join('')}
-            </div>` : ''}
-            <div class="grid grid-cols-1 ${e && showP ? 'lg:grid-cols-2' : ''} gap-3">
-              ${showP ? `<div class="p-3 rounded-xl bg-stone-50 border border-stone-200"><div class="text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">Исходная · баланс ${f(p.chain_state, 2)} · подтверждённость ${f(p.support_share)} · новизна: ${esc(nm('novelty', p.N || ''))}</div>
-                <p class="text-xs text-stone-700 mb-1">${esc(p.plain || '')}</p>${chain(p.links)}
-                <p class="text-[11px] text-stone-500">Заявленный эксперимент: ${esc((p.experiment || {}).design || '—')}, ${esc((p.experiment || {}).endpoint || '—')}, n ${esc((p.experiment || {}).n || '—')}${p.N_pmid ? ` · статья, задающая новизну: <button data-pmid="${p.N_pmid}" class="text-blue-800 underline">PMID ${p.N_pmid}</button>` : ''}</p></div>` : ''}
-              ${e ? `<div class="p-3 rounded-xl bg-emerald-50/50 border border-emerald-800/20"><div class="text-xs font-bold text-[#1E4D40] uppercase tracking-wider mb-1">${e.evo_mode === 'free' ? 'Свободная эволюция' : 'Доработанная версия'} · баланс ${f(e.chain_state, 2)} · подтверждённость ${f(e.support_share)} · новизна: ${esc(nm('novelty', e.N || ''))}</div>
-                <p class="text-xs text-stone-800 mb-1">${esc(e.plain || '')}</p>${chain(e.links)}
-                ${e.drift ? `<p class="text-[11px] text-stone-600">Доля звеньев с опорой до даты среза: ${f((e.drift.known_share || [])[0], 2)} → ${f((e.drift.known_share || [])[1], 2)}${e.drift.applied && e.drift.applied.length ? ' · применено: ' + esc(e.drift.applied.join(', ')) : ''}${e.drift.distance != null ? ' · расстояние от родителя ' + f(e.drift.distance, 2) : ''}${e.drift.cited ? ` · статей названо ${e.drift.cited.length}, найдено ${(e.drift.cited_found || []).length}` : ''}</p>` : ''}</div>` : ''}
-            </div>
-            <div class="overflow-x-auto"><table class="w-full text-left border-collapse text-xs"><thead><tr class="border-b-2 border-[#1E4D40] text-[#1E4D40] bg-stone-50 font-bold">
-              <th class="py-2 px-2">${tipK('link', 'Звено')}</th><th class="py-2 px-2">Утверждение</th><th class="py-2 px-2">${tipK('FA', 'F / A')}</th>
-              <th class="py-2 px-2">${tipK('S', 'S [90%]')}</th><th class="py-2 px-2">${tipK('link_N', 'Новизна звена')}</th><th class="py-2 px-2">${tipK('records', 'Записи PubMed (за / против, вес)')}</th>
-            </tr></thead><tbody class="divide-y divide-stone-200">${linkRows(showP ? p : e, showP ? e : null)}</tbody></table></div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-              <div class="p-3 rounded-lg bg-stone-50 border border-stone-200 space-y-1.5">
-                <div><b class="text-emerald-800">▲ Вытягивает:</b> ${esc(p.lifts.join('; ') || '—')}</div>
-                <div><b class="text-red-800">▼ Занижает:</b> ${esc(p.lowers.join('; ') || '—')}</div>
-              </div>
-              <div class="p-3 rounded-lg bg-stone-50 border border-stone-200"><div class="font-bold mb-1">${tipK('alt', 'Альтернативные объяснения')} (I ${e ? f(p.I) + ' → ' + f(e.I) : f(p.I) + ', запас ' + f(p.I_headroom)})</div>
-                <ul class="list-disc pl-4 space-y-1 text-stone-700">${(p.alternatives || []).map(a => `<li>${esc(a.text)} — опора ${f(a.support)}; эксперимент при успехе: ${esc(nm('disc', a.on_positive))}, при неудаче: ${esc(nm('disc', a.on_negative))}${a.why ? `<br><span class="text-stone-500">${esc(a.why)}</span>` : ''}</li>`).join('') || '<li>нет</li>'}</ul></div>
-            </div>
-            <details class="rounded-lg border border-amber-300 bg-amber-50/60 p-3 text-xs">
-              <summary class="font-bold text-amber-950 cursor-pointer">${tipK('room', 'Запас улучшения')}: ${PROFS.map(pr => `${pr.label} +${f(p.room[pr.key])}`).join(', ')} — что поднимет оценку (пунктов: ${p.improvements.length})</summary>
-              <ul class="list-disc pl-4 space-y-1 mt-2">${p.improvements.map(i => `<li><b>${i.cls === 'rewrite' ? 'исправить формулировкой' : 'нужны новые данные'}:</b> ${esc(i.what)} <span class="text-emerald-900">${esc(i.expected)}</span>${i.facts.length ? ` <span class="text-stone-500">(${esc(i.facts.join(', '))})</span>` : ''}</li>`).join('') || '<li>нет</li>'}</ul>
-            </details>
-          </div>` : ''}
-        </div>`;
-      }).join('');
-      document.querySelectorAll('[data-toggle]').forEach(h => h.onclick = () => { const id = h.dataset.toggle; openCards.has(id) ? openCards.delete(id) : openCards.add(id); renderCards(); });
-      document.querySelectorAll('.mode-btn').forEach(b => b.onclick = ev => { ev.stopPropagation(); cardMode[b.dataset.mode] = b.dataset.val; renderCards(); });
-    }
-
-    // ---------- 3. evolution
-    function renderEvolution() {
-      const kids = DATA.results.filter(r => r.is_evolved && r.scored);
-      document.getElementById('evo-empty').classList.toggle('hidden', kids.length > 0);
-      document.getElementById('evo-head').closest('table').classList.toggle('hidden', !kids.length);
-      document.getElementById('evo-head').innerHTML = ['Пара', 'Режим', 'Баланс', 'Подтверждённость', 'Новизна и флаг', 'I', 'Размах', ...PROFS.map(p => 'Δ ' + p.label), ''].map(h => `<th class="py-2 px-2 whitespace-nowrap">${h}</th>`).join('');
-      document.getElementById('evo-tbody').innerHTML = kids.map(e => {
-        const p = byId[e.parent_id]; if (!p || !p.scored) return '';
-        return `<tr class="hover:bg-stone-50"><td class="py-2.5 px-2 font-bold text-[#1E4D40]">${esc(p.id)}<div class="font-normal text-stone-500 line-clamp-1 max-w-xs">${esc(p.title)}</div></td>
-          <td class="py-2.5 px-2">${e.evo_mode === 'free' ? tipK('free', 'свободная') : tipK('tuned', 'доработка')}</td>
-          <td class="py-2.5 px-2">${f(p.chain_state, 2)} → ${f(e.chain_state, 2)}</td><td class="py-2.5 px-2">${f(p.support_share)} → ${f(e.support_share)}</td>
-          <td class="py-2.5 px-2">${esc(nm('novelty', p.N || ''))} → ${esc(nm('novelty', e.N || ''))}${e.drift && e.drift.drift_to_known ? `<br>${tip(TIPS.drift + ' Причина: ' + e.drift.reasons.join('; '), '⚠ сдвиг к известному', 'px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 text-[10px] font-semibold')}` : ''}</td>
-          <td class="py-2.5 px-2">${f(p.I)} → ${f(e.I)}</td><td class="py-2.5 px-2">${esc(nm('scope', p.W))} → ${esc(nm('scope', e.W))}</td>
-          ${PROFS.map(pr => `<td class="py-2.5 px-2">${delta(e.aspid[pr.key].score - p.aspid[pr.key].score)}</td>`).join('')}
-          <td class="py-2.5 px-2"><button data-jump="${e.id}" class="px-2.5 py-1 rounded bg-stone-200 hover:bg-[#1E4D40] hover:text-white font-semibold">Карточка →</button></td></tr>`;
+      const items = scored().filter(r => !q || (r.id + ' ' + r.title + ' ' + (r.text || '')).toLowerCase().includes(q))
+        .sort((a, b) => (a.aspid[curProfile].place ?? 999) - (b.aspid[curProfile].place ?? 999));
+      document.getElementById('cards').innerHTML = items.map(r => {
+        const c = r.card_view || {}, pop = c.population || {}, ex = c.experiment || {};
+        const kv = (k, v) => v && v !== 'unknown' ? `<li><span class="text-stone-500">${k}:</span> ${esc(v)}</li>` : '';
+        const parent = r.is_evolved ? byId[r.parent_id] : null;
+        const changes = r.drift && r.drift.changes ? r.drift.changes.map(x => x.what_changed).filter(Boolean) : [];
+        return `<details id="card-${esc(r.id)}" class="bg-white rounded-xl border border-stone-200 shadow-sm">
+          <summary class="p-4 cursor-pointer"><span class="font-semibold text-[#1E4D40]">${esc(r.title)}</span> <span class="ml-1">${origin(r)}</span></summary>
+          <div class="px-4 pb-4 grid grid-cols-1 lg:grid-cols-2 gap-5 prose-r">
+            <div><h3>Текст гипотезы</h3>${textBlock(r.text) || `<p>${esc(r.plain || '')}</p>`}
+              ${parent ? `<h3>Чем отличается от исходной</h3><p>Версия гипотезы <a href="#" data-card="${esc(parent.id)}" class="underline">${esc(short(parent.title, 80))}</a> (${esc(MODE[r.evo_mode] || 'версия')}).</p>${changes.map(x => `<p>${esc(x)}</p>`).join('')}` : ''}</div>
+            <div><h3>Как гипотеза понята (карточка)</h3><ul>
+                ${kv('Вмешательство', (c.interventions || []).map(i => i.label + (i.regimen && i.regimen !== 'unknown' ? ', ' + i.regimen : '')).join('; '))}
+                ${kv('Популяция', [pop.label, pop.sex && pop.sex !== 'unknown' ? pop.sex : '', pop.age_at_start && pop.age_at_start !== 'unknown' ? pop.age_at_start : ''].filter(Boolean).join(', '))}
+                ${kv('Сравнение', c.comparator)}${kv('Исход', c.outcome)}</ul>
+              <h3>Механизм по шагам</h3><ol>${(c.links || []).map(l => `<li><span class="text-stone-500">${esc(nm('link', l.type))}:</span> ${esc(sentence(l))}${l.hallmark ? ` <span class="text-stone-500">(признак старения: ${esc(l.hallmark)})</span>` : ''}</li>`).join('')}</ol>
+              <h3>Заявленный эксперимент</h3><p>${esc(nm('exp_design', ex.design))}${ex.control && ex.control !== 'unknown' ? ', контроль: ' + esc(nm('control', ex.control)) : ''}${ex.n_planned ? ', плановая выборка ' + esc(ex.n_planned) : ''}${ex.primary_outcome && ex.primary_outcome !== 'unknown' ? '. Главный исход: ' + esc(ex.primary_outcome) : ''}.</p>
+              ${(c.alternatives || []).length ? `<h3>Альтернативные объяснения</h3><ul>${c.alternatives.map(a => `<li>${esc(sentence(a))}</li>`).join('')}</ul>` : ''}</div>
+            <div class="lg:col-span-2"><h3>Разбор</h3>${r.analysis ? textBlock(r.analysis) : '<p class="text-stone-500">Разбор обычным языком ещё не написан для этого пула.</p>'}
+              <p class="mt-2"><a href="#" data-eval="${esc(r.id)}" class="px-3 py-1.5 rounded-lg bg-[#1E4D40] text-white text-xs font-semibold no-underline">Оценка →</a></p></div>
+          </div></details>`;
       }).join('');
     }
 
-    // ---------- 4. pubmed
-    function renderPubmed() {
-      const q = document.getElementById('search-pubmed').value.trim().toLowerCase();
-      const items = DATA.pubmed.filter(p => !q || (p.pmid + ' ' + p.used_in.join(' ') + ' ' + (p.quote || '')).toLowerCase().includes(q));
-      const pages = Math.max(1, Math.ceil(items.length / PUB_PAGE)); pubPage = Math.min(pubPage, pages - 1);
-      document.getElementById('pub-title').textContent = `Статьи PubMed (${DATA.pubmed.length}) до даты среза ${DATA.meta.date}`;
-      document.getElementById('pubmed-list').innerHTML = items.slice(pubPage * PUB_PAGE, pubPage * PUB_PAGE + PUB_PAGE).map(p => `
-        <div class="p-3.5 rounded-xl bg-stone-50 border border-stone-200 space-y-1.5">
-          <div class="flex flex-wrap items-center justify-between gap-2"><a href="https://pubmed.ncbi.nlm.nih.gov/${p.pmid}/" target="_blank" rel="noopener" class="px-2.5 py-0.5 rounded bg-[#1E4D40] text-white text-xs font-bold">PMID ${p.pmid} ↗</a>
-            <span class="text-xs text-stone-600">${esc(nm('design', p.design))} · n ${p.n ?? 'не указано'} · ${p.sides.map(s => s === 'for' ? 'за' : 'против').join(' и ')}</span></div>
-          <blockquote class="pl-3 border-l-4 border-[#1E4D40] italic text-xs text-stone-800">«${esc(p.quote || '')}»</blockquote>
-          <div class="flex flex-wrap items-center gap-1.5"><span class="text-xs text-stone-500">Используется в:</span>${p.used_in.map(h => `<button data-jump="${h}" class="px-2 py-0.5 rounded bg-white border border-stone-300 text-xs font-semibold hover:bg-[#1E4D40] hover:text-white">${esc(h)}</button>`).join('')}</div>
-        </div>`).join('');
-      document.getElementById('pub-pager').innerHTML = `<button id="pp-prev" class="px-2 py-0.5 rounded border">‹</button><span>${pubPage + 1} / ${pages} · статей: ${items.length}</span><button id="pp-next" class="px-2 py-0.5 rounded border">›</button>`;
-      document.getElementById('pp-prev').onclick = () => { pubPage = Math.max(0, pubPage - 1); renderPubmed(); };
-      document.getElementById('pp-next').onclick = () => { pubPage = Math.min(pages - 1, pubPage + 1); renderPubmed(); };
+    // ---------- 3. evaluation (numbers)
+    const recBtn = r => `<button data-pmid="${r.pmid}" data-tip="${esc((r.side === 'for' ? 'ЗА' : 'ПРОТИВ') + ' · вес ' + f(r.w, 3) + ' · «' + (r.quote || '') + '»')}" class="inline-block mr-1 mb-1 px-2 py-0.5 rounded border text-xs ${r.side === 'for' ? 'bg-emerald-50 text-emerald-900 border-emerald-300' : 'bg-red-50 text-red-900 border-red-300'}">${r.side === 'for' ? 'за' : 'против'} ${r.pmid} · ${f(r.w)}</button>`;
+    function renderEval() {
+      const q = document.getElementById('search-eval').value.trim().toLowerCase();
+      const items = scored().filter(r => !q || (r.id + ' ' + r.title).toLowerCase().includes(q))
+        .sort((a, b) => (a.aspid[curProfile].place ?? 999) - (b.aspid[curProfile].place ?? 999));
+      document.getElementById('evals').innerHTML = items.map(r => {
+        const parent = r.is_evolved ? byId[r.parent_id] : null;
+        const prof = `<table class="tbl w-full text-sm"><thead><tr><th>Профиль</th><th>Балл</th><th>Место</th><th>В топ-5</th><th>Запас</th></tr></thead><tbody>${PROFS.map(p => { const a = r.aspid[p.key];
+          return `<tr><td>${esc(p.label)}</td><td>${f(a.score)}${parent ? ` <span class="text-stone-500">(исходная ${f(parent.aspid[p.key].score)})</span>` : ''}</td><td>${a.place ?? '—'} из ${a.of}</td><td>${a.p_top5 == null ? '—' : Math.round(a.p_top5 * 100) + '%'}</td><td>${sg(r.room[p.key])}${r.room_not_computed ? ' *' : ''}</td></tr>`; }).join('')}</tbody></table>`;
+        const ind = [['Баланс доказательств', sg(r.chain_state) + (r.cover ? ` · покрыто ${r.cover[0]} из ${r.cover[1]} мест цепочки` : '')],
+          ['Новизна', esc(nm('novelty', r.N || '')) + (r.N_pmid ? ` · задаёт <button data-pmid="${r.N_pmid}" class="underline text-blue-800">PMID ${r.N_pmid}</button>` : '')],
+          ['Информативность эксперимента', f(r.I) + (r.I_headroom != null ? ` · запас ${f(r.I_headroom)}` : '')], ['Размах механизма', esc(nm('scope', r.W))],
+          ['Реализуемость', f(r.feasibility)], ['Клиничность конечной точки', esc(nm('endpoint', r.endpoint || ''))], ['Роль ИИ', esc(nm('ai', r.ai_role))],
+          ['Рост внимания', sg(r.trend)], ['Лучший дизайн по исходу', esc(nm('design', r.best_design))], ['Независимые источники по исходу', r.independent ?? '—']];
+        const links = `<table class="tbl w-full text-sm"><thead><tr><th>Звено</th><th>Утверждение</th><th>F / A</th><th>S [90%]</th><th>Новизна звена</th><th>Записи</th></tr></thead><tbody>${r.links.map(l => `<tr>
+            <td class="whitespace-nowrap">${esc(nm('link', l.type))}</td><td>${esc(linkText(r, l))}</td><td class="whitespace-nowrap">${f(l.F)} / ${f(l.A)}</td>
+            <td class="whitespace-nowrap">${l.checked ? f(l.S) + ` [${f(l.ci[0])}; ${f(l.ci[1])}]` : 'нет данных'}</td><td>${esc(nm('novelty', l.novelty || ''))}</td>
+            <td>${l.records.length ? l.records.map(recBtn).join('') : '<span class="text-stone-400">нет</span>'}</td></tr>`).join('')}</tbody></table>`;
+        const alts = (r.alternatives || []).length ? `<table class="tbl w-full text-sm"><thead><tr><th>Альтернатива</th><th>Опора</th><th>Эксперимент при успехе</th><th>при неудаче</th></tr></thead><tbody>${r.alternatives.map((a, i) => `<tr><td>${esc(((r.card_view || {}).alternatives || [])[i] ? sentence(r.card_view.alternatives[i]) : a.text)}</td><td>${f(a.support)}</td><td>${esc(nm('disc', a.on_positive))}</td><td>${esc(nm('disc', a.on_negative))}</td></tr>`).join('')}</tbody></table>` : '<p class="text-sm text-stone-500">Альтернативы не предложены.</p>';
+        const flags = (r.flags || []).length ? `<ul class="list-disc pl-5 text-sm">${r.flags.map(x => `<li><b>${esc(x.name)}</b>${x.detail ? ': ' + esc(x.detail) : ''}</li>`).join('')}</ul>` : '<p class="text-sm text-stone-500">Флагов нет.</p>';
+        const imps = (r.improvements || []).length ? `<ul class="list-disc pl-5 text-sm">${r.improvements.map(i => `<li><b>${i.cls === 'rewrite' ? 'исправить формулировкой' : 'нужны новые данные'}:</b> ${esc(i.what)} <span class="text-emerald-900">${esc(i.expected)}</span>${i.facts.length ? ` <span class="text-stone-500">(${esc(i.facts.join(', '))})</span>` : ''}</li>`).join('')}</ul>` : '<p class="text-sm text-stone-500">Пунктов нет.</p>';
+        const d = r.drift;
+        const evo = parent ? `<h4 class="font-bold text-[#1E4D40] mt-4 mb-1">Проверки версии</h4><ul class="list-disc pl-5 text-sm">
+            <li>Режим: ${esc(MODE[d && d.mode] || MODE[r.evo_mode] || 'версия')}; исходная — <a href="#" data-eval="${esc(parent.id)}" class="underline">${esc(short(parent.title, 70))}</a></li>
+            <li>Новизна: ${esc(nm('novelty', parent.N || ''))} → ${esc(nm('novelty', r.N || ''))}${d && d.drift_to_known ? ' · сдвиг к известному: ' + esc((d.reasons || []).join('; ')) : ''}</li>
+            ${d && d.known_share ? `<li>Доля звеньев с опорой до даты среза: ${f(d.known_share[0])} → ${f(d.known_share[1])}</li>` : ''}
+            <li>Баланс: ${sg(parent.chain_state)} → ${sg(r.chain_state)}; I: ${f(parent.I)} → ${f(r.I)}; размах: ${esc(nm('scope', parent.W))} → ${esc(nm('scope', r.W))}</li></ul>` : '';
+        return `<details id="eval-${esc(r.id)}" class="bg-white rounded-xl border border-stone-200 shadow-sm">
+          <summary class="p-4 cursor-pointer"><span class="font-semibold text-[#1E4D40]">${esc(r.title)}</span> <span class="ml-1">${origin(r)}</span></summary>
+          <div class="px-4 pb-4 space-y-3">
+            <p><a href="#" data-card="${esc(r.id)}" class="text-xs underline">← Карточка</a></p>
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-4"><div><h4 class="font-bold text-[#1E4D40] mb-1">Оценка в профилях</h4>${prof}</div>
+              <div><h4 class="font-bold text-[#1E4D40] mb-1">Показатели</h4><table class="tbl w-full text-sm"><tbody>${ind.map(([k, v]) => `<tr><td class="text-stone-600">${k}</td><td>${v}</td></tr>`).join('')}</tbody></table></div></div>
+            <h4 class="font-bold text-[#1E4D40]">Звенья цепочки и записи из статей</h4><div class="overflow-x-auto">${links}</div>
+            <h4 class="font-bold text-[#1E4D40]">Альтернативные объяснения</h4><div class="overflow-x-auto">${alts}</div>
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-4"><div><h4 class="font-bold text-[#1E4D40] mb-1">Флаги</h4>${flags}</div><div><h4 class="font-bold text-[#1E4D40] mb-1">Что поднимет оценку</h4>${imps}</div></div>
+            ${evo}
+          </div></details>`;
+      }).join('');
+    }
+
+    // ---------- 4. scheme (simplified; the full one: docs/system/)
+    const STEPS = [
+      ['Карточка гипотезы', 'Модель разбирает текст в карточку: вмешательство, популяция, цепочка шагов механизма, заявленный эксперимент.', 'Устойчивость к перефразированию и сверка с ручными карточками.'],
+      ['Поиск статей', 'Для каждого шага ищутся статьи PubMed до даты среза.', 'Поиск находит 95% ключевых статей второго читателя; узкое место — чтение.'],
+      ['Чтение статьи', 'Статья разбирается один раз в «костяк»: группы, исходы, результаты с дословными цитатами; шаги гипотезы сопоставляются с находками.', 'Против второго читателя: полнота 0.52, точность 0.85; поля дизайна и выборки совпадают в 92–96%.'],
+      ['Вес находки', 'Вес по доменам GRADE: дизайн, точность, эффект, сравнение, контекст.', 'Упорядочивает более поздние испытания того же шага (AUC 0.70).'],
+      ['Сила шага и баланс', 'Находки «за» и «против» складываются в силу шага; баланс — среднее по шагам с данными.', 'Против исходов прошлых испытаний различает слабо (AUC 0.59); главная проверка — проспективный пул.'],
+      ['Новизна', 'Насколько вопрос далёк от уже заданного до даты среза.', 'Сверена со вторым читателем: завышена, читать с оговоркой.'],
+      ['Эксперимент', 'Какие подкреплённые альтернативные объяснения отсекает заявленный эксперимент.', 'Согласие со вторым читателем каппа 0.35 на отложенной выборке.'],
+      ['Ранжирование', 'Профиль задаёт порядок важности; веса разыгрываются, балл — среднее, «в топ-5» — устойчивость места.', 'Каждый показатель допускается в профиль только после проверки надёжности и неизбыточности.'],
+      ['Что улучшить и эволюция', 'Список исправимых пунктов и версии гипотез по правилам, которые проверяет код.', 'Восемь правил эволюции проверяются кодом для каждой версии.'],
+      ['Чистая проверка', '60 идущих испытаний оценены и заморожены до их результатов.', 'Результаты придут в 2026–2028 годах.'],
+    ];
+    function renderScheme() {
+      document.getElementById('scheme').innerHTML = STEPS.map(([t, what, check], i) => `<div class="bg-white rounded-xl border border-stone-200 p-4 step">
+        <div class="text-xs text-stone-500">Шаг ${i + 1}</div><div class="font-semibold text-[#1E4D40]">${esc(t)}</div>
+        <p class="text-sm mt-1">${esc(what)}</p><p class="text-sm mt-1 text-stone-600"><span class="font-semibold">Чем проверено:</span> ${esc(check)}</p></div>`).join('');
     }
 
     // ---------- 5. help (dynamic parts)
     function renderHelp() {
-      const inds = [];
-      PROFS.forEach(p => (p.tiers || []).flat().forEach(k => { if (!inds.includes(k)) inds.push(k); }));
-      const lvl = (p, k) => { const i = (p.tiers || []).findIndex(t => t.includes(k)); return i < 0 ? '—' : `<b>${i + 1}</b>`; };
-      const matrix = `<p>Цифра — уровень важности в профиле (1 — главный); внутри уровня признаки равноправны, веса разыгрываются под этим порядком; «—» — признак в профиле не участвует.</p>
-        <div class="overflow-x-auto"><table><thead><tr><th>Признак</th>${PROFS.map(p => `<th>${esc(p.label)}</th>`).join('')}</tr></thead>
-        <tbody>${inds.map(k => `<tr><td>${esc(k)}</td>${PROFS.map(p => `<td style="text-align:center">${lvl(p, k)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
-      document.getElementById('help-profiles').innerHTML = matrix + '<ul>' + PROFS.map(p => `<li><b>${esc(p.label)}</b>: ${esc(p.order)}. ${esc(p.about)}</li>`).join('') + '</ul>';
+      const inds = []; PROFS.forEach(p => p.tiers.flat().forEach(k => { if (!inds.includes(k)) inds.push(k); }));
+      const rk = (p, k) => { const i = p.tiers.findIndex(t => t.includes(k)); return i < 0 ? '—' : i + 1; };
+      document.getElementById('help-profiles').innerHTML = `<p>Число — ранг важности показателя в профиле (1 — главный; при равных рангах показатели равноправны); «—» — показатель в профиль не входит. Точные веса не задаются: они разыгрываются много раз в пределах этого порядка.</p>
+        <div class="overflow-x-auto"><table class="tbl"><thead><tr><th>Показатель</th>${PROFS.map(p => `<th>${esc(p.label)}</th>`).join('')}</tr></thead>
+        <tbody>${inds.map(k => `<tr><td>${esc(cap1(k))}</td>${PROFS.map(p => `<td style="text-align:center">${rk(p, k)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+        <ul>${PROFS.map(p => `<li><b>${esc(p.label)}</b>: ${esc(p.about)}</li>`).join('')}</ul>`;
       document.getElementById('glossary').innerHTML = DATA.glossary.map(g => `<dt class="font-semibold">${esc(g.term)}</dt><dd class="text-stone-600">${esc(g.text)}</dd>`).join('');
       const m = DATA.meta;
-      document.getElementById('help-prov').textContent = `Дата среза ${m.date}; литература — только до неё. Метод: ${m.method}. Оценено ${m.n_scored} из ${m.n}; исходы прогона: ${JSON.stringify(m.outcomes)}. Хеш оценок SHA-256 ${m.sha}.`;
+      document.getElementById('help-prov').textContent = `Дата среза ${m.date}; литература — только до неё. Метод: ${m.method}. Оценено ${m.n_scored} из ${m.n}. Хеш оценок SHA-256 ${m.sha}.`;
     }
 
-    // ---------- init
     (function init() {
       const m = DATA.meta;
       document.getElementById('hdr-title').textContent = m.title;
-      document.getElementById('hdr-meta').textContent = `Дата среза T = ${m.date} · оценено ${m.n_scored} из ${m.n}`;
-      document.getElementById('rank-about').textContent = m.about + ' Нажмите на строку — откроется карточка гипотезы.';
-      document.getElementById('profile-tabs').innerHTML = PROFS.map(p => `<button data-profile="${p.key}" class="prof-btn px-3 py-1.5 rounded-lg text-xs ${p.key === curProfile ? 'tab-active' : 'tab-inactive'}">${esc(p.label)}</button>`).join('');
-      document.querySelectorAll('.prof-btn').forEach(b => b.onclick = () => { curProfile = b.dataset.profile; rankPage = 0;
-        document.querySelectorAll('.prof-btn').forEach(x => x.className = 'prof-btn px-3 py-1.5 rounded-lg text-xs ' + (x.dataset.profile === curProfile ? 'tab-active' : 'tab-inactive')); renderRanking(); });
+      document.getElementById('hdr-meta').textContent = `Дата среза ${m.date} · оценено ${m.n_scored} из ${m.n}`;
+      const setProf = k => { curProfile = k; rankPage = 0; document.querySelectorAll('.prof-btn').forEach(x => x.className = 'prof-btn px-3.5 py-1.5 rounded-full text-sm ' + (x.dataset.profile === k ? 'tab-active' : 'tab-inactive')); renderRanking(); };
+      document.getElementById('profile-tabs').innerHTML = PROFS.map(p => `<button data-profile="${p.key}" class="prof-btn">${esc(p.label)}</button>`).join('');
+      document.querySelectorAll('.prof-btn').forEach(b => b.onclick = () => setProf(b.dataset.profile));
       const types = [...new Set(DATA.results.map(r => r.type).filter(Boolean))].sort();
       document.getElementById('filter-type').innerHTML = '<option value="">Все типы вмешательств</option>' + types.map(t => `<option value="${esc(t)}">${esc((DATA.results.find(r => r.type === t) || {}).type_ru || t)}</option>`).join('');
-      ['filter-status', 'filter-type', 'search-ranking'].forEach(id => document.getElementById(id).addEventListener('input', () => { rankPage = 0; renderRanking(); }));
+      ['filter-origin', 'filter-type', 'search-ranking'].forEach(id => document.getElementById(id).addEventListener('input', () => { rankPage = 0; renderRanking(); }));
       document.getElementById('search-cards').addEventListener('input', renderCards);
-      document.getElementById('search-pubmed').addEventListener('input', () => { pubPage = 0; renderPubmed(); });
+      document.getElementById('search-eval').addEventListener('input', renderEval);
       document.querySelectorAll('#main-nav .nav-btn').forEach(b => b.onclick = () => switchView(b.dataset.view));
-      document.getElementById('btn-expand-all').onclick = () => { DATA.results.filter(r => !r.is_evolved && r.scored).forEach(p => openCards.add(p.id)); renderCards(); };
-      document.getElementById('btn-collapse-all').onclick = () => { openCards.clear(); renderCards(); };
       const close = () => { const md = document.getElementById('pmid-modal'); md.classList.add('hidden'); md.classList.remove('flex'); };
       document.getElementById('modal-close').onclick = close;
       document.getElementById('pmid-modal').onclick = e => { if (e.target.id === 'pmid-modal') close(); };
       const un = DATA.results.filter(r => !r.scored);
-      document.getElementById('unscored').textContent = un.length ? 'Не вошли в рейтинг: ' + un.map(r => `${r.id} (${r.outcome === 'filtered' ? 'отсечена правилом опровержения' : r.outcome})`).join(', ') : '';
-      rankHead(); renderRanking(); renderCards(); renderEvolution(); renderPubmed(); renderHelp(); switchView('ranking');
+      document.getElementById('unscored').textContent = un.length ? 'Не вошли в рейтинг: ' + un.map(r => `${r.title || r.id} (${r.outcome === 'filtered' ? 'опровергнута данными' : r.outcome === 'known_result' ? 'результат уже известен' : 'не оценена'})`).join('; ') : '';
+      setProf(curProfile); renderCards(); renderEval(); renderScheme(); renderHelp(); switchView('ranking');
     })();
   </script>
 </body>

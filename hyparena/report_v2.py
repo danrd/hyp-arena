@@ -1,5 +1,5 @@
-"""Pool report, second layout (user decision 2026-11-07: take the outside reader's (Argon's) report as the base and correct it
-towards the method: Russian names instead of codes, every evolution pair, a fuller help).
+"""Pool report, second layout (user decision 2026-11-07, reshaped 2026-11-11: five tabs — ranking, hypothesis cards (text
+only), evaluation (numbers), how it works, help in two levels; text and numbers kept apart; method manual section 10).
 
     python -m hyparena.report_v2 prospective [--n 60] [--out FILE]
 
@@ -52,6 +52,44 @@ def _expected_text(i: dict) -> str:
     return (ind + "; " if ind else "") + "оценка: " + sc
 
 
+RELATION_RU = {
+    "extends_lifespan_in": "продлевает жизнь у", "shortens_lifespan_in": "сокращает жизнь у",
+    "no_lifespan_effect_in": "не меняет продолжительность жизни у", "slows_aging_in": "замедляет старение у",
+    "improves_healthspan_in": "улучшает здоровье и функции у", "changes_biomarker": "меняет показатель",
+    "predicts": "предсказывает", "inhibits": "подавляет", "activates": "активирует",
+    "increases_expression": "повышает экспрессию", "decreases_expression": "снижает экспрессию", "promotes": "усиливает",
+    "suppresses": "ослабляет", "part_of": "входит в", "associated_with": "связано с",
+    "affects_hallmark": "влияет на признак старения", "translates_to": "переносится на", "other": "связано с"}
+DESIGN_RU = {"rct": "рандомизированное контролируемое испытание", "cluster_rct": "кластерное рандомизированное испытание",
+             "single_arm": "одна группа без контроля", "pilot": "пилотное исследование", "observational": "наблюдательное",
+             "other": "другой дизайн", "unknown": "не указан"}
+CONTROL_RU = {"placebo": "плацебо", "active": "активный контроль", "usual_care": "обычная помощь", "none": "без контроля",
+              "unknown": "не указан"}
+RESULT_KEY = {"chain_state": "chain_state", "N": "N", "I": "I", "W": "W", "feasibility": "feasibility", "trend_pubmed": "trend",
+              "ai_role": "ai_role", "best_design_outcome": "best_design", "independent_outcome": "independent",
+              "endpoint_clinical": "endpoint"}
+
+
+def slot_coverage(links: list[dict]) -> list[int]:
+    """[slots with data, slots] as rules_v32 counts them: consecutive pathway links are one slot, the outcomes one slot
+    (the primary when there is one); a slot has data when one of its links has a counting record."""
+    outs = [l for l in links if l["type"] == "outcome"]
+    slots, run = [], []
+    for l in links + [None]:
+        if l is not None and l["type"] == "pathway":
+            run.append(l)
+            continue
+        if run:
+            slots.append(run)
+            run = []
+        if l is not None and l["type"] != "outcome":
+            slots.append([l])
+    if outs:
+        prim = [l for l in outs if l.get("primary")]
+        slots.append(prim or outs)
+    return [sum(1 for sl in slots if any(l["checked"] for l in sl)), len(slots)]
+
+
 def _link(c: dict, levels: dict) -> dict:
     R = r32.non_refutation(c["F"], c["A"])
     return {"id": c["id"], "type": c["link"], "claim": c["text"], "hallmark": c.get("hallmark"), "F": c["F"], "A": c["A"],
@@ -62,7 +100,7 @@ def _link(c: dict, levels: dict) -> dict:
                          "w": r["w"], "f": r.get("f"), "quote": r["quote"]} for r in c["records"]]}
 
 
-def data(rep: dict) -> dict:
+def data(rep: dict, analyses: Optional[dict] = None) -> dict:
     H, m = rep["hyps"], rep["meta"]
     profiles = aspid_v3.load()
     evo = rep.get("evolution") or {}
@@ -106,7 +144,10 @@ def data(rep: dict) -> dict:
             "aspid": {p: {"score": x["aspid"].get(p), "place": x["rank"].get(p), "of": n_ranked[p], "p_top5": x["p_top5"].get(p)}
                       for p in profiles},
             "drift": drift_of.get(h),
+            "text": x.get("text", ""), "card_view": x.get("card_view"),
+            "analysis": (analyses or {}).get(h),
         })
+        base["cover"] = slot_coverage(base["links"])
         results.append(base)
         for c in x["chain"]:
             for r in c["records"]:
@@ -124,12 +165,15 @@ def data(rep: dict) -> dict:
         "meta": {"title": m["title_ru"], "about": m["about_ru"], "date": m["date"], "method": m["method"], "sha": m["sha"],
                  "n": m["n"], "n_scored": m["n_scored"], "outcomes": m["outcomes"]},
         "profiles": [{"key": p, "label": PROFILE_LABEL.get(p, p), "about": PROFILE_ABOUT.get(p, ""), "order": _order_text(prof.tiers),
-                      "tiers": [[_ind_name(k) for k in t] for t in prof.tiers]}
+                      "tiers": [[_ind_name(k) for k in t] for t in prof.tiers],
+                      "tier_keys": [[RESULT_KEY.get(k, k) for k in t] for t in prof.tiers]}
                      for p, (prof, _) in profiles.items()],
         "names": {"novelty": {k or "": v[0] for k, v in rh.NOVELTY_NAMES.items()}, "scope": {k: v[0] for k, v in rh.SCOPE_NAMES.items()},
                   "endpoint": {(k or ""): v[0] for k, v in rh.ENDPOINT_NAMES.items()}, "ai": {k: v[0] for k, v in rh.AI_NAMES.items()},
                   "link": {k: v[0] for k, v in rh.LINK_NAMES.items()}, "design": {k: v[0] for k, v in rh.DESIGN_NAMES.items()},
-                  "disc": {k: v[0] for k, v in rh.DISC.items()}, "flags": {k: v[0] for k, v in FLAG_NAMES.items()}},
+                  "disc": {k: v[0] for k, v in rh.DISC.items()}, "flags": {k: v[0] for k, v in FLAG_NAMES.items()},
+                  "relation": RELATION_RU, "exp_design": DESIGN_RU, "control": CONTROL_RU,
+                  "ind": {RESULT_KEY.get(k, k): _ind_name(k) for k in RESULT_KEY}},
         "tips": {k: rh.t_ru(v) for k, v in {**rh.TIPS, **rh.GLOSSARY_EXTRA}.items() if k not in hidden},
         "results": results, "pubmed": sorted(pubmed.values(), key=lambda e: e["pmid"]), "glossary": glossary,
     }
@@ -183,8 +227,8 @@ FLAG_NAMES = {
 }
 
 
-def render(rep: dict) -> str:
-    d = data(rep)
+def render(rep: dict, analyses: Optional[dict] = None) -> str:
+    d = data(rep, analyses)
     body = json.dumps(d, ensure_ascii=False, default=str).replace("</", "<\\/")
     return TEMPLATE.read_text(encoding="utf-8").replace("__DATA__", body).replace("__TITLE__", rh.e(d["meta"]["title"]))
 
@@ -197,7 +241,8 @@ def main() -> None:
     a = ap.parse_args()
     rep, default = rh.prospective(a.n)
     out = Path(a.out or default.replace(".html", "_v2.html"))
-    out.write_text(render(rep), encoding="utf-8")
+    af = Path(default).with_name(f"analysis_{a.n}.json")     # plain-language analyses (cards tab), written by a model when run
+    out.write_text(render(rep, json.loads(af.read_text()) if af.exists() else None), encoding="utf-8")
     print(out, round(out.stat().st_size / 1024), "KB")
 
 

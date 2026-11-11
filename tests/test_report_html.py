@@ -24,9 +24,13 @@ def test_report_v2_renders_an_empty_pool_and_keeps_the_template_hooks():
     from hyparena import report_v2 as r2
     from hyparena.card import aspid_v3
     tpl = r2.TEMPLATE.read_text()
-    for hook in ("__DATA__", "__TITLE__", 'id="ranking-tbody"', 'id="cards-container"', 'id="glossary"', 'id="tt"'):
+    for hook in ("__DATA__", "__TITLE__", 'id="rank-body"', 'id="cards"', 'id="evals"', 'id="scheme"', 'id="glossary"', 'id="tt"'):
         assert hook in tpl
     assert "Топ-1" not in tpl and "top-3" not in tpl.lower()
+    # manual section 10 (2026-11-11): five tabs, ranks of importance, no internal profile codes
+    for tab in ("Рейтинг", "Карточки гипотез", "Оценка карточек", "Схема работы", "Справка"):
+        assert f">{tab}</button>" in tpl
+    assert "ранг важности" in tpl and "trial-" not in tpl
     rep = {"meta": {"title_ru": "Пул", "title_en": "Pool", "about_ru": "", "about_en": "", "date": "2026-11-06", "method": "v3.4",
                     "sha": "0" * 64, "n": 0, "n_scored": 0, "outcomes": {}}, "hyps": {}, "ranks": {p: [] for p in aspid_v3.load()}}
     html = r2.render(rep)
@@ -34,3 +38,6 @@ def test_report_v2_renders_an_empty_pool_and_keeps_the_template_hooks():
     d = r2.data(rep)
     assert {g["term"] for g in d["glossary"]} >= {"запас улучшения", "новизна", "баланс доказательств", "сдвиг к известному"}
     assert "неопровергнутость механизма" not in {g["term"] for g in d["glossary"]}
+    assert all("tier_keys" in p for p in d["profiles"]) and "relation" in d["names"]
+    assert r2.slot_coverage([{"type": "engagement", "checked": True}, {"type": "pathway", "checked": False},
+                             {"type": "pathway", "checked": True}, {"type": "outcome", "checked": False, "primary": True}]) == [2, 3]
