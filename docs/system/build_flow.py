@@ -38,7 +38,7 @@ STAGES = [
          own=["Доля эталонных статей среди найденных."],
          base_llm=["Ссылки, которые LLM даёт без поиска: существуют ли, до T ли."],
          why=["Запросы модели находят эталонные статьи втрое чаще ключевых слов."]),
-    dict(name="4. Чтение статей", kind="llm",
+    dict(name="4. Чтение статей", basis="поля находки — как сбор данных в Cochrane [9]; «за / против» по звену с дословной опорой — как evidence inference [10] и SciFact [11]", kind="llm",
          base=["Из статьи — находка по звену: за или против,",
                "с дословной цитатой, дизайном и размером выборки."],
          llm=["Решает, сообщает ли статья свой результат по звену, и выписывает его."],
@@ -91,7 +91,7 @@ STAGES = [
          own=["Ожидаемый прирост против полученного; внешний читатель по парам."],
          base_llm=["«LLM, улучши гипотезу» без правил; судьи по парам."],
          why=["Без правил прирост получается подгонкой к найденным статьям."]),
-    dict(name="11. Сквозная проверка", kind="code",
+    dict(name="11. Сквозная проверка", basis="предрегистрация [12]; проспективная (временная) проверка модели прогноза [13]", kind="code",
          base=["Оценки пула закреплены хешем до результатов испытаний;",
                "порядок оценок сравнивается с исходами."],
          code=["Хеш файла оценок; исходы собираются из реестров."],
@@ -110,6 +110,11 @@ REFS = [
     "FDA-NIH Biomarker Working Group. BEST (Biomarkers, EndpointS, and other Tools) Resource.",
     "Lahdelma R, Hokkanen J, Salminen P. SMAA. Eur J Oper Res 1998;106:137-43.",
     "Хованов Н.В. Анализ и синтез показателей при информационном дефиците (АСПИД), СПбГУ.",
+    "Li T, Higgins JPT, Deeks JJ. Collecting data. Cochrane Handbook for Systematic Reviews of Interventions, ch. 5.",
+    "Lehman E, DeYoung J, Barzilay R, Wallace BC. Inferring which medical treatments work from reports of clinical trials (evidence inference). NAACL 2019:3705-17.",
+    "Wadden D et al. Fact or fiction: verifying scientific claims (SciFact). EMNLP 2020:7534-50.",
+    "Nosek BA et al. The preregistration revolution. PNAS 2018;115:2600-6.",
+    "Moons KG et al. TRIPOD: explanation and elaboration. Ann Intern Med 2015;162:W1-73 (виды проверки модели, в т. ч. временная).",
 ]
 
 VARIANTS = {"base": [], "impl": ["impl"], "check": ["check"], "full": ["impl", "check", "why"]}
