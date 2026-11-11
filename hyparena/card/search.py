@@ -26,6 +26,19 @@ def _dated(pmids: list[str], as_of: Optional[str]) -> list[str]:
     return [p for p in pmids if p in d and d[p] <= as_of]
 
 
+ORGANISM_RELATIONS = ("improves_healthspan_in", "extends_lifespan_in", "shortens_lifespan_in", "slows_aging_in",
+                      "no_lifespan_effect_in")
+
+
+def link_outcome(claim) -> str:
+    """The outcome line of the query prompt is the link's own object (its measure where the object is the organism), not all
+    outcomes of the trial (user decision 2026-11-11: on H49 the body-composition link got queries about SPPB)."""
+    if claim.relation in ORGANISM_RELATIONS:
+        m = claim.qualifiers.get("measure", "")
+        return m if m and m != "unknown" else claim.relation.replace("_in", "").replace("_", " ")
+    return claim.object.label
+
+
 def model_queries(client, family: str, avoid, claim, card, as_of: Optional[str], log: Optional[list] = None) -> list[str]:
     from hyparena.card.llm import ask
     from hyparena.card.search_vocab import filter_query, vocabulary
@@ -33,7 +46,7 @@ def model_queries(client, family: str, avoid, claim, card, as_of: Optional[str],
     variables = {"as_of": as_of or "today", "claim_plain": card.claim_plain, "claim": claim,
                  "qualifiers": ", ".join(f"{k}: {v}" for k, v in claim.qualifiers.items() if v and v != "unknown"),
                  "intervention": "; ".join(i.label for i in p.intervention) or claim.subject.label,
-                 "population": p.population.label, "outcome": p.outcome.metric or claim.object.label}
+                 "population": p.population.label, "outcome": link_outcome(claim)}
     if claim.note == ALTERNATIVE_NOTE:      # a competing explanation is searched on its own terms, not the hypothesis's
         variables.update({"claim_plain": f"a competing explanation of the hypothesis's result: {claim.subject.label} — "
                                          f"{claim.relation} — {claim.object.label}",

@@ -41,3 +41,14 @@ def test_keyword_queries_add_lifespan_only_to_lifespan_claims():
     life = Claim(id="c9", subject={"label": "squat exercise"}, relation="extends_lifespan_in", object={"label": "mouse"},
                  role="premise", source_span="")
     assert any("lifespan" in q for q in queries(life, CARD))
+
+
+def test_the_outcome_line_is_the_link_own_object(monkeypatch):
+    seen = _seen(monkeypatch)
+    c2 = Claim(id="c2", subject={"label": "squat exercise"}, relation="changes_biomarker", object={"label": "body composition"},
+               role="premise", link="outcome", source_span="x")
+    model_queries(None, "f", frozenset(), c2, CARD, "2026-11-06")
+    assert seen["outcome"] == "body composition"
+    c1 = CARD.claims[0].model_copy(update={"qualifiers": {"measure": "physical performance"}})
+    model_queries(None, "f", frozenset(), c1, CARD, "2026-11-06")
+    assert seen["outcome"] == "physical performance"
