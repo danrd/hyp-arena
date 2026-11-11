@@ -70,6 +70,13 @@ RESULT_KEY = {"chain_state": "chain_state", "N": "N", "I": "I", "W": "W", "feasi
               "endpoint_clinical": "endpoint"}
 
 
+def ru_claims(text: str) -> str:
+    """'subject — promotes — object' (the chain's link text in English codes) as 'subject усиливает object'."""
+    for rel, ru in RELATION_RU.items():
+        text = text.replace(f" — {rel.replace('_', ' ')} — ", f" {ru} ")
+    return text
+
+
 def slot_coverage(links: list[dict]) -> list[int]:
     """[slots with data, slots] as rules_v32 counts them: consecutive pathway links are one slot, the outcomes one slot
     (the primary when there is one); a slot has data when one of its links has a counting record."""
@@ -136,7 +143,7 @@ def data(rep: dict) -> dict:
             "alternatives": x.get("alternatives", []),
             "lifts": [f"{_ind_name(i)} (лучше, чем у {round((x['pct'].get(i) or 0) * 100)}% пула)" for i in lifts],
             "lowers": [f"{_ind_name(i)} (лучше, чем у {round((x['pct'].get(i) or 0) * 100)}% пула)" for i in lowers],
-            "improvements": [{"cls": i["cls"], "what": i["what"][0], "expected": _expected_text(i),
+            "improvements": [{"cls": i["cls"], "what": ru_claims(i["what"][0]), "expected": _expected_text(i),
                               "facts": [f"PMID {f['pmid']} ({'за' if f['side'] == 'for' else 'против'})" for f in i.get("facts", [])]}
                              for i in x.get("improvements") or []],
             "room": {p: round(b - a, 4) for p, (a, b) in (room.get("score") or {}).items()},
@@ -214,7 +221,7 @@ def flag_details(x: dict) -> list[dict]:
             code = "established_by_approval"
             detail = (f"Звено «{c['text']}» принято как умеренно подтверждённое без поиска: вещество одобрено (ChEMBL, фаза 4) "
                       "и действует на названную в звене мишень.") if c else ""
-        out.append({"code": code, "name": FLAG_NAMES.get(code, (code,))[0], "detail": detail})
+        out.append({"code": code, "name": FLAG_NAMES.get(code, (code,))[0], "detail": ru_claims(detail)})
     return out
 
 

@@ -115,3 +115,10 @@ stage_0_amended_2026_11_10:   # user decision 2026-11-10: include the ambiguous-
     'multi-component nutritional formula', a Mediterranean diet as 'nutritional supplements'), two look like incomplete
     parses (only control comparisons). go_to_stage_1 rule met (recall >= 0.52, precision >= 0.65); stage 1 needs the
     user's go and a named price
+  argon_pack15_2026_11_11: >-
+    outside check of 30 parsed papers (longevity-kg reviews/argon-2026-11-11, pack_15_analysis.json): the skeleton holds the
+    results (recall of results rows 0.93: 26 missing against 360 true rows; 66 rows are not results of the study), but 378 of
+    426 rows have a wrong or empty field, and 459 of 609 field errors are fields our quote checks emptied (comparison,
+    direction, outcome name, significance); Argon rates 0 skeletons usable as they are, 13 partly, 17 not. The checks are
+    too strict for matching: fix them (Codex task 2026-11-11, part 2.3) before stage 1. Part C: 3 of the 4 failed papers have
+    long subgroup tables, the fourth is a protocol without results.

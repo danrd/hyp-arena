@@ -25,4 +25,8 @@ check:
     pack9: "recall, precision and direction against Argon as in stage 0; Argon's 'class' findings split into our class / category / other; how many of the 10 losses come back as category records (weight 1/2)"
     argon_pack15: "Argon labels a sample of pairs with the same four levels blind to our answers (longevity-kg reviews/argon-2026-11-11/): weighted kappa of the level"
   adopt_if: "agreement with Argon on the level (weighted kappa) above the v3.6 class label's 0.10 by a clear margin (at least 0.4), and recall not lower than stage 0's 0.52; R2 / R3 when the skeleton runs on the pools (stage 1)"
-result: pending
+result:   # 2026-11-11; paid 0.106 USD (pair model v2 on the 1 725 stage-0 pairs, parse reused)
+  pack9: "recall 0.52 (11 of 21, unchanged), precision 0.85, direction 10 of 11 (v1: 9 of 11); the 10 losses stay: the model calls most of Argon's 'class' papers 'other'"
+  argon_pack15_part_b: "80 pairs blind: weighted kappa of the level with Argon 0.551 (v1 without 'category': 0.497), raw agreement 0.51, stance 0.89; the main disagreement: ours 'other' where Argon says 'category' (16 of 80), ours 'exact' where Argon says 'class' (10); Argon uses 'category' for 27 of 80"
+  levels_in_v2_answers: "other 1 350, class 133, exact 132, category 110 of 1 725 pairs"
+  adopt_rule: "met (kappa at least 0.4, recall not lower than 0.52); R2 / R3 wait for stage 1; adoption is the user's decision"
