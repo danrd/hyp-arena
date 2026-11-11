@@ -361,7 +361,7 @@
     const recBtn = r => `<button data-pmid="${r.pmid}" data-tip="${esc((r.side === 'for' ? 'ЗА' : 'ПРОТИВ') + ' · вес ' + f(r.w, 3) + ' · «' + (r.quote || '') + '»')}" class="inline-block mr-1 mb-1 px-2 py-0.5 rounded border text-xs ${r.side === 'for' ? 'bg-emerald-50 text-emerald-900 border-emerald-300' : 'bg-red-50 text-red-900 border-red-300'}">${r.side === 'for' ? 'за' : 'против'} ${r.pmid} · ${f(r.w)}</button>`;
     function versionBlock(r, parent) {
       const d = r.drift || {};
-      const NOV = ['new_context', 'translation', 'analog', 'new_combination', 'new_link'], SC = ['local', 'organ', 'hallmark'];
+      const NOV = ['new_context', 'translation', 'analog', 'new_mechanism', 'new_combination', 'new_link'], SC = ['local', 'organ', 'hallmark'];
       const row = (name, a, b, what) => `<tr><td class="text-stone-600">${name}</td><td class="whitespace-nowrap">${a} → ${b}</td><td>${what}</td></tr>`;
       // scores: one line that says where the version gained or lost
       const ds = PROFS.map(p => [p.label, (r.aspid[p.key].score ?? 0) - (parent.aspid[p.key].score ?? 0)]);

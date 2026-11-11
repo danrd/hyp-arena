@@ -1,4 +1,4 @@
-"""Builds docs/system/scheme.drawio: the whole system on one page (method v3.8). Each step: what is done, what a language model
+"""Builds docs/system/scheme.drawio: the whole system on one page (method v3.9). Each step: what is done, what a language model
 does (task, input -> output), what code does, why it is so, how it is checked; at the bottom the ideas of benchmarking.
 The text lives in STEPS and BENCH below; edit there and run:  python docs/system/build_scheme.py"""
 from math import ceil
@@ -179,7 +179,7 @@ def cell(cid, value, x, y, w, h, style):
 def build() -> str:
     out, X0, y = [], 20, 20
     total = sum(w for _, w in COLS)
-    out.append(cell("title", "<b>Как работает система оценки гипотез (метод v3.8)</b><br/><span style='font-size:12px'>Каждый шаг: что делается, где и с какой задачей работает языковая модель (LLM), что делает код, почему так, как проверяем</span>",
+    out.append(cell("title", "<b>Как работает система оценки гипотез (метод v3.9)</b><br/><span style='font-size:12px'>Каждый шаг: что делается, где и с какой задачей работает языковая модель (LLM), что делает код, почему так, как проверяем</span>",
                     X0, y, total, 54, "text;html=1;fontSize=20;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#1E4D40;"))
     y += 66
     x = X0

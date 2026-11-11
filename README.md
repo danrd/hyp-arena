@@ -1,6 +1,6 @@
 # hyp-arena
 
-A research prototype for ranking hypotheses about ageing and healthy lifespan. The current method (**v3.8**) reads a
+A research prototype for ranking hypotheses about ageing and healthy lifespan. The current method (**v3.9**) reads a
 hypothesis as a **mechanism chain** from the intervention to the outcome. Each link is checked against PubMed papers
 published before the date of scoring; every finding is a record with a verbatim quote and a weight built on the GRADE
 domains (design, precision, effect, comparison, context). From the records the code computes the **evidence balance** of the

@@ -43,7 +43,8 @@ IND_NAMES = {
     "N": ("новизна", "novelty"),
 }
 NOVELTY_NAMES = {"new_context": ("новый контекст", "new context"), "translation": ("перенос на другой вид", "translation"),
-                 "analog": ("аналог", "analog"), "new_combination": ("новое сочетание", "new combination"),
+                 "analog": ("аналог", "analog"),
+                 "new_mechanism": ("новый механизм известного эффекта", "new mechanism of a known effect"), "new_combination": ("новое сочетание", "new combination"),
                  "new_link": ("новое звено", "new link"), None: ("неизвестно", "unknown")}
 LINK_NAMES = {"delivery": ("доставка", "delivery"), "engagement": ("действие на мишень", "target engagement"),
               "pathway": ("сигнальный путь", "pathway"), "effect": ("промежуточный эффект", "intermediate effect"),

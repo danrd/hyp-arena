@@ -123,3 +123,20 @@ argon_trial_2_2026_11_09:   # Argon's second hand run with the manual's section 
     0.395 exactly). With feasibility charged, directed evolution towards the frontier can only add I. The first run's gains
     all came from breaking the rules.
   decision_needed: "whether mechanism novelty (a supported-neighbour new link) should count for the frontier, and whether an untested inserted slot should dilute the balance; for the user"
+
+decision_mechanism_novelty_2026_11_11:   # user decision; manual sections 7, 11, 12 (v3.9)
+  question: "argon_trial_2_2026_11_09.decision_needed: should mechanism novelty count for the frontier, and should an untested inserted slot dilute the balance"
+  balance: "already settled by v3.7 (2026-11-09): a slot without records is left out of the evidence balance"
+  decision: >-
+    a level of N, not a separate indicator: "new mechanism of a known effect" (new_mechanism), between analog and
+    new_combination. Given when the outcome has records, a link before the outcome has none, both its chain neighbours are
+    supported (S > 1/2 with a record for), and the PubMed count on the link's own subject AND object before T is under 5
+    (rule 6, the same code); no count, no level. Reason: the ladder already holds mechanism levels (new combination, new link)
+    used only without outcome records; the new level is their counterpart when the outcome was studied.
+  code: "hyparena/card/novelty_v34.py (mechanism_candidates, mechanism_absence, new_mechanism_links, novelty(absence=...)); evolve_v3.compare counts when as_of is known; aspid_v3 N scale has six levels"
+  tests: "tests/test_new_mechanism.py: candidate only between supported neighbours; under 5 counts, 5 does not, no count does not; no change without outcome records; count on subject AND object only; loss of the level is drift"
+  checks_pending: >-
+    free: Argon's four directed versions (counts 0, 2, 0, 1 rechecked earlier) must get the level; hand counter-examples (a
+    known link reworded, an unsupported neighbour) must not; the admission rule of N re-run on the pools after the counts are
+    made for saved runs (on registry pools the level is expected to be rare).
+  side_effect: "the N scale has six levels instead of five: ASPID's random monotone mapping spreads the levels over [0, 1] differently, so frontier and funding scores of hypotheses with N move slightly when re-scored; frozen scores are untouched"

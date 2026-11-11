@@ -1,7 +1,8 @@
 # Method v3 manual: how a hypothesis is scored and how to read the report
 
-Version: rules **v3.8** (2026-11-11) = v3.7 with a third level of the intervention match, "same category only", counted as
-adjacent (reading rule 1, section 4). v3.7 (2026-11-09): the record weight of v3.6 on the GRADE domains (section 5), link strength as a sum
+Version: rules **v3.9** (2026-11-11) = v3.8 with the novelty level "new mechanism of a known effect" (section 7: the effect
+on the outcome was studied, but a link between supported neighbours is new by a PubMed count). v3.8 (2026-11-11): a third
+level of the intervention match, "same category only", counted as adjacent (reading rule 1, section 4). v3.7 (2026-11-09): the record weight of v3.6 on the GRADE domains (section 5), link strength as a sum
 of log likelihood ratios (section 6), the evidence balance over the links that have data (section 7), the ASPID profiles
 (section 8) and the rules every improved version keeps (section 11). Code: `hyparena/card/rules_v32.py`
 (`evaluate(..., v36=True)`, `EMPTY_SLOTS = "skip"`), `hyparena/card/novelty_v34.py`, `hyparena/card/aspid_v3.py`,
@@ -39,7 +40,7 @@ several **profiles** (whose order of importance says what matters to whoever ran
 |---|---|---|
 | evidence balance | How strongly does the literature before T support the chain's links (for minus against), over the links that have data? | −1 … +1 |
 | coverage | How many links of the chain have any data at all? | k of n links |
-| N, novelty | How far is the hypothesis from what was already asked before T? | new context < translation < analog < new combination < new link |
+| N, novelty | How far is the hypothesis from what was already asked before T? | new context < translation < analog < new mechanism of a known effect < new combination < new link |
 | I, informativeness | Which supported competing explanations does the stated experiment cut off? | 0-1 |
 | W, scope | How far does the supported mechanism reach: one condition, an organ or system, a hallmark of ageing? | local, organ, hallmark |
 | feasibility | Can the stated experiment be run: system, duration, planned n, readiness of the intervention? | 0-1 |
@@ -268,7 +269,15 @@ ranked). Nothing else filters: an undeveloped but promising hypothesis keeps its
 - **N, novelty** (v3.4, `novelty_v34.novelty`): the distance of the hypothesis to what was already asked before T, from the
   usable records on either side (a question already asked is not new, whatever the answer). On the outcome link, by the
   closest record: **new context** (the same intervention and outcome in the claim's species, another population, age, sex or
-  dose), **translation** (the same intervention, only in another species), **analog** (only a related compound or class).
+  dose), **translation** (the same intervention, only in another species), **analog** (only a related compound or class);
+  above them **new mechanism of a known effect** (v3.9, user decision 2026-11-11, `novelty_v34.new_mechanism_links`): the
+  outcome has records, but a link before the outcome has none, both its neighbours in the chain are supported (S > 1/2 with a
+  record for), and PubMed holds fewer than 5 records before T on the link's own subject AND object (counted by code, the
+  same count as rule 6 of section 11; no count, no level). The level answers the frontier's question about mechanisms: under
+  v3.4-v3.8 N was read from the outcome link only, so a new mechanism of a studied effect stayed "new context", and directed
+  evolution could not raise novelty (Argon's hand run, `specs/directed-evolution-2026-11-09.yaml`). It sits below new
+  combination because there the outcome itself is untested. On registry pools it is rare (mechanisms are seldom written);
+  saved scores have no counts, so none moved.
   Without any outcome record: **new combination** (every link before the outcome is supported: the pieces are known, the
   chain as a whole was not tested), **new link** (at least one link before the outcome has no record and at least one is
   supported). **Unknown** when there is no data anywhere or the chain is the outcome alone: absence of evidence is not
@@ -298,7 +307,7 @@ drawn over its whole range in every draw.
 | support_share | how much of the mechanism chain is supported: mean of max(0, 2 (S − 0.5)) over its slots (v3.3) | 0-1 |
 | trend_pubmed | rising attention: PubMed records on the intervention in the last 3 years vs the 3 before, net of PubMed's growth | -0.5 … 1.5 |
 | ai_role | role of AI in the hypothesis | none < analysis < in the loop < AI is the intervention |
-| N | novelty (section 7) | new context < translation < analog < new combination < new link |
+| N | novelty (section 7) | new context < translation < analog < new mechanism of a known effect < new combination < new link |
 | leverage, W_potential, literature_density | defined in code, failed the admission rule on the trial pools (below) | |
 
 Profiles as of v3.6 (`configs/profiles_v3.yaml`). The number is the rank of importance (1 = most important; a "tier" in
@@ -504,6 +513,7 @@ The table is the code's own (`hyparena/report_html.py` IND_NAMES, LINK_NAMES, NO
 | novelty level | `new_context` | новый контекст | new context |
 | novelty level | `translation` | перенос на другой вид | translation |
 | novelty level | `analog` | аналог | analog |
+| novelty level | `new_mechanism` | новый механизм известного эффекта | new mechanism of a known effect |
 | novelty level | `new_combination` | новое сочетание | new combination |
 | novelty level | `new_link` | новое звено | new link |
 | novelty level | `unknown` | неизвестно | unknown |
@@ -568,7 +578,7 @@ tuned version is the same hypothesis with its fixable defects repaired; a free v
 |---|---|---|---|---|---|---|
 | tune (доработка), `--mode tune` | repair the "fixable by rewriting" items | only what the items say, from their facts; the parent's new parts (links at "analog" or "new link") must stay | **constraint**: a version that moved towards the known (`novelty_v34.drift`) goes back to the writer with the reason, once (`retries`); if it still drifts it is kept with the flag and "constraint not kept" | the whole pipeline again on the new text, parent's cut-off | "tuned version" | implemented (prompt `evolve_v3/v2`), not yet run; the first run (2026-11-06, `archive/method-history.md`) was this mode before the constraint |
 | free (свободная эволюция), `--mode free --profile P --writer F` | get the best hypothesis for the profile P | everything (claim, mechanism, population, outcome, experiment); the writer is told the profile's order and whether novelty comes first; it names the papers it relies on | **flag only**: a move towards the known is shown, not forbidden | the whole pipeline again; the papers it named count only if the verifier finds them with a verbatim quote before the cut-off (named / found are reported); distance from the parent = 1 − Jaccard of content words; above 0.7 the version is marked "new hypothesis after" the parent | "free evolution" (+ "new hypothesis after") | implemented (prompt `evolve_free/v1`), not yet run; for current pools only (the writer knows literature past the cut-off); the user's preferred mode for improving |
-| directed (направленная эволюция), `--mode directed --profile frontier` | reach the target of a profile; first frontier: one new link | keep the intervention and every supported link; add exactly one new link between supported neighbours, with an experiment that tests it | **target**: N not lower, one link at "new link", no drift, and a PubMed count of the new link's subject and object before T under a threshold (guard against reader misses) | the whole pipeline again, parent's cut-off; failed checks go back to the writer once, then kept with "target not reached" | "directed evolution (frontier)" | specified (`specs/directed-evolution-2026-11-09.yaml`), not implemented; an outside reader's hand run met every target by moves the rules below forbid; checked through Argon |
+| directed (направленная эволюция), `--mode directed --profile frontier` | reach the target of a profile; first frontier: one new link | keep the intervention and every supported link; add exactly one new link between supported neighbours, with an experiment that tests it | **target**: N not lower and, when the outcome has records, at least "new mechanism of a known effect" (v3.9), one link at "new link", no drift, and a PubMed count of the new link's subject and object before T under a threshold (guard against reader misses) | the whole pipeline again, parent's cut-off; failed checks go back to the writer once, then kept with "target not reached" | "directed evolution (frontier)" | specified (`specs/directed-evolution-2026-11-09.yaml`), not implemented; an outside reader's hand run met every target by moves the rules below forbid; checked through Argon |
 | controlled | test whether the list predicts the gain | one item at a time | — | the parent's card, records and alternatives are kept; only what the item changes is re-checked | — | planned |
 
 Both modes report, next to the drift flag, the **share of links with support before the cut-off**, parent → child: a version can
@@ -617,7 +627,9 @@ frontier). The flag is checked by hand-made drifted pairs (a human trial added o
 in place of the intervention's records, the new link removed, a kept link moved down) which must all be flagged, and
 controls (an identical child, support added at the same level, a new link added) which must not (`tests/test_v34.py`). In the
 first run 1 of 10 pairs was flagged (analog → new context). The improvement item "narrow the population" shows its expected
-change of novelty next to its gain, so the cost of narrowing towards the known is visible before it is applied.
+change of novelty next to its gain, so the cost of narrowing towards the known is visible before it is applied. Since v3.9 the parent and the child are compared with their PubMed counts of new links (`evolve_v3.compare` makes
+them when the cut-off is known): a child that loses the parent's "new mechanism of a known effect" is flagged like any other
+fall of N (`tests/test_new_mechanism.py`).
 
 **The report section "Evolution"**: a table parent → improved version (evidence balance, I, scope, novelty with the flag, and the
 score under each profile, rises in green, falls in red); per pair, collapsed: the items applied, what changed in the text and on which fact,
@@ -677,7 +689,8 @@ are checked by us before any export; the triage is in the database spec.
 - Alternatives come from a model, not yet from the knowledge graph.
 - Novelty depends on the verifier's recall: a paper it missed makes a hypothesis look newer than it is (about 40% of
   relevant papers are missed). Novelty is therefore an upper estimate; the "known result" gate catches only exact matches.
-- Novelty is read off the outcome link first: a known effect with a new mechanism counts as new context, not as new.
+- Novelty is read off the outcome link first; a known effect with a new mechanism is "new mechanism of a known effect" only
+  when the new link's PubMed count was made (v3.9): without the count it stays new context.
 
 **Outside checks by a second reader (Argon, blind; 2026-11-08; specs/record-weight-2026-11-08.yaml,
 informativeness-check, novelty-check, balance-check):**
@@ -763,7 +776,7 @@ v36:
   effect_full_from: 0.71875  # the continuous effect weight of d = 0.5
 v34:
   preclinical_precision: 0.5
-  novelty_levels: [new_context, translation, analog, new_combination, new_link]
+  novelty_levels: [new_context, translation, analog, new_mechanism, new_combination, new_link]
 link_thresholds: {moderate: 0.6, strong: 1.5, strong_min_independent: 2}
 informativeness_cap: 1.5
 effect_unclear_weight: 0.5

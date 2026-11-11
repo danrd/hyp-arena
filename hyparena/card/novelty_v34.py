@@ -1,8 +1,10 @@
 """Novelty, leverage and the drift flag of method v3.4 (specs/v34-frontier-2026-11-07.yaml), computed by code from the saved
 records, no model calls.
 
-- N (ordinal, low to high): new_context < translation < analog < new_combination < new_link, the distance of the hypothesis
-  to what was already asked before its date (records on either side count: a question already asked is not new);
+- N (ordinal, low to high): new_context < translation < analog < new_mechanism < new_combination < new_link, the distance
+  of the hypothesis to what was already asked before its date (records on either side count: a question already asked is
+  not new); new_mechanism (v3.9, user decision 2026-11-11): the effect on the outcome was already studied, but the chain
+  has a new link between supported neighbours, new by a PubMed count on its own subject and object (`absence`);
 - link_levels: the same ladder per link from its own records;
 - literature_density: log10(1 + PubMed records on the intervention AND the outcome before the date), a candidate;
 - leverage: how much support_share would rise if the bottleneck slot reached S = 5/6, times the mean support of the other
@@ -18,7 +20,8 @@ from hyparena.card import rules_v3 as r3
 from hyparena.card import rules_v32 as r32
 from hyparena.card.models import Claim, ClaimVerification, EvidenceRecord, HypothesisCard
 
-LEVELS = ("new_context", "translation", "analog", "new_combination", "new_link")
+LEVELS = ("new_context", "translation", "analog", "new_mechanism", "new_combination", "new_link")
+ABSENCE_THRESHOLD = 5          # the same as evolution_rules.ABSENCE_THRESHOLD (rule 6 of manual section 11)
 LINK_LEVELS = ("new_context", "translation", "analog", "new_link")
 S_TARGET = 5 / 6
 A_TARGET = 2 * (S_TARGET - 0.5)
@@ -76,7 +79,48 @@ def _slot_S(e: r32.V32Result, sl: list[str], is_out: bool) -> float:
     return max(e.links[i][0] for i in sl)
 
 
-def novelty(card: HypothesisCard, cvs: list[ClaimVerification], e: Optional[r32.V32Result] = None) -> Optional[str]:
+def _supported_link(e: r32.V32Result, i: str) -> bool:
+    return i in e.links and e.links[i][3] > 0 and e.links[i][0] > 0.5
+
+
+def mechanism_candidates(card: HypothesisCard, cvs: list[ClaimVerification], e: Optional[r32.V32Result] = None) -> list[Claim]:
+    """Links before the outcome without any record whose two neighbours in the chain are supported (S > 1/2 with a record
+    for): the links that can make a known effect a new mechanism, once a PubMed count shows them new."""
+    e = e or evaluate(card, cvs)
+    by = {c.id: c for c in cvs}
+    links = r3.chain(card)
+    outs = {c.id for c in r3.outcome_group(card, links)[0]}
+    out = []
+    for k, c in enumerate(links):
+        if c.id in outs or k == 0 or k == len(links) - 1:
+            continue
+        if link_level(c, by.get(c.id)) != "new_link":
+            continue
+        if _supported_link(e, links[k - 1].id) and _supported_link(e, links[k + 1].id):
+            out.append(c)
+    return out
+
+
+def mechanism_absence(card: HypothesisCard, cvs: list[ClaimVerification], as_of: str, get=None,
+                      e: Optional[r32.V32Result] = None) -> dict[str, Optional[int]]:
+    """PubMed records before T on each candidate link's own subject AND object (rule 6; network, free; `get` for tests)."""
+    from hyparena.card.evolution_rules import pubmed_pair_count
+    return {c.id: pubmed_pair_count(c.subject.label, c.object.label, as_of, get) for c in mechanism_candidates(card, cvs, e)}
+
+
+def new_mechanism_links(card: HypothesisCard, cvs: list[ClaimVerification], absence: Optional[dict],
+                        e: Optional[r32.V32Result] = None) -> list[str]:
+    """Candidate links counted new: fewer than ABSENCE_THRESHOLD records before T. No count, no new mechanism."""
+    if not absence:
+        return []
+    return [c.id for c in mechanism_candidates(card, cvs, e)
+            if absence.get(c.id) is not None and absence[c.id] < ABSENCE_THRESHOLD]
+
+
+def novelty(card: HypothesisCard, cvs: list[ClaimVerification], e: Optional[r32.V32Result] = None,
+            absence: Optional[dict] = None) -> Optional[str]:
+    """N. `absence` = {link id: PubMed count on its subject and object before T} (mechanism_absence); without it the level
+    new_mechanism is never given (novelty by absence is counted by code or not at all)."""
     e = e or evaluate(card, cvs)
     by = {c.id: c for c in cvs}
     claims = {c.id: c for c in r3.chain(card)}
@@ -84,6 +128,8 @@ def novelty(card: HypothesisCard, cvs: list[ClaimVerification], e: Optional[r32.
     lv = [x for i in out for r in ((by[i].evidence + by[i].counterevidence) if i in by else [])
           if (x := record_level(r, claims[i]))]
     if lv:
+        if new_mechanism_links(card, cvs, absence, e):
+            return "new_mechanism"
         return min(lv, key=LINK_LEVELS.index)
     if not pre:
         return None
@@ -189,11 +235,12 @@ def known_share(card: HypothesisCard, cvs: list[ClaimVerification], e: Optional[
     return round(sum(1 for x in sl if any(e.links[i][3] > 0 for i in x)) / len(sl), 3) if sl else 0.0
 
 
-def drift(parent: tuple[HypothesisCard, list[ClaimVerification]], child: tuple[HypothesisCard, list[ClaimVerification]]) -> dict:
+def drift(parent: tuple[HypothesisCard, list[ClaimVerification]], child: tuple[HypothesisCard, list[ClaimVerification]],
+          absence: tuple[Optional[dict], Optional[dict]] = (None, None)) -> dict:
     """The evolution flag: N of the child below N of the parent (both known), a kept link at a lower level, or the parent's
-    new link gone with no new link in the child."""
+    new link gone with no new link in the child. `absence` = the PubMed counts of parent and child (novelty)."""
     (pc, pcv), (cc, ccv) = parent, child
-    np_, nc = novelty(pc, pcv), novelty(cc, ccv)
+    np_, nc = novelty(pc, pcv, absence=absence[0]), novelty(cc, ccv, absence=absence[1])
     lp, lc = link_levels(pc, pcv), link_levels(cc, ccv)
     tp, tc = _texts(pc), _texts(cc)
     by_text_c = {v: k for k, v in tc.items()}

@@ -241,7 +241,7 @@ def _chain_texts(card: HypothesisCard) -> dict[str, str]:
 
 def compare(parent_item: dict, child_item: dict, parent_extras: dict, child_extras: dict, mode: str = "tune",
             parent_logs: Optional[dict] = None, child_logs: Optional[dict] = None, as_of: str = "",
-            child_text: str = "") -> Optional[dict]:
+            child_text: str = "", get=None) -> Optional[dict]:
     """Per pair: indicators before and after, the score under each profile before and after (fixed scales), links added,
     removed and changed (S before -> after), and the novelty drift (novelty_v34.drift: flagged, never excluding)."""
     if not child_item.get("card") or not child_item.get("verification") or "v3" not in child_item:
@@ -250,7 +250,10 @@ def compare(parent_item: dict, child_item: dict, parent_extras: dict, child_extr
     pc, pcv, pa = parent_parts(parent_item)
     cc, ccv, ca = parent_parts(child_item)
     ep, ec = imp.evaluate(pc, pcv, pa), imp.evaluate(cc, ccv, ca)
-    dr = nv.drift((pc, pcv), (cc, ccv))
+    # new_mechanism (v3.9): a link between supported neighbours counted new on PubMed before T (free, only with a date)
+    absence = (nv.mechanism_absence(pc, pcv, as_of, get), nv.mechanism_absence(cc, ccv, as_of, get)) if as_of else (None, None)
+    dr = nv.drift((pc, pcv), (cc, ccv), absence)
+    dr["mechanism_absence"] = list(absence)
     parent_extras = {**parent_extras, "N": dr["N"][0]}
     child_extras = {**child_extras, "N": dr["N"][1]}
     pairs = {"parent": imp.axes(ep, parent_item["v3"].get("headroom_I"), parent_extras),
@@ -273,7 +276,7 @@ def compare(parent_item: dict, child_item: dict, parent_extras: dict, child_extr
     from hyparena.card import evolution_rules as er          # manual section 11: rules every version keeps; the two parts
     score = {p: [sc["parent"].get(p), sc["child"].get(p)] for p in sc["parent"]}
     rules = er.check((pc, pcv, parent_logs or {}), (cc, ccv, child_logs or {}), mode=mode, as_of=as_of,
-                     child_experiment_text=child_text, parent_alts=pa, child_alts=ca, scores=score, pubmed=bool(as_of))
+                     child_experiment_text=child_text, parent_alts=pa, child_alts=ca, scores=score, pubmed=bool(as_of), get=get)
     return {"gate": [ep.gate, ec.gate], "indicators": ind, "score": score, "links": links, "drift": dr,
             "decomposition": er.decompose(pairs["parent"], pairs["child"]), "rules": rules}
 
