@@ -325,7 +325,12 @@
 
     // ---------- 2. cards (words only); a link is shown as a triple: subject, relation, object
     const sentence = l => `${l.subject} ${nm('relation', l.relation)} ${l.object}`;
-    const triplet = l => `<span class="subj">${esc(l.subject)}</span> <span class="rel">${esc(nm('relation', l.relation))} →</span> <span class="obj">${esc(l.object)}</span>`;
+    // for relations whose object is the organism the card keeps what changes in the measure (manual section 10, 2026-11-11):
+    // "squats — improve → physical performance (human)", not "squats — improve health in → human"
+    const ORG_REL = {improves_healthspan_in: 'улучшает', extends_lifespan_in: 'продлевает', slows_aging_in: 'замедляет', shortens_lifespan_in: 'сокращает'};
+    const triplet = l => (l.measure && ORG_REL[l.relation])
+      ? `<span class="subj">${esc(l.subject)}</span> <span class="rel">${ORG_REL[l.relation]} →</span> <span class="obj">${esc(l.measure)} (${esc(l.object)})</span>`
+      : `<span class="subj">${esc(l.subject)}</span> <span class="rel">${esc(nm('relation', l.relation))} →</span> <span class="obj">${esc(l.object)}</span>`;
     const cardLink = (r, l) => ((r.card_view || {}).links || []).find(x => x.id === l.id);
     function textBlock(t) {
       const lines = String(t || '').split(/\n+/).map(s => s.trim()).filter(Boolean);

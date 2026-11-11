@@ -277,8 +277,10 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
                                  "comparator": card.pico.comparator.label, "outcome": card.pico.outcome.metric,
                                  "experiment": de.model_dump(include={"design", "control", "n_planned", "primary_outcome", "endpoint", "system"}),
                                  "links": [{"id": cl.id, "type": cl.link, "subject": cl.subject.label, "relation": cl.relation,
-                                            "object": cl.object.label, "hallmark": cl.object.hallmark} for cl in r3.chain(card)],
-                                 "alternatives": [{"subject": a.subject.label, "relation": a.relation, "object": a.object.label}
+                                            "object": cl.object.label, "measure": cl.qualifiers.get("measure"), "hallmark": cl.object.hallmark}
+                                           for cl in r3.chain(card)],
+                                 "alternatives": [{"subject": a.subject.label, "relation": a.relation, "object": a.object.label,
+                                                   "measure": a.qualifiers.get("measure")}
                                                   for a in card.proposed_alternatives]}}
         values[h] = {"P": res.P, "chain_state": res.chain_state, "I": res.I, "I_headroom": res.headroom_I if res.headroom_I is not None else it["v3"].get("headroom_I"), "W": res.scope, "support_share": res.support_share, "coverage": res.coverage, "N": N,
                      "endpoint_clinical": sc.get("endpoint_clinical"), "trend_pubmed": sc.get("trend_pubmed"), "ai_role": sc.get("ai_role"),

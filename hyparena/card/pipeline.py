@@ -21,7 +21,7 @@ from hyparena.card import alternatives, entities, proximity
 from hyparena.card import expert as ex
 from hyparena.card import indicators as ind
 from hyparena.card.models import HypothesisCard, Verification
-from hyparena.card.normalizer import normalize
+from hyparena.card.normalizer import normalize, normalize_union
 from hyparena.card.lifespan import late_start
 from hyparena.card.rank import rank
 from hyparena.card.rules import STRAIN_ANALOG, add_disease_analogs, add_strain_analogs, admit, finalize
@@ -139,6 +139,7 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
         search_mode += "+fulltext"
     method = cfg_extra.get("method", "v2")                              # `method: v3` (docs/archive/spec/method-v3.md)
     norm_version = cfg_extra.get("normalize_version") or ("v7" if method == "v3" else None)   # v3: v7 or later (`normalize_version`)
+    norm_runs = int(cfg_extra.get("normalize_runs", 1))               # v3.9: 2 = union of two parses (user decision 2026-11-11)
     verify_version = cfg_extra.get("verify_version") or ("v6" if method == "v3" else "")   # v3: v6 or later (`verify_version`)
     from hyparena.card import rules as _rules
     _rules.GRADED_CONTEXT = cfg_extra.get("admission") == "graded"     # `admission: graded` in the config
@@ -157,6 +158,11 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
             card = HypothesisCard.model_validate(saved) if saved else None
             problems = [] if card else ["no card in the earlier run"]
         else:
+            if norm_runs > 1:                     # v3.9: the card is the union of independent parses (`normalize_runs`)
+                card, problems, stability = normalize_union(client, norm_family, text, cid, log=log, runs=norm_runs,
+                                                            version=norm_version)
+                return {"id": cid, "text": text, "card": card, "problems": problems, "origin": origins[i - 1],
+                        "card_stability": stability}
             card, problems = normalize(client, norm_family, text, cid, log=log, version=norm_version)
         return {"id": cid, "text": text, "card": card, "problems": problems, "origin": origins[i - 1]}
 

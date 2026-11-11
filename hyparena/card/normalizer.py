@@ -127,3 +127,98 @@ def normalize(client, family: str, raw_text: str, card_id: str, log: Optional[li
     if card is not None and int((version or TEMPLATE[1]).lstrip("v") or 0) >= 10:
         registry_defaults(card, raw_text)
     return card, problems
+
+
+# ---- union of two parses (method v3.9, user decision 2026-11-11) -------------------------------------------------------
+# Two parses of the same text at temperature 0 still differ (H49: the first parse missed the mechanism steps the second
+# wrote, both with verbatim spans). The card is the union of the parses: every claim either parse wrote with a verbatim span,
+# matched by (subject, relation, object, and the measure where the object is the organism); the first parse keeps its ids and its outcome claim; a missing field of the
+# experiment or the PICO is taken from the second. The agreement of the parses is kept as the card's stability.
+
+ORGANISM_RELATIONS = ("improves_healthspan_in", "extends_lifespan_in", "shortens_lifespan_in", "slows_aging_in",
+                      "no_lifespan_effect_in")
+
+
+def _claim_key(c) -> tuple:
+    """Subject, relation, object; the measure only where the object is the organism (there the measure is what changes;
+    elsewhere it restates the object: "body composition" / "bioelectrical impedance analysis")."""
+    norm = lambda s: re.sub(r"\s+", " ", (s or "").strip().lower())
+    measure = norm(c.qualifiers.get("measure")) if c.relation in ORGANISM_RELATIONS else ""
+    return (norm(c.subject.label), c.relation, norm(c.object.label), measure)
+
+
+def _unknown(v) -> bool:
+    return v is None or (isinstance(v, str) and v.strip().lower() in ("", "unknown"))
+
+
+def union_cards(a: HypothesisCard, b: HypothesisCard, raw_text: str) -> tuple[HypothesisCard, dict]:
+    card = a.model_copy(deep=True)
+    keys = {_claim_key(c): c.id for c in card.claims}
+    idmap, added = {}, []
+    used = {c.id for c in card.claims}
+    n = max([int(m.group(1)) for c in card.claims if (m := re.fullmatch(r"c(\d+)", c.id))] or [0])
+    for c in b.claims:
+        k = _claim_key(c)
+        if k in keys:
+            idmap[c.id] = keys[k]
+            continue
+        n += 1
+        while f"c{n}" in used:
+            n += 1
+        nc = c.model_copy(deep=True)
+        nc.id = f"c{n}"
+        used.add(nc.id)
+        if nc.role == "outcome":                       # one outcome claim: the first parse's
+            nc.role = "premise"
+        card.claims.append(nc)
+        keys[k] = nc.id
+        idmap[c.id] = nc.id
+        added.append(nc.id)
+    have = {(e.from_, e.to, e.type) for e in card.edges}
+    for e in b.edges:
+        f, t = idmap.get(e.from_), idmap.get(e.to)
+        if f and t and (f, t, e.type) not in have:
+            card.edges.append(e.model_copy(update={"from_": f, "to": t}))
+            have.add((f, t, e.type))
+    filled, conflicts = [], []
+    for part in ("decisive_experiment",):
+        pa, pb = getattr(card, part), getattr(b, part)
+        for field in type(pa).model_fields:
+            va, vb = getattr(pa, field), getattr(pb, field)
+            if _unknown(va) and not _unknown(vb):
+                setattr(pa, field, vb)
+                filled.append(f"{part}.{field}")
+            elif not _unknown(va) and not _unknown(vb) and va != vb:
+                conflicts.append(f"{part}.{field}: {va!r} / {vb!r}")
+    pop_a, pop_b = card.pico.population, b.pico.population
+    for field in type(pop_a).model_fields:
+        if _unknown(getattr(pop_a, field)) and not _unknown(getattr(pop_b, field)):
+            setattr(pop_a, field, getattr(pop_b, field))
+            filled.append(f"pico.population.{field}")
+    alt_keys = {_claim_key(x) for x in card.declared_alternatives}
+    for x in b.declared_alternatives:
+        if _claim_key(x) not in alt_keys:
+            card.declared_alternatives.append(x.model_copy(deep=True))
+            alt_keys.add(_claim_key(x))
+    shared = len({_claim_key(c) for c in a.claims} & {_claim_key(c) for c in b.claims})
+    total = len({_claim_key(c) for c in a.claims} | {_claim_key(c) for c in b.claims})
+    stability = {"claims": [len(a.claims), len(b.claims)], "shared": shared, "jaccard": round(shared / total, 3) if total else 1.0,
+                 "added_from_second": added, "filled_from_second": filled, "conflicts": conflicts}
+    return card, stability
+
+
+def normalize_union(client, family: str, raw_text: str, card_id: str, log: Optional[list] = None, runs: int = 2,
+                    version: Optional[str] = None) -> tuple[Optional[HypothesisCard], list[str], dict]:
+    """`runs` independent parses united (runs = 1: a single parse). Returns (card, problems, stability)."""
+    parses = [normalize(client, family, raw_text, card_id, log=log, version=version) for _ in range(max(1, runs))]
+    good = [(c, p) for c, p in parses if c is not None]
+    if not good:
+        return None, parses[0][1], {"parses": len(parses), "valid": 0}
+    card, problems = good[0]
+    stab = {"parses": len(parses), "valid": len(good)}
+    for other, _ in good[1:]:
+        card, s = union_cards(card, other, raw_text)
+        stab.update(s)
+    if len(good) > 1:
+        problems = validate_card(card, raw_text)
+    return card, problems, stab

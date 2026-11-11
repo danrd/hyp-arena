@@ -1,7 +1,8 @@
 # Method v3 manual: how a hypothesis is scored and how to read the report
 
 Version: rules **v3.9** (2026-11-11) = v3.8 with the novelty level "new mechanism of a known effect" (section 7: the effect
-on the outcome was studied, but a link between supported neighbours is new by a PubMed count). v3.8 (2026-11-11): a third
+on the outcome was studied, but a link between supported neighbours is new by a PubMed count) and the card as the union of
+two parses (section 3). v3.8 (2026-11-11): a third
 level of the intervention match, "same category only", counted as adjacent (reading rule 1, section 4). v3.7 (2026-11-09): the record weight of v3.6 on the GRADE domains (section 5), link strength as a sum
 of log likelihood ratios (section 6), the evidence balance over the links that have data (section 7), the ASPID profiles
 (section 8) and the rules every improved version keeps (section 11). Code: `hyparena/card/rules_v32.py`
@@ -87,6 +88,22 @@ A model (the normaliser) turns the text into a card:
 - **Alternatives**: competing explanations, proposed by a second model call from the literature found, each with its support.
 - **AI role** (normaliser v10): none / AI analyses the data / AI in the experiment loop / AI is the intervention, with a
   verbatim phrase of the text; without one the code sets "none". An indicator of the investor profile only.
+
+**Two parses, one card** (v3.9, user decision 2026-11-11; `normalizer.normalize_union`, config `normalize_runs: 2`). Two
+parses of the same text at temperature 0 differ: on H49 the first wrote no mechanism, the second wrote two intermediate
+effects, both with verbatim spans. The card is the union of two independent parses: a claim of either parse counts if its
+span is verbatim; claims are matched by subject, relation and object (and the measure, where the object is the organism);
+the first parse keeps its ids and its single outcome claim (an outcome claim of the second becomes a premise); edges are
+carried over; a field of the experiment or the population unknown in the first parse is taken from the second; a conflict
+keeps the first and is recorded. The agreement of the parses (shared claims / all claims) is kept as the card's stability.
+Cards made before 2026-11-11 come from one parse.
+
+**What the normaliser is given** (`hyparena/prompts/normalize_card/v10.j2`): the text only (for a registry trial the
+registry fields as "Name: value" lines, section 2), the closed lists of relations and hallmarks, the rules for every field,
+two worked examples of other hypotheses and an empty JSON skeleton. Not the date T, not the literature, not other
+hypotheses. The code then checks the schema and the verbatim spans (up to three rounds; a claim without a verbatim span is
+dropped), retries once with a hint when the outcome relation is "other", and fills the endpoint and the population of a
+registry text from its fields.
 
 ## 4. Evidence records
 
@@ -434,7 +451,9 @@ and is searchable. An outside report uses the same ids.
      description of what was changed.
    - **Как гипотеза понята**: intervention, population, comparator, outcome; **the mechanism step by step**, each step with
      its link type and written as a triple — the subject on a blue plate, the relation in italics with an arrow, the object
-     on a sand plate (a legend line "что действует / как → / на что" above the list); **the stated experiment** (design,
+     on a sand plate (for a relation whose object is the organism — improves healthspan, extends lifespan, slows ageing — the
+     object plate shows what changes, from the claim's measure, with the organism in brackets: "улучшает → физическая
+     работоспособность (человек)") (a legend line "что действует / как → / на что" above the list); **the stated experiment** (design,
      control, planned size, primary outcome); **the alternative explanations** as triples.
    - A button "Оценка →" to the same hypothesis in the evaluation tab. No plain-language analysis (user decision 2026-11-11).
 3. **Оценка гипотез (Evaluation of hypotheses)**, numbers, one collapsible block per hypothesis in the order of the current
