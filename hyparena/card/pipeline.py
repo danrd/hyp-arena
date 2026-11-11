@@ -221,8 +221,9 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
             for alt in card.proposed_alternatives:
                 if not alt.support_pmids:
                     continue                                # no support: weighs nothing, no call
+                from hyparena.card.search import ALTERNATIVE_NOTE
                 ac = _Claim(id=alt.id, subject=alt.subject, relation=alt.relation, object=alt.object, qualifiers=alt.qualifiers,
-                            role="premise", source_span="")
+                            role="premise", source_span="", note=ALTERNATIVE_NOTE)
                 alt_ver[alt.id] = _vc(client, checker, frozenset({writer}), ac, card, as_of, log=log,
                                       expert_pmids=[(p, "proposed alternative support") for p in alt.support_pmids],
                                       search=search_mode, template_version=verify_version)

@@ -15,6 +15,7 @@ from collections import Counter
 from typing import Optional
 
 TOP_SEEDS, KEEP_SEEDS = 5, 10
+ALTERNATIVE_NOTE = "proposed alternative"   # set by the pipeline on the claim made from a proposed alternative
 
 
 def _dated(pmids: list[str], as_of: Optional[str]) -> list[str]:
@@ -33,6 +34,10 @@ def model_queries(client, family: str, avoid, claim, card, as_of: Optional[str],
                  "qualifiers": ", ".join(f"{k}: {v}" for k, v in claim.qualifiers.items() if v and v != "unknown"),
                  "intervention": "; ".join(i.label for i in p.intervention) or claim.subject.label,
                  "population": p.population.label, "outcome": p.outcome.metric or claim.object.label}
+    if claim.note == ALTERNATIVE_NOTE:      # a competing explanation is searched on its own terms, not the hypothesis's
+        variables.update({"claim_plain": f"a competing explanation of the hypothesis's result: {claim.subject.label} — "
+                                         f"{claim.relation} — {claim.object.label}",
+                          "intervention": claim.subject.label, "outcome": claim.object.label})
     value, _ = ask(client, role="search_queries", family=family, template="search_queries", version="v1", variables=variables,
                    validate=lambda v: [] if isinstance(v.get("queries"), list) and v["queries"] else ['"queries" must be a non-empty list'],
                    rounds=2, avoid=avoid, log=log)

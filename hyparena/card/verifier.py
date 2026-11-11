@@ -73,7 +73,10 @@ def queries(claim, card: HypothesisCard) -> list[str]:
     q1 = q(subject, rel, obj_term, organism)
     q_rel = q(subject, rel, organism) if rel and obj_term and organism else ""
     q2 = q(subject, obj_term or organism)
-    q3 = q(subject, obj_term, organism, "lifespan" if "lifespan" not in q1 else "")
+    # "lifespan" only for lifespan claims (H49 walkthrough 2026-11-11: it was added to every claim, "squat exercise body
+    # composition humans lifespan")
+    lifespan_claim = claim.relation in ("extends_lifespan_in", "shortens_lifespan_in", "no_lifespan_effect_in")
+    q3 = q(subject, obj_term, organism, "lifespan" if lifespan_claim and "lifespan" not in q1 else "")
     q_measure = q(subject, measure, organism) if measure else ""
     # primary research first: reviews only give background (never a status) and push findings out of the top
     # results; without them the first page holds the studies on both sides (Example 3: Wilkinson 2012 and Neff 2013)

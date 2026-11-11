@@ -26,7 +26,7 @@ models:
 
 # Literature search with model-written queries, the light guard and citation expansion (hyparena/card/search.py; retrieval
 # calibration 2026-11-02, scripts/retrieval_eval.py). Without this key the keyword queries are used, as in earlier runs.
-search: model
+search: model_population   # 2026-11-11 (H49 walkthrough): the exact-population query first; the pool of 2026-11-06 ran with `model`
 # Graded admission of adjacent-population and same-class records for claims about humans (hyparena/card/rules.py,
 # `adjacent`; calibration 2026-11-02).
 admission: graded
