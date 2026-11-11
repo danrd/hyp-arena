@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="1262" font-family="Inter, Arial, sans-serif">
+<defs><marker id="a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#1E4D40"/></marker></defs>
+<rect width="100%" height="100%" fill="#F8F7F2"/>
+<text x="40" y="40" font-size="18" font-weight="700" fill="#1E4D40">Схема системы (метод v3.8)</text>
+<rect x="40" y="70" width="470" height="74" rx="10" fill="#fff" stroke="#1E4D40"/>
+<text x="52" y="98" font-size="14" font-weight="700" fill="#1E4D40">Шаг 0. Гипотезы на входе</text>
+<text x="52" y="122" font-size="11" fill="#333">реестры испытаний; генерация по теме; версии лучших</text>
+<rect x="520" y="92" width="90" height="30" rx="8" fill="#EEF0FB"/>
+<text x="565" y="112" font-size="11" text-anchor="middle" fill="#333">LLM + код</text>
+<rect x="620" y="70" width="480" height="74" rx="10" fill="#FFF4DC" stroke="#B7791F"/>
+<text x="632" y="98" font-size="13" font-weight="700" fill="#B7791F">частично</text>
+<text x="632" y="122" font-size="11" fill="#333">правила версий проверяет код; качество новых гипотез не измерено</text>
+<rect x="40" y="166" width="470" height="74" rx="10" fill="#fff" stroke="#1E4D40"/>
+<text x="52" y="194" font-size="14" font-weight="700" fill="#1E4D40">Шаг 1. Карточка гипотезы</text>
+<text x="52" y="218" font-size="11" fill="#333">вмешательство, популяция, исход, шаги механизма, эксперимент</text>
+<rect x="520" y="188" width="90" height="30" rx="8" fill="#EEF0FB"/>
+<text x="565" y="208" font-size="11" text-anchor="middle" fill="#333">LLM + код</text>
+<rect x="620" y="166" width="480" height="74" rx="10" fill="#FFF4DC" stroke="#B7791F"/>
+<text x="632" y="194" font-size="13" font-weight="700" fill="#B7791F">частично</text>
+<text x="632" y="218" font-size="11" fill="#333">перефразирование: субъект, отношение, объект 1.00, контекст 0.80; механизм 6 из 8</text>
+<line x1="275" y1="144" x2="275" y2="164" stroke="#1E4D40" stroke-width="2" marker-end="url(#a)"/>
+<rect x="40" y="262" width="470" height="74" rx="10" fill="#fff" stroke="#1E4D40"/>
+<text x="52" y="290" font-size="14" font-weight="700" fill="#1E4D40">Шаг 2. Поиск статей</text>
+<text x="52" y="314" font-size="11" fill="#333">PubMed до даты среза для каждого шага</text>
+<rect x="520" y="284" width="90" height="30" rx="8" fill="#EEF0FB"/>
+<text x="565" y="304" font-size="11" text-anchor="middle" fill="#333">LLM + код</text>
+<rect x="620" y="262" width="480" height="74" rx="10" fill="#E3F1E8" stroke="#2E7D4F"/>
+<text x="632" y="290" font-size="13" font-weight="700" fill="#2E7D4F">пройдено</text>
+<text x="632" y="314" font-size="11" fill="#333">95% ключевых статей второго читателя найдено</text>
+<line x1="275" y1="240" x2="275" y2="260" stroke="#1E4D40" stroke-width="2" marker-end="url(#a)"/>
+<rect x="40" y="358" width="470" height="74" rx="10" fill="#fff" stroke="#1E4D40"/>
+<text x="52" y="386" font-size="14" font-weight="700" fill="#1E4D40">Шаг 3. Чтение статей</text>
+<text x="52" y="410" font-size="11" fill="#333">находки с дословной цитатой: за / против, дизайн, выборка</text>
+<rect x="520" y="380" width="90" height="30" rx="8" fill="#EEF0FB"/>
+<text x="565" y="400" font-size="11" text-anchor="middle" fill="#333">LLM + код</text>
+<rect x="620" y="358" width="480" height="74" rx="10" fill="#FFF4DC" stroke="#B7791F"/>
+<text x="632" y="386" font-size="13" font-weight="700" fill="#B7791F">частично</text>
+<text x="632" y="410" font-size="11" fill="#333">поля 92–96%; находки на своём шаге 19–52% — главная потеря</text>
+<line x1="275" y1="336" x2="275" y2="356" stroke="#1E4D40" stroke-width="2" marker-end="url(#a)"/>
+<rect x="40" y="454" width="470" height="74" rx="10" fill="#fff" stroke="#1E4D40"/>
+<text x="52" y="482" font-size="14" font-weight="700" fill="#1E4D40">Шаг 4. Вес находки</text>
+<text x="52" y="506" font-size="11" fill="#333">дизайн × точность × эффект × сравнение × контекст (GRADE)</text>
+<rect x="520" y="476" width="90" height="30" rx="8" fill="#F1F1F1"/>
+<text x="565" y="496" font-size="11" text-anchor="middle" fill="#333">код</text>
+<rect x="620" y="454" width="480" height="74" rx="10" fill="#E3F1E8" stroke="#2E7D4F"/>
+<text x="632" y="482" font-size="13" font-weight="700" fill="#2E7D4F">пройдено</text>
+<text x="632" y="506" font-size="11" fill="#333">поздние испытания того же шага: AUC 0.70</text>
+<line x1="275" y1="432" x2="275" y2="452" stroke="#1E4D40" stroke-width="2" marker-end="url(#a)"/>
+<rect x="40" y="550" width="470" height="74" rx="10" fill="#fff" stroke="#1E4D40"/>
+<text x="52" y="578" font-size="14" font-weight="700" fill="#1E4D40">Шаг 5. Сила шага и баланс</text>
+<text x="52" y="602" font-size="11" fill="#333">«за» и «против» → сила шага → баланс цепочки, покрытие</text>
+<rect x="520" y="572" width="90" height="30" rx="8" fill="#F1F1F1"/>
+<text x="565" y="592" font-size="11" text-anchor="middle" fill="#333">код</text>
+<rect x="620" y="550" width="480" height="74" rx="10" fill="#FFF4DC" stroke="#B7791F"/>
+<text x="632" y="578" font-size="13" font-weight="700" fill="#B7791F">частично</text>
+<text x="632" y="602" font-size="11" fill="#333">исходы прошлых испытаний: AUC 0.59</text>
+<line x1="275" y1="528" x2="275" y2="548" stroke="#1E4D40" stroke-width="2" marker-end="url(#a)"/>
+<rect x="40" y="646" width="470" height="74" rx="10" fill="#fff" stroke="#1E4D40"/>
+<text x="52" y="674" font-size="14" font-weight="700" fill="#1E4D40">Шаг 6. Новизна</text>
+<text x="52" y="698" font-size="11" fill="#333">расстояние до уже изученного до даты среза</text>
+<rect x="520" y="668" width="90" height="30" rx="8" fill="#F1F1F1"/>
+<text x="565" y="688" font-size="11" text-anchor="middle" fill="#333">код</text>
+<rect x="620" y="646" width="480" height="74" rx="10" fill="#FDE8E6" stroke="#C0392B"/>
+<text x="632" y="674" font-size="13" font-weight="700" fill="#C0392B">не пройдено</text>
+<text x="632" y="698" font-size="11" fill="#333">второй читатель: κ 0.14–0.26, завышена</text>
+<line x1="275" y1="624" x2="275" y2="644" stroke="#1E4D40" stroke-width="2" marker-end="url(#a)"/>
+<rect x="40" y="742" width="470" height="74" rx="10" fill="#fff" stroke="#1E4D40"/>
+<text x="52" y="770" font-size="14" font-weight="700" fill="#1E4D40">Шаг 7. Эксперимент и альтернативы</text>
+<text x="52" y="794" font-size="11" fill="#333">какие подкреплённые объяснения отсекает эксперимент</text>
+<rect x="520" y="764" width="90" height="30" rx="8" fill="#EEF0FB"/>
+<text x="565" y="784" font-size="11" text-anchor="middle" fill="#333">LLM + код</text>
+<rect x="620" y="742" width="480" height="74" rx="10" fill="#FFF4DC" stroke="#B7791F"/>
+<text x="632" y="770" font-size="13" font-weight="700" fill="#B7791F">частично</text>
+<text x="632" y="794" font-size="11" fill="#333">второй читатель: κ 0.35</text>
+<line x1="275" y1="720" x2="275" y2="740" stroke="#1E4D40" stroke-width="2" marker-end="url(#a)"/>
+<rect x="40" y="838" width="470" height="74" rx="10" fill="#fff" stroke="#1E4D40"/>
+<text x="52" y="866" font-size="14" font-weight="700" fill="#1E4D40">Шаг 8. Прочие показатели</text>
+<text x="52" y="890" font-size="11" fill="#333">реализуемость, конечная точка, рост внимания, роль ИИ</text>
+<rect x="520" y="860" width="90" height="30" rx="8" fill="#EEF0FB"/>
+<text x="565" y="880" font-size="11" text-anchor="middle" fill="#333">LLM + код</text>
+<rect x="620" y="838" width="480" height="74" rx="10" fill="#FFF4DC" stroke="#B7791F"/>
+<text x="632" y="866" font-size="13" font-weight="700" fill="#B7791F">частично</text>
+<text x="632" y="890" font-size="11" fill="#333">конечная точка κ 0.93; реализуемость не проверялась</text>
+<line x1="275" y1="816" x2="275" y2="836" stroke="#1E4D40" stroke-width="2" marker-end="url(#a)"/>
+<rect x="40" y="934" width="470" height="74" rx="10" fill="#fff" stroke="#1E4D40"/>
+<text x="52" y="962" font-size="14" font-weight="700" fill="#1E4D40">Шаг 9. Ранжирование (АСПИД)</text>
+<text x="52" y="986" font-size="11" fill="#333">порядок важности → случайные веса → балл и «в топ-5»</text>
+<rect x="520" y="956" width="90" height="30" rx="8" fill="#F1F1F1"/>
+<text x="565" y="976" font-size="11" text-anchor="middle" fill="#333">код</text>
+<rect x="620" y="934" width="480" height="74" rx="10" fill="#FFF4DC" stroke="#B7791F"/>
+<text x="632" y="962" font-size="13" font-weight="700" fill="#B7791F">частично</text>
+<text x="632" y="986" font-size="11" fill="#333">правило допуска показателей; профили в пределах 0.03</text>
+<line x1="275" y1="912" x2="275" y2="932" stroke="#1E4D40" stroke-width="2" marker-end="url(#a)"/>
+<rect x="40" y="1030" width="470" height="74" rx="10" fill="#fff" stroke="#1E4D40"/>
+<text x="52" y="1058" font-size="14" font-weight="700" fill="#1E4D40">Шаг 10. Улучшения и версии</text>
+<text x="52" y="1082" font-size="11" fill="#333">исправимые пункты, их прирост, версии гипотез</text>
+<rect x="520" y="1052" width="90" height="30" rx="8" fill="#EEF0FB"/>
+<text x="565" y="1072" font-size="11" text-anchor="middle" fill="#333">код + LLM</text>
+<rect x="620" y="1030" width="480" height="74" rx="10" fill="#FFF4DC" stroke="#B7791F"/>
+<text x="632" y="1058" font-size="13" font-weight="700" fill="#B7791F">частично</text>
+<text x="632" y="1082" font-size="11" fill="#333">восемь правил версий проверяются тестами</text>
+<line x1="275" y1="1008" x2="275" y2="1028" stroke="#1E4D40" stroke-width="2" marker-end="url(#a)"/>
+<rect x="40" y="1126" width="470" height="74" rx="10" fill="#fff" stroke="#1E4D40"/>
+<text x="52" y="1154" font-size="14" font-weight="700" fill="#1E4D40">Шаг 11. Сквозная проверка</text>
+<text x="52" y="1178" font-size="11" fill="#333">60 идущих испытаний, оценки заморожены хешем</text>
+<rect x="520" y="1148" width="90" height="30" rx="8" fill="#F1F1F1"/>
+<text x="565" y="1168" font-size="11" text-anchor="middle" fill="#333">код</text>
+<rect x="620" y="1126" width="480" height="74" rx="10" fill="#ECEFF3" stroke="#5A6B7B"/>
+<text x="632" y="1154" font-size="13" font-weight="700" fill="#5A6B7B">ждёт исходов</text>
+<text x="632" y="1178" font-size="11" fill="#333">исходы 2026–2028</text>
+<line x1="275" y1="1104" x2="275" y2="1124" stroke="#1E4D40" stroke-width="2" marker-end="url(#a)"/>
+</svg>
