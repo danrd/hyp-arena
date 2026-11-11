@@ -18,6 +18,8 @@
     [data-tip] { cursor: help; border-bottom: 1px dashed rgba(30,77,64,.55); }
     .num a, a.num { color: inherit; text-decoration: none; border-bottom: 1px dotted #6b7280; cursor: pointer; }
     .clamp1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+    .clamp3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .clamp3.open { display: block; -webkit-line-clamp: unset; overflow: visible; }
     .clamp2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .prose-r p, .prose-r li { font-size: .9rem; line-height: 1.6; color: #2d3748; }
     .prose-r h3 { font-weight: 700; color: #1E4D40; margin: 1rem 0 .3rem; font-size: .95rem; }
@@ -31,7 +33,7 @@
     .rank-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid #e7e5e4; border-radius: .6rem; background: #fff; }
     .rank-tbl { min-width: 760px; width: 100%; border-collapse: collapse; }
     .rank-tbl th.hy, .rank-tbl td.hy { position: sticky; left: 0; background: #fff; z-index: 1; min-width: 280px; max-width: 380px; box-shadow: 1px 0 0 #e7e5e4; }
-    @media (max-width: 760px) { .rank-tbl th.hy, .rank-tbl td.hy { min-width: 170px; max-width: 190px; } .rank-tbl .hy .line { display: none; } .rank-tbl .pl { display: none; } }
+    @media (max-width: 760px) { .rank-tbl th.hy, .rank-tbl td.hy { min-width: 190px; max-width: 220px; } .rank-tbl .hy .txt:not(.open) { display: none; } .rank-tbl .pl { display: none; } }
     .cap { font-size: .68rem; color: #78716c; white-space: nowrap; margin-top: 2px; }
     .step { border-left: 3px solid #1E4D40; }
   </style>
@@ -48,7 +50,7 @@
       <nav class="flex flex-wrap gap-1.5" id="main-nav">
         <button data-view="ranking" class="nav-btn px-3 py-1.5 rounded text-xs">Рейтинг</button>
         <button data-view="cards" class="nav-btn px-3 py-1.5 rounded text-xs">Карточки гипотез</button>
-        <button data-view="eval" class="nav-btn px-3 py-1.5 rounded text-xs">Оценка карточек</button>
+        <button data-view="eval" class="nav-btn px-3 py-1.5 rounded text-xs">Оценка гипотез</button>
         <button data-view="scheme" class="nav-btn px-3 py-1.5 rounded text-xs">Схема работы</button>
         <button data-view="help" class="nav-btn px-3 py-1.5 rounded text-xs">Справка</button>
       </nav>
@@ -75,59 +77,113 @@
 
     <!-- 2. CARDS: text only -->
     <section id="view-cards" class="space-y-3 hidden">
-      <p class="text-sm text-stone-700 max-w-3xl">Каждая гипотеза — её текст и то, как он разобран в карточку: вмешательство, популяция, звенья механизма, заявленный эксперимент. Числа оценки — во вкладке «Оценка карточек».</p>
+      <p class="text-sm text-stone-700 max-w-3xl">Каждая гипотеза — её текст и то, как он понят: вмешательство, популяция, шаги механизма, заявленный эксперимент. Числа — во вкладке «Оценка гипотез».</p>
       <input id="search-cards" type="text" placeholder="Поиск" class="text-xs border border-stone-300 rounded-lg px-2.5 py-1.5 bg-white w-56">
       <div id="cards" class="space-y-3"></div>
     </section>
 
     <!-- 3. EVALUATION: numbers -->
     <section id="view-eval" class="space-y-3 hidden">
-      <p class="text-sm text-stone-700 max-w-3xl">Все числа по каждой гипотезе: оценка в профилях, показатели, звенья цепочки с записями из статей, альтернативные объяснения, что поднимет оценку; у версий — проверки правил эволюции. Нажмите на запись — откроется статья с цитатой.</p>
+      <p class="text-sm text-stone-700 max-w-3xl">Все числа по каждой гипотезе: оценка в профилях, показатели, звенья цепочки с записями из статей, альтернативные объяснения, что поднимет оценку; у версий — сравнение с исходной гипотезой. Нажмите на запись — откроется статья с цитатой.</p>
       <input id="search-eval" type="text" placeholder="Поиск" class="text-xs border border-stone-300 rounded-lg px-2.5 py-1.5 bg-white w-56">
       <div id="evals" class="space-y-3"></div>
     </section>
 
-    <!-- 4. SCHEME -->
+    <!-- 4. SCHEME: self-contained, what each step does and how it is implemented -->
     <section id="view-scheme" class="space-y-3 hidden">
-      <p class="text-sm text-stone-700 max-w-3xl">Как система приходит к оценке: шаг за шагом, что делает каждый шаг и чем он проверен. Подробная схема с обоснованиями — в репозитории метода, папка docs/system.</p>
-      <div id="scheme" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+      <p class="text-sm text-stone-700 max-w-3xl">Как система приходит к оценке. У каждого шага — что он делает и как это устроено: где работает языковая модель (LLM) и зачем, а где только код.</p>
+      <div id="scheme" class="space-y-3 max-w-5xl"></div>
     </section>
 
-    <!-- 5. HELP: first level in words, second level collapsed -->
+    <!-- 5. HELP: first level in words, second level collapsed and structured -->
     <section id="view-help" class="hidden">
       <div class="bg-white rounded-xl p-5 shadow-sm border border-stone-200 help max-w-4xl">
         <h2 class="serif-title text-lg font-bold text-[#1E4D40]">Как читать отчёт</h2>
         <div class="prose-r">
           <p>Отчёт ранжирует гипотезы о старении и здоровом долголетии. Каждая гипотеза разобрана на цепочку шагов от вмешательства к результату («упражнение → сила мышц → функция у пожилых»), и каждый шаг проверен по статьям, опубликованным до даты среза: что в них подтверждает шаг, что ему противоречит.</p>
           <p><b>Рейтинг.</b> Профиль задаёт, что важнее: «Доказательность» — насколько механизм уже обоснован; «Финансирование» — готовность к проекту; «Фронтир» — новизна для поисковых программ. Балл — средняя оценка при разных допустимых весах показателей; «в топ-5» — как часто гипотеза оказывается среди пяти лучших. Колонки — показатели профиля по рангу важности.</p>
-          <p><b>Карточка гипотезы</b> — текст и то, как он понят: что за вмешательство, у кого, через какие шаги. <b>Оценка</b> — числа: насколько подтверждён каждый шаг, что нового, что покажет эксперимент, что поднимет оценку.</p>
+          <p><b>Карточка гипотезы</b> — текст и то, как он понят: что за вмешательство, у кого, через какие шаги. <b>Оценка гипотезы</b> — числа: насколько подтверждён каждый шаг, что нового, что покажет эксперимент, что поднимет оценку.</p>
           <p><b>Чего отчёт не утверждает.</b> Это не прогноз исхода испытания: оценка говорит, насколько гипотеза обоснована литературой сейчас, нова ли она и насколько полезен предложенный эксперимент. Чистая проверка — проспективный пул: оценки заморожены до того, как испытания сообщат результаты.</p>
         </div>
         <h3 class="mt-5 text-sm font-bold text-stone-500 uppercase tracking-wider">Подробнее</h3>
+
         <details><summary>Вес записи из статьи</summary>
-          <p>Каждая находка в статье — запись с дословной цитатой. Её вес = дизайн × точность × эффект × сравнение × контекст (домены GRADE): РКИ и метаанализ 1, нерандомизированное и наблюдательное 1/2, остальное 1/4 (до звена исхода: клетки 1/3, обзор 2/3, первичное исследование 1); точность растёт с размером выборки до n = 300; указанный средний или крупный эффект 1, иначе 1/2; сравнение между группами 1, иначе 1/2; другая популяция, возраст, пол, доза, вид (если звено их называет) или только та же широкая категория вмешательства — 1/2. Нулевой результат весит по мощности исследования. Несколько записей одной статьи или испытания: самая весомая целиком, остальные по 1/4.</p></details>
+          <p>Каждая находка в статье — запись с дословной цитатой. Вес записи — произведение пяти множителей, каждый — один домен оценки доказательств GRADE.</p>
+          <table class="tbl text-sm"><thead><tr><th>Множитель</th><th>Что учитывает</th><th>Значения</th></tr></thead><tbody>
+            <tr><td>Дизайн (звено исхода)</td><td>надёжность типа исследования</td><td>РКИ, метаанализ — 1; нерандомизированное, наблюдательное — 1/2; обзор, животные, клетки — 1/4</td></tr>
+            <tr><td>Дизайн (звенья до исхода)</td><td>то же для механизма</td><td>первичное исследование — 1; обзор — 2/3; клетки — 1/3</td></tr>
+            <tr><td>Точность</td><td>размер выборки</td><td>min(1, ln n / ln 300), не ниже 1/4; n не указано — 1/4; до исхода — 1/2</td></tr>
+            <tr><td>Эффект</td><td>величина эффекта</td><td>указан средний или крупный — 1; малый или не указан — 1/2</td></tr>
+            <tr><td>Сравнение</td><td>с чем сравнивали</td><td>между группами — 1; до/после или без сравнения — 1/2</td></tr>
+            <tr><td>Контекст</td><td>насколько условия совпадают со звеном</td><td>совпадает — 1; другая популяция, возраст, пол, доза, вид (если звено их называет) или только та же широкая категория вмешательства — 1/2</td></tr>
+          </tbody></table>
+          <table class="tbl text-sm mt-2"><tbody>
+            <tr><td>Нулевой результат («против»)</td><td>весит по мощности исследования обнаружить эффект d = 0.4: маленькое исследование почти ничего не значит, большое — весит полностью</td></tr>
+            <tr><td>Несколько записей одной статьи или испытания</td><td>самая весомая — целиком, остальные — по 1/4</td></tr>
+          </tbody></table></details>
+
         <details><summary>Сила звена, баланс доказательств и покрытие</summary>
-          <p>Сила звена S = 1 / (1 + e<sup>−2.68(F − A)</sup>), где F и A — суммы весов «за» и «против»: 0.5 без данных или при равенстве, 0.83 при F = 0.6. Баланс доказательств — среднее 2S − 1 по местам цепочки с данными: от −1 (против) через 0 до +1 (подтверждено); место без записей в среднее не входит. Покрытие — сколько мест цепочки имеют хоть одну запись: баланс говорит, насколько сильно то, что известно, покрытие — сколько известно.</p></details>
+          <table class="tbl text-sm"><thead><tr><th>Величина</th><th>Формула</th><th>Как читать</th></tr></thead><tbody>
+            <tr><td>F, A</td><td>суммы весов записей «за» и «против»</td><td>сколько данных с каждой стороны</td></tr>
+            <tr><td>Сила звена S</td><td>S = 1 / (1 + e<sup>−2.68·(F − A)</sup>)</td><td>0.5 — данных нет или поровну; 0.83 — F = 0.6 без «против»; ниже 0.5 — данные против</td></tr>
+            <tr><td>Баланс доказательств</td><td>среднее (2S − 1) по местам цепочки с данными</td><td>−1 — против, 0 — поровну, +1 — подтверждено</td></tr>
+            <tr><td>Покрытие</td><td>места с данными / все места</td><td>сколько звеньев вообще проверено</td></tr>
+          </tbody></table>
+          <p>Место цепочки — одно звено; несколько звеньев «сигнальный путь» подряд — одно место; параллельные исходы — одно место. Место без записей в баланс не входит: баланс говорит, насколько сильно то, что известно, покрытие — сколько известно.</p></details>
+
         <details><summary>Правила прочтения записи</summary>
-          <ul><li>«Против» — нулевой или противоположный результат по тому же показателю; значимый, но малый эффект — «за» с малым весом.</li>
-            <li>Сравнение читается по анализу: «не изменилось ни в одной группе» — до/после.</li>
-            <li>Вмешательство: то же; узкий класс (другая форма того же вещества, программа того же рода) — полный вес; только та же широкая категория — 1/2; другое — не учитывается.</li>
-            <li>Смежный контекст засчитывается, только если звено само называет популяцию, пол, дозу или вид.</li></ul></details>
+          <table class="tbl text-sm"><thead><tr><th>Ситуация</th><th>Как читается</th></tr></thead><tbody>
+            <tr><td>Нет эффекта или эффект в обратную сторону</td><td>запись «против»</td></tr>
+            <tr><td>Значимый, но малый эффект</td><td>запись «за» с малым весом</td></tr>
+            <tr><td>«Не изменилось ни в одной группе»</td><td>сравнение до/после, даже в двухгрупповом испытании</td></tr>
+            <tr><td>То же вмешательство или узкий класс (другая форма того же вещества, программа того же рода)</td><td>полный вес</td></tr>
+            <tr><td>Только та же широкая категория (отдельная добавка вместо многокомпонентной формулы)</td><td>вес 1/2</td></tr>
+            <tr><td>Другое вмешательство</td><td>не учитывается</td></tr>
+            <tr><td>Другая популяция, пол, доза, вид</td><td>вес 1/2, только если звено само их называет</td></tr>
+          </tbody></table></details>
+
         <details><summary>Новизна</summary>
-          <p>Насколько гипотеза далека от того, что уже спрашивали до даты среза: новый контекст &lt; перенос на другой вид &lt; аналог &lt; новое сочетание известных звеньев &lt; новое звено. «Неизвестно» — данных нет вовсе. Поиск находит не все статьи, поэтому новизна — оценка сверху; рядом указана статья, задающая ступень.</p></details>
-        <details><summary>Эксперимент, размах и реализуемость</summary>
-          <ul><li>Информативность I: какие подкреплённые альтернативные объяснения отсекает заявленный эксперимент, от 0 до 1; отсекает — только при названной группе или измерении, где гипотеза и альтернатива предсказывают разное. Запас I — если бы отсекал все.</li>
-            <li>Размах: локальный &lt; орган или система &lt; признак старения — по подтверждённым звеньям.</li>
-            <li>Реализуемость: система, длительность, плановая выборка, готовность вмешательства (0–1).</li>
-            <li>Конечная точка: биомаркер &lt; самоотчёт &lt; функция &lt; клиническое событие.</li></ul></details>
-        <details open><summary>Профили и ранги важности</summary><div id="help-profiles"></div></details>
-        <details><summary>Что поднимет оценку и эволюция гипотез</summary>
-          <ul><li>Запас — насколько вырастет балл, если применить все исправимые пункты разбора (эксперимент, отсекающий альтернативы; переписанное опровергнутое звено; суженная популяция; клиническая конечная точка). Это оценка сверху.</li>
-            <li>Версии гипотез: доработка (только исправимые пункты), свободная и направленная эволюция. Версия, сдвинувшаяся к уже известному, помечается. Эволюция не создаёт новых доказательств: рост балла подсказывает, что менять.</li></ul></details>
-        <details><summary>Ограничения и статус проверки</summary>
-          <ul><li>Читаются аннотации и открытые разделы результатов; поиск находит не все статьи, сильнее недосчитывая программы и поведенческие вмешательства.</li>
-            <li>Против исходов прошлых испытаний баланс доказательств различает слабо (AUC около 0.59); языковые модели, спрошенные напрямую, — 0.76, но они могли помнить результаты. Веса записей хорошо упорядочивают более поздние испытания того же звена (AUC 0.70).</li>
-            <li>Новизна и информативность сверены со вторым читателем: новизна завышена, профиль «Фронтир» читать с этой оговоркой.</li></ul></details>
+          <table class="tbl text-sm"><thead><tr><th>Уровень (от известного к новому)</th><th>Когда</th></tr></thead><tbody>
+            <tr><td>Новый контекст</td><td>то же вмешательство и исход у того же вида уже изучали, но в другой популяции или дозе</td></tr>
+            <tr><td>Перенос на другой вид</td><td>то же вмешательство изучали только на другом виде</td></tr>
+            <tr><td>Аналог</td><td>изучали только родственное вмешательство</td></tr>
+            <tr><td>Новое сочетание</td><td>исход не изучали, но все звенья до него подтверждены</td></tr>
+            <tr><td>Новое звено</td><td>исход не изучали, и хотя бы одно звено механизма без данных</td></tr>
+            <tr><td>Неизвестно</td><td>данных нет вовсе: отсутствие данных — не новизна</td></tr>
+          </tbody></table>
+          <p>Поиск находит не все статьи, поэтому новизна — оценка сверху; в оценке гипотезы указана статья, задающая уровень.</p></details>
+
+        <details><summary>Эксперимент, размах, реализуемость</summary>
+          <table class="tbl text-sm"><thead><tr><th>Показатель</th><th>Как считается</th><th>Шкала</th></tr></thead><tbody>
+            <tr><td>Информативность эксперимента I</td><td>min(1, Σ a·d / 1.5): a — опора альтернативы в литературе, d — что делает с ней эксперимент (отсекает 1, ослабляет 0.5, не различает 0)</td><td>0–1</td></tr>
+            <tr><td>Запас I</td><td>то же, если бы эксперимент отсекал все подкреплённые альтернативы</td><td>0–1</td></tr>
+            <tr><td>Размах механизма</td><td>по подтверждённым звеньям</td><td>локальный &lt; орган или система &lt; признак старения</td></tr>
+            <tr><td>Реализуемость</td><td>система, длительность, плановая выборка, готовность вмешательства</td><td>0–1</td></tr>
+            <tr><td>Клиничность конечной точки</td><td>две модели должны согласиться, иначе «неизвестно»</td><td>биомаркер &lt; самоотчёт &lt; функция &lt; клиническое событие</td></tr>
+            <tr><td>Рост внимания</td><td>статьи о вмешательстве за 3 года против 3 предыдущих, за вычетом роста PubMed</td><td>−0.5 … 1.5</td></tr>
+          </tbody></table></details>
+
+        <details open><summary>Профили, ранги важности и метод АСПИД</summary>
+          <div id="help-profiles"></div>
+          <p class="mt-3"><b>На пальцах.</b> Известно только, что один показатель важнее другого, но не во сколько раз. Поэтому система 10 000 раз выбирает случайные веса, которые соблюдают порядок важности профиля, и каждый раз считает взвешенную сумму показателей каждой гипотезы. Балл — средняя сумма; «в топ-5» — в какой доле расчётов гипотеза попала в пятёрку лучших пула. Высокая доля значит, что место не зависит от того, как именно выбраны веса.</p>
+          <table class="tbl text-sm mt-2"><thead><tr><th>Шаг</th><th>Формально</th></tr></thead><tbody>
+            <tr><td>Шкалы</td><td>каждый показатель j переводится в v<sub>j</sub> ∈ [0, 1]: числовой — линейно между границами шкалы (баланс от −1 до +1, I от 0 до 1, рост внимания от −0.5 до 1.5); уровневый — случайной возрастающей разметкой уровней (худший 0, лучший 1, промежуточные — случайные упорядоченные числа, свои в каждом розыгрыше); неизвестное значение — случайное по всей шкале</td></tr>
+            <tr><td>Веса</td><td>w<sub>j</sub> ≥ 0, Σ w<sub>j</sub> = 1, равномерно случайны среди всех наборов, где показатель старшего ранга весит не меньше показателя младшего; при равном ранге показатели равноправны</td></tr>
+            <tr><td>Розыгрыш k</td><td>u<sub>k</sub>(h) = Σ<sub>j</sub> w<sub>kj</sub> · v<sub>kj</sub>(h), k = 1 … 10 000</td></tr>
+            <tr><td>Балл</td><td>среднее u<sub>k</sub>(h) по розыгрышам; шкалы фиксированы, поэтому балл гипотезы не зависит от остального пула</td></tr>
+            <tr><td>Место и «в топ-5»</td><td>место — по баллу; «в топ-5» — доля розыгрышей, где u<sub>k</sub>(h) входит в пять наибольших среди гипотез пула</td></tr>
+          </tbody></table>
+          <p class="text-xs text-stone-500 mt-1">Метод — АСПИД (Хованов), в форме стохастического анализа приемлемости SMAA-2.</p></details>
+
+        <details><summary>Что поднимет оценку и версии гипотез</summary>
+          <table class="tbl text-sm"><thead><tr><th>Понятие</th><th>Что это</th></tr></thead><tbody>
+            <tr><td>Запас</td><td>насколько вырастет балл, если применить все исправимые пункты разбора: эксперимент, отсекающий альтернативы; переписанное опровергнутое звено; суженная популяция; клиническая конечная точка. Оценка сверху</td></tr>
+            <tr><td>Доработка</td><td>версия, где исправлено только то, что указано в разборе; новые части исходной гипотезы сохраняются</td></tr>
+            <tr><td>Свободная эволюция</td><td>версия, где можно менять всё под выбранный профиль</td></tr>
+            <tr><td>Направленная эволюция</td><td>версия с одним новым звеном между подтверждёнными соседями</td></tr>
+            <tr><td>Сдвиг к известному</td><td>версия стала ближе к уже изученному (ниже новизна или пропало новое звено); помечается, но остаётся в рейтинге</td></tr>
+          </tbody></table>
+          <p>Версии не создают новых доказательств: рост балла подсказывает, что менять в гипотезе, а не доказывает её.</p></details>
         <details><summary>Происхождение отчёта</summary><p id="help-prov"></p></details>
         <details><summary>Словарь параметров</summary><dl id="glossary" class="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-x-4 gap-y-1.5 text-xs mt-2"></dl></details>
       </div>
@@ -222,13 +278,15 @@
     }
 
     // ---------- 1. ranking
+    const orderText = P => P.tiers.map(t => t.map(cap1).join(' = ')).join(' > ');
     function renderRanking() {
       const P = PROFS.find(p => p.key === curProfile);
-      document.getElementById('profile-order').innerHTML = `${esc(P.about)}`;
+      document.getElementById('profile-order').innerHTML = `<span class="text-stone-500">Порядок важности:</span> ${esc(orderText(P))}`;
       const cols = []; P.tier_keys.forEach((t, i) => t.forEach(k => cols.push([k, i + 1])));
       const H = [['pl', '#'], ['hy', 'Гипотеза'], ['', 'Балл'], ['', 'В топ-5']];
-      document.getElementById('rank-head').innerHTML = H.map(([c, l]) => `<th class="${c} py-2 px-2 text-xs font-bold text-[#1E4D40] align-bottom">${l === 'Балл' ? tip(TIPS.score || '', l) : l === 'В топ-5' ? tip(TIPS.top5 || 'Как часто гипотеза среди пяти лучших при разных допустимых весах', l) : l}</th>`).join('') +
-        cols.map(([k, rank]) => `<th class="py-2 px-2 text-xs font-bold text-[#1E4D40] align-bottom">${tip(TIPS[k === 'trend' ? 'trend_pubmed' : k === 'best_design' ? 'best_design_outcome' : k === 'independent' ? 'independent_outcome' : k === 'endpoint' ? 'endpoint_clinical' : k] || '', esc(cap1(NM.ind[k] || k)))}<div class="font-normal text-stone-500">ранг важности ${rank}</div></th>`).join('');
+      const tipOf = k => TIPS[{trend: 'trend_pubmed', best_design: 'best_design_outcome', independent: 'independent_outcome', endpoint: 'endpoint_clinical'}[k] || k] || '';
+      document.getElementById('rank-head').innerHTML = H.map(([c, l]) => `<th class="${c} py-2 px-2 text-xs font-bold text-[#1E4D40] align-bottom">${l === 'Балл' ? tip(TIPS.score || 'Средний балл гипотезы по 10 000 розыгрышей весов профиля (см. «Справка» → АСПИД)', l) : l === 'В топ-5' ? tip('Доля розыгрышей весов, в которых гипотеза входит в пятёрку лучших пула', l) : l}</th>`).join('') +
+        cols.map(([k, rank]) => `<th class="py-2 px-2 text-xs font-bold text-[#1E4D40] align-bottom">${tip(tipOf(k), esc(cap1(NM.ind[k] || k)))}<div class="font-normal text-stone-500">ранг важности ${rank}</div></th>`).join('');
       const og = document.getElementById('filter-origin').value, ty = document.getElementById('filter-type').value;
       const q = document.getElementById('search-ranking').value.trim().toLowerCase();
       let items = scored();
@@ -241,20 +299,25 @@
         const a = r.aspid[curProfile];
         return `<tr class="border-t border-stone-200 align-top">
           <td class="pl py-2.5 px-2 text-stone-500">${a.place ?? '—'}</td>
-          <td class="hy py-2.5 px-2"><a href="#" data-card="${esc(r.id)}" class="font-semibold text-[#1E4D40] hover:underline clamp2">${esc(short(r.title, 110))}</a>
-            <div class="line text-xs text-stone-600 clamp2 mt-0.5">${esc(r.plain || '')}</div><div class="mt-1 flex flex-wrap gap-1">${origin(r)}</div></td>
-          <td class="py-2.5 px-2 font-bold num"><a data-eval="${esc(r.id)}">${f(a.score)}</a></td>
+          <td class="hy py-2.5 px-2"><a href="#" data-card="${esc(r.id)}" class="font-semibold text-[#1E4D40] hover:underline">${esc(r.title)}</a>
+            <div class="txt text-xs text-stone-600 mt-0.5 clamp3">${esc(r.plain || '')}</div>
+            <button class="more text-[11px] text-emerald-800 underline" data-more>текст полностью</button>
+            <div class="mt-1 flex flex-wrap gap-1">${origin(r)}</div></td>
+          <td class="py-2.5 px-2 font-bold num"><a data-eval="${esc(r.id)}">${f(a.score, 3)}</a></td>
           <td class="py-2.5 px-2 num"><a data-eval="${esc(r.id)}">${a.p_top5 == null ? '—' : Math.round(a.p_top5 * 100) + '%'}</a></td>
           ${cols.map(([k]) => `<td class="py-2.5 px-2 num whitespace-nowrap"><a data-eval="${esc(r.id)}">${indVal(r, k)}</a>${k === 'chain_state' && r.cover ? `<div class="cap">покрыто ${r.cover[0]} из ${r.cover[1]}</div>` : ''}</td>`).join('')}</tr>`;
       }).join('');
+      document.querySelectorAll('#rank-body [data-more]').forEach(b => b.onclick = e => { e.preventDefault(); e.stopPropagation();
+        const t = b.previousElementSibling; const open = t.classList.toggle('open'); b.textContent = open ? 'свернуть' : 'текст полностью'; });
       document.getElementById('rank-pager').innerHTML = `<button id="rp-prev" class="px-2 py-0.5 rounded border">‹</button><span>${rankPage + 1} / ${pages} · гипотез: ${items.length}</span><button id="rp-next" class="px-2 py-0.5 rounded border">›</button>`;
       document.getElementById('rp-prev').onclick = () => { rankPage = Math.max(0, rankPage - 1); renderRanking(); };
       document.getElementById('rp-next').onclick = () => { rankPage = Math.min(pages - 1, rankPage + 1); renderRanking(); };
     }
 
-    // ---------- 2. cards (words only)
+    // ---------- 2. cards (words only); a link is shown as a triple: subject, relation, object
     const sentence = l => `${l.subject} ${nm('relation', l.relation)} ${l.object}`;
-    const linkText = (r, l) => { const c = ((r.card_view || {}).links || []).find(x => x.id === l.id); return c ? sentence(c) : l.claim; };
+    const triplet = l => `<span class="font-semibold">${esc(l.subject)}</span> <span class="italic text-emerald-800">${esc(nm('relation', l.relation))}</span> <span class="font-semibold">${esc(l.object)}</span>`;
+    const cardLink = (r, l) => ((r.card_view || {}).links || []).find(x => x.id === l.id);
     function textBlock(t) {
       const lines = String(t || '').split(/\n+/).map(s => s.trim()).filter(Boolean);
       return lines.map(s => { const m = s.match(/^([A-Z][A-Za-z ]{2,30}):\s*(.*)$/); return m ? `<p><span class="text-stone-500">${esc(m[1])}:</span> ${esc(m[2])}</p>` : `<p>${esc(s)}</p>`; }).join('');
@@ -272,22 +335,40 @@
           <summary class="p-4 cursor-pointer"><span class="font-semibold text-[#1E4D40]">${esc(r.title)}</span> <span class="ml-1">${origin(r)}</span></summary>
           <div class="px-4 pb-4 grid grid-cols-1 lg:grid-cols-2 gap-5 prose-r">
             <div><h3>Текст гипотезы</h3>${textBlock(r.text) || `<p>${esc(r.plain || '')}</p>`}
-              ${parent ? `<h3>Чем отличается от исходной</h3><p>Версия гипотезы <a href="#" data-card="${esc(parent.id)}" class="underline">${esc(short(parent.title, 80))}</a> (${esc(MODE[r.evo_mode] || 'версия')}).</p>${changes.map(x => `<p>${esc(x)}</p>`).join('')}` : ''}</div>
-            <div><h3>Как гипотеза понята (карточка)</h3><ul>
+              ${parent ? `<h3>Чем отличается от исходной</h3><p>Это версия гипотезы «<a href="#" data-card="${esc(parent.id)}" class="underline">${esc(parent.title)}</a>», режим — ${esc(MODE[r.evo_mode] || 'версия')}.</p>${changes.map(x => `<p>${esc(x)}</p>`).join('')}` : ''}</div>
+            <div><h3>Как гипотеза понята</h3><ul>
                 ${kv('Вмешательство', (c.interventions || []).map(i => i.label + (i.regimen && i.regimen !== 'unknown' ? ', ' + i.regimen : '')).join('; '))}
                 ${kv('Популяция', [pop.label, pop.sex && pop.sex !== 'unknown' ? pop.sex : '', pop.age_at_start && pop.age_at_start !== 'unknown' ? pop.age_at_start : ''].filter(Boolean).join(', '))}
                 ${kv('Сравнение', c.comparator)}${kv('Исход', c.outcome)}</ul>
-              <h3>Механизм по шагам</h3><ol>${(c.links || []).map(l => `<li><span class="text-stone-500">${esc(nm('link', l.type))}:</span> ${esc(sentence(l))}${l.hallmark ? ` <span class="text-stone-500">(признак старения: ${esc(l.hallmark)})</span>` : ''}</li>`).join('')}</ol>
-              <h3>Заявленный эксперимент</h3><p>${esc(nm('exp_design', ex.design))}${ex.control && ex.control !== 'unknown' ? ', контроль: ' + esc(nm('control', ex.control)) : ''}${ex.n_planned ? ', плановая выборка ' + esc(ex.n_planned) : ''}${ex.primary_outcome && ex.primary_outcome !== 'unknown' ? '. Главный исход: ' + esc(ex.primary_outcome) : ''}.</p>
-              ${(c.alternatives || []).length ? `<h3>Альтернативные объяснения</h3><ul>${c.alternatives.map(a => `<li>${esc(sentence(a))}</li>`).join('')}</ul>` : ''}</div>
-            <div class="lg:col-span-2"><h3>Разбор</h3>${r.analysis ? textBlock(r.analysis) : '<p class="text-stone-500">Разбор обычным языком ещё не написан для этого пула.</p>'}
-              <p class="mt-2"><a href="#" data-eval="${esc(r.id)}" class="px-3 py-1.5 rounded-lg bg-[#1E4D40] text-white text-xs font-semibold no-underline">Оценка →</a></p></div>
+              <h3>Механизм по шагам</h3><p class="text-xs text-stone-500">Каждый шаг — тройка: <b>что</b> · <i class="text-emerald-800">как действует</i> · <b>на что</b>.</p>
+              <ol>${(c.links || []).map(l => `<li><span class="text-stone-500">${esc(nm('link', l.type))}:</span> ${triplet(l)}${l.hallmark ? ` <span class="text-stone-500">(признак старения: ${esc(l.hallmark)})</span>` : ''}</li>`).join('')}</ol>
+              <h3>Заявленный эксперимент</h3><p>${esc(cap1(nm('exp_design', ex.design)))}${ex.control && ex.control !== 'unknown' ? ', контроль: ' + esc(nm('control', ex.control)) : ''}${ex.n_planned ? ', плановая выборка ' + esc(ex.n_planned) : ''}${ex.primary_outcome && ex.primary_outcome !== 'unknown' ? '. Главный исход: ' + esc(ex.primary_outcome) : ''}.</p>
+              ${(c.alternatives || []).length ? `<h3>Альтернативные объяснения</h3><ul>${c.alternatives.map(a => `<li>${triplet(a)}</li>`).join('')}</ul>` : ''}
+              <p class="mt-3"><a href="#" data-eval="${esc(r.id)}" class="px-3 py-1.5 rounded-lg bg-[#1E4D40] text-white text-xs font-semibold no-underline">Оценка →</a></p></div>
           </div></details>`;
       }).join('');
     }
 
     // ---------- 3. evaluation (numbers)
     const recBtn = r => `<button data-pmid="${r.pmid}" data-tip="${esc((r.side === 'for' ? 'ЗА' : 'ПРОТИВ') + ' · вес ' + f(r.w, 3) + ' · «' + (r.quote || '') + '»')}" class="inline-block mr-1 mb-1 px-2 py-0.5 rounded border text-xs ${r.side === 'for' ? 'bg-emerald-50 text-emerald-900 border-emerald-300' : 'bg-red-50 text-red-900 border-red-300'}">${r.side === 'for' ? 'за' : 'против'} ${r.pmid} · ${f(r.w)}</button>`;
+    function versionBlock(r, parent) {
+      const d = r.drift || {};
+      const row = (name, a, b, mean) => `<tr><td>${name}</td><td>${a}</td><td>${b}</td><td class="text-stone-600">${mean}</td></tr>`;
+      const ks = d.known_share || [];
+      const drift = d.drift_to_known ? `да: ${esc((d.reasons || []).join('; '))}` : 'нет';
+      return `<h4 class="font-bold text-[#1E4D40] mt-4 mb-1">Сравнение с исходной гипотезой</h4>
+        <p class="text-sm mb-1">Эта гипотеза — версия «<a href="#" data-eval="${esc(parent.id)}" class="underline">${esc(parent.title)}</a>», режим — ${esc(MODE[d.mode] || MODE[r.evo_mode] || 'версия')}. Что изменено в тексте — в карточке.</p>
+        <div class="overflow-x-auto"><table class="tbl w-full text-sm"><thead><tr><th>Показатель</th><th>Исходная</th><th>Версия</th><th>Что это значит</th></tr></thead><tbody>
+          ${PROFS.map(p => row('Балл, ' + esc(p.label), f(parent.aspid[p.key].score, 3), f(r.aspid[p.key].score, 3), 'рост — версия лучше по этому профилю')).join('')}
+          ${row('Баланс доказательств', sg(parent.chain_state), sg(r.chain_state), 'насколько подтверждено то, что о звеньях известно')}
+          ${row('Покрытие', parent.cover ? parent.cover.join(' из ') : '—', r.cover ? r.cover.join(' из ') : '—', 'сколько мест цепочки имеют данные')}
+          ${row('Звенья, уже подтверждённые статьями', ks.length ? Math.round(ks[0] * 100) + '%' : '—', ks.length > 1 ? Math.round(ks[1] * 100) + '%' : '—', 'рост значит, что версия собрана из уже известных частей')}
+          ${row('Новизна', esc(nm('novelty', parent.N || '')), esc(nm('novelty', r.N || '')), 'ниже — версия ближе к изученному')}
+          ${row('Информативность эксперимента', f(parent.I), f(r.I), 'сколько альтернатив отсекает эксперимент версии')}
+          ${row('Размах механизма', esc(nm('scope', parent.W)), esc(nm('scope', r.W)), 'как далеко идёт подтверждённый механизм')}
+        </tbody></table></div>
+        <p class="text-sm mt-1">Сдвиг к известному: ${drift}.</p>`;
+    }
     function renderEval() {
       const q = document.getElementById('search-eval').value.trim().toLowerCase();
       const items = scored().filter(r => !q || (r.id + ' ' + r.title).toLowerCase().includes(q))
@@ -295,66 +376,83 @@
       document.getElementById('evals').innerHTML = items.map(r => {
         const parent = r.is_evolved ? byId[r.parent_id] : null;
         const prof = `<table class="tbl w-full text-sm"><thead><tr><th>Профиль</th><th>Балл</th><th>Место</th><th>В топ-5</th><th>Запас</th></tr></thead><tbody>${PROFS.map(p => { const a = r.aspid[p.key];
-          return `<tr><td>${esc(p.label)}</td><td>${f(a.score)}${parent ? ` <span class="text-stone-500">(исходная ${f(parent.aspid[p.key].score)})</span>` : ''}</td><td>${a.place ?? '—'} из ${a.of}</td><td>${a.p_top5 == null ? '—' : Math.round(a.p_top5 * 100) + '%'}</td><td>${sg(r.room[p.key])}${r.room_not_computed ? ' *' : ''}</td></tr>`; }).join('')}</tbody></table>`;
-        const ind = [['Баланс доказательств', sg(r.chain_state) + (r.cover ? ` · покрыто ${r.cover[0]} из ${r.cover[1]} мест цепочки` : '')],
+          return `<tr><td>${esc(p.label)}</td><td>${f(a.score, 3)}</td><td>${a.place ?? '—'} из ${a.of}</td><td>${a.p_top5 == null ? '—' : Math.round(a.p_top5 * 100) + '%'}</td><td>${sg(r.room[p.key], 3)}${r.room_not_computed ? ' *' : ''}</td></tr>`; }).join('')}</tbody></table>`;
+        const ind = [['Баланс доказательств', sg(r.chain_state)], ['Покрытие', r.cover ? `${r.cover[0]} из ${r.cover[1]} мест цепочки` : '—'],
           ['Новизна', esc(nm('novelty', r.N || '')) + (r.N_pmid ? ` · задаёт <button data-pmid="${r.N_pmid}" class="underline text-blue-800">PMID ${r.N_pmid}</button>` : '')],
-          ['Информативность эксперимента', f(r.I) + (r.I_headroom != null ? ` · запас ${f(r.I_headroom)}` : '')], ['Размах механизма', esc(nm('scope', r.W))],
+          ['Информативность эксперимента', f(r.I)], ['Запас информативности', f(r.I_headroom)], ['Размах механизма', esc(nm('scope', r.W))],
           ['Реализуемость', f(r.feasibility)], ['Клиничность конечной точки', esc(nm('endpoint', r.endpoint || ''))], ['Роль ИИ', esc(nm('ai', r.ai_role))],
           ['Рост внимания', sg(r.trend)], ['Лучший дизайн по исходу', esc(nm('design', r.best_design))], ['Независимые источники по исходу', r.independent ?? '—']];
-        const links = `<table class="tbl w-full text-sm"><thead><tr><th>Звено</th><th>Утверждение</th><th>F / A</th><th>S [90%]</th><th>Новизна звена</th><th>Записи</th></tr></thead><tbody>${r.links.map(l => `<tr>
-            <td class="whitespace-nowrap">${esc(nm('link', l.type))}</td><td>${esc(linkText(r, l))}</td><td class="whitespace-nowrap">${f(l.F)} / ${f(l.A)}</td>
+        const links = `<table class="tbl w-full text-sm"><thead><tr><th>Звено</th><th>Субъект</th><th>Отношение</th><th>Объект</th><th>F / A</th><th>S [90%]</th><th>Новизна звена</th><th>Записи</th></tr></thead><tbody>${r.links.map(l => { const c = cardLink(r, l);
+            return `<tr><td class="whitespace-nowrap">${esc(nm('link', l.type))}</td>
+            ${c ? `<td class="font-semibold">${esc(c.subject)}</td><td class="italic text-emerald-800">${esc(nm('relation', c.relation))}</td><td class="font-semibold">${esc(c.object)}</td>` : `<td colspan="3">${esc(l.claim)}</td>`}
+            <td class="whitespace-nowrap">${f(l.F)} / ${f(l.A)}</td>
             <td class="whitespace-nowrap">${l.checked ? f(l.S) + ` [${f(l.ci[0])}; ${f(l.ci[1])}]` : 'нет данных'}</td><td>${esc(nm('novelty', l.novelty || ''))}</td>
-            <td>${l.records.length ? l.records.map(recBtn).join('') : '<span class="text-stone-400">нет</span>'}</td></tr>`).join('')}</tbody></table>`;
-        const alts = (r.alternatives || []).length ? `<table class="tbl w-full text-sm"><thead><tr><th>Альтернатива</th><th>Опора</th><th>Эксперимент при успехе</th><th>при неудаче</th></tr></thead><tbody>${r.alternatives.map((a, i) => `<tr><td>${esc(((r.card_view || {}).alternatives || [])[i] ? sentence(r.card_view.alternatives[i]) : a.text)}</td><td>${f(a.support)}</td><td>${esc(nm('disc', a.on_positive))}</td><td>${esc(nm('disc', a.on_negative))}</td></tr>`).join('')}</tbody></table>` : '<p class="text-sm text-stone-500">Альтернативы не предложены.</p>';
+            <td>${l.records.length ? l.records.map(recBtn).join('') : '<span class="text-stone-400">нет</span>'}</td></tr>`; }).join('')}</tbody></table>`;
+        const ca = (r.card_view || {}).alternatives || [];
+        const alts = (r.alternatives || []).length ? `<table class="tbl w-full text-sm"><thead>
+            <tr><th rowspan="2">Субъект</th><th rowspan="2">Отношение</th><th rowspan="2">Объект</th><th rowspan="2">Опора в литературе</th><th colspan="2" style="text-align:center">Что делает эксперимент</th></tr>
+            <tr><th>при успехе</th><th>при неудаче</th></tr></thead><tbody>${r.alternatives.map((a, i) => { const t = ca[i];
+            return `<tr>${t ? `<td class="font-semibold">${esc(t.subject)}</td><td class="italic text-emerald-800">${esc(nm('relation', t.relation))}</td><td class="font-semibold">${esc(t.object)}</td>` : `<td colspan="3">${esc(a.text)}</td>`}
+              <td>${f(a.support)}</td><td>${esc(nm('disc', a.on_positive))}</td><td>${esc(nm('disc', a.on_negative))}</td></tr>`; }).join('')}</tbody></table>` : '<p class="text-sm text-stone-500">Альтернативы не предложены.</p>';
         const flags = (r.flags || []).length ? `<ul class="list-disc pl-5 text-sm">${r.flags.map(x => `<li><b>${esc(x.name)}</b>${x.detail ? ': ' + esc(x.detail) : ''}</li>`).join('')}</ul>` : '<p class="text-sm text-stone-500">Флагов нет.</p>';
         const imps = (r.improvements || []).length ? `<ul class="list-disc pl-5 text-sm">${r.improvements.map(i => `<li><b>${i.cls === 'rewrite' ? 'исправить формулировкой' : 'нужны новые данные'}:</b> ${esc(i.what)} <span class="text-emerald-900">${esc(i.expected)}</span>${i.facts.length ? ` <span class="text-stone-500">(${esc(i.facts.join(', '))})</span>` : ''}</li>`).join('')}</ul>` : '<p class="text-sm text-stone-500">Пунктов нет.</p>';
-        const d = r.drift;
-        const evo = parent ? `<h4 class="font-bold text-[#1E4D40] mt-4 mb-1">Проверки версии</h4><ul class="list-disc pl-5 text-sm">
-            <li>Режим: ${esc(MODE[d && d.mode] || MODE[r.evo_mode] || 'версия')}; исходная — <a href="#" data-eval="${esc(parent.id)}" class="underline">${esc(short(parent.title, 70))}</a></li>
-            <li>Новизна: ${esc(nm('novelty', parent.N || ''))} → ${esc(nm('novelty', r.N || ''))}${d && d.drift_to_known ? ' · сдвиг к известному: ' + esc((d.reasons || []).join('; ')) : ''}</li>
-            ${d && d.known_share ? `<li>Доля звеньев с опорой до даты среза: ${f(d.known_share[0])} → ${f(d.known_share[1])}</li>` : ''}
-            <li>Баланс: ${sg(parent.chain_state)} → ${sg(r.chain_state)}; I: ${f(parent.I)} → ${f(r.I)}; размах: ${esc(nm('scope', parent.W))} → ${esc(nm('scope', r.W))}</li></ul>` : '';
         return `<details id="eval-${esc(r.id)}" class="bg-white rounded-xl border border-stone-200 shadow-sm">
           <summary class="p-4 cursor-pointer"><span class="font-semibold text-[#1E4D40]">${esc(r.title)}</span> <span class="ml-1">${origin(r)}</span></summary>
           <div class="px-4 pb-4 space-y-3">
             <p><a href="#" data-card="${esc(r.id)}" class="text-xs underline">← Карточка</a></p>
             <div class="grid grid-cols-1 xl:grid-cols-2 gap-4"><div><h4 class="font-bold text-[#1E4D40] mb-1">Оценка в профилях</h4>${prof}</div>
               <div><h4 class="font-bold text-[#1E4D40] mb-1">Показатели</h4><table class="tbl w-full text-sm"><tbody>${ind.map(([k, v]) => `<tr><td class="text-stone-600">${k}</td><td>${v}</td></tr>`).join('')}</tbody></table></div></div>
+            ${parent ? versionBlock(r, parent) : ''}
             <h4 class="font-bold text-[#1E4D40]">Звенья цепочки и записи из статей</h4><div class="overflow-x-auto">${links}</div>
             <h4 class="font-bold text-[#1E4D40]">Альтернативные объяснения</h4><div class="overflow-x-auto">${alts}</div>
             <div class="grid grid-cols-1 xl:grid-cols-2 gap-4"><div><h4 class="font-bold text-[#1E4D40] mb-1">Флаги</h4>${flags}</div><div><h4 class="font-bold text-[#1E4D40] mb-1">Что поднимет оценку</h4>${imps}</div></div>
-            ${evo}
           </div></details>`;
       }).join('');
     }
 
-    // ---------- 4. scheme (simplified; the full one: docs/system/)
+    // ---------- 4. scheme: what each step does and how it is implemented (LLM or code)
     const STEPS = [
-      ['Карточка гипотезы', 'Модель разбирает текст в карточку: вмешательство, популяция, цепочка шагов механизма, заявленный эксперимент.', 'Устойчивость к перефразированию и сверка с ручными карточками.'],
-      ['Поиск статей', 'Для каждого шага ищутся статьи PubMed до даты среза.', 'Поиск находит 95% ключевых статей второго читателя; узкое место — чтение.'],
-      ['Чтение статьи', 'Статья разбирается один раз в «костяк»: группы, исходы, результаты с дословными цитатами; шаги гипотезы сопоставляются с находками.', 'Против второго читателя: полнота 0.52, точность 0.85; поля дизайна и выборки совпадают в 92–96%.'],
-      ['Вес находки', 'Вес по доменам GRADE: дизайн, точность, эффект, сравнение, контекст.', 'Упорядочивает более поздние испытания того же шага (AUC 0.70).'],
-      ['Сила шага и баланс', 'Находки «за» и «против» складываются в силу шага; баланс — среднее по шагам с данными.', 'Против исходов прошлых испытаний различает слабо (AUC 0.59); главная проверка — проспективный пул.'],
-      ['Новизна', 'Насколько вопрос далёк от уже заданного до даты среза.', 'Сверена со вторым читателем: завышена, читать с оговоркой.'],
-      ['Эксперимент', 'Какие подкреплённые альтернативные объяснения отсекает заявленный эксперимент.', 'Согласие со вторым читателем каппа 0.35 на отложенной выборке.'],
-      ['Ранжирование', 'Профиль задаёт порядок важности; веса разыгрываются, балл — среднее, «в топ-5» — устойчивость места.', 'Каждый показатель допускается в профиль только после проверки надёжности и неизбыточности.'],
-      ['Что улучшить и эволюция', 'Список исправимых пунктов и версии гипотез по правилам, которые проверяет код.', 'Восемь правил эволюции проверяются кодом для каждой версии.'],
-      ['Чистая проверка', '60 идущих испытаний оценены и заморожены до их результатов.', 'Результаты придут в 2026–2028 годах.'],
+      {t: 'Гипотезы на входе', what: 'Откуда берутся гипотезы: тексты из реестров испытаний (ClinicalTrials.gov и другие), внешние наборы (Bio Arena) и версии, полученные эволюцией.',
+       how: [['LLM', 'пишет версии гипотез в режиме эволюции (модуль evolve_v3) по списку исправимых пунктов; отдельная команда генерации описана, но ещё не реализована'], ['Код', 'выгрузка текстов из реестров с датой регистрации; версии проходят те же шаги, что и исходные']]},
+      {t: 'Карточка гипотезы', what: 'Текст превращается в структуру: вмешательство, популяция, исход, цепочка шагов механизма от вмешательства к исходу, заявленный эксперимент.',
+       how: [['LLM', 'разбирает текст по фиксированной схеме карточки и выписывает шаги механизма как тройки «что — как действует — на что»'], ['Код', 'проверка схемы (HypothesisCard), приведение названий веществ и видов к справочникам (ChEMBL, ChEBI), популяция и эксперимент берутся из полей реестра']]},
+      {t: 'Поиск статей', what: 'Для каждого шага цепочки ищутся статьи PubMed, опубликованные до даты среза.',
+       how: [['LLM', 'пишет поисковые запросы под шаг'], ['Код', 'запросы к PubMed с отсечкой по дате, добавление статей по цитированиям, исключение отозванных']]},
+      {t: 'Чтение статей', what: 'Из каждой статьи извлекаются находки: что сравнивали, у кого, в какую сторону изменился исход, с дословной цитатой.',
+       how: [['LLM', 'читает аннотацию (и открытый раздел результатов) и выписывает находки; в новой схеме статья разбирается один раз в «костяк», а шаги гипотезы сопоставляются с ним'], ['Код', 'проверяет, что каждая цитата дословно есть в тексте (иначе находка отбрасывается), сопоставляет находку с шагом по вмешательству, исходу и контексту; спорные пары решает отдельный короткий вызов LLM']]},
+      {t: 'Вес находки', what: 'Каждая находка получает вес по надёжности: дизайн, размер выборки, величина эффекта, тип сравнения, совпадение условий.',
+       how: [['Код', 'правила весов по доменам GRADE (rules_v32); LLM здесь не участвует']]},
+      {t: 'Сила шага и баланс доказательств', what: 'Находки «за» и «против» складываются в силу каждого шага; баланс — среднее по шагам, о которых есть данные; покрытие — доля таких шагов.',
+       how: [['Код', 'S = 1 / (1 + e^(−2.68·(F − A))), баланс = среднее (2S − 1); фильтр отсекает гипотезы, ключевой шаг которых опровергнут РКИ в той же популяции']]},
+      {t: 'Новизна', what: 'Насколько вопрос далёк от уже заданного до даты среза: от «новый контекст» до «новое звено».',
+       how: [['Код', 'по найденным записям на шаге исхода и на шагах механизма (novelty_v34); без данных — «неизвестно», а не «ново»']]},
+      {t: 'Эксперимент и альтернативы', what: 'Какие конкурирующие объяснения результата есть и какие из них отсекает заявленный эксперимент.',
+       how: [['LLM', 'предлагает альтернативные объяснения; второй вызов по тексту реестра решает, отсекает ли эксперимент каждую (нужна названная группа или измерение с дословной фразой)'], ['Код', 'опора альтернатив ищется и читается как шаги гипотезы; информативность I = min(1, Σ опора × отсечение / 1.5)']]},
+      {t: 'Реализуемость и прочие показатели', what: 'Цена и срок эксперимента, близость конечной точки к клинике, рост внимания к теме, роль ИИ.',
+       how: [['LLM', 'две модели независимо относят конечную точку к уровню; засчитывается только совпадение'], ['Код', 'реализуемость по системе, длительности, выборке и готовности вмешательства; рост внимания по числу статей PubMed']]},
+      {t: 'Ранжирование (АСПИД)', what: 'Показатели сводятся в балл по профилю. Профиль задаёт только порядок важности показателей, а не точные веса.',
+       how: [['Код', 'каждый показатель переводится в шкалу 0–1; 10 000 раз выбираются случайные веса, соблюдающие порядок важности (старший ранг весит не меньше младшего), и считается взвешенная сумма; балл — среднее по розыгрышам, «в топ-5» — доля розыгрышей, где гипотеза в пятёрке лучших пула (aspid_v3); подробно — «Справка» → профили и АСПИД']]},
+      {t: 'Что улучшить и эволюция', what: 'Для каждой гипотезы — список исправимых пунктов и оценка, сколько каждый добавит; по нему создаются версии гипотез.',
+       how: [['Код', 'список пунктов и запас (improvements); восемь правил, которые соблюдает каждая версия (evolution_rules): записи не переносятся и не правятся вручную, подтверждённые звенья сохраняются, новизна по отсутствию статей считается кодом'], ['LLM', 'пишет текст версии']]},
+      {t: 'Отчёт', what: 'Рейтинг, карточки, оценка и справка собираются из тех же данных.',
+       how: [['Код', 'сборка отчёта (report_v2); оценки проспективного пула заморожены хешем до появления результатов испытаний']]},
     ];
     function renderScheme() {
-      document.getElementById('scheme').innerHTML = STEPS.map(([t, what, check], i) => `<div class="bg-white rounded-xl border border-stone-200 p-4 step">
-        <div class="text-xs text-stone-500">Шаг ${i + 1}</div><div class="font-semibold text-[#1E4D40]">${esc(t)}</div>
-        <p class="text-sm mt-1">${esc(what)}</p><p class="text-sm mt-1 text-stone-600"><span class="font-semibold">Чем проверено:</span> ${esc(check)}</p></div>`).join('');
+      document.getElementById('scheme').innerHTML = STEPS.map((s, i) => `<div class="bg-white rounded-xl border border-stone-200 p-4 step">
+        <div class="text-xs text-stone-500">Шаг ${i}</div><div class="font-semibold text-[#1E4D40]">${esc(s.t)}</div>
+        <p class="text-sm mt-1">${esc(s.what)}</p>
+        <div class="mt-2 text-sm"><div class="font-semibold text-stone-700">Как реализовано</div>
+          <ul class="mt-1 space-y-1">${s.how.map(([who, txt]) => `<li class="flex gap-2"><span class="shrink-0 px-2 py-0.5 rounded text-[11px] font-semibold ${who === 'LLM' ? 'bg-indigo-50 text-indigo-900' : 'bg-stone-100 text-stone-700'}">${who}</span><span>${esc(txt)}</span></li>`).join('')}</ul></div></div>`).join('');
     }
 
     // ---------- 5. help (dynamic parts)
     function renderHelp() {
       const inds = []; PROFS.forEach(p => p.tiers.flat().forEach(k => { if (!inds.includes(k)) inds.push(k); }));
       const rk = (p, k) => { const i = p.tiers.findIndex(t => t.includes(k)); return i < 0 ? '—' : i + 1; };
-      document.getElementById('help-profiles').innerHTML = `<p>Число — ранг важности показателя в профиле (1 — главный; при равных рангах показатели равноправны); «—» — показатель в профиль не входит. Точные веса не задаются: они разыгрываются много раз в пределах этого порядка.</p>
+      document.getElementById('help-profiles').innerHTML = `<p>Число — ранг важности показателя в профиле (1 — главный; показатели с одинаковым рангом равноправны); «—» — показатель в профиль не входит.</p>
         <div class="overflow-x-auto"><table class="tbl"><thead><tr><th>Показатель</th>${PROFS.map(p => `<th>${esc(p.label)}</th>`).join('')}</tr></thead>
         <tbody>${inds.map(k => `<tr><td>${esc(cap1(k))}</td>${PROFS.map(p => `<td style="text-align:center">${rk(p, k)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
-        <ul>${PROFS.map(p => `<li><b>${esc(p.label)}</b>: ${esc(p.about)}</li>`).join('')}</ul>`;
+        <ul>${PROFS.map(p => `<li><b>${esc(p.label)}</b>: ${esc(orderText(p))}. ${esc(p.about)}</li>`).join('')}</ul>`;
       document.getElementById('glossary').innerHTML = DATA.glossary.map(g => `<dt class="font-semibold">${esc(g.term)}</dt><dd class="text-stone-600">${esc(g.text)}</dd>`).join('');
       const m = DATA.meta;
       document.getElementById('help-prov').textContent = `Дата среза ${m.date}; литература — только до неё. Метод: ${m.method}. Оценено ${m.n_scored} из ${m.n}. Хеш оценок SHA-256 ${m.sha}.`;

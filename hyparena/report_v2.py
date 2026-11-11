@@ -1,5 +1,5 @@
 """Pool report, second layout (user decision 2026-11-07, reshaped 2026-11-11: five tabs — ranking, hypothesis cards (text
-only), evaluation (numbers), how it works, help in two levels; text and numbers kept apart; method manual section 10).
+only), evaluation of hypotheses (numbers), how it works, help in two levels; text and numbers kept apart; manual section 10).
 
     python -m hyparena.report_v2 prospective [--n 60] [--out FILE]
 
@@ -100,7 +100,7 @@ def _link(c: dict, levels: dict) -> dict:
                          "w": r["w"], "f": r.get("f"), "quote": r["quote"]} for r in c["records"]]}
 
 
-def data(rep: dict, analyses: Optional[dict] = None) -> dict:
+def data(rep: dict) -> dict:
     H, m = rep["hyps"], rep["meta"]
     profiles = aspid_v3.load()
     evo = rep.get("evolution") or {}
@@ -145,7 +145,6 @@ def data(rep: dict, analyses: Optional[dict] = None) -> dict:
                       for p in profiles},
             "drift": drift_of.get(h),
             "text": x.get("text", ""), "card_view": x.get("card_view"),
-            "analysis": (analyses or {}).get(h),
         })
         base["cover"] = slot_coverage(base["links"])
         results.append(base)
@@ -227,8 +226,8 @@ FLAG_NAMES = {
 }
 
 
-def render(rep: dict, analyses: Optional[dict] = None) -> str:
-    d = data(rep, analyses)
+def render(rep: dict) -> str:
+    d = data(rep)
     body = json.dumps(d, ensure_ascii=False, default=str).replace("</", "<\\/")
     return TEMPLATE.read_text(encoding="utf-8").replace("__DATA__", body).replace("__TITLE__", rh.e(d["meta"]["title"]))
 
@@ -241,8 +240,7 @@ def main() -> None:
     a = ap.parse_args()
     rep, default = rh.prospective(a.n)
     out = Path(a.out or default.replace(".html", "_v2.html"))
-    af = Path(default).with_name(f"analysis_{a.n}.json")     # plain-language analyses (cards tab), written by a model when run
-    out.write_text(render(rep, json.loads(af.read_text()) if af.exists() else None), encoding="utf-8")
+    out.write_text(render(rep), encoding="utf-8")
     print(out, round(out.stat().st_size / 1024), "KB")
 
 

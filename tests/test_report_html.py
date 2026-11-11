@@ -28,7 +28,7 @@ def test_report_v2_renders_an_empty_pool_and_keeps_the_template_hooks():
         assert hook in tpl
     assert "Топ-1" not in tpl and "top-3" not in tpl.lower()
     # manual section 10 (2026-11-11): five tabs, ranks of importance, no internal profile codes
-    for tab in ("Рейтинг", "Карточки гипотез", "Оценка карточек", "Схема работы", "Справка"):
+    for tab in ("Рейтинг", "Карточки гипотез", "Оценка гипотез", "Схема работы", "Справка"):
         assert f">{tab}</button>" in tpl
     assert "ранг важности" in tpl and "trial-" not in tpl
     rep = {"meta": {"title_ru": "Пул", "title_en": "Pool", "about_ru": "", "about_en": "", "date": "2026-11-06", "method": "v3.4",
