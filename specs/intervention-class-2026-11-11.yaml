@@ -1,6 +1,6 @@
 id: intervention-class-2026-11-11
 written_on: 2026-11-11
-status: decided by the user (variant c); code ready, no existing record changes; the check below needs a paid re-run (named price) and Argon pack 15
+status: adopted 2026-11-11 (user) as method v3.8 after the check below
 user_decision: "2026-11-11: variant c, three levels of the intervention match"
 why: >-
   stage 0 of the paper skeleton (specs/paper-skeleton-2026-11-09.yaml, result_2026_11_10) lost about half of its 10 misses
@@ -30,3 +30,4 @@ result:   # 2026-11-11; paid 0.106 USD (pair model v2 on the 1 725 stage-0 pairs
   argon_pack15_part_b: "80 pairs blind: weighted kappa of the level with Argon 0.551 (v1 without 'category': 0.497), raw agreement 0.51, stance 0.89; the main disagreement: ours 'other' where Argon says 'category' (16 of 80), ours 'exact' where Argon says 'class' (10); Argon uses 'category' for 27 of 80"
   levels_in_v2_answers: "other 1 350, class 133, exact 132, category 110 of 1 725 pairs"
   adopt_rule: "met (kappa at least 0.4, recall not lower than 0.52); R2 / R3 wait for stage 1; adoption is the user's decision"
+decision: "adopted 2026-11-11 (user): method v3.8; manual section 4 reading rule 1 and section 12"

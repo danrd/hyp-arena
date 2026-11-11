@@ -1,6 +1,7 @@
 # Method v3 manual: how a hypothesis is scored and how to read the report
 
-Version: rules **v3.7** (2026-11-09): the record weight of v3.6 on the GRADE domains (section 5), link strength as a sum
+Version: rules **v3.8** (2026-11-11) = v3.7 with a third level of the intervention match, "same category only", counted as
+adjacent (reading rule 1, section 4). v3.7 (2026-11-09): the record weight of v3.6 on the GRADE domains (section 5), link strength as a sum
 of log likelihood ratios (section 6), the evidence balance over the links that have data (section 7), the ASPID profiles
 (section 8) and the rules every improved version keeps (section 11). Code: `hyparena/card/rules_v32.py`
 (`evaluate(..., v36=True)`, `EMPTY_SLOTS = "skip"`), `hyparena/card/novelty_v34.py`, `hyparena/card/aspid_v3.py`,
@@ -107,11 +108,11 @@ the verifier prompt `verify_claim/v9` already follows them; a report written by 
    same compound); a different dose or schedule of it is exact with dose or regimen "no", which makes the record adjacent.
    *class*: another intervention of the same kind on the claim's outcome (another resistance programme for a squat
    programme; another drug of the same class) — it counts at full weight under v3.6 (the class label is not charged while it is
-   unreliable). *category* (user decision 2026-11-11, `specs/intervention-class-2026-11-11.yaml`): only the same broad
+   unreliable). *category* (v3.8, adopted by the user 2026-11-11, `specs/intervention-class-2026-11-11.yaml`): only the same broad
    category (another single nutrient for a multi-component formula, another diet for "nutritional supplements", another
    exercise modality for a specific programme) — it counts as adjacent, 1/2 (`rules_v3.context_level`). The paper-skeleton
    pair model reads the four levels; the verifier of the saved runs never wrote "category", so their scores do not change;
-   the check of the level against an outside reader is pending. The match is judged at the level at which the
+   against an outside reader (Argon, 80 pairs blind) the four levels agree at weighted kappa 0.55. The match is judged at the level at which the
    claim names the intervention (verifier prompt v10, 2026-11-08): when the claim names a kind ("resistance training",
    "adequate protein intake", "a home-based exercise programme"), any study of that kind is exact; class only when the claim
    names a specific product, compound or programme and the study used another member of its kind. A programme that merely includes the named
@@ -678,6 +679,7 @@ trials (Spearman 0.81 between two readings; R2 and R3 do not move): close places
 | record weight v3.6 | order of 80 pairs of records by an outside reader (R4) | τ-b 0.10 (v3.5: 0.04) |
 | evidence balance | trial outcomes on the calibration pool (R3) | AUC 0.586 (v3.7), in-sample, wide intervals (`specs/empty-slots-2026-11-09.yaml`) |
 | the same question asked to two models | trial outcomes, 63 trials the models do not remember | AUC 0.76 vs 0.59 for our P (`specs/llm-consensus-2026-11-07.yaml`): the models' priors beat the literature count; leakage not excluded |
+| intervention match: exact / class / category / other (v3.8) | an outside reader, 80 link-finding pairs blind | weighted κ 0.55, stance agreement 0.89 (`specs/intervention-class-2026-11-11.yaml`) |
 | I (d of the alternatives) | an outside reader, holdout of 30 trials | κ 0.35 |
 | N (novelty) | an outside reader | weighted κ 0.14-0.26; ours is nearer the new |
 | prospective pool, 60 ongoing trials | outcomes 2026-11 … 2028-12 | scores frozen 2026-11-06 with a SHA-256 (`specs/prospective-2026-11-06.yaml`): the clean test |
