@@ -371,45 +371,79 @@ there before use.
 hypothesis, its origin, what it claims, what changed); a number cell holds one number or one level ("new combination",
 "organ / system") and nothing else. Explanations of a number live in its hover note, in the evaluation tab and in the help,
 never in the cell. Audit trails (which records were dropped, which rule was checked) live only in the evaluation tab.
-Internal codes (profile ids such as "trial-3", indicator codes, prompt versions, method tags in titles) are never shown;
-names follow section 10a.
+Internal codes (profile ids such as "trial-3", indicator codes, module names, prompt versions, method tags in titles) are
+never shown; names follow section 10a. Russian only.
 
-**Pool report** (`python -m hyparena.report_v2 prospective --n 60` → `report_<n>_v2.html`; template
-`hyparena/templates/pool_report_v2.html`; Russian). Five tabs, in this order:
+**Pool report** (`python -m hyparena.report_v2 prospective --n 60` → `report_<n>_v2.html`; data shaped by
+`hyparena/report_v2.py`, page `hyparena/templates/pool_report_v2.html`). A header band (pool title, cut-off date, how many
+scored; fixed at the top on a wide screen only) and five tabs, in this order.
 
-1. **Рейтинг (Ranking).** Profile switch with the Russian names only, and one line under it: the profile's order of
-   importance in words. One table, also on a phone (the table scrolls sideways inside its frame; the hypothesis column stays
-   fixed). Columns: place; **hypothesis** — a short title, one line of its text, and origin chips (original; generated;
-   tuned version; free evolution; directed evolution; a warning chip "moved towards the known" when the drift flag is set);
-   **score** under the profile; **probability of the top 5**; then exactly the profile's indicators in its order of
-   importance (section 8), one column each, the header captioned with its rank of importance ("ранг важности 1"; equal
-   ranks share a number), with **coverage as a caption under the evidence balance** ("covered 3 of 4
-   links"). Every number links to the hypothesis in the evaluation tab. Filters: origin, intervention type, search; pages of
-   15 rows. Nothing else: no room-to-improve column, no record lists, no audit text.
-2. **Карточки гипотез (Hypothesis cards).** Text only. For each hypothesis: the text as submitted; how it was normalised
-   into a card (intervention, population, the chain of links written as plain sentences, the outcome, the stated
-   experiment, the alternatives by name); for a version, its parent and what was changed, in words; and **a plain-language
-   analysis** written by a model from the evaluation (what is already known for and against, what is new, what the
-   experiment would show and what it would not tell apart, the main risk, what would improve it) without numbers. A link
-   "Оценка →" opens the same hypothesis in the evaluation tab.
-3. **Оценка карточек гипотез (Evaluation).** All numbers of a hypothesis, in blocks: the table of links (S with its
-   interval, F / A, link novelty, records as chips: a click opens the paper with its quote and the factors of its weight);
-   evidence balance and coverage; novelty with the record that sets it; I with the table of alternatives (support, what the
-   experiment does to each); scope; feasibility with the arms and specialised measures (section 11, rule 7); flags; the room
-   to improve and the improvement list; for a version, the checks of the evolution rules (section 11), the records that
-   disappeared or were lifted, and the split of the score change into the hypothesis part and the experiment part. A link
-   "← Карточка" goes back. The papers of the pool are reached from here (no separate papers tab).
-4. **Схема работы (How it works).** The steps of the system as one simple diagram: for each step what it does and how it
-   is checked, in one line each, with a link to the full scheme (`docs/system/`).
-5. **Справка (Help)** in two levels. *First level*, one screen, words only: what the report is; how to read the ranking
-   (score, top-5 probability, the profiles); how to read a card and its evaluation; what the report does not claim (it is
-   not a forecast of the trial; the clean test is the prospective pool). *Second level*, collapsed by topic: the weight of a
-   record; link strength and the evidence balance; the reading rules; novelty; the experiment, scope and feasibility; the
-   profiles with the table of ranks of importance (section 8); room to improve and evolution; limits and validation status (section 12);
-   provenance (date cut, method version, scores hash); a glossary of every parameter shown.
+**Short ids.** Every hypothesis has a short id: original hypotheses H01, H02, … in the order of their registry ids; a version
+adds the letter of its mode to its parent's id (д tuned, с free evolution, н directed evolution: H49д). The id is shown in
+every tab and is searchable.
 
-Every column header, chip and number has a hover note; colours carry meaning only for direction (red against, green for,
-amber for warnings).
+1. **Рейтинг (Ranking).**
+   - A switch of the three profiles by their Russian names, and under it one line: "Порядок важности:" followed by the
+     profile's indicators in order, ">" between ranks and "=" inside a rank.
+   - Filters: origin (all, originals only, versions only), intervention type, search (short id or words of the text).
+   - One table, on a phone too: it scrolls sideways inside its frame, the hypothesis column stays fixed. Pages of 15 rows.
+   - The **hypothesis cell**: first line the place ("1 место") and the short id; then the hypothesis statement itself (up to
+     three lines), under it the registry title in small grey type (one line); a button "текст полностью" expands both; then
+     the origin chips (original; tuned; free evolution; directed evolution; "new hypothesis" when a version is far from its
+     parent; a warning chip "moved towards the known" when the drift flag is set). The statement opens the card.
+   - Then **Балл** (score, three decimals), **В топ-5** (per cent), and exactly the profile's indicators, one column each in
+     the order of importance, each header captioned "ранг важности N" (equal ranks share N). The evidence balance has the
+     coverage as a caption ("покрыто 3 из 4"). Every number opens the hypothesis in the evaluation tab.
+   - Under the table, the hypotheses not ranked and why (refuted by data; known result; not scored).
+2. **Карточки гипотез (Hypothesis cards)**, words only, one collapsible card per hypothesis in the order of the current
+   profile:
+   - **Текст гипотезы**: the text as submitted (the registry fields as labelled paragraphs).
+   - For a version, **Чем отличается от исходной**: the parent with its short id and title, the mode, and the writer's
+     description of what was changed.
+   - **Как гипотеза понята**: intervention, population, comparator, outcome; **the mechanism step by step**, each step with
+     its link type and written as a triple — the subject on a blue plate, the relation in italics with an arrow, the object
+     on a sand plate (a legend line "что действует / как → / на что" above the list); **the stated experiment** (design,
+     control, planned size, primary outcome); **the alternative explanations** as triples.
+   - A button "Оценка →" to the same hypothesis in the evaluation tab. No plain-language analysis (user decision 2026-11-11).
+3. **Оценка гипотез (Evaluation of hypotheses)**, numbers, one collapsible block per hypothesis in the order of the current
+   profile, with a link "← Карточка" back:
+   - **Оценка в профилях**: per profile the score (three decimals), the place, the top-5 probability, the room to improve.
+   - **Показатели**: evidence balance, coverage, novelty with the paper that sets it (opens the paper card), I, I headroom,
+     scope, feasibility, how clinical the endpoint is, role of AI, rising attention, best design for the outcome,
+     independent sources for the outcome.
+   - For a version, **Сравнение с исходной гипотезой**: a three-column table (indicator; parent → version; what changed),
+     the third column written from the values of this pair, never a generic reading — the scores as one line (where they
+     rose or fell, and by how much), evidence balance, coverage (how many places the chain gained and how many have data),
+     the share of links with support before the cut-off, novelty, I, scope; then "Сдвиг к известному: да / нет" with the
+     reason.
+   - **Звенья цепочки и записи из статей**: link type; the statement as a triple; F / A; S with its 90% interval (or "нет
+     данных"); link novelty; the records as chips (for green, against red, with the weight; hover: the quote; a click opens
+     the paper card with the quote, design, n, the side and the hypotheses that use it).
+   - **Альтернативные объяснения**: the alternative as a triple; its support in the literature; under one header "Что делает
+     эксперимент" the two columns "при успехе" and "при неудаче".
+   - **Флаги** with the concrete reason in this hypothesis, and **Что поднимет оценку**: the improvement list with the
+     expected change of the indicators and of the score per profile, and the papers each item rests on.
+   - On a phone every table of this tab scrolls inside its own frame.
+4. **Схема работы (How it works)**, self-contained: steps 0-11 (hypotheses in; card; search; reading; record weight; link
+   strength and evidence balance; novelty; experiment and alternatives; feasibility and the other indicators; ranking;
+   improvements and versions; report). Each step says what it does and, under "Как реализовано", what is done by a language
+   model (labelled LLM: with which task) and what by code, in plain words: no module names, formulas, ideas or variants not
+   implemented. Where details help, a link opens the matching section of the help.
+5. **Справка (Help)** in two levels.
+   - *First level*, one screen of words: what the report is; how to read the ranking (profiles, score, top-5 probability,
+     ranks of importance); how to read a card and its evaluation; what the report does not claim (it is not a forecast of
+     the trial; the clean test is the prospective pool).
+   - *Second level*, collapsed sections, each a table: **the weight of a record** (factor, what it accounts for, values; the
+     null weighted by power; the fold of one paper or trial); **link strength, evidence balance and coverage** (quantity,
+     formula, how to read); **reading rules** (situation, how it is read); **novelty** (level, when); **the experiment, scope,
+     feasibility** (indicator, how it is computed, scale); **profiles, ranks of importance and ASPID** (the table of ranks per
+     profile, each profile's order, ASPID explained plainly and then formally: scales, weights, the draw, the score, place
+     and top-5); **improvements and versions** (term, meaning); **provenance** (cut-off date, method version, scores hash);
+     **a glossary** of every parameter shown. Limits and validation status are not in the report's help; they are in this
+     manual (section 12) and in `docs/system/`.
+
+Every column header, chip and number has a hover note. Colours carry meaning only for direction (green for, red against),
+for warnings (amber) and for the two parts of a triple.
 
 Reports on private hypotheses stay in the private repository (`longevity-kg`).
 
@@ -431,12 +465,12 @@ hard to compare (user note 2026-11-09). The code report is the reference; anothe
   in its note).
 - **Flags** (section 9) are shown by their names below, with the link or alternative they concern; the code may follow in
   parentheses.
-- **The tabs and the help section** are those of section 10, in that order: the ranking, the hypothesis cards (text only),
-  the evaluation (numbers), how it works, and the help in two levels (one screen in words first; then, collapsed, the
-  weight of a record, link strength and evidence balance, the reading rules, novelty, the experiment, scope and
-  feasibility, the profiles with the table of ranks of importance, room to improve and evolution, limits and validation
-  status, provenance, a glossary of every parameter shown). A part may be short, but none is left out, and the numbers in
-  it are this manual's (section 14). Text and numbers are kept apart as section 10 says.
+- **The tabs and the help section** are those of section 10, in that order: the ranking, the hypothesis cards (words
+  only), the evaluation of hypotheses (numbers), how it works, and the help in two levels (one screen of words first; then,
+  collapsed and as tables, the weight of a record, link strength with evidence balance and coverage, the reading rules,
+  novelty, the experiment with scope and feasibility, the profiles with the ranks of importance and ASPID, improvements and
+  versions, provenance, a glossary of every parameter shown). A part may be short, but none is left out, and the numbers in
+  it are this manual's (section 14). Short ids, triples and the separation of text and numbers follow section 10.
 - **Check**: an outside report is read against this table and list before its content is compared with the code report.
 
 The table is the code's own (`hyparena/report_html.py` IND_NAMES, LINK_NAMES, NOVELTY_NAMES, DESIGN_NAMES, DISC;
