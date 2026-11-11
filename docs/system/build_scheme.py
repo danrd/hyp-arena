@@ -1,13 +1,17 @@
-"""Builds docs/system/scheme.drawio: the whole system on one page (method v3.9). Each step: what is done, what a language model
-does (task, input -> output), what code does, why it is so, how it is checked; at the bottom the ideas of benchmarking.
-The text lives in STEPS and BENCH below; edit there and run:  python docs/system/build_scheme.py"""
+"""Builds docs/system/scheme.drawio: the whole system on one page (method v3.9). Each step: the step with what is done, what a
+language model does (task, input -> output; for code-only steps one merged cell with the code), what code does, why it is so,
+how we check it ourselves, and how it can be checked against a plain-LLM baseline; at the bottom benchmarking in two parts
+(our own checks; the baseline). Column widths follow the amount of text, so rows are even (user note 2026-11-11).
+The text lives in STEPS, BASELINE and BENCH below; edit there and run:  python docs/system/build_scheme.py"""
 from math import ceil
 from pathlib import Path
 from xml.sax.saxutils import escape
 
 D = Path(__file__).resolve().parent
-COLS = [("Шаг", 190), ("Что делается", 330), ("LLM: задача · вход → выход", 380), ("Код", 340), ("Почему так", 430),
-        ("Как проверяем", 330)]
+TOTAL = 2100
+HEAD = ["Шаг и что делается", "LLM: задача · вход → выход", "Код", "Почему так", "Как проверяем сами",
+        "Как сравниваем с бейзлайном (LLM напрямую)"]
+MIN_W = 230
 
 # step: (title, what[], llm[] (empty: no model), code[], why[], check[])
 STEPS = [
@@ -90,8 +94,10 @@ STEPS = [
      ["Насколько вопрос далёк от уже изученного до даты среза."],
      [],
      ["По найденным записям: изучали ли то же вмешательство и исход у того же вида (новый контекст), только у другого вида (перенос), только родственное вмешательство (аналог); если исход не изучали — новое сочетание известных звеньев или новое звено.",
+      "Если исход изучали, но звено между подтверждёнными соседями новое (в PubMed до T меньше 5 статей по его субъекту и объекту) — «новый механизм известного эффекта».",
       "Нет данных вовсе — «неизвестно», а не «ново»."],
      ["Модельное суждение о новизне ненадёжно, поэтому новизна выводится из тех же находок, что и баланс.",
+      "Новый механизм известного эффекта считается только по подсчёту PubMed кодом: иначе экзотическое звено накручивало бы новизну.",
       "Отсутствие данных не считается новизной: иначе плохой поиск выглядел бы как открытие.",
       "Нужна профилю «Фронтир»; прошла правило допуска показателей."],
      ["Ближайшая прежняя работа по мнению внешнего читателя против нашей.",
@@ -147,12 +153,40 @@ STEPS = [
       "То же для ответа LLM, заданного напрямую и закреплённого тем же способом."]),
 ]
 
-BENCH = ("Бенчмаркинг: общие принципы", [
+BASELINE = [
+    ["GPT пишет гипотезы по той же теме; наша генерация по шаблону — той же моделью.",
+     "5 судей других семей сравнивают попарно; оба набора сначала переписаны в один формат.",
+     "Плюс то, что судьи не придумают: доля уже проверенного до T, дубли, звенья с опорой в литературе."],
+    ["GPT получает ту же схему карточки и тот же текст; сравнение с ручной разметкой: совпадение звеньев."],
+    ["Сам поиск не сравниваем: GPT с веб-поиском нарушил бы дату среза.",
+     "Ссылки, которые GPT приводит без поиска: существуют ли, до T ли, совпадают ли с эталонными статьями."],
+    ["Те же 200 пар «звено — статья» и тот же эталон второго читателя; утечка не мешает: задача — извлечь из данного текста.",
+     "Известные факты: верный против изменённых ловит ответы «по памяти».",
+     "Устойчивость: два прогона GPT на тех же статьях."],
+    ["GPT упорядочивает те же 80 пар находок; его согласие с внешним читателем против нашего."],
+    ["Модели, спрошенные «подтвердится ли гипотеза», на прошлых испытаниях угадывают лучше нас (AUC 0.76 против 0.59), но утечка не исключена.",
+     "Честно — только на проспективном пуле (шаг 11)."],
+    ["GPT называет ближайшую прежнюю работу по тем же гипотезам; сравнение с нашей и с внешним читателем по доле совпадений."],
+    ["Тот же вопрос «отсекает ли» по тем же протоколам; согласие с тем же внешним читателем."],
+    ["Клиничность конечной точки: ответ GPT против согласия двух семей и внешнего читателя."],
+    ["GPT ранжирует тот же пул напрямую: сравнение порядков и устойчивости места между прогонами."],
+    ["«GPT, улучши гипотезу» без правил: доля версий, которые судьи считают лучше исходной.",
+     "Прирост раскладывается на часть гипотезы и часть эксперимента — как у нас."],
+    ["Ответ GPT «подтвердится ли» по 60 идущим испытаниям закреплён хешем рядом с нашими оценками.",
+     "Проверяется и сочетание: наш баланс вместе с вероятностью модели."],
+]
+
+BENCH_SELF = ("Как проверяем сами", [
     "<b>Свой эталон для каждого шага.</b> Не только исход испытания (он шумный): ручная разметка, внешний читатель вслепую, факты из курируемых баз, более поздняя литература того же звена.",
     "<b>Критерий до расчёта.</b> Порог и эталон записываются до прогона; из равных по качеству вариантов выбирается более простой (правило 0.03).",
     "<b>Защита от утечки.</b> Литература только до даты среза; модели не видят исходов; проспективный пул заморожен хешем до результатов.",
-    "<b>Бейзлайн LLM.</b> Та же задача шага, тот же вход, тот же эталон: на извлечении из данного текста утечка не мешает. Сквозной прогноз LLM — только проспективно.",
     "<b>Шум и абляции.</b> Повторный прогон того же шага даёт разброс, с которым сравнивается любое изменение; исключение множителя или показателя показывает, что он добавляет.",
+])
+BENCH_BASE = ("Как сравниваем с бейзлайном (LLM напрямую)", [
+    "<b>Та же задача, тот же вход, тот же эталон.</b> Модель без веб-поиска, с известной датой обучения, ответы сохраняются.",
+    "<b>Утечка.</b> На извлечении из данного текста она не мешает; прогноз исхода — только проспективно или по испытаниям, о результатах которых сообщили после даты обучения модели (их мало).",
+    "<b>Судьи.</b> Другие семьи моделей, попарно, оба набора в одном формате; плюс меры, которые судьи не придумают (уже проверено до T, дубли, опора в литературе).",
+    "<b>Что утверждаем.</b> Не лучшее угадывание исхода, а прослеживаемость до цитаты, проверку каждого шага и указание, что улучшить.",
 ])
 
 FONT = 11
@@ -160,7 +194,7 @@ LINE = 15
 
 
 def lines(text: str, width: int) -> int:
-    per = max(10, int((width - 16) / (FONT * 0.56)))
+    per = max(10, int((width - 16) / (FONT * 0.5)))
     return max(1, ceil(len(text) / per))
 
 
@@ -176,47 +210,71 @@ def cell(cid, value, x, y, w, h, style):
     return f'<mxCell id="{cid}" value="{v}" style="{style}" vertex="1" parent="1"><mxGeometry x="{x}" y="{y}" width="{w}" height="{h}" as="geometry"/></mxCell>'
 
 
+def _widths() -> list[int]:
+    """Widths in proportion to the square root of each column's text, at least MIN_W, summing to TOTAL."""
+    cols = [[t for st in STEPS for t in [st[0]] + st[1]],
+            [t for st in STEPS for t in st[2]], [t for st in STEPS for t in st[3]], [t for st in STEPS for t in st[4]],
+            [t for st in STEPS for t in st[5]], [t for b in BASELINE for t in b]]
+    v = [max(1, sum(len(t) for t in c)) ** 0.5 for c in cols]
+    w = [max(MIN_W, int(TOTAL * x / sum(v))) for x in v]
+    w[-1] += TOTAL - sum(w)
+    return w
+
+
 def build() -> str:
+    assert len(BASELINE) == len(STEPS)
     out, X0, y = [], 20, 20
-    total = sum(w for _, w in COLS)
-    out.append(cell("title", "<b>Как работает система оценки гипотез (метод v3.9)</b><br/><span style='font-size:12px'>Каждый шаг: что делается, где и с какой задачей работает языковая модель (LLM), что делает код, почему так, как проверяем</span>",
+    W = _widths()
+    total = sum(W)
+    out.append(cell("title", "<b>Как работает система оценки гипотез (метод v3.9)</b><br/><span style='font-size:12px'>Каждый шаг: что делается, где и с какой задачей работает языковая модель (LLM), что делает код, почему так, как проверяем сами и как сравниваем с LLM напрямую</span>",
                     X0, y, total, 54, "text;html=1;fontSize=20;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#1E4D40;"))
     y += 66
     x = X0
-    for k, (name, w) in enumerate(COLS):
-        out.append(cell(f"h{k}", f"<b>{name}</b>", x, y, w, 30, "rounded=0;html=1;fillColor=#1E4D40;fontColor=#FFFFFF;strokeColor=#FFFFFF;fontSize=13;"))
-        x += w
+    for k, name in enumerate(HEAD):
+        fill = "#7A5C1E" if k == 5 else "#1E4D40"
+        out.append(cell(f"h{k}", f"<b>{name}</b>", x, y, W[k], 30, f"rounded=0;whiteSpace=wrap;html=1;fillColor={fill};fontColor=#FFFFFF;strokeColor=#FFFFFF;fontSize=13;"))
+        x += W[k]
     y += 30
     fills = ["#FFFFFF", "#F6F5EF"]
-    for i, (title, what, llm, code, why, check) in enumerate(STEPS):
-        blocks = [block(b, w) for b, (_, w) in zip([what, llm, code, why, check], COLS[1:])]
-        h = max(70, max(n for _, n in blocks) * LINE + 18)
+    style = "rounded=0;whiteSpace=wrap;html=1;fillColor={f};strokeColor=#C9C9C0;fontSize=%d;fontColor=#1A202C;align=left;verticalAlign=top;spacingLeft=8;spacingRight=6;spacingTop=6;" % FONT
+    for i, ((title, what, llm, code, why, check), base) in enumerate(zip(STEPS, BASELINE)):
+        f = fills[i % 2]
+        first = f"<div style='font-size:13px;color:#1E4D40;margin-bottom:6px'><b>{escape(title)}</b></div>" + block(what, W[0])[0]
+        n_first = 2 + block(what, W[0])[1]
+        if llm:
+            cells = [(first, W[0], "#E3EEE8"), (block(llm, W[1])[0], W[1], "#EEF0FB"), (block(code, W[2])[0], W[2], f)]
+            ns = [n_first, block(llm, W[1])[1], block(code, W[2])[1]]
+        else:
+            merged = "<div style='color:#555555;margin-bottom:4px'><i>Только код, языковая модель не участвует.</i></div>" + block(code, W[1] + W[2])[0]
+            cells = [(first, W[0], "#E3EEE8"), (merged, W[1] + W[2], f)]
+            ns = [n_first, 1 + block(code, W[1] + W[2])[1]]
+        for b, w, fl in ((why, W[3], f), (check, W[4], f), (base, W[5], "#FBF6EC")):
+            html, n = block(b, w)
+            cells.append((html, w, fl))
+            ns.append(n)
+        h = max(70, max(ns) * LINE + 18)
         x = X0
-        out.append(cell(f"s{i}", f"<b>{escape(title)}</b>", x, y, COLS[0][1], h,
-                        f"rounded=0;whiteSpace=wrap;html=1;fillColor=#E3EEE8;strokeColor=#C9C9C0;fontSize=13;fontColor=#1E4D40;align=left;verticalAlign=top;spacingLeft=8;spacingTop=6;"))
-        x += COLS[0][1]
-        for k, (html, _) in enumerate(blocks):
-            w = COLS[k + 1][1]
-            fill = ("#EEF0FB" if llm else fills[i % 2]) if k == 1 else fills[i % 2]
-            out.append(cell(f"c{i}_{k}", html, x, y, w, h,
-                            f"rounded=0;whiteSpace=wrap;html=1;fillColor={fill};strokeColor=#C9C9C0;fontSize={FONT};fontColor=#1A202C;align=left;verticalAlign=top;spacingLeft=8;spacingRight=6;spacingTop=6;"))
+        for k, (html, w, fl) in enumerate(cells):
+            out.append(cell(f"c{i}_{k}", html, x, y, w, h, style.format(f=fl)))
             x += w
         y += h
     y += 20
-    bt, items = BENCH
-    html = f"<b style='font-size:14px'>{bt}</b><br/>" + "".join(f"<div style='margin-top:4px'>{t}</div>" for t in items)
-    bh = 34 + sum(lines(t, total) for t in items) * LINE + 10 * len(items)
-    out.append(cell("bench", html, X0, y, total, bh,
-                    "rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7E6;strokeColor=#B7791F;fontColor=#1A202C;fontSize=12;align=left;verticalAlign=top;spacingLeft=12;spacingTop=8;"))
+    half = (total - 20) // 2
+    bh = 0
+    for (bt, items), w in ((BENCH_SELF, half), (BENCH_BASE, half)):
+        bh = max(bh, 34 + sum(lines(t, w) for t in items) * LINE + 10 * len(items))
+    for k, ((bt, items), stroke, fill) in enumerate(((BENCH_SELF, "#1E4D40", "#EEF5F1"), (BENCH_BASE, "#B7791F", "#FFF7E6"))):
+        html = f"<b style='font-size:14px'>Бенчмаркинг. {bt}</b><br/>" + "".join(f"<div style='margin-top:4px'>{t}</div>" for t in items)
+        out.append(cell(f"bench{k}", html, X0 + k * (half + 20), y, half, bh,
+                        f"rounded=1;whiteSpace=wrap;html=1;fillColor={fill};strokeColor={stroke};fontColor=#1A202C;fontSize=12;align=left;verticalAlign=top;spacingLeft=12;spacingTop=8;"))
     y += bh + 12
-    out.append(cell("legend", "Голубой фон в колонке LLM — шаг использует языковую модель; «—» — шаг выполняет только код. Подробности и числа проверок: docs/system/steps.md и specs/.",
+    out.append(cell("legend", "Голубой фон — шаг использует языковую модель; одна общая ячейка на месте LLM и кода — шаг выполняет только код. Подробности и числа проверок: docs/system/steps.md и specs/.",
                     X0, y, total, 24, "text;html=1;fontSize=11;align=left;fontColor=#555555;fillColor=none;strokeColor=none;"))
     page_h = y + 40
     body = "".join(out)
     return (f'<mxfile host="hyp-arena"><diagram name="Схема системы"><mxGraphModel dx="{total + 40}" dy="{page_h}" grid="0" '
             f'page="1" pageWidth="{total + 40}" pageHeight="{page_h}"><root><mxCell id="0"/><mxCell id="1" parent="0"/>{body}'
             f'</root></mxGraphModel></diagram></mxfile>')
-
 
 if __name__ == "__main__":
     (D / "scheme.drawio").write_text(build(), encoding="utf-8")
