@@ -214,14 +214,8 @@
     let curProfile = PROFS.find(p => p.key === 'frontier') ? 'frontier' : PROFS[0].key, rankPage = 0;
     const PAGE = 15;
     const byId = Object.fromEntries(DATA.results.map(r => [r.id, r]));
-    // short ids: originals H01, H02 ... by registry id; a version adds the letter of its mode to its parent's id
-    (function () {
-      const orig = DATA.results.filter(r => !r.is_evolved).map(r => r.id).sort();
-      const w = String(orig.length).length < 2 ? 2 : String(orig.length).length;
-      const sid = Object.fromEntries(orig.map((id, i) => [id, 'H' + String(i + 1).padStart(w, '0')]));
-      const L = {tune: 'д', free: 'с', directed: 'н'};
-      DATA.results.forEach(r => { r.sid = r.is_evolved ? (sid[r.parent_id] || 'H?') + (L[r.evo_mode] || 'в') : sid[r.id]; });
-    })();
+    // short ids come from the hypothesis database (hyparena/short_ids.py); a row without one shows its registry id
+    DATA.results.forEach(r => { r.sid = r.sid || r.id; });
     const sidChip = r => `<span class="font-mono text-[11px] px-1.5 py-0.5 rounded bg-stone-100 text-stone-700">${esc(r.sid)}</span>`;
     const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     const f = (x, d = 2) => (x === null || x === undefined || Number.isNaN(x)) ? '—' : Number(x).toFixed(d);

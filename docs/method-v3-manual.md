@@ -378,9 +378,13 @@ never shown; names follow section 10a. Russian only.
 `hyparena/report_v2.py`, page `hyparena/templates/pool_report_v2.html`). A header band (pool title, cut-off date, how many
 scored; fixed at the top on a wide screen only) and five tabs, in this order.
 
-**Short ids.** Every hypothesis has a short id: original hypotheses H01, H02, … in the order of their registry ids; a version
-adds the letter of its mode to its parent's id (д tuned, с free evolution, н directed evolution: H49д). The id is shown in
-every tab and is searchable.
+**Short ids.** Every hypothesis has a short id kept in the hypothesis database (`longevity-kg/hypothesis_db/short_ids.jsonl`,
+`hyparena/short_ids.py`; user decision 2026-11-11): one numbering for every pool and source, with a leading zero (H01 … H99,
+H100 …), given once in the order hypotheses enter the database and never renumbered (the prospective 60 are H01-H60, the
+calibration 74 H61-H134). A version adds the letter of its mode to its parent's id (д tuned, с free evolution, н directed
+evolution: H49д), and a number from the second version of the same mode on (H49д2). The report reads the ids from the
+database, so they do not move when a pool changes; a row without one shows its registry id. The id is shown in every tab
+and is searchable. An outside report uses the same ids.
 
 1. **Рейтинг (Ranking).**
    - A switch of the three profiles by their Russian names, and under it one line: "Порядок важности:" followed by the

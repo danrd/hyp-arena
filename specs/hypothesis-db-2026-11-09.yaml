@@ -19,6 +19,7 @@ sources:   # first set; Argon is asked for more (below)
 
 row:   # one row per hypothesis version
   id: "stable id: source prefix + source id (bioarena:<uuid>, ctgov:NCT..., gen:<run>/<k>, evo:<parent>/<mode>/<k>)"
+  short_id: "H01 ... (user decision 2026-11-11): one numbering for every source, leading zero, given once on entry, never renumbered; a version adds its mode letter (д, с, н) and a number from the second; registry longevity-kg hypothesis_db/short_ids.jsonl, code hyparena/short_ids.py"
   text: "the text as given by the source (private)"
   source: "source name, source URL or file, date collected, licence or permission note"
   author_kind: "human | AI agent | model | organisation | unknown (no personal names)"

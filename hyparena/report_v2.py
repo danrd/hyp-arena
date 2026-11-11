@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Optional
 
 from hyparena import report_html as rh
+from hyparena import short_ids
 from hyparena.card import aspid_v3
 from hyparena.card import rules_v32 as r32
 
@@ -164,6 +165,9 @@ def data(rep: dict) -> dict:
                 e["sides"].add(r["side"])
     for e in pubmed.values():
         e["sides"] = sorted(e["sides"])
+    sids = short_ids.for_report(results, short_ids.load())   # short ids from the hypothesis database (user 2026-11-11)
+    for r in results:
+        r["sid"] = sids.get(r["id"])
     hidden = ("P", "R")       # non-refutation left the profiles in v3.5 and the report in v3.7 (user 2026-11-09)
     names = {**rh.IND_NAMES, **rh.GLOSSARY_NAMES}
     glossary = [{"term": names.get(k, (k, k))[0], "text": rh.t_ru(v)} for k, v in {**rh.TIPS, **rh.GLOSSARY_EXTRA}.items() if k not in hidden]
