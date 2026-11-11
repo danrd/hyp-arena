@@ -97,7 +97,10 @@ A model (the normaliser) turns the text into a card:
   `propose_alternatives`: up to 5, after going through seven kinds of competitor — expectation and placebo; attention and
   supervision; co-interventions; selection and attrition; measurement and learning; regression to the mean and natural
   course; another biological route), then searched and read like claims (their support comes from the records found, the
-  model's PMIDs only seed the search), and what the experiment does to each is judged from the registry text (section 7).
+  model's PMIDs only seed the search; since 2026-11-11 a finding counts for an alternative only when it shows the part that
+  differs from the hypothesis — for "attention and supervision" an effect of attention itself, not that the exercise works:
+  on H49 that alternative had been "supported" by meta-analyses of resistance training), and what the experiment does to
+  each is judged from the registry text (section 7).
   **Asymmetry, on purpose** (user decision 2026-11-11): the mechanism is taken strictly from the text (the hypothesis is
   scored as written), while competitors are looked for more widely than the author named them; their weight still comes
   only from literature found before T.
@@ -503,7 +506,8 @@ and is searchable. An outside report uses the same ids.
    - **Звенья цепочки и записи из статей**: link type; the statement as a triple; F / A; S with its 90% interval (or "нет
      данных"); link novelty; the records as chips (for green, against red, with the weight; hover: the quote; a click opens
      the paper card with the quote, design, n, the side and the hypotheses that use it).
-   - **Альтернативные объяснения**: the alternative as a triple; its support in the literature; under one header "Что делает
+   - **Альтернативные объяснения**: the alternative as a triple; its support in the literature with the papers it rests on
+     (chips as for the links, 2026-11-11); under one header "Что делает
      эксперимент" the two columns "при успехе" and "при неудаче".
    - **Флаги** with the concrete reason in this hypothesis, and **Что поднимет оценку**: the improvement list with the
      expected change of the indicators and of the score per profile, and the papers each item rests on.

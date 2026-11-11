@@ -58,3 +58,13 @@ def test_normalizer_v11_asks_for_a_direction_on_value_links():
     from hyparena.llm.prompts import render
     t = render("normalize_card", "v11", text="x", relations="promotes, changes_biomarker", hallmarks="", hint="", history_text="")
     assert "use changes_biomarker only when the text gives no direction" in t
+
+
+def test_the_reader_is_told_a_competitor_counts_only_by_its_own_part():
+    from hyparena.llm.prompts import render
+    alt = Claim(id="p2", subject={"label": "attention"}, relation="improves_healthspan_in", object={"label": "human"},
+                role="premise", source_span="", note=ALTERNATIVE_NOTE)
+    base = dict(claim=alt, negated=False, alternative=False, human_healthspan=False, contrast="", qualifiers="", endpoint="",
+                claim_plain="x", population="p", intervention="i", comparator="c", abstracts=[], history_text="")
+    assert "COMPETING EXPLANATION" in render("verify_claim", "v9", competitor=True, **base)
+    assert "COMPETING EXPLANATION" not in render("verify_claim", "v9", competitor=False, **base)

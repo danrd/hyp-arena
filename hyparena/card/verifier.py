@@ -446,7 +446,9 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
     contrast = next((a for a in card.declared_alternatives if a.id == claim.qualifiers.get("contrast")), None)
     human_healthspan = claim_endpoint(claim) == "healthspan" and \
         species_key(claim.qualifiers.get("species") or claim.object.label) == "human"
+    from hyparena.card.search import ALTERNATIVE_NOTE   # 2026-11-11: a proposed alternative counts only by its own part
     variables = {"claim": claim, "negated": negated, "alternative": claim.role == "alternative",
+                 "competitor": claim.note == ALTERNATIVE_NOTE,
                  "human_healthspan": human_healthspan,
                  "contrast": contrast.subject.label + " " + contrast.relation + " " + contrast.object.label if contrast else "",
                  "qualifiers": ", ".join(f"{k}: {v}" for k, v in claim.qualifiers.items()

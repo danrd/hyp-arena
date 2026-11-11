@@ -241,8 +241,17 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
             ac = r32.Claim(id=alt.id, subject=alt.subject, relation=alt.relation, object=alt.object, qualifiers=alt.qualifiers,
                            role="premise", source_span="")
             support = r32.current_support(cv.evidence if cv else [], cv.counterevidence if cv else [], ac)
+            arecs = []                               # 2026-11-11: the papers the support rests on, as for the links
+            for side, lst in (("for", cv.evidence if cv else []), ("against", cv.counterevidence if cv else [])):
+                for rec in lst:
+                    w = r32.current_weight(rec, ac, side == "against")
+                    if w > 0:
+                        arecs.append({"side": side, "pmid": rec.record_id.replace("PMID:", ""), "w": round(w, 3),
+                                      "f": r32.current_factors(rec, ac, side == "against"), "design": r3.record_design(rec),
+                                      "n": rec.n_total, "effect": rec.effect_reported or rec.effect_class, "quote": rec.quote})
+            arecs.sort(key=lambda x: -x["w"])
             alt_rows.append({"id": alt.id, "text": f"{alt.subject.label} — {alt.relation.replace('_', ' ')} — {alt.object.label}",
-                             "why": alt.rationale, "support": round(support, 3),
+                             "why": alt.rationale, "support": round(support, 3), "records": arecs,
                              "on_positive": alt.on_positive, "on_negative": alt.on_negative})
         links = r3.chain(card)
         outs, primary = r3.outcome_group(card, links)

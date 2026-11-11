@@ -425,7 +425,7 @@
             <tr><th rowspan="2">Альтернативное объяснение</th><th rowspan="2">Опора в литературе</th><th colspan="2" style="text-align:center">Что делает эксперимент</th></tr>
             <tr><th>при успехе</th><th>при неудаче</th></tr></thead><tbody>${r.alternatives.map((a, i) => { const t = ca[i];
             return `<tr><td>${t ? triplet(t) : esc(a.text)}</td>
-              <td>${f(a.support)}</td><td>${esc(nm('disc', a.on_positive))}</td><td>${esc(nm('disc', a.on_negative))}</td></tr>`; }).join('')}</tbody></table>` : '<p class="text-sm text-stone-500">Альтернативы не предложены.</p>';
+              <td>${f(a.support)}${(a.records || []).length ? `<div class="mt-1">${a.records.map(recBtn).join('')}</div>` : ''}</td><td>${esc(nm('disc', a.on_positive))}</td><td>${esc(nm('disc', a.on_negative))}</td></tr>`; }).join('')}</tbody></table>` : '<p class="text-sm text-stone-500">Альтернативы не предложены.</p>';
         const flags = (r.flags || []).length ? `<ul class="list-disc pl-5 text-sm">${r.flags.map(x => `<li><b>${esc(x.name)}</b>${x.detail ? ': ' + esc(x.detail) : ''}</li>`).join('')}</ul>` : '<p class="text-sm text-stone-500">Флагов нет.</p>';
         const imps = (r.improvements || []).length ? `<ul class="list-disc pl-5 text-sm">${r.improvements.map(i => `<li><b>${i.cls === 'rewrite' ? 'исправить формулировкой' : 'нужны новые данные'}:</b> ${esc(i.what)} <span class="text-emerald-900">${esc(i.expected)}</span>${i.facts.length ? ` <span class="text-stone-500">(${esc(i.facts.join(', '))})</span>` : ''}</li>`).join('')}</ul>` : '<p class="text-sm text-stone-500">Пунктов нет.</p>';
         return `<details id="eval-${esc(r.id)}" class="bg-white rounded-xl border border-stone-200 shadow-sm">

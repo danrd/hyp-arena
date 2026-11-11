@@ -156,7 +156,7 @@ def data(rep: dict) -> dict:
         })
         base["cover"] = slot_coverage(base["links"])
         results.append(base)
-        for c in x["chain"]:
+        for c in x["chain"] + [{"records": a.get("records", [])} for a in x.get("alternatives", [])]:
             for r in c["records"]:
                 e = pubmed.setdefault(r["pmid"], {"pmid": r["pmid"], "design": r["design"], "n": r["n"], "quote": r["quote"],
                                                   "used_in": [], "sides": set()})
