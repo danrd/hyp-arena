@@ -1,8 +1,8 @@
 # Aggregation: implementation notes (АСПИД/МРСП and SMAA)
 
-> **Method v2 (historical).** The current method is v3.2: [`method-v3-manual.md`](../method-v3-manual.md) (manual) and [`spec/method-v3.md`](method-v3.md) (specification). This specification was written for v2; the card format and the ASPID implementation are still used by v3 (its additions are in method-v3.md).
+> **Written for method v2.** The ASPID implementation described here is still used; the indicators and profiles of the current method are in the [manual](../method-v3-manual.md), section 8. The history of the v3 decisions is in [archive/spec/method-v3.md](../archive/spec/method-v3.md).
 
-> Turns the indicators of [card spec, section 8a. Scoring indicators for АСПИД (draft, 2026-10-19)](hypothesis-card-spec.md) into a ranking with uncertainty, under an ordinal importance order (a named preference profile). Design decisions: [design notes, section 2.1 Aggregation without explicit weights: АСПИД / МРСП (proposed, 2026-10-15)](working-notes.md), [design notes, section 2.2 Judge role and its link to АСПИД (agreed 2026-10-18)](working-notes.md). Written 2026-10-19.
+> Turns the indicators of [card spec, section 8a. Scoring indicators for АСПИД (draft, 2026-10-19)](hypothesis-card-spec.md) into a ranking with uncertainty, under an ordinal importance order (a named preference profile). Design decisions: [design notes, section 2.1 Aggregation without explicit weights: АСПИД / МРСП (proposed, 2026-10-15)](../archive/spec/working-notes.md), [design notes, section 2.2 Judge role and its link to АСПИД (agreed 2026-10-18)](../archive/spec/working-notes.md). Written 2026-10-19.
 
 ---
 
@@ -38,7 +38,7 @@
 
 With no information, weights are uniform on W ("Bayesian" in Hovanov's and SMAA's sense). With constraints, weights are uniform on the restricted set W′.
 
-**Preference profile** = a named, versioned set of these constraints (e.g., "cheap and feasible": path_to_human ≥ novelty ≥ effect_level; "fundamental": mechanism, informativeness, novelty ≥ cost). One run per profile; profiles are reported with results ([design notes, section 2.1 Aggregation without explicit weights: АСПИД / МРСП (proposed, 2026-10-15)](working-notes.md)).
+**Preference profile** = a named, versioned set of these constraints (e.g., "cheap and feasible": path_to_human ≥ novelty ≥ effect_level; "fundamental": mechanism, informativeness, novelty ≥ cost). One run per profile; profiles are reported with results ([design notes, section 2.1 Aggregation without explicit weights: АСПИД / МРСП (proposed, 2026-10-15)](../archive/spec/working-notes.md)).
 
 ## 3. Weight sampling (Tervonen, Lahdelma 2007, section 3.2)
 
@@ -63,7 +63,7 @@ All outputs come from one simulation pass over K iterations; in each iteration d
 | pairwise winning index / dominance probability P(u_i > u_j) | share of draws where i beats j | Hovanov's dominance probability; pool-independent if scales are fixed |
 | rank acceptability b_i^r | share of draws where i has rank r | portfolio and top-k selection |
 | acceptability a_i = b_i^1 | probability of being best | — |
-| **P(i in top-k)** = Σ_{r ≤ k} b_i^r | probability of being among the first k | **entry threshold to judges** ([design notes, section 2.3 Co-Scientist debates, and where we might need a judge (2026-10-19)](working-notes.md)) |
+| **P(i in top-k)** = Σ_{r ≤ k} b_i^r | probability of being among the first k | **entry threshold to judges** ([design notes, section 2.3 Co-Scientist debates, and where we might need a judge (2026-10-19)](../archive/spec/working-notes.md)) |
 | central weight vector w_i^c | mean of the weight vectors under which i is ranked first | explanation: "which priorities favour this hypothesis" |
 | confidence factor p_i^c | probability that i is first when the central weights w_i^c are fixed and only the data vary (Phase 2, Algorithm 4) | whether the data are precise enough to separate i from the rest; low for hypotheses with many unknowns |
 | decision entropy (optional) | entropy of the rank or choice distribution (R `smaa`) | overall decisiveness of a run |
@@ -94,12 +94,12 @@ aggregate(values: dict[hyp_id, dict[ind_id, float | Level | Unknown]]   # Level:
 
 ## 6a. Expert pairwise choices as weight constraints
 
-Source: [design notes, section 2.5 Expert in the loop (agreed 2026-10-19)](working-notes.md), point 3.
+Source: [design notes, section 2.5 Expert in the loop (agreed 2026-10-19)](../archive/spec/working-notes.md), point 3.
 
 - **Constraint.** An expert choice "A is at least as good as B" under a profile becomes Σ_j w_j (q_Aj − q_Bj) ≥ 0, a linear constraint on the weights. It is stored in the profile as `Prefer("H-A", ">=", "H-B", by, at)`; the profile version increases. Sampling uses hit-and-run (section 3), since the constraint is not a simple order on weights.
 - **Unknown values.** If A or B has unknown indicator values, the constraint depends on the draw. MVP: substitute the expected value of the unknown (midpoint of its range, or the mean of the SMAA-O mapping for ordinal levels) and mark the constraint `approximate`. The exact treatment (constraint must hold for the drawn values) is an open point.
 - **Which pairs to ask.** Among the top (P(top-k) above the judge threshold), pairs with P(A > B) closest to 0.5; ties broken by the share of the admissible weight set the answer would cut (estimate from the current sample: share of draws violating each possible answer). Ask one pair at a time and re-run, since each answer changes the remaining uncertainty.
-- **Contradictions.** If the constraints leave an empty admissible set (hit-and-run finds no starting point; check with a linear program), report the minimal set of conflicting choices and raise `criterion_gap` ([design notes, section 2.3 Co-Scientist debates, and where we might need a judge (2026-10-19)](working-notes.md)). Never drop an answer silently.
+- **Contradictions.** If the constraints leave an empty admissible set (hit-and-run finds no starting point; check with a linear program), report the minimal set of conflicting choices and raise `criterion_gap` ([design notes, section 2.3 Co-Scientist debates, and where we might need a judge (2026-10-19)](../archive/spec/working-notes.md)). Never drop an answer silently.
 - **Reporting.** Results are reported with and without expert constraints (autonomous mode), together with the number of questions asked.
 - **Background.** Preference disaggregation / robust ordinal regression: Greco, Mousseau, Słowiński 2008, EJOR 191: 416–436, doi:10.1016/j.ejor.2007.08.013 (not read yet).
 

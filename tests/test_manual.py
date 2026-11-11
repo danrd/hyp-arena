@@ -10,6 +10,11 @@ from hyparena.card.effect_class import from_phrase
 from hyparena.card import aspid_v3, rules_v32 as r32
 
 MANUAL = Path(__file__).resolve().parents[1] / "docs" / "method-v3-manual.md"
+HISTORY = Path(__file__).resolve().parents[1] / "docs" / "archive" / "method-history.md"   # earlier versions
+
+
+def _with_history() -> str:
+    return MANUAL.read_text() + "\n" + HISTORY.read_text()
 
 
 def _constants() -> dict:
@@ -60,7 +65,7 @@ def test_manual_worked_example_is_what_the_code_gives(monkeypatch):
     c, cvs, alts = _case()
     ev = lambda extra=(): r32.evaluate(c, cvs + list(extra), alts, fold=True, neutral_unverified=True)
     e = ev()
-    text = MANUAL.read_text()
+    text = _with_history()
     row = f"| v3.3 | S {e.links['c1'][0]:.3f} (F {e.links['c1'][3]:.3f}) | no record, not in P | S {e.links['c3'][0]:.3f} (F {e.links['c3'][3]:.2f}) | " \
           f"{e.P:.3f} [{e.P_lo:.3f}; {e.P_hi:.3f}] | {e.support_share:.3f} | {e.I:.3f} | {e.scope} | {e.V:.3f} |"
     assert row in text, row
@@ -85,7 +90,7 @@ def test_manual_worked_example_v34(monkeypatch):
     c, cvs, alts = _case()
     ev = lambda extra=(): r32.evaluate(c, cvs + list(extra), alts, v34=True)
     e = ev()
-    text = MANUAL.read_text()
+    text = _with_history()
     row = f"| v3.4 | S {e.links['c1'][0]:.3f} (F {e.links['c1'][3]:.3f}) | no record, R 1 | S {e.links['c3'][0]:.3f} (F {e.links['c3'][3]:.2f}) | " \
           f"{e.P:.3f} | {e.support_share:.3f} | {e.I:.3f} | {e.scope} | {e.V:.3f} |"
     assert row in text, row
@@ -113,7 +118,7 @@ def test_manual_worked_example_v36(monkeypatch):
     c, cvs, alts = _case()
     ev = lambda extra=(): r32.evaluate(c, cvs + list(extra), alts, v36=True)
     e = ev()
-    text = MANUAL.read_text()
+    text = _with_history()
     row = f"| v3.6 | S {e.links['c1'][0]:.3f} (F {e.links['c1'][3]:.3f}) | no record | S {e.links['c3'][0]:.3f} (F {e.links['c3'][3]:.3f}) | " \
           f"evidence balance {e.chain_state:.3f} | | {e.I:.3f} | {e.scope} | |"
     assert row in text, row

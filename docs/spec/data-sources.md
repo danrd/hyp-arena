@@ -1,6 +1,6 @@
 # Data sources for hypothesis verification and cost/time estimation
 
-> Companion to [design notes](working-notes.md). Survey of knowledge bases, data repositories, literature sources and cost/duration sources, plus how to wire them into the pipeline.
+> Companion to [design notes](../archive/spec/working-notes.md). Survey of knowledge bases, data repositories, literature sources and cost/duration sources, plus how to wire them into the pipeline.
 > Status tags: **[V]** = checked via web search/fetch (summary level, not the official docs unless stated); **[L]** = live API/file call (2026-10-14 unless another date is given; see section 12); **[K]** = from general knowledge, not re-verified now. Access terms, limits and licenses change: re-check the official docs before building on any row. Last updated: 2026-10-19.
 
 ---
@@ -37,7 +37,7 @@
 | **Open Genes** **[V]** | ~2,400 genes from ~1,700 papers, lifespan-altering interventions in model animals, longevity-associated variants, hallmark links; confidence grading by 6 study types and 12 criteria | API + web; community MCP over SQLite | gene-level evidence, hallmark mapping, confidence prior |
 | HAGR: GenAge, AnAge, GenDR, LongevityMap, DrugAge, CellAge **[V]** | ageing genes (human >300, model organisms >2,000); animal life-history (>4,000 species); dietary-restriction genes; human longevity variants (LongevityMap: 550 entries in the live check); >1,000 compounds in model organisms (1,046 in the live check, section 12); senescence genes | downloads page; no API mentioned; terms on legal page | analogs and base rates (DrugAge), gene priors |
 | **RAID** (Rodent Aging Interventions Database, LEV Foundation) **[V]** | published mouse/rat lifespan-extension studies (normal-lifespan strains, significant effect on mean or max lifespan) | project page with visualization; periodic updates | analogs, rodent lifespan base rates (note: inclusion criterion = significant effect, so positive-only) |
-| **NIA ITP** results **[V partial]** | multi-site (3 sites) UM-HET3 mouse lifespan program, designed to detect 10% change in mean lifespan at 80% power with ≥2 sites; positives include rapamycin, acarbose, 17α-estradiol, NDGA | public portal after publication; JAX aging center lists ITP data and Mouse Phenome Database | `multi_site_program` flag; cleanest backtest labels (spec section 8; [design notes](working-notes.md) item A2) |
+| **NIA ITP** results **[V partial]** | multi-site (3 sites) UM-HET3 mouse lifespan program, designed to detect 10% change in mean lifespan at 80% power with ≥2 sites; positives include rapamycin, acarbose, 17α-estradiol, NDGA | public portal after publication; JAX aging center lists ITP data and Mouse Phenome Database | `multi_site_program` flag; cleanest backtest labels (spec section 8; [design notes](../archive/spec/working-notes.md) item A2) |
 | Mouse Phenome Database **[V partial]** | curated mouse phenotype data incl. UM-HET3 | public | phenotype context |
 | Aging Atlas, Tabula Muris Senis, single-cell aging atlases **[K]** | expression across age | public | data for falsification tests (Popper-style) |
 | Biomarkers of Aging Consortium, epigenetic clock resources **[K]** | clock definitions and validation | various | biomarker-type hypotheses |
@@ -137,7 +137,7 @@
 
 ### 9.3 Cost/time estimation specifics
 
-- Cost anchors and draft ordinal cost classes (ITP/CITP grant totals from NIH RePORTER, vivarium per diem rates, published trial cost estimates; checked 2026-10-19): [design notes](working-notes.md) section 3. Ranking uses the path to humans, the next step is shown separately (decided 2026-10-19).
+- Cost anchors and draft ordinal cost classes (ITP/CITP grant totals from NIH RePORTER, vivarium per diem rates, published trial cost estimates; checked 2026-10-19): [design notes](../archive/spec/working-notes.md) section 3. Ranking uses the path to humans, the next step is shown separately (decided 2026-10-19).
 - Build **reference classes** from ClinicalTrials.gov (by phase, condition, intervention type) for duration and enrollment, and from RePORTER (by activity code/topic) for academic study cost; use Moore et al. only as a sanity range for human pivotal trials.
 - For rodent lifespan studies, build a table from protocol facts: cohort size from power calculation (ITP logic), duration from lifespan of strain (years), per-diem and animal costs from facility price lists (collect 2–3 institutional sources; the NIA subsidy is not a market price).
 - Output distributions (median + interval), always with source list and what is modeled vs observed. Backtest: predicted vs actual durations of completed trials.

@@ -208,7 +208,7 @@ def main() -> None:
                         help="full: our method; coscientist: baseline (one family, one Elo, holistic verdict); "
                              "coscientist-2026: the same with TrueSkill and UCB")
     parser.add_argument("--ladder", choices=sorted(LADDER), default=None,
-                        help="ablation step L0 (baseline) .. L4 (full); overrides --mode (docs/comparison.md)")
+                        help="ablation step L0 (baseline) .. L4 (full); overrides --mode (docs/archive/comparison.md)")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--fake", action="store_true", help="fake LLM, no model calls (tests the machinery)")
     parser.add_argument("--criteria", default=str(CONFIGS / "criteria.yaml"), help="criteria file (default: by step)")

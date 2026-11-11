@@ -4,7 +4,7 @@ Status: tooling ready; a first small run on cheap paid models (6 groups, one see
 
 ## 1. Question
 
-Given a confirmed finding hidden among nine plausible but false statements, does the ranking put the finding first? This complements the ITP backtest (`docs/comparison.md`):
+Given a confirmed finding hidden among nine plausible but false statements, does the ranking put the finding first? This complements the ITP backtest (`docs/archive/comparison.md`):
 
 | | ITP backtest | Negative sampling |
 |---|---|---|
@@ -93,7 +93,7 @@ L4 − L0, paired over the six groups: hit@1 +0.33 [0, 0.67], MRR +0.25 [−0.01
 
 This needs more groups before it means anything. If it holds, a cheap listwise pre-ranking ahead of the tournament is worth considering.
 
-**Earlier attempt with the review gate on** (reviews rejected below the thresholds, as in the paper). The gate rejected almost everything: 1 of 60 items survived in L0 and 8 in L4, and only two groups had a match. The ranking was made by the gate. This led to the decision to make reviews advisory by default (`docs/architecture.md`, 6.4).
+**Earlier attempt with the review gate on** (reviews rejected below the thresholds, as in the paper). The gate rejected almost everything: 1 of 60 items survived in L0 and 8 in L4, and only two groups had a match. The ranking was made by the gate. This led to the decision to make reviews advisory by default (`docs/archive/architecture.md`, 6.4).
 
 **What the test found in the pipeline (fixed before the reported run):**
 1. **Cut-off leak.** The evidence cut-off used PubMed's print date. Papers appear online weeks earlier, so the retrieval "as of" the day before a finding returned the finding's own paper (spermidine in mice: online 2016-11-14, print 2016-12). The cut-off now uses the earliest of the online, print and PubMed-entry dates. This also affects the ITP backtest.
@@ -129,6 +129,6 @@ This needs more groups before it means anything. If it holds, a cheap listwise p
 **What decided v2's order.** With evidence cut the day before the finding, the finding itself is unverified in every group (42 of 50 items are unverified). Only in group 2 did evidence decide: a 1971 DrugAge paper refutes the three procaine statements (with the new rule also "procaine shortens lifespan"), and the finding comes first among the rest. In groups 1 and 4 every item is unverified, so the order there comes from indicators without evidence (clinical phase, novelty) and from the draws of unknowns: noise, not skill. v2 abstains where nothing is known, by design; this test rewards a guess.
 
 **Errors found (group 3, mice):**
-- "Lovaza shortens lifespan in mice" became supported by a quote that says Lovaza extends lifespan: gpt-5-nano gave the record the wrong stance. Fixed after the run (`verify_claim/v4`): the verifier extracts the direction of the effect and code sets the stance, as for DrugAge (`docs/rules-method.md`).
+- "Lovaza shortens lifespan in mice" became supported by a quote that says Lovaza extends lifespan: gpt-5-nano gave the record the wrong stance. Fixed after the run (`verify_claim/v4`): the verifier extracts the direction of the effect and code sets the stance, as for DrugAge (`docs/archive/rules-method.md`).
 - "Lovaza extends lifespan in mice", a real negative of the test (no significant effect in DrugAge), is supported by PMID 23918873: "4% Lovaza significantly extends both the median and maximal life span of (NZBxNZW)F1 mice", a lupus-prone, short-lived strain. The claim names no strain, so the finding matches by the rules; the test's label and the verifier both miss that the strain is a disease model. Fixed after the run: a table of disease models and short-lived strains flags such records (`configs/disease_models.yaml`); a flag lowers trust but does not change the status.
 - The mechanism variant ("... by activating SIRT1") inherits the supported outcome and becomes a known result; its mechanism stays unverified. This follows the specification.

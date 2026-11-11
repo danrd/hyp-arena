@@ -59,8 +59,8 @@ class Evidence(BaseModel):
     publication_date: Optional[str] = None       # ISO date; the basis for "as of date T" filtering
     retrieved_at: str = ""
     query: str = ""
-    tier: Optional[int] = None                   # 1 curated ... 4 preprint (see docs/architecture.md)
-    # What the source can assert (six epistemic types, see docs/architecture.md 3a): primary_text,
+    tier: Optional[int] = None                   # 1 curated ... 4 preprint (see docs/archive/architecture.md)
+    # What the source can assert (six epistemic types, see docs/archive/architecture.md 3a): primary_text,
     # curated_record, measurement, machine_derived, quality_metadata, plans. Only primary text with a
     # finding, curated records and executed measurements can support a claim; the rest are leads or inputs.
     epistemic_type: str = ""

@@ -1,4 +1,4 @@
-"""Method v3: alternatives proposed by a model (docs/spec/method-v3.md, section 4).
+"""Method v3: alternatives proposed by a model (docs/archive/spec/method-v3.md, section 4).
 
 One call per hypothesis (prompt propose_alternatives/v1) over the abstracts already read for it, dated by T. Code keeps only
 support PMIDs from that list (an alternative without them weighs nothing in the rules), drops an alternative eliminated by

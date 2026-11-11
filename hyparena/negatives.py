@@ -6,7 +6,7 @@
     python -m hyparena.negatives evaluate --runs runs/neg/L4_s0
     python -m hyparena.negatives compare --a runs/neg/L4_s0 --b runs/neg/L0_s0
 
-A group is one confirmed finding and nine negatives (docs/negative-sampling.md):
+A group is one confirmed finding and nine negatives (docs/archive/negative-sampling.md):
 - the finding: a compound that significantly increased average lifespan of a species in at least two
   DrugAge publications, and never significantly decreased it;
 - real negatives: compounds tested in the same species that never had a significant effect (DrugAge);

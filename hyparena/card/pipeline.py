@@ -1,5 +1,5 @@
 """Method v2 end to end: texts → normalizer → admission → verifier → statuses and evidence profile → indicators
-→ aggregation under each preference profile (docs/rules-method.md).
+→ aggregation under each preference profile (docs/archive/rules-method.md).
 
     ALLOW_PAID=1 python -m hyparena.card.pipeline --paste hypotheses.txt --writer openai --out runs/v2.json
     python -m hyparena.card.pipeline --paste hypotheses.txt --fake --out runs/v2.json        # no model calls
@@ -137,7 +137,7 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
     search_mode = cfg_extra.get("search", "keywords")                  # `search: model` in the config
     if cfg_extra.get("full_text") == "pmc":                            # sources experiment arm B: read PMC full texts where allowed
         search_mode += "+fulltext"
-    method = cfg_extra.get("method", "v2")                              # `method: v3` (docs/spec/method-v3.md)
+    method = cfg_extra.get("method", "v2")                              # `method: v3` (docs/archive/spec/method-v3.md)
     norm_version = cfg_extra.get("normalize_version") or ("v7" if method == "v3" else None)   # v3: v7 or later (`normalize_version`)
     verify_version = cfg_extra.get("verify_version") or ("v6" if method == "v3" else "")   # v3: v6 or later (`verify_version`)
     from hyparena.card import rules as _rules

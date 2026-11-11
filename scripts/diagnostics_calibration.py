@@ -7,7 +7,7 @@ For every pool of ranked hypotheses (indicator values from saved runs) and every
   by size     the same on random sub-pools of 10, 15, 20, 30 hypotheses (does a warning fire because the pool is small?);
   chance      the same after permuting every indicator column across the hypotheses independently (marginals kept,
               dependence between indicators and hypotheses destroyed): what a pool with no structure gives.
-The warning thresholds are compared with these distributions in docs/rules-method.md.
+The warning thresholds are compared with these distributions in docs/archive/rules-method.md.
 """
 from __future__ import annotations
 

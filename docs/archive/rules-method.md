@@ -1,6 +1,6 @@
 # Our method, version 2: verified card → rule-based indicators → aggregation
 
-> **Method v2 (historical).** The current method is v3.2: [`method-v3-manual.md`](method-v3-manual.md) (manual) and [`spec/method-v3.md`](spec/method-v3.md) (specification). This document describes v2 and the Co-Scientist-style baselines, which are kept for comparison.
+> **Archived: method v2 (historical).** The current method is described in the [manual](../method-v3-manual.md). This document describes v2 and the Co-Scientist-style baselines, which are kept for comparison.
 
 Design decided in the working notes on 2026-10-19 (sections 2.1–2.4); specifications in `docs/spec/`
 into `docs/spec/` (card format, worked examples, aggregation). The LLM tournament over the whole pool (ladder
@@ -222,7 +222,7 @@ exchange apart.
 
 ## Lifespan stance by code, context flags (2026-10-20)
 
-Two error types seen in the negative-sampling run (`docs/negative-sampling.md`, section 6):
+Two error types seen in the negative-sampling run (`docs/archive/negative-sampling.md`, section 6):
 - **Stance of lifespan findings.** The verifier (`verify_claim/v4`) extracts the direction of a lifespan finding (increase, decrease, no effect); code sets the stance from it, as for DrugAge: a finding supports the claim whose direction it matches (extends ↔ increase, shortens ↔ decrease, no effect or a negated "extends" ↔ no effect) and counts against the others. When the extractor's own stance differs, the record notes it. Before, gpt-5-nano took "Lovaza extends life span" as support for "Lovaza shortens lifespan".
 - **Disease models and special conditions** (`configs/disease_models.yaml`, `hyparena/card/contexts.py`): which strain or diet a study used is in the text; what it means is a lookup. A seed table of about 30 models (lupus-prone, cancer-prone, metabolic, neurodegeneration, progeroid and senescence-accelerated strains, short-lived worm mutants, high-calorie diets) is matched against the record's abstract and DrugAge's strain field; a match adds the flag `disease_model`, `short_lived_controls` or `special_diet` with the model's name. Flags alone do not change a status (spec 7); since 2026-10-22 a disease-model label with a disease name and its place changes the context (see below); the profile used to report "mammals (disease models or special conditions only)" when every record at the effect level is flagged. The table is a stand-in until a strain ontology is part of the knowledge graph.
 
@@ -461,7 +461,7 @@ negative only.
   и старше метки; `tests/test_prespec.py` делает это на временном репозитории.
 - **Что это доказывает и чего нет.** Порядок «спецификация в git, затем запуск». Не доказывает, что спецификацию не писали,
   уже видя данные где-то ещё, и не охватывает прогоны до 2026-10-23: у них нет `meta.spec`. Для первого прогона эволюции
-  порядок подтверждается только историей git (протокол в `docs/evolution-experiment.md` закоммичен в `f3ba37a`, 2026-10-22
+  порядок подтверждается только историей git (протокол в `docs/archive/evolution-experiment.md` закоммичен в `f3ba37a`, 2026-10-22
   14:49 UTC, результат в `4aa2e6b`, 15:04); `specs/evolution-1.yaml` записывает его машинно после факта и на тот прогон не
   ссылается. Выборка ITP: первый прогон сделан до этого механизма, любой новый прогон на ней идёт по `specs/itp-backtest-2010.yaml`.
 

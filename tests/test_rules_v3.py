@@ -1,4 +1,4 @@
-"""Method v3 rules on synthetic cases from the paper runs (docs/spec/mechanism-chain-draft.md, method-v3.md section 9.5)."""
+"""Method v3 rules on synthetic cases from the paper runs (docs/archive/spec/mechanism-chain-draft.md, method-v3.md section 9.5)."""
 import pytest
 
 from hyparena.card import rules_v3 as r3

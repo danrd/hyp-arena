@@ -1,5 +1,5 @@
 # Method v3 extraction against the hand-made gold for numbers, fixed before the first call (user decisions 2026-11-04:
-# thresholds written in advance; compare with the v2 verifier on the same inputs). docs/spec/method-v3.md, sections 2 and 7.
+# thresholds written in advance; compare with the v2 verifier on the same inputs). docs/archive/spec/method-v3.md, sections 2 and 7.
 id: extraction-gold-v3
 date: 2026-11-04
 question: "Does verify_claim/v6 extract design, total n, comparison and effect class the way the hand-made gold does?"

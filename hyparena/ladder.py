@@ -2,7 +2,7 @@
 L0ts is the second baseline: the 2026 version of Co-Scientist (TrueSkill + UCB) instead of Elo.
 
 Every step runs the same upstream stages (normalization, retrieval, reviews); only the ranking differs.
-See docs/comparison.md."""
+See docs/archive/comparison.md."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field

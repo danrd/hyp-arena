@@ -1,7 +1,7 @@
-# Evolution experiment 1 (docs/evolution-experiment.md): fixed before the run, hashed into the run's meta.
+# Evolution experiment 1 (docs/archive/evolution-experiment.md): fixed before the run, hashed into the run's meta.
 id: evolution-1
 kind: evolution
-protocol: docs/evolution-experiment.md
+protocol: docs/archive/evolution-experiment.md
 profile: evidence_first
 k: 3
 rule: a child ends in the top k of the profile, and its P(top-k) is at least that of its parent

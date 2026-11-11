@@ -54,11 +54,11 @@ Protocol: [`benchmark.md`](benchmark.md), [`specs/benchmark-v2.yaml`](../specs/b
 
 ## Other tests and tools
 
-- Negative-sampling test: `python -m hyparena.negatives` ([`negative-sampling.md`](negative-sampling.md))
+- Negative-sampling test: `python -m hyparena.negatives` ([`negative-sampling.md`](archive/negative-sampling.md))
 - Retraction check: `python -m hyparena.tools.retractions download` (Retraction Watch CSV, ~67 MB, kept out of git)
 - Tournament simulation prototype: `python -m hyparena.sim` (takes a few minutes)
 - Graph skeleton with a fake LLM (no real calls): `python -m hyparena.demo`
-- Demonstration interface (Gradio, in Russian): `pip install -e ".[demo]" && python -m hyparena.app`, see [`demo.md`](demo.md)
+- Demonstration interface (Gradio, in Russian): `pip install -e ".[demo]" && python -m hyparena.app`, see [`demo.md`](archive/demo.md)
 - Live runs on real models (free OpenRouter models by default): `python -m hyparena.live smoke` and `python -m hyparena.live run`
   (`--checkpoint runs/state.sqlite` makes a run resumable with `--resume --thread <id>`; `--criteria`, `--card`,
   `--search europepmc|none`, `--as-of YYYY-MM-DD`). Models: [`configs/models.yaml`](../configs/models.yaml); cheap paid models for

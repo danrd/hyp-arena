@@ -1,4 +1,4 @@
-"""Method v3 rules (docs/spec/method-v3.md, sections 3-6 and 9): record weight on ordinal scales, link strength, the gate,
+"""Method v3 rules (docs/archive/spec/method-v3.md, sections 3-6 and 9): record weight on ordinal scales, link strength, the gate,
 plausibility P, scope W, informativeness I, promise V = P x W x I, evolution flags and the experiment headroom.
 
 Pure functions over a card and its verification; no model calls. The v2 rules (hyparena/card/rules.py) are untouched; a run

@@ -50,7 +50,7 @@ API, three requests at a time (a hypothesis page takes the server 7–10 s).
 
 ## Relation to our approach
 
-| Bio Arena | Ours (method v2, `docs/rules-method.md`) |
+| Bio Arena | Ours (method v2, `docs/archive/rules-method.md`) |
 |---|---|
 | dossier: the author's claims with quotes, supporting and opposing evidence with quotes, uncertainties | card: declared claims in a closed vocabulary with verbatim spans; verified layer with evidence records, statuses computed by rules |
 | quotes are verbatim (checked 2026-10-20: all 3,309 author-claim quotes are in the hypothesis texts; a random sample of 232 evidence quotes from 30 verified dossiers is in the 128 source texts, character for character); whether a quote supports the model-written claim beside it is reviewed by an LLM consistency step | quotes checked verbatim by code; what a quote supports (stance, finding vs background or speculation, species, endpoint, primary outcome) is extracted as fields by an LLM, partly re-checked by code, and statuses, gate and profile follow from rules |

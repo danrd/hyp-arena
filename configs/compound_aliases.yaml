@@ -1,5 +1,5 @@
 # Standard abbreviations of compounds that the longevity literature uses, mapped to a full name the compound lookup knows.
-# An abbreviation that is not here stays unresolved (no identifier, no curated records): see docs/rules-method.md (Нормализатор:
+# An abbreviation that is not here stays unresolved (no identifier, no curated records): see docs/archive/rules-method.md (Нормализатор:
 # каноникализация и сокращения). Keys are compared with `compounds.key` (lower case, letters and digits only); add only abbreviations
 # with one meaning in this field. The card keeps the label as the text wrote it; the alias is used only to find the compound.
 aliases:

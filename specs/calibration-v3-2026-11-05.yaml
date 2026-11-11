@@ -4,7 +4,7 @@
 id: calibration-v3
 date: 2026-11-05
 question: "Does method v3's plausibility P order the 30 calibration trials by their outcome at all (where v2 gave tied AUC 0.46)?"
-status_in_advance: "orientation, not a test: these 30 units (17 positive, 13 null or negative) were used to debug v2 and to design v3 (docs/spec/method-v3.md, worked examples). A test of P needs the fresh sample (CT.gov 2023-2026, registered late) with its own threshold, next step."
+status_in_advance: "orientation, not a test: these 30 units (17 positive, 13 null or negative) were used to debug v2 and to design v3 (docs/archive/spec/method-v3.md, worked examples). A test of P needs the fresh sample (CT.gov 2023-2026, registered late) with its own threshold, next step."
 config: configs/v3-flash.yaml   # normalize_card/v7 (Gemini 3.5 Flash), verify_claim/v9 (DeepSeek V4.1 Flash), proposed alternatives, rules_v3, model-written search, graded admission, temperature 0
 code: "scripts/calibration.py run --step 1/2/3 --config configs/v3-flash.yaml --tag _v3, then score-v3; cards frozen per method in calibration/cards_v3.json (v2 cards have no chain links)"
 units: "units_1.json, units_2.json, units_3.json (30 units, each as of min(registration, primary completion))"

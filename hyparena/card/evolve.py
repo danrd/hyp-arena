@@ -3,7 +3,7 @@ a child is a refinement driven by what the verification found (narrow to a conte
 conditions of a conflict, add a mechanism the premise records support, add the control of an open alternative). Children
 go through the same pipeline (card, verification, alternatives, informativeness) and are ranked together with the
 parents under the same profiles. Nothing here decides whether a child is good: the criterion is declared in advance
-(docs/evolution-experiment.md) and evaluated after the last round, whatever the result.
+(docs/archive/evolution-experiment.md) and evaluated after the last round, whatever the result.
 
     python -m hyparena.card.evolve --v2 runs/x.reapplied.json --out runs/evolution/x.json --rounds 3 --parents 4 \
         --children 2 --max-calls 200"""
@@ -136,7 +136,7 @@ def place_of(res: dict, hid: str, profile: str = PROFILE) -> Optional[int]:
 
 
 def criterion(res: dict, profile: str = PROFILE, k: int = 3) -> dict:
-    """The criterion declared in docs/evolution-experiment.md: a child in the top k whose P(top-k) is at least that of its parent."""
+    """The criterion declared in docs/archive/evolution-experiment.md: a child in the top k whose P(top-k) is at least that of its parent."""
     P = (res.get("ranking") or {}).get(profile, {})
     by_id = {x["id"]: x for x in res["items"]}
     rows = []

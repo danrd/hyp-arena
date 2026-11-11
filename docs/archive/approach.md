@@ -1,12 +1,12 @@
 # Ranking thousands of hypotheses: a Co-Scientist-based approach
 
-> **Method v2 (historical).** The current method is v3.2: [`method-v3-manual.md`](method-v3-manual.md) (manual) and [`spec/method-v3.md`](spec/method-v3.md) (specification). This document describes v2 and the Co-Scientist-style baselines, which are kept for comparison.
+> **Archived: method v2 (historical).** The current method is described in the [manual](../method-v3-manual.md). This document describes v2 and the Co-Scientist-style baselines, which are kept for comparison.
 
 Task: from N ≈ 10³–10⁵ biological hypotheses (domain: ageing) that **arrive from outside** (LLMs generate them in volume), select the most **promising** ones, with an explanation that can be verified against sources. **Ranking is the focus.** Generation and evolution stay in the graph as optional modules (off when hypotheses are imported), because the stages interact: what is retrieved and reviewed is what the judges rank.
 
 The honest claim is "our selector picks better from a given pool", measured against an independent signal at equal LLM-call budget, not "a better system than Co-Scientist overall".
 
-Details of how Co-Scientist itself works (hypothesis format, judges, criteria) are in [`co-scientist-reference.md`](co-scientist-reference.md).
+Details of how Co-Scientist itself works (hypothesis format, judges, criteria) are in [`co-scientist-reference.md`](../co-scientist-reference.md).
 
 ## 1. What we take from Co-Scientist
 
@@ -122,7 +122,7 @@ Decision (working notes): expert labels are **not assumed**; they are an optiona
 4. **Judge checks without labels:** position-swap consistency; sensitivity to style (same content, different phrasing or format); cross-family agreement as a sanity check only; accuracy on the backtest labels.
 5. **Baselines at equal budget:** direct 1–10 scoring; a Co-Scientist-like tournament (one Elo, one model family, holistic verdict); our tournament without evidence; single judge vs. ensemble. Report cost per run.
 6. **Leakage.** A judge or generator whose training cutoff is after T can know the outcome; use models with an earlier cutoff for backtests or test for leakage.
-7. **Negative sampling.** A confirmed finding hidden among nine plausible false statements (real negatives from DrugAge and model-generated variants checked by another family); hit@1, MRR and errors per kind of negative (`docs/negative-sampling.md`). Cheap and scalable, but it measures telling true from false, not prioritising open hypotheses.
+7. **Negative sampling.** A confirmed finding hidden among nine plausible false statements (real negatives from DrugAge and model-generated variants checked by another family); hit@1, MRR and errors per kind of negative (`docs/archive/negative-sampling.md`). Cheap and scalable, but it measures telling true from false, not prioritising open hypotheses.
 8. **Experts, when available:** a small set of pairwise preferences as the top validation tier, with inter-expert agreement as the ceiling.
 
 ## 8. Next steps

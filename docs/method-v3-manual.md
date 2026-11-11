@@ -1,18 +1,13 @@
 # Method v3 manual: how a hypothesis is scored and how to read the report
 
-Version: rules **v3.7** as of 2026-11-09 = v3.6 with a slot that has no record left out of the evidence balance and the
-support share (`rules_v32.EMPTY_SLOTS = "skip"`, specs/empty-slots-2026-11-09.yaml; section 7), and non-refutation P no
-longer shown in the report (it left the profiles in v3.5; the gate still filters refuted chains). v3.6 as of 2026-11-08 (`evaluate(..., v36=True)`, specs/record-weight-2026-11-08.yaml): the record
-weight rebuilt on the GRADE domains with fewer levels, and records for and against folded as a sum of log likelihood ratios
-(sections 5, 5a, 6); the signed axis is named the **evidence balance** (`chain_state` in the code). v3.5 as of 2026-11-08 (v3.4 + one signed axis in the profiles and a null record weighted
-by the power of its study, `evaluate(..., v35=True)`, specs/link-scoring-2026-11-08.yaml); v3.4 as of 2026-11-07 (`hyparena/card/rules_v32.py`, `evaluate(..., v34=True)`; novelty, leverage and the
-evolution drift flag in `hyparena/card/novelty_v34.py`; definitions in `specs/v34-frontier-2026-11-07.yaml`), on top of
-`rules_v3.py` variant v3.1 and `v3_levels.py`, aggregation by ASPID over the axes (`hyparena/card/aspid_v3.py`, `configs/profiles_v3.yaml`). v3.3
-(`evaluate(..., fold=True, neutral_unverified=True)`) differs only in P (section 7) and in two record weights (section 5). The
-specification with its history and decisions is `docs/spec/method-v3.md` (in Russian, sections 9-13); this manual is the
-self-contained English description. The constants in section 14 and the numbers of the worked example in section 13 are
-checked against the code by `tests/test_manual.py`: if the code changes, the test fails until this manual is updated. The
-discrete levels of v3 and v3.1, used by earlier runs and still shown as labels, are in appendix A.
+Version: rules **v3.7** (2026-11-09): the record weight of v3.6 on the GRADE domains (section 5), link strength as a sum
+of log likelihood ratios (section 6), the evidence balance over the links that have data (section 7), the ASPID profiles
+(section 8) and the rules every improved version keeps (section 11). Code: `hyparena/card/rules_v32.py`
+(`evaluate(..., v36=True)`, `EMPTY_SLOTS = "skip"`), `hyparena/card/novelty_v34.py`, `hyparena/card/aspid_v3.py`,
+`configs/profiles_v3.yaml`. Every rule has its check in `specs/` (named in the section); how the earlier versions
+differed (v3.0-v3.6) is in [`archive/method-history.md`](archive/method-history.md). The constants (section 14) and the worked
+example (section 13) are checked against the code by `tests/test_manual.py`: if the code changes, the test fails until this
+manual is updated.
 
 ## 0. Using this manual as context
 
@@ -21,9 +16,9 @@ section 10. Rules for a model writing such a report:
 
 - Score only what the literature you were given says; every record needs a PMID and a verbatim quote. A record you cannot
   quote does not exist.
-- Use the scales and formulas of sections 5-7 exactly; show the arithmetic for P, the support share, I and V, and the record
-  that sets the novelty level.
-- Do not predict the outcome of the trial; P is non-refutation of the mechanism given the literature, not a forecast.
+- Use the scales and formulas of sections 5-7 exactly; show the arithmetic for each link's S, the evidence balance and I, and the
+  record that sets the novelty level.
+- Do not predict the outcome of the trial; the evidence balance is the state of the literature before T, not a forecast.
 - When you evolve or improve a hypothesis, keep the rules of section 11 ("Rules every improved version keeps"): no record copied, edited, moved or dropped by hand, supported links kept, novelty-by-absence counted on the link's own subject and object.
 - When in doubt between two levels, take the lower one and say why. For novelty, take the level nearer the known: a paper you
   were not given may exist, and missing data are never novelty.
@@ -41,20 +36,19 @@ several **profiles** (whose order of importance says what matters to whoever ran
 
 | Axis | Question | Range |
 |---|---|---|
-| P, non-refutation (named plausibility until v3.3) | How far is the chain not refuted by the literature before the date T? | 0-1, product over links (v3.4) |
-| support share | How much of the chain is supported by that literature? | 0-1 |
+| evidence balance | How strongly does the literature before T support the chain's links (for minus against), over the links that have data? | −1 … +1 |
+| coverage | How many links of the chain have any data at all? | k of n links |
 | N, novelty | How far is the hypothesis from what was already asked before T? | new context < translation < analog < new combination < new link |
 | I, informativeness | Which supported competing explanations does the stated experiment cut off? | 0-1 |
 | W, scope | How far does the supported mechanism reach: one condition, an organ or system, a hallmark of ageing? | local, organ, hallmark |
-| V, reference | P × I (0 if filtered): the point of equal weights | 0-1 |
+| feasibility | Can the stated experiment be run: system, duration, planned n, readiness of the intervention? | 0-1 |
 
-**ASPID** (section 8) is the main aggregation: each profile orders the indicators (P, I, scope, feasibility and others) by
-importance, weights are drawn at random under that order, and a hypothesis gets an expected value and the probability of
-being in the top. A near-zero P is not compensated (P and I are on log scales). V is reported as one reference point, not
-as the ranking.
+**ASPID** (section 8) is the aggregation: each profile orders the indicators by importance, weights are drawn at random
+under that order, and a hypothesis gets an expected value and the probability of being in the top. A chain refuted by
+strong data is filtered by the gate (section 6) and not ranked.
 
-Only P is meant to track trial outcomes; I, W and V describe what a result would teach, whatever it is; novelty N says how far
-the question is from what was already asked. Validation status is in section 12.
+Only the evidence balance is meant to track trial outcomes; I, W and feasibility describe what a result would teach and what
+it costs, whatever the result; N says how far the question is from what was already asked. Validation status is in section 12.
 
 ## 2. Inputs
 
@@ -112,7 +106,10 @@ the verifier prompt `verify_claim/v9` already follows them; a report written by 
 1. **Same intervention or not** (`intervention_match`). *exact*: the intervention the claim names (the same programme, the
    same compound); a different dose or schedule of it is exact with dose or regimen "no", which makes the record adjacent.
    *class*: another intervention of the same kind on the claim's outcome (another resistance programme for a squat
-   programme; another drug of the same class) — it counts, with context 1/3. The match is judged at the level at which the
+   programme; another drug of the same class) — it counts at full weight under v3.6 (the class label is not charged while it is
+   unreliable). Decided 2026-11-11, not yet in the rules: a third level "same category only" (another intervention of the
+   same broad category, e.g. a single nutrient for a multi-component formula) that counts as adjacent, 1/2
+   (`specs/intervention-class-2026-11-11.yaml`). The match is judged at the level at which the
    claim names the intervention (verifier prompt v10, 2026-11-08): when the claim names a kind ("resistance training",
    "adequate protein intake", "a home-based exercise programme"), any study of that kind is exact; class only when the claim
    names a specific product, compound or programme and the study used another member of its kind. A programme that merely includes the named
@@ -121,11 +118,11 @@ the verifier prompt `verify_claim/v9` already follows them; a report written by 
    altogether* (aerobic training for a resistance claim) weighs 0.
 2. **Against means null or opposite, not small.** A record is *against* when the result for the claim's own measure is no
    effect (not significant against control, or no change in a before-after design) or the opposite direction. A significant
-   effect judged clinically small (below a minimal important difference) is a record *for* with a small effect (weight 1/4),
+   effect judged clinically small (below a minimal important difference) is a record *for* with a small effect (effect weight 1/2),
    not a record against. A null on another measure of the same study is not against this claim (it may be against another
    link of the chain).
 3. **Comparison is read from the analysis behind the sentence, not from the number of arms.** "X did not change in either
-   group over 12 weeks" is a within-group (before-after) result, 2/3, even in a two-arm trial; "no difference between groups"
+   group over 12 weeks" is a within-group (before-after) result, 1/2, even in a two-arm trial; "no difference between groups"
    is between groups, 1.
 4. **A null primary outcome with positive secondary ones** gives two records: the null primary against, the secondary for
    with the flag subgroup_only or as a separate measure.
@@ -157,34 +154,22 @@ level is in section 5a.
 | comparison (part of risk of bias) | between groups 1; within group or none 1/2 |
 | context (indirectness) | adjacent 1/2 (another population, age, sex, dose, comparator or species, only on qualifiers the claim states); exact and class 1 |
 
-The fold by independence group is unchanged (the heaviest record of a group fully, the others 1/4). The table below
-(v3.2-v3.5) is kept for earlier runs.
+A record against (a null or opposite result from a comparison) is weighed by the power of its study to detect d = 0.4 in
+place of precision and effect (two-sided 5%; between groups Φ(0.4·√(n/4) − 1.96), before-after Φ(0.4·√n − 1.96), n unknown
+→ 40): a null of 20 people weighs little, a null of 300 fully. A record about another intervention altogether weighs 0.
+Retracted papers weigh 0.
 
-| Factor | Levels (v3.2–v3.4) | |
-|---|---|---|
-| design, claim about humans (outcome link) | cells, animal, observational, review, non-randomised, meta-analysis, RCT | 1/7 … 7/7 |
-| design, every link before the outcome, or a claim about animals | cells, review, primary study | 1/3, 2/3, 1 |
-| precision | outcome link: min(1, ln n / ln 300), at least 1/4, unknown n = 1/4; links before the outcome: 1/2 (v3.4) | continuous |
-| effect | where the phrase gives a ratio or a standardised difference: d = abs(ln ratio) × √3 / π or abs(d), weight 1/4 + 3/4 × min(1, d / 0.8); otherwise the rule-A class: none, small, medium, large = 1/4 … 4/4, unclear 1/2 | continuous or class |
-| comparison | none, within group, between groups | 1/3, 2/3, 1 |
-| context | same class of intervention, adjacent population or species, exact (v3.4: another species alone is not adjacent on the outcome link of a human claim) | 1/3, 2/3, 1 |
+**Folding by independence group.** On each side (for, against) the records of one group (one trial, or one paper) are
+folded: the heaviest counts fully, every further record of the group 1/4. F and A are the folded sums. The fold runs per
+link, so one paper can count on several links of a chain (a candidate rule for the same finding on several links:
+`specs/v38-candidates-2026-11-10.yaml`, C2).
 
-A record against (a null or opposite result from a comparison) takes the top effect weight: a clear null weighs like a
-clear positive. A record about another intervention altogether weighs 0. Retracted papers weigh 0.
+**The distance to the clinic is charged once.** Links before the outcome use the preclinical design scale (cells 1/3,
+review 2/3, primary study 1) with precision 1/2 (replicates of cells or animals are not comparable with trial
+participants), and the context factor charges another species there; on the outcome link of a human claim another species
+is charged by the design scale only.
 
-**Folding by independence group.** On each side (for, against) the records of one group are folded: the heaviest counts
-fully, every further record of the group with 1/4. F and A are the folded sums.
-
-The distance to the clinic is charged once: links before the outcome use the preclinical design scale, the outcome link the
-clinical one. **v3.4** (`specs/v34-frontier-2026-11-07.yaml`, after an outside review):
-
-- on the outcome link of a claim about humans, another species is charged by the design scale only (an animal study 2/7), no
-  longer also by the context factor; another population, age, sex, dose or comparator still makes the record adjacent (2/3).
-  On the links before the outcome the preclinical design scale does not see the species, so the context factor charges it
-  there, once;
-- on the links before the outcome precision is a constant 1/2: replicates of cells or animals are not comparable with trial
-  participants and are rarely stated in an abstract. Under v3.3 a cell study without n weighed 1/3 × 1/4 = 0.083 and a new
-  link needed about eight of them to reach moderate support; now it weighs 1/6.
+The weight tables of v3.2-v3.5 are in `archive/method-history.md`.
 
 ## 5a. Why each factor and level (v3.6)
 
@@ -226,22 +211,11 @@ F = 0.6 with nothing against gives 5/6, as the Beta did; F = A gives 0.5 whateve
 depends on the difference F − A, not on the ratio: three units for and one against (S 0.995) count more than one for and
 none against (0.936). The 90% interval is still the Beta's: it shows how much data there are, not where the point lies.
 
-**Strength, v3.2-v3.5:** S = (cF + 1) / (c(F + A) + 2), the mean of Beta(1 + cF, 1 + cA), with c = 4 / 0.6, so that F = 0.6 with
-nothing against gives 5/6 (the old "moderate"). Its 90% interval comes from the Beta quantiles. Reading S:
-
-| Situation | S | Interval |
-|---|---|---|
-| no record | 0.5; in P the link counts as 1 (nothing refutes it) | wide (0.05-0.95): nothing is known |
-| for and against about equal | about 0.5 | narrow: data conflict |
-| F = 0.6, nothing against | 0.83 | |
-| F = 1.5, nothing against | 0.92 | |
-| only against | below 0.5 | |
-
-A label is still shown for reading (appendix A: unverified, weak, moderate, strong, contested, refuted).
-
-Reference points for F: one RCT with ≥ 300 participants, a large between-group effect and the exact population weighs 1.0;
-one RCT of 120 with a medium effect about 0.63; a mouse study of 40 with a large effect, between groups, in another species
-(context 2/3) about 0.43 on a link before the outcome.
+Reference points (v3.6; the worked example of section 13): one RCT of 120 with a medium effect, between groups, in the
+exact population weighs 0.839 on the outcome link (S 0.905 alone); one mouse study of 40 with a large effect, between
+groups, on a link before the outcome weighs 0.5 (S 0.793); a mouse null of 40 weighs 0.24 by its power. A link without
+records has S 0.5 and is left out of the evidence balance (section 7). The Beta strength of v3.2-v3.5 and the discrete
+labels of v3 / v3.1 are in `archive/method-history.md`.
 
 **Approved action.** An engagement link whose subject is one approved drug (ChEMBL phase 4) with one of its ChEMBL targets
 named in the link is taken as at least 5/6 without search.
@@ -262,33 +236,17 @@ ranked). Nothing else filters: an undeveloped but promising hypothesis keeps its
   Check (specs/empty-slots-2026-11-09.yaml): R3 0.593 → 0.586, agreement with the outside reader's trial balance 0.393 →
   0.398, 12 of 59 prospective units move, rankings Spearman ≥ 0.99. A consequence to read correctly: the balance is the
   state of what is known, so a first modest record on a link that had none can lower it (worked example, section 13).
-- **P** (v3.4; not in any profile since v3.5, not shown in the report since v3.7; kept for the gate and the history) = **non-refutation**: the product over the links of R = (1 + cF) / (1 + cF + cA). R = 1 when nothing is
-  against, whatever the support; data against lower it, data for soften that (F = A = 0.6 gives 0.5). Parallel outcomes
-  (mass, strength, function) count once: the one matching the primary outcome of the stated experiment, else their mean.
-  Consecutive pathway links (a cascade written as several steps) are one slot, their geometric mean. No interval is
-  reported: the uncertainty of the support is in the support share. Why: under v3.3 (P = product of S over the links with a
-  record, a link without one counting 1) a first modest paper for a new link lowered P from 1 to its S (about 0.6), so the
-  first evidence for a new link was a penalty; and P's signal against trial outcomes came from data against anyway. On the
-  calibration P v3.4 orders the trials as v3.3 did (AUC 0.584 vs 0.589, 72 units, exploration). For two thirds of the
-  hypotheses nothing is against, P = 1, and the order among them comes from the other indicators.
-- **Support share** = the mean over the chain's slots (a cascade = one slot, its best link; parallel outcomes = one slot)
-  of a = max(0, 2 (S − 0.5)): 0 for a slot without data or with data only against, 2/3 for moderate support (S 5/6), near 1
-  for strong support. It carries what P leaves out: a chain of guesses has a high P only because nothing is known, and a low
-  support share says so. An ASPID indicator (section 8), right below P in the evidence profile. It replaced a 0/1 share of
-  checked slots before any score was used (that one moved with P, |ρ| 0.74, and two thirds of the chains have one slot).
-  Consequence (v3.4): finding support for an unchecked link leaves P at 1 and raises the support share; under every profile
-  the hypothesis's score goes up (section 13).
-- Why (specs/error-analysis-2026-11-06.yaml): under v3.2 a link without data multiplied P by 0.5, so a hypothesis that
-  wrote out its mechanism lost a factor of 2 per unchecked link; on the calibration P then ordered the 18 hypotheses with a
-  mechanism backwards. The signal of P against trial outcomes came from data against, not from support.
+- **Coverage**: the share of the chain's slots with at least one counting record. It says how much is known; the balance
+  says how strong it is. The report shows the chain with its empty links; a coverage column next to the balance is a
+  pending candidate (`specs/v38-candidates-2026-11-10.yaml`, C4).
+- **P (non-refutation)** and the **support share** are still computed by the code (P for the history and the support share
+  for older reports) but are in no profile; definitions in `archive/method-history.md`.
 - **W, scope**, from supported links only: a hallmark of ageing (needs a link at least moderate), an organ or system, else
-  local. A scope that is claimed but not supported counts as local. An indicator of ASPID, not a factor of V. A hallmark is
+  local. A scope that is claimed but not supported counts as local. An indicator of ASPID. A hallmark is
   the link's own object (a measured hallmark process: senescent cells, proteostasis markers, mitochondrial function), not
   something inferred from the kind of intervention: "protein after exercise → muscle protein synthesis" is an organ link,
   not the hallmark "loss of proteostasis".
-- **I** = min(1, Σ a·d / 1.5) over the proposed alternatives, from 0 to 1 (v3.4, 2026-11-08; until then 1/3 + 2/3 × the same,
-  a floor of 1/3 kept for the log scale and for V; in ASPID the floor had no effect, so it was dropped, and I is now on a
-  linear 0-1 scale). **Headroom I** = the same with d = 1 for every supported alternative. a = support of the alternative, max(0, 2 (S − 0.5))
+- **I** = min(1, Σ a·d / 1.5) over the proposed alternatives, from 0 to 1. **Headroom I** = the same with d = 1 for every supported alternative. a = support of the alternative, max(0, 2 (S − 0.5))
   with S its strength; d = what the stated experiment does to it at either outcome (cut off 1, weakened 0.5, unchanged 0).
   Without supported alternatives I = 0: an invented alternative adds nothing. **How d is set** (added 2026-11-07): d = 1
   only when the experiment has a named arm, control or measurement for which the hypothesis and the alternative predict
@@ -301,8 +259,8 @@ ranked). Nothing else filters: an undeveloped but promising hypothesis keeps its
   registry text, writing what the hypothesis and the alternative predict for each named arm, with the separating phrase
   copied verbatim (an "eliminated" without one becomes "weakened"); on a holdout of 30 trials it agrees with the outside
   reader at κ 0.35 (specs/informativeness-check-2026-11-08.yaml). The support a is unchanged: from the records found.
-- **V** = P × I (0 if filtered). **Headroom I** = I if the experiment cut off every supported alternative (d = 1): what
-  improving the experiment could add.
+- **Headroom I** = I if the experiment cut off every supported alternative (d = 1): what improving the experiment could
+  add; an input of the room to improve (section 11).
 
 - **N, novelty** (v3.4, `novelty_v34.novelty`): the distance of the hypothesis to what was already asked before T, from the
   usable records on either side (a question already asked is not new, whatever the answer). On the outcome link, by the
@@ -317,7 +275,7 @@ ranked). Nothing else filters: an undeveloped but promising hypothesis keeps its
   times the mean support of the other slots, so a chain of guesses or one link alone has none. **W potential**: the scope
   with the bottleneck confirmed.
 
-Protections against inflated hypotheses, by construction: the product over links; alternatives without support weigh 0;
+Protections against inflated hypotheses, by construction: the gate (section 6); alternatives without support weigh 0;
 scope only from supported links; records of one trial or paper count once; novelty is unknown, not high, without data.
 
 ## 8. ASPID: indicators and profiles
@@ -327,7 +285,6 @@ drawn over its whole range in every draw.
 
 | Indicator | What it says | Scale |
 |---|---|---|
-| P | non-refutation of the chain (in no profile since v3.5; not shown since v3.7) | log, from 0.01 |
 | I | informativeness of the stated experiment (headroom I, of an improved one, feeds the room to improve, section 11) | linear, 0-1 |
 | W | scope | local < organ < hallmark |
 | feasibility | system, duration, planned n, readiness of the intervention (approved or not a compound 1, in trials 0.5, neither 0) | 0-1; does not yet count arms or invasive measures (section 11, rule 7) |
@@ -365,8 +322,6 @@ to tier 4 next to I (investors weigh reach); frontier I above feasibility and W 
 change little (Spearman with the previous order 0.99 and 0.98, 9 of the top 10 kept; AUC 0.611 vs 0.610 and 0.575 vs
 0.584, inside the 0.03 rule), because W is local for 48 of 55 prospective hypotheses; they matter on pools with written
 mechanisms, where scope varies. Funding trial-6 and frontier trial-2 were the orders before.
-Earlier orders (v3.4 and before): evidence P > support share > I > W > {…}; funding P > feasibility > {trend, AI role,
-novelty} > {I, support share} > {…}; frontier trial-1 N > {leverage, W_potential} > P > {I, feasibility}.
 
 **Definitions of the three rejected frontier candidates** (`specs/v34-frontier-2026-11-07.yaml`): **leverage** — how much
 the support share would grow if the weakest slot of the chain (the bottleneck) were checked and supported (S = 5/6), times
@@ -374,27 +329,13 @@ the mean support of the other slots: large for a chain held back by one unchecke
 mechanism would have with that bottleneck supported (local / organ / hallmark). **literature_density** — log10(1 + PubMed
 records on the intervention and the outcome before T): a proxy of how much is already known (lower = newer).
 
-**v3.5 (2026-11-08): one axis instead of P and the support share.** The **evidence balance** (named "chain state" until
-v3.6; `chain_state` in the code) = the mean over the chain's slots
-of 2S − 1, from −1 (data against the links) through 0 (nothing known, or for and against balanced) to +1 (supported). It
-replaces P and the support share in every profile: evidence = chain state > I > W > {best design, independent sources,
-endpoint}; funding = chain state > feasibility > {trend, AI role, novelty} > I > {W, endpoint, best design, independent
-sources}; frontier = novelty > chain state > {I, feasibility}. Why: the support share gave 0 both to a refuted link and to an
-unknown one; P told them apart but was 1 for two thirds of the hypotheses. The chain state orders the calibration trials
-as P does (AUC 0.597-0.609 vs 0.595) and separates far better (its most common value covers 33% of hypotheses, P's 67%).
-It is linear, so a refuted chain is compensated a little more than under P's log scale; strong refutation is still
-filtered by the gate. **A null record weighs by the power of its study** to detect d = 0.4 (two-sided 5%; between groups
-Φ(0.4·√(n/4) − 1.96), before-after Φ(0.4·√n − 1.96), n unknown → 40), replacing its precision and effect factors: a null
-of 20 people weighs little, a null of 300 fully. P and the support share are still computed and shown. On the prospective
-pool the rankings move moderately (Spearman 0.88-0.95 with v3.4, 7-9 of the top 10 kept).
-
 There is no separate "room to grow" profile any more (removed 2026-11-07, user decision): what improving a hypothesis would
 give is computed under every profile as the **room to improve** (section 11), so the profile duplicated it, and only for one
 kind of improvement (a better experiment). Headroom I stays an input of that computation, not an indicator of any profile.
 
-The evidence profile has no novelty on purpose: there novelty and P pull apart by design. The frontier profile has
-no support share on purpose: it rewards the known. Its protection against inflated hypotheses is that unknown novelty is
-drawn over the whole range (not set high), P falls with any data against, and I counts only supported alternatives.
+The evidence profile has no novelty on purpose: novelty and the evidence balance pull apart by design. The frontier
+profile puts novelty first; its protection against inflated hypotheses is that unknown novelty is drawn over the whole
+range (not set high), the balance falls with any data against, and I counts only supported alternatives.
 
 A new indicator enters only when it passes four conditions, checked on saved data before it is used: reliable (computed by
 code, or extracted with a verbatim phrase and agreed by two model families, κ ≥ 0.6); separating (at least three values,
@@ -436,7 +377,7 @@ probability of top 5; novelty with the PMID that sets it; **evidence balance** (
 switch between "comparison", "original only" and "version only"; the two chains side by side; one table of links with rows
 "original / version": F / A, S with its interval, R, link novelty, record chips whose hover shows every factor of the weight
 and the verbatim quote, a click opens the paper card; what lifts and lowers; the alternatives; the room and the improvement
-list), *Evolution* (every pair: mode, P, support share, novelty with the drift flag, I, scope, the change of the score under
+list), *Evolution* (every pair: mode, the indicators of both versions, novelty with the drift flag, the change of the score under
 each profile; a placeholder when the pool has no evolution results; no shortcut button elsewhere), *PubMed papers* (every
 paper with its quote and the hypotheses that use it), *Help* (how to read the report, the record weight table of v3.6 with
 its GRADE domains, S as a log-likelihood sum, the evidence balance (slots with data, v3.7), the reading rules, novelty, the experiment and
@@ -449,35 +390,13 @@ item per line where a cell holds several (no wrapped "a / b / c"); long headers 
 column; the page uses the full window width (up to 1920 px) and a larger base size on desktop (17 px from 1280 px, 18.5 px
 from 1680 px, 20 px from 2200 px). Colours carry meaning only for direction (red against, green for, amber for flags).
 
-**Pool report, first layout** (`python -m hyparena.report_html prospective --n 60`; one HTML page, built by code with fixed wording,
-Russian and English in one page; layout redone 2026-11-07 after the structure of an outside reader's report). A header band
-(method, cut-off date, how many scored) and five tabs:
-
-1. *Ranking*: one sub-tab per profile; the table shows the place, the expected score, the probability of the top 5, the room
-   to improve (section 11; `*` when "write the mechanism" could not be computed, `↓` when the improvements would lower
-   novelty) and the profile's indicators in its order of importance (the reader chooses the columns): P in red when below 1,
-   novelty with the PMID of the record that sets it, I with its headroom. Pages of 15 rows, search, filter by intervention
-   type. Improved versions are ranked with the rest as their own rows, marked "tuned version" or "free evolution" (+ "new
-   hypothesis after"). No separate top-3 block.
-2. *Hypotheses* (collapsed, one-line verdict; open all / close all): the chain with each link coloured by S; P, novelty, I,
-   support share, scope, endpoint, AI role, places; what lifts and what lowers it; **the table of links**: F / A, S with its
-   90% interval, R, the link's novelty level, the records as chips with their weights (green for, red against; hovering a
-   chip shows the design, n, weight and the verbatim quote, a click opens PubMed); the stated experiment; the alternatives
-   with what the experiment does to each; the room to improve and the improvement list (collapsed).
-3. *Evolution* (when run): section 11; the summary table first (mode and items, P, I, support share, novelty with the drift
-   flag, the score under each profile), the details of each pair collapsed after it.
-4. *Sources*: every record of the pool, one row per paper and link (PMID, hypothesis, link, for or against, design, n,
-   weight, quote), with search and sorting.
-5. *Help*: how to read the report, ASPID in brief, **a glossary of every parameter** (the same texts as the hover notes),
-   provenance and limitations.
-
-Every column header, chip and indicator name has a hover note; the notes float above the table (they are not clipped by it
-and do not cover other notes).
+The first layout (`python -m hyparena.report_html prospective --n 60`, bilingual, 2026-11-07) is kept in the code; its
+description is in `archive/method-history.md`.
 
 Reports on private hypotheses stay in the private repository (`longevity-kg`).
 
-**A report written by a model from this manual** (section 0) follows the same order for one hypothesis: summary (P, support
-share, novelty with the record that sets it, I, scope, places under the three profiles if there is a pool, and the room to improve under each), the chain table
+**A report written by a model from this manual** (section 0) follows the same order for one hypothesis: summary (evidence balance and
+coverage, novelty with the record that sets it, I, scope, places under the three profiles if there is a pool, and the room to improve under each), the chain table
 (id, type, claim, S with interval, R, F / A, link novelty level, main records), why (what lifts, what lowers, the
 alternatives), what to improve (actions with the score they would give, and the change of novelty they would cost),
 limitations, provenance. The older one-hypothesis report by code (`python -m hyparena.analyze`) still uses the v3 / v3.1
@@ -566,11 +485,11 @@ Items fall into two classes:
 | Class | Item | When it appears | Expected effect computed as |
 |---|---|---|---|
 | fixable by rewriting | experiment_alternatives | supported alternatives the stated experiment leaves standing | I with those alternatives ruled out |
-| | rewrite_refuted_link | a link the data are against (S < 0.5) | P without the records against (an upper bound) |
-| | narrow_population | records for come from an adjacent population, age or sex | P and support share with those records in the exact context |
+| | rewrite_refuted_link | a link the data are against (S < 0.5) | the balance without the records against (an upper bound) |
+| | narrow_population | records for come from an adjacent population, age or sex | the balance with those records in the exact context |
 | | write_mechanism | the chain is the outcome only | not computable in advance (depends on what is found) |
 | | clinical_endpoint | the endpoint is a biomarker or a self-report | the score with the endpoint "function" |
-| needs new data | support_link | a link with weak support (0.5 ≤ S < 5/6) | P and support share with the link at 5/6 |
+| needs new data | support_link | a link with weak support (0.5 ≤ S < 5/6) | the balance with the link at 5/6 |
 | | check_link | a link without any record | the same |
 
 **Room to improve** (`improvements.room`, user decision 2026-11-07; replaces the "room to grow" profile). All computable
@@ -584,12 +503,7 @@ and an experiment is scored as if it already ruled out the alternatives.
 
 **Choosing hypotheses for evolution** = the largest room under the profile the user names
 (`python -m hyparena.card.evolve_v3 --top 10 --profile frontier --dry` prints the choice free; without `--dry` and with
-`ALLOW_PAID=1` it runs the evolution). On the prospective pool (55 ranked trials): a positive room for 50 (evidence), 51
-(funding) and 45 (frontier); median +0.10, +0.04 and +0.06, largest +0.30, +0.22 and +0.64 (frontier: a refuted link
-rewritten lifts P from low to 1, and P is its second tier). The commonest item is the experiment that rules out the
-alternatives (42 hypotheses), then the endpoint (23) and a refuted link (14). The top 10 by room share 9 hypotheses between
-evidence and frontier: on registry trials the room comes mostly from the same fixes, whatever the profile. Novelty would
-change for one.
+`ALLOW_PAID=1` it runs the evolution). The room of every hypothesis of the prospective pool is in its report.
 
 **Evolution** (`hyparena/card/evolve_v3.py`, on request) improves chosen hypotheses and scores the improved versions
 the same way as every hypothesis. **Tuning and free evolution are separate, named modes** (user decision 2026-11-07): a
@@ -597,7 +511,7 @@ tuned version is the same hypothesis with its fixable defects repaired; a free v
 
 | Mode | Purpose | What the writer may change | Novelty | How the improved version is scored | Report label | Status |
 |---|---|---|---|---|---|---|
-| tune (доработка), `--mode tune` | repair the "fixable by rewriting" items | only what the items say, from their facts; the parent's new parts (links at "analog" or "new link") must stay | **constraint**: a version that moved towards the known (`novelty_v34.drift`) goes back to the writer with the reason, once (`retries`); if it still drifts it is kept with the flag and "constraint not kept" | the whole pipeline again on the new text, parent's cut-off | "tuned version" | implemented (prompt `evolve_v3/v2`), not yet run; the first run (below) was this mode before the constraint, with prompt v1 |
+| tune (доработка), `--mode tune` | repair the "fixable by rewriting" items | only what the items say, from their facts; the parent's new parts (links at "analog" or "new link") must stay | **constraint**: a version that moved towards the known (`novelty_v34.drift`) goes back to the writer with the reason, once (`retries`); if it still drifts it is kept with the flag and "constraint not kept" | the whole pipeline again on the new text, parent's cut-off | "tuned version" | implemented (prompt `evolve_v3/v2`), not yet run; the first run (2026-11-06, `archive/method-history.md`) was this mode before the constraint |
 | free (свободная эволюция), `--mode free --profile P --writer F` | get the best hypothesis for the profile P | everything (claim, mechanism, population, outcome, experiment); the writer is told the profile's order and whether novelty comes first; it names the papers it relies on | **flag only**: a move towards the known is shown, not forbidden | the whole pipeline again; the papers it named count only if the verifier finds them with a verbatim quote before the cut-off (named / found are reported); distance from the parent = 1 − Jaccard of content words; above 0.7 the version is marked "new hypothesis after" the parent | "free evolution" (+ "new hypothesis after") | implemented (prompt `evolve_free/v1`), not yet run; for current pools only (the writer knows literature past the cut-off); the user's preferred mode for improving |
 | directed (направленная эволюция), `--mode directed --profile frontier` | reach the target of a profile; first frontier: one new link | keep the intervention and every supported link; add exactly one new link between supported neighbours, with an experiment that tests it | **target**: N not lower, one link at "new link", no drift, and a PubMed count of the new link's subject and object before T under a threshold (guard against reader misses) | the whole pipeline again, parent's cut-off; failed checks go back to the writer once, then kept with "target not reached" | "directed evolution (frontier)" | specified (`specs/directed-evolution-2026-11-09.yaml`), not implemented; an outside reader's hand run met every target by moves the rules below forbid; checked through Argon |
 | controlled | test whether the list predicts the gain | one item at a time | — | the parent's card, records and alternatives are kept; only what the item changes is re-checked | — | planned |
@@ -607,15 +521,6 @@ keep its novelty level and still be assembled from known pieces; a rise above 0.
 Choosing whom to improve: `--top K --profile P` (the largest room to improve, below). Tuning: one call writes the text, about
 21 calls per improved hypothesis, up to twice that with a retry; free evolution: about the same, with the writer named by
 `--writer`.
-
-**First run** (2026-11-06, `specs/evolution-v3-pilot-2026-11-06.yaml`): the top 10 of the pilot under the evidence
-profile; about 311 calls (about 0.8 USD). The score under the evidence profile rose for 2 and fell for 8 (down to −0.17),
-against an expected +0.04 … +0.11. The reason is the design of the mode, not the hypotheses: (1) the whole pipeline ran
-again, so a new card, a new search and new alternatives changed everything at once (I fell for 3, because the alternatives
-were proposed anew, not the same ones); (2) the prompt's layout asked for a mechanism line every time, so every version
-wrote out a mechanism, the chains grew by 2 to 7 links, the new links were checked and often found weak or contested, and P
-fell in 9 of 10 (e.g. 0.93 → 0.26). The useful side: writing the mechanism out shows the links a hypothesis rated well on its
-outcome alone actually rests on. The controlled and free modes above answer the two flaws.
 
 **Rules every improved version keeps (all modes; user decision 2026-11-09).** They are part of the method, not advice: the
 code checks them, and a model or outside reader that evolves a hypothesis from this manual (section 0) applies them the
@@ -659,14 +564,14 @@ controls (an identical child, support added at the same level, a new link added)
 first run 1 of 10 pairs was flagged (analog → new context). The improvement item "narrow the population" shows its expected
 change of novelty next to its gain, so the cost of narrowing towards the known is visible before it is applied.
 
-**The report section "Evolution"**: a table parent → improved version (P, I, support share, novelty with the flag, and the
+**The report section "Evolution"**: a table parent → improved version (evidence balance, I, scope, novelty with the flag, and the
 score under each profile, rises in green, falls in red); per pair, collapsed: the items applied, what changed in the text and on which fact,
 the expected change of each item against the change obtained, the mechanism links added or removed, the improved text; at
 the end, the mean change of the score by kind of item. Hypotheses without an improved version are listed with the reason.
 The improved versions also appear in the ranking (section 10).
 
-**Limits.** Evolution in the implemented and controlled modes makes no new evidence: P can rise only by moving the text away
-from what the data are against, the support share only by fitting the text to what was already found (which is exactly the
+**Limits.** Evolution in the implemented and controlled modes makes no new evidence: the evidence balance can rise only by moving the
+text away from what the data are against or by fitting the text to what was already found (which is exactly the
 drift towards the known that the novelty flag shows), and a rise of I is a design that is still to be carried out. The improved text is written from the
 findings of the verifier that then scores it (circular), so a rise of the score says what to change, not that the
 hypothesis became better. In the free mode new evidence counts only when the verifier finds it; the writer's own knowledge
@@ -712,12 +617,9 @@ are checked by us before any export; the triage is in the database spec.
 
 - It does not predict whether a trial will succeed; trials are run where support exists but the question is open.
 - The verifier keeps about 60% of relevant papers with almost no false ones (measured on three hand-labelled sets): support
-  from interventions of the same kind is often missed, so P is biased down for programmes and behavioural interventions.
+  from interventions of the same kind is often missed, so the balance is biased down for programmes and behavioural interventions.
 - Abstracts by default; full texts only where a knowledge-graph row says so.
 - Alternatives come from a model, not yet from the knowledge graph.
-- P (v3.4, now named non-refutation) is 1 for about two thirds of registry hypotheses: it says "nothing refutes it" and
-  nothing more (whether to keep it as a separate indicator is open, user 2026-11-07); the order among
-  them comes from the support share, I and the other indicators of the profile.
 - Novelty depends on the verifier's recall: a paper it missed makes a hypothesis look newer than it is (about 40% of
   relevant papers are missed). Novelty is therefore an upper estimate; the "known result" gate catches only exact matches.
 - Novelty is read off the outcome link first: a known effect with a new mechanism counts as new context, not as new.
@@ -746,53 +648,27 @@ trials (Spearman 0.81 between two readings; R2 and R3 do not move): close places
   model families with only agreement counted, since a well-described experiment is cheap to write.
 - Opposite effects in different regimes (timing, dose, polarity) are read as a conflict ("contested"). Planned: the regime
   of the intervention in the verifier's extraction, F and A summed only within comparable regimes.
-- Every unchecked link starts at S 0.5. Planned only as a prior from databases by code (target evidence in OpenTargets or
+- An unchecked link has no prior (it is left out of the balance). Planned only as a prior from databases by code (target evidence in OpenTargets or
   ChEMBL), in narrow bounds about 0.4–0.6 and after the admission check; never a model's judgement.
 - Precision from full texts (PMC open access, numbers only) instead of the constant before the outcome.
-**Validation status (2026-11-07).**
+**Validation status (2026-11-11).** Each line is a file in `specs/` with its definitions written before the computation.
 
-| Check | Result |
-|---|---|
-| extraction of design, comparison, n (three hand-labelled sets) | passed each time (0.81-0.96) |
-| effect class (rule A) | passed formally (most effects "unclear") |
-| P vs trial outcome, calibration (30 trials, seen while building v3) | v3 0.677, "unclear"; v3.2 0.65 |
-| P vs trial outcome, fresh sample 2023-2026 (14 decisive) | v3 0.571 "unclear"; v3.2 0.61 (not pre-registered) |
-| P vs trial outcome, fresh sample 2000-2022 (26 decisive) | v3 0.534 "no signal"; v3.2 0.64 (not pre-registered) |
-| evolution, first run (pilot top 10) | scores fell for 8 of 10: the mode re-ran the whole pipeline and forced a mechanism; see section 11 |
-| error analysis on the calibration (exploration) | P's signal comes from data against the outcome (AUC 0.63), support does not separate; unchecked links penalised written mechanisms → v3.3 (0.66 on the same data, not a test) |
-| prospective pool: 60 ongoing trials ending 2026-11 … 2028-12 | scores frozen 2026-11-06 with a SHA-256 (`specs/prospective-2026-11-06.yaml`); the clean test of v3.2, when the trials report; v3.4 scores in `scores_60_v34.json` (the frozen file is not rewritten) |
-| error analysis, 74 units rerun (normalize v10) under v3.3 | P 0.60, support share 0.54, the outcome link alone 0.61; with a written mechanism P is at chance (0.46, 17 units) |
-| v3.4 (P non-refutation, two weight changes) | P 0.584 vs v3.3 0.589 on the same 72 calibration units: the same order, the paradox removed (exploration) |
-| novelty, leverage, frontier profile | cannot be checked against trial outcomes; they rest on the admission rule and the protections above |
+| Step | Check | Result |
+|---|---|---|
+| reading: design, n, blinding | against an outside reader (Argon) | 92-96% agreement |
+| reading: which papers hold a finding on the link | key papers of an outside reader (pack 8) | 19% held on their link: the bottleneck (`docs/plans/reading-recall-2026-11-08.md`) |
+| paper skeleton (read once, match by code and a model) | 200 link-paper pairs of pack 9 | recall 0.52, precision 0.85, direction 9 of 11 (`specs/paper-skeleton-2026-11-09.yaml`) |
+| record weight v3.6 | later RCTs and meta-analyses of the same link (R2) | AUC 0.70 vs 0.66 under v3.5 (`specs/record-weight-2026-11-08.yaml`) |
+| record weight v3.6 | order of 80 pairs of records by an outside reader (R4) | τ-b 0.10 (v3.5: 0.04) |
+| evidence balance | trial outcomes on the calibration pool (R3) | AUC 0.586 (v3.7), in-sample, wide intervals (`specs/empty-slots-2026-11-09.yaml`) |
+| the same question asked to two models | trial outcomes, 63 trials the models do not remember | AUC 0.76 vs 0.59 for our P (`specs/llm-consensus-2026-11-07.yaml`): the models' priors beat the literature count; leakage not excluded |
+| I (d of the alternatives) | an outside reader, holdout of 30 trials | κ 0.35 |
+| N (novelty) | an outside reader | weighted κ 0.14-0.26; ours is nearer the new |
+| prospective pool, 60 ongoing trials | outcomes 2026-11 … 2028-12 | scores frozen 2026-11-06 with a SHA-256 (`specs/prospective-2026-11-06.yaml`): the clean test |
 
-**Ablation on the calibration** (`scripts/ablation.py`, 73 units, exploration; one standard error of an AUC here is about
-0.065, so only large changes mean anything):
-
-| What is removed | AUC |
-|---|---|
-| nothing: P v3.4 / P v3.3 | 0.595 / 0.600 |
-| any one factor of the record weight (design, precision, effect, comparison, context) | 0.595–0.598 |
-| every factor: each record weighs 1 (P counts records only) | 0.602 |
-| P replaced by the outcome link alone | 0.614 (without design 0.622) |
-| support share alone | 0.540 |
-| ASPID score, evidence profile: all / without P / without I | 0.543 / 0.491 / 0.559 |
-| funding profile: all / without P / without I / without trend | 0.583 / 0.552 / 0.632 / 0.606 |
-| frontier profile: all / without P / without N | 0.553 / 0.502 / 0.588 |
-
-Reading: against trial outcomes the record-weight machinery carries no signal (counting records does as well); P's signal is
-whether there are data against, mostly on the outcome link; I is inversely related to a positive result (informative
-experiments test open questions and are more often null); only P is meant to track outcomes, so the other indicators of a
-profile dilute this AUC by design. The weights stay for what they are for (telling a large RCT from a cell study in the
-report), not because they improve the outcome AUC.
-
-**Ceiling of the label** (`scripts/ceiling.py`): the design of the trial (randomisation, blinding, placebo or sham, sponsor,
-endpoint, number of primary outcomes; from ClinicalTrials.gov) does not predict the outcome either (cross-validated 0.51).
-Open and sham-free trials are positive far more often (63% vs 38% for blinded): there "positive" partly measures room for bias.
-Within placebo- or sham-controlled trials the outcome link reaches 0.75 (n 20, very uncertain). The benchmark analysis
-should therefore be stratified by blinding and placebo, or take the blinded subset as primary.
-
-AUC is the tied AUC of P between positive and null trials; the pre-set rule is "signal" at ≥ 0.60 with the lower bound of
-the 95% interval above 0.45, "no signal" below 0.55. The samples are small and the intervals wide.
+Against trial outcomes the record weights add nothing over counting records (ablation of 2026-11-07, in
+`archive/method-history.md`); the weights are kept for what they are for: ordering later trials of the same link (R2) and
+telling a large RCT from a cell study in the report. AUC here is the tied AUC between positive and null trials.
 
 ## 13. Worked example (computed by the code)
 
@@ -800,20 +676,8 @@ Hypothesis: "x activates AMPK, AMPK suppresses senescent cells (hallmark: cellul
 older adults". Records: two mouse studies for c1 (n = 40 each, large effect, between groups); none for c2; one RCT of 120 for
 c3 (medium effect). One proposed alternative with an observational study of 300 for it, cut off by the stated experiment.
 
-| | c1 engagement | c2 pathway | c3 outcome | P [90%] | support share | I | W | V |
+| | c1 engagement | c2 pathway | c3 outcome | evidence balance | | I | W | |
 |---|---|---|---|---|---|---|---|---|
-| v3.3 | S 0.906 (F 1.293) | no record, not in P | S 0.839 (F 0.63) | 0.760 [0.412; 0.985] | 0.496 | 0.651 | organ | 0.494 |
-| with one mouse study of 40 for c2 | | S 0.842 | | 0.639 | 0.724 | | organ | 0.416 |
-| with one mouse study of 40 against c2 | | S 0.158 | | 0.120 | 0.496 | | | |
-
-| v3.4 | S 0.885 (F 1.000) | no record, R 1 | S 0.839 (F 0.63) | 1.000 | 0.482 | 0.476 | organ | 0.476 |
-| v3.4, with one mouse study of 40 for c2 | | S 0.812 | | 1.000 | 0.691 | | organ | 0.476 |
-| v3.4, with one mouse study of 40 against c2 | | S 0.188 | | 0.231 | 0.482 | | | |
-
-| v3.6 | S 0.936 (F 1.000) | no record | S 0.905 (F 0.839) | evidence balance 0.560 | | 0.581 | organ | |
-| v3.6, with one mouse study of 40 for c2 | | S 0.793 | | evidence balance 0.756 | | | | |
-| v3.6, with one mouse study of 40 against c2 | | S 0.342 | | evidence balance 0.455 | | | | |
-
 | v3.7 | S 0.936 (F 1.000) | no record, not averaged | S 0.905 (F 0.839) | evidence balance 0.841 | | 0.581 | organ | |
 | v3.7, with one mouse study of 40 for c2 | | S 0.793 | | evidence balance 0.756 | | | | |
 | v3.7, with one mouse study of 40 against c2 | | S 0.342 | | evidence balance 0.455 | | | | |
@@ -822,15 +686,9 @@ Under v3.7 the empty c2 is not averaged in, so the balance is that of c1 and c3 
 counted as 0). A mouse study of 40 for c2 then adds a slot weaker than the other two and lowers the balance to 0.756: the
 balance says how strong what is known is, and the coverage (2 of 3 slots → 3 of 3) says how much is known.
 
-Under v3.6 the RCT of 120 with a medium effect weighs 0.839 (its effect counts in full), each link's S comes from F − A,
-and a mouse null of 40 weighs by its power (0.24; preclinical design 1, between groups 1) against 0.5 for the
-mouse study for, so it lowers the balance less than under v3.5 (0.455 vs 0.333).
-
-Under v3.4 the c1 records weigh more (precision 1/2 before the outcome), P is 1 until something is against, the study for c2
-raises only the support share, and the study against c2 cuts P to 0.23. Novelty: new context (an RCT on the outcome exists).
-Under v3.3: the study for c2 lowers P slightly and raises the support share; under every profile the expected score rises (evidence
-0.667 → 0.703 on these two alone). A study against c2 cuts P to 0.12: data against are what P is for. Under v3.2 the first row had
-P 0.380 (c2 at 0.5), the penalty for writing out the mechanism that v3.3 removes.
+The RCT of 120 with a medium effect weighs 0.839 (its effect counts in full), each link's S comes from F − A, and a mouse
+null of 40 weighs by its power (0.24; preclinical design 1, between groups 1) against 0.5 for the mouse study for.
+Novelty: new context (an RCT on the outcome exists). The same example under v3.3-v3.6 is in `archive/method-history.md`.
 
 ## 14. Constants (checked against the code)
 
@@ -875,19 +733,3 @@ profiles:
   funding: [[chain_state], [feasibility], [trend_pubmed, ai_role, N], [I, W], [endpoint_clinical, best_design_outcome, independent_outcome]]
   frontier: [[N], [chain_state], [I], [feasibility], [W]]
 ```
-
-## Appendix A. Discrete levels of v3 and v3.1
-
-Runs before 2026-11-06 were scored with discrete levels; v3.2 keeps them as labels. F = summed weights for, A = against;
-precision in bands (unknown or < 30, 30-99, 100-299, ≥ 300: 1/4 … 4/4) and the effect by class.
-
-| Level | Rule | Weight S (v3) | Weight S (v3.1) |
-|---|---|---|---|
-| refuted | strong refutation (gate) | 1/6 | 1/6 |
-| contested | A > 0 and A ≥ F/2 | 2/6 | 3/6 |
-| unverified | no usable record | 3/6 | 2/6 |
-| weak | 0 < F < 0.6 | 4/6 | 4/6 |
-| moderate | F ≥ 0.6 | 5/6 | 5/6 |
-| strong | F ≥ 1.5 and at least two independent sources | 1 | 1 |
-
-In v3 and v3.1, V = P × W × I with W = 1/3, 2/3, 1; in v3.1 the alternative's support a is weak 1/3, moderate 2/3, strong 1.

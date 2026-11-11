@@ -18,7 +18,7 @@ Relation = Literal[
     "changes_biomarker", "predicts", "inhibits", "activates", "increases_expression", "decreases_expression",
     "promotes", "suppresses", "part_of", "associated_with", "affects_hallmark", "translates_to", "other"]
 Role = Literal["premise", "mechanism", "analog", "outcome", "translation"]
-# Method v3 (docs/spec/method-v3.md): the place of a claim in the mechanism chain, from the intervention to the outcome
+# Method v3 (docs/archive/spec/method-v3.md): the place of a claim in the mechanism chain, from the intervention to the outcome
 Link = Literal["delivery", "engagement", "pathway", "effect", "outcome"]
 EdgeType = Literal["requires", "supports_if_true", "analog_of", "contradicts"]
 Endpoint = Literal["lifespan", "healthspan", "biomarker", "disease", "mechanism", "unknown"]
@@ -276,7 +276,7 @@ class EvidenceRecord(BaseModel):
     strata: list[str] = Field(default_factory=list)  # strata the protocol fixed in advance (`sex` in ITP and CITP): a result in one of them is not a post hoc subgroup
     flags: list[str] = Field(default_factory=list)   # retracted, preprint, conflict_of_interest, small_n, open_label, subgroup_only, short_lived_controls, disease_model, special_diet
     fields: dict[str, Union[str, float, int]] = Field(default_factory=dict)   # curated-record fields (e.g. DrugAge row)
-    # v3 extraction, from the whole abstract (docs/spec/method-v3.md, section 2); numbers are checked verbatim by code
+    # v3 extraction, from the whole abstract (docs/archive/spec/method-v3.md, section 2); numbers are checked verbatim by code
     design: Literal["rct", "non_randomised", "observational", "animal", "cells", "review", "meta_analysis", "other",
                     "unknown"] = "unknown"
     n_total: Optional[int] = None

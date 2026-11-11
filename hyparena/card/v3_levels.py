@@ -1,4 +1,4 @@
-"""Ordinal scales of method v3 and their weights (docs/spec/method-v3.md, section 3).
+"""Ordinal scales of method v3 and their weights (docs/archive/spec/method-v3.md, section 3).
 
 Rule (user decision 2026-11-03): a scale with k ordered levels gives level i (1-based, lowest first) the weight i/k. A departure
 from equal steps is made only when calibration shows that equal steps break something, and is recorded in the spec.

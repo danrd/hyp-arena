@@ -6,7 +6,7 @@ Status: protocol and tooling are ready; nothing here has been run on real models
 
 ## 1. The claim under test
 
-"From a given pool of hypotheses, our selector ranks the ones that were later confirmed higher than a Co-Scientist-style selector does, at the same cost." It is not a claim about Co-Scientist as a whole: generation and evolution are not compared, and Google's system itself is not available. The baseline is our reimplementation of its ranking (`docs/architecture.md`, section 8b).
+"From a given pool of hypotheses, our selector ranks the ones that were later confirmed higher than a Co-Scientist-style selector does, at the same cost." It is not a claim about Co-Scientist as a whole: generation and evolution are not compared, and Google's system itself is not available. The baseline is our reimplementation of its ranking (`docs/archive/architecture.md`, section 8b).
 
 ## 2. Data and labels
 
@@ -72,7 +72,7 @@ python -m hyparena.backtest compare --labels data/backtest/itp_<T>_labels.json -
 
 ## 7. Complementary test: negative sampling
 
-A confirmed finding hidden among nine plausible false statements (real DrugAge negatives and verified synthetic ones), one tournament per group, the same ladder steps as arms: `docs/negative-sampling.md`. It measures telling true from false rather than prioritising open hypotheses, but has far more labelled items than the ITP pool.
+A confirmed finding hidden among nine plausible false statements (real DrugAge negatives and verified synthetic ones), one tournament per group, the same ladder steps as arms: `docs/archive/negative-sampling.md`. It measures telling true from false rather than prioritising open hypotheses, but has far more labelled items than the ITP pool.
 
 ## 8. Known limits
 

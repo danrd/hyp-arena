@@ -51,7 +51,7 @@ There is no fixed schema.
 
 ## 6. Implications for this project
 
-- Their hypothesis format is minimal. A structured schema (see `docs/approach.md`, section 9) makes comparison and explanation easier.
+- Their hypothesis format is minimal. A structured schema (see `docs/archive/approach.md`, section 9) makes comparison and explanation easier.
 - One Elo over configurable criteria differs from our plan of separate promise and feasibility ratings.
 - One model family means correlated judge errors; an ensemble of different models is a justified improvement.
 - Search-grounded novelty review is supported by their ablation and is part of our pipeline.

@@ -1,4 +1,4 @@
-# Historical ITP check at T = 2010-12-31 (docs/spec/working-notes.md A2; docs/rules-method.md, stage 4).
+# Historical ITP check at T = 2010-12-31 (docs/archive/spec/working-notes.md A2; docs/archive/rules-method.md, stage 4).
 # The first run was made before this file existed; it is the frozen protocol for any new run on this sample.
 id: itp-backtest-2010
 kind: backtest

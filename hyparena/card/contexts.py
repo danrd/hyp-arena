@@ -120,7 +120,7 @@ GENOTYPE = re.compile(
 
 def genotype_in(text: str) -> str:
     """The words of a text that name a mutant or engineered genotype ("daf-16(mu86)", "knockout", "-/-"), or an empty string. Used by the offline
-    evaluation of a mutant-context rule (scripts/extraction_fixes_eval.py); the rule itself was not adopted (docs/rules-method.md, L1.17)."""
+    evaluation of a mutant-context rule (scripts/extraction_fixes_eval.py); the rule itself was not adopted (docs/archive/rules-method.md, L1.17)."""
     m = GENOTYPE.search(text or "")
     return m.group(0) if m else ""
 

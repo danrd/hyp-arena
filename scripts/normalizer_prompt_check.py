@@ -8,7 +8,7 @@ Arms (the normalizer is the google family of configs/v2-flash.yaml; the dose/age
   O, v6 once: the 15 original texts (field O_full), against the saved original cards O1 and O2 of L1.8 (v5) as the reference.
 Measures per run of T (reference: the main claim of the saved original card O1): unresolved compounds (fewer is better), cards whose first claim is the
 outcome claim, cards with the same number of claims as the reference, and agreement with the reference on subject, relation, object and context of
-the outcome claim. Adoption rule (fixed before the run, see docs/rules-method.md): for both repeats v6 is not worse than the v5 repeat on any of the
+the outcome claim. Adoption rule (fixed before the run, see docs/archive/rules-method.md): for both repeats v6 is not worse than the v5 repeat on any of the
 four counts or the mean facet agreement, the sum of items gained over the two repeats on (outcome-first + same claim count + subject agreement) is at least 2,
 and on the original texts v6 agrees with O1 on every facet not below the agreement of O2 with O1 minus 0.05."""
 from __future__ import annotations

@@ -4,7 +4,7 @@
     ALLOW_PAID=1 python -m scripts.normalizer_prompt_check2 run --out runs/stage5/prompt_check2     # about 105 normalizer calls
     python -m scripts.normalizer_prompt_check2 report --dir runs/stage5/prompt_check2
 
-Why a second check (docs/rules-method.md, "Проверка правила в промпте нормализатора (v6)"): the first check measured the claim count against a reference card that itself
+Why a second check (docs/archive/rules-method.md, "Проверка правила в промпте нормализатора (v6)"): the first check measured the claim count against a reference card that itself
 contained the bracketed-descriptor claim the rule forbids, and counted unresolved compounds on a run where a v5 card failed. Refined, declared before the run:
   * unresolved compounds as a rate over the cards that parsed (failed cards reported apart);
   * descriptor claims: cards with a non-outcome claim built on a bracketed descriptor of the text (fewer is better; independent of a reference card);

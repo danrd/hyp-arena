@@ -1,4 +1,4 @@
-"""Effect class by code from the verbatim effect phrase (user decision 2026-11-04, option A; docs/spec/method-v3.md, section 2).
+"""Effect class by code from the verbatim effect phrase (user decision 2026-11-04, option A; docs/archive/spec/method-v3.md, section 2).
 
 The extractor decides only whether the finding closest to the claim is a null result ("none") and copies the phrase with the
 effect size; the class is computed here, so that "small", "medium" and "large" mean the same thing in every record:

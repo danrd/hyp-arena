@@ -57,7 +57,7 @@ def for_meta(meta: dict) -> list[IndicatorSpec]:
 
 def set_hash(specs: Optional[list[IndicatorSpec]] = None, profiles: Optional[dict] = None) -> str:
     """sha256 of the indicator set (ids, kinds, levels, bounds, scaling, mapping) and, when given, of the profile tiers:
-    written into a run's meta next to the hash of its spec (docs/rules-method.md, A4)."""
+    written into a run's meta next to the hash of its spec (docs/archive/rules-method.md, A4)."""
     import hashlib
     import json
     specs = INDICATORS if specs is None else specs

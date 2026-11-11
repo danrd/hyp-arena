@@ -16,7 +16,7 @@ def estimate_tokens(text: str) -> int:
 class Reply:
     text: str
     family: str
-    model_id: str                 # what answered (as configured; see docs/architecture.md, section 8)
+    model_id: str                 # what answered (as configured; see docs/archive/architecture.md, section 8)
     tokens_in: int = 0
     tokens_out: int = 0
     seconds: float = 0.0

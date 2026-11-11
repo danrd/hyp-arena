@@ -10,7 +10,7 @@ Method: Guney, Menche, Vidal, Barabási, "Network-based in silico drug efficacy 
 In method v3 a mechanism link without any literature record is "unverified" (S = 0.5 in v3.2): the method cannot tell an
 unverified link that biology makes likely from one it does not. The proximity of the intervention's targets to an ageing
 module on the human interactome is a code-computed prior for such links and a candidate ASPID indicator (evidence and
-evolution profiles). It is admitted only through the four conditions of `docs/spec/method-v3.md` section 13 (reliability,
+evolution profiles). It is admitted only through the four conditions of `docs/archive/spec/method-v3.md` section 13 (reliability,
 separation, non-redundancy, own question), checked by the Claude session afterwards — this task builds and validates the
 computation, it does not change the scoring.
 

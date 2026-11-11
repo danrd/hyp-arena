@@ -1,6 +1,6 @@
 """Aggregation of per-criterion ratings without explicit weights. Based on the method of randomized
 aggregated indicators (МРСП, part of Hovanov's АСПИД methodology; international analogue: SMAA) and adapted
-to pairwise ratings; see docs/architecture.md, 3a, for what is ours.
+to pairwise ratings; see docs/archive/architecture.md, 3a, for what is ours.
 
 Only an order of importance of the criteria is given, e.g. value >= evidence_support >= testability >=
 novelty (groups of equally important criteria allowed). The weight vector is treated as random and uniform
@@ -12,7 +12,7 @@ It is computed in every Monte Carlo sample from ratings drawn within their uncer
 standard error; TrueSkill: sigma; Elo, which has none: a bootstrap of the match log), so the spread carries
 the uncertainty of the tournament as well as of the weights. The share depends on the pool and the judges:
 it compares hypotheses within one run, not across runs. Systems are compared by external labels, never by
-these numbers (docs/comparison.md).
+these numbers (docs/archive/comparison.md).
 
 Output per hypothesis: expected aggregated score, its spread, a rank interval and per-criterion win shares
 with intervals; for the top: the probability that one hypothesis outranks another. When no order is given,

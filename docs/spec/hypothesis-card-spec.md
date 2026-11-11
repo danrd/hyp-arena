@@ -1,8 +1,8 @@
 # Hypothesis card: specification v1 (MVP)
 
-> **Method v2 (historical).** The current method is v3.2: [`method-v3-manual.md`](../method-v3-manual.md) (manual) and [`spec/method-v3.md`](method-v3.md) (specification). This specification was written for v2; the card format and the ASPID implementation are still used by v3 (its additions are in method-v3.md).
+> **Written for method v2.** The card format, the relation vocabulary (shared with the knowledge graph) and the ASPID implementation described here are still used; how the current method scores a card is in the [manual](../method-v3-manual.md). The history of the v3 decisions is in [archive/spec/method-v3.md](../archive/spec/method-v3.md).
 
-> Source of truth for the card format and for the **relation vocabulary shared with the knowledge graph** (the knowledge-graph design). Decisions confirmed on 2026-10-15 (see [design notes](working-notes.md), section 5c). Worked examples: [card examples](hypothesis-card-examples.md).
+> Source of truth for the card format and for the **relation vocabulary shared with the knowledge graph** (the knowledge-graph design). Decisions confirmed on 2026-10-15 (see [design notes](../archive/spec/working-notes.md), section 5c). Worked examples: [card examples](../archive/spec/hypothesis-card-examples.md).
 > The code implements this as Pydantic models (single source of truth), exported to JSON Schema; YAML for people.
 
 ---
@@ -190,7 +190,7 @@ verification:
   declared_vs_verified: [...]         # e.g. declared novelty contradicted by found prior work
 ```
 
-`EvidenceRecord` (same as in [design notes, section 5b. Evidence record: what "every claim carries its sources" means](working-notes.md) and [data sources, section 13. Source anatomy: six epistemic types (2026-10-15)](data-sources.md)):
+`EvidenceRecord` (same as in [design notes, section 5b. Evidence record: what "every claim carries its sources" means](../archive/spec/working-notes.md) and [data sources, section 13. Source anatomy: six epistemic types (2026-10-15)](data-sources.md)):
 
 ```yaml
 source: PubMed | DrugAge | OpenGenes | ClinicalTrials.gov | GEO | ...
@@ -226,7 +226,7 @@ Status rules:
 - `unverified`: no admissible evidence found (background and speculation do not count).
 - `unresolved`: entities could not be mapped to identifiers, so the claim could not be checked.
 
-Endpoint must match (agreed 2026-10-18): a finding supports or refutes a claim only if it measures the claim's endpoint (`pico.outcome.endpoint`: lifespan, healthspan, biomarker, disease, mechanism). A healthspan or marker finding does not support a lifespan claim; such records go to `refusals` with type `endpoint_mismatch` and stay visible to the judge. No separate field: this is verifier quality, enforced by the verifier prompt and checked by a fixture ([card examples, section Example 5. Endpoint mismatch: resveratrol and mouse lifespan](hypothesis-card-examples.md)).
+Endpoint must match (agreed 2026-10-18): a finding supports or refutes a claim only if it measures the claim's endpoint (`pico.outcome.endpoint`: lifespan, healthspan, biomarker, disease, mechanism). A healthspan or marker finding does not support a lifespan claim; such records go to `refusals` with type `endpoint_mismatch` and stay visible to the judge. No separate field: this is verifier quality, enforced by the verifier prompt and checked by a fixture ([card examples, section Example 5. Endpoint mismatch: resveratrol and mouse lifespan](../archive/spec/hypothesis-card-examples.md)).
 
 Qualifier matching (agreed 2026-10-19):
 - A qualifier that is `unknown` in the card gives `n/a` in `qualifiers_match`, never `no`: an unknown comparator, sex or age does not turn into a mismatch. `n/a` counts as matching.
@@ -256,7 +256,7 @@ Flags lower trust but do not change status by themselves; they are visible to th
 
 ## 7a. Expert layer (agreed 2026-10-19)
 
-Third layer next to declared and verified ([design notes, section 2.5 Expert in the loop (agreed 2026-10-19)](working-notes.md)). It records expert decisions; it never edits the other two layers.
+Third layer next to declared and verified ([design notes, section 2.5 Expert in the loop (agreed 2026-10-19)](../archive/spec/working-notes.md)). It records expert decisions; it never edits the other two layers.
 
 ```yaml
 expert:
@@ -301,7 +301,7 @@ Goal: minimal arbitrariness, maximal use for our tasks (judge, path to humans, b
 
 The only order we impose is the rung order of `effect_level` (proximity to humans). Analogs with a different subject (e.g., knockout of the drug's target gene) do not raise `effect_level`; they stay visible as claims in the judge packet.
 
-**Derived: `next_step`** (practical "what to do next", shown outside the ranking; [design notes](working-notes.md) section 3):
+**Derived: `next_step`** (practical "what to do next", shown outside the ranking; [design notes](../archive/spec/working-notes.md) section 3):
 - `robustness: single` at an animal rung → replicate at the same rung (multi-site if mammals);
 - otherwise → the next rung up;
 - a contested rung → resolve that rung (e.g., a trial with a pre-registered primary outcome).
@@ -312,7 +312,7 @@ The only order we impose is the rung order of `effect_level` (proximity to human
 
 ## 8a. Scoring indicators for АСПИД (draft, 2026-10-19)
 
-Decision ([design notes, section 2.2 Judge role and its link to АСПИД (agreed 2026-10-18)](working-notes.md)): criteria are scored by rules from the verified card wherever possible, not by an LLM judge. Reason: absolute LLM scores compress and drift; the card was built so that most criteria have a symbolic value. Each indicator is computed once; АСПИД aggregates them under random weights consistent with an ordinal importance order (a parameter set by experts; default stance: verified evidence matters most).
+Decision ([design notes, section 2.2 Judge role and its link to АСПИД (agreed 2026-10-18)](../archive/spec/working-notes.md)): criteria are scored by rules from the verified card wherever possible, not by an LLM judge. Reason: absolute LLM scores compress and drift; the card was built so that most criteria have a symbolic value. Each indicator is computed once; АСПИД aggregates them under random weights consistent with an ordinal importance order (a parameter set by experts; default stance: verified evidence matters most).
 
 | Indicator | Computed from | Type | Values → [0, 1] | Direction |
 |---|---|---|---|---|
@@ -376,7 +376,7 @@ Limits: depends on entity resolution; cards with `unresolved` entities fall back
 Source of the idea: DiscoveryRSI `2610.23839` represents a hypothesis as (claim, investigation plan, decision criteria, alternatives). Our decisive experiment already covers the plan; decision criteria and alternatives were missing.
 
 **Who fills what.** The normalizer only parses the text: if the source lists alternatives or criteria, they go to `declared_alternatives` / `declared_decision_criteria` and are never scored (otherwise listing many alternatives would earn points: form over substance). Exception: an alternative with `stated_as: rejected` is part of the hypothesis's own content (contrast "mainly X, not Y", section 6). It is verified (section 7, contrast rule), searched for, and enters the prediction table as a row with `source: declared`; it still earns no points by itself. In the verified layer, **alternatives are added by a pipeline component after the verifier**, from three sources:
-1. a checklist of failure modes (table below; seed: [design notes, section 6a. Where hypotheses come from and how they fail (2026-10-18)](working-notes.md)): added automatically by rules over card fields, no LLM, so two cards with the same fields get the same alternatives;
+1. a checklist of failure modes (table below; seed: [design notes, section 6a. Where hypotheses come from and how they fail (2026-10-18)](../archive/spec/working-notes.md)): added automatically by rules over card fields, no LLM, so two cards with the same fields get the same alternatives;
 2. `competitor` hypotheses from card-based proximity (section 8b);
 3. debates (judge role B), which add alternatives the checklist misses and propose discriminating designs for alternatives without a known one.
 
@@ -416,7 +416,7 @@ Each alternative has `status`: `excluded_by_evidence` (a study with the discrimi
 | biomarker | the marker predicts the outcome beyond chronological age in an independent cohort, or adds nothing |
 | observational | the association persists in a confounding-robust design (twins, Mendelian randomization), or vanishes after adjustment (e.g., metformin, PMID 36287641) |
 
-Decision criteria are the status rules (section 7) applied in advance to a future experiment. Uses: (1) pre-registration for debates (no moving the goalposts); (2) output for the user (what would refute the hypothesis); (3) automatic labelling for backtests: a later study is classified as supports / weakens / inconclusive by these criteria ([design notes, section 2.4 Closing the evolution loop (draft, 2026-10-19)](working-notes.md), evaluation protocol).
+Decision criteria are the status rules (section 7) applied in advance to a future experiment. Uses: (1) pre-registration for debates (no moving the goalposts); (2) output for the user (what would refute the hypothesis); (3) automatic labelling for backtests: a later study is classified as supports / weakens / inconclusive by these criteria ([design notes, section 2.4 Closing the evolution loop (draft, 2026-10-19)](../archive/spec/working-notes.md), evaluation protocol).
 
 **Informativeness = number of table rows the experiment separates** (alternatives whose predicted pattern differs from H's). Checklist alternatives and proximity competitors are just different sources of rows, so one indicator suffices (section 8a).
 
@@ -452,7 +452,7 @@ Contains: `claim_plain`, PICO, claims with verified statuses and ≤1 short quot
 
 ## 12. Open items
 
-- Criteria for aggregation: draft indicator set in section 8a; importance orders = preference profiles (content open, [design notes](working-notes.md) item B5); saturation caps open.
+- Criteria for aggregation: draft indicator set in section 8a; importance orders = preference profiles (content open, [design notes](../archive/spec/working-notes.md) item B5); saturation caps open.
 - ~~Whether `observational` hypotheses need extra fields (cohort, design) beyond PICO.~~ Closed 2026-10-20: no. Design and cohort are properties of the studies (`study_type` in evidence records, "observational only" in the profile), the decisive experiment comes from the decision-criteria template (8c), confounding and reverse causation from the checklist.
 - Identifier resolution for complexes (proposed 2026-10-20, for the KG): Complex Portal id for the species if it exists (mTORC1: mouse CPX-4473; no human entry found), else the GO cellular-component term (mTORC1: GO:0031931 "TORC1 complex", species-independent), optionally the member UniProt ids; matching across species via the GO term.
 - Effect-size threshold in decision criteria: the hypothesis's declared size if given; otherwise "any significant effect" with a note. Taking a threshold from a reference class (e.g., typical +10–20% median lifespan in ITP) is an assumption to decide.

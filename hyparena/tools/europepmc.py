@@ -17,7 +17,7 @@ from hyparena.state import Evidence
 
 URL = "https://www.ebi.ac.uk/europepmc/webservices/rest/search"
 
-#: Evidence tiers (docs/architecture.md): 2 peer-reviewed text, 4 preprint.
+#: Evidence tiers (docs/archive/architecture.md): 2 peer-reviewed text, 4 preprint.
 PREPRINT_SOURCES = {"PPR"}
 
 
