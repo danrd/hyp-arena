@@ -37,6 +37,10 @@ def context_level(rec: EvidenceRecord) -> Optional[str]:
     no = {k for k, v in rec.qualifiers_match.items() if v == "no" and k != "intervention_match"}
     if no - ADJACENT_KEYS:
         return None
+    if im == "category":
+        # 2026-11-11 (user decision, specs/intervention-class-2026-11-11.yaml): another intervention of the same broad
+        # category only (a single nutrient for a multi-component formula) counts as adjacent, 1/2 under v3.6
+        return "adjacent"
     if im in ("class", "related_compound"):
         return "class"
     return "adjacent" if no else "exact"

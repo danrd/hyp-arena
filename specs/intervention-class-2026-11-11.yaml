@@ -1,0 +1,28 @@
+id: intervention-class-2026-11-11
+written_on: 2026-11-11
+status: decided by the user (variant c); code ready, no existing record changes; the check below needs a paid re-run (named price) and Argon pack 15
+user_decision: "2026-11-11: variant c, three levels of the intervention match"
+why: >-
+  stage 0 of the paper skeleton (specs/paper-skeleton-2026-11-09.yaml, result_2026_11_10) lost about half of its 10 misses
+  on what counts as the same intervention: for a link 'multi-component nutritional formula -> metabolic biomarkers' the
+  outside reader (Argon, pack 9) took chromium, cinnamon, NMN and creatine papers as findings ('class'), for 'nutritional
+  supplements' a Mediterranean diet; our pair model called them another intervention. Under v3.6 'class' weighs as 'exact'
+  (the label was unreliable, kappa 0.10 with Argon), so where the border lies decides whether such papers count in full.
+  A broad border fills a link with the literature of a whole category (the balance then describes the category, not the
+  hypothesis); a narrow one drops evidence an expert would weigh.
+levels:
+  exact: "the intervention the claim names: the same compound, product or programme, another name or description of it (weight as v3.6)"
+  class: "a narrow class: another form or preparation of the same agent (another omega-3 preparation), a programme of the same kind (another resistance programme for a resistance-training claim); counts in full, as v3.6"
+  category: "only the same broad category: another single nutrient or supplement for a multi-component formula, another diet for 'nutritional supplements', another exercise modality for a specific programme; counts as adjacent (context 1/2 under v3.6), whatever else matches"
+  other: "a different intervention, or the finding is about the comparator; weight 0"
+judged_at_the_claim_level: "as the v10 reading rule: when the claim names a kind ('resistance training'), any study of that kind is exact; class and category only when the claim names something more specific"
+code:
+  rules: "hyparena/card/rules_v3.py context_level: intervention_match 'category' -> adjacent (tests/test_rules_v3.py); no record of the existing runs has 'category', so no score changes"
+  pair_model: "longevity-kg tools/skeleton/session.py, adjudicate_v2: intervention exact | class | category | other, with the definitions above; the record is built by code with intervention_match = the answer"
+check:
+  rerun: "re-ask the pair model (adjudicate_v2) on the same 1 725 stage-0 pairs; the parse is reused (about 0.11 USD, off-peak, with the user's consent)"
+  measures:
+    pack9: "recall, precision and direction against Argon as in stage 0; Argon's 'class' findings split into our class / category / other; how many of the 10 losses come back as category records (weight 1/2)"
+    argon_pack15: "Argon labels a sample of pairs with the same four levels blind to our answers (longevity-kg reviews/argon-2026-11-11/): weighted kappa of the level"
+  adopt_if: "agreement with Argon on the level (weighted kappa) above the v3.6 class label's 0.10 by a clear margin (at least 0.4), and recall not lower than stage 0's 0.52; R2 / R3 when the skeleton runs on the pools (stage 1)"
+result: pending

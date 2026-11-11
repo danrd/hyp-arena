@@ -107,9 +107,11 @@ the verifier prompt `verify_claim/v9` already follows them; a report written by 
    same compound); a different dose or schedule of it is exact with dose or regimen "no", which makes the record adjacent.
    *class*: another intervention of the same kind on the claim's outcome (another resistance programme for a squat
    programme; another drug of the same class) — it counts at full weight under v3.6 (the class label is not charged while it is
-   unreliable). Decided 2026-11-11, not yet in the rules: a third level "same category only" (another intervention of the
-   same broad category, e.g. a single nutrient for a multi-component formula) that counts as adjacent, 1/2
-   (`specs/intervention-class-2026-11-11.yaml`). The match is judged at the level at which the
+   unreliable). *category* (user decision 2026-11-11, `specs/intervention-class-2026-11-11.yaml`): only the same broad
+   category (another single nutrient for a multi-component formula, another diet for "nutritional supplements", another
+   exercise modality for a specific programme) — it counts as adjacent, 1/2 (`rules_v3.context_level`). The paper-skeleton
+   pair model reads the four levels; the verifier of the saved runs never wrote "category", so their scores do not change;
+   the check of the level against an outside reader is pending. The match is judged at the level at which the
    claim names the intervention (verifier prompt v10, 2026-11-08): when the claim names a kind ("resistance training",
    "adequate protein intake", "a home-based exercise programme"), any study of that kind is exact; class only when the claim
    names a specific product, compound or programme and the study used another member of its kind. A programme that merely includes the named
@@ -152,7 +154,7 @@ level is in section 5a.
 | precision (imprecision) | record for: min(1, ln n / ln 300), at least 1/4, n unknown 1/4; before the outcome 1/2. Record against (a null): the power of its study to detect d = 0.4 (v3.5) |
 | effect (rating up for a large effect) | record for: a stated effect of at least medium size (d ≥ 0.5, ratio ≥ 1.25, ≥ 5%, the authors' "moderate") 1; small, none or not stated 1/2. Record against: 1 |
 | comparison (part of risk of bias) | between groups 1; within group or none 1/2 |
-| context (indirectness) | adjacent 1/2 (another population, age, sex, dose, comparator or species, only on qualifiers the claim states); exact and class 1 |
+| context (indirectness) | adjacent 1/2 (another population, age, sex, dose, comparator or species, only on qualifiers the claim states; or an intervention of the same broad category only, reading rule 1); exact and class 1 |
 
 A record against (a null or opposite result from a comparison) is weighed by the power of its study to detect d = 0.4 in
 place of precision and effect (two-sided 5%; between groups Φ(0.4·√(n/4) − 1.96), before-after Φ(0.4·√n − 1.96), n unknown
