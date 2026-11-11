@@ -116,7 +116,13 @@ carried over; a field of the experiment or the population unknown in the first p
 keeps the first and is recorded. The agreement of the parses (shared claims / all claims) is kept as the card's stability.
 Cards made before 2026-11-11 come from one parse.
 
-**What the normaliser is given** (`hyparena/prompts/normalize_card/v10.j2`): the text only (for a registry trial the
+**A direction for value links** (normaliser v11, user decision 2026-11-11). "Changes a value" (`changes_biomarker`) is
+kept only when the text gives no direction anywhere; otherwise the link says which way ("promotes", "suppresses", or
+"improves healthspan" with the measure), with the span from the sentence that states it. On H49 the undirected link
+"squats change body composition" got 11 findings from the reader, all "neither": with no direction there is no side to take,
+and a null on muscle mass could not count against.
+
+**What the normaliser is given** (`hyparena/prompts/normalize_card/v11.j2`): the text only (for a registry trial the
 registry fields as "Name: value" lines, section 2), the closed lists of relations and hallmarks, the rules for every field,
 two worked examples of other hypotheses and an empty JSON skeleton. Not the date T, not the literature, not other
 hypotheses. The code then checks the schema and the verbatim spans (up to three rounds; a claim without a verbatim span is

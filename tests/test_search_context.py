@@ -52,3 +52,9 @@ def test_the_outcome_line_is_the_link_own_object(monkeypatch):
     c1 = CARD.claims[0].model_copy(update={"qualifiers": {"measure": "physical performance"}})
     model_queries(None, "f", frozenset(), c1, CARD, "2026-11-06")
     assert seen["outcome"] == "physical performance"
+
+
+def test_normalizer_v11_asks_for_a_direction_on_value_links():
+    from hyparena.llm.prompts import render
+    t = render("normalize_card", "v11", text="x", relations="promotes, changes_biomarker", hallmarks="", hint="", history_text="")
+    assert "use changes_biomarker only when the text gives no direction" in t
