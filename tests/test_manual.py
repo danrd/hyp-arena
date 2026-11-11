@@ -53,6 +53,8 @@ def test_manual_v32_constants_and_profiles_equal_the_code():
     assert {k: p.tiers for k, (p, _) in aspid_v3.load().items()} == c["profiles"]
     from hyparena.card import novelty_v34 as nv
     assert c["v34"] == {"preclinical_precision": r32.PRECLINICAL_PRECISION, "novelty_levels": list(nv.LEVELS)}
+    from hyparena.card import review_kind as rk
+    assert c["meta_certainty"] == {**rk.CERTAINTY_WEIGHT, "not_reported": rk.NOT_REPORTED}
     from hyparena.card import v3_extra as vx                   # feasibility, written out after an outside report (2026-11-11)
     f = c["feasibility"]
     assert f["system"] == vx.SYSTEM_COST

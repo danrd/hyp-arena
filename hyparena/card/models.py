@@ -279,6 +279,8 @@ class EvidenceRecord(BaseModel):
     # v3 extraction, from the whole abstract (docs/archive/spec/method-v3.md, section 2); numbers are checked verbatim by code
     design: Literal["rct", "non_randomised", "observational", "animal", "cells", "review", "meta_analysis", "other",
                     "unknown"] = "unknown"
+    review_kind: str = ""                         # systematic | narrative, from PubMed publication types (2026-11-11)
+    certainty: str = ""                           # GRADE certainty of a meta-analysis from its abstract (2026-11-11)
     n_total: Optional[int] = None
     n_quote: str = ""                            # the verbatim phrase that gives n_total
     comparison: Literal["between_groups", "within_group", "none", "unknown"] = "unknown"

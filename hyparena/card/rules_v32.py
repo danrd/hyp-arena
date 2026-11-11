@@ -151,6 +151,10 @@ EFFECT_FULL_FROM = 0.25 + 0.75 * 0.5 / 0.8      # the continuous effect weight o
 LOGLR_LAMBDA = 2 * math.atanh(2 / 3) / 0.6      # F = 0.6 alone gives s = 2/3, as c did for the Beta
 
 
+META_CERTAINTY = True     # 2026-11-11 (user decision): GRADE certainty of a meta-analysis scales its design weight
+from hyparena.card.review_kind import certainty_factor  # noqa: E402
+
+
 def record_weight_v36(rec: EvidenceRecord, claim: Claim, against: bool) -> float:
     """v3.6 (specs/record-weight-2026-11-08.yaml, user decision 2026-11-08): GRADE-shaped weight.
     design: on the outcome link of a human claim RCT and meta-analysis 1, non-randomised and observational 1/2, else 1/4
@@ -165,6 +169,8 @@ def record_weight_v36(rec: EvidenceRecord, claim: Claim, against: bool) -> float
     pre = claim.link in r3.PRECLINICAL_LINKS
     design = r3.record_design(rec)
     w = DESIGN_GRADE3.get(design, 0.25) if (r3.human_claim(claim) and not pre) else lv.design_weight(design, False)
+    if design == "meta_analysis" and META_CERTAINTY:      # 2026-11-11: a meta-analysis weighs by its GRADE certainty
+        w *= certainty_factor(rec.certainty)
     if against:
         w *= null_power(rec.n_total, rec.comparison)
     else:
@@ -243,12 +249,18 @@ def weight_factors(rec: EvidenceRecord, claim: Claim, against: bool, v34: bool =
     if V36:
         design = r3.record_design(rec)
         dw = DESIGN_GRADE3.get(design, 0.25) if (r3.human_claim(claim) and not pre) else lv.design_weight(design, False)
+        if design == "meta_analysis" and META_CERTAINTY:
+            dw *= certainty_factor(rec.certainty)
+            design = f"meta_analysis ({rec.certainty or 'certainty not reported'})"
         if against:
             prec, eff = ["power", null_power(rec.n_total, rec.comparison)], ["against", 1.0]
         else:
             prec = [rec.n_total, PRECLINICAL_PRECISION if pre else precision(rec.n_total)]
             full = effect_weight(rec, False) >= EFFECT_FULL_FROM - 1e-9
-            eff = [rec.effect_class if full else "small or not stated", 1.0 if full else 0.5]
+            # the label is the level that was used: an effect read from the phrase (SMD, ratio, CI) can be at least medium
+            # while the reader's class says "unclear" (H49 walkthrough 2026-11-11)
+            label = rec.effect_class if rec.effect_class in ("medium", "large") else "medium or large (from the phrase)"
+            eff = [label if full else "small or not stated", 1.0 if full else 0.5]
         return {"design": [design, dw], "precision": prec, "effect": eff,
                 "comparison": [comp, 1.0 if rec.comparison == "between_groups" else 0.5],
                 "context": [ctx, 0.5 if ctx == "adjacent" else 1.0]}

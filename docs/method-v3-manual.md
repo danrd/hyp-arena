@@ -2,7 +2,8 @@
 
 Version: rules **v3.9** (2026-11-11) = v3.8 with the novelty level "new mechanism of a known effect" (section 7: the effect
 on the outcome was studied, but a link between supported neighbours is new by a PubMed count) and the card as the union of
-two parses (section 3). v3.8 (2026-11-11): a third
+two parses (section 3), the weight of a meta-analysis by its GRADE certainty and the design from PubMed's publication types
+(sections 4, 5; specs/meta-and-nulls-2026-11-09.yaml: R2 0.697 and R3 0.582 against 0.702 and 0.593, inside the 0.03 rule). v3.8 (2026-11-11): a third
 level of the intervention match, "same category only", counted as adjacent (reading rule 1, section 4). v3.7 (2026-11-09): the record weight of v3.6 on the GRADE domains (section 5), link strength as a sum
 of log likelihood ratios (section 6), the evidence balance over the links that have data (section 7), the ASPID profiles
 (section 8) and the rules every improved version keeps (section 11). Code: `hyparena/card/rules_v32.py`
@@ -136,7 +137,11 @@ returns records:
 
 - a verbatim quote (checked by code; a quote not in the abstract is dropped);
 - stance: supports / refutes / neither (only supports and refutes are scored);
-- from the whole abstract: `design` (rct, non_randomised, observational, animal, cells, review, meta_analysis, other),
+- from the whole abstract: `design` (rct, non_randomised, observational, animal, cells, review, meta_analysis, other;
+  since 2026-11-11 PubMed's own publication types decide where they are decisive: "Meta-Analysis" is a meta-analysis,
+  "Systematic Review" and "Review" are reviews with their kind kept (systematic / narrative), a "Randomized Controlled
+  Trial" the reader called a review is an RCT; `review_kind.design_from_pubtypes`; a meta-analysis also gets its GRADE
+  certainty from the abstract by code, `certainty_from_abstract`),
   `n_total` (only when stated as one number; group sizes are not summed; checked verbatim), `comparison` (between groups,
   within group, none), `effect_reported` (the verbatim phrase with the effect size);
 - `effect_class`, computed by code from the effect phrase (rule A):
@@ -207,7 +212,7 @@ level is in section 5a.
 
 | Factor (GRADE domain) | Levels |
 |---|---|
-| design (starting level), outcome link of a claim about humans | RCT and meta-analysis 1; non-randomised and observational 1/2; review, animal, cells, other 1/4 |
+| design (starting level), outcome link of a claim about humans | RCT 1; meta-analysis by its GRADE certainty (2026-11-11): high or moderate 1, low 1/2, very low 1/4, not reported 3/4; non-randomised and observational 1/2; review (systematic or narrative), animal, cells, other 1/4 |
 | design, links before the outcome or a claim about animals | cells 1/3, review 2/3, primary study 1 (unchanged) |
 | precision (imprecision) | record for: min(1, ln n / ln 300), at least 1/4, n unknown 1/4; before the outcome 1/2. Record against (a null): the power of its study to detect d = 0.4 (v3.5) |
 | effect (rating up for a large effect) | record for: a stated effect of at least medium size (d ≥ 0.5, ratio ≥ 1.25, ≥ 5%, the authors' "moderate") 1; small, none or not stated 1/2. Record against: 1 |
@@ -840,6 +845,7 @@ v36:
   loglr_lambda: 2.682397     # 2 atanh(2/3) / 0.6
   design_grade3: {rct: 1.0, meta_analysis: 1.0, non_randomised: 0.5, observational: 0.5, other: 0.25}
   effect_full_from: 0.71875  # the continuous effect weight of d = 0.5
+meta_certainty: {high: 1.0, moderate: 1.0, low: 0.5, very_low: 0.25, not_reported: 0.75}   # 2026-11-11
 v34:
   preclinical_precision: 0.5
   novelty_levels: [new_context, translation, analog, new_mechanism, new_combination, new_link]

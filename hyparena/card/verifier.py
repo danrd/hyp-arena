@@ -508,6 +508,11 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
         if pubmed.is_retracted(a):
             rec.flags.append("retracted_pubmed")          # read by the v3.1 rules (section 12, point 7); v2 and v3 unchanged
         v3_fields(rec, r, a["title"] + " " + a["abstract"], review)
+        # 2026-11-11: PubMed's own publication types decide the review kind and a meta-analysis; its GRADE certainty by code
+        from hyparena.card.review_kind import certainty_from_abstract, design_from_pubtypes
+        rec.design, rec.review_kind = design_from_pubtypes(rec.design, a.get("pubtypes", []))
+        if rec.design == "meta_analysis":
+            rec.certainty = certainty_from_abstract(a["abstract"])
         if rec.qualifiers_match["intervention_match"] in ("exact", "dose_differs", "regimen_differs") and not names_in_source(
                 claim, card, a["title"], a["abstract"], quote):
             if subject_compounds(claim.subject.label, card):
