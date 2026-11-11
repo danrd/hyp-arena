@@ -23,7 +23,7 @@ STAGES = [
          own=["Разнообразие пула; внешний читатель: новизна, правдоподобие, проверяемость."],
          base_llm=["LLM пишет гипотезы по той же теме; 5 судей других семей сравнивают попарно."],
          why=["У гипотез из реестров есть дата и будущий исход: отбор проверяется без утечки."]),
-    dict(name="2. Карточка гипотезы", kind="llm",
+    dict(name="2. Карточка гипотезы", basis="PICO [1]; типы звеньев — адаптация «трёх опор» [2] и пути неблагоприятного исхода (AOP) [3]", kind="llm",
          base=["Текст → вмешательство, популяция, исход, эксперимент.",
                "Механизм — цепочка звеньев «субъект — отношение — объект»."],
          llm=["Разбирает текст по фиксированной схеме и закрытому словарю отношений."],
@@ -46,7 +46,7 @@ STAGES = [
          own=["Ручная разметка; ключевые статьи внешнего читателя; известные факты из баз."],
          base_llm=["LLM на тех же парах «звено — статья» и том же эталоне."],
          why=["Цитата делает каждую оценку проверяемой и не даёт модели подставить память."]),
-    dict(name="5. Сводка доказательств", kind="code",
+    dict(name="5. Сводка доказательств", basis="вес находки — домены GRADE [4]; сила звена — по образцу веса доказательств связи в AOP [3]", kind="code",
          base=["Вес находки по надёжности (дизайн, выборка, эффект, сравнение, контекст).",
                "Сила звена и баланс доказательств цепочки."],
          code=["Вес по доменам GRADE; сила звена из суммы «за» и «против»; баланс — среднее по звеньям с данными."],
@@ -60,7 +60,7 @@ STAGES = [
          own=["Ближайшая прежняя работа по мнению внешнего читателя."],
          base_llm=["LLM называет ближайшую прежнюю работу; доля совпадений."],
          why=["Суждение модели о новизне ненадёжно; отсутствие данных — не новизна."]),
-    dict(name="7. Эксперимент и альтернативы", kind="llm",
+    dict(name="7. Эксперимент и альтернативы", basis="решающий эксперимент, отсекающий альтернативы, — strong inference [5]", kind="llm",
          base=["Какие конкурирующие объяснения возможны",
                "и какие из них отсекает заявленный эксперимент."],
          llm=["Называет альтернативы; по тексту протокола решает, отсекает ли их эксперимент."],
@@ -68,7 +68,7 @@ STAGES = [
          own=["Согласие с внешним читателем по «отсекает ли»."],
          base_llm=["Тот же вопрос LLM по тем же протоколам."],
          why=["Придуманная альтернатива без опоры ничего не добавляет."]),
-    dict(name="8. Прочие показатели", kind="llm",
+    dict(name="8. Прочие показатели", basis="клиничность конечной точки — классы биомаркеров BEST FDA–NIH [6]", kind="llm",
          base=["Реализуемость эксперимента, клиничность конечной точки,",
                "размах механизма, рост внимания к теме."],
          llm=["Относит конечную точку к уровню; две семьи моделей, считается только совпадение."],
@@ -76,7 +76,7 @@ STAGES = [
          own=["Правило допуска показателя: надёжен, различает, не дублирует."],
          base_llm=["Конечная точка: LLM против согласия двух семей."],
          why=["Профилю «Финансирование» нужны цена и готовность."]),
-    dict(name="9. Ранжирование", kind="code",
+    dict(name="9. Ранжирование", basis="SMAA [7] с порядком важности показателей (АСПИД) [8]", kind="code",
          base=["Показатели сводятся в балл по профилю:",
                "Доказательность, Финансирование, Фронтир."],
          code=["Профиль задаёт только порядок важности; АСПИД разыгрывает веса и даёт балл и «в топ-5»."],
@@ -98,6 +98,18 @@ STAGES = [
          own=["Порядок оценок против исходов идущих испытаний."],
          base_llm=["Ответ LLM «подтвердится ли», закреплённый так же; и сочетание с нашим балансом."],
          why=["Единственная проверка без утечки."]),
+]
+
+# checked 2026-11-11 (PubMed and publisher records; ASPID: the book's details to be confirmed in a library catalogue)
+REFS = [
+    "Richardson WS et al. The well-built clinical question. ACP J Club 1995;123:A12-3.",
+    "Morgan P et al. Can the flow of medicines be improved? Drug Discov Today 2012;17:419-24 (Pfizer, «три опоры»: экспозиция в месте действия, связывание с мишенью, фармакологическая активность).",
+    "Ankley GT et al. Adverse outcome pathways. Environ Toxicol Chem 2010;29:730-41; OECD AOP Users' Handbook.",
+    "Guyatt GH et al. GRADE: an emerging consensus. BMJ 2008;336:924-6.",
+    "Platt JR. Strong inference. Science 1964;146:347-53.",
+    "FDA-NIH Biomarker Working Group. BEST (Biomarkers, EndpointS, and other Tools) Resource.",
+    "Lahdelma R, Hokkanen J, Salminen P. SMAA. Eur J Oper Res 1998;106:137-43.",
+    "Хованов Н.В. Анализ и синтез показателей при информационном дефиците (АСПИД), СПбГУ.",
 ]
 
 VARIANTS = {"base": [], "impl": ["impl"], "check": ["check"], "full": ["impl", "check", "why"]}
@@ -135,6 +147,9 @@ def stage_html(s: dict, layers: list[str]) -> tuple[str, int]:
     html = f"<div style='font-size:16px;color:#1E4D40'><b>{escape(s['name'])}</b></div>" \
            f"<div style='margin-top:4px'>{'<br/>'.join(escape(t) for t in s['base'])}</div>"
     n = 2 + sum(nlines(t, BW) for t in s["base"])
+    if s.get("basis"):                     # the accepted scheme a stage adapts (user 2026-11-11: say whose idea we adapt)
+        html += f"<div style='margin-top:6px;font-size:12px;color:#7A5C1E'><i>Основа: {escape(s['basis'])}</i></div>"
+        n += nlines(s["basis"], BW, 12) + 1
     if "impl" in layers:
         if s["kind"] == "llm":
             for t, items in (("LLM", s["llm"]), ("Код", s["code"])):
@@ -195,7 +210,12 @@ def build(layers: list[str]) -> str:
               "<span style='color:#B7791F'>- - →</span> версия гипотезы проходит этапы заново &nbsp;&nbsp; "
               "<span style='color:#555'>- - →</span> оценки пула закрепляются до результатов")
     out.append(cell("legend", legend, X0, y, total_w, 26, "text;html=1;fontSize=12;align=left;fontColor=#333;fillColor=none;strokeColor=none;"))
-    page_h = y + 50
+    y += 30
+    refs = "<b>Основа этапов</b> (этапы без пометки — наша разработка): " + " ".join(f"[{i}] {escape(r)}" for i, r in enumerate(REFS, 1))
+    rh = (nlines(" ".join(REFS), total_w, 11) + 1) * 15 + 10
+    out.append(cell("refs", refs, X0, y, total_w, rh, "text;html=1;whiteSpace=wrap;fontSize=11;align=left;verticalAlign=top;fontColor=#555;fillColor=none;strokeColor=none;"))
+    y += rh
+    page_h = y + 30
     body = "".join(out)
     W = total_w + 2 * X0
     return (f'<mxfile host="hyp-arena"><diagram name="Схема"><mxGraphModel dx="{W}" dy="{page_h}" grid="0" page="1" '

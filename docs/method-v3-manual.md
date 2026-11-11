@@ -81,7 +81,13 @@ A model (the normaliser) turns the text into a card:
 - **Claims** with roles, and for the mechanism a **link** type: `delivery` (the intervention is given and reaches the tissue),
   `engagement` (it acts on its target), `pathway` (the target changes a pathway), `effect` (an intermediate effect),
   `outcome` (the clinical or functional outcome). If the text argues a mechanism, the chain must be written; a missing link
-  is a flag ("build mechanism"), not an error.
+  is a flag ("build mechanism"), not an error. The link types are our adaptation of accepted schemes, not a standard
+  ontology: delivery, engagement and pathway / effect follow Pfizer's "three pillars" of Phase II survival (exposure at
+  the site of action, target binding, functional pharmacological activity; Morgan et al., Drug Discov Today 2012;17:419-24),
+  and the chain of steps with a strength per step is built like an adverse outcome pathway (molecular initiating event,
+  key events, adverse outcome, weight of evidence per key-event relationship; Ankley et al., Environ Toxicol Chem
+  2010;29:730-41; OECD AOP Users' Handbook). For an intervention that is not a compound, delivery means it was carried out
+  (adherence). Whether this decomposition is better than others is tested in `specs/mechanism-chain-comparison-2026-11-11.yaml`.
 - **Hallmarks of ageing** on engagement, pathway and effect links when the link concerns one.
 - **Population** (for registries taken from the registry fields).
 - **The stated experiment**: design, control, planned n, primary outcome.
