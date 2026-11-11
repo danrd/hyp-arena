@@ -294,7 +294,11 @@ ranked). Nothing else filters: an undeveloped but promising hypothesis keeps its
 - **Evidence balance** (v3.7; `chain_state`), the main axis of every profile = the mean of 2S − 1 over the chain's **slots that
   have at least one counting record**, from −1 (the data are against the links) through 0 (for and against balanced) to +1
   (supported). A slot is one link; consecutive pathway links are one slot (its best link); parallel outcomes are one slot
-  (the primary, else their mean). A slot with no record is not averaged in (v3.7, user decision 2026-11-09): under v3.6 it
+  (the primary, else their mean). Since 2026-11-11 (H49 walkthrough): the mean is over the parallel outcomes that have a
+  counting record (an empty outcome is not averaged in, as an empty slot is not since v3.7: on H49 it pulled a supported
+  slot from 1.0 to 0.83 and would have softened a refuted one); the primary is the outcome matching the registry's primary
+  outcome by its words; when the registry lists several primary outcomes there is no single primary (they are equal; H49
+  lists SPPB and body composition); with one primary outcome and no word match, the card's own outcome claim is primary. A slot with no record is not averaged in (v3.7, user decision 2026-11-09): under v3.6 it
   entered as 0, so an added untested link lowered a positive balance by k/(k+1), raised a negative one towards 0, and cost
   nothing when written as a pathway next to another pathway; the result depended on the sign and on the link type chosen.
   Gaps are shown by the coverage (share of slots with data) and the improvement item "check the link", not by the balance.

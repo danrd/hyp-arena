@@ -172,11 +172,19 @@ def outcome_group(card: HypothesisCard, links: list[Claim]) -> tuple[list[Claim]
     outs = [c for c in links if c.link == "outcome" or (not c.link and c.role == "outcome")]
     if len(outs) <= 1:
         return outs, (outs[0] if outs else None)
+    if ";" in (card.decisive_experiment.primary_outcome or ""):
+        return outs, None        # several primary outcomes in the registry are equal: no single primary (2026-11-11)
     target = _words(card.decisive_experiment.primary_outcome) | _words(card.pico.outcome.metric)
     scored = sorted(((len(target & (_words(c.object.label) | _words(c.qualifiers.get("measure", "")))), c) for c in outs),
                     key=lambda t: -t[0])
     if target and scored[0][0] > 0 and (len(scored) == 1 or scored[0][0] > scored[1][0]):
         return outs, scored[0][1]
+    # 2026-11-11: with one primary outcome in the registry and no word match, the card's own outcome claim is the primary
+    # (several primary outcomes return above: H49 lists SPPB and body composition, and the slot is their mean over those
+    # with data)
+    own = [c for c in outs if c.role == "outcome"]
+    if len(own) == 1 and not (scored[0][0] > 0 and scored[0][0] == scored[1][0]):
+        return outs, own[0]
     return outs, None
 
 

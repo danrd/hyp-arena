@@ -74,8 +74,9 @@ def slots(card: HypothesisCard) -> tuple[list[list[str]], list[str]]:
 
 
 def _slot_S(e: r32.V32Result, sl: list[str], is_out: bool) -> float:
-    if is_out and len(sl) > 1:
-        return sum(e.links[i][0] for i in sl) / len(sl)
+    if is_out and len(sl) > 1:                     # as rules_v32: the mean over parallel outcomes with data (2026-11-11)
+        known = [i for i in sl if e.links[i][3] + e.links[i][4] > 0] or sl
+        return sum(e.links[i][0] for i in known) / len(known)
     return max(e.links[i][0] for i in sl)
 
 

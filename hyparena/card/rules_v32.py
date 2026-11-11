@@ -392,7 +392,10 @@ def _evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
 
     def slot_S(sl):
         if len(sl) > 1 and outs and sl[0] in {o.id for o in outs}:
-            return sum(res.links[i][0] for i in sl) / len(sl)          # parallel outcomes without a primary: their mean
+            # parallel outcomes without a primary: the mean over those with a counting record (2026-11-11, H49: an empty
+            # outcome pulled a supported slot from 1.0 to 0.83, and would soften a refuted one; as v3.7 for empty slots)
+            known = [i for i in sl if res.links[i][3] + res.links[i][4] > 0] or sl
+            return sum(res.links[i][0] for i in known) / len(known)
         return max(res.links[i][0] for i in sl)                         # a cascade: its best link
     # EMPTY_SLOTS = "skip" (v3.7, user 2026-11-09): a slot none of whose links has a counting record is left out of the
     # balance and the support share ("nothing known" is not averaged in; gaps show in coverage and the improvement list)
