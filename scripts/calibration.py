@@ -1,3 +1,5 @@
+# Data note (2026-11-12): the raw calibration runs of methods v2 and v3 before normaliser v10 (run_{s}_v3.json, run_{s}_msearch.json,
+# run_1.json) were removed from longevity-kg; the numbers are in the spec named below. Restore them from the git history to re-run.
 """Calibration of method v2 on registry hypotheses outside the benchmark, in growing steps (user decision 2026-11-02).
 
     python -m scripts.calibration pick --step 1                     # step 1: 30 CT.gov trials outside the benchmark, by intervention type

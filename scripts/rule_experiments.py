@@ -1,3 +1,5 @@
+# Data note (2026-11-12): the raw calibration runs of methods v2 and v3 before normaliser v10 (run_{s}_v3.json, run_{s}_msearch.json,
+# run_1.json) were removed from longevity-kg; the numbers are in the spec named below. Restore them from the git history to re-run.
 """Offline rule experiments on the calibration units (no model calls): E1 known result needs 2 independent sources, E3 reviews
 count towards robustness, E4 an outcome paper does not count again for premises. 2026-11-02.
 

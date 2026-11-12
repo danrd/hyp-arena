@@ -1,3 +1,5 @@
+# Data note (2026-11-12): the raw calibration runs of methods v2 and v3 before normaliser v10 (run_{s}_v3.json, run_{s}_msearch.json,
+# run_1.json) were removed from longevity-kg; the numbers are in the spec named below. Restore them from the git history to re-run.
 """Two OHF ideas checked on the saved records of the calibration (steps 1-5), no model calls (2026-11-06; method-v3.md
 section 13): four-axis indirectness (system, intervention, endpoint, comparison) in place of the context and comparison
 factors of v3.2, and independence groups by the trial ids in the abstracts.

@@ -1,3 +1,5 @@
+# Data note (2026-11-12): the raw calibration runs of methods v2 and v3 before normaliser v10 (run_{s}_v3.json, run_{s}_msearch.json,
+# run_1.json) were removed from longevity-kg; the numbers are in the spec named below. Restore them from the git history to re-run.
 """The check of specs/trend-genetics-2026-11-06.yaml on saved runs (no model calls).
 
     python -m scripts.trend_genetics_check          # writes $KG_DIR/hypothesis_sources/calibration/trend_genetics.json

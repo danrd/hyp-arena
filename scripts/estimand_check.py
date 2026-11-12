@@ -1,3 +1,5 @@
+# Data note (2026-11-12): the raw calibration runs of methods v2 and v3 before normaliser v10 (run_{s}_v3.json, run_{s}_msearch.json,
+# run_1.json) were removed from longevity-kg; the numbers are in the spec named below. Restore them from the git history to re-run.
 """Estimand check (specs/estimand-2026-11-06.yaml): five ICH E9(R1) attributes from the registry texts by two model families,
 then the four admission conditions for an indicator.
 

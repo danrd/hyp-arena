@@ -1,3 +1,5 @@
+# Data note (2026-11-12): the raw calibration runs of methods v2 and v3 before normaliser v10 (run_{s}_v3.json, run_{s}_msearch.json,
+# run_1.json) were removed from longevity-kg; the numbers are in the spec named below. Restore them from the git history to re-run.
 """Error analysis of P on the calibration samples (steps 1-5), no model calls (specs/error-analysis-2026-11-06.yaml).
 
     python -m scripts.error_analysis              # v3.2 fold on run_{s}_v3.json -> error_analysis.json
