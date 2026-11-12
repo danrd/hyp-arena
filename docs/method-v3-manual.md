@@ -138,6 +138,28 @@ keeps its value and is listed in `unanchored`: the report shows it as "from the 
 `docs/system/card.md`). Cards made before v12 have no spans and are not checked for them. The working config stays on v11
 until the card benchmark (`specs/benchmark-card-2026-11-12.yaml`) compares v11 and v12.
 
+**Normaliser v13** (user decisions of the card walkthrough, 2026-11-12; `normalizer.derive_roles`, `v13_code_fields`; the
+core and the reference fields are listed in `docs/system/card.md`). On top of v12:
+- **background**: what every group receives alike (the same exercise programme in both arms, standard care for all) is
+  `pico.background`, not an intervention; only something done to the participants (not a measurement or a condition held
+  equal); it carries a span like the other core fields;
+- **primary and stated_as in place of role**: a claim states its place in the chain (`link`), whether it is the main outcome
+  (`primary`, one claim with link outcome) and how the text states it (`stated_as`: claimed, known, analogy). `role`, read by
+  the earlier rules, is derived by code: the primary outcome is `outcome`, an analogy `analog`, a claimed step before the
+  outcome `mechanism`, the rest `premise`. Requires edges are no longer asked (the order is the link's);
+- **level** of each claim (molecule, cell, tissue, organ, organism): reference only, not scored until it agrees with the
+  outside reader (card benchmark);
+- **expected effect** (size, what it is compared to, time point, span) when the text names one; the outcome's direction;
+- **one comparator vocabulary** (placebo, sham, active, usual care, no intervention, unknown); the experiment's `control` is
+  set from it by code; the experiment's **duration class by code** from the stated duration (under 90 days weeks, under 2
+  years months, under 10 years years, else decades; before v13 the model chose it and was not consistent); the primary
+  outcomes as a list (several are equal, section 7);
+- **registry design fields by code** (allocation, model, masking and who is masked, purpose, arms with their types, planned
+  enrollment) from the lines the text builder writes, kept as `decisive_experiment.registry` (reference; an input of the
+  planned code rule for d); **references the text names** (PMID, DOI) as `author_refs`.
+Saved cards (v10, v11) keep their fields and scores; nothing is recomputed. The working config moves to v13 only after the card
+benchmark (`specs/benchmark-card-2026-11-12.yaml`).
+
 **What the normaliser is given** (`hyparena/prompts/normalize_card/v11.j2`): the text only (for a registry trial the
 registry fields as "Name: value" lines, section 2), the closed lists of relations and hallmarks, the rules for every field,
 two worked examples of other hypotheses and an empty JSON skeleton. Not the date T, not the literature, not other
