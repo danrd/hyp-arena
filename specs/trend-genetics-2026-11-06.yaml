@@ -5,7 +5,7 @@ origin: >-
   user decision 2026-11-06 after the Eternal Search presentation "Спектр борьбы со смертью" (Open Longevity, snapshot
   2026-09-17): "мода в Longevity" (capital follows a rising interest) and human genetics as a priority filter
   (Minikel et al., Nature 2024). Network proximity (SHARP, Gross et al., Nature Aging 2026) is a separate task
-  (docs/tasks/network-proximity.md), not here.
+  (docs/tasks/network-proximity.md, removed 2026-11-12; in git history), not here.
 data: >-
   units with v3 results: calibration steps 1-5 (as of their dates) and the prospective pilot (as of 2026-11-06);
   no model calls; PubMed E-utilities, ClinicalTrials.gov API v2, OpenGenes (open-genes.com/api, snapshot 2026-11-06)

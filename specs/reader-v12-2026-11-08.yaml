@@ -1,7 +1,7 @@
 id: reader-v12-2026-11-08
 written_on: 2026-11-08
 status: definitions fixed before any call
-plan: docs/plans/reader-v12-2026-11-08.md
+plan: docs/plans/reader-v12-2026-11-08.md (removed 2026-11-12 after the work was done; in git history)
 user_decision: "2026-11-08: run the pilot (about 0.5 USD); 'unsure' papers of the filter go to the reader"
 changes:
   filter_rule: >-

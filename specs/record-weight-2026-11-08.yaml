@@ -4,7 +4,7 @@ status: >-
   step 0 (definitions, references, menu, decision rules) fixed before any value of steps 3-7 was computed. Steps 1-2 are
   descriptive; their only numbers seen before writing this file are the shares of the spread of log w and the level counts
   of design, context and n shown to the user in the conversation of 2026-11-08 (604 records).
-plan: docs/plans/record-weight-2026-11-08.md
+plan: docs/plans/record-weight-2026-11-08.md (removed 2026-11-12 after the work was done; in git history)
 why: >-
   User request 2026-11-08: work out step by step which factors of the record weight are needed (and whether some are
   missing), their levels, their relative weights, and how records for and against are folded into a link state; the result

@@ -1,7 +1,7 @@
 id: test-model-2026-11-09
 written_on: 2026-11-09
 status: definitions fixed before any call
-plan: docs/plans/test-model-2026-11-09.md
+plan: docs/plans/test-model-2026-11-09.md (removed 2026-11-12 after the work was done; in git history)
 user_decisions: "2026-11-09: rigour enters I as a part, both forms computed; the matrix replaces judge_alternatives only if it holds up in numbers AND in meaning (hand review); no probability of a positive report"
 call: "test_model/v1, one call per trial (DeepSeek V4.1 Flash): the registry text, the chain, the proposed alternatives and six checklist rows (expectation or unblinding, attention and contact, co-interventions, selection or attrition, measurement or learning, natural course or regression)"
 code:
