@@ -26,8 +26,8 @@ KG = Path(__file__).resolve().parents[2] / "longevity-kg"
 DIR = KG / "reviews" / "argon-2026-11-12"
 CONFIG = "configs/v3-flash-n10.yaml"
 PRICE = {"google": (1.5, 9.0), "deepseek": (0.15, 0.6)}      # USD per M tokens
-SYSTEMS = ("ours", "ours_v12", "ours_v13", "base_a")
-NORMALIZE = {"ours": "v11", "ours_v12": "v12", "ours_v13": "v13"}
+SYSTEMS = ("ours", "ours_v12", "ours_v13", "ours_v13_dedup", "base_a")
+NORMALIZE = {"ours": "v11", "ours_v12": "v12", "ours_v13": "v13", "ours_v13_dedup": "v13"}
 
 
 def texts() -> list[dict]:
@@ -165,6 +165,22 @@ def _measures(rows: list[dict]) -> dict:
     return {k: (round(v, 3) if isinstance(v, float) else v) for k, v in m.items()}
 
 
+def dedup_saved() -> dict:
+    """Free: the saved v13 cards with normalizer.dedupe_claims applied after the fact (what the union would have kept)."""
+    from hyparena.card.models import HypothesisCard
+    from hyparena.card.normalizer import dedupe_claims, derive_roles
+    res = json.loads((DIR / "bench_card_ours_v13.json").read_text())
+    out, removed = {}, 0
+    for tid, v in res.items():
+        card = HypothesisCard.model_validate(v["card"])
+        gone = dedupe_claims(card)
+        derive_roles(card)
+        removed += len(gone)
+        out[tid] = {**v, "card": card.model_dump(by_alias=True), "deduplicated": gone, "calls": []}
+    (DIR / "bench_card_ours_v13_dedup.json").write_text(json.dumps(out, ensure_ascii=False, indent=1, default=str) + "\n")
+    return {"texts": len(out), "claims_removed": removed}
+
+
 def score() -> dict:
     """By the measures of specs/benchmark-card-2026-11-12.yaml (written before Argon's answer and before any run)."""
     gold = {i["id"]: i for i in json.loads((DIR / "pack_17_answer.json").read_text())["items"]}
@@ -208,9 +224,9 @@ def score() -> dict:
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["dry", "run", "score"])
+    ap.add_argument("cmd", choices=["dry", "run", "score", "dedup"])
     ap.add_argument("--system", choices=SYSTEMS)
     ap.add_argument("--limit", type=int, default=0)
     a = ap.parse_args()
-    r = {"dry": dry, "score": score}.get(a.cmd)
+    r = {"dry": dry, "score": score, "dedup": dedup_saved}.get(a.cmd)
     print(json.dumps(r() if r else run(a.system, a.limit), indent=1, default=str))

@@ -43,3 +43,15 @@ result:   # 2026-11-12 15:4x-16:3x UTC; scripts/bench_card.py run/score; longevi
     intervention vs 0.36); comparator and design; core spans (one field unanchored in 60 cards); almost no invented steps.
     Level (0.48) is moderate: keep it as reference. Next: dedupe the union (match claims by span overlap, not by labels), then
     re-score without new calls on the saved cards; the link-type disagreements by kind.
+follow_up:   # 2026-11-12, free, on the saved v13 cards (scripts/bench_card.py dedup, score)
+  dedup: "normalizer.dedupe_claims (same link, targets and subjects sharing half of the shorter's words) removes 45 of 287 claims: recall 0.63 -> 0.61, precision 0.36 -> 0.42 (base 0.50), link kappa 0.33, stated_as 0.84, level 0.49; in the code for v13 from now (after the union)"
+  precision_gap: >-
+    Of our 140 unmatched claims 71 repeat the phrase of a gold claim they did not take one-to-one: our card splits what Argon
+    wrote as one claim (one claim per outcome measure; the manual's atomic rule). Counting such a finer split as right, both
+    systems have precision 0.72. The spec's one-to-one measure stays the measure; this is a diagnosis, not a new rule.
+  link_types: >-
+    Kappa 0.33 over all matched pairs, 0.46 where both put the claim in the chain (75 pairs, the candidate population_state
+    left out). The largest disagreement: claims stated as known that are steps on the way (gold: pathway 11, population state
+    5, effect 2) get no link from us (33 known claims with no link): the v13 prompt says a background fact not on the way has
+    no link, and the model reads 'known' as 'not on the way'. Then effect vs pathway vs outcome (effect: 0 of 8 agree).
+  next: "prompt fix (a known step on the way keeps its link; effect = a state of a tissue or organ, pathway = a molecular or cellular process, using the level) and a re-run of v13 on the 60 texts (about 4 USD), user's go"

@@ -232,6 +232,8 @@ def normalize_union(client, family: str, raw_text: str, card_id: str, log: Optio
     if len(good) > 1:
         problems = validate_card(card, raw_text)
         if int((version or TEMPLATE[1]).lstrip("v") or 0) >= 13:
+            stab["deduplicated"] = dedupe_claims(card)  # near-duplicates the union added (card benchmark 2026-11-12)
+            derive_roles(card)
             card.decisive_experiment.duration_class = "unknown"
             v13_code_fields(card, raw_text)             # fields the second parse filled (duration, primary outcomes)
         if int((version or TEMPLATE[1]).lstrip("v") or 0) >= 12:
@@ -321,3 +323,44 @@ def v13_code_fields(card: HypothesisCard, raw_text: str) -> None:
     if e.n_planned is None and e.registry.get("planned_enrollment"):
         e.n_planned = e.registry["planned_enrollment"]
     card.author_refs = author_refs(raw_text)
+
+
+def _target(c) -> str:
+    return (c.qualifiers or {}).get("measure") or c.object.label if c.relation in ORGANISM_RELATIONS else c.object.label
+
+
+def _overlap(a: str, b: str) -> float:
+    ta, tb = set(re.findall(r"\w+", (a or "").lower())), set(re.findall(r"\w+", (b or "").lower()))
+    return len(ta & tb) / min(len(ta), len(tb)) if ta and tb else 0.0
+
+
+def dedupe_claims(card: HypothesisCard) -> list[str]:
+    """v13 (card benchmark 2026-11-12: the union of two parses wrote 287 claims for Argon's 166): a later claim is a duplicate
+    of an earlier one when both sit at the same link, their targets (the object, or the measure where the object is the
+    organism) share at least half of the shorter one's words, and so do their subjects (two components of one programme with
+    the same outcome stay apart). The earlier claim is kept (the first parse's), the primary one always; edges and contrast
+    references move to the kept claim. Returns the ids removed."""
+    keep, removed, alias = [], [], {}
+    for c in sorted(card.claims, key=lambda c: (not c.primary, card.claims.index(c))):
+        twin = next((k for k in keep if k.link == c.link and _overlap(_target(k), _target(c)) >= 0.5
+                     and _overlap(k.subject.label, c.subject.label) >= 0.5), None)
+        if twin is None:
+            keep.append(c)
+        else:
+            removed.append(c.id)
+            alias[c.id] = twin.id
+    if removed:
+        order = {c.id: i for i, c in enumerate(card.claims)}
+        card.claims = sorted(keep, key=lambda c: order[c.id])
+        seen, edges = set(), []
+        for e in card.edges:
+            f, t = alias.get(e.from_, e.from_), alias.get(e.to, e.to)
+            if f != t and (f, t, e.type) not in seen:
+                seen.add((f, t, e.type))
+                edges.append(e.model_copy(update={"from_": f, "to": t}))
+        card.edges = edges
+        for c in card.claims:
+            ref = (c.qualifiers or {}).get("contrast")
+            if ref in alias:
+                c.qualifiers["contrast"] = alias[ref]
+    return removed
