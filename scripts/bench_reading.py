@@ -38,10 +38,15 @@ def targets() -> list[dict]:
     want = defaultdict(dict)
     for rid, k in key.items():
         want[k["pool"]][(k["unit"], k["claim_id"])] = rid
+    from hyparena.card.models import Claim
+    from hyparena.card.search import ALTERNATIVE_NOTE
     out = []
     for pool, ws in want.items():
         for h, as_of, card, cvs, logs in items(pool):
-            for c in list(card.claims) + list(card.proposed_alternatives):
+            alts = [Claim(id=a.id, subject=a.subject, relation=a.relation, object=a.object, qualifiers=a.qualifiers,
+                          role="premise", source_span="", note=ALTERNATIVE_NOTE)       # as the pipeline reads an alternative
+                    for a in card.proposed_alternatives]
+            for c in list(card.claims) + alts:
                 rid = ws.get((h, c.id))
                 if rid:
                     out.append({"rid": rid, "unit": h, "as_of": as_of, "card": card, "claim": c, "task": task[rid], "key": key[rid]})

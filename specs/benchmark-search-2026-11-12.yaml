@@ -1,0 +1,22 @@
+id: benchmark-search-2026-11-12
+written_on: 2026-11-12
+status: definitions fixed before Argon answers pack 18
+why: "Benchmark registry, stages 3 (search) and 6 (novelty): do our searches find before T what a careful search must find; does the novelty level match the closest prior work."
+sets:
+  pack_18: "30 calibration trials (T 2009-2025, 14 positive and 16 null outcomes), none in packs 16-17, holdout 10; Argon gets the registry text and T only, not our chain; longevity-kg reviews/argon-2026-11-12/pack_18_task.json, key pack_18_key.json (scripts/pack18_search.py)"
+  code_built_later: "registry references before registration (prior trials), DrugAge and Open Genes facts with their PMIDs (the known-facts set), Argon pack 8 key papers (59 prospective trials) - each a separate part of this benchmark"
+gold: "Argon's papers on or before T: closest prior work, prior trials, direct, step, against, review; up to 5 must_find; every PMID and date checked by code against PubMed before use (a PMID after T or not in PubMed is dropped and counted)"
+systems:
+  ours: "the saved searches of the calibration runs (run_{s}_v10.json: every PMID our search returned for each claim, before reading) - free"
+  ours_now: "the current search (model_population, the link's own outcome, alternatives on their own terms) re-run on the 30 texts - paid, after a dry run"
+  base_b: "an LLM without search names the papers (existence, before T, overlap with the gold), as in the registry"
+measures:
+  recall_must: "share of must_find papers that the system's searches of the trial returned (any link), and on the matching link type (outcome / step)"
+  recall_all: "the same over all gold papers, by category"
+  prior_work: "share of trials whose closest prior work was found; agreement of our novelty level with Argon's (weighted kappa over the ladder) and the share where ours is farther from the known"
+  against: "share of gold 'against' papers found (the H49 failure: the key null was never retrieved)"
+intervals: "bootstrap over trials, 2000 resamples; holdout separately"
+thresholds:
+  search_ok: "recall_must at least 0.6 on the saved searches; below it the search is the bottleneck before reading"
+  novelty_ok: "weighted kappa at least 0.4 and ours farther from the known in under 25% of trials"
+cost: "pack free; ours free; ours_now and base_b priced after a dry run, user's go"

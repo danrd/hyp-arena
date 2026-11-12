@@ -1,0 +1,23 @@
+id: benchmark-card-2026-11-12
+written_on: 2026-11-12
+status: definitions fixed before Argon answers pack 17 and before any model call
+why: "Benchmark registry, stage 2 (the card): gold by Argon, no human labellers (leadership, 2026-11-12)."
+set:
+  pack_17: "60 texts (20 registry trials with a stated reason, 20 without, 20 hypotheses written with a mechanism: Bio Arena 12, ChatGPT set 8); registry texts as the current text builder writes them; holdout 18; longevity-kg reviews/argon-2026-11-12/pack_17{a,b}_task.json, key pack_17_key.json (scripts/pack17_card.py)"
+gold: "Argon, from the text only (the weakest step may use the literature before T); no Claude labels"
+systems:
+  ours: "normalize_card/v11, two parses united, code checks (method v3.9)"
+  base_a: "the same model (Gemini 3.5 Flash), one call, the task in one sentence and an output schema (prompts/card_baseline/v1), no rules, no checks"
+measures:   # claims matched to the gold by phrase overlap of at least half the shorter phrase (normalised), one-to-one
+  claims: "precision and recall of the stated steps (all claims; and the steps before the outcome separately); invented steps = system claims whose phrase is not in the text or that match no gold claim in texts where the gold has no step before the outcome"
+  link_type: "Cohen kappa of the link over matched claims (five types; population_state of the gold counted as its own type, so it shows where ours puts it)"
+  outcomes: "recall of the gold outcomes; agreement on the primary one; direction agreement"
+  fields: "agreement on comparator kind, design, masking (where both state it), n_planned, number of arms; interventions vs background: share of gold background items that the system lists as an intervention"
+  reads_as_result: "how many texts the gold marks as reading like a result (by group): a data-quality measure, not a system measure"
+  stability: "ours: agreement of its two parses (shared / all claims) against its precision"
+  candidates: "for the candidate fields (background, population_state, level, stated_as, expected_effect, ai_role plausible) only the gold's distribution and, where ours has the field, agreement: they enter the template only after this"
+intervals: "bootstrap over texts, 2000 resamples; groups and holdout separately"
+thresholds:
+  ours_better: "ours above base_a on claim recall or precision with the 95% interval of the paired difference above 0, the other not lower by more than 0.05"
+  link_types_usable: "kappa of the link type with Argon at least 0.4 (as in mechanism-chain-comparison); below it the typed chain is not reliable"
+cost: "dry run 2026-11-12 (scripts/bench_card.py dry): ours about 4.7 USD (216 calls), base_a about 0.8 USD; user's go after the answer"
