@@ -23,6 +23,9 @@ section 10. Rules for a model writing such a report:
 - Use the scales and formulas of sections 5-7 exactly; show the arithmetic for each link's S, the evidence balance and I, and the
   record that sets the novelty level.
 - Do not predict the outcome of the trial; the evidence balance is the state of the literature before T, not a forecast.
+- **The hypothesis is the object, the experiment is its test** (2026-11-12): score the experiment as it is stated and never
+  invent one, nor links the text does not state; proposals for a better experiment belong only to the improvement list and to
+  versions, which are labelled as such.
 - When you evolve or improve a hypothesis, keep the rules of section 11 ("Rules every improved version keeps"): no record copied, edited, moved or dropped by hand, supported links kept, novelty-by-absence counted on the link's own subject and object.
 - When in doubt between two levels, take the lower one and say why. For novelty, take the level nearer the known: a paper you
   were not given may exist, and missing data are never novelty.
