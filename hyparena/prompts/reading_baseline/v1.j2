@@ -1,0 +1,10 @@
+Claim: {{ claim }}
+
+For each abstract below, say whether the study's own result supports the claim, refutes it, or does not address it, and copy the sentence that shows it.
+
+{% for p in papers %}[PMID {{ p.pmid }}] {{ p.title }}
+{{ p.abstract }}
+
+{% endfor %}
+Reply with a single JSON object and nothing else:
+{"papers": [{"pmid": "", "finding": "for | against | none", "quote": ""}]}

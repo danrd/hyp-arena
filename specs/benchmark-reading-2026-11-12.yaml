@@ -35,7 +35,8 @@ sets:
       (only qualifiers the claim states); secondary_positive; distinguishing_part_shown (alternatives).
   public_later: "SciFact dev (CC BY 4.0 / ODC-By), then evidence inference 1.0 (MIT annotations; PMC texts private) - a separate spec"
 systems:
-  ours: "the verifier as in the current config (verify_claim prompt and code checks: verbatim quote, retry, effect class), on the same items"
+  ours_v9: "verify_claim/v9 with its code checks (verbatim quote, retry, effect class, fallback family): the reader the prospective pool was scored with"
+  ours_v13: "relevance filter v2, then verify_claim/v13 in batches of 10 with an answer for every paper (the reader of specs/reader-v12-2026-11-08.yaml); added 2026-11-12 before any call"
   baseline_a: >-
     the same model as our reader, the same items (claim + the same abstracts in one call), the task in one sentence and the
     output schema, no reading rules, no code checks (no quote verification, no retry). User decision 2026-11-12: baseline (a) only.
@@ -50,6 +51,6 @@ metrics:   # per pair unless said; intervals: bootstrap over links (pairs of a l
   argon_retest: "agreement of Argon's pack 16 with its pack 9 answer on the 2 repeated links (finding per pair, kappa)"
 thresholds:   # written before the run
   report: "every metric with its interval, overall and by stratum, holdout separately"
-  ours_better: "the paired difference ours - baseline_a in recall or precision has a 95% interval above 0 without the other below -0.05"
+  ours_better: "for each of ours_v9 and ours_v13, the paired difference ours - baseline_a in recall or precision has a 95% interval above 0 without the other below -0.05"
   gold_usable: "argon_retest kappa >= 0.6 on finding; if lower, the gold is noisier than the system differences it measures - report so"
-cost: "pack 16 build free; ours and baseline_a: dry run first, price named, off-peak, user's go"
+cost: "pack 16 build free; dry run 2026-11-12 (scripts/bench_reading.py dry): v9 about 0.046, v13 about 0.051, baseline_a about 0.044 USD off-peak (x2 at peak), about 0.14 USD in all; user's go before the run"
