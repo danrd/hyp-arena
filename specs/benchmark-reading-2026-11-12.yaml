@@ -54,3 +54,18 @@ thresholds:   # written before the run
   ours_better: "for each of ours_v9 and ours_v13, the paired difference ours - baseline_a in recall or precision has a 95% interval above 0 without the other below -0.05"
   gold_usable: "argon_retest kappa >= 0.6 on finding; if lower, the gold is noisier than the system differences it measures - report so"
 cost: "pack 16 build free; dry run 2026-11-12 (scripts/bench_reading.py dry): v9 about 0.046, v13 about 0.051, baseline_a about 0.044 USD off-peak (x2 at peak), about 0.14 USD in all; user's go before the run"
+result:   # 2026-11-12 13:3x-14:1x UTC off-peak; scripts/bench_reading.py run/score; longevity-kg reviews/argon-2026-11-12/bench_reading_*.json; 0.141 USD in all (v9 0.047, v13 0.050, base_a 0.044)
+  gold: "pack 16: 94 own findings in 400 pairs (alternatives 54, outcome 23, mechanism 14, repeat 3); Argon test-retest 40/40 on the repeats"
+  v9:     {recall: "20/94 = 0.21 [0.10, 0.39]", precision: "20/37 = 0.54 [0.29, 0.81]", side: 0.91, quote_verbatim: 1.0, consensus_recorded: "0.06"}
+  v13:    {recall: "27/94 = 0.29 [0.15, 0.48]", precision: "27/42 = 0.64 [0.43, 0.87]", side: 0.96, quote_verbatim: 1.0, consensus_recorded: "0.04"}
+  base_a: {recall: "26/94 = 0.28 [0.13, 0.42]", precision: "26/63 = 0.41 [0.19, 0.71]", side: 0.96, quote_verbatim: 1.0, consensus_recorded: "0.24"}
+  paired_vs_base_a: {v9: "recall -0.06 [-0.25, 0.16], precision +0.13 [-0.21, 0.41]", v13: "recall +0.01 [-0.15, 0.21], precision +0.23 [-0.04, 0.50]"}
+  by_stratum: "outcome links: v9 R 0.30 P 0.44, v13 R 0.26 P 0.46, base_a R 0.04 P 0.20; alternatives: v9 R 0.13, v13 R 0.24, base_a R 0.37 (P 0.64 / 0.76 / 0.69); mechanism: base_a P 0.17"
+  holdout: "21 gold findings: v9 1, v13 2, base_a 8 recalled"
+  reading: >-
+    By the rule written before the run neither reader beats the baseline: no paired interval is above 0 (v13's precision
+    +0.23 comes closest). Every reader misses most of Argon's findings (recall 0.21-0.29): the reader is the bottleneck, as
+    packs 8 and 9 said. Our readers keep consensus phrases out (4-6% vs 24%) and are much better on the outcome link; the
+    baseline is better on alternatives (it is not held to the alternative's distinguishing part, which the gold does not
+    ask either for every pair) and records many mechanism pairs Argon does not (P 0.17). v13 is ahead of v9 on both
+    measures. Intervals are wide: 20 links.
