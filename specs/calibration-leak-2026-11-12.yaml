@@ -1,0 +1,23 @@
+id: calibration-leak-2026-11-12
+written_on: 2026-11-12
+status: checked (free, no model call)
+why: "The calibration texts (74 trials with known outcomes) are the current registry versions, while T = min(first posted, primary completion) (scripts/calibration.py as_of); the H86 walkthrough found a title that states the result. Does the text carry knowledge from after T?"
+how: "scripts/calibration_leak.py: dates from the ClinicalTrials.gov API v2 (current record: first posted, start, primary completion, last update, results posted) and the candidate files (ISRCTN, UMIN, NTR); the text as the pipeline reads it; output longevity-kg hypothesis_sources/calibration/leak_check.json"
+grades:
+  outcome_in_text: "the title states the result or the text has its own Results / Conclusion part: the label can be read off the text"
+  written_after_data: "first posted after the primary completion: T is the completion date, the whole text was written after the data were collected"
+  retrospective: "first posted after the start, or the conduct told in the past, or results posted before the current version"
+  updated: "only: the current version was posted after T"
+result:
+  grades: {outcome_in_text: 3, written_after_data: 37, retrospective: 22, updated: 10, none: 2}
+  outcome_in_text: "H86 (title 'Whey Protein ... Increases Muscle Mass and Strength ...', label positive), H113 (title 'Lactobacillus Plantarum TWK10 Improves Muscle Mass ...', Results and Conclusion in the text, positive), H96 (title '... Does Not Promote Additional Increase on Lean Mass ...', null); the title agrees with the label in all three"
+  written_after_data: "40 of 74 first posted after the primary completion (37 graded here, 3 above): from 9 days to 8 years after it, median about a year"
+  updated_after_T: "69 of 74"
+  result_phrases: "12 texts have a result-like phrase; read by hand: 10 are about earlier studies or the hypothesis ('will significantly improve'), the own results are H113 and H129 ('examined whether ... was associated with changes', no direction)"
+  pack_18: "of its 30: written_after_data 14, retrospective 11, updated 5, outcome_in_text 0"
+  balance_by_label: "outcome_in_text 2 positive / 1 null; written_after_data 21 / 16; retrospective 9 / 13; updated 3 / 7; none 2 / 0"
+reading:
+  - "Three texts give the outcome away (title or results); every LLM step that reads the text (normaliser, the two-model question of specs/llm-consensus-2026-11-07.yaml, Argon) can read the label there. Exclude them from calibration numbers that use a model's reading of the text, or score them with the title removed."
+  - "Half of the pool was registered after its data were collected: these are not prospective hypotheses but descriptions of finished trials; T = completion keeps the literature cut-off right, but the wording of the text (what is claimed, the outcome chosen as primary) may follow the results. No change of the label is visible from dates alone."
+  - "The search and reading benchmarks are not hit directly: their gold and our searches use papers on or before T, and the outcome is not scored there."
+next: "user's decision: (a) drop the 3 outcome_in_text texts from the calibration numbers (R3 AUC, LLM consensus) and recompute, free; (b) a sensitivity check of R3 on the 22 + 10 + 2 texts registered before completion, free; (c) future calibration pools: only trials first posted before the primary completion"

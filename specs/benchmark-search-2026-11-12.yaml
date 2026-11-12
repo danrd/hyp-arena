@@ -1,6 +1,6 @@
 id: benchmark-search-2026-11-12
 written_on: 2026-11-12
-status: definitions fixed before Argon answers pack 18
+status: "definitions fixed before Argon answered pack 18; scored 2026-11-12 (result below)"
 why: "Benchmark registry, stages 3 (search) and 6 (novelty): do our searches find before T what a careful search must find; does the novelty level match the closest prior work."
 sets:
   pack_18: "30 calibration trials (T 2009-2025, 14 positive and 16 null outcomes), none in packs 16-17, holdout 10; Argon gets the registry text and T only, not our chain; longevity-kg reviews/argon-2026-11-12/pack_18_task.json, key pack_18_key.json (scripts/pack18_search.py)"
@@ -20,3 +20,14 @@ thresholds:
   search_ok: "recall_must at least 0.6 on the saved searches; below it the search is the bottleneck before reading"
   novelty_ok: "weighted kappa at least 0.4 and ours farther from the known in under 25% of trials"
 cost: "pack free; ours free; ours_now and base_b priced after a dry run, user's go"
+result_2026_11_12:   # scripts/bench_search.py check, score; longevity-kg reviews/argon-2026-11-12/bench_search_score.json
+  gold_check: "154 papers given (about 5 per trial); 2 PMIDs not in PubMed, dropped; 0 after T (date = earliest of electronic, print and PubMed entry date; one paper is public before T by its entry date only); 4 years differ from PubMed, kept; 152 papers left"
+  gold_caveat: "Argon marked must_find on 146 of 152 papers (5 per trial, the cap): must_find does not separate the key papers, so recall_must is about recall_all"
+  ours_saved_v10: {recall_must: "0.25 [0.17, 0.34]", recall_must_on_link: "0.10 [0.05, 0.16]", read_must: 0.09, recall_all: "0.25 [0.17, 0.35]", trials_with_a_gold_paper_found: 0.70, returned_per_trial_median: 99}
+  by_category_found_read: {prior_trial: "0.40 / 0.21 (n 43)", direct: "0.24 / 0.06 (34)", step: "0.10 / 0.00 (30)", against: "0.14 / 0.05 (22)", review: "0.30 / 0.04 (23)"}
+  by_population_found: {exact: 0.27, adjacent: 0.24, other_species: "0.00"}
+  prior_work: "closest prior work found 0.40 [0.23, 0.57], read 0.23"
+  novelty: "weighted kappa -0.08 [-0.33, 0.13] on 22 trials (8 without a level: 3 filtered, 1 unparsed, 4 ranked with none); ours farther from the known 0.50 [0.29, 0.71], nearer 0.09; Argon: new_context 23 of 30, analog 3, known_result 3, translation 1; ours: new_context 10, analog 9, new_link 2, known_result 1; the main disagreement is ours 'analog' where Argon has 'new_context' (9)"
+  holdout_10: "recall_all 0.26, prior work found 0.40, kappa 0.03, ours farther 0.29"
+  thresholds: "search_ok not met (0.25 < 0.6): the search is a bottleneck before reading; novelty_ok not met (kappa -0.08 < 0.4, farther 50% > 25%)"
+  limits: "saved searches are of method v3 with config v3-flash-n10 and normaliser v10 (8 of 30 cards have a step claim, which bounds step recall); the current search (ours_now) is not run; no LLM baseline (base_b) yet; Argon's gold is one reader, not checked against a second; 30 calibration texts, see the leak check (scripts/calibration_leak.py): 14 of the 30 were registered after primary completion"

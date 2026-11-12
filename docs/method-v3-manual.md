@@ -836,12 +836,13 @@ trials (Spearman 0.81 between two readings; R2 and R3 do not move): close places
 - An unchecked link has no prior (it is left out of the balance). Planned only as a prior from databases by code (target evidence in OpenTargets or
   ChEMBL), in narrow bounds about 0.4–0.6 and after the admission check; never a model's judgement.
 - Precision from full texts (PMC open access, numbers only) instead of the constant before the outcome.
-**Validation status (2026-11-11).** Each line is a file in `specs/` with its definitions written before the computation.
+**Validation status (2026-11-12).** Each line is a file in `specs/` with its definitions written before the computation.
 
 | Step | Check | Result |
 |---|---|---|
 | reading: design, n, blinding | against an outside reader (Argon) | 92-96% agreement |
 | reading: which papers hold a finding on the link | key papers of an outside reader (pack 8) | 19% held on their link: the bottleneck (`docs/plans/reading-recall-2026-11-08.md`) |
+| search: are the papers a careful search must find returned before T | an outside reader's search gold, 30 calibration trials (pack 18) | saved searches return 0.25 [0.17, 0.35] of the gold papers, 0.10 on their own link; the closest prior work in 0.40 of trials (`specs/benchmark-search-2026-11-12.yaml`): the search is a bottleneck before reading |
 | paper skeleton (read once, match by code and a model) | 200 link-paper pairs of pack 9 | recall 0.52, precision 0.85, direction 9 of 11 (`specs/paper-skeleton-2026-11-09.yaml`) |
 | record weight v3.6 | later RCTs and meta-analyses of the same link (R2) | AUC 0.70 vs 0.66 under v3.5 (`specs/record-weight-2026-11-08.yaml`) |
 | record weight v3.6 | order of 80 pairs of records by an outside reader (R4) | τ-b 0.10 (v3.5: 0.04) |
@@ -849,12 +850,17 @@ trials (Spearman 0.81 between two readings; R2 and R3 do not move): close places
 | the same question asked to two models | trial outcomes, 63 trials the models do not remember | AUC 0.76 vs 0.59 for our P (`specs/llm-consensus-2026-11-07.yaml`): the models' priors beat the literature count; leakage not excluded |
 | intervention match: exact / class / category / other (v3.8) | an outside reader, 80 link-finding pairs blind | weighted κ 0.55, stance agreement 0.89 (`specs/intervention-class-2026-11-11.yaml`) |
 | I (d of the alternatives) | an outside reader, holdout of 30 trials | κ 0.35 |
-| N (novelty) | an outside reader | weighted κ 0.14-0.26; ours is nearer the new |
+| N (novelty) | an outside reader (packs 7, 18) | weighted κ 0.14-0.26 (pack 7), −0.08 (pack 18, 22 trials); ours is nearer the new (farther from the known in half of pack 18) |
 | prospective pool, 60 ongoing trials | outcomes 2026-11 … 2028-12 | scores frozen 2026-11-06 with a SHA-256 (`specs/prospective-2026-11-06.yaml`): the clean test |
 
 Against trial outcomes the record weights add nothing over counting records (ablation of 2026-11-07, in
 `archive/method-history.md`); the weights are kept for what they are for: ordering later trials of the same link (R2) and
 telling a large RCT from a cell study in the report. AUC here is the tied AUC between positive and null trials.
+
+**Calibration texts and leakage** (`specs/calibration-leak-2026-11-12.yaml`). The calibration texts are the current registry
+versions; 40 of the 74 trials were first posted after their primary completion (T is then the completion date), and 3 texts
+state the outcome in the title or a results part (H86, H113, H96). Numbers that rest on a model reading these texts (R3, the
+two-model question) carry that leak until they are recomputed without them.
 
 ## 13. Worked example (computed by the code)
 
