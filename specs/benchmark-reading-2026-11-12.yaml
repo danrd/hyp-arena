@@ -1,0 +1,55 @@
+id: benchmark-reading-2026-11-12
+written_on: 2026-11-12
+status: definitions fixed before Argon labels pack 16 and before any model call
+why: >-
+  Leadership (2026-11-12): a full benchmark for every stage, gold by Argon. Reading is first (docs/benchmarks/README.md).
+  Pack 9 has only 21 own findings in 200 pairs, so recall 0.52 has a 95% interval of about +-0.2; the user chose one full
+  Argon pack instead of pieces (2026-11-12).
+sets:
+  frozen_history:   # kept for comparison with earlier numbers; texts private in longevity-kg/reviews (SHA-256 of the files)
+    pack_9:   # 10 links x 20 abstracts, finding per pair
+    pack_9_task.json: "eab737de1a9df7e8f7aedc752b967753ba91a530ff4f9849fecdd0050072aac1"
+    pack_9_key.json: "20912cb7d3df7b889511df3628bd8349113e073b6ad95520de299400d92b2469"
+    pack_9_answer.json: "d43a1341a7649c26288b4367e3983397ba3ee8fbb714c193b7cad770d4dcb517"
+    pack_13:  # 35 papers, between-group result on the claim's outcome
+    pack_13_task.json: "f86fa7b0c469d049504e09ca940a04b13bb11eedfe82c8aad3fc342751c5bcbb"
+    pack_13_key.json: "853434a81f8282178d3e9a1ca1869ee21dcf90e790da5ac381a3e2f1c106932f"
+    pack_13_answer.json: "0a04f0dc26bf46c6b250deedc3553cce364df59be8c8795ce2e61b350f8bcaea"
+    pack_15:  # part B: 80 link-finding pairs, intervention level and stance
+    pack_15_task.json: "1fec64bf142cadca14b5a286fd68e94b3546e14015946c0ad35ceaab2b316b59"
+    pack_15_key.json: "b9e8902879e54ac9251a1b3721e9cda6c6fd16f0b0052b6513e1a45b9ea41d6f"
+    pack_15_answer.json: "0b2690fbb1f61342a8f23a180dd4b200ae63124ecec9f7da8e2e1d973b3d3175"
+  pack_16:    # the reading gold v2 (scripts/pack16_reading.py build, deterministic, no model call)
+    pack_16a_task.json: "cb9edf03e7520f732245d1e0978f9dd8dddec85071dc76aa327cb1bd6e791644"
+    pack_16b_task.json: "0aeb377a6e0d1e7f106a2228d95ddf72cd893c53927cb1b86bd6b2a31f833506"
+    pack_16_key.json: "c5c08010f127f947b1595a09cef51ace1add9635dc919ce55a0086cbd93cd3af"
+    design: >-
+      20 links with every abstract their last search returned (as our reader saw them, up to 25): 400 pairs in two parts
+      of 10 links. Strata: outcome 8, mechanism 5, alternative 5 (each random and enriched halves), repeat 2 (pack 9 links
+      with an own finding: Argon test-retest). Enriched = most abstracts typed RCT or meta-analysis by PubMed whose title shares
+      a word of the link's subject (code signal, independent of our reader). One link per unit; pack 9 units and H49 left out
+      except the repeats. Holdout: 4 links (every third of a stratum in hash order), never used to tune a prompt.
+    fields: >-
+      finding (for / against / none) with none_reason; contiguous verbatim quote; result_on_claim_measure; comparison;
+      effect_phrase; design; n_total with n_quote; intervention_match (exact / class / category / other); context_differs
+      (only qualifiers the claim states); secondary_positive; distinguishing_part_shown (alternatives).
+  public_later: "SciFact dev (CC BY 4.0 / ODC-By), then evidence inference 1.0 (MIT annotations; PMC texts private) - a separate spec"
+systems:
+  ours: "the verifier as in the current config (verify_claim prompt and code checks: verbatim quote, retry, effect class), on the same items"
+  baseline_a: >-
+    the same model as our reader, the same items (claim + the same abstracts in one call), the task in one sentence and the
+    output schema, no reading rules, no code checks (no quote verification, no retry). User decision 2026-11-12: baseline (a) only.
+metrics:   # per pair unless said; intervals: bootstrap over links (pairs of a link are not independent), 2000 resamples
+  recall: "share of Argon's for/against pairs that the system records on that link with the same side"
+  precision: "share of the system's for/against records that Argon calls for/against with the same side"
+  side: "agreement on for vs against among pairs both call for/against"
+  quote: "share of the system's records whose quote is contiguous and verbatim in the abstract (code check)"
+  fields: "agreement on design, n_total, comparison; weighted kappa on intervention_match (exact > class > category > other)"
+  consensus: "share of Argon's background_or_consensus pairs the system turned into a record (lower is better)"
+  alternatives: "precision on alternative links with distinguishing_part_shown required"
+  argon_retest: "agreement of Argon's pack 16 with its pack 9 answer on the 2 repeated links (finding per pair, kappa)"
+thresholds:   # written before the run
+  report: "every metric with its interval, overall and by stratum, holdout separately"
+  ours_better: "the paired difference ours - baseline_a in recall or precision has a 95% interval above 0 without the other below -0.05"
+  gold_usable: "argon_retest kappa >= 0.6 on finding; if lower, the gold is noisier than the system differences it measures - report so"
+cost: "pack 16 build free; ours and baseline_a: dry run first, price named, off-peak, user's go"
