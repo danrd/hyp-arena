@@ -26,7 +26,8 @@ KG = Path(__file__).resolve().parents[2] / "longevity-kg"
 DIR = KG / "reviews" / "argon-2026-11-12"
 CONFIG = "configs/v3-flash-n10.yaml"
 PRICE = {"google": (1.5, 9.0), "deepseek": (0.15, 0.6)}      # USD per M tokens
-SYSTEMS = ("ours", "base_a")
+SYSTEMS = ("ours", "ours_v12", "base_a")
+NORMALIZE = {"ours": "v11", "ours_v12": "v12"}
 
 
 def texts() -> list[dict]:
@@ -38,10 +39,10 @@ def dry() -> dict:
     and on the prospective cards (most parses pass in one round): ours counted with 2 parses x 1.8 rounds."""
     from hyparena.llm.prompts import render
     ts = texts()
-    tmpl = len(render("normalize_card", "v11", text="", relations="", hallmarks="", hint="", history_text=""))
+    tmpl = len(render("normalize_card", "v12", text="", relations="", hallmarks="", hint="", history_text=""))
     est = {}
     for s in SYSTEMS:
-        if s == "ours":
+        if s in NORMALIZE:
             tin = sum((tmpl + len(t["text"])) / 4 * 2 * 1.8 + 600 * 2 * 0.8 for t in ts)   # retries carry the previous reply
             tout, calls = 1600 * 2 * 1.8 * len(ts), round(2 * 1.8 * len(ts))
         else:
@@ -67,8 +68,9 @@ def run(system: str, limit: int = 0) -> dict:
 
     def one(t):
         log: list = []
-        if system == "ours":
-            card, problems, stab = normalize_union(client, "google", t["text"], t["id"], log=log, runs=2, version="v11")
+        if system in NORMALIZE:
+            card, problems, stab = normalize_union(client, "google", t["text"], t["id"], log=log, runs=2,
+                                                   version=NORMALIZE[system])
             res = {"card": card.model_dump(by_alias=True) if card else None, "problems": problems, "stability": stab}
         else:
             value, _ = ask(client, role="card_baseline", family="google", template="card_baseline", version="v1",
@@ -88,12 +90,114 @@ def run(system: str, limit: int = 0) -> dict:
     return {"system": system, "texts_done": len(done), "this_run": len(ts), "tokens": dict(tok), "usd": round(usd, 4)}
 
 
-def score() -> dict:
-    """Written after Argon's answer arrives, by the measures fixed in specs/benchmark-card-2026-11-12.yaml."""
-    if not (DIR / "pack_17_answer.json").exists():
-        raise SystemExit("no Argon answer yet (pack_17_answer.json)")
-    raise SystemExit("score: to be written against the answer's format, by the spec's measures")
+def _toks(s: str) -> set:
+    return set(re.findall(r"\w+", unicodedata.normalize("NFKC", s or "").lower()))
 
+
+def _match(sys_claims: list[dict], gold_claims: list[dict]) -> list[tuple[dict, dict]]:
+    """One-to-one by phrase overlap: shared words / words of the shorter phrase >= 0.5, best pairs first."""
+    pairs = []
+    for a in sys_claims:
+        for b in gold_claims:
+            ta, tb = _toks(a["phrase"]), _toks(b["phrase"])
+            if ta and tb:
+                ov = len(ta & tb) / min(len(ta), len(tb))
+                if ov >= 0.5:
+                    pairs.append((ov + len(ta & tb) / len(ta | tb), id(a), id(b), a, b))   # ties: the closer phrase first
+    used_a, used_b, out = set(), set(), []
+    for ov, ia, ib, a, b in sorted(pairs, key=lambda x: -x[0]):
+        if ia not in used_a and ib not in used_b:
+            used_a.add(ia), used_b.add(ib), out.append((a, b))
+    return out
+
+
+def _sys_view(system: str, card: dict) -> dict:
+    """The system's card in the gold's terms."""
+    if not card:
+        return {"claims": [], "interventions": [], "comparator": None, "design": None}
+    if system in NORMALIZE:
+        claims = [{"phrase": c.get("source_span") or "", "link": c.get("link") or "none", "primary": c.get("role") == "outcome"}
+                  for c in card.get("claims") or []]
+        ints = [(x.get("label") or "") + " " + (x.get("span") or "") for x in card["pico"].get("intervention") or []]
+        comp = {"placebo": "placebo", "untreated": "no_intervention", "standard_care": "usual_care", "active_drug": "active",
+                "monotherapy": "active", "other": "other", "unknown": "none_stated"}.get(card["pico"]["comparator"].get("type"), "other")
+        design = {"rct": "randomised", "cluster_rct": "randomised", "single_arm": "single_arm", "pilot": "not_stated",
+                  "observational": "observational", "unknown": "not_stated", "other": "not_stated"}.get(card["decisive_experiment"].get("design"))
+        return {"claims": claims, "interventions": ints, "comparator": comp, "design": design,
+                "unanchored": card.get("unanchored") or []}
+    claims = [{"phrase": c.get("phrase") or "", "link": c.get("link") or "none", "primary": False} for c in card.get("claims") or []
+              if isinstance(c, dict)]
+    ints = [(x.get("name") or "") for x in card.get("interventions") or [] if isinstance(x, dict)]
+    comp = str((card.get("comparator") or {}).get("kind") or "none_stated").lower()
+    design = str((card.get("experiment") or {}).get("design") or "not_stated").lower()
+    design = "randomised" if "random" in design else design
+    return {"claims": claims, "interventions": ints, "comparator": comp, "design": design}
+
+
+def _kappa(pairs: list[tuple[str, str]]) -> float | None:
+    if not pairs:
+        return None
+    labs = sorted({x for p in pairs for x in p})
+    n = len(pairs)
+    po = sum(a == b for a, b in pairs) / n
+    pa, pb = Counter(a for a, _ in pairs), Counter(b for _, b in pairs)
+    pe = sum(pa[l] * pb[l] for l in labs) / n / n
+    return None if pe == 1 else round((po - pe) / (1 - pe), 3)
+
+
+def _measures(rows: list[dict]) -> dict:
+    tot = lambda k: sum(r[k] for r in rows)
+    m = {"claim_recall": tot("hit") / tot("gold") if tot("gold") else None,
+         "claim_precision": tot("hit") / tot("sys") if tot("sys") else None,
+         "step_recall": tot("hit_step") / tot("gold_step") if tot("gold_step") else None,
+         "step_precision": tot("hit_step") / tot("sys_step") if tot("sys_step") else None,
+         "invented_steps_in_texts_without_steps": sum(r["sys_step"] for r in rows if r["gold_step"] == 0),
+         "link_kappa": _kappa([p for r in rows for p in r["link_pairs"]]),
+         "background_listed_as_intervention": (tot("bg_as_int") / tot("bg")) if tot("bg") else None,
+         "comparator_agree": sum(r["comp_ok"] for r in rows) / len(rows) if rows else None,
+         "design_agree": sum(r["design_ok"] for r in rows) / len(rows) if rows else None,
+         "n": {"texts": len(rows), "gold_claims": tot("gold"), "sys_claims": tot("sys"), "gold_steps": tot("gold_step")}}
+    return {k: (round(v, 3) if isinstance(v, float) else v) for k, v in m.items()}
+
+
+def score() -> dict:
+    """By the measures of specs/benchmark-card-2026-11-12.yaml (written before Argon's answer and before any run)."""
+    gold = {i["id"]: i for i in json.loads((DIR / "pack_17_answer.json").read_text())["items"]}
+    key = json.loads((DIR / "pack_17_key.json").read_text())
+    out = {}
+    for s in SYSTEMS:
+        f = DIR / f"bench_card_{s}.json"
+        if not f.exists():
+            continue
+        res = json.loads(f.read_text())
+        rows = []
+        for tid, g in gold.items():
+            if tid not in res:
+                continue
+            sv = _sys_view(s, res[tid].get("card"))
+            gc = [c for c in g.get("claims") or [] if c.get("link") != "none"]
+            pairs = _match(sv["claims"], gc)
+            step = lambda c: c.get("link") not in ("outcome", "none")
+            bg = [b.get("phrase") or b.get("name") or "" for b in g.get("background") or [] if isinstance(b, dict)] + \
+                 [b for b in g.get("background") or [] if isinstance(b, str)]
+            gcomp = str((g.get("comparator") or {}).get("kind") or "none_stated")
+            gdes = str((g.get("experiment") or {}).get("design") or "not_stated")
+            rows.append({"tid": tid, "group": key[tid]["group"], "holdout": key[tid]["holdout"],
+                         "gold": len(gc), "sys": len(sv["claims"]), "hit": len(pairs),
+                         "gold_step": sum(step(c) for c in gc), "sys_step": sum(step(c) for c in sv["claims"]),
+                         "hit_step": sum(1 for a, b in pairs if step(a) and step(b)),
+                         "link_pairs": [(a["link"], b["link"]) for a, b in pairs],
+                         "bg": len(bg), "bg_as_int": sum(1 for b in bg if any(len(_toks(b) & _toks(i)) / max(1, min(len(_toks(b)), len(_toks(i)))) >= 0.5
+                                                                             for i in sv["interventions"])),
+                         "comp_ok": sv["comparator"] == gcomp, "design_ok": (sv["design"] or "not_stated") == gdes})
+        out[s] = {"all": _measures(rows),
+                  "by_group": {gr: _measures([r for r in rows if r["group"] == gr]) for gr in sorted({r["group"] for r in rows})},
+                  "holdout": _measures([r for r in rows if r["holdout"]])}
+        if s in NORMALIZE:
+            un = Counter(u.split("[")[0] for tid in res for u in (res[tid].get("card") or {}).get("unanchored") or [])
+            out[s]["unanchored_fields"] = dict(un)
+    (DIR / "bench_card_score.json").write_text(json.dumps(out, indent=1) + "\n")
+    return out
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()

@@ -31,6 +31,43 @@ def _norm(s: str) -> str:
 
 # ---- validation and admission (sections 4a, 10) ----
 
+def _core_fields(card: HypothesisCard) -> list[tuple[str, object, bool]]:
+    """(name, the object holding `span`, whether its value is known) for the core fields of normalize_card/v12."""
+    p, e, unk = card.pico, card.decisive_experiment, lambda v: v is None or str(v).strip().lower() in ("", UNKNOWN)
+    out = [("pico.population", p.population, not unk(p.population.label))]
+    out += [(f"pico.intervention[{i}]", x, True) for i, x in enumerate(p.intervention)]
+    out += [("pico.comparator", p.comparator, not (unk(p.comparator.type) and unk(p.comparator.label))),
+            ("pico.outcome", p.outcome, not unk(p.outcome.metric)),
+            ("decisive_experiment", e, not all(unk(v) for v in (e.design, e.control, e.n_planned, e.primary_outcome)))]
+    return out
+
+
+def core_span_problems(card: HypothesisCard, raw_text: str) -> list[str]:
+    """normalize_card/v12 (2026-11-12, user decision): every known core field (population, each intervention, comparator,
+    outcome, the stated experiment) carries the exact phrase of the text that states it, as claims do."""
+    text, out = _norm(raw_text), []
+    for name, obj, known in _core_fields(card):
+        span = getattr(obj, "span", "") or ""
+        if known and not span:
+            out.append(f"core {name}: span is missing (copy the exact phrase of the text that states it)")
+        elif span and _norm(span) not in text:
+            out.append(f"core {name}: span is not a verbatim fragment of the text: {span!r}")
+    return out
+
+
+def anchor_core(card: HypothesisCard, raw_text: str) -> list[str]:
+    """After the rounds: a span that is not verbatim is cleared; every known core field without a verbatim span is listed in
+    `card.unanchored` (its value is kept and shown as not anchored)."""
+    text, missing = _norm(raw_text), []
+    for name, obj, known in _core_fields(card):
+        if getattr(obj, "span", "") and _norm(obj.span) not in text:
+            obj.span = ""
+        if known and not getattr(obj, "span", ""):
+            missing.append(name)
+    card.unanchored = missing
+    return missing
+
+
 def validate_card(card: HypothesisCard, raw_text: Optional[str] = None) -> list[str]:
     """Problems with a declared card; empty when it is valid."""
     problems = []

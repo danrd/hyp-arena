@@ -12,7 +12,7 @@ from pydantic import ValidationError
 from hyparena.card.llm import ask
 from hyparena.card.models import Hallmark, HypothesisCard, Relation
 from hyparena.card.canonical import canonicalize
-from hyparena.card.rules import mark_inherited, set_sex_scope, validate_card
+from hyparena.card.rules import anchor_core, core_span_problems, mark_inherited, set_sex_scope, validate_card
 
 TEMPLATE = ("normalize_card", "v6")       # v6 adopted 2026-10-29 by the user's decision, see docs/archive/rules-method.md
 
@@ -77,6 +77,7 @@ def registry_defaults(card: HypothesisCard, raw_text: str) -> list[str]:
     if registry and pop.label in ("", "unknown") and not pop.taxon:
         m = re.search(r"^Conditions:\s*(.+)$", raw_text, re.M)
         pop.label, pop.taxon = (m.group(1).strip()[:120] if m else "trial participants"), "NCBITaxon:9606"
+        pop.span = m.group(1).strip()[:120] if m else ""
         filled.append("population from the registry conditions")
     if card.ai_role != "none" and (not card.ai_role_span or re.sub(r"\s+", " ", card.ai_role_span).strip().lower()
                                    not in re.sub(r"\s+", " ", raw_text).lower()):
@@ -85,7 +86,7 @@ def registry_defaults(card: HypothesisCard, raw_text: str) -> list[str]:
     return filled
 
 
-def _problems(value: dict, raw_text: str, card_id: str) -> tuple[Optional[HypothesisCard], list[str]]:
+def _problems(value: dict, raw_text: str, card_id: str, core: bool = False) -> tuple[Optional[HypothesisCard], list[str]]:
     value = _closed_fields(value)
     try:
         card = HypothesisCard.model_validate({**value, "id": card_id, "raw_id": card_id})
@@ -93,7 +94,7 @@ def _problems(value: dict, raw_text: str, card_id: str) -> tuple[Optional[Hypoth
         return None, [f"{'.'.join(map(str, err['loc']))}: {err['msg']}" for err in e.errors()[:12]]
     set_sex_scope(card, raw_text)                       # `any` from the words "at least one sex" when the model left it out
     canonicalize(card)                                  # dose and age in one wording (L1.8)
-    return mark_inherited(card), validate_card(card, raw_text)
+    return mark_inherited(card), validate_card(card, raw_text) + (core_span_problems(card, raw_text) if core else [])
 
 
 def normalize(client, family: str, raw_text: str, card_id: str, log: Optional[list] = None,
@@ -102,8 +103,10 @@ def normalize(client, family: str, raw_text: str, card_id: str, log: Optional[li
     listing the nearest vocabulary relations (spec 5); if it stays `other`, admission flags it."""
     variables = {"text": raw_text, "relations": ", ".join(typing.get_args(Relation)),
                  "hallmarks": ", ".join(typing.get_args(Hallmark)), "hint": ""}
+    vnum = int((version or TEMPLATE[1]).lstrip("v") or 0)
+    core = vnum >= 12                                   # normalize_card/v12: spans for the core fields, checked like claims
     run = lambda v: ask(client, role="normalize_card", family=family, template=TEMPLATE[0], version=version or TEMPLATE[1],
-                        variables=v, validate=lambda x: _problems(x, raw_text, card_id)[1], rounds=rounds, log=log)[0]
+                        variables=v, validate=lambda x: _problems(x, raw_text, card_id, core)[1], rounds=rounds, log=log)[0]
     value = run(variables)
     if value is None:
         return None, ["no valid JSON from the normalizer"]
@@ -117,15 +120,17 @@ def normalize(client, family: str, raw_text: str, card_id: str, log: Optional[li
         again = run({**variables, "hint": hint})
         if again is not None and _problems(again, raw_text, card_id)[0] is not None:
             value = again
-    card, problems = _problems(value, raw_text, card_id)
+    card, problems = _problems(value, raw_text, card_id)    # core spans are settled by anchor_core below, not by dropping
     if card is not None and problems:                  # drop claims whose span is not verbatim, keep the rest
         bad = {p.split(":")[0] for p in problems if "source_span" in p}
         if bad and len(bad) < len(card.claims):
             card.claims = [c for c in card.claims if c.id not in bad]
             card.edges = [e for e in card.edges if e.from_ not in bad and e.to not in bad]
             problems = validate_card(card, raw_text)
-    if card is not None and int((version or TEMPLATE[1]).lstrip("v") or 0) >= 10:
+    if card is not None and vnum >= 10:
         registry_defaults(card, raw_text)
+    if card is not None and core:
+        anchor_core(card, raw_text)
     return card, problems
 
 
@@ -221,4 +226,6 @@ def normalize_union(client, family: str, raw_text: str, card_id: str, log: Optio
         stab.update(s)
     if len(good) > 1:
         problems = validate_card(card, raw_text)
+        if int((version or TEMPLATE[1]).lstrip("v") or 0) >= 12:
+            anchor_core(card, raw_text)                 # a span the first parse lacked may have come from the second
     return card, problems, stab

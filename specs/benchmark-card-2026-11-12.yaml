@@ -7,6 +7,7 @@ set:
 gold: "Argon, from the text only (the weakest step may use the literature before T); no Claude labels"
 systems:
   ours: "normalize_card/v11, two parses united, code checks (method v3.9)"
+  ours_v12: "normalize_card/v12 (spans for the core fields, user decision 2026-11-12), otherwise as ours; added 2026-11-12 after the answer arrived and before any run"
   base_a: "the same model (Gemini 3.5 Flash), one call, the task in one sentence and an output schema (prompts/card_baseline/v1), no rules, no checks"
 measures:   # claims matched to the gold by phrase overlap of at least half the shorter phrase (normalised), one-to-one
   claims: "precision and recall of the stated steps (all claims; and the steps before the outcome separately); invented steps = system claims whose phrase is not in the text or that match no gold claim in texts where the gold has no step before the outcome"
@@ -20,4 +21,5 @@ intervals: "bootstrap over texts, 2000 resamples; groups and holdout separately"
 thresholds:
   ours_better: "ours above base_a on claim recall or precision with the 95% interval of the paired difference above 0, the other not lower by more than 0.05"
   link_types_usable: "kappa of the link type with Argon at least 0.4 (as in mechanism-chain-comparison); below it the typed chain is not reliable"
-cost: "dry run 2026-11-12 (scripts/bench_card.py dry): ours about 4.7 USD (216 calls), base_a about 0.8 USD; user's go after the answer"
+cost: "dry run 2026-11-12 (scripts/bench_card.py dry): ours and ours_v12 about 4.8 USD each (216 calls), base_a about 0.8 USD; user's go"
+scoring_check: "a run equal to the gold scores 1.0 on claims, steps, link kappa and comparator (2026-11-12, after fixing word splitting for Russian texts)"

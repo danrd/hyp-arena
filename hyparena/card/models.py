@@ -96,6 +96,7 @@ class Population(BaseModel):
     strain: str = UNKNOWN
     sex: str = UNKNOWN
     age_at_start: str = UNKNOWN                  # age of the population when the intervention starts
+    span: str = ""                               # normalize_card/v12: the exact phrase of the text that states this field ("" before v12)
 
     @model_validator(mode="before")
     @classmethod
@@ -118,11 +119,13 @@ class Intervention(BaseModel):
     id: Optional[str] = None
     regimen: str = UNKNOWN
     route: Route = "unknown"                     # diet / water: mixed into food or drinking water
+    span: str = ""                               # normalize_card/v12: the exact phrase of the text that states this field ("" before v12)
 
 
 class Comparator(BaseModel):
     type: str = UNKNOWN                          # placebo | untreated | standard_care | wild_type | monotherapy | active_drug | chronological_age | other
     label: str = UNKNOWN
+    span: str = ""                               # normalize_card/v12: the exact phrase of the text that states this field ("" before v12)
 
     @model_validator(mode="before")
     @classmethod
@@ -133,6 +136,7 @@ class Comparator(BaseModel):
 class Outcome(BaseModel):
     endpoint: Endpoint = "unknown"
     metric: str = UNKNOWN
+    span: str = ""                               # normalize_card/v12: the exact phrase of the text that states this field ("" before v12)
 
 
 class Pico(BaseModel):
@@ -152,6 +156,7 @@ class DecisiveExperiment(BaseModel):
     control: Literal["placebo", "active", "usual_care", "none", "unknown"] = "unknown"
     n_planned: Optional[int] = None
     primary_outcome: str = UNKNOWN
+    span: str = ""                               # normalize_card/v12: the exact phrase of the text that states this field ("" before v12)
 
 
 AlternativeFate = Literal["eliminated", "weakened", "unchanged"]
@@ -198,6 +203,9 @@ class HypothesisCard(BaseModel):
     # code sets "none" when the span is not in the text. An ordinal indicator of the investor profile, not part of P or V.
     ai_role: Literal["none", "analysis", "in_the_loop", "intervention"] = "none"
     ai_role_span: str = ""
+    # normalize_card/v12 (2026-11-12, user decision): core fields whose value has no verbatim span after the rounds; the value is
+    # kept and shown as "from the text, not anchored" (docs/system/card.md)
+    unanchored: list[str] = Field(default_factory=list)
 
     @field_validator("declared_alternatives", mode="before")
     @classmethod

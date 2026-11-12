@@ -129,6 +129,15 @@ kept only when the text gives no direction anywhere; otherwise the link says whi
 "squats change body composition" got 11 findings from the reader, all "neither": with no direction there is no side to take,
 and a null on muscle mass could not count against.
 
+**Spans for the core fields** (normaliser v12, user decision 2026-11-12; `rules.core_span_problems`, `rules.anchor_core`).
+Until v11 only the claims (and the AI role) carried a verbatim span; the population, the interventions, the comparator, the
+outcome and the stated experiment were filled by the model from the text with nothing checked against it. From v12 each of
+them carries `span`, the shortest exact phrase of the text that states it, checked by code like a claim's span and sent back
+to the model with the problem for up to three rounds. A field whose value is known but has no verbatim span after the rounds
+keeps its value and is listed in `unanchored`: the report shows it as "from the text, not anchored" (two labels in
+`docs/system/card.md`). Cards made before v12 have no spans and are not checked for them. The working config stays on v11
+until the card benchmark (`specs/benchmark-card-2026-11-12.yaml`) compares v11 and v12.
+
 **What the normaliser is given** (`hyparena/prompts/normalize_card/v11.j2`): the text only (for a registry trial the
 registry fields as "Name: value" lines, section 2), the closed lists of relations and hallmarks, the rules for every field,
 two worked examples of other hypotheses and an empty JSON skeleton. Not the date T, not the literature, not other
