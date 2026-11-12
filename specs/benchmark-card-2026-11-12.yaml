@@ -23,3 +23,23 @@ thresholds:
   link_types_usable: "kappa of the link type with Argon at least 0.4 (as in mechanism-chain-comparison); below it the typed chain is not reliable"
 cost: "dry run 2026-11-12 (scripts/bench_card.py dry): ours and ours_v12 about 4.8 USD each (216 calls), base_a about 0.8 USD; user's go"
 scoring_check: "a run equal to the gold scores 1.0 on claims, steps, link kappa and comparator (2026-11-12, after fixing word splitting for Russian texts)"
+result:   # 2026-11-12 15:4x-16:3x UTC; scripts/bench_card.py run/score; longevity-kg reviews/argon-2026-11-12/bench_card_{ours_v13,base_a}.json, bench_card_score.json
+  cost: "ours_v13 4.01 USD (231 calls: 120 passed in round 1, 72 in round 2, 39 in round 3), base_a 0.60 USD; two smoke texts of v13 before the run 0.13 USD (a template bug: role still required by the model, fixed)"
+  ran: "ours_v13 and base_a only (user: 'make v13, run the benchmark'); v11 and v12 not run"
+  claims:     {ours_v13: "recall 0.63 (104/166), precision 0.36 (104/287)", base_a: "recall 0.42, precision 0.50"}
+  paired_ours_minus_base: "recall +0.21 [0.13, 0.29], precision -0.14 [-0.21, -0.07]"
+  steps_before_outcome: {ours_v13: "recall 0.34, precision 0.35; invented steps in texts without any: 2", base_a: "recall 0.31, precision 0.25; invented: 14"}
+  link_kappa: {ours_v13: 0.31, base_a: 0.06}
+  candidates: {stated_as_kappa: 0.82, level_kappa: 0.48, background_listed_as_intervention: "ours 0.11, base 0.36"}
+  fields: {comparator_agree: "ours 0.68, base 0.23", design_agree: "ours 0.73, base 0.55", unanchored_core_fields: "1 (a population) in 60 cards"}
+  stability: "mean agreement of the two parses (shared / all claims) 0.46"
+  holdout: "ours recall 0.63, precision 0.37, link kappa 0.30 (as the whole set)"
+  reading: >-
+    By the rule written before the run ours does not pass: recall is higher (+0.21, interval above 0) but precision lower by
+    more than 0.05. Our card writes 287 claims where the gold has 166: the union of two parses that agree on under half of
+    their claims (0.46) adds near-duplicates (H86: the same outcomes with object "human" and "sarcopenic elderly"). Link types
+    agree with Argon at kappa 0.31, under the 0.4 written before: by that rule the typed chain is not reliable enough to weigh
+    links by type without a fix. What works: stated_as (0.82) - the split of role is reliable; background (0.11 listed as an
+    intervention vs 0.36); comparator and design; core spans (one field unanchored in 60 cards); almost no invented steps.
+    Level (0.48) is moderate: keep it as reference. Next: dedupe the union (match claims by span overlap, not by labels), then
+    re-score without new calls on the saved cards; the link-type disagreements by kind.
