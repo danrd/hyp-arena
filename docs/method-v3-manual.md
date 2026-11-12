@@ -460,7 +460,11 @@ writer's own on records or rules.
 
 **Pool report** (`python -m hyparena.report_v2 prospective --n 60` → `report_<n>_v2.html`; data shaped by
 `hyparena/report_v2.py`, page `hyparena/templates/pool_report_v2.html`). A header band (pool title, cut-off date, how many
-scored; fixed at the top on a wide screen only) and five tabs, in this order.
+scored; fixed at the top on a wide screen only) and five tabs, in this order. **Width:** the page uses the width of the
+screen: the header band and the content sit in one container `max-w-[1600px] w-full mx-auto` (Tailwind; not `max-w-7xl` or
+narrower), wide tables scroll sideways inside their own block, never the page; text blocks inside may stay narrower for
+reading. A report written from this manual keeps the same container (an outside report of 2026-11-11 used 1280 px and left
+half of a desktop screen empty).
 
 **Short ids.** Every hypothesis has a short id kept in the hypothesis database (`longevity-kg/hypothesis_db/short_ids.jsonl`,
 `hyparena/short_ids.py`; user decision 2026-11-11): one numbering for every pool and source, with a leading zero (H01 … H99,
