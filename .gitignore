@@ -5,3 +5,5 @@ __pycache__/
 runs/
 data/cache/
 data/bioarena/*/raw/
+data/bioarena/
+data/chatgpt_hypotheses.json

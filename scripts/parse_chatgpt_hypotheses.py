@@ -1,6 +1,6 @@
 """Parse a markdown dump of the ChatGPT hypothesis dialogue into structured JSON.
 
-Usage: python scripts/parse_chatgpt_hypotheses.py conv.md data/chatgpt_hypotheses.json
+Usage: python scripts/parse_chatgpt_hypotheses.py conv.md ../longevity-kg/external/chatgpt_hypotheses.json
 Input: assistant messages separated by '### [assistant]' headers, hypotheses as '**N. Title**'.
 """
 import json

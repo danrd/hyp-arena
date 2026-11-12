@@ -88,7 +88,7 @@ def rows() -> list[dict]:
             outcome_due=it.get("primary_completion"), parent=None, mode=None,
             text="\n".join(x for x in [f"Title: {it.get('title', '')}", f"Summary: {it.get('brief_summary', '')}"] if x))
     # 5. Bio Arena export 2026-10-19
-    ba = HA / "data" / "bioarena" / "2026-10-19" / "hypotheses.jsonl.gz"
+    ba = KG / "external" / "bioarena" / "2026-10-19" / "hypotheses.jsonl.gz"
     if ba.exists():
         for line in gzip.open(ba, "rt"):
             b = json.loads(line)
@@ -99,7 +99,7 @@ def rows() -> list[dict]:
                 mode=None, text=f"{h.get('title', '')}\n\n{h.get('description', '')}",
                 source_scores={"rating": (b.get("ranking") or {}).get("rating"), "rank": (b.get("ranking") or {}).get("rank")})
     # 6. ChatGPT set
-    ch = HA / "data" / "chatgpt_hypotheses.json"
+    ch = KG / "external" / "chatgpt_hypotheses.json"
     if ch.exists():
         d = json.loads(ch.read_text())
         for h in d["hypotheses"]:

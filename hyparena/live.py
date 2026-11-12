@@ -201,7 +201,7 @@ def main() -> None:
     parser.add_argument("--max-calls", type=int, default=40)
     parser.add_argument("--goal", default=None)
     parser.add_argument("--gen", type=int, default=None, help="hypotheses generated in the run (default 4, or 0 with --import-file)")
-    parser.add_argument("--import-file", default=None, help="dataset JSON of externally written hypotheses, e.g. data/chatgpt_hypotheses.json")
+    parser.add_argument("--import-file", default=None, help="dataset JSON of externally written hypotheses, e.g. ../longevity-kg/external/chatgpt_hypotheses.json (private)")
     parser.add_argument("--limit", type=int, default=None, help="with --import-file: use an evenly spaced sample of this size")
     parser.add_argument("--matches", type=float, default=1.0, help="tournament matches per active hypothesis")
     parser.add_argument("--mode", choices=sorted(MODES), default="full",

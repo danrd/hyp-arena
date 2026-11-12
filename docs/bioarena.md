@@ -26,9 +26,9 @@ local hypotheses (causal substance; justified scope; experiment matched to the c
 negative results; the trade-off). No absolute scores, no ties; model-organism findings are not proof of human
 benefit; AI-proposed experiments are not credited to the author.
 
-## The export (`data/bioarena/2026-10-19/`)
+## The export (private: `longevity-kg/external/bioarena/2026-10-19/`)
 
-`python -m hyparena.tools.bioarena --out data/bioarena/<date>` (`hyparena/tools/bioarena.py`); read-only, public
+`python -m hyparena.tools.bioarena --out ../longevity-kg/external/bioarena/<date>` (`hyparena/tools/bioarena.py`); read-only, public
 API, three requests at a time (a hypothesis page takes the server 7–10 s).
 
 | File | Contents |

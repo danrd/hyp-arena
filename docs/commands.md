@@ -63,5 +63,5 @@ Protocol: [`benchmark.md`](benchmark.md), [`specs/benchmark-v2.yaml`](../specs/b
   (`--checkpoint runs/state.sqlite` makes a run resumable with `--resume --thread <id>`; `--criteria`, `--card`,
   `--search europepmc|none`, `--as-of YYYY-MM-DD`). Models: [`configs/models.yaml`](../configs/models.yaml); cheap paid models for
   small tests: [`configs/paid-test.yaml`](../configs/paid-test.yaml).
-- Example data: [`data/chatgpt_hypotheses.json`](../data/chatgpt_hypotheses.json), 27 hypotheses in Russian parsed from a ChatGPT
+- Example data (private): `longevity-kg/external/chatgpt_hypotheses.json`, 27 hypotheses in Russian parsed from a ChatGPT
   dialogue with `scripts/parse_chatgpt_hypotheses.py`; load them into a run with `--import-file`.

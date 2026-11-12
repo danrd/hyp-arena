@@ -2,7 +2,7 @@
 hypotheses with their texts, moderation and evidence dossiers, the Bradley–Terry ranking snapshot, and every
 pairwise match with the judge's reasons. Read-only public JSON API of the site's own front end.
 
-    python -m hyparena.tools.bioarena --out data/bioarena/2026-10-19
+    python -m hyparena.tools.bioarena --out ../longevity-kg/external/bioarena/2026-10-19
 
 Writes status.json, ranking.json (all pages of one snapshot), hypotheses.jsonl.gz (one detail object per
 hypothesis), matches.jsonl.gz (one match per line) and hypotheses.csv (flat summary). Polite: one request at
