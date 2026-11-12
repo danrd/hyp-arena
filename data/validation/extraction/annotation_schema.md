@@ -34,4 +34,4 @@ Rules.
 6. One record per intervention, species and sex group. Two compounds in one sentence are two records with the same quote.
 7. Do not use outside knowledge about the paper, only the abstract text.
 
-Check your file with `python -m scripts.check_annotations <your file> --source <the to_annotate.json you were given>` before opening the pull request.
+(Method v1; the checker `scripts/check_annotations.py` was removed 2026-11-12, see git history.) Check your file with `python -m scripts.check_annotations <your file> --source <the to_annotate.json you were given>` before opening the pull request.

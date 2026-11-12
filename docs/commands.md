@@ -22,7 +22,6 @@ Protocol: [`benchmark.md`](benchmark.md), [`specs/benchmark-v2.yaml`](../specs/b
 
 - Calibration on trials outside the benchmark, in steps: `scripts/calibration.py` (pick, units, run, score, score-v3; usage in its docstring)
 - Retrieval evaluation (gold from CT.gov background references and DrugAge): `scripts/retrieval_eval.py`
-- Offline rule experiments on the saved calibration records: `python -m scripts.rule_experiments`
 - Method v3: `configs/v3-flash.yaml` (`method: v3`), with normalize_card/v10 `configs/v3-flash-n10.yaml`; rules in
   `hyparena/card/rules_v3.py` (variants v3, v3.1), `rules_v32.py` (v3.2, applied to saved records), levels in `v3_levels.py`;
   ASPID over the axes `hyparena/card/aspid_v3.py` with `configs/profiles_v3.yaml`

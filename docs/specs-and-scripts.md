@@ -26,20 +26,13 @@
 | Текущий конвейер и данные | `benchmark_run`, `prospective`, `hypothesis_sources_ctgov`, `*_outcomes` (ctgov, isrctn, drks, anzctr, ntr, umin), `ctgov_flags`, `ctgov_recompute`, `hypothesis_db`, `profile_variants`, `profile_report`, `evolution_check`, `v34_check` (общие функции, его импортируют 35 модулей), `reread_v11` (импортируют 13), `parse_chatgpt_hypotheses`, `validation_table` | актуальный |
 | Бенчмарки и пакеты Argon | `pack16_reading`, `pack5`–`pack13_*` (сборка и анализ), `two_step_reading`, `reading_recall` | `pack16` — актуальный; остальные — история |
 | Проверки метода v3.x | `record_weight_check`, `reread_analysis`, `empty_slots`, `i_cap_check`, `i_recalibration`, `judge_alternatives`, `propose_v2`, `link_scoring_check`, `meta_certainty`, `claim_results`, `fulltext_reread`, `test_model`, `test_model_fixcheck`, `reader_model`, `reader_v12`, `split_reader`, `pilot_crosslink`, `llm_consensus`, `experiment_forecast`, `chain_layers`, `protocol_review`, `graph_r2`, `sources_experiment`, `sources_compare`, `argon_check`, `ablation`, `ceiling`, `error_analysis`, `estimand_check`, `trend_genetics_check`, `ohf_probe`, `normalizer_v8_check`, `extraction_gold_v3`, `retrieval_eval`, `style_check`, `paraphrase_check`, `repeat_l18_l19`, `verifier_agreement`, `blind_check`, `pairwise_calibration`, `naive_baseline`, `drugage_pool`, `extraction_compare`, `fresh_outcomes`, `calibration` | история (у части данные удалены — помечено в шапке) |
-| Метод v1/v2, без спецификации | `aspid_calibration`, `aspid_sensitivity`, `diagnostics_calibration`, `null_calibration`, `itp_label_permutation`, `clean_backtest`, `benchmark_v1`, `normalizer_acceptance`, `normalizer_prompt_check`, `normalizer_prompt_check2`, `check_annotations`, `extraction_pool`, `extraction_fixes_eval`, `extraction_status_impact`, `llm_catalog_check`, `short_ids_seed`, `trace_page`, `rule_experiments` | кандидаты на удаление (раздел ниже) |
+| Проверки агрегации и метода v1 | `aspid_calibration`, `aspid_sensitivity`, `clean_backtest`, `benchmark_v1`, `normalizer_acceptance`, `trace_page` | история |
 
-### Кандидаты на удаление (на решение пользователя)
+### Удалено 2026-11-12
 
-| Скрипт | Почему | Что ещё убрать |
-|---|---|---|
-| `short_ids_seed` | одноразовый посев номеров, заменён `hypothesis_db` | — |
-| `normalizer_prompt_check`, `normalizer_prompt_check2` | сравнение промптов нормализатора v5 и v6 (сейчас v11) | их тесты |
-| `check_annotations`, `extraction_pool`, `extraction_fixes_eval`, `extraction_status_impact` | проверка извлечения L1.17 метода v1 (DrugAge-аннотации) | тесты, если есть |
-| `itp_label_permutation` | перестановочный тест бэктеста ITP-2010 (метод v1) | тест |
-| `aspid_calibration`, `aspid_sensitivity`, `diagnostics_calibration`, `null_calibration` | симуляции агрегации и предупреждений метода v1 | тесты |
-| `llm_catalog_check` | проверка каталога моделей без описания | — |
-| `rule_experiments` | правила метода v2, данные удалены | — |
+`short_ids_seed`, `normalizer_prompt_check`, `normalizer_prompt_check2`, `check_annotations`, `extraction_pool`,
+`extraction_fixes_eval`, `extraction_status_impact`, `itp_label_permutation`, `diagnostics_calibration`, `null_calibration`,
+`llm_catalog_check`, `rule_experiments` и их тесты (12 скриптов, 5 тестов); вернуть — из истории git.
 
-Оставить: `trace_page` (страница пошагового прохода по сохранённому прогону — пригодится для проходов вроде H49),
-`clean_backtest`, `benchmark_v1`, `normalizer_acceptance` (на них стоят спецификации `clean-2024-12-31`, `benchmark-v1`,
-`normalizer-acceptance`).
+Оставлены: `aspid_calibration`, `aspid_sensitivity` (проверки агрегации ASPID, которая действует; тест —
+доказательство в `specs/validation-criteria.yaml`), `trace_page`, `clean_backtest`, `benchmark_v1`, `normalizer_acceptance`.
