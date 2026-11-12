@@ -55,3 +55,12 @@ follow_up:   # 2026-11-12, free, on the saved v13 cards (scripts/bench_card.py d
     5, effect 2) get no link from us (33 known claims with no link): the v13 prompt says a background fact not on the way has
     no link, and the model reads 'known' as 'not on the way'. Then effect vs pathway vs outcome (effect: 0 of 8 agree).
   next: "prompt fix (a known step on the way keeps its link; effect = a state of a tissue or organ, pathway = a molecular or cellular process, using the level) and a re-run of v13 on the 60 texts (about 4 USD), user's go"
+post_hoc_measure:   # added 2026-11-12 AFTER the first run; a diagnosis of granularity, not the measure the rule was written for
+  why: "pack 17 did not tell Argon the manual's atomic rule (one relation, one claim); Argon often wrote several outcome measures as one claim, our card one claim each"
+  definition: "many-to-one: a system claim is right when its phrase shares half of the shorter one's words with some gold claim; a gold claim is found when at least one system claim does (scripts/bench_card.py _m2o)"
+  result: {ours_v13: "recall 0.64, precision 0.74", ours_v13_dedup: "0.63 / 0.72", base_a: "0.45 / 0.72", paired_v13_minus_base: "recall +0.19 [0.12, 0.27], precision +0.02 [-0.07, 0.12]"}
+  weak_group: "registry texts with a stated reason: ours precision 0.56 vs base 0.67 (the steps: known ones off the chain, effect / pathway)"
+  rule_reading: "the rule as written (one-to-one) is not met; under the post-hoc measure ours is higher on recall and not lower on precision. The decision on v13 / v14 stays with the user; future packs state the atomic rule"
+prompt_fix:
+  v14: "normalize_card/v14 = v13 + every step on the way keeps its link whether claimed or known (known is how the text states it, not that it is off the chain); pathway = a molecular or cellular process, effect = a state of a tissue or organ (the definitions pack 17 gave Argon); 2026-11-12, not run"
+  known_steps_without_link: "v13: 37 of 287 claims (33 after dedupe); base_a: 0"

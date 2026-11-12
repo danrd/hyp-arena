@@ -157,7 +157,7 @@ core and the reference fields are listed in `docs/system/card.md`). On top of v1
 - **registry design fields by code** (allocation, model, masking and who is masked, purpose, arms with their types, planned
   enrollment) from the lines the text builder writes, kept as `decisive_experiment.registry` (reference; an input of the
   planned code rule for d); **references the text names** (PMID, DOI) as `author_refs`.
-Saved cards (v10, v11) keep their fields and scores; nothing is recomputed. The working config moves to v13 only after the card
+**v14** (2026-11-12, after the card benchmark): every step on the way to the outcome keeps its link whether claimed or known (v11-v13 also told the model that a background premise has no link, and v13 put 37 known steps off the chain); pathway is a molecular or cellular process, effect a state of a tissue or organ. Saved cards (v10, v11) keep their fields and scores; nothing is recomputed. The working config moves to v13 only after the card
 benchmark (`specs/benchmark-card-2026-11-12.yaml`).
 
 **What the normaliser is given** (`hyparena/prompts/normalize_card/v11.j2`): the text only (for a registry trial the

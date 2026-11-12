@@ -26,8 +26,8 @@ KG = Path(__file__).resolve().parents[2] / "longevity-kg"
 DIR = KG / "reviews" / "argon-2026-11-12"
 CONFIG = "configs/v3-flash-n10.yaml"
 PRICE = {"google": (1.5, 9.0), "deepseek": (0.15, 0.6)}      # USD per M tokens
-SYSTEMS = ("ours", "ours_v12", "ours_v13", "ours_v13_dedup", "base_a")
-NORMALIZE = {"ours": "v11", "ours_v12": "v12", "ours_v13": "v13", "ours_v13_dedup": "v13"}
+SYSTEMS = ("ours", "ours_v12", "ours_v13", "ours_v13_dedup", "ours_v14", "base_a")
+NORMALIZE = {"ours": "v11", "ours_v12": "v12", "ours_v13": "v13", "ours_v13_dedup": "v13", "ours_v14": "v14"}
 
 
 def texts() -> list[dict]:
@@ -111,6 +111,14 @@ def _match(sys_claims: list[dict], gold_claims: list[dict]) -> list[tuple[dict, 
     return out
 
 
+def _m2o(sys_claims: list[dict], gold_claims: list[dict]) -> tuple[int, int]:
+    """Many-to-one (added 2026-11-12 AFTER the first run, a diagnosis of granularity, not the spec's measure): a system claim is
+    right when its phrase shares half of the shorter one's words with some gold claim; a gold claim is found when at least one
+    system claim does. Returns (gold claims found, system claims right)."""
+    ok = lambda a, b: (ta := _toks(a["phrase"])) and (tb := _toks(b["phrase"])) and len(ta & tb) / min(len(ta), len(tb)) >= 0.5
+    return sum(any(ok(a, g) for a in sys_claims) for g in gold_claims), sum(any(ok(a, g) for g in gold_claims) for a in sys_claims)
+
+
 def _sys_view(system: str, card: dict) -> dict:
     """The system's card in the gold's terms."""
     if not card:
@@ -155,6 +163,9 @@ def _measures(rows: list[dict]) -> dict:
          "step_recall": tot("hit_step") / tot("gold_step") if tot("gold_step") else None,
          "step_precision": tot("hit_step") / tot("sys_step") if tot("sys_step") else None,
          "invented_steps_in_texts_without_steps": sum(r["sys_step"] for r in rows if r["gold_step"] == 0),
+         "m2o_recall_post_hoc": tot("m2o_found") / tot("gold") if tot("gold") else None,
+         "m2o_precision_post_hoc": tot("m2o_right") / tot("sys") if tot("sys") else None,
+         "known_steps_without_link": tot("known_unlinked"),
          "link_kappa": _kappa([p for r in rows for p in r["link_pairs"]]),
          "stated_as_kappa": _kappa([p for r in rows for p in r.get("stated_pairs", [])]),
          "level_kappa": _kappa([p for r in rows for p in r.get("level_pairs", [])]),
@@ -208,6 +219,8 @@ def score() -> dict:
                          "gold_step": sum(step(c) for c in gc), "sys_step": sum(step(c) for c in sv["claims"]),
                          "hit_step": sum(1 for a, b in pairs if step(a) and step(b)),
                          "link_pairs": [(a["link"], b["link"]) for a, b in pairs],
+                         "m2o_found": _m2o(sv["claims"], gc)[0], "m2o_right": _m2o(sv["claims"], gc)[1],
+                         "known_unlinked": sum(1 for c in sv["claims"] if c.get("stated_as") == "known" and c["link"] == "none"),
                          "stated_pairs": [(a.get("stated_as"), b.get("stated_as")) for a, b in pairs if a.get("stated_as")],
                          "level_pairs": [(a.get("level"), b.get("level")) for a, b in pairs if a.get("level")],
                          "bg": len(bg), "bg_as_int": sum(1 for b in bg if any(len(_toks(b) & _toks(i)) / max(1, min(len(_toks(b)), len(_toks(i)))) >= 0.5
