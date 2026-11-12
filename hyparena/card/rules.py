@@ -36,6 +36,7 @@ def _core_fields(card: HypothesisCard) -> list[tuple[str, object, bool]]:
     p, e, unk = card.pico, card.decisive_experiment, lambda v: v is None or str(v).strip().lower() in ("", UNKNOWN)
     out = [("pico.population", p.population, not unk(p.population.label))]
     out += [(f"pico.intervention[{i}]", x, True) for i, x in enumerate(p.intervention)]
+    out += [(f"pico.background[{i}]", x, True) for i, x in enumerate(getattr(p, "background", []) or [])]
     out += [("pico.comparator", p.comparator, not (unk(p.comparator.type) and unk(p.comparator.label))),
             ("pico.outcome", p.outcome, not unk(p.outcome.metric)),
             ("decisive_experiment", e, not all(unk(v) for v in (e.design, e.control, e.n_planned, e.primary_outcome)))]

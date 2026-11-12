@@ -61,10 +61,15 @@ class Claim(BaseModel):
     object: Entity
     qualifiers: dict[str, str] = Field(default_factory=dict)   # species, strain, sex, tissue, dose, age_at_start, comparator, direction, measure
     inherited_from_pico: list[str] = Field(default_factory=list)   # species / strain copied from PICO (spec 9)
-    role: Role
+    role: Role = "premise"                       # v13: derived by code from primary and stated_as (normalizer.derive_roles)
     link: Optional[Link] = None                  # v3: delivery (done and reached), engagement (target), pathway, effect, outcome
     source_span: str = ""                        # verbatim fragment of the hypothesis text (empty only for verifier-added claims)
     note: str = ""                               # e.g. why `other` was used
+    # normalize_card/v13 (2026-11-12): the place in the chain (`link`) and the status in the author's reasoning are separate;
+    # `role` is derived from them by code (normalizer.derive_roles) so that the rules reading it keep working
+    primary: Optional[bool] = None               # the main outcome of the hypothesis (one claim with link outcome)
+    stated_as: Optional[Literal["claimed", "known", "analogy"]] = None
+    level: Optional[Literal["molecule", "cell", "tissue", "organ", "organism"]] = None   # reference only (not scored)
     sex_scope: Literal["any", "unspecified"] = "unspecified"   # `any`: the text claims the effect in at least one sex (an effect in one sex is enough)
 
 
@@ -136,6 +141,7 @@ class Comparator(BaseModel):
 class Outcome(BaseModel):
     endpoint: Endpoint = "unknown"
     metric: str = UNKNOWN
+    direction: str = UNKNOWN                     # v13: increase | decrease | improve | worsen | unknown
     span: str = ""                               # normalize_card/v12: the exact phrase of the text that states this field ("" before v12)
 
 
@@ -143,6 +149,7 @@ class Pico(BaseModel):
     population: Population = Field(default_factory=Population)
     intervention: list[Intervention] = Field(default_factory=list)
     comparator: Comparator = Field(default_factory=Comparator)
+    background: list[Intervention] = Field(default_factory=list)   # v13: what every group receives alike (not an intervention)
     outcome: Outcome = Field(default_factory=Outcome)
     time: str = UNKNOWN
 
@@ -156,6 +163,9 @@ class DecisiveExperiment(BaseModel):
     control: Literal["placebo", "active", "usual_care", "none", "unknown"] = "unknown"
     n_planned: Optional[int] = None
     primary_outcome: str = UNKNOWN
+    primary_outcomes: list[str] = Field(default_factory=list)      # v13: each primary outcome with its time frame
+    duration: str = UNKNOWN                      # v13: as the text gives it; duration_class is computed from it by code
+    registry: dict = Field(default_factory=dict) # v13: design fields of a registry text parsed by code (allocation, model, masking, arms)
     span: str = ""                               # normalize_card/v12: the exact phrase of the text that states this field ("" before v12)
 
 
@@ -206,6 +216,8 @@ class HypothesisCard(BaseModel):
     # normalize_card/v12 (2026-11-12, user decision): core fields whose value has no verbatim span after the rounds; the value is
     # kept and shown as "from the text, not anchored" (docs/system/card.md)
     unanchored: list[str] = Field(default_factory=list)
+    expected_effect: Optional[dict] = None       # v13: {size, compared_to, time_point, span} when the text names a size
+    author_refs: list[str] = Field(default_factory=list)          # v13: PMIDs / DOIs named in the text (code)
 
     @field_validator("declared_alternatives", mode="before")
     @classmethod

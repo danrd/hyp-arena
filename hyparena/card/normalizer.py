@@ -92,6 +92,7 @@ def _problems(value: dict, raw_text: str, card_id: str, core: bool = False) -> t
         card = HypothesisCard.model_validate({**value, "id": card_id, "raw_id": card_id})
     except ValidationError as e:
         return None, [f"{'.'.join(map(str, err['loc']))}: {err['msg']}" for err in e.errors()[:12]]
+    derive_roles(card)                                  # v13: `role` from `primary` and `stated_as` (no-op before v13)
     set_sex_scope(card, raw_text)                       # `any` from the words "at least one sex" when the model left it out
     canonicalize(card)                                  # dose and age in one wording (L1.8)
     return mark_inherited(card), validate_card(card, raw_text) + (core_span_problems(card, raw_text) if core else [])
@@ -129,6 +130,8 @@ def normalize(client, family: str, raw_text: str, card_id: str, log: Optional[li
             problems = validate_card(card, raw_text)
     if card is not None and vnum >= 10:
         registry_defaults(card, raw_text)
+    if card is not None and vnum >= 13:
+        v13_code_fields(card, raw_text)
     if card is not None and core:
         anchor_core(card, raw_text)
     return card, problems
@@ -175,6 +178,8 @@ def union_cards(a: HypothesisCard, b: HypothesisCard, raw_text: str) -> tuple[Hy
         used.add(nc.id)
         if nc.role == "outcome":                       # one outcome claim: the first parse's
             nc.role = "premise"
+            if nc.primary:
+                nc.primary = False
         card.claims.append(nc)
         keys[k] = nc.id
         idmap[c.id] = nc.id
@@ -226,6 +231,93 @@ def normalize_union(client, family: str, raw_text: str, card_id: str, log: Optio
         stab.update(s)
     if len(good) > 1:
         problems = validate_card(card, raw_text)
+        if int((version or TEMPLATE[1]).lstrip("v") or 0) >= 13:
+            card.decisive_experiment.duration_class = "unknown"
+            v13_code_fields(card, raw_text)             # fields the second parse filled (duration, primary outcomes)
         if int((version or TEMPLATE[1]).lstrip("v") or 0) >= 12:
             anchor_core(card, raw_text)                 # a span the first parse lacked may have come from the second
     return card, problems, stab
+
+
+# ---- normalize_card/v13 (2026-11-12, user decisions of the card walkthrough) ------------------------------------------------
+PRE_OUTCOME = ("delivery", "engagement", "pathway", "effect")
+CONTROL_BY_COMPARATOR = {"placebo": "placebo", "sham": "placebo", "active": "active", "usual_care": "usual_care",
+                         "no_intervention": "none"}
+
+
+def derive_roles(card: HypothesisCard) -> None:
+    """v13 cards state `primary` and `stated_as`; `role` (read by the rules of v1-v3) is derived from them: the primary outcome
+    is `outcome`, an analogy `analog`, a claimed step before the outcome `mechanism`, everything else `premise`."""
+    if not any(c.primary is not None or c.stated_as for c in card.claims):
+        return                                          # a card before v13
+    outs = [c for c in card.claims if c.link == "outcome"]
+    prim = [c for c in outs if c.primary] or outs[:1] or [c for c in card.claims if c.stated_as != "analogy"][:1]
+    main = prim[0] if prim else None
+    for c in card.claims:
+        c.primary = c is main
+        c.role = ("outcome" if c is main else "analog" if c.stated_as == "analogy"
+                  else "mechanism" if c.link in PRE_OUTCOME and c.stated_as != "known" else "premise")
+
+
+def duration_class(text: str) -> str:
+    """weeks / months / years / decades from a duration written in the text, by its length in days (the longest one named):
+    under 90 days weeks, under 2 years months, under 10 years years, else decades (v13; the normaliser before v13 chose the
+    class itself and was not consistent: 12 weeks "weeks" but 24 weeks "months"); unknown when no duration is written."""
+    words = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
+             "eleven": 11, "twelve": 12, "eighteen": 18, "twenty": 20, "twenty-four": 24, "thirty": 30, "thirty-six": 36}
+    t = re.sub(r"\b(" + "|".join(sorted(words, key=len, reverse=True)) + r")\b", lambda m: str(words[m.group(1)]), (text or "").lower())
+    nums = [(float(n), u) for n, u in re.findall(r"(\d+(?:\.\d+)?)\s*-?\s*(day|week|month|year)", t)]
+    if not nums:
+        return "unknown"
+    days = max(n * {"day": 1, "week": 7, "month": 30.4, "year": 365}[u] for n, u in nums)
+    return "weeks" if days < 90 else "months" if days < 730 else "years" if days < 3650 else "decades"
+
+
+def registry_design(raw_text: str) -> dict:
+    """The design and arm lines the text builder writes for a registry trial (scripts/benchmark_run._ctgov_design), as fields."""
+    out = {}
+    m = re.search(r"^Design:\s*(.+)$", raw_text, re.M)
+    if m:
+        d = m.group(1).lower()
+        out["allocation"] = "randomized" if "non-randomized" not in d and "randomized" in d else (
+            "non_randomized" if "non-randomized" in d else "unknown")
+        mm = re.search(r"masking (\w+)(?: \(([^)]*)\))?", d)
+        out["masking"] = mm.group(1) if mm else "unknown"
+        out["masked"] = [x.strip() for x in mm.group(2).split(",")] if mm and mm.group(2) else []
+        model = re.search(r"\b(parallel|crossover|factorial|single group|sequential)\b", d)
+        out["model"] = model.group(1) if model else "unknown"
+        pp = re.search(r"primary purpose ([a-z_ ]+)", d)
+        out["purpose"] = pp.group(1).strip() if pp else "unknown"
+    m = re.search(r"^Arms:\s*(.+)$", raw_text, re.M)
+    if m:
+        out["arms"] = [{"label": a.group(1).strip(), "type": a.group(2).strip()}
+                       for a in re.finditer(r"(?:^|; )([^;:()]+?) \((experimental|active comparator|placebo comparator|sham comparator|"
+                                            r"no intervention|other)\)", m.group(1))]
+    m = re.search(r"^Planned enrollment:\s*(\d+)", raw_text, re.M)
+    if m:
+        out["planned_enrollment"] = int(m.group(1))
+    return out
+
+
+def author_refs(raw_text: str) -> list[str]:
+    pm = [f"PMID:{x}" for x in re.findall(r"PMID[:\s]*(\d{6,8})", raw_text, re.I)]
+    doi = [f"doi:{x.rstrip('.,;)')}" for x in re.findall(r"\b(10\.\d{4,9}/[^\s\"<>]+)", raw_text)]
+    return list(dict.fromkeys(pm + doi))
+
+
+def v13_code_fields(card: HypothesisCard, raw_text: str) -> None:
+    """Fields v13 leaves to code: the experiment's control from the comparator (one vocabulary), its duration class from the
+    stated duration, the joined primary outcomes (several are equal, rules_v3.outcome_group), the registry design fields,
+    the references the text names."""
+    e, p = card.decisive_experiment, card.pico
+    e.control = CONTROL_BY_COMPARATOR.get(p.comparator.type, e.control)
+    if e.duration_class == "unknown":
+        e.duration_class = duration_class(f"{e.duration} {p.time}")
+    if e.primary_outcomes and _unknown(e.primary_outcome):
+        e.primary_outcome = "; ".join(e.primary_outcomes)
+    if _unknown(e.endpoint):
+        e.endpoint = p.outcome.metric
+    e.registry = registry_design(raw_text)
+    if e.n_planned is None and e.registry.get("planned_enrollment"):
+        e.n_planned = e.registry["planned_enrollment"]
+    card.author_refs = author_refs(raw_text)

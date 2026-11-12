@@ -26,8 +26,8 @@ KG = Path(__file__).resolve().parents[2] / "longevity-kg"
 DIR = KG / "reviews" / "argon-2026-11-12"
 CONFIG = "configs/v3-flash-n10.yaml"
 PRICE = {"google": (1.5, 9.0), "deepseek": (0.15, 0.6)}      # USD per M tokens
-SYSTEMS = ("ours", "ours_v12", "base_a")
-NORMALIZE = {"ours": "v11", "ours_v12": "v12"}
+SYSTEMS = ("ours", "ours_v12", "ours_v13", "base_a")
+NORMALIZE = {"ours": "v11", "ours_v12": "v12", "ours_v13": "v13"}
 
 
 def texts() -> list[dict]:
@@ -116,11 +116,14 @@ def _sys_view(system: str, card: dict) -> dict:
     if not card:
         return {"claims": [], "interventions": [], "comparator": None, "design": None}
     if system in NORMALIZE:
-        claims = [{"phrase": c.get("source_span") or "", "link": c.get("link") or "none", "primary": c.get("role") == "outcome"}
+        claims = [{"phrase": c.get("source_span") or "", "link": c.get("link") or "none", "primary": c.get("role") == "outcome",
+                   "stated_as": c.get("stated_as"), "level": c.get("level")}
                   for c in card.get("claims") or []]
         ints = [(x.get("label") or "") + " " + (x.get("span") or "") for x in card["pico"].get("intervention") or []]
-        comp = {"placebo": "placebo", "untreated": "no_intervention", "standard_care": "usual_care", "active_drug": "active",
-                "monotherapy": "active", "other": "other", "unknown": "none_stated"}.get(card["pico"]["comparator"].get("type"), "other")
+        comp = {"placebo": "placebo", "sham": "sham", "active": "active", "usual_care": "usual_care",
+                "no_intervention": "no_intervention", "untreated": "no_intervention", "standard_care": "usual_care",
+                "active_drug": "active", "monotherapy": "active", "other": "other", "unknown": "none_stated"}.get(
+                    card["pico"]["comparator"].get("type"), "other")
         design = {"rct": "randomised", "cluster_rct": "randomised", "single_arm": "single_arm", "pilot": "not_stated",
                   "observational": "observational", "unknown": "not_stated", "other": "not_stated"}.get(card["decisive_experiment"].get("design"))
         return {"claims": claims, "interventions": ints, "comparator": comp, "design": design,
@@ -153,6 +156,8 @@ def _measures(rows: list[dict]) -> dict:
          "step_precision": tot("hit_step") / tot("sys_step") if tot("sys_step") else None,
          "invented_steps_in_texts_without_steps": sum(r["sys_step"] for r in rows if r["gold_step"] == 0),
          "link_kappa": _kappa([p for r in rows for p in r["link_pairs"]]),
+         "stated_as_kappa": _kappa([p for r in rows for p in r.get("stated_pairs", [])]),
+         "level_kappa": _kappa([p for r in rows for p in r.get("level_pairs", [])]),
          "background_listed_as_intervention": (tot("bg_as_int") / tot("bg")) if tot("bg") else None,
          "comparator_agree": sum(r["comp_ok"] for r in rows) / len(rows) if rows else None,
          "design_agree": sum(r["design_ok"] for r in rows) / len(rows) if rows else None,
@@ -187,6 +192,8 @@ def score() -> dict:
                          "gold_step": sum(step(c) for c in gc), "sys_step": sum(step(c) for c in sv["claims"]),
                          "hit_step": sum(1 for a, b in pairs if step(a) and step(b)),
                          "link_pairs": [(a["link"], b["link"]) for a, b in pairs],
+                         "stated_pairs": [(a.get("stated_as"), b.get("stated_as")) for a, b in pairs if a.get("stated_as")],
+                         "level_pairs": [(a.get("level"), b.get("level")) for a, b in pairs if a.get("level")],
                          "bg": len(bg), "bg_as_int": sum(1 for b in bg if any(len(_toks(b) & _toks(i)) / max(1, min(len(_toks(b)), len(_toks(i)))) >= 0.5
                                                                              for i in sv["interventions"])),
                          "comp_ok": sv["comparator"] == gcomp, "design_ok": (sv["design"] or "not_stated") == gdes})
