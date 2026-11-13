@@ -1,0 +1,406 @@
+<title>Разбор карточки H86 и H49</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a registry record pinned on the left, the card read field by field on the right, footnotes under each tab */
+:root{
+  --bg:#f6f7f9; --surface:#ffffff; --ink:#1b2430; --muted:#5b6676; --line:#dde2e9;
+  --accent:#1f5f8b; --accent-soft:#dbe8f2;
+  --o-span:#1f5f8b; --o-span-bg:#dbe8f2;
+  --o-reg:#6b4c9a;  --o-reg-bg:#ebe4f5;
+  --o-code:#2e6b4f; --o-code-bg:#dcefe5;
+  --o-llm:#8a5a12;  --o-llm-bg:#f6e8cf;
+  --o-none:#8a2f2f; --o-none-bg:#f6dede;
+  --mark:#fff1a8; --mark-strong:#ffd54a;
+  --f-body:"Golos Text", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12161c; --surface:#1a2029; --ink:#e3e8ef; --muted:#9aa5b4; --line:#2c3440;
+  --accent:#7db6e0; --accent-soft:#1d3346;
+  --o-span:#8fc3ea; --o-span-bg:#1d3346; --o-reg:#c3a8ec; --o-reg-bg:#2e2342;
+  --o-code:#8fd3b0; --o-code-bg:#1c3529; --o-llm:#e8bf7a; --o-llm-bg:#3a2c14;
+  --o-none:#ee9a9a; --o-none-bg:#3d1f1f; --mark:#4a4220; --mark-strong:#8a7012; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12161c; --surface:#1a2029; --ink:#e3e8ef; --muted:#9aa5b4; --line:#2c3440;
+  --accent:#7db6e0; --accent-soft:#1d3346;
+  --o-span:#8fc3ea; --o-span-bg:#1d3346; --o-reg:#c3a8ec; --o-reg-bg:#2e2342;
+  --o-code:#8fd3b0; --o-code-bg:#1c3529; --o-llm:#e8bf7a; --o-llm-bg:#3a2c14;
+  --o-none:#ee9a9a; --o-none-bg:#3d1f1f; --mark:#4a4220; --mark-strong:#8a7012; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;margin:0}
+.wrap{max-width:1280px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{font-size:26px;line-height:1.2;margin:0 0 6px;font-weight:700;text-wrap:balance}
+h2{font-size:18px;margin:0;font-weight:600;text-wrap:balance}
+h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0;font-weight:600}
+p{margin:0}
+.lede{color:var(--muted);max-width:75ch}
+.legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:14px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.chip{display:inline-block;font-size:12px;line-height:1.3;padding:2px 8px;border-radius:999px;white-space:nowrap;font-weight:500}
+.o-span{background:var(--o-span-bg);color:var(--o-span)} .o-reg{background:var(--o-reg-bg);color:var(--o-reg)}
+.o-code{background:var(--o-code-bg);color:var(--o-code)} .o-llm{background:var(--o-llm-bg);color:var(--o-llm)}
+.o-none{background:var(--o-none-bg);color:var(--o-none)}
+.tabs{display:flex;gap:4px;margin:24px 0 0;border-bottom:1px solid var(--line)}
+.tab{appearance:none;border:0;background:none;color:var(--muted);font:600 15px var(--f-body);padding:10px 16px;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tab:focus-visible,.field:focus-visible,.claim:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 22px;padding:16px 0;font-size:14px;color:var(--muted)}
+.meta b{color:var(--ink);font-weight:600}
+.grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:28px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+.textcol{position:sticky;top:max(12px,env(safe-area-inset-top,0px));min-width:0}
+@media (max-width:900px){.textcol{position:static}}
+.record{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px;font-family:var(--f-mono);font-size:12.5px;line-height:1.6;max-height:78vh;overflow:auto}
+@media (max-width:900px){.record{max-height:none}}
+.record .ln{margin:0 0 8px;overflow-wrap:anywhere}
+.record .key{color:var(--muted)}
+.record mark{background:var(--mark);color:inherit;border-radius:2px;padding:0 1px}
+.record mark.on{background:var(--mark-strong)}
+.hint{font-size:12.5px;color:var(--muted);margin-top:8px}
+.cardcol{display:flex;flex-direction:column;gap:26px;min-width:0}
+.block{display:flex;flex-direction:column;gap:10px}
+.block-head{display:flex;flex-direction:column;gap:2px}
+.block-head p{color:var(--muted);font-size:13.5px}
+.field,.claim{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;display:grid;gap:6px;cursor:pointer}
+.field.active,.claim.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.frow{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px}
+.fname{font-weight:600}
+.fval{font-family:var(--f-mono);font-size:13px;overflow-wrap:anywhere}
+.how{font-size:14px}
+.reads{font-size:13px;color:var(--muted)}
+.reads b{font-weight:600;color:var(--muted)}
+sup.fn a{font-size:11px;color:var(--accent);text-decoration:none;font-weight:600;padding:0 1px}
+.triple{font-family:var(--f-mono);font-size:13px;overflow-wrap:anywhere}
+.triple .rel{color:var(--accent)}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:12px;border:1px solid var(--line);border-radius:4px;padding:1px 7px;color:var(--muted);white-space:nowrap}
+.tag.main{border-color:var(--accent);color:var(--accent);font-weight:600}
+.chain{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto}
+.chain-row{display:grid;grid-template-columns:repeat(5,minmax(118px,1fr));gap:8px;min-width:640px}
+.slot{display:flex;flex-direction:column;gap:6px}
+.slot-h{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:2px solid var(--line);padding-bottom:4px;position:relative}
+.slot-h::after{content:"→";position:absolute;right:-8px;top:-1px;color:var(--muted)}
+.slot:last-child .slot-h::after{content:none}
+.node{font-size:12.5px;border-radius:5px;padding:6px 8px;border:1px solid var(--accent);background:var(--accent-soft);cursor:pointer}
+.node.known{border-style:dashed;background:transparent}
+.node.empty{border:1px dashed var(--line);background:transparent;color:var(--muted);cursor:default}
+.chain-legend{font-size:12.5px;color:var(--muted);margin-top:10px;display:flex;flex-wrap:wrap;gap:6px 16px}
+.notes{border-top:1px solid var(--line);padding-top:16px;display:flex;flex-direction:column;gap:10px}
+.notes ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:10px}
+.notes li{max-width:80ch}
+.notes li:target{background:var(--accent-soft);border-radius:4px}
+.notes .sev{font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-right:6px}
+.sev-hi{color:var(--o-none)} .sev-mid{color:var(--o-llm)} .sev-lo{color:var(--muted)}
+.foot{margin-top:40px;font-size:13px;color:var(--muted);max-width:90ch;display:flex;flex-direction:column;gap:6px}
+code{font-family:var(--f-mono);font-size:.92em}
+@media (prefers-reduced-motion:no-preference){.field,.claim{transition:border-color .15s,box-shadow .15s}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Разбор карточки H86 и H49</h1>
+    <p class="lede">Приложение к мануалу этапа «Карточка» (<a href="https://github.com/danrd/hyp-arena/blob/main/docs/system/card.md">docs/system/card.md</a>). Каждая карточка построена текущим нормализатором (два независимых разбора, объединение) по тексту записи реестра, как его собирает код. Для каждого поля: значение, как оно получено из данных, откуда (метка происхождения) и что в оценке его читает. Спорное по полю вынесено в сноски под карточкой. Нажмите на поле или утверждение, и в тексте слева выделится фраза, на которой оно держится.</p>
+    <div class="legend" aria-label="Метки происхождения">
+      <span><i class="chip o-span">из текста, с опорой</i> LLM записала значение и дословную фразу, код проверил фразу</span>
+      <span><i class="chip o-reg">из полей реестра</i> код разобрал строки Design, Arms, Planned enrollment</span>
+      <span><i class="chip o-code">правилом кода</i> выведено из других полей по фиксированному правилу</span>
+      <span><i class="chip o-llm">LLM, без опоры</i> суждение модели по тексту, фразы нет</span>
+      <span><i class="chip o-none">пусто</i> в тексте этого нет</span>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Гипотеза">
+    <button class="tab" role="tab" id="tab-h86" data-h="h86" aria-selected="true">H86 · белок и витамин D</button>
+    <button class="tab" role="tab" id="tab-h49" data-h="h49" aria-selected="false">H49 · приседания</button>
+  </nav>
+
+  <main id="view"></main>
+
+  <footer class="foot">
+    <p>Данные: <code>longevity-kg/hypothesis_sources/calibration/walkthrough_H86/card_v14.json</code>, <code>…/prospective/walkthrough_H49/card_v14.json</code> (карточка, оба разбора, журнал вызовов). Тексты собраны <code>scripts/benchmark_run.build_texts</code> из текущей записи ClinicalTrials.gov 2026-11-13. Правила кода — <code>hyparena/card/normalizer.py</code> (<code>derive_roles</code>, <code>v13_code_fields</code>, <code>registry_design</code>, <code>duration_class</code>, <code>dedupe_claims</code>).</p>
+    <p>Карточка — только то, что сказано в тексте. Найденное потом (статьи, сила звеньев, альтернативы, баллы) сюда не входит и разбирается на следующих этапах со своими мануалами.</p>
+  </footer>
+</div>
+
+<script>
+const ORIGIN = {span:["o-span","из текста, с опорой"], reg:["o-reg","из полей реестра"], code:["o-code","правилом кода"], llm:["o-llm","LLM, без опоры"], none:["o-none","пусто"]};
+const LINKS = [["delivery","доставка"],["engagement","мишень"],["pathway","путь"],["effect","эффект"],["outcome","исход"]];
+const LINK_RU = Object.fromEntries(LINKS);
+const STATED = {claimed:"утверждается", known:"известное", analogy:"аналогия"};
+const LEVEL = {molecule:"молекула", cell:"клетка", tissue:"ткань", organ:"орган", organism:"организм"};
+
+const H = {
+h86: {
+  meta: [["Запись","NCT02402608"],["T","2014-11-01"],["Что такое T","дата первичного завершения: запись опубликована 2015-03-30, позже завершения"],["Пул","калибровка (исход известен)"],["Устойчивость","6 из 6 утверждений общие для двух разборов"]],
+  text: `A trial registered to test the following.
+Title: Whey Protein, Amino Acids and Vitamin D Supplementation With Physical Activity Increases Muscle Mass and Strength, Functionality and Quality of Life and Decreases Inflammation in Sarcopenic Elderly
+Conditions: Sarcopenia
+Interventions: dietary supplement (dietary_supplement): oral essential amino acid (EAA), whey protein and vitamin D mixture; placebo (dietary_supplement): placebo consisting of an equicaloric amount of maltodextrin with the same flavour and appearance as for the intervention product
+Summary: This 3 months randomized, double-blind, placebo-controlled supplementation trial tested the hypothesis that nutritional supplementation with whey protein, essential amino acids and vitamin D concurrent with regular, controlled physical activity would increase muscle mass, strength, physical functional, quality of life, and decrease the risk of malnutrition and inflammation in sarcopenic elderly.
+Description: This 3 months randomized, double-blind, placebo-controlled supplementation trial tested the hypothesis that nutritional supplementation (32 g) with whey protein, essential amino acids and vitamin D concurrent with regular, controlled physical activity would increase muscle mass (assessed by DXA), strength (assessed by handgrip dynamometer), physical functional (assessed by ADL), quality of life (assessed by SF-36), and decrease the risk of malnutrition (assessed by MNA and IGF-I) and inflammation (assessed by C-reactive protein) in sarcopenic elderly.
+Design: randomized, parallel, masking double (participant, investigator)
+Arms: dietary supplement (active comparator): oral essential amino acid (EAA), whey protein and vitamin D mixture (32 g); placebo (placebo comparator): placebo consisting of an equicaloric amount of maltodextrin with the same flavour and appearance as for the intervention product
+Primary outcomes: muscle mass assessed by dual x-ray absorptiometry (3 months)`,
+  core: [
+    {id:"pop", name:"Популяция", val:"sarcopenic elderly · вид: человек · возраст: elderly · пол: неизвестен", origin:"span", span:"sarcopenic elderly",
+     how:"Фраза «sarcopenic elderly» из Summary и Description; код нашёл её в тексте дословно. Вид «человек» модель поставила по смыслу, отдельной фразы для вида нет. Возраст числом не назван, поэтому остался словом.",
+     reads:"запрос поиска по точной популяции; контекст записей статей (запись в другой популяции весит ½)", notes:[1]},
+    {id:"int", name:"Вмешательство", val:"essential amino acid (EAA), whey protein and vitamin D mixture · тип: diet · доза: 32 g · путь: oral", origin:"span", span:"oral essential amino acid (EAA), whey protein and vitamin D mixture (32 g)",
+     how:"Фраза из строки Arms (группа добавки). Доза «32 g» стоит в той же фразе; путь «oral» — первое слово фразы. Тип «diet» — из закрытого словаря карточки: отдельного типа для пищевой добавки в нём нет.",
+     reads:"запросы поиска; совпадение вмешательства в записях статей (точное / класс / категория)", notes:[2]},
+    {id:"bg", name:"Фон", val:"regular, controlled physical activity", origin:"span", span:"regular, controlled physical activity",
+     how:"Фраза из Summary: «supplementation … concurrent with regular, controlled physical activity». Модель записала физическую активность фоном, то есть тем, что получают обе группы: группы различаются только добавкой и плацебо.",
+     reads:"граница вмешательства: фон не попадает в запросы и не считается вмешательством", notes:[3]},
+    {id:"out", name:"Исход гипотезы", val:"muscle mass · направление: increase · шкала: healthspan", origin:"span", span:"increase muscle mass (assessed by DXA)",
+     how:"Фраза из Description. Совпадает с первичным исходом реестра (muscle mass by DXA, 3 months), поэтому именно этот исход главный.",
+     reads:"утверждение-исход c1: его поиск и чтение", notes:[4,8]},
+    {id:"eff", name:"Ожидаемый эффект", val:"неизвестно", origin:"none", span:null,
+     how:"Текст не называет величину эффекта, с чем она сравнивается и к какому сроку. Поле оставлено пустым, а не додумано.",
+     reads:"предсказание гипотезы: при исходе — достигнут ли обещанный эффект; мощность при известной выборке", notes:[]},
+  ],
+  claims: [
+    {id:"c1", s:"EAA, whey protein and vitamin D mixture", r:"promotes", o:"muscle mass", q:"мера DXA · популяция sarcopenic elderly", link:"outcome", primary:true, stated:"claimed", level:"tissue", span:"increase muscle mass (assessed by DXA)",
+     how:"Главный исход: единственный первичный исход реестра. Отношение «повышает» с объектом-показателем.", notes:[5]},
+    {id:"c2", s:"EAA, whey protein and vitamin D mixture", r:"improves_healthspan_in", o:"sarcopenic elderly", q:"мера: handgrip dynamometer", link:"outcome", primary:false, stated:"claimed", level:"organism", span:"strength (assessed by handgrip dynamometer)",
+     how:"Параллельный исход: стоит рядом с главным, цепочку не продолжает. Объект — организм, показатель в уточнении.", notes:[5,7]},
+    {id:"c3", s:"EAA, whey protein and vitamin D mixture", r:"improves_healthspan_in", o:"sarcopenic elderly", q:"мера: ADL", link:"outcome", primary:false, stated:"claimed", level:"organism", span:"physical functional (assessed by ADL)",
+     how:"Параллельный исход (функциональность по ADL).", notes:[5,7]},
+    {id:"c4", s:"EAA, whey protein and vitamin D mixture", r:"improves_healthspan_in", o:"sarcopenic elderly", q:"мера: SF-36", link:"outcome", primary:false, stated:"claimed", level:"organism", span:"quality of life (assessed by SF-36)",
+     how:"Параллельный исход (качество жизни по SF-36).", notes:[5,7]},
+    {id:"c5", s:"EAA, whey protein and vitamin D mixture", r:"suppresses", o:"risk of malnutrition", q:"мера: MNA and IGF-I", link:"outcome", primary:false, stated:"claimed", level:"organism", span:"decrease the risk of malnutrition (assessed by MNA and IGF-I)",
+     how:"Параллельный исход (риск недостаточного питания).", notes:[6,7]},
+    {id:"c6", s:"EAA, whey protein and vitamin D mixture", r:"suppresses", o:"inflammation", q:"мера: C-reactive protein", link:"outcome", primary:false, stated:"claimed", level:"organism", span:"inflammation (assessed by C-reactive protein)",
+     how:"Параллельный исход (воспаление по СРБ). Текст ставит его в ряд исходов, а не шагом пути к мышцам, поэтому звено — исход.", notes:[6,7]},
+  ],
+  chainNote:"Текст не называет ни одного шага между добавкой и исходами, поэтому цепочка состоит только из исходов. Это верно по тексту: шаг, которого в тексте нет, карточка не добавляет.",
+  exp: [
+    {id:"ctl", name:"Контроль", val:"плацебо: maltodextrin, равная калорийность, тот же вкус и вид", origin:"span", span:"placebo consisting of an equicaloric amount of maltodextrin with the same flavour and appearance as for the intervention product",
+     how:"Фраза из строк Interventions и Arms. Тип «placebo» из единого словаря контроля.", reads:"отчёт; контроль эксперимента (ниже) выводится из него кодом", notes:[]},
+    {id:"ctlx", name:"Контроль эксперимента", val:"placebo", origin:"code", span:null,
+     how:"Правило кода: тип контроля «placebo» переходит в контроль эксперимента без модели.", reads:"информативность I (что эксперимент отсекает); отчёт", notes:[]},
+    {id:"des", name:"Дизайн и система", val:"РКИ · человек", origin:"span", span:"randomized, parallel, masking double (participant, investigator)",
+     how:"Фраза — строка Design. Первый разбор оставил дизайн пустым, его взяли из второго (правило объединения: неизвестное в первом берётся из второго).", reads:"реализуемость (система); отчёт", notes:[]},
+    {id:"n", name:"Плановая выборка", val:"нет", origin:"none", span:null,
+     how:"Строки Planned enrollment в тексте нет: набор завершён, и в реестре стоит фактическое число. Сборщик текста пишет только плановое число, чтобы не нести в текст данных после T.", reads:"реализуемость; мощность при ожидаемом эффекте", notes:[]},
+    {id:"dur", name:"Длительность", val:"3 months → класс «months»", origin:"code", span:"3 months",
+     how:"Срок «3 months» модель взяла из текста; класс длительности вычислил код: 3 × 30.4 = 91 день, это не меньше 90, значит «months».", reads:"реализуемость", notes:[9]},
+    {id:"po", name:"Первичные исходы", val:"muscle mass assessed by dual x-ray absorptiometry (3 months)", origin:"span", span:"muscle mass assessed by dual x-ray absorptiometry (3 months)",
+     how:"Строка Primary outcomes, один исход.", reads:"клиничность конечной точки → профили; выбор главного исхода", notes:[]},
+    {id:"reg", name:"Поля дизайна реестра", val:"рандомизация: да · модель: parallel · маскирование: double (participant, investigator) · цель: нет · группы: dietary supplement (active comparator), placebo (placebo comparator)", origin:"reg", span:"randomized, parallel, masking double (participant, investigator)",
+     how:"Код разобрал строки Design и Arms. Цели (primary purpose) в строке Design нет, поэтому она пустая.", reads:"правило d кодом (план); эволюция видит, что можно поменять", notes:[10]},
+  ],
+  ref: [
+    {id:"lvl", name:"Уровень звена", val:"c1 ткань; c2–c6 организм", origin:"llm", span:null, how:"Модель отнесла каждое утверждение к уровню. Мышечная масса — ткань, остальные исходы — организм.", reads:"пока ничего: размах механизма кодом — после проверки уровня", notes:[]},
+    {id:"hm", name:"Признак старения", val:"нет ни у одного утверждения", origin:"llm", span:null, how:"Признак ставится на звенья мишени, пути и эффекта; здесь их нет.", reads:"размах механизма W", notes:[]},
+    {id:"ai", name:"Роль ИИ", val:"нет", origin:"code", span:null, how:"В тексте нет фразы о роли ИИ; без фразы код ставит «нет».", reads:"профиль «Финансирование»", notes:[]},
+    {id:"refs", name:"Ссылки автора", val:"нет", origin:"code", span:null, how:"Код ищет в тексте PMID и DOI; их нет.", reads:"затравка поиска", notes:[]},
+    {id:"type", name:"Тип и суть", val:"интервенционная · «A nutritional supplement with whey protein, amino acids, and vitamin D combined with physical activity increases muscle mass, strength, physical function, and quality of life, and decreases malnutrition risk and inflammation in sarcopenic elderly people.»", origin:"llm", span:null, how:"Пересказ одной фразой для отчёта и генерации.", reads:"отчёт", notes:[3]},
+    {id:"decl", name:"Заявленное автором", val:"альтернатив, новизны, критериев решения, рисков нет", origin:"none", span:null, how:"Текст их не называет.", reads:"отчёт", notes:[]},
+    {id:"stab", name:"Устойчивость", val:"6 из 6 (доля общих утверждений 1.0); из второго разбора — только дизайн", origin:"code", span:null, how:"Код сравнил два независимых разбора: все шесть утверждений совпали.", reads:"доверие к карточке", notes:[]},
+  ],
+  notes: [
+    {n:1, sev:"lo", t:"Возраст не числом. В тексте нет возрастных границ (только «elderly»), поэтому поле осталось словом. Для запроса по точной популяции это не мешает: состояние (саркопения) названо."},
+    {n:2, sev:"mid", t:"Доза без частоты. «32 g» есть в тексте, но не сказано, в день это или на приём; карточка записывает дозу как есть и не додумывает. Отдельно: словарь типов вмешательства не различает пищевую добавку и диету (реестр пишет dietary_supplement, карточка — diet). Нужен ли отдельный тип?"},
+    {n:3, sev:"hi", t:"Физическая активность — фон или часть вмешательства? Гипотеза сформулирована про сочетание: «добавка вместе с регулярной контролируемой активностью». Строки Arms об активности молчат: ни для одной группы её нет. Фоном она записана по логике дизайна (группы различаются только добавкой). Следствие: проверяется только добавка, а синергия «добавка + активность», о которой говорят название и суть, в карточке не выражена. Это совпадает с тем, что реально сравнивает испытание, но расходится с формулировкой гипотезы и с полем «суть»."},
+    {n:4, sev:"mid", t:"Поле «шкала» (healthspan) — старая шкала конечной точки (жизнь / здоровье / биомаркер). Мышечная масса по DXA по словарю BEST — биомаркер, а не клинический исход. В мануале близость исхода к клинике оценивает клиничность конечной точки по словарю BEST, а это поле всё ещё заполняется. Убрать его из шаблона или оставить только справочным?"},
+    {n:5, sev:"mid", t:"Один тип высказывания записан двумя способами. c1 — «повышает мышечную массу» (объект — показатель, уровень ткань), c2–c4 — «улучшает здоровье у sarcopenic elderly» с показателем в уточнении (уровень организм). Запрос поиска строится из объекта, поэтому для c2–c4 в запрос пойдёт популяция, а не показатель. Стоит ли требовать объект-показатель для всех измеряемых исходов?"},
+    {n:6, sev:"lo", t:"c5: в одно утверждение попали две меры разной природы — шкала питания MNA и гормон IGF-I. Так они стоят в тексте («assessed by MNA and IGF-I»). c6: воспаление по смыслу могло бы быть шагом пути к мышцам, но текст ставит его в ряд исходов, и карточка следует тексту."},
+    {n:7, sev:"mid", t:"Служебное поле role у параллельных исходов — «посылка» (premise). Так его выводит код: главный исход — outcome, утверждаемый шаг — mechanism, всё остальное — premise. Старые правила, которые читают role, увидят параллельный исход как посылку. Это нужно проверить по коду правил до перевода рабочего конфига."},
+    {n:8, sev:"lo", t:"Утечка в тексте записи. Название утверждает результат («… Increases Muscle Mass and Strength …»), запись опубликована через 5 месяцев после завершения, текст — текущая версия. Нормализатор не взял из названия ни одного утверждения: все фразы — из Summary и Description («would increase …»). Но в самой карточке нет пометки, что текст написан после сбора данных. Предложение: справочное поле «текст записан после завершения испытания» правилом кода из дат реестра."},
+    {n:9, sev:"lo", t:"Граница 90 дней делит почти одинаковые сроки: 12 недель (84 дня) — «weeks», 3 месяца (91 день) — «months»."},
+    {n:10, sev:"mid", t:"Реестр сам назвал группу добавки «active comparator», хотя активного контроля в испытании нет (добавка против плацебо). Код берёт тип группы как есть. Для будущего правила d кодом это неверный сигнал: правилу нужна проверка, что «active comparator» действительно сравнивает с другим вмешательством."},
+  ]
+},
+h49: {
+  meta: [["Запись","NCT07726758"],["T","2026-11-06"],["Что такое T","дата оценки проспективного пула: испытание идёт, исход неизвестен"],["Пул","проспективный (60 идущих испытаний)"],["Устойчивость","6 из 6 утверждений общие для двух разборов"]],
+  text: `A trial registered to test the following.
+Title: The Effectiveness of Squat Exercise for Improving Pre-Sarcopenia in Order Adults
+Conditions: Sarcopenia
+Interventions: Squat Exercise (behavioral): Squat exercise is an effective resistance training intervention that enhances lower-extremity muscle strength, physical performance, and functional ability, thereby helping prevent or delay sarcopenia in older adults.
+Summary: With the growing aging population, it has been reported that approximately 10-20% of older adults have pre-sarcopenia. Pre-sarcopenia is defined as a decline in either muscle mass or muscle strength. Previous studies have indicated that squat exercise has significant effects on improving lower-extremity muscle strength and physical performance. Early intervention through resistance exercise during the pre-sarcopenia stage may increase muscle mass, enhance physical performance, and prevent progression to sarcopenia. Therefore, the purpose of this study is to investigate the effects of squat exercise on improving pre-sarcopenia among older adults. It is expected that, following the squat exercise intervention, older adults will demonstrate significant improvements in muscle mass, lower-extremity muscle strength, physical performance, and body composition, thereby alleviating pre-sarcopenia.
+Design: randomized, sequential, masking single (participant), primary purpose prevention
+Arms: Squat Exercise (experimental): The researcher first assists participants in completing the questionnaire and measures older adults' InBody composition, grip strength, and SPPB (Short Physical Performance Battery). A 12-week squat exercise intervention is then implemented. Post-intervention assessments are conducted at Week 6 and Week 12.; Intervention: Usual Care (no intervention): No specific resistance training is performed, and participants maintain their usual daily activities.
+Planned enrollment: 80
+Primary outcomes: Physical performance assessed by the Short Physical Performance Battery (SPPB) (Baseline, 6 weeks, and 12 weeks); Body composition assessed by bioelectrical impedance analysis (InBody) (Baseline, 6 weeks, and 12 weeks)`,
+  core: [
+    {id:"pop", name:"Популяция", val:"older adults · вид: человек · возраст: неизвестен · пол: неизвестен", origin:"span", span:"older adults",
+     how:"Фраза «older adults» (встречается в тексте несколько раз). Вид «человек» — по смыслу. Состояние «pre-sarcopenia» в популяцию не попало.",
+     reads:"запрос поиска по точной популяции; контекст записей статей", notes:[1]},
+    {id:"int", name:"Вмешательство", val:"squat exercise · тип: procedure · режим: 12-week squat exercise intervention · путь: other", origin:"span", span:"Squat Exercise (behavioral): Squat exercise is an effective resistance training intervention that enhances lower-extremity muscle strength, physical performance, and functional ability, thereby helping prevent or delay sarcopenia in older adults.",
+     how:"Фраза — вся строка Interventions. Режим «12 weeks» модель взяла из строки Arms («A 12-week squat exercise intervention»). Частота и нагрузка в тексте не названы.",
+     reads:"запросы поиска; совпадение вмешательства в записях статей", notes:[2]},
+    {id:"bg", name:"Фон", val:"нет", origin:"none", span:null,
+     how:"Общего для обеих групп вмешательства текст не называет. «Usual daily activities» есть только в контрольной группе, это контроль, а не фон.",
+     reads:"граница вмешательства", notes:[]},
+    {id:"out", name:"Исход гипотезы", val:"pre-sarcopenia · направление: improve · шкала: healthspan", origin:"span", span:"Improving Pre-Sarcopenia in Order Adults",
+     how:"Фраза из названия («Improving Pre-Sarcopenia»). Первичные исходы реестра — SPPB и состав тела (InBody), но исходом гипотезы стало состояние из названия.",
+     reads:"утверждение-исход c1: его поиск и чтение", notes:[3]},
+    {id:"eff", name:"Ожидаемый эффект", val:"неизвестно", origin:"none", span:null,
+     how:"Текст обещает «significant improvements», но без величины, точки сравнения и срока. Поле пустое.",
+     reads:"предсказание гипотезы; мощность при плановой выборке 80", notes:[]},
+  ],
+  claims: [
+    {id:"c1", s:"squat exercise", r:"improves_healthspan_in", o:"human", q:"мера: pre-sarcopenia", link:"outcome", primary:true, stated:"claimed", level:"organism", span:"The Effectiveness of Squat Exercise for Improving Pre-Sarcopenia in Order Adults",
+     how:"Главный исход. Фраза — всё название.", notes:[3]},
+    {id:"c2", s:"squat exercise", r:"promotes", o:"lower-extremity muscle strength", q:"вид: человек (из популяции)", link:"effect", primary:false, stated:"known", level:"tissue", span:"squat exercise has significant effects on improving lower-extremity muscle strength",
+     how:"Шаг, который текст подаёт как известное («Previous studies have indicated…»). Известный шаг сохраняет своё звено: эффект — состояние ткани.", notes:[]},
+    {id:"c3", s:"squat exercise", r:"improves_healthspan_in", o:"human", q:"мера: physical performance", link:"effect", primary:false, stated:"known", level:"organism", span:"squat exercise has significant effects on improving lower-extremity muscle strength and physical performance",
+     how:"Известный шаг из той же фразы: физическая работоспособность.", notes:[4,5]},
+    {id:"c4", s:"resistance exercise", r:"promotes", o:"muscle mass", q:"вид: человек (не во фразе)", link:"pathway", primary:false, stated:"claimed", level:"tissue", span:"Early intervention through resistance exercise during the pre-sarcopenia stage may increase muscle mass",
+     how:"Утверждаемый шаг: силовые упражнения на стадии пре-саркопении могут увеличить мышечную массу.", notes:[4,6,7]},
+    {id:"c5", s:"resistance exercise", r:"improves_healthspan_in", o:"human", q:"мера: physical performance; вид не во фразе", link:"pathway", primary:false, stated:"claimed", level:"organism", span:"Early intervention through resistance exercise during the pre-sarcopenia stage may increase muscle mass, enhance physical performance",
+     how:"Утверждаемый шаг: та же фраза, физическая работоспособность.", notes:[4,5,6,7]},
+    {id:"c6", s:"resistance exercise", r:"suppresses", o:"sarcopenia", q:"вид не во фразе", link:"pathway", primary:false, stated:"claimed", level:"organism", span:"Early intervention through resistance exercise during the pre-sarcopenia stage may increase muscle mass, enhance physical performance, and prevent progression to sarcopenia.",
+     how:"Утверждаемый шаг: предотвращение перехода в саркопению.", notes:[4,6,7]},
+  ],
+  chainNote:"Цепочка есть: два известных шага (эффект) и три утверждаемых (путь) ведут к главному исходу. Ни один шаг не стоит на звеньях доставки и мишени: текст о них не говорит.",
+  exp: [
+    {id:"ctl", name:"Контроль", val:"обычный уход: Usual Care (no intervention), участники сохраняют обычную активность", origin:"span", span:"Intervention: Usual Care (no intervention): No specific resistance training is performed, and participants maintain their usual daily activities.",
+     how:"Фраза из строки Arms. Тип «usual_care» из единого словаря контроля.", reads:"отчёт; контроль эксперимента выводится из него кодом", notes:[8]},
+    {id:"ctlx", name:"Контроль эксперимента", val:"usual_care", origin:"code", span:null,
+     how:"Правило кода: тип контроля переходит в контроль эксперимента.", reads:"информативность I; отчёт", notes:[]},
+    {id:"des", name:"Дизайн и система", val:"РКИ · человек", origin:"span", span:"randomized, sequential, masking single (participant), primary purpose prevention",
+     how:"Фраза — строка Design.", reads:"реализуемость (система); отчёт", notes:[]},
+    {id:"n", name:"Плановая выборка", val:"80", origin:"reg", span:"Planned enrollment: 80",
+     how:"Код взял число из строки Planned enrollment (набор ещё идёт, число плановое).", reads:"реализуемость; мощность", notes:[]},
+    {id:"dur", name:"Длительность", val:"12 weeks → класс «weeks»", origin:"code", span:"12-week",
+     how:"Срок «12 weeks» модель взяла из Arms; класс вычислил код: 12 × 7 = 84 дня, меньше 90, значит «weeks».", reads:"реализуемость", notes:[]},
+    {id:"po", name:"Первичные исходы", val:"SPPB (исходно, 6 и 12 недель); состав тела по InBody (исходно, 6 и 12 недель)", origin:"span", span:"Physical performance assessed by the Short Physical Performance Battery (SPPB)",
+     how:"Строка Primary outcomes, два равноправных исхода.", reads:"клиничность конечной точки → профили; выбор главного исхода", notes:[3]},
+    {id:"reg", name:"Поля дизайна реестра", val:"рандомизация: да · модель: sequential · маскирование: single (participant) · цель: prevention · группы: Squat Exercise (experimental)", origin:"reg", span:"randomized, sequential, masking single (participant), primary purpose prevention",
+     how:"Код разобрал строки Design и Arms. Вторая группа (Usual Care) в список групп не попала.", reads:"правило d кодом (план); эволюция", notes:[9]},
+  ],
+  ref: [
+    {id:"lvl", name:"Уровень звена", val:"c2, c4 ткань; c1, c3, c5, c6 организм", origin:"llm", span:null, how:"Модель отнесла каждое утверждение к уровню.", reads:"пока ничего (после проверки уровня — размах механизма кодом)", notes:[]},
+    {id:"hm", name:"Признак старения", val:"нет ни у одного утверждения", origin:"llm", span:null, how:"Шаги о силе, массе и работоспособности модель ни к одному из 12 признаков не отнесла.", reads:"размах механизма W", notes:[]},
+    {id:"ai", name:"Роль ИИ", val:"нет", origin:"code", span:null, how:"Фразы о роли ИИ нет; код ставит «нет».", reads:"профиль «Финансирование»", notes:[]},
+    {id:"refs", name:"Ссылки автора", val:"нет", origin:"code", span:null, how:"«Previous studies» упомянуты без PMID и DOI.", reads:"затравка поиска", notes:[]},
+    {id:"type", name:"Тип и суть", val:"интервенционная · «Squat exercise improves pre-sarcopenia in older adults.»", origin:"llm", span:null, how:"Пересказ одной фразой.", reads:"отчёт", notes:[]},
+    {id:"decl", name:"Заявленное автором", val:"альтернатив, новизны, критериев решения, рисков нет", origin:"none", span:null, how:"Текст их не называет.", reads:"отчёт", notes:[]},
+    {id:"stab", name:"Устойчивость", val:"6 из 6 (доля общих утверждений 1.0)", origin:"code", span:null, how:"Оба разбора дали одни и те же шесть утверждений.", reads:"доверие к карточке", notes:[]},
+  ],
+  notes: [
+    {n:1, sev:"hi", t:"Пре-саркопения — состояние популяции, а не исход. Текст говорит о пожилых с пре-саркопенией: цель — «improving pre-sarcopenia among older adults», Summary определяет её как снижение мышечной массы или силы. В карточке популяция — просто «older adults», а пре-саркопения стала исходом. Запрос по точной популяции тогда будет общим. Самая информативная запись для таких испытаний (нулевой результат силовой программы по SPPB при пре-саркопении) находится только запросом по точной популяции. Правило: состояние, по которому отбирают участников, — в популяцию."},
+    {n:2, sev:"mid", t:"Фраза у вмешательства не кратчайшая: взята вся строка Interventions вместе с описанием эффекта. Правило требует кратчайшую дословную фразу; код проверяет только, что фраза есть в тексте, но не её длину. Частота и нагрузка приседаний в тексте не названы, режим — только срок."},
+    {n:3, sev:"hi", t:"Главный исход взят не по правилу. Мануал: главный исход — первичный исход испытания, иначе первый названный. Первичные исходы реестра — SPPB и состав тела; карточка взяла «улучшение пре-саркопении» из названия. Это состояние, а не измеряемый показатель. Утверждения об SPPB нет (есть только известный и утверждаемый шаги о «physical performance»), утверждения о составе тела нет совсем, хотя текст ожидает улучшения «body composition». Как минимум: главный исход — SPPB, параллельный — состав тела."},
+    {n:4, sev:"hi", t:"Звенья не по определению. Путь — процесс в молекуле или клетке, эффект — состояние ткани или органа. c4 (мышечная масса) — эффект, а не путь; c5 (физическая работоспособность) и c6 (переход в саркопению) — исходы, а не шаги. По тексту цепочка такая: приседания → сила и масса мышц (эффект) → работоспособность и предотвращение саркопении (исход). Типы звеньев — слабое место нормализатора: согласие с эталоном по типу звена — каппа Коэна 0.31 (0 — как случайно, 1 — полное)."},
+    {n:5, sev:"mid", t:"Физическая работоспособность записана дважды: как известный шаг (c3, эффект) и как утверждаемый (c5, путь), и она же — первичный исход испытания (SPPB). Удаление дублей их не объединило: оно сравнивает только утверждения на одном и том же звене."},
+    {n:6, sev:"mid", t:"Субъект c4–c6 — «resistance exercise», то есть класс вмешательства, а не приседания. Текст так и говорит. Подача «утверждается» спорна: это довод о классе, близкий к аналогии (для родственного вмешательства). При «аналогии» эти шаги не стали бы звеньями цепочки приседаний."},
+    {n:7, sev:"lo", t:"Вид «человек» у c4–c6 не стоит во фразе и не унаследован по правилу (правило наследует вид только в утверждения, где субъект — вмешательство карточки). Код трижды вернул это модели, после трёх раундов замечание осталось; утверждения сохранены с пометкой."},
+    {n:8, sev:"lo", t:"В реестре группа типа «no intervention», а подписана «Usual Care». Карточка записала обычный уход. Для оценки обе трактовки дают одно: контакта и внимания у контрольной группы нет, и альтернативу «эффект внимания» дизайн не отсекает."},
+    {n:9, sev:"hi", t:"Ошибка кода: вторая группа потеряна. В реестре её подпись «Intervention: Usual Care», а разбор строки Arms не допускает двоеточия в подписи группы. В полях дизайна реестра одна группа вместо двух. Модель «sequential» записана как в реестре, хотя по описанию это две параллельные группы; код берёт её как есть."},
+  ]
+}
+};
+
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+let cur = "h86", active = null;
+
+function ranges(h){
+  const all = [...h.core, ...h.claims, ...h.exp, ...h.ref].filter(x=>x.span);
+  const out = {};
+  for (const x of all){ const i = h.text.indexOf(x.span); if (i >= 0) out[x.id] = [i, i + x.span.length]; }
+  return out;
+}
+
+function renderText(h, R){
+  const n = h.text.length, cov = new Uint8Array(n), on = new Uint8Array(n);
+  for (const [k,[a,b]] of Object.entries(R)){ for (let i=a;i<b;i++){ cov[i]=1; if (k===active) on[i]=1; } }
+  let html = "", i = 0;
+  while (i < n){
+    let j = i; const c = cov[i], o = on[i];
+    while (j < n && cov[j]===c && on[j]===o && h.text[j] !== "\n") j++;
+    if (j === i){ html += "\n"; i++; continue; }
+    const seg = esc(h.text.slice(i,j));
+    html += c ? `<mark class="${o?"on":""}">${seg}</mark>` : seg;
+    i = j;
+  }
+  return html.split("\n").map(l=>{
+    const m = l.match(/^([A-Z][A-Za-z ]+):/);
+    return `<p class="ln">${m ? l.replace(m[0], `<span class="key">${m[0]}</span>`) : l}</p>`;
+  }).join("");
+}
+
+function fn(h, list){ return list.map(n=>`<sup class="fn"><a href="#${cur}-n${n}" aria-label="сноска ${n}">${n}</a></sup>`).join(""); }
+function chip(o){ const [c,t] = ORIGIN[o]; return `<i class="chip ${c}">${t}</i>`; }
+
+function fieldCard(h, f){
+  return `<div class="field${active===f.id?" active":""}" tabindex="0" data-id="${f.id}">
+    <div class="frow"><span class="fname">${esc(f.name)}</span>${chip(f.origin)}${fn(h,f.notes)}</div>
+    <div class="fval">${esc(f.val)}</div>
+    <p class="how">${esc(f.how)}</p>
+    <p class="reads"><b>Что читает:</b> ${esc(f.reads)}</p>
+  </div>`;
+}
+
+function claimCard(h, c){
+  return `<div class="claim${active===c.id?" active":""}" tabindex="0" data-id="${c.id}">
+    <div class="frow"><span class="fname">${c.id}</span>${chip("span")}${fn(h,c.notes)}</div>
+    <div class="triple">${esc(c.s)} — <span class="rel">${esc(c.r)}</span> — ${esc(c.o)}</div>
+    <div class="tags">
+      <span class="tag${c.primary?" main":""}">звено: ${LINK_RU[c.link]}${c.primary?" · главный исход":""}</span>
+      <span class="tag">как сказано: ${STATED[c.stated]}</span>
+      <span class="tag">уровень: ${LEVEL[c.level]}</span>
+      <span class="tag">${esc(c.q)}</span>
+    </div>
+    <p class="how">${esc(c.how)}</p>
+  </div>`;
+}
+
+function chain(h){
+  const cols = LINKS.map(([k,ru])=>{
+    const nodes = h.claims.filter(c=>c.link===k).map(c=>`<div class="node${c.stated==="known"?" known":""}" data-id="${c.id}" tabindex="0">${c.id}${c.primary?" ★":""} · ${esc(c.o==="human"||c.o==="sarcopenic elderly" ? c.q.replace(/^мера: /,"").split(";")[0] : c.o)}</div>`).join("");
+    return `<div class="slot"><div class="slot-h">${ru}</div>${nodes || '<div class="node empty">нет</div>'}</div>`;
+  }).join("");
+  return `<div class="chain"><div class="chain-row">${cols}</div>
+    <div class="chain-legend"><span>сплошная рамка — утверждается</span><span>пунктир — известное</span><span>★ — главный исход</span></div></div>
+    <p class="reads">${esc(h.chainNote)} По каждому звену идут поиск и чтение; из записей статей считаются сила звена S, баланс, покрытие, новизна и размах механизма W.</p>`;
+}
+
+function render(){
+  const h = H[cur], R = ranges(h);
+  const block = (title, sub, inner) => `<section class="block"><div class="block-head"><h2>${title}</h2><p>${sub}</p></div>${inner}</section>`;
+  document.getElementById("view").innerHTML = `
+    <div class="meta">${h.meta.map(([k,v])=>`<span>${k}: <b>${esc(v)}</b></span>`).join("")}</div>
+    <div class="grid">
+      <div class="textcol"><h3>Текст, который читает нормализатор</h3><div class="record" id="record">${renderText(h,R)}</div>
+        <p class="hint">Жёлтым — все опорные фразы карточки; ярче — фраза выбранного поля.</p></div>
+      <div class="cardcol">
+        ${block("Ядро: гипотеза","То, из чего строится и проверяется по литературе сама идея: что даётся, кому, что должно измениться.", h.core.map(f=>fieldCard(h,f)).join(""))}
+        ${block("Утверждения","Каждое — одно проверяемое высказывание текста с дословной фразой. Тоже ядро.", h.claims.map(c=>claimCard(h,c)).join(""))}
+        ${block("Цепочка","Утверждения по звеньям от вмешательства к исходу.", chain(h))}
+        ${block("Заявленный эксперимент","Проверка гипотезы, а не сама гипотеза. Оценивается таким, как заявлен (I, реализуемость, клиничность).", h.exp.map(f=>fieldCard(h,f)).join(""))}
+        ${block("Справочное","Хранится и видно отчёту и эволюции; саму гипотезу не оценивает.", h.ref.map(f=>fieldCard(h,f)).join(""))}
+        <section class="notes"><h2>Спорное по полям</h2><ol>${h.notes.map(x=>`<li id="${cur}-n${x.n}" value="${x.n}"><span class="sev sev-${x.sev}">${{hi:"важно",mid:"спорно",lo:"мелочь"}[x.sev]}</span>${esc(x.t)}</li>`).join("")}</ol></section>
+      </div>
+    </div>`;
+}
+
+function select(id){
+  active = (active === id) ? null : id;
+  render();
+  const m = document.querySelector("#record mark.on");
+  if (m) m.scrollIntoView({block:"nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"});
+}
+
+document.getElementById("view").addEventListener("click", e=>{
+  if (e.target.closest("a")) return;
+  const el = e.target.closest("[data-id]"); if (el) select(el.dataset.id);
+});
+document.getElementById("view").addEventListener("keydown", e=>{
+  if (e.key!=="Enter" && e.key!==" ") return;
+  const el = e.target.closest("[data-id]"); if (el){ e.preventDefault(); select(el.dataset.id); }
+});
+function show(h){
+  cur = h; active = null;
+  document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected", String(t.dataset.h===h)));
+  render();
+}
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click", ()=>{ show(t.dataset.h); try{ history.replaceState(null,"","#"+t.dataset.h); }catch(_){ location.hash = t.dataset.h; } }));
+function fromHash(){ const h = (location.hash||"").slice(1).split("-")[0]; if (H[h] && h!==cur) show(h); }
+window.addEventListener("hashchange", fromHash);
+render(); fromHash();
+</script>

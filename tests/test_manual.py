@@ -169,6 +169,6 @@ def test_manual_worked_example_v37(monkeypatch):
     c, cvs, alts = _case()
     e = r32.evaluate(c, cvs, alts, v36=True)
     text = MANUAL.read_text()
-    assert f"| v3.7 | S {e.links['c1'][0]:.3f} (F {e.links['c1'][3]:.3f}) | no record, not averaged | S {e.links['c3'][0]:.3f} (F {e.links['c3'][3]:.3f}) | evidence balance {e.chain_state:.3f} |" in text
+    assert f"| as given | S {e.links['c1'][0]:.3f} (F {e.links['c1'][3]:.3f}) | no record, not averaged | S {e.links['c3'][0]:.3f} (F {e.links['c3'][3]:.3f}) | evidence balance {e.chain_state:.3f} |" in text
     e2 = r32.evaluate(c, cvs + [ClaimVerification(id="c2", evidence=[rec(5, "animal", n=40, effect="large")])], alts, v36=True)
-    assert f"| v3.7, with one mouse study of 40 for c2 | | S {e2.links['c2'][0]:.3f} | | evidence balance {e2.chain_state:.3f} |" in text
+    assert f"| with one mouse study of 40 for c2 | | S {e2.links['c2'][0]:.3f} | | evidence balance {e2.chain_state:.3f} |" in text
