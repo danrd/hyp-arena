@@ -79,4 +79,6 @@ relabel_pack_20:   # 2026-11-13
   why: "agreement on the middle links (engagement, pathway, effect) is near chance for the model, the premise rule and the ontology alike: the gold of pack 17 (loose definitions) limits the measure"
   set: "Argon pack 20: the 60 texts of pack 17 unchanged, new ids and order, card_gold_v2 instructions with the registry rules (scripts/pack20_relabel.py)"
   measures: "the card measures of part 1 against the new gold; Argon pack 17 against pack 20 on the same texts (kappa of the link type, chain / premise): how much the definitions change the labels"
-  status: "built, not sent"
+  status: "gold received 2026-11-13 (60 texts, 225 claims, all 843 phrases verbatim)"
+  result: {argon_old_vs_new: "kappa 0.53; old pathways kept 7 of 34 (16 -> premise, 9 -> outcome), engagements 0 of 9, outcomes 52/54, premises 24/25", ours_v13_vs_new_gold: "kappa 0.50, without outcomes 0.32 (old gold: 0.37 and about 0); main errors premise -> pathway 12, outcome -> pathway or effect 13; claims one-to-one recall 0.54, precision 0.50"}
+  reading: "the old gold's middle links were the problem as much as the model: under the new definitions the outside reader is consistent with the levels and our saved cards agree better; the rules of the card manual target the two remaining errors"
