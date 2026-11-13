@@ -69,7 +69,7 @@ part_2_non_registry:   # 2026-11-13
   set: "Argon pack 19: 30 texts not in pack 17 - Bio Arena 12 (at most 3 per author), ChatGPT 10, our evolved versions 8; holdout 9 (scripts/pack19_card.py; longevity-kg reviews/argon-2026-11-13/)"
   gold: "card_gold_v2: hypothesis kind and main factor, topic, population with condition and age as stated, outcomes first (one measure each), intervention chain vs premises about the problem (population state, problem mechanism), link types as in docs/system/card.md, test manipulations in the experiment arms, labels in English"
   measures: "as part 1 (claims one-to-one and many-to-one, link kappa) plus: main factor right, chain / premise agreement, outcome agreement, population condition found"
-  status: "pack built, not sent; scored after the next normaliser template"
+  status: "gold received 2026-11-13 (30 texts, 134 claims, all phrases verbatim); scored after the next normaliser template"
 link_ontology_check_2026_11_13:   # scripts/link_ontology_check.py (free, PubMed term mapping and MeSH trees); longevity-kg reviews/argon-2026-11-12/link_ontology_check.json
   set: "102 claim pairs where our v13 card and pack 17 gold match by phrase; gold population_state and none = premise (off the chain)"
   result: {llm: "kappa 0.37 (outcome 40/45, pathway 11/30, effect 0/8, engagement 1/5, premise 5/13)", premise_rule: "kappa 0.41 (premise 11/13, pathway 7/30)", ontology: "kappa 0.34 (pathway 3/30, effect 1/8); 31 of 38 steps mapped"}
