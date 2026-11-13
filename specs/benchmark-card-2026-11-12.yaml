@@ -75,3 +75,8 @@ link_ontology_check_2026_11_13:   # scripts/link_ontology_check.py (free, PubMed
   result: {llm: "kappa 0.37 (outcome 40/45, pathway 11/30, effect 0/8, engagement 1/5, premise 5/13)", premise_rule: "kappa 0.41 (premise 11/13, pathway 7/30)", ontology: "kappa 0.34 (pathway 3/30, effect 1/8); 31 of 38 steps mapped"}
   without_outcome: "kappa on the middle links about 0 for every variant"
   reading: "the premise rule helps (premises 5 -> 11 of 13) but drops pathways where the chain's subject is the cause of a mechanistic hypothesis, not an intervention: the rule must use the hypothesis's main factor; the MeSH head-term level is worse than the model (the head term of a phrase is often a place or a mis-mapped word: 'TCA cycle activity' -> Exercise, 'BDNF in hippocampus' -> Hippocampus); agreement on the middle links is near chance for all, so the gold itself (loose definitions of pack 17) limits the measure: pack 19 gives a gold under the new definitions"
+relabel_pack_20:   # 2026-11-13
+  why: "agreement on the middle links (engagement, pathway, effect) is near chance for the model, the premise rule and the ontology alike: the gold of pack 17 (loose definitions) limits the measure"
+  set: "Argon pack 20: the 60 texts of pack 17 unchanged, new ids and order, card_gold_v2 instructions with the registry rules (scripts/pack20_relabel.py)"
+  measures: "the card measures of part 1 against the new gold; Argon pack 17 against pack 20 on the same texts (kappa of the link type, chain / premise): how much the definitions change the labels"
+  status: "built, not sent"
