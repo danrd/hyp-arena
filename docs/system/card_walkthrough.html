@@ -385,7 +385,7 @@ function arClaims(h){
   if (!h.arClaims) return "";
   return `<div class="alist"><h3>Утверждения у Argon</h3>${h.arClaims.list.map(c=>`<div class="aclaim">
       <div class="triple">${esc(c.s)} — <span class="rel">${esc(c.r)}</span> — ${esc(c.o)}</div>
-      <div class="tags"><span class="tag">звено: ${LINK_RU[c.link]}</span><span class="tag">как сказано: ${STATED[c.stated]}</span><span class="tag">уровень: ${LEVEL[c.level]}</span></div>
+      <div class="tags"><span class="tag">звено: ${LINK_RU[c.link]||"состояние популяции"}</span><span class="tag">как сказано: ${STATED[c.stated]}</span><span class="tag">уровень: ${LEVEL[c.level]}</span></div>
     </div>`).join("")}<p class="how">${esc(h.arClaims.note)}</p></div>`;
 }
 function label(c){ return c.o==="human"||c.o==="sarcopenic elderly" ? c.q.replace(/^мера: /,"") : c.o; }
@@ -399,6 +399,7 @@ function chain(h){
   const off = h.claims.filter(c=>!c.link);
   return `<div class="chain">
     ${h.arClaims?'<p class="chain-cap">Наша карточка</p>':""}<div class="chain-row">${chainRow(h.claims,"",true)}</div>
+    ${h.arClaims&&h.arClaims.list.some(c=>!LINK_RU[c.link])?`<p class="offchain">Argon вне цепочки (состояние популяции): ${h.arClaims.list.filter(c=>!LINK_RU[c.link]).map(c=>c.id).join(", ")}</p>`:""}
     ${h.arClaims?`<p class="chain-cap" style="margin-top:12px">Argon</p><div class="chain-row">${chainRow(h.arClaims.list.map(c=>({...c,primary:c.link==="outcome"})),"ar",false)}</div>`:""}
     ${off.length?`<p class="offchain">Вне цепочки (известные посылки без звена): ${off.map(c=>esc(c.id)).join(", ")}</p>`:""}
     <div class="chain-legend"><span>сплошная рамка — утверждается</span><span>пунктир — известное</span><span>★ — главный исход</span></div></div>

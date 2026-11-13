@@ -64,3 +64,9 @@ post_hoc_measure:   # added 2026-11-12 AFTER the first run; a diagnosis of granu
 prompt_fix:
   v14: "normalize_card/v14 = v13 + every step on the way keeps its link whether claimed or known (known is how the text states it, not that it is off the chain); pathway = a molecular or cellular process, effect = a state of a tissue or organ (the definitions pack 17 gave Argon); 2026-11-12, not run"
   known_steps_without_link: "v13: 37 of 287 claims (33 after dedupe); base_a: 0"
+part_2_non_registry:   # 2026-11-13
+  why: "the hypothesis database is mostly not registry trials (Bio Arena 985, ChatGPT 27 - in Russian); pack 17 had 20 such texts, all scored with registry-style definitions"
+  set: "Argon pack 19: 30 texts not in pack 17 - Bio Arena 12 (at most 3 per author), ChatGPT 10, our evolved versions 8; holdout 9 (scripts/pack19_card.py; longevity-kg reviews/argon-2026-11-13/)"
+  gold: "card_gold_v2: hypothesis kind and main factor, topic, population with condition and age as stated, outcomes first (one measure each), intervention chain vs premises about the problem (population state, problem mechanism), link types as in docs/system/card.md, test manipulations in the experiment arms, labels in English"
+  measures: "as part 1 (claims one-to-one and many-to-one, link kappa) plus: main factor right, chain / premise agreement, outcome agreement, population condition found"
+  status: "pack built, not sent; scored after the next normaliser template"
