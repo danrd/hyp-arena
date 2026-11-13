@@ -56,14 +56,15 @@ def dry() -> dict:
             "usd_est": round(usd, 2), "usd_per_text": round(usd / len(ts), 3), "model": "Gemini Flash (google family), no peak price"}
 
 
-def run(limit: int = 0) -> dict:
+def run(limit: int = 0, ids: str = "") -> dict:
     if os.environ.get("ALLOW_PAID") != "1":
         raise SystemExit("paid: set ALLOW_PAID=1")
     from hyparena.card.normalizer import normalize_union
     from hyparena.card.pipeline import _client
     out_p = DIR / f"bench_card_v2_ours_{VERSION}.json"
     done = json.loads(out_p.read_text()) if out_p.exists() else {}
-    ts = [t for t in texts() if t["id"] not in done][: limit or None]
+    want = set(ids.split(",")) if ids else None
+    ts = [t for t in texts() if t["id"] not in done and (want is None or t["id"] in want)][: limit or None]
     client, _ = _client(CONFIG, False, len(ts) * 10 + 10)
     lock, tok = threading.Lock(), Counter()
 
@@ -164,5 +165,6 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("cmd", choices=["dry", "run", "score"])
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--ids", default="")
     a = ap.parse_args()
-    print(json.dumps({"dry": dry, "score": score}[a.cmd]() if a.cmd != "run" else run(a.limit), indent=1))
+    print(json.dumps({"dry": dry, "score": score}[a.cmd]() if a.cmd != "run" else run(a.limit, a.ids), indent=1))

@@ -87,3 +87,7 @@ normaliser_v15:   # 2026-11-13
   run: "scripts/bench_card_v2.py on packs 19 and 20 (90 texts); dry run 7.9 USD (0.088 per text, Gemini Flash)"
   earlier_system_on_pack_20: {ours_v13: "claims 0.54 / 0.50 (many-to-one 0.57 / 0.76); link kappa 0.50, without outcomes 0.32; chain / premise 0.84; main outcome 0.55; population condition 0.45"}
   pass_rule: "v15 replaces v11 as the working card when, on pack 20, link kappa and main outcome are not lower than v13's and claim recall is not lower by more than 0.03; pack 19 reported apart (no earlier system)"
+pilot_v15_2026_11_13:   # 10 texts (P13 H86, P46 ChatGPT 27, P57 H49, P02, P03, P09, N01, N02, N04, N06); 0.80 USD
+  all_10: "no card with problems left after the rounds; main factor 10/10, main outcome 0.9, population condition 0.8; link kappa 0.57; chain / premise 0.91"
+  pack20_6_v15_vs_v13: "claims 0.58 / 0.61 vs 0.46 / 0.50; link kappa 0.62 vs 0.58; main outcome 6/6 vs 4/6; population condition 6/6 vs 3/6; chain / premise 1.0 vs 0.91"
+  seen: "ChatGPT 27: the hypothesis's own steps extracted, main factor thymus rejuvenation, the test peptides in arms; H49: SPPB main, body composition parallel, pre-sarcopenia the condition, the prevalence a premise; arms written in Russian by one parse (check added); stability understated by near-duplicates (jaccard_after_dedupe added)"

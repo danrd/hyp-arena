@@ -245,6 +245,10 @@ def normalize_union(client, family: str, raw_text: str, card_id: str, log: Optio
         problems = validate_card(card, raw_text, max_claims=12 if v15 else 8) + (v15_problems(card) if v15 else [])
         if int((version or TEMPLATE[1]).lstrip("v") or 0) >= 13:
             stab["deduplicated"] = dedupe_claims(card)  # near-duplicates the union added (card benchmark 2026-11-12)
+            n1, n2 = (stab.get("claims") or [0, 0])[:2]
+            added = set(stab.get("added_from_second") or [])           # a removed near-duplicate from the second parse was
+            sh = stab.get("shared", 0) + len(added & set(stab["deduplicated"]))   # the same claim as one of the first
+            stab["jaccard_after_dedupe"] = round(sh / (n1 + n2 - sh), 3) if n1 + n2 - sh > 0 else 1.0
             derive_roles(card)
             card.decisive_experiment.duration_class = "unknown"
             v13_code_fields(card, raw_text)             # fields the second parse filled (duration, primary outcomes)
@@ -458,6 +462,10 @@ def v15_problems(card: HypothesisCard) -> list[str]:
     out = []
     if not card.main_factor or not str(card.main_factor.get("label") or "").strip():
         out.append("main_factor is missing: name the thing whose consequences the hypothesis states")
+    other = [("main_factor", (card.main_factor or {}).get("label", "")), ("topic", (card.topic or {}).get("label", "")),
+             ("population.condition", card.pico.population.condition)] + \
+            [(f"decisive_experiment.arms[{i}]", a) for i, a in enumerate(card.decisive_experiment.arms)]
+    out += [f"{name}: write it in English" for name, v in other if re.search(r"[а-яА-ЯёЁ]", v or "")]
     roots = _toks((card.main_factor or {}).get("label", "")) | set().union(*[_toks(i.label) for i in card.pico.intervention] or [set()])
     seen = set(roots)
     for c in card.claims:

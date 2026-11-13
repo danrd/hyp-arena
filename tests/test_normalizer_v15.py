@@ -57,3 +57,9 @@ def test_v15_problems():
     assert "c2: part chain, but its subject" in probs                 # not the main factor, nor an earlier step
     assert "c3: write subject, object and measure labels in English" in probs
     assert "c4" not in probs                                          # follows from c1's object
+
+
+def test_other_labels_in_english():
+    card = _card([_c("c1", "squat exercise", "muscle mass", "effect", "chain", "tissue")])
+    card.decisive_experiment.arms = ["контрольный пептид"]
+    assert any("arms[0]: write it in English" in p for p in v15_problems(card))
