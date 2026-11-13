@@ -148,7 +148,7 @@ code{font-family:var(--f-mono);font-size:.92em;overflow-wrap:anywhere}
 <script>
 const ORIGIN = {span:["o-span","из текста, с опорой"], reg:["o-reg","из полей реестра"], code:["o-code","правилом кода"], llm:["o-llm","LLM, без опоры"], none:["o-none","не сказано"]};
 const VERDICT = {ok:["v-ok","совпало"], part:["v-part","частично"], bad:["v-bad","расходится"], ours:["v-part","только у нас"], theirs:["v-bad","только у Argon"]};
-const LINKS = [["delivery","доставка"],["engagement","мишень"],["pathway","путь"],["effect","эффект"],["outcome","исход"]];
+const LINKS = [["delivery","доставка"],["engagement","мишень"],["pathway","клеточный процесс"],["effect","эффект"],["outcome","исход"]];
 const LINK_RU = Object.fromEntries(LINKS);
 const STATED = {claimed:"утверждается", known:"известное", analogy:"аналогия"};
 const LEVEL = {molecule:"молекула", cell:"клетка", tissue:"ткань", organ:"орган", organism:"организм"};
@@ -218,7 +218,7 @@ Primary outcomes: muscle mass assessed by dual x-ray absorptiometry (3 months)`,
     {id:"res", name:"Текст читается как результат", main:"поля нет", origin:"none", span:null, subs:[],
      how:"В схеме карточки нет пометки, что текст сообщает результат. Нормализатор не взял из названия ни одного утверждения, но и не отметил его.", reads:"—", notes:[8]},
     {id:"lvl", name:"Уровень звена", main:"c1 ткань; c2–c6 организм", origin:"llm", span:null, subs:[], how:"Модель отнесла каждое утверждение к уровню.", reads:"пока ничего", notes:[]},
-    {id:"hm", name:"Признак старения", main:"нет", origin:"llm", span:null, subs:[], how:"Признак ставится на звенья мишени, пути и эффекта; здесь их нет.", reads:"размах механизма", notes:[]},
+    {id:"hm", name:"Признак старения", main:"нет", origin:"llm", span:null, subs:[], how:"Признак ставится на звенья мишени, клеточного процесса и эффекта; здесь их нет.", reads:"размах механизма", notes:[]},
     {id:"ai", name:"Роль ИИ", main:"нет", origin:"code", span:null, subs:[], how:"Фразы о роли ИИ нет; без фразы код ставит «нет».", reads:"профиль «Финансирование»", notes:[]},
     {id:"refs", name:"Ссылки автора", main:"нет", origin:"code", span:null, subs:[], how:"Код ищет в тексте PMID и DOI; их нет.", reads:"затравка поиска", notes:[]},
     {id:"type", name:"Тип и суть", main:"интервенционная", origin:"llm", span:null, subs:[["суть","A nutritional supplement with whey protein, amino acids, and vitamin D combined with physical activity increases muscle mass, strength, physical function, and quality of life, and decreases malnutrition risk and inflammation in sarcopenic elderly people."]], how:"Пересказ одной фразой для отчёта.", reads:"отчёт", notes:[3]},
@@ -279,7 +279,7 @@ Primary outcomes: Physical performance assessed by the Short Physical Performanc
     {id:"c5", s:"resistance exercise", r:"улучшает здоровье у", o:"human", q:"мера: physical performance", link:"pathway", primary:false, stated:"claimed", level:"organism", span:"Early intervention through resistance exercise during the pre-sarcopenia stage may increase muscle mass, enhance physical performance", how:"Утверждаемый шаг из той же фразы: физическая работоспособность.", notes:[4,5,6,7]},
     {id:"c6", s:"resistance exercise", r:"подавляет", o:"sarcopenia", q:"", link:"pathway", primary:false, stated:"claimed", level:"organism", span:"Early intervention through resistance exercise during the pre-sarcopenia stage may increase muscle mass, enhance physical performance, and prevent progression to sarcopenia.", how:"Утверждаемый шаг: предотвращение перехода в саркопению.", notes:[4,6,7]},
   ],
-  chainNote:"Два известных шага (эффект) и три утверждаемых (путь) ведут к главному исходу. На звеньях доставки и мишени ничего нет: текст о них не говорит.",
+  chainNote:"Два известных шага (эффект) и три утверждаемых (клеточный процесс) ведут к главному исходу. На звеньях доставки и мишени ничего нет: текст о них не говорит.",
   exp: [
     {id:"ctl", name:"Контроль", main:"обычный уход", origin:"span", span:"Intervention: Usual Care (no intervention): No specific resistance training is performed, and participants maintain their usual daily activities.",
      subs:[["описание","без силовых тренировок, обычная повседневная активность"],["одним словом для расчёта информативности","usual_care","code"]],
@@ -306,8 +306,8 @@ Primary outcomes: Physical performance assessed by the Short Physical Performanc
     {n:1, sev:"hi", t:"Пре-саркопения — состояние популяции, а не исход: текст говорит о пожилых с пре-саркопенией (цель — «improving pre-sarcopenia among older adults»). В карточке популяция — просто «older adults». Запрос по точной популяции будет общим, а самая информативная запись для таких испытаний (нулевой результат силовой программы при пре-саркопении) находится только им. Решение: подполе «состояние» у популяции; состояние, по которому отбирают участников, — туда. Возраст словом; привязка к числам — по принятой классификации (вопрос открыт)."},
     {n:2, sev:"mid", t:"Фраза у вмешательства не кратчайшая: взята вся строка Interventions с описанием эффекта. Код проверяет только, что фраза есть в тексте, но не её длину. В словаре типов нет «упражнений» — они идут «процедурой»."},
     {n:3, sev:"hi", t:"Главный исход взят не по правилу. Правило: главный исход — первичный исход испытания, иначе первый названный. Первичные исходы реестра — SPPB и состав тела; карточка взяла состояние из названия. Утверждения об SPPB как исходе нет, о составе тела — нет совсем, хотя текст ожидает улучшения «body composition»."},
-    {n:4, sev:"hi", t:"Звенья не по определению. Путь — процесс в молекуле или клетке, эффект — состояние ткани или органа. c4 (мышечная масса) — эффект, c5 (работоспособность) и c6 (переход в саркопению) — исходы. По тексту цепочка: приседания → сила и масса мышц (эффект) → работоспособность и предотвращение саркопении (исход)."},
-    {n:5, sev:"mid", t:"Работоспособность записана дважды: как известный шаг (c3, эффект) и как утверждаемый (c5, путь), и она же — первичный исход (SPPB). Удаление дублей их не объединило: оно сравнивает утверждения только на одном звене."},
+    {n:4, sev:"hi", t:"Звенья не по определению. Клеточный процесс — процесс внутри клеток, эффект — состояние ткани или органа. c4 (мышечная масса) — эффект, c5 (работоспособность) и c6 (переход в саркопению) — исходы. По тексту цепочка: приседания → сила и масса мышц (эффект) → работоспособность и предотвращение саркопении (исход)."},
+    {n:5, sev:"mid", t:"Работоспособность записана дважды: как известный шаг (c3, эффект) и как утверждаемый (c5, клеточный процесс), и она же — первичный исход (SPPB). Удаление дублей их не объединило: оно сравнивает утверждения только на одном звене."},
     {n:6, sev:"mid", t:"Субъект c4–c6 — «resistance exercise», класс вмешательства, а не приседания. Подача «утверждается» спорна: это довод о классе, ближе к аналогии."},
     {n:7, sev:"lo", t:"Вид «человек» у c4–c6 не стоит во фразе и по правилу не наследуется (субъект — не вмешательство карточки). Код трижды вернул это модели; замечание осталось."},
     {n:8, sev:"lo", t:"В реестре группа типа «no intervention», подписана «Usual Care»; карточка записала обычный уход. Для оценки обе трактовки дают одно: контакта и внимания у контрольной группы нет."},
