@@ -82,3 +82,8 @@ relabel_pack_20:   # 2026-11-13
   status: "gold received 2026-11-13 (60 texts, 225 claims, all 843 phrases verbatim)"
   result: {argon_old_vs_new: "kappa 0.53; old pathways kept 7 of 34 (16 -> premise, 9 -> outcome), engagements 0 of 9, outcomes 52/54, premises 24/25", ours_v13_vs_new_gold: "kappa 0.50, without outcomes 0.32 (old gold: 0.37 and about 0); main errors premise -> pathway 12, outcome -> pathway or effect 13; claims one-to-one recall 0.54, precision 0.50"}
   reading: "the old gold's middle links were the problem as much as the model: under the new definitions the outside reader is consistent with the levels and our saved cards agree better; the rules of the card manual target the two remaining errors"
+normaliser_v15:   # 2026-11-13
+  template: "hyparena/prompts/normalize_card/v15.j2; code: normalizer.v15_prepare, primary_from_registry, v15_problems, age_class (tests/test_normalizer_v15.py)"
+  run: "scripts/bench_card_v2.py on packs 19 and 20 (90 texts); dry run 7.9 USD (0.088 per text, Gemini Flash)"
+  earlier_system_on_pack_20: {ours_v13: "claims 0.54 / 0.50 (many-to-one 0.57 / 0.76); link kappa 0.50, without outcomes 0.32; chain / premise 0.84; main outcome 0.55; population condition 0.45"}
+  pass_rule: "v15 replaces v11 as the working card when, on pack 20, link kappa and main outcome are not lower than v13's and claim recall is not lower by more than 0.03; pack 19 reported apart (no earlier system)"

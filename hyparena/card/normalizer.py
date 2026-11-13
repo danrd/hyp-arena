@@ -86,16 +86,23 @@ def registry_defaults(card: HypothesisCard, raw_text: str) -> list[str]:
     return filled
 
 
-def _problems(value: dict, raw_text: str, card_id: str, core: bool = False) -> tuple[Optional[HypothesisCard], list[str]]:
+def _problems(value: dict, raw_text: str, card_id: str, core: bool = False, v15: bool = False) -> tuple[Optional[HypothesisCard], list[str]]:
     value = _closed_fields(value)
     try:
         card = HypothesisCard.model_validate({**value, "id": card_id, "raw_id": card_id})
     except ValidationError as e:
         return None, [f"{'.'.join(map(str, err['loc']))}: {err['msg']}" for err in e.errors()[:12]]
+    extra = []
+    if v15:
+        v15_prepare(card)                               # premises off the chain before roles are derived
+        extra = primary_from_registry(card, raw_text)   # the main outcome is the registry's primary outcome (code)
     derive_roles(card)                                  # v13: `role` from `primary` and `stated_as` (no-op before v13)
     set_sex_scope(card, raw_text)                       # `any` from the words "at least one sex" when the model left it out
     canonicalize(card)                                  # dose and age in one wording (L1.8)
-    return mark_inherited(card), validate_card(card, raw_text) + (core_span_problems(card, raw_text) if core else [])
+    problems = validate_card(card, raw_text, max_claims=12 if v15 else 8) + (core_span_problems(card, raw_text) if core else [])
+    if v15:
+        problems += extra + v15_problems(card)
+    return mark_inherited(card), problems
 
 
 def normalize(client, family: str, raw_text: str, card_id: str, log: Optional[list] = None,
@@ -106,12 +113,13 @@ def normalize(client, family: str, raw_text: str, card_id: str, log: Optional[li
                  "hallmarks": ", ".join(typing.get_args(Hallmark)), "hint": ""}
     vnum = int((version or TEMPLATE[1]).lstrip("v") or 0)
     core = vnum >= 12                                   # normalize_card/v12: spans for the core fields, checked like claims
+    v15 = vnum >= 15                                    # normalize_card/v15: chain and premises, main factor, code checks
     run = lambda v: ask(client, role="normalize_card", family=family, template=TEMPLATE[0], version=version or TEMPLATE[1],
-                        variables=v, validate=lambda x: _problems(x, raw_text, card_id, core)[1], rounds=rounds, log=log)[0]
+                        variables=v, validate=lambda x: _problems(x, raw_text, card_id, core, v15)[1], rounds=rounds, log=log)[0]
     value = run(variables)
     if value is None:
         return None, ["no valid JSON from the normalizer"]
-    first, _ = _problems(value, raw_text, card_id)
+    first, _ = _problems(value, raw_text, card_id, v15=v15)
     out = first.outcome_claim if first is not None else None
     if out is not None and out.relation == "other":
         near = nearest_relations(f"{out.note} {out.source_span} {out.object.label}")
@@ -119,15 +127,15 @@ def normalize(client, family: str, raw_text: str, card_id: str, log: Optional[li
                 f'"{out.note or "none"}"). Check whether one of these relations fits it: {", ".join(near)}. '
                 f'Keep "other" only if none of them states what the text says.')
         again = run({**variables, "hint": hint})
-        if again is not None and _problems(again, raw_text, card_id)[0] is not None:
+        if again is not None and _problems(again, raw_text, card_id, v15=v15)[0] is not None:
             value = again
-    card, problems = _problems(value, raw_text, card_id)    # core spans are settled by anchor_core below, not by dropping
+    card, problems = _problems(value, raw_text, card_id, v15=v15)   # core spans are settled by anchor_core below, not by dropping
     if card is not None and problems:                  # drop claims whose span is not verbatim, keep the rest
         bad = {p.split(":")[0] for p in problems if "source_span" in p}
         if bad and len(bad) < len(card.claims):
             card.claims = [c for c in card.claims if c.id not in bad]
             card.edges = [e for e in card.edges if e.from_ not in bad and e.to not in bad]
-            problems = validate_card(card, raw_text)
+            problems = validate_card(card, raw_text, max_claims=12 if v15 else 8) + (v15_problems(card) if v15 else [])
     if card is not None and vnum >= 10:
         registry_defaults(card, raw_text)
     if card is not None and vnum >= 13:
@@ -230,7 +238,11 @@ def normalize_union(client, family: str, raw_text: str, card_id: str, log: Optio
         card, s = union_cards(card, other, raw_text)
         stab.update(s)
     if len(good) > 1:
-        problems = validate_card(card, raw_text)
+        v15 = int((version or TEMPLATE[1]).lstrip("v") or 0) >= 15
+        if v15:
+            v15_prepare(card)
+            primary_from_registry(card, raw_text)
+        problems = validate_card(card, raw_text, max_claims=12 if v15 else 8) + (v15_problems(card) if v15 else [])
         if int((version or TEMPLATE[1]).lstrip("v") or 0) >= 13:
             stab["deduplicated"] = dedupe_claims(card)  # near-duplicates the union added (card benchmark 2026-11-12)
             derive_roles(card)
@@ -320,6 +332,7 @@ def v13_code_fields(card: HypothesisCard, raw_text: str) -> None:
     if _unknown(e.endpoint):
         e.endpoint = p.outcome.metric
     e.registry = registry_design(raw_text)
+    p.population.age_class = age_class(p.population.age_at_start, p.population.taxon)
     if e.n_planned is None and e.registry.get("planned_enrollment"):
         e.n_planned = e.registry["planned_enrollment"]
     card.author_refs = author_refs(raw_text)
@@ -364,3 +377,104 @@ def dedupe_claims(card: HypothesisCard) -> list[str]:
             if ref in alias:
                 c.qualifiers["contrast"] = alias[ref]
     return removed
+
+
+# ---- normalize_card/v15 (docs/system/card.md, "Звенья: как определяется тип"; 2026-11-13) ---------------------------------
+STEP_LEVELS = {"engagement": {"molecule"}, "pathway": {"molecule", "cell"}, "effect": {"tissue", "organ", "organism"}}
+_STOP = {"the", "and", "with", "for", "from", "into", "older", "adults", "adult", "elderly", "people", "patients", "human",
+         "humans", "mice", "mouse", "level", "levels", "of", "in", "on", "by", "a", "an", "to"}
+MESH_AGE = [(80, "Aged, 80 and over"), (65, "Aged"), (45, "Middle Aged"), (19, "Adult"), (13, "Adolescent"), (2, "Child"),
+            (0, "Infant")]
+AGE_WORDS = [(r"\b(oldest[- ]old|octogenarian|nonagenarian|over 80|80\+)", ["Aged, 80 and over"]),
+             (r"\bmiddle[- ]aged?\b", ["Middle Aged"]),
+             (r"\b(elderly|older (adults?|people|persons|individuals|women|men)|aged|seniors?|old age|geriatric)\b", ["Aged"]),
+             (r"\byoung adults?\b", ["Adult"])]
+
+
+def age_class(text: str, taxon: Optional[str] = None) -> str:
+    """The MeSH age groups a stated age covers (people only; animals get their own scale later): a number or a range of
+    years gives the groups from its lower bound to its upper one ("or older", "+", ">=" up to 80 and over); words map by a
+    short list (elderly, older adults -> Aged); "" when nothing fits."""
+    if taxon and taxon not in ("NCBITaxon:9606",):
+        return ""
+    t = (text or "").lower()
+    if not t or t == "unknown":
+        return ""
+    nums = [int(x) for x in re.findall(r"(\d{1,3})\s*(?:-|to|–|\s)?\s*(?=(?:\d{1,3}\s*)?(?:years?|yrs?|y\b|\+|or older|and older|and over|or over))", t)]
+    nums += [int(x) for x in re.findall(r"(?:>=|≥|over|above|aged)\s*(\d{1,3})", t)]
+    nums = [n for n in nums if n < 120]
+    if nums:
+        lo, hi = min(nums), max(nums)
+        if re.search(r"or older|and older|and over|or over|\+|>=|≥|over|above", t):
+            hi = 120
+        groups = [g for bound, g in MESH_AGE if bound <= hi and (bound >= lo or bound == max(b for b, _ in MESH_AGE if b <= lo))]
+        return "; ".join(dict.fromkeys(reversed(groups)))
+    for pat, gs in AGE_WORDS:
+        if re.search(pat, t):
+            return "; ".join(gs)
+    return ""
+
+
+def _toks(s: str) -> set:
+    return {w[:6] for w in re.findall(r"[a-z0-9]{3,}", (s or "").lower())} - {w[:6] for w in _STOP}
+
+
+def v15_prepare(card: HypothesisCard) -> None:
+    """A premise is off the chain (no link); a chain claim without a part is chain when it has a link."""
+    for c in card.claims:
+        if c.part is None:
+            c.part = "chain" if c.link else "premise"
+        if c.part == "premise":
+            c.link = None
+            c.primary = False
+
+
+def primary_from_registry(card: HypothesisCard, raw_text: str) -> list[str]:
+    """For a registry text the main outcome is the claim matching the registry's primary outcome by words (the first primary
+    outcome that has such a claim). A primary outcome with no matching outcome claim is sent back to the model."""
+    m = re.search(r"^Primary outcomes:\s*(.+)$", raw_text, re.M)
+    if not m:
+        return []
+    regs = [re.sub(r"\([^)]*\)\s*$", "", x).strip() for x in m.group(1).split(";") if x.strip()]
+    outs = [c for c in card.claims if c.link == "outcome" and c.part != "premise"]
+    problems, main = [], None
+    for r in regs:
+        rt = _toks(r) - {"assess", "measur", "change", "baseli", "score", "total"}
+        best = max(outs, key=lambda c: len(rt & _toks(f"{c.object.label} {c.qualifiers.get('measure', '')}")), default=None)
+        if best is not None and rt & _toks(f"{best.object.label} {best.qualifiers.get('measure', '')}"):
+            main = main or best
+        else:
+            problems.append(f"the registry primary outcome {r!r} has no outcome claim: write one (part chain, link outcome, "
+                            f"its measure as the object or in qualifiers.measure) with a source_span that states it")
+    if main is not None:
+        for c in card.claims:
+            c.primary = c is main
+    return problems
+
+
+def v15_problems(card: HypothesisCard) -> list[str]:
+    """Checks of normalize_card/v15, sent back to the model like the span checks: English labels; part and link agree; a chain
+    claim starts from the main factor, the intervention or an earlier step; the link fits the level (docs/system/card.md)."""
+    out = []
+    if not card.main_factor or not str(card.main_factor.get("label") or "").strip():
+        out.append("main_factor is missing: name the thing whose consequences the hypothesis states")
+    roots = _toks((card.main_factor or {}).get("label", "")) | set().union(*[_toks(i.label) for i in card.pico.intervention] or [set()])
+    seen = set(roots)
+    for c in card.claims:
+        labels = f"{c.subject.label} {c.object.label} {c.qualifiers.get('measure', '')}"
+        if re.search(r"[а-яА-ЯёЁ]", labels):
+            out.append(f"{c.id}: write subject, object and measure labels in English (the source_span stays in the text's language)")
+        if c.part == "premise" and c.link:
+            out.append(f"{c.id}: a premise has no link")
+        if c.part == "chain" and not c.link:
+            out.append(f"{c.id}: a chain claim needs a link")
+        if c.part == "chain" and c.link != "outcome" and roots and not (_toks(c.subject.label) & seen):
+            out.append(f"{c.id}: part chain, but its subject ({c.subject.label!r}) is neither the main factor, the intervention nor "
+                       f"the object of an earlier chain claim: make it a premise or write the step it follows from")
+        allowed = STEP_LEVELS.get(c.link or "")
+        if allowed and c.level and c.level not in allowed:
+            out.append(f"{c.id}: link {c.link} with level {c.level}: an engagement acts on a named molecule, a pathway (cellular "
+                       f"process) is inside cells, an effect is a state of a tissue, organ or body system - fix the link or the level")
+        if c.part == "chain":
+            seen |= _toks(c.object.label) | _toks(c.qualifiers.get("measure", ""))
+    return out

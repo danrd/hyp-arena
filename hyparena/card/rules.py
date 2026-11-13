@@ -69,14 +69,14 @@ def anchor_core(card: HypothesisCard, raw_text: str) -> list[str]:
     return missing
 
 
-def validate_card(card: HypothesisCard, raw_text: Optional[str] = None) -> list[str]:
-    """Problems with a declared card; empty when it is valid."""
+def validate_card(card: HypothesisCard, raw_text: Optional[str] = None, max_claims: int = 8) -> list[str]:
+    """Problems with a declared card; empty when it is valid. normalize_card/v15 allows 12 claims (one measure per outcome)."""
     problems = []
     outcomes = [c for c in card.claims if c.role == "outcome"]
     if len(outcomes) != 1:
         problems.append(f"exactly one claim must have role outcome (found {len(outcomes)})")
-    if len(card.claims) > 8:
-        problems.append(f"at most 8 claims (found {len(card.claims)})")
+    if len(card.claims) > max_claims:
+        problems.append(f"at most {max_claims} claims (found {len(card.claims)})")
     ids = {c.id for c in card.claims}
     if len(ids) != len(card.claims):
         problems.append("claim ids must be unique")

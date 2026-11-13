@@ -47,7 +47,7 @@ NOVELTY_NAMES = {"new_context": ("новый контекст", "new context"), 
                  "new_mechanism": ("новый механизм известного эффекта", "new mechanism of a known effect"), "new_combination": ("новое сочетание", "new combination"),
                  "new_link": ("новое звено", "new link"), None: ("неизвестно", "unknown")}
 LINK_NAMES = {"delivery": ("доставка", "delivery"), "engagement": ("действие на мишень", "target engagement"),
-              "pathway": ("сигнальный путь", "pathway"), "effect": ("промежуточный эффект", "intermediate effect"),
+              "pathway": ("клеточный процесс", "cellular process"), "effect": ("промежуточный эффект", "intermediate effect"),
               "outcome": ("исход", "outcome")}
 SCOPE_NAMES = {"local": ("локальный", "local"), "organ": ("орган / система", "organ or system"),
                "hallmark": ("признак старения", "hallmark of ageing")}
@@ -701,7 +701,7 @@ GLOSSARY_EXTRA = {
                "Link novelty: the level of the closest record of this link: new context (the same intervention in the same species), translation (only another species), analog (only a related intervention), new link (no records)."),
     "records": ("Записи PubMed по звену: PMID и вес. Зелёные — «за», красные — «против». Наведите на запись, чтобы увидеть дизайн, n и дословную цитату; клик открывает статью.",
                 "PubMed records of the link: PMID and weight. Green: for, red: against. Hover for the design, n and the verbatim quote; a click opens the paper."),
-    "link": ("Звено механизма: доставка, действие на мишень, сигнальный путь, промежуточный эффект, исход. Цепочка звеньев ведёт от вмешательства к исходу.",
+    "link": ("Звено механизма: доставка, действие на мишень, клеточный процесс, промежуточный эффект, исход. Цепочка звеньев ведёт от вмешательства к исходу.",
              "A link of the mechanism: delivery, target engagement, pathway, intermediate effect, outcome. The chain leads from the intervention to the outcome."),
     "alt": ("Альтернативное объяснение того же результата. Учитывается в I, только если у него есть поддержка в литературе и заявленный эксперимент его отсекает или ослабляет.",
             "An alternative explanation of the same result. It counts in I only with support in the literature and when the stated experiment rules it out or weakens it."),

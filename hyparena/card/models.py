@@ -12,7 +12,7 @@ from pydantic import AliasChoices, BaseModel, Field, field_validator, model_vali
 
 UNKNOWN = "unknown"
 
-HypothesisType = Literal["interventional", "mechanistic", "biomarker", "observational"]
+HypothesisType = Literal["interventional", "mechanistic", "explanatory", "biomarker", "observational"]
 Relation = Literal[
     "extends_lifespan_in", "shortens_lifespan_in", "no_lifespan_effect_in", "slows_aging_in", "improves_healthspan_in",
     "changes_biomarker", "predicts", "inhibits", "activates", "increases_expression", "decreases_expression",
@@ -71,6 +71,9 @@ class Claim(BaseModel):
     stated_as: Optional[Literal["claimed", "known", "analogy"]] = None
     level: Optional[Literal["molecule", "cell", "tissue", "organ", "organism"]] = None   # reference only (not scored)
     sex_scope: Literal["any", "unspecified"] = "unspecified"   # `any`: the text claims the effect in at least one sex (an effect in one sex is enough)
+    # normalize_card/v15 (docs/system/card.md, "Звенья"): a claim is on the chain of the main factor or a premise about the problem
+    part: Optional[Literal["chain", "premise"]] = None
+    premise_kind: Optional[Literal["population_state", "problem_mechanism"]] = None
 
 
 class DeclaredAlternative(BaseModel):
@@ -100,7 +103,9 @@ class Population(BaseModel):
     label: str = UNKNOWN
     strain: str = UNKNOWN
     sex: str = UNKNOWN
-    age_at_start: str = UNKNOWN                  # age of the population when the intervention starts
+    age_at_start: str = UNKNOWN                  # age of the population when the intervention starts (v15: as the text states it)
+    condition: str = UNKNOWN                     # v15: the state the people or animals are selected for ("pre-sarcopenia")
+    age_class: str = ""                          # v15: MeSH age group set by code from age_at_start (normalizer.age_class)
     span: str = ""                               # normalize_card/v12: the exact phrase of the text that states this field ("" before v12)
 
     @model_validator(mode="before")
@@ -166,6 +171,7 @@ class DecisiveExperiment(BaseModel):
     primary_outcomes: list[str] = Field(default_factory=list)      # v13: each primary outcome with its time frame
     duration: str = UNKNOWN                      # v13: as the text gives it; duration_class is computed from it by code
     registry: dict = Field(default_factory=dict) # v13: design fields of a registry text parsed by code (allocation, model, masking, arms)
+    arms: list[str] = Field(default_factory=list)   # v15: the arms or test manipulations the text names (an added antigen, a knockout)
     span: str = ""                               # normalize_card/v12: the exact phrase of the text that states this field ("" before v12)
 
 
@@ -218,6 +224,10 @@ class HypothesisCard(BaseModel):
     unanchored: list[str] = Field(default_factory=list)
     expected_effect: Optional[dict] = None       # v13: {size, compared_to, time_point, span} when the text names a size
     author_refs: list[str] = Field(default_factory=list)          # v13: PMIDs / DOIs named in the text (code)
+    # v15: the thing whose consequences the hypothesis states (the chain starts from it) and the disease or ageing process
+    # it is about; {label, kind: intervention | exposure | condition | process, span} and {label, span, mesh}
+    main_factor: Optional[dict] = None
+    topic: Optional[dict] = None
 
     @field_validator("declared_alternatives", mode="before")
     @classmethod
