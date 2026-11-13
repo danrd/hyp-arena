@@ -31,3 +31,10 @@ result_2026_11_12:   # scripts/bench_search.py check, score; longevity-kg review
   holdout_10: "recall_all 0.26, prior work found 0.40, kappa 0.03, ours farther 0.29"
   thresholds: "search_ok not met (0.25 < 0.6): the search is a bottleneck before reading; novelty_ok not met (kappa -0.08 < 0.4, farther 50% > 25%)"
   limits: "saved searches are of method v3 with config v3-flash-n10 and normaliser v10 (8 of 30 cards have a step claim, which bounds step recall); the current search (ours_now) is not run; no LLM baseline (base_b) yet; Argon's gold is one reader, not checked against a second; 30 calibration texts, see the leak check (scripts/calibration_leak.py): 14 of the 30 were registered after primary completion"
+diagnosis_2026_11_13:   # scripts/search_misses.py (free, PubMed only); longevity-kg reviews/argon-2026-11-12/search_misses.json
+  where_lost: "of 152 gold papers: read 13 (9%); given to the reader, no record 25 (16%); a saved query matches it but it is cut before the 20 given per claim 39 (26%); no saved query matches it 75 (49%); the date guard 0"
+  no_query: "16 have no claim of their kind on the card (mostly step papers: 8 of 30 v10 cards have a step claim); of the other 59, the closest query of their link misses by 1 AND-block for 17, 2 for 20, 3 or more for 22; where one block decides, it is the intervention wording 27 times, the outcome 23, the population 4"
+  queries: "956 saved LLM queries: median 4 AND-blocks, median 54 hits before T, 56 with no hit, 328 under 20"
+  reading: "of the 38 gold papers the reader got, 13 became records (34%)"
+  caveat: "PubMed relevance order today may differ from the run's; the block kinds are named by a word rule (intervention words of the card, population words, the rest outcome / other)"
+  reading_of_it: "the search loses about three quarters of the gold before reading: half by query wording (too many AND-blocks, intervention and outcome terms that the papers do not use), a quarter by the cut at 20 per claim; the reader then keeps a third of what it gets"
