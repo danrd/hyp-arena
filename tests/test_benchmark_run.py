@@ -68,7 +68,7 @@ def test_gemini_runner_thinking_level_and_cut_reply():
 
 
 def test_query_fallbacks_for_trial_claims():
-    from hyparena.card.verifier import _head, _population_words, _words, queries
+    from hyparena.reading.verifier import _head, _population_words, _words, queries
     from hyparena.card.models import HypothesisCard
     assert _head("markers of inflammation, immune system markers and other risk factors") == "markers of inflammation"
     assert _words("markers of inflammation", 4) == "markers inflammation"
@@ -82,7 +82,7 @@ PILOT_CARD = json.loads('{"id": "H-0001", "raw_id": "H-0001", "hypothesis_type":
 
 
 def test_or_relation_words_are_bracketed():
-    from hyparena.card.verifier import queries
+    from hyparena.reading.verifier import queries
     from hyparena.card.models import HypothesisCard
     card = HypothesisCard.model_validate(json.loads(json.dumps(PILOT_CARD)))
     c = card.claims[0].model_copy(update={"relation": "improves_healthspan_in"})
@@ -90,7 +90,7 @@ def test_or_relation_words_are_bracketed():
 
 
 def test_graded_admission_counts_adjacent_population_only_when_on():
-    from hyparena.card import rules
+    from hyparena.scoring import rules
     from hyparena.card.models import Claim, EvidenceRecord
     claim = Claim.model_validate({"id": "c1", "subject": {"label": "exercise programme"}, "relation": "improves_healthspan_in",
                                   "object": {"label": "human"}, "qualifiers": {"species": "human"}, "role": "outcome", "source_span": "x"})

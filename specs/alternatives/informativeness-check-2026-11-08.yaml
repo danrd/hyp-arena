@@ -106,7 +106,7 @@ fix_step2_result:   # 2026-11-08; prospective/alternatives_v2_holdout.json, alte
   caveat: "one labeller (Claude); 'partly' is a judgement call"
 adopted_judged_d:   # user decision 2026-11-08 ("item 1: adopt the judge of d and recompute I and the room")
   code: >-
-    hyparena/card/alternatives_d.py: the d of judge_alternatives/v2 replaces on_positive / on_negative where saved runs are
+    hyparena/alternatives/alternatives_d.py: the d of judge_alternatives/v2 replaces on_positive / on_negative where saved runs are
     read (scripts.common.v34_check.parts(it, unit_id), scripts.common.ablation.units, scripts.whole_system.prospective.score, the report builder);
     JUDGED_D=0 reproduces earlier numbers. Calibration pool judged: 73 units, 0.045 USD; prospective: the dev + holdout runs
   prospective: "I mean 0.164 -> 0.325, I > 0 in 29 -> 42 trials; ASPID order Spearman 0.936 / 0.982 / 0.965 (evidence / funding / frontier), top 10 kept 7 / 10 / 8"

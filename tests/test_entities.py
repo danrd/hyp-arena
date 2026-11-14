@@ -3,9 +3,10 @@ from pathlib import Path
 
 import yaml
 
-from hyparena.card import entities, sources
+from hyparena.card import entities
+from hyparena.reading import sources
 from hyparena.card.models import Claim, Entity, HypothesisCard
-from hyparena.card.rules import same_intervention
+from hyparena.scoring.rules import same_intervention
 from hyparena.tools import compounds as cp
 
 FIX = Path(__file__).parent / "fixtures" / "cards"

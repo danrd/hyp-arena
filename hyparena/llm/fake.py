@@ -106,7 +106,7 @@ class FakeLLMClient:
         return json.dumps({"generate": "State a refutation condition.", "review": "Check citations.",
                            "compare": "Do not prefer longer text.", "evolve": "Keep claims testable."})
 
-    # negative-sampling test (hyparena/negatives.py)
+    # negative-sampling test (hyparena/whole_system/negatives.py)
 
     @staticmethod
     def _numbered(prompt):

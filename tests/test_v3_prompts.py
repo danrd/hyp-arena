@@ -3,7 +3,7 @@ import json
 
 from hyparena.card.llm import render
 from hyparena.card.models import EvidenceRecord, HypothesisCard
-from hyparena.card.verifier import v3_fields
+from hyparena.reading.verifier import v3_fields
 from tests.test_benchmark_run import PILOT_CARD
 
 ABSTRACT = "In this randomized double-blind study, patients were assigned either to treatment (n = 35) or placebo (n = 36). Treatment improved IS (+11.5 ± 17.2; p = 0.041)."
@@ -32,7 +32,7 @@ def test_v3_fields_keep_only_verbatim_numbers():
 
 
 def test_proposed_alternatives_keep_only_listed_support():
-    from hyparena.card.alternatives_v3 import propose
+    from hyparena.alternatives.alternatives_v3 import propose
     from hyparena.llm.fake import FakeLLMClient
     card = HypothesisCard.model_validate(json.loads(json.dumps(PILOT_CARD)))
     alts = propose(FakeLLMClient(0), "deepseek", card, {"123": {"title": "t", "abstract": "a", "year": "2010"}}, "2018-01-01")
@@ -40,7 +40,7 @@ def test_proposed_alternatives_keep_only_listed_support():
 
 
 def test_v3_pipeline_runs_with_the_fake_llm():
-    from hyparena.card.pipeline import run
+    from hyparena.pipeline import run
     text = "Older adults will store more heat than younger adults during a prolonged simulated heatwave, because sweating declines."
     res = run([text], writer="human_registry", config="configs/v3-flash.yaml", fake=True, as_of="2020-01-01", max_calls=60,
               verifiers=["deepseek"])
@@ -51,7 +51,7 @@ def test_v3_pipeline_runs_with_the_fake_llm():
 
 
 def test_numbers_written_in_words_are_accepted():
-    from hyparena.card.verifier import words_to_numbers
+    from hyparena.reading.verifier import words_to_numbers
     assert 163 in words_to_numbers("One hundred and sixty-three outpatients with stable chronic heart failure")
     assert 2290 in words_to_numbers("two thousand two hundred ninety residents")
     rec = EvidenceRecord(source="PubMed", record_id="PMID:1")

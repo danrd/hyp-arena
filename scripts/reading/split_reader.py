@@ -11,7 +11,7 @@ import os
 import sys
 from collections import Counter
 
-from hyparena.card import rules_v32 as r32
+from hyparena.scoring import rules_v32 as r32
 from scripts.reading.reader_model import ARGON, sample
 from scripts.common.reread_v11 import CONFIG, items
 from scripts.common.v34_check import CAL, PROS
@@ -25,7 +25,7 @@ def run() -> dict:
     if os.environ.get("ALLOW_PAID") != "1":
         raise SystemExit("paid: set ALLOW_PAID=1")
     from hyparena.card.llm import ask
-    from hyparena.card.pipeline import _client
+    from hyparena.pipeline import _client
     from hyparena.tools import pubmed
     want = set(sample())
     done = json.loads(OUT.read_text()) if OUT.exists() else {}

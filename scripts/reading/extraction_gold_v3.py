@@ -152,9 +152,9 @@ def pairs_retrieval(per_claim=(("direct", 3), ("related", 3), ("no", 1), (None, 
 
 
 def run(fake: bool = False, gold_name: str = "v3", only: tuple = ()) -> None:
-    from hyparena.card import verifier
+    from hyparena.reading import verifier
     from hyparena.card.models import HypothesisCard
-    from hyparena.card.pipeline import _client
+    from hyparena.pipeline import _client
     from hyparena.tools import pubmed
     pubmed.search = lambda *a, **k: []                    # no retrieval: only the gold paper is read
     gold = load_gold(gold_name)
@@ -186,9 +186,9 @@ def record_for(replies: list[str], pmid: str, source: str, review: bool = False,
     """The compared record of a pair, with the code checks of a run applied (fields as EvidenceRecord names them).
     `relevant`: the verifier returned a record with stance supports or refutes."""
     from hyparena.card.models import EvidenceRecord
-    from hyparena.card.verifier import _norm, parse_records, v3_fields
+    from hyparena.reading.verifier import _norm, parse_records, v3_fields
     from hyparena.card.llm import parse_fullest
-    from hyparena.card.verifier import merge_relevance
+    from hyparena.reading.verifier import merge_relevance
     recs, checks = [], []
     for t in reversed(replies):                           # the last parsed reply is the one a run keeps
         value = parse_records(t or "")
@@ -216,7 +216,7 @@ def record_for(replies: list[str], pmid: str, source: str, review: bool = False,
 
 
 def overlaps(a: str, b: str) -> bool:
-    from hyparena.card.verifier import _norm
+    from hyparena.reading.verifier import _norm
     a, b = _norm(a), _norm(b)
     return bool(a and b and (a in b or b in a))
 

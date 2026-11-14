@@ -12,18 +12,18 @@ generated ideas and manuscripts, and external hypotheses have no experiment logs
 |---|---|---|
 | Normalizer: text → declared card (claims in a closed vocabulary, each with a verbatim `source_span`; qualifiers inherited from PICO marked; contrast "mainly X, not Y" as outcome X plus a rejected alternative Y) | LLM (`normalize_card/v4`, gemini-3.5-flash), code sets inheritance of species and strain (deterministic), validates and asks again: `hyparena/card/normalizer.py` | done |
 | Compound identifiers: interventions typed as compounds → PubChem parent compound, ChEBI, ChEMBL, max clinical phase, first approval year, synonyms | code: `hyparena/tools/compounds.py`, `hyparena/card/entities.py`; DrugAge names mapped once in `data/drugage_compounds.json` | done (compounds only) |
-| Validation and admission (accepted / needs refinement / not a hypothesis) | code: `hyparena/card/rules.py` | done |
-| Verifier: evidence records with verbatim quotes, quote role, context match, endpoint; rejected alternatives checked like claims; analog probes in mice for human outcomes | DrugAge (curated, deterministic) + PubMed abstracts (LLM extracts with `verify_claim/v5`; code drops quotes that are not verbatim, checks the context and the strain, see below): `hyparena/card/verifier.py` | done |
-| Claim statuses (with the contrast rule), gate, evidence profile, next step, known result | code: `hyparena/card/rules.py` | done |
-| Indicators (spec 8a) | code: `hyparena/card/indicators.py` | done for evidence-based ones and `path_to_human`; late start and informativeness stay unknown until their inputs exist |
-| Aggregation under preference profiles (МРСП / SMAA-2) | code: `hyparena/aspid.py`, profiles in `configs/profiles.yaml` | done |
-| Ranking across profiles, robust candidates | code: `hyparena/card/rank.py` | done |
-| End to end | `python -m hyparena.card.pipeline --paste file.txt --out result.json` (`configs/v2.yaml`, `--fake` for no model calls) | done |
-| Expert layer (card spec 7a; Aggregation_Spec 6a): sources sent through the verifier, opinions kept apart, pairwise choices as weight constraints, the expert's own hypotheses | `hyparena/card/expert.py`, `Prefer` / `check_feasible` / `next_pair` in `hyparena/aspid.py`; `--expert expert.yaml` | done (file input; no interface yet) |
-| Alternatives row (spec 8c): declared rejected alternatives with their status, 14 checklist rows by rules, one check call per hypothesis, a dedicated search for P(top-k) ≥ 0.5 | code + LLM (`check_alternatives/v1`): `hyparena/card/alternatives.py` | done |
-| Backtest pools and metrics (Working_Notes A2) | code: `hyparena/outcomes.py`, `hyparena/backtest.py` | done (no run yet) |
+| Validation and admission (accepted / needs refinement / not a hypothesis) | code: `hyparena/scoring/rules.py` | done |
+| Verifier: evidence records with verbatim quotes, quote role, context match, endpoint; rejected alternatives checked like claims; analog probes in mice for human outcomes | DrugAge (curated, deterministic) + PubMed abstracts (LLM extracts with `verify_claim/v5`; code drops quotes that are not verbatim, checks the context and the strain, see below): `hyparena/reading/verifier.py` | done |
+| Claim statuses (with the contrast rule), gate, evidence profile, next step, known result | code: `hyparena/scoring/rules.py` | done |
+| Indicators (spec 8a) | code: `hyparena/scoring/indicators.py` | done for evidence-based ones and `path_to_human`; late start and informativeness stay unknown until their inputs exist |
+| Aggregation under preference profiles (МРСП / SMAA-2) | code: `hyparena/scoring/aspid.py`, profiles in `configs/profiles.yaml` | done |
+| Ranking across profiles, robust candidates | code: `hyparena/rank.py` | done |
+| End to end | `python -m hyparena.pipeline --paste file.txt --out result.json` (`configs/v2.yaml`, `--fake` for no model calls) | done |
+| Expert layer (card spec 7a; Aggregation_Spec 6a): sources sent through the verifier, opinions kept apart, pairwise choices as weight constraints, the expert's own hypotheses | `hyparena/scoring/expert.py`, `Prefer` / `check_feasible` / `next_pair` in `hyparena/scoring/aspid.py`; `--expert expert.yaml` | done (file input; no interface yet) |
+| Alternatives row (spec 8c): declared rejected alternatives with their status, 14 checklist rows by rules, one check call per hypothesis, a dedicated search for P(top-k) ≥ 0.5 | code + LLM (`check_alternatives/v1`): `hyparena/alternatives/alternatives.py` | done |
+| Backtest pools and metrics (Working_Notes A2) | code: `hyparena/whole_system/outcomes.py`, `hyparena/whole_system/backtest.py` | done (no run yet) |
 | Debates on the top (prosecution vs defence; competitor pairs), prediction table, informativeness | LLM | stage C |
-| Card-based proximity (spec 8b): duplicate, variant, competitor, contradiction, analog (shared ChEMBL mechanism target or narrow ChEBI class), mechanism neighbour (shared hallmark or molecular node); embedding fallback for unresolved names (SapBERT, approximate); duplicates are not verified twice, competitors become alternatives | code: `hyparena/card/proximity.py`, `hyparena/tools/chebi.py`, `hyparena/tools/embed.py` | done (refinement siblings not linked) |
+| Card-based proximity (spec 8b): duplicate, variant, competitor, contradiction, analog (shared ChEMBL mechanism target or narrow ChEBI class), mechanism neighbour (shared hallmark or molecular node); embedding fallback for unresolved names (SapBERT, approximate); duplicates are not verified twice, competitors become alternatives | code: `hyparena/novelty/proximity.py`, `hyparena/tools/chebi.py`, `hyparena/tools/embed.py` | done (refinement siblings not linked) |
 | Evolution loop | code + LLM | later |
 
 **Aggregation as implemented** (Aggregation_Spec):
@@ -132,7 +132,7 @@ changed outcome: Lovaza "via SIRT1" in mice became a known result and oridonin "
 
 ## Typed proximity (2026-10-21)
 
-`hyparena/card/proximity.py` compares cards by keys, not by text. Keys: the intervention (identifiers of
+`hyparena/novelty/proximity.py` compares cards by keys, not by text. Keys: the intervention (identifiers of
 `pico.intervention`, names when unresolved), the population's species, the explained effect (the outcome claim;
 for a mechanistic hypothesis its premise claims) with its direction, the mechanism claims, the context (sex, age at
 start, strain, regimen, route, comparator, dose, measure), every claim as a triple (subject, relation family,
@@ -243,7 +243,7 @@ Classes and mixtures ("senolytics", "omega-3 fatty acids") do not resolve; they 
 
 ## Expert layer (2026-10-20)
 
-An expert file (YAML) next to a run holds decisions and hypotheses written by the expert; it never edits the declared or verified layer (card spec 7a). `hyparena/card/expert.py` documents the format.
+An expert file (YAML) next to a run holds decisions and hypotheses written by the expert; it never edits the declared or verified layer (card spec 7a). `hyparena/scoring/expert.py` documents the format.
 - **A decision with a PubMed source** on a claim or a rejected alternative: the PMID is fetched together with the search results for that claim and goes through the verifier like any abstract; the record notes which decision gave it. The status changes only through the usual rules.
 - **A decision without a source** stays in the layer and appears in the output as "expert opinion".
 - **Pairwise** ("prefer H-A" on [H-A, H-B], optionally for one profile): the constraint sum_j w_j (q_Aj − q_Bj) ≥ 0 in that profile, whose version gets "+expert-N". Unknown values enter at their expected value and the constraint is marked approximate; ordinal levels enter at the mean of the SMAA-O mapping (= equal steps). Weights are sampled by hit-and-run from an interior point found by linear programming; the output reports, per choice, the share of draws in which the drawn data still violate it. Results are reported with and without the choices (`ranking_autonomous`). Choices naming a hypothesis that is not ranked (filtered, not admitted) are listed in `expert_skipped`.
@@ -397,7 +397,7 @@ negative only.
 - `EvidenceRecord.strata`: пол в ITP и CITP задан протоколом заранее; `rules.mark_strata` ставит `strata: [sex]` на строки
   DrugAge программы и записи PubMed тех же работ, берёт неизвестный пол записи из курируемой строки той же работы,
   `subgroup_only` для таких записей не ставится (апостериорные подгруппы остаются `subgroup_only`).
-- Пересчёт сохранённых прогонов: `python -m hyparena.backtest reapply --v2 … --out …` (`--legacy` воспроизводит прежний
+- Пересчёт сохранённых прогонов: `python -m hyparena.whole_system.backtest reapply --v2 … --out …` (`--legacy` воспроизводит прежний
   прогон; тест `test_reapplying_the_old_rules_reproduces_a_saved_run`). Модели не вызываются.
 
 Результат на ITP 2010 (подробно в «Справочнике → Данные и источники»): статус изменился у четырёх режимов (аспирин
@@ -436,7 +436,7 @@ negative only.
 
 - **E1, снимок бэктеста.** `tests/fixtures/itp2010_snapshot.csv` — 70 строк: статус основного утверждения, место в профиле
   `evidence_first`, ожидание и P(топ-3) по объединённому рейтингу на 2010-12-31. Строится из сохранённых прогонов без
-  вызовов моделей: `python -m hyparena.snapshot` (запись), `--check` (сверка). Тест сверяет снимок со списком
+  вызовов моделей: `python -m hyparena.whole_system.snapshot` (запись), `--check` (сверка). Тест сверяет снимок со списком
   `archive/docs/itp_2010_changes_after_first_run.csv`: статус, исход и место должны совпадать, поэтому любое изменение снимка
   требует строки в списке «изменения после первого прогона». Если прогонов нет в рабочей копии, сверка с ними
   пропускается, остальные проверки работают.
@@ -453,7 +453,7 @@ negative only.
 - **Файлы:** `specs/evolution/evolution-1.yaml` (критерий и параметры эволюции) и `specs/whole-system/itp-backtest-2010.yaml` (дата T, профиль,
   исключённые показатели, главная метрика и правило «на равных» для выборки ITP). Тест `test_spec_files_say_what_the_code_does`
   сверяет их с кодом: параметры, значения по умолчанию и `PRIMARY_DROP` не могут разойтись со спецификацией.
-- **Запуск со спецификацией:** `--spec specs/…yaml` у `hyparena.card.pipeline`, `hyparena.backtest v2` и `hyparena.card.evolve`.
+- **Запуск со спецификацией:** `--spec specs/…yaml` у `hyparena.pipeline`, `hyparena.whole_system.backtest v2` и `hyparena.evolution.evolve`.
   Спецификация должна быть закоммичена и без правок (иначе запуск не начинается), параметры запуска должны совпадать с её
   параметрами (иначе тоже). В мету пишется `meta.spec`: файл, хэш содержимого (по разобранному YAML, комментарии и порядок
   ключей не влияют), коммит, время коммита и время метки в UTC; метка ставится до чтения данных.
@@ -518,10 +518,10 @@ negative only.
 - **(в) Геометрия весов** описана в справочнике (раздел «Геометрия весов и набор показателей»), ступени по меняющимся показателям не
   считаются. Хэш набора показателей и профилей пишется в `meta.indicator_set` и в запись спецификации (`meta.spec.indicators_sha256`);
   сохранённые прогоны читаются по записанному в них набору (`indicators.for_meta`).
-- **(г) Топ без родственников.** Второй вид результата `top_distinct` (`hyparena/diversity.py`): лучший представитель каждого
+- **(г) Топ без родственников.** Второй вид результата `top_distinct` (`hyparena/reports/diversity.py`): лучший представитель каждого
   семейства (duplicate, variant, analog по близости и потомки по `parent`), в порядке профиля; основной рейтинг не меняется. На странице
   блок «Топ без родственников» под рейтингом. На эволюции семейство никотинамида (11 членов) занимает одно место, а не шесть.
-- **Диагностика пула** (`hyparena/diagnostics.py`, `meta.diagnostics`, отчёт и страница): сколько показателей меняется, какие
+- **Диагностика пула** (`hyparena/reports/diagnostics.py`, `meta.diagnostics`, отчёт и страница): сколько показателей меняется, какие
   постоянны или неизвестны у всех, доля пар, которые профиль упорядочивает; предупреждение, когда меняется меньше трёх показателей или
   упорядочено меньше половины пар (пороги по умолчанию, не результат калибровки). Срабатывает на ITP (46–48% пар) и на примере на мышах (меняются 2 показателя из 9).
 - **(д) Бесплатный пул из DrugAge на 2015 год** (`scripts/data/drugage_pool.py`, `data/calibration/drugage_2015.json`): 40 соединений
@@ -573,7 +573,7 @@ AUC считается с ничьёй при |ΔE| < 0,002 (без станда
 - **Платный прогон на чистой выборке не запущен: условия не выполнены.** Пул `data/backtest/outcomes_2024-12-31.json` (33 теста: ITP 10, CITP 23; «продлило» 8,
   «без эффекта» 22, «вред» 3) помечен чистым относительно T = 2024-12-31 (`clean_after` по умолчанию равен T), но по правилу проекта
   (`configs/model_cutoffs.yaml`: модель судит пул на дату T, только если её отсечка не позже T; результаты должны быть опубликованы после отсечки всех
-  используемых моделей) картина другая: `python -m hyparena.outcomes models --as-of 2024-12-31` — **ни одна из двух моделей (Gemini 3.5 Flash, отсечка около 2025-11-19;
+  используемых моделей) картина другая: `python -m hyparena.whole_system.outcomes models --as-of 2024-12-31` — **ни одна из двух моделей (Gemini 3.5 Flash, отсечка около 2025-11-19;
   DeepSeek V4.1 Flash, около 2026-04-17) не допускается**. После отсечки Gemini опубликовано 9 тестов (все «без эффекта» и «вред», положительных нет), после отсечки
   DeepSeek **ни одного**. То есть для текущих моделей чистой выборки с положительными результатами нет. Варианты: (А) взять модель с отсечкой не позже T и
   записать её отсечку в `configs/model_cutoffs.yaml`; (Б) ждать тестов, опубликованных после отсечки проверяющей модели; (В) прогнать текущими моделями и
@@ -650,7 +650,7 @@ AUC считается с ничьёй при |ΔE| < 0,002 (без станда
 
 ## Калибровка порогов предупреждений о пуле (2026-10-27, без вызовов моделей)
 
-Пороги `MIN_VARYING = 3`, `MIN_PAIRS_ORDERED = 0.5`, `LEAD_SHARE = 0.8` стояли по умолчанию (`hyparena/diagnostics.py`). Проверка: `python -m scripts.diagnostics_calibration --draws 20 --K 1000`, пулы ITP 2010 (две половины, разведочная версия показателей), DrugAge 2015 и g003.
+Пороги `MIN_VARYING = 3`, `MIN_PAIRS_ORDERED = 0.5`, `LEAD_SHARE = 0.8` стояли по умолчанию (`hyparena/reports/diagnostics.py`). Проверка: `python -m scripts.diagnostics_calibration --draws 20 --K 1000`, пулы ITP 2010 (две половины, разведочная версия показателей), DrugAge 2015 и g003.
 Для каждого пула и каждого из трёх профилей: наблюдаемые значения; случайные подпулы 10, 15, 20, 30 гипотез (срабатывает ли предупреждение только из-за малого размера); «шанс» — значения каждого показателя перемешаны между гипотезами независимо (распределение каждого столбца сохранено, связь с гипотезой разрушена): что даёт пул без структуры. Медиана [5-й; 95-й процентиль], профиль `evidence_first`.
 
 | Пул (ranked) | Меняющихся показателей | Доля упорядоченных пар | Доля ведущего показателя | Шанс: доля пар / ведущий | Предупреждения в подпулах 20 / 30 (из 20) |

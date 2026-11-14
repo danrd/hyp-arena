@@ -10,10 +10,10 @@ from collections import Counter, defaultdict
 
 from scipy.stats import kendalltau, spearmanr
 
-from hyparena.backtest import tied_auc
-from hyparena.card import novelty_v34 as nv
-from hyparena.card import rules_v3 as r3
-from hyparena.card import rules_v32 as r32
+from hyparena.whole_system.backtest import tied_auc
+from hyparena.novelty import novelty_v34 as nv
+from hyparena.scoring import rules_v3 as r3
+from hyparena.scoring import rules_v32 as r32
 from hyparena.card.models import ClaimVerification
 from scripts.common.ablation import units
 from scripts.argon.pack6_analysis import wkappa

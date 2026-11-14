@@ -9,8 +9,8 @@ factors of v3.2, and independence groups by the trial ids in the abstracts.
 import json, re, statistics
 from collections import Counter
 from scipy.stats import spearmanr
-from hyparena.backtest import tied_auc
-from hyparena.card import rules_v3 as r3, rules_v32 as r32, v3_levels as lv
+from hyparena.whole_system.backtest import tied_auc
+from hyparena.scoring import rules_v3 as r3, rules_v32 as r32, v3_levels as lv
 from hyparena.card.models import ClaimVerification, HypothesisCard
 from hyparena.tools import pubmed
 C='/home/user/longevity-kg/hypothesis_sources/calibration/'
@@ -23,7 +23,7 @@ def axes(rec, claim):
     endp = 'direct' if ep in ('unknown', need) or not need else ('partial' if ep=='biomarker' else 'serious')
     comp = {'between_groups':'direct','within_group':'partial'}.get(rec.comparison,'serious')
     return sysl, inter, endp, comp
-from hyparena.card.rules import claim_endpoint as r3_endpoint
+from hyparena.scoring.rules import claim_endpoint as r3_endpoint
 W={'direct':1.0,'partial':2/3,'serious':1/3}
 def w4(rec, claim, against):
     if not r3.usable(rec,'v3.1') or r3.context_level(rec) is None: return 0.0

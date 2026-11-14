@@ -57,7 +57,7 @@ def mask(prompt: str, names: list[str]) -> tuple[str, int]:
 
 
 def collect(runs: list[str]) -> list[dict]:
-    from hyparena.card.verifier import parse_records
+    from hyparena.reading.verifier import parse_records
     out = []
     for p in runs:
         res = json.loads(Path(p).read_text())
@@ -72,12 +72,12 @@ def collect(runs: list[str]) -> list[dict]:
 
 
 def _records(text: str) -> list[dict]:
-    from hyparena.card.verifier import parse_records
+    from hyparena.reading.verifier import parse_records
     return (parse_records(text) or {"records": []})["records"]
 
 
 def run(runs: list[str], out: str, config: str, max_calls: int, replay: bool = True) -> dict:
-    from hyparena.card.pipeline import _client
+    from hyparena.pipeline import _client
     items = collect(runs)
     client, _ = _client(config, False, max_calls)
 
@@ -174,7 +174,7 @@ def mini_indices(items: list[dict], k: int = 4) -> list[int]:
 
 def run_candidate(runs: list[str], out: str, config: str, family: str, max_calls: int, mini: bool = False, resume: str | None = None) -> dict:
     """Ask the candidate the saved (unmasked) prompts; `mini` asks only the mini-sample; `resume` keeps the answers already saved."""
-    from hyparena.card.pipeline import _client
+    from hyparena.pipeline import _client
     items = collect(runs)
     done = {}
     if resume and Path(resume).exists():
@@ -224,7 +224,7 @@ def candidate_verdict(path: str, thresholds: dict, mini: bool = False) -> dict:
     d = json.loads(Path(path).read_text())
     cap = thresholds.get("completion_token_cap", 4000)
     ans = d["answers"]
-    valid = [a for a in ans if a["text"] and not a["error"] and __import__("hyparena.card.verifier", fromlist=["parse_records"]).parse_records(a["text"]) is not None]
+    valid = [a for a in ans if a["text"] and not a["error"] and __import__("hyparena.reading.verifier", fromlist=["parse_records"]).parse_records(a["text"]) is not None]
     truncated = [a for a in ans if (a["tokens_out"] or 0) >= 0.98 * cap]
     out = {"answered": len(ans), "valid": len(valid), "truncated": len(truncated),
            "tokens_out_median": sorted(a["tokens_out"] or 0 for a in ans)[len(ans) // 2] if ans else None,

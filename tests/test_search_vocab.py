@@ -1,5 +1,5 @@
 """Vocabulary guard of model-written PubMed queries."""
-from hyparena.card.search_vocab import filter_query, term_allowed
+from hyparena.search.search_vocab import filter_query, term_allowed
 
 
 V = {"words": {"creatine", "older", "adults", "muscle", "mass", "hip", "fracture", "growth", "hormone", "insulin-like", "factor"},
@@ -32,7 +32,7 @@ def test_light_guard_keeps_topic_widening_and_drops_steering():
 
 
 def test_the_light_guard_keeps_anatomy_and_still_drops_direction_words():
-    from hyparena.card.search_vocab import term_allowed_light
+    from hyparena.search.search_vocab import term_allowed_light
     vocab = {"words": set(), "phrases": set(), "card_words": set()}
     assert term_allowed_light('"lower limb exercise"[tiab]', vocab)            # H49: was dropped as a direction word
     assert term_allowed_light('"lower extremity resistance"[tiab]', vocab)

@@ -24,7 +24,7 @@ sample:
 method:
   run: configs/v3-flash-n10.yaml (normalize_card/v10, verify_claim/v9, verifier deepseek),
     as of the run date
-  score: hyparena/card/rules_v32.py (P with 90% interval, I, V = P x I, scope) + ASPID
+  score: hyparena/scoring/rules_v32.py (P with 90% interval, I, V = P x I, scope) + ASPID
     trial profiles (configs/profiles_v3.yaml)
   frozen: scores file and SHA-256 written to specs/ by scripts/whole_system/prospective.py freeze,
     before any outcome

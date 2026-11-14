@@ -243,10 +243,10 @@ def _claim_card(compound: str, species: str) -> dict:
 
 def extract(client, family: str, kg_dir: str, pmid: str, compound: str, species: str, log: list | None = None) -> list[dict]:
     """Records of one verifier family for the claim about `compound` from the one abstract of `pmid` (the prompt of `verify_claim/v5`, no search)."""
-    from hyparena.card import verifier as v
+    from hyparena.reading import verifier as v
     from hyparena.card.llm import ask
     from hyparena.card.models import HypothesisCard
-    from hyparena.card.rules import claim_endpoint
+    from hyparena.scoring.rules import claim_endpoint
     text = Path(kg_dir, "corpus", f"{pmid}.md").read_text(encoding="utf-8")
     title = re.search(r"## Title\n(.*?)\n\n## Abstract", text, re.S).group(1).strip()
     abstract = text.split("## Abstract", 1)[1].strip()
@@ -268,7 +268,7 @@ def run_families(kg_dir: str, out: str, families: list[str], max_calls: int = 40
     """Every (paper, compound) of the frozen test subset for every family; the raw records are saved to `out`."""
     from concurrent.futures import ThreadPoolExecutor
 
-    from hyparena.card.pipeline import _client
+    from hyparena.pipeline import _client
     gold = load_gold(kg_dir)
     pmids = json.loads(TEST_FILE.read_text())["pmids"]
     pairs = []

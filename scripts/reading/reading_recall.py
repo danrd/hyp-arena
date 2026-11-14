@@ -8,8 +8,8 @@ import json
 import re
 from collections import Counter, defaultdict
 
-from hyparena.card import rules_v3 as r3
-from hyparena.card import rules_v32 as r32
+from hyparena.scoring import rules_v3 as r3
+from hyparena.scoring import rules_v32 as r32
 from scripts.common.v34_check import CAL, PROS, parts
 
 ARGON = CAL.parents[1] / "reviews" / "argon-2026-11-08"

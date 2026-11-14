@@ -1,4 +1,4 @@
-from hyparena.card import verifier
+from hyparena.reading import verifier
 
 
 def test_mouse_probes_are_off_when_asked(monkeypatch):

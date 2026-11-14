@@ -1,4 +1,4 @@
-"""Literature search interface. Every connector returns Evidence records (hyparena.state.Evidence).
+"""Literature search interface. Every connector returns Evidence records (hyparena.coscientist.state.Evidence).
 
 `as_of` (ISO date) restricts results to what was published on or before that date; backtests need it
 so that later findings do not leak into the evaluation."""
@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import Optional, Protocol
 
-from hyparena.state import Evidence
+from hyparena.coscientist.state import Evidence
 
 
 class SearchTool(Protocol):

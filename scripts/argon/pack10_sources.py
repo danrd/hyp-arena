@@ -8,7 +8,7 @@ import hashlib
 import json
 import sys
 
-from hyparena.card import rules_v3 as r3
+from hyparena.scoring import rules_v3 as r3
 from hyparena.tools import pmc, pubmed
 from scripts.reading.pilot_crosslink import sample as pilot_trials
 from scripts.common.reread_v11 import items

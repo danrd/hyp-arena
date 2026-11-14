@@ -4,7 +4,7 @@
 id: extraction-gold-v3b
 date: 2026-11-04
 question: "Does verify_claim/v7 tell relevant papers from irrelevant ones, and extract design, total n, comparison and effect class the way the hand-made gold does?"
-code: "scripts/reading/extraction_gold_v3.py --gold v3; hyparena/card/effect_class.py (rule A); v3_fields (review keeps design review)"
+code: "scripts/reading/extraction_gold_v3.py --gold v3; hyparena/reading/effect_class.py (rule A); v3_fields (review keeps design review)"
 prompt: "verify_claim/v7: rct only when allocation is said to be random; a review stays review; effect phrase required whenever a number is given; effect_class none | present (size by code). Examples in the prompt are invented (v6 carried three phrases of gold abstracts as examples: a leak, removed in v7)"
 config: configs/v3-flash.yaml          # DeepSeek V4.1 Flash (snapshot 1017), thinking off, temperature 0
 gold: "longevity-kg hypothesis_sources/calibration/extraction_gold/labels_v3.jsonl: all 45 pairs of task.jsonl relabelled by hand 2026-11-04 (26 relevant, 19 not; relevance rule and labelling rules in the README next to it); disagrees with Jules' finding labels on 9 of 45"

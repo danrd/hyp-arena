@@ -36,7 +36,7 @@ calls per round; the lineage on the site.
 ## Result (added after the run, the protocol above is unchanged)
 
 One run, 24 children over three rounds, 168 model calls of the 200 allowed (counted from the log: the in-run counter of that
-version dropped the children's verification calls from round 2 on; fixed in `hyparena/card/evolve.py`), about 1.0 M input
+version dropped the children's verification calls from round 2 on; fixed in `hyparena/evolution/evolve.py`), about 1.0 M input
 tokens, 12 minutes. Primary criterion: formally met by one child (place 3, P(top-3) 0.155 against 0.149 of its parent),
 but both differences are within the Monte Carlo error (±0.01) and three more children share the place (expected scores
 0.1851 to 0.1855); the first two places stay with the parents (P(top-3) 0.62 and 0.53). The scores of the children rose

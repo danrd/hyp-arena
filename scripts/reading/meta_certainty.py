@@ -11,8 +11,8 @@ import re
 import sys
 from collections import Counter
 
-from hyparena.card import rules_v3 as r3
-from hyparena.card import rules_v32 as r32
+from hyparena.scoring import rules_v3 as r3
+from hyparena.scoring import rules_v32 as r32
 from scripts.common.reread_v11 import CONFIG, items
 from scripts.common.v34_check import CAL
 
@@ -47,7 +47,7 @@ def run() -> dict:
     if os.environ.get("ALLOW_PAID") != "1":
         raise SystemExit("paid: set ALLOW_PAID=1")
     from hyparena.card.llm import ask
-    from hyparena.card.pipeline import _client
+    from hyparena.pipeline import _client
     from hyparena.tools import pmc, pubmed
     done = json.loads(OUT.read_text()) if OUT.exists() else {}
     todo = [t for t in records() if t[0] not in done]

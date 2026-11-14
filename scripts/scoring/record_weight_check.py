@@ -23,9 +23,9 @@ from contextlib import contextmanager
 import numpy as np
 from scipy.stats import spearmanr
 
-from hyparena.backtest import tied_auc
-from hyparena.card import rules_v3 as r3
-from hyparena.card import rules_v32 as r32
+from hyparena.whole_system.backtest import tied_auc
+from hyparena.scoring import rules_v3 as r3
+from hyparena.scoring import rules_v32 as r32
 from scripts.common.ablation import units
 from scripts.common.v34_check import CAL, PROS, parts
 

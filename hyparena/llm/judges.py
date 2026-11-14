@@ -5,7 +5,7 @@ import random
 from dataclasses import dataclass
 from typing import Iterable, Literal
 
-from hyparena.state import Hypothesis
+from hyparena.coscientist.state import Hypothesis
 
 LineageMode = Literal["writer", "lineage", "none"]
 

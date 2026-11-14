@@ -17,7 +17,7 @@ import random
 from collections import defaultdict
 from pathlib import Path
 
-from hyparena.backtest import tied_auc, tied_scores
+from hyparena.whole_system.backtest import tied_auc, tied_scores
 
 MIN_SCORED, MIN_POSITIVES = 30, 8
 

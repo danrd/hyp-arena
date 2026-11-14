@@ -39,7 +39,7 @@ def intervention_label(value: str) -> str:
 
 def organism_label(value: str) -> str:
     """The object of a lifespan or healthspan claim is the organism; strain and wording go to qualifiers: "genetically heterogeneous UM-HET3 mice" -> "mouse"."""
-    from hyparena.card.rules import species_key
+    from hyparena.scoring.rules import species_key
     return ORGANISM.get(species_key(value or ""), value)
 
 

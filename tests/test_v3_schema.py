@@ -3,7 +3,7 @@ import json
 
 import pytest
 
-from hyparena.card import v3_levels as lv
+from hyparena.scoring import v3_levels as lv
 from hyparena.card.models import EvidenceRecord, HypothesisCard, ProposedAlternative
 from tests.test_benchmark_run import PILOT_CARD
 

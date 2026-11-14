@@ -13,8 +13,8 @@ import threading
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 
-from hyparena.card import rules_v3 as r3
-from hyparena.card import rules_v32 as r32
+from hyparena.scoring import rules_v3 as r3
+from hyparena.scoring import rules_v32 as r32
 from hyparena.card.models import ClaimVerification
 from scripts.reading.pilot_crosslink import merge
 from scripts.reading.pilot_crosslink import sample as pilot_trials
@@ -64,8 +64,8 @@ def run(part: str, rev: str) -> dict:
     if os.environ.get("ALLOW_PAID") != "1":
         raise SystemExit("paid: set ALLOW_PAID=1")
     from hyparena.card.llm import ask, parse_fullest
-    from hyparena.card.pipeline import _client
-    from hyparena.card.verifier import verify_claim
+    from hyparena.pipeline import _client
+    from hyparena.reading.verifier import verify_claim
     from hyparena.tools import pubmed
     out_p = PROS / f"reader_v12_{part}_{rev}.json"
     done = json.loads(out_p.read_text()) if out_p.exists() else {}

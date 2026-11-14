@@ -1,7 +1,7 @@
 """Alternatives (card spec 8c): declared rows, checklist inclusion rules, the one-call check."""
-from hyparena.card import alternatives as al
+from hyparena.alternatives import alternatives as al
 from hyparena.card.models import EvidenceRecord, HypothesisCard, Verification
-from hyparena.card.rules import finalize
+from hyparena.scoring.rules import finalize
 from hyparena.tools import pubmed
 from tests.test_card_rules import load
 

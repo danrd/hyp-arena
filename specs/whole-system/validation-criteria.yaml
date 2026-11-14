@@ -42,7 +42,7 @@ power:
 
 multiplicity:
   family: [L3.4, L3.5]
-  method: "e-BH при α = 0.05: p перестановки → e-значение калибратором e = 0.5·p^(−0.5) (hyparena/tools/multitest.py: p_to_e, e_bh); допустима произвольная зависимость между проверками"
+  method: "e-BH при α = 0.05: p перестановки → e-значение калибратором e = 0.5·p^(−0.5) (archive/code/multitest.py: p_to_e, e_bh); допустима произвольная зависимость между проверками"
   primary: "L3.3 проверяется отдельно при α = 0.05 и в семейство не входит"
 
 # Политика чистоты (вариант А для основного теста). ЖДЁТ ПОДТВЕРЖДЕНИЯ после ответа по реализуемости.
@@ -149,7 +149,7 @@ tests:
     can_fail: "Да: пул без различий не вызвал предупреждения. Пороги по умолчанию, не калибровались."
     declared: before_run
     status: pass
-    evidence: "hyparena/diagnostics.py; tests/test_diagnostics.py"
+    evidence: "hyparena/reports/diagnostics.py; tests/test_diagnostics.py"
 
   - id: L1.7
     level: 1

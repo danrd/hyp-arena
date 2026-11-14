@@ -7,12 +7,12 @@ from __future__ import annotations
 
 import json
 
-from hyparena.card import alternatives_d
-from hyparena.card import aspid_v3
-from hyparena.card import novelty_v34 as nv
-from hyparena.card import rules_v32 as r32
-from hyparena.card import trend_genetics as tg
-from hyparena.card import v3_extra
+from hyparena.alternatives import alternatives_d
+from hyparena.scoring import aspid_v3
+from hyparena.novelty import novelty_v34 as nv
+from hyparena.scoring import rules_v32 as r32
+from hyparena.scoring import trend_genetics as tg
+from hyparena.scoring import v3_extra
 from scripts.common.ablation import auc_of, units
 from scripts.common.ceiling import CAL, endpoint
 

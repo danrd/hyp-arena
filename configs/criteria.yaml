@@ -1,7 +1,7 @@
 # Criteria the judges compare on, one verdict per criterion per comparison.
 # Each criterion gets its own Bradley-Terry rating. They are combined without numeric weights: only the
 # order of importance below is given, and the final order comes from randomized aggregation over all
-# weight vectors consistent with it (МРСП, hyparena/aggregate.py), with spreads and dominance
+# weight vectors consistent with it (МРСП, hyparena/scoring/aggregate.py), with spreads and dominance
 # probabilities. The report also shows the Pareto front over all criteria.
 # Default set: the separated criteria of the working notes. Cost and time of the decisive
 # experiment are meant to be estimated from registries later, not judged.

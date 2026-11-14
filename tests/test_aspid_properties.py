@@ -2,8 +2,8 @@ import math
 import numpy as np
 from scipy.stats import spearmanr
 from dataclasses import replace
-from hyparena.aspid import IndicatorSpec, aggregate, Profile
-from hyparena.card.indicators import INDICATORS
+from hyparena.scoring.aspid import IndicatorSpec, aggregate, Profile
+from hyparena.scoring.indicators import INDICATORS
 
 def _generate_random_pool(n_hypotheses: int, rng: np.random.Generator, specs: list[IndicatorSpec]) -> dict[str, dict[str, object]]:
     """Generates a random pool of hypotheses with values for the given indicators."""
@@ -181,8 +181,8 @@ def test_sensitivity_script_function():
         sys.path.append(scripts_dir)
 
     from aspid_sensitivity import compute_sensitivity
-    from hyparena.card.indicators import INDICATORS
-    from hyparena.aspid import Profile
+    from hyparena.scoring.indicators import INDICATORS
+    from hyparena.scoring.aspid import Profile
 
     rng = np.random.default_rng(123)
     pool = _generate_random_pool(5, rng, INDICATORS)

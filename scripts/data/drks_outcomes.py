@@ -58,7 +58,7 @@ def aging_itself(cond: str) -> bool:
 
 def plan() -> dict:
     from hyparena.tools import pubmed
-    from hyparena.backtest import _pubdates
+    from hyparena.whole_system.backtest import _pubdates
     pmids = pubmed.search(f"DRKS[si] AND {TOPIC}", retmax=500)
     recs = pubmed.fetch(pmids)
     by_id: dict[str, list[str]] = {}

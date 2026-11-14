@@ -28,6 +28,6 @@ task_b_known_outcomes:
 next: fix the effect-class parser (free); tighten the population field in the verifier prompt (needs a rerun to check).
 done_2026_11_07:
   effect_parser: >-
-    hyparena/card/effect_class.py: numbers without a leading zero (".67") and a standardised difference written before its
+    hyparena/reading/effect_class.py: numbers without a leading zero (".67") and a standardised difference written before its
     name ("- 1.20 standardised mean difference (SMD)") are read; the record weight (rules_v32.effect_weight) uses the same
     patterns. A dated rule change: scores computed after 2026-11-07 use it.

@@ -1,5 +1,5 @@
-from hyparena.card import rules_v3 as r3
-from hyparena.card import v3_extra as x
+from hyparena.scoring import rules_v3 as r3
+from hyparena.scoring import v3_extra as x
 from hyparena.card.models import ClaimVerification
 from tests.test_rules_v3 import card, claim, rec
 
@@ -24,7 +24,7 @@ def test_extras_from_records(monkeypatch):
 def test_feasibility_parts():
     c = card([claim("c2", "x", "improves_healthspan_in", "human", "outcome", "outcome")])
     c.decisive_experiment.system, c.decisive_experiment.duration_class, c.decisive_experiment.n_planned = "human", "months", 80
-    import hyparena.card.v3_extra as m
+    import hyparena.scoring.v3_extra as m
     m_read = m.readiness
     try:
         m.readiness = lambda k: 1.0

@@ -12,7 +12,7 @@ from pathlib import Path
 
 import yaml
 
-from hyparena.outcomes import cutoffs
+from hyparena.whole_system.outcomes import cutoffs
 from scripts.data.ctgov_outcomes import KG
 
 HS = KG / "hypothesis_sources"

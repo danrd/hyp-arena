@@ -6,8 +6,12 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from hyparena import backtest, prespec, site
-from hyparena.card import evolve, pipeline, verifier
+from hyparena.whole_system import backtest
+from hyparena import prespec
+from hyparena.reports import site
+from hyparena.evolution import evolve
+from hyparena import pipeline
+from hyparena.reading import verifier
 from hyparena.tools import pubmed
 
 CONFIG = str(Path(__file__).parents[1] / "configs" / "v2.yaml")

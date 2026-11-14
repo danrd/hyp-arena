@@ -8,14 +8,14 @@ import json
 
 from scipy.stats import spearmanr
 
-from hyparena.card import rules_v32 as r32
+from hyparena.scoring import rules_v32 as r32
 from scripts.scoring.empty_slots import prospective, r3_auc, ranks
 from scripts.common.v34_check import CAL
 
 
 def main() -> dict:
     # the approved-action rule looks drugs up in ChEMBL, which this environment cannot reach; it is the same in every variant
-    from hyparena.card import rules_v3 as r3
+    from hyparena.scoring import rules_v3 as r3
     r3.established_by_approval = lambda claim, card: False
     from hyparena.tools import compounds as _cp                    # PubChem / ChEMBL are not reachable here: no lookups
     _cp._get = lambda url: None                                    # (the same in every variant; readiness from cache only)

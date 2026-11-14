@@ -26,6 +26,6 @@ python -m hyparena.app --share               # also a temporary public link (Gra
 
 It can be downloaded as a standalone HTML page and as JSON.
 
-**Without the app:** `python -m hyparena.showcase --paste file.txt --out result.json --html result.html` (or `--goal … --generate 5`), and `--render result.json --html page.html` to turn a saved result into a page.
+**Without the app:** `python -m hyparena.coscientist.showcase --paste file.txt --out result.json --html result.html` (or `--goal … --generate 5`), and `--render result.json --html page.html` to turn a saved result into a page.
 
 **Embedding.** The page can be embedded with an iframe in slides that run in a browser (reveal.js, Google Slides via a link, or an HTML deck), or opened from a link: locally, through `--share`, or after deploying the app to Hugging Face Spaces (keys as Space secrets). A static page from `--html` needs no server at all.

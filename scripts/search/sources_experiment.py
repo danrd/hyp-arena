@@ -23,7 +23,7 @@ def unit_ids() -> list[str]:
 
 
 def run(arm: str) -> None:
-    from hyparena.card.pipeline import run as v3
+    from hyparena.pipeline import run as v3
     texts = {}
     for s in (1, 2, 3, 4, 5):
         for l in open(CAL / f"texts_{s}.jsonl"):

@@ -3,9 +3,9 @@ from pathlib import Path
 
 import yaml
 
-from hyparena.card import indicators as ind
+from hyparena.scoring import indicators as ind
 from hyparena.card.models import HypothesisCard, Verification
-from hyparena.card.rules import finalize
+from hyparena.scoring.rules import finalize
 
 FIX = Path(__file__).parent / "fixtures" / "cards"
 
@@ -66,7 +66,7 @@ def test_saved_runs_are_read_with_their_own_indicator_set():
 
 
 def test_the_set_hash_changes_with_the_set_and_with_the_profiles():
-    from hyparena.aspid import load_profiles
+    from hyparena.scoring.aspid import load_profiles
     a = ind.set_hash(ind.INDICATORS, load_profiles())
     assert a == ind.set_hash(list(ind.INDICATORS), load_profiles())
     assert a != ind.set_hash(ind.INDICATORS_V1, load_profiles()) and a != ind.set_hash(ind.INDICATORS)

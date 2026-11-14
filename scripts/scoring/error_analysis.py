@@ -17,10 +17,10 @@ import json
 import math
 from collections import Counter
 
-from hyparena.backtest import tied_auc
-from hyparena.card import rules_v3 as r3
-from hyparena.card import rules_v32 as r32
-from hyparena.card import trend_genetics as tg
+from hyparena.whole_system.backtest import tied_auc
+from hyparena.scoring import rules_v3 as r3
+from hyparena.scoring import rules_v32 as r32
+from hyparena.scoring import trend_genetics as tg
 from hyparena.card.models import ClaimVerification, HypothesisCard
 from scripts.data.ctgov_outcomes import KG
 

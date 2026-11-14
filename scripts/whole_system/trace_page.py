@@ -2,7 +2,7 @@
 code and prompt template run, every model and search call with its full prompt and reply, and what the
 node produced.
 
-    ALLOW_PAID=1 python -m hyparena.showcase --paste input.txt --writer openai --trace runs/trace.json --out runs/r.json
+    ALLOW_PAID=1 python -m hyparena.coscientist.showcase --paste input.txt --writer openai --trace runs/trace.json --out runs/r.json
     python scripts/whole_system/trace_page.py runs/trace.json page.html
 
 The page has no <!doctype>/<html>/<body> of its own (it is published as an artifact, which adds them)."""
@@ -14,41 +14,41 @@ import sys
 from collections import Counter
 
 NODES = {
-    "parse_goal": ("Разбор цели", "hyparena/agents/parse_goal.py · make_parse_goal", "parse_goal/v1",
+    "parse_goal": ("Разбор цели", "hyparena/coscientist/agents/parse_goal.py · make_parse_goal", "parse_goal/v1",
                    "Одна модель переводит цель исследования в предпочтения и ограничения для судей. Критерии и их "
                    "порядок важности берутся не от модели, а из configs/criteria.yaml."),
-    "supervisor": ("Решение супервизора", "hyparena/agents/supervisor.py · make_supervisor", "без вызова модели",
+    "supervisor": ("Решение супервизора", "hyparena/coscientist/agents/supervisor.py · make_supervisor", "без вызова модели",
                    "Решает, запускать ли ещё цикл: останавливает по числу циклов, по бюджету токенов или когда "
                    "топ перестал меняться."),
-    "normalize": ("Карточки гипотез", "hyparena/agents/normalize.py · make_normalize (схема configs/card.yaml)", "normalize/v2",
+    "normalize": ("Карточки гипотез", "hyparena/coscientist/agents/normalize.py · make_normalize (схема configs/card.yaml)", "normalize/v2",
                   "Из свободного текста извлекается карточка: утверждение, механизм, вмешательство, решающий "
                   "эксперимент, что опровергнет и так далее. Ничего не додумывается: незаявленные обязательные "
                   "поля попадают в «пробелы». Модель заодно предлагает поисковые запросы. Если ответ не проходит "
                   "проверку схемы, модель переспрашивают с причиной (refine loop)."),
-    "retrieve": ("Поиск литературы", "hyparena/agents/retrieve.py · make_retrieve → hyparena/tools/europepmc.py",
+    "retrieve": ("Поиск литературы", "hyparena/coscientist/agents/retrieve.py · make_retrieve → hyparena/tools/europepmc.py",
                  "без вызова модели",
                  "По запросам из карточки ищутся публикации в Europe PMC (до 5 на запрос, до 10 на гипотезу). "
                  "Каждая запись получает эпистемический тип (первичная работа, обзор и т. п.), отозванные статьи "
                  "помечаются по Retraction Watch и судьям не показываются."),
-    "review": ("Рецензии", "hyparena/agents/review.py · make_review", "review_initial/v1 → review_full/v4 → review_deep/v1",
+    "review": ("Рецензии", "hyparena/coscientist/agents/review.py · make_review", "review_initial/v1 → review_full/v4 → review_deep/v1",
                "Три рецензии на гипотезу, каждая от семейства, отличного от автора: первичная (без литературы), "
                "полная (с найденной литературой, новизна только относительно неё) и глубокая проверка "
                "допущений. Рецензии совещательные: ничего не отсеивают (кроме проблем безопасности), а их "
                "замечания потом видят судьи."),
-    "proximity": ("Поиск дубликатов", "hyparena/agents/proximity.py · make_proximity", "без вызова модели",
+    "proximity": ("Поиск дубликатов", "hyparena/coscientist/agents/proximity.py · make_proximity", "без вызова модели",
                   "Эмбеддинги текстов, слияние почти одинаковых гипотез (порог сходства 0.97 в демо) и кластеры "
                   "для выбора пар."),
-    "tournament": ("Турнир", "hyparena/agents/tournament.py · make_tournament; судьи: hyparena/llm/judges.py · pick_judges; "
-                   "рейтинг: hyparena/rating.py · fit_bt", "compare/v4 или debate/v4",
+    "tournament": ("Турнир", "hyparena/coscientist/agents/tournament.py · make_tournament; судьи: hyparena/llm/judges.py · pick_judges; "
+                   "рейтинг: hyparena/coscientist/rating.py · fit_bt", "compare/v4 или debate/v4",
                    "Выбор пар, затем судьи из семейств, не совпадающих с автором ни одной из двух гипотез. "
                    "Порядок A/B случайный. Судья выносит отдельный вердикт по каждому критерию. Маленький пул "
                    "(до 8) сначала играет все пары; пары внутри текущего топ-5 разбираются дебатами одного "
                    "судьи, остальные — двумя судьями, при разногласии добавляется третий. После матчей по "
                    "каждому критерию заново подгоняется Bradley–Terry."),
-    "meta_review": ("Мета-обзор раунда", "hyparena/agents/meta_review.py · make_meta_review", "meta_review/v1",
+    "meta_review": ("Мета-обзор раунда", "hyparena/coscientist/agents/meta_review.py · make_meta_review", "meta_review/v1",
                     "Повторяющиеся замечания рецензентов и судей сводятся в советы на следующий цикл: что "
                     "учитывать судьям и рецензентам."),
-    "report": ("Итог: агрегация и обзор", "hyparena/agents/report.py · make_report → hyparena/aggregate.py · mrsp",
+    "report": ("Итог: агрегация и обзор", "hyparena/coscientist/agents/report.py · make_report → hyparena/scoring/aggregate.py · mrsp",
                "research_overview/v3",
                "Итоговый порядок без числовых весов. По каждому критерию считается ожидаемая доля побед против "
                "остальных гипотез пула, веса сэмплируются равномерно из всех векторов, согласованных с порядком "
@@ -302,12 +302,12 @@ class Page:
 
 <section class="block"><h2>Что подано на вход</h2>
 <p>Команда (её же выполняет кнопка «Ранжировать» в демо):</p>
-<pre class="cmd">ALLOW_PAID=1 python -m hyparena.showcase --paste input.txt --writer openai \\
+<pre class="cmd">ALLOW_PAID=1 python -m hyparena.coscientist.showcase --paste input.txt --writer openai \\
     --config configs/paid-test.yaml --trace runs/trace_real.json --out runs/trace_result.json</pre>
-<p><span class="mono">hyparena/showcase.py · run</span> разбивает текст на гипотезы (по нумерации), каждой даёт id и
+<p><span class="mono">hyparena/coscientist/showcase.py · run</span> разбивает текст на гипотезы (по нумерации), каждой даёт id и
 происхождение <span class="mono">family=openai</span> (это важно для правила независимости судей), собирает контекст
-(<span class="mono">hyparena/live.py · _context</span>: клиент моделей, поиск, критерии, схема карточки) и запускает граф
-LangGraph (<span class="mono">hyparena/graph.py · build_graph</span>).</p>
+(<span class="mono">hyparena/coscientist/live.py · _context</span>: клиент моделей, поиск, критерии, схема карточки) и запускает граф
+LangGraph (<span class="mono">hyparena/coscientist/graph.py · build_graph</span>).</p>
 {hyps}
 <div class="scroll"><table class="calls"><tbody>
 <tr><th>Модели (одно семейство — одна модель)</th><td>{e(", ".join(f"{f}: {m}" for f, m in zip(t["families"], t["models"])))}</td></tr>

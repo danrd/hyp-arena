@@ -6,7 +6,7 @@ from hyparena.card.models import (
     HypothesisCard, Claim, Pico, Population, Outcome, Entity,
     DeclaredAlternative, Intervention, Edge
 )
-from hyparena.card.rules import validate_card, mark_inherited
+from hyparena.scoring.rules import validate_card, mark_inherited
 import string
 
 SPECIES_VOCAB = ["mouse", "human", "C. elegans", "rat", "unknown"]
@@ -114,7 +114,7 @@ def test_mark_inherited_properties(card_text):
 @given(valid_card_strategy())
 def test_source_span_substring(card_text):
     card, raw_text = card_text
-    from hyparena.card.rules import _norm
+    from hyparena.scoring.rules import _norm
 
     card = mark_inherited(card)
     norm_raw = _norm(raw_text)
@@ -133,7 +133,7 @@ def test_source_span_substring(card_text):
 @settings(max_examples=100, derandomize=True, deadline=None)
 @given(valid_card_strategy())
 def test_claim_reference_graph_acyclic(card_text):
-    from hyparena.card.rules import _has_cycle
+    from hyparena.scoring.rules import _has_cycle
     card, raw_text = card_text
 
     edges = {e.from_ for e in card.edges}; graph = {c.id: [e.to for e in card.edges if e.from_ == c.id] for c in card.claims}
@@ -160,7 +160,7 @@ def test_round_trip_serialization(card_text):
 @settings(max_examples=100, derandomize=True, deadline=None)
 @given(valid_card_strategy())
 def test_metamorphic_population_change(card_text):
-    from hyparena.card.rules import _span_names
+    from hyparena.scoring.rules import _span_names
     card, raw_text = card_text
     card = mark_inherited(card)
 

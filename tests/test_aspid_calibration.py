@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 
 from scripts.scoring.aspid_calibration import run_calibration
-from hyparena.aspid import load_profiles
+from hyparena.scoring.aspid import load_profiles
 
 def test_calibration_fast():
     """Test calibration with no unknowns, running quickly."""

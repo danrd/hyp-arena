@@ -1,4 +1,4 @@
-from hyparena.card import aspid_v3 as a
+from hyparena.scoring import aspid_v3 as a
 
 
 def _r(P, scope, I, H=None, gate="pass", feas=None, state=None):

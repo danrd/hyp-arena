@@ -1,7 +1,7 @@
 import pytest
 
-from hyparena import report_html as rh
-from hyparena.card import rules_v3 as r3, rules_v32 as r32
+from hyparena.reports import report_html as rh
+from hyparena.scoring import rules_v3 as r3, rules_v32 as r32
 from tests.test_analyze import _case
 
 
@@ -21,8 +21,8 @@ def test_contributions_use_rank_order_centroid_weights():
 
 
 def test_report_v2_renders_an_empty_pool_and_keeps_the_template_hooks():
-    from hyparena import report_v2 as r2
-    from hyparena.card import aspid_v3
+    from hyparena.reports import report_v2 as r2
+    from hyparena.scoring import aspid_v3
     tpl = r2.TEMPLATE.read_text()
     for hook in ("__DATA__", "__TITLE__", 'id="rank-body"', 'id="cards"', 'id="evals"', 'id="scheme"', 'id="glossary"', 'id="tt"'):
         assert hook in tpl

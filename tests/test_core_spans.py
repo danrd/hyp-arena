@@ -1,6 +1,6 @@
 """normalize_card/v12 (2026-11-12): the core fields of the card carry a verbatim span, checked like the spans of claims."""
 from hyparena.card.models import HypothesisCard
-from hyparena.card.rules import anchor_core, core_span_problems, validate_card
+from hyparena.scoring.rules import anchor_core, core_span_problems, validate_card
 
 TEXT = ("A trial registered to test the following.\nConditions: Sarcopenia\n"
         "Summary: whey protein and vitamin D with regular physical activity would increase muscle mass in sarcopenic elderly, "

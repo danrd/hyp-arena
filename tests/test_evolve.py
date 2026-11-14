@@ -3,10 +3,11 @@ from pathlib import Path
 
 import yaml
 
-from hyparena.card import evolve, informativeness
+from hyparena.evolution import evolve
+from hyparena.alternatives import informativeness
 from hyparena.card.models import HypothesisCard, Verification
-from hyparena.card.pipeline import run
-from hyparena.card.rules import finalize
+from hyparena.pipeline import run
+from hyparena.scoring.rules import finalize
 from hyparena.llm.fake import FakeLLMClient
 
 FIX = Path(__file__).parent / "fixtures" / "cards"
@@ -89,7 +90,7 @@ def test_one_round_of_evolution_with_the_fake_client_ranks_the_child_with_its_pa
 
 def test_the_evolution_bundle_carries_the_lineage_and_the_honest_facts(tmp_path):
     import json
-    from hyparena import site
+    from hyparena.reports import site
     parent = run([TEXT, TEXT.replace("Resveratrol", "Metformin")], config="configs/v2-flash.yaml", fake=True, dedup=False)
     res = evolve.evolve(parent, "configs/v2-flash.yaml", rounds=1, parents=1, children=1, writer="google", verifiers=["deepseek"],
                         max_calls=400, fake=True)

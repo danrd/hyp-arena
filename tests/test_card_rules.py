@@ -5,7 +5,7 @@ import pytest
 import yaml
 
 from hyparena.card.models import HypothesisCard, Verification, json_schema
-from hyparena.card.rules import (admit, claim_status, contrast_status, evidence_profile, finalize, validate_card,
+from hyparena.scoring.rules import (admit, claim_status, contrast_status, evidence_profile, finalize, validate_card,
                                  verified_layer_problems)
 
 FIX = Path(__file__).parent / "fixtures" / "cards"
@@ -196,7 +196,7 @@ def test_ex_vivo_does_not_support_an_organism_claim():
 
 
 def test_unmarked_inheritance_is_marked_or_rejected():
-    from hyparena.card.rules import mark_inherited
+    from hyparena.scoring.rules import mark_inherited
     d = load("ex2_senolytics_function")
     card = HypothesisCard.model_validate(d["card"])
     card.claims[0].inherited_from_pico = []          # species human copied without the mark
@@ -227,7 +227,7 @@ def _ex2():
 
 
 def test_inheritance_is_mandatory_and_deterministic():
-    from hyparena.card.rules import mark_inherited
+    from hyparena.scoring.rules import mark_inherited
     d, card = _ex2()
     for c in card.claims[:2]:
         c.qualifiers.pop("species"), c.inherited_from_pico.clear()
@@ -238,7 +238,7 @@ def test_inheritance_is_mandatory_and_deterministic():
 
 
 def test_span_naming_the_organism_blocks_inheritance():
-    from hyparena.card.rules import mark_inherited
+    from hyparena.scoring.rules import mark_inherited
     d = load("ex1_rapamycin_healthspan")
     card = HypothesisCard.model_validate(d["card"])
     c3 = card.claims[2]                              # "in mice where it extends lifespan": named, not inherited
@@ -247,7 +247,7 @@ def test_span_naming_the_organism_blocks_inheritance():
 
 
 def test_molecular_relations_never_inherit():
-    from hyparena.card.rules import mark_inherited
+    from hyparena.scoring.rules import mark_inherited
     d = load("ex1_rapamycin_healthspan")
     card = HypothesisCard.model_validate(d["card"])
     c1 = card.claims[0]                              # rapamycin inhibits mTORC1: molecular
@@ -257,7 +257,7 @@ def test_molecular_relations_never_inherit():
 
 
 def test_organism_relation_inherits_into_the_object():
-    from hyparena.card.rules import mark_inherited
+    from hyparena.scoring.rules import mark_inherited
     d = load("ex1_rapamycin_healthspan")
     card = HypothesisCard.model_validate(d["card"])
     c2 = card.claims[1]                              # the pre-2026-10-19 normalizer output
@@ -270,7 +270,7 @@ def test_organism_relation_inherits_into_the_object():
 
 
 def test_only_species_and_strain_inherit():
-    from hyparena.card.rules import mark_inherited
+    from hyparena.scoring.rules import mark_inherited
     d, card = _ex2()
     card.claims[0].inherited_from_pico = ["species", "age_at_start"]
     assert any("cannot be inherited" in p for p in validate_card(card, d["raw"]))
@@ -335,7 +335,7 @@ def test_subgroup_with_a_positive_whole_sample_result_is_supported():
 
 def test_record_rungs_fall_back_to_the_endpoint():
     from hyparena.card.models import EvidenceRecord
-    from hyparena.card.rules import record_rungs
+    from hyparena.scoring.rules import record_rungs
     rec = lambda **k: EvidenceRecord(source="PubMed", record_id="PMID:1", epistemic_type="A_text", **k)
     assert record_rungs(rec(endpoint="biomarker")) == ["human_markers"]
     assert record_rungs(rec(endpoint="lifespan")) == ["human_clinical"]
@@ -360,7 +360,7 @@ def _strain_case(strain, inherited=False):
 
 
 def test_strain_unspecified_in_the_card_is_na():
-    from hyparena.card.rules import add_strain_analogs
+    from hyparena.scoring.rules import add_strain_analogs
     d = load("ex5_resveratrol_endpoint")
     card = HypothesisCard.model_validate(d["card"])
     ver = Verification.model_validate(d["verification"])
@@ -370,7 +370,7 @@ def test_strain_unspecified_in_the_card_is_na():
 
 
 def test_other_strain_moves_to_an_analog():
-    from hyparena.card.rules import add_strain_analogs
+    from hyparena.scoring.rules import add_strain_analogs
     card, ver = _strain_case("C57BL/6")
     ver = add_strain_analogs(card, ver)
     c1, an1 = ver.claims[0], ver.claims[-1]
@@ -384,7 +384,7 @@ def test_other_strain_moves_to_an_analog():
 
 
 def test_inherited_strain_that_differs_leaves_a_refusal():
-    from hyparena.card.rules import add_strain_analogs
+    from hyparena.scoring.rules import add_strain_analogs
     card, ver = _strain_case("C57BL/6", inherited=True)
     ver = add_strain_analogs(card, ver)
     assert any(r.type == "inherited_mismatch" and r.record_id == "PMID:20974732" for r in ver.claims[0].refusals)
@@ -393,7 +393,7 @@ def test_inherited_strain_that_differs_leaves_a_refusal():
 
 def test_analog_strain_does_not_make_a_known_result():
     from hyparena.card.models import EvidenceRecord
-    from hyparena.card.rules import add_strain_analogs
+    from hyparena.scoring.rules import add_strain_analogs
     card, ver = _strain_case("C57BL/6")
     cv = ver.claims[0]
     cv.counterevidence = []
@@ -406,7 +406,7 @@ def test_analog_strain_does_not_make_a_known_result():
 
 def test_generic_heterogeneous_strain_matches_um_het3():
     from hyparena.card.models import EvidenceRecord
-    from hyparena.card.rules import strain_match
+    from hyparena.scoring.rules import strain_match
     d = load("ex5_resveratrol_endpoint")
     claim = HypothesisCard.model_validate(d["card"]).claims[0]
     claim.qualifiers["strain"] = "genetically heterogeneous"
@@ -419,7 +419,7 @@ def test_generic_heterogeneous_strain_matches_um_het3():
 def test_stage1_findings():
     """Normalizer outputs seen on real models (2026-10-21): an inherited species written as the population label,
     and a mechanistic parse of "Senescent cells are bad for health" with an `other` outcome."""
-    from hyparena.card.rules import mark_inherited
+    from hyparena.scoring.rules import mark_inherited
     d = load("ex1_rapamycin_healthspan")
     card = HypothesisCard.model_validate(d["card"])
     card.pico.population.label = "healthy older adults"
@@ -447,7 +447,7 @@ def test_gate_reason_of_a_curated_record_is_its_pmid():
 
 def test_human_marker_record_counts_for_a_human_healthspan_claim():
     from hyparena.card.models import EvidenceRecord
-    from hyparena.card.rules import admissible
+    from hyparena.scoring.rules import admissible
     claim = HypothesisCard.model_validate(load("ex1_rapamycin_healthspan")["card"]).claims[3]   # healthspan, human
     rec = lambda species: EvidenceRecord(source="PubMed", record_id="PMID:1", epistemic_type="A_text", species=species,
                                          endpoint="biomarker", quote_role="finding", qualifiers_match={"species": "yes"})

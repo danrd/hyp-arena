@@ -72,7 +72,7 @@ def papers(c: dict) -> list[dict]:
     """Abstracts published after the primary completion date: listed result papers first, then [si] records; no protocols or reviews."""
     from hyparena.tools import pubmed
     pmids = list(dict.fromkeys(c.get("result_pmids_listed", []) + c.get("result_pmids_si", [])))
-    from hyparena.backtest import _pubdates
+    from hyparena.whole_system.backtest import _pubdates
     got = pubmed.fetch(pmids) if pmids else {}
     dates = _pubdates(pmids) if pmids else {}          # earliest public date (e-pub, print, PubMed entry); fetch() has none for cached records
     out = []

@@ -87,7 +87,7 @@ def _units(n: int) -> list[dict]:
 
 
 def run(n: int = 60) -> None:
-    from hyparena.card.pipeline import run as v3
+    from hyparena.pipeline import run as v3
     from scripts.whole_system.benchmark_run import build_texts
     us = _units(n)
     texts = build_texts([{k: u[k] for k in ("id", "source", "written_on")} for u in us], OUT / f"texts_{n}.jsonl")
@@ -134,8 +134,8 @@ def endpoint_clinical(n: int, h: str):
 def score(n: int = 60) -> dict:
     """Method v3.4 (specs/scoring/v34-frontier-2026-11-07.yaml) -> scores_{n}_v34.json; scores_{n}.json (v3.2, frozen by its hash in
     specs/whole-system/prospective-2026-11-06.yaml) is never rewritten."""
-    from hyparena.card import aspid_v3, rules_v32, v3_extra
-    from hyparena.card import novelty_v34 as nv
+    from hyparena.scoring import aspid_v3, rules_v32, v3_extra
+    from hyparena.novelty import novelty_v34 as nv
     from hyparena.card.models import ClaimVerification, HypothesisCard
     res = json.loads((OUT / f"run_{n}.json").read_text())
     rows, ax = {}, {}
@@ -144,7 +144,7 @@ def score(n: int = 60) -> dict:
         if not it.get("card") or not it.get("verification") or "v3" not in it:
             rows[h] = {"outcome": it["outcome"]}
             continue
-        from hyparena.card import alternatives_d
+        from hyparena.alternatives import alternatives_d
         card = alternatives_d.apply(h, HypothesisCard.model_validate(it["card"]))
         claims = [ClaimVerification.model_validate(c) for c in it["verification"]["claims"]]
         alts = {k: ClaimVerification.model_validate(v) for k, v in (it.get("v3_alternatives") or {}).items()}
@@ -155,7 +155,7 @@ def score(n: int = 60) -> dict:
         ext["N"] = nv.novelty(card, claims, e)
         ext["leverage"], ext["W_potential"], _ = nv.leverage(card, claims, e)
         ext["endpoint_clinical"] = endpoint_clinical(n, h)
-        from hyparena.card import trend_genetics as tg
+        from hyparena.scoring import trend_genetics as tg
         ext["trend_pubmed"] = tg.trend_pubmed(card, r["meta"].get("as_of") or dt.date.today().isoformat())[0]
         ext["ai_role"] = card.ai_role
         rows[h] = {"outcome": it["outcome"], "gate": e.gate, "P": e.P, "P_lo": e.P_lo, "P_hi": e.P_hi, "I": e.I, "V": e.V,

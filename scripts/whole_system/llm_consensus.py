@@ -13,7 +13,7 @@ import json
 import os
 from concurrent.futures import ThreadPoolExecutor
 
-from hyparena.backtest import tied_auc
+from hyparena.whole_system.backtest import tied_auc
 from hyparena.card.llm import ask
 from scripts.common.ceiling import CAL
 
@@ -55,7 +55,7 @@ def auc(pts):
 
 
 def main(fake: bool = False) -> dict:
-    from hyparena.card.pipeline import _client
+    from hyparena.pipeline import _client
     out_f = CAL / "llm_consensus.json"
     done = json.loads(out_f.read_text()) if out_f.exists() else {}
     us = units()
@@ -111,7 +111,7 @@ def prospective(n: int = 60) -> str:
     import datetime as dt
     import hashlib
     import yaml
-    from hyparena.card.pipeline import _client
+    from hyparena.pipeline import _client
     from scripts.whole_system.prospective import OUT, SPECS
     texts = [json.loads(l) for l in open(OUT / f"texts_{n}.jsonl")]
     out_f = OUT / f"llm_consensus_{n}.json"

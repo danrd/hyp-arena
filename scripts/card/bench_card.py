@@ -59,7 +59,7 @@ def run(system: str, limit: int = 0) -> dict:
         raise SystemExit("paid: set ALLOW_PAID=1")
     from hyparena.card.llm import ask
     from hyparena.card.normalizer import normalize_union
-    from hyparena.card.pipeline import _client
+    from hyparena.pipeline import _client
     out_p = DIR / f"bench_card_{system}.json"
     done = json.loads(out_p.read_text()) if out_p.exists() else {}
     ts = [t for t in texts() if t["id"] not in done][: limit or None]

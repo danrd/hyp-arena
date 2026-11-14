@@ -11,7 +11,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from hyparena.state import Evidence
+from hyparena.coscientist.state import Evidence
 
 URL = "https://gitlab.com/crossref/retraction-watch-data/-/raw/main/retraction_watch.csv"
 DEFAULT = Path(__file__).resolve().parents[2] / "data" / "cache" / "retraction_watch.csv"

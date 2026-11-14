@@ -98,7 +98,7 @@ def verdict(st: dict[str, list[str]]) -> dict:
 def cmd_run(out: str, max_calls: int) -> None:
     from concurrent.futures import ThreadPoolExecutor
 
-    from hyparena.card import pipeline
+    from hyparena import pipeline
     d = json.loads(POOL.read_text())
     Path(out).mkdir(parents=True, exist_ok=True)
 

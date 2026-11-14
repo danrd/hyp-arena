@@ -1,5 +1,6 @@
 """Pipeline machinery with the fake LLM and stubbed sources (no network)."""
-from hyparena.card import pipeline, sources, verifier
+from hyparena import pipeline
+from hyparena.reading import sources, verifier
 from hyparena.tools import pubmed
 
 ABSTRACT = {"pmid": "1", "title": "A fake compound extends lifespan in mice.", "year": "2020", "pubtypes": ["Journal Article"],
@@ -119,7 +120,7 @@ def test_cut_off_reply_goes_to_the_fallback_family(monkeypatch):
 
 
 def test_stated_species_is_not_inherited():
-    from hyparena.card.rules import mark_inherited
+    from hyparena.scoring.rules import mark_inherited
     card = _fixture_card("ex1_rapamycin_healthspan")
     c4 = card.claims[3]                                   # span "... in healthy older adults"
     c4.qualifiers["species"], c4.inherited_from_pico = "human", ["species"]
@@ -189,7 +190,7 @@ def test_pipeline_with_expert_layer(monkeypatch, tmp_path):
 
 
 def test_preferences_from_pairwise_decisions():
-    from hyparena.card import expert as ex
+    from hyparena.scoring import expert as ex
     layer = ex.ExpertLayer.model_validate({"decisions": [
         {"id": "e1", "point": "pairwise", "target": ["H-1", "H-2"], "decision": "prefer H-2"},
         {"id": "e2", "point": "pairwise", "target": ["H-1", "H-3"], "decision": "prefer H-1", "profile": "fundamental"}]})
@@ -245,7 +246,7 @@ def test_disease_model_records_do_not_set_the_effect_level(monkeypatch):
     """Context rule (2026-10-22): a lupus-prone strain named in the abstract is a disease model; for a claim about
     lifespan in mice without a stated disease the record moves to an analog and does not enter the effect level."""
     from hyparena.card.models import Verification
-    from hyparena.card.rules import add_disease_analogs, finalize
+    from hyparena.scoring.rules import add_disease_analogs, finalize
     card = _lovaza_card("extends_lifespan_in")
     quote = "4% Lovaza significantly extends both the median and maximal life span of (NZBxNZW)F1 mice."
     _stub(monkeypatch, [_record(quote=quote, effect="increase", qualifiers_match={"species": "yes"})])
@@ -267,7 +268,7 @@ def test_a_quote_about_another_compound_does_not_count(monkeypatch):
     cv = verifier.verify_claim(None, "google", frozenset(), card.claims[0], card)
     rec = cv.evidence[0]
     assert rec.qualifiers_match["intervention_match"] == "related_compound"
-    from hyparena.card.rules import claim_status
+    from hyparena.scoring.rules import claim_status
     assert claim_status(cv, card.claims[0]) == "unverified"          # related compounds count only as analogs
 
 
@@ -290,7 +291,7 @@ def _other_outcome(card):
 
 
 def test_outcome_other_is_flagged_by_admission():
-    from hyparena.card.rules import admit
+    from hyparena.scoring.rules import admit
     card = _fixture_card("ex5_resveratrol_endpoint")
     assert admit(card).flags == []
     assert admit(_other_outcome(card)).flags == ["unmapped_relation"]
@@ -520,14 +521,14 @@ def _run_file(tmp_path, records, as_of="2010-12-31"):
 
 
 def test_audit_of_a_clean_run(monkeypatch, tmp_path):
-    from hyparena import backtest
+    from hyparena.whole_system import backtest
     _dated(monkeypatch, {"1": "2009-05-01"})
     out = backtest.audit(_run_file(tmp_path, [{"record_id": "PMID:1"}]), strict=True)
     assert out["ok"] and out["undated_share"] == 0 and out["after_T"] == {}
 
 
 def test_audit_fails_on_a_late_record_always_and_on_undated_ones_when_final(monkeypatch, tmp_path):
-    from hyparena import backtest
+    from hyparena.whole_system import backtest
     _dated(monkeypatch, {"1": "2009-05-01", "2": "2012-01-01"})
     late = backtest.audit(_run_file(tmp_path, [{"record_id": "PMID:2"}]))
     assert not late["ok"] and list(late["after_T"]) == ["2"]

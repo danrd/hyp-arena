@@ -24,8 +24,8 @@ KIND_RU = {"code": "Проверки кода и метода", "claim": "Про
 
 def current_set() -> str:
     """Prefix of the hash of the current indicator set and profiles (what a recorded result is compared with)."""
-    from hyparena.aspid import load_profiles
-    from hyparena.card import indicators as ind
+    from hyparena.scoring.aspid import load_profiles
+    from hyparena.scoring import indicators as ind
     return ind.set_hash(ind.INDICATORS, load_profiles())[:8]
 
 

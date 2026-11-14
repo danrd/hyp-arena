@@ -1,5 +1,5 @@
 """The top without relatives: one hypothesis per family, in the order of the profile; the ranking itself is not changed."""
-from hyparena import diversity
+from hyparena.reports import diversity
 
 
 def _res(order, parents=None):

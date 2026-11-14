@@ -1,9 +1,9 @@
 # ASPID profiles over the axes of method v3 (user decision 2026-11-05, "for a trial"): the axes are indicators and ASPID
 # aggregates them with random weights under each profile's order of importance, instead of the fixed product V = P x W x I
-# (which is one point of this family: equal weights on the log scale). hyparena/card/aspid_v3.py.
+# (which is one point of this family: equal weights on the log scale). hyparena/scoring/aspid_v3.py.
 # Indicators: P, W, I, I_headroom (I if the experiment cut off every supported alternative), feasibility (method-v3.md 9.4),
 # endpoint_clinical (2026-11-06, specs/scoring/estimand-2026-11-06.yaml: kappa 0.93 between two families, |rho| <= 0.42 with every
-# other indicator) in the lowest tier of evidence and funding; trial-2 profiles. Earlier: in the lowest tier three refinements from the records (hyparena/card/v3_extra.py): best design for the outcome link,
+# other indicator) in the lowest tier of evidence and funding; trial-2 profiles. Earlier: in the lowest tier three refinements from the records (hyparena/scoring/v3_extra.py): best design for the outcome link,
 # independent sources for it, share of the chain's weight against. Unknown values are drawn over their range.
 # the v2 indicator set: human safety data exist or not; unknown is drawn over its range). P, I and I_headroom are on log
 # scales, so the aggregation is a randomly weighted geometric mean: a near-zero plausibility is not compensated.

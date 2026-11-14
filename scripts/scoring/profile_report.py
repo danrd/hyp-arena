@@ -14,7 +14,7 @@ from pathlib import Path
 import numpy as np
 from scipy.stats import kendalltau, spearmanr
 
-from hyparena.snapshot import places
+from hyparena.whole_system.snapshot import places
 
 
 def _code(spec: dict, v):
@@ -83,8 +83,8 @@ def _aggregate(b: dict, ranked: list[dict], profile: str, drop: tuple[str, ...] 
     indicators in `drop`; with drop=() it must reproduce the bundle's own ranking."""
     from dataclasses import replace
 
-    from hyparena.aspid import aggregate, load_profiles
-    from hyparena.card.indicators import for_meta
+    from hyparena.scoring.aspid import aggregate, load_profiles
+    from hyparena.scoring.indicators import for_meta
     BY_ID = {s.id: s for s in for_meta(b["meta"])}              # the run's own set and levels
     keep = [s["id"] for s in b["meta"]["indicators"] if s["id"] not in drop]
     tiers = [t if isinstance(t, str) else [i for i in t if i in keep] for t in b["meta"]["profiles"][profile]["tiers"]]

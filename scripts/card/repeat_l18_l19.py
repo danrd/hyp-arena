@@ -50,7 +50,7 @@ def select(n: int = 15) -> list[dict]:
 
 
 def cmd_texts() -> None:
-    from hyparena.card.pipeline import _client
+    from hyparena.pipeline import _client
     d = json.loads(TEXTS.read_text())
     missing = [r["id"] for r in d["items"] if r["source"] == "manual" and not r.get("paraphrase")]
     if missing:
@@ -71,7 +71,7 @@ def cmd_texts() -> None:
 def cmd_run(out: str, max_calls: int = 400) -> None:
     from concurrent.futures import ThreadPoolExecutor
 
-    from hyparena.card import pipeline
+    from hyparena import pipeline
     d = json.loads(TEXTS.read_text())
     arms = {"O1": [r["text"] for r in d["items"]], "O2": [r["text"] for r in d["items"]], "P": [r["paraphrase"] for r in d["items"]],
             "H": [r["H"] for r in d["items"]], "T": [r["T"] for r in d["items"]]}

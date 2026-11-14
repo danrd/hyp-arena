@@ -9,12 +9,12 @@ import json
 
 from scipy.stats import spearmanr
 
-from hyparena.card import aspid_v3
-from hyparena.card import novelty_v34 as nv
-from hyparena.card import rules_v3 as r3
-from hyparena.card import rules_v32 as r32
-from hyparena.card import trend_genetics as tg
-from hyparena.card import v3_extra
+from hyparena.scoring import aspid_v3
+from hyparena.novelty import novelty_v34 as nv
+from hyparena.scoring import rules_v3 as r3
+from hyparena.scoring import rules_v32 as r32
+from hyparena.scoring import trend_genetics as tg
+from hyparena.scoring import v3_extra
 from scripts.common.ablation import units
 from scripts.alternatives.i_recalibration import measure
 from scripts.argon.pack6_analysis import D, SUP
@@ -49,7 +49,7 @@ def prospective_axes():
 def main() -> dict:
     argon = {t["id"]: t for t in json.loads((ARGON / "pack_6_answer.json").read_text())["trials"]}
     key = json.loads((ARGON / "pack_6_key.json").read_text())
-    from hyparena.card import alternatives_d
+    from hyparena.alternatives import alternatives_d
     out, base_scores = {}, None
     cal = units()
     order = [1.5] + [c for c in CAPS if c != 1.5]

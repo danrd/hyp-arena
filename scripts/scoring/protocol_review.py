@@ -10,7 +10,7 @@ import json
 import os
 from concurrent.futures import ThreadPoolExecutor
 
-from hyparena.backtest import tied_auc
+from hyparena.whole_system.backtest import tied_auc
 from hyparena.card.llm import ask
 from scripts.common.ceiling import CAL
 from scripts.whole_system.llm_consensus import CONFIG, FAMILIES, units
@@ -39,7 +39,7 @@ def score(v: dict, k: str):
 
 
 def main() -> dict:
-    from hyparena.card.pipeline import _client
+    from hyparena.pipeline import _client
     out_f = CAL / "protocol_review.json"
     done = json.loads(out_f.read_text()) if out_f.exists() else {}
     us = units()

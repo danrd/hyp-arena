@@ -19,7 +19,7 @@ from pathlib import Path
 
 import gradio as gr
 
-from hyparena import showcase
+from hyparena.coscientist import showcase
 from hyparena.llm.providers import ALLOW_PAID_ENV
 
 ROOT = Path(__file__).resolve().parents[2]

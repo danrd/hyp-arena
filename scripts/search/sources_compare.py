@@ -11,11 +11,11 @@ from __future__ import annotations
 import json
 from collections import Counter
 
-from hyparena.backtest import tied_auc
-from hyparena.card import novelty_v34 as nv
-from hyparena.card import rules_v3 as r3
-from hyparena.card import rules_v32 as r32
-from hyparena.card.effect_class import d_from_ci, from_phrase
+from hyparena.whole_system.backtest import tied_auc
+from hyparena.novelty import novelty_v34 as nv
+from hyparena.scoring import rules_v3 as r3
+from hyparena.scoring import rules_v32 as r32
+from hyparena.reading.effect_class import d_from_ci, from_phrase
 from hyparena.card.models import ClaimVerification, HypothesisCard
 from scripts.argon.argon_check import SRC, check_quotes
 from scripts.scoring.experiment_forecast import d_of

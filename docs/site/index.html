@@ -577,7 +577,7 @@ tr.foldrow button { font-size: var(--step--1); }
   const fieldRu = {"pico.population": "популяция (вид)", "pico.outcome.endpoint": "исход", "pico.intervention": "вмешательство"};
 
   function load(bundle, example, key) {
-    if (!bundle || bundle.format !== "hyparena-site@1" || !Array.isArray(bundle.hypotheses)) throw new Error("Это не файл страницы: соберите его командой python -m hyparena.site export.");
+    if (!bundle || bundle.format !== "hyparena-site@1" || !Array.isArray(bundle.hypotheses)) throw new Error("Это не файл страницы: соберите его командой python -m hyparena.reports.site export.");
     B = bundle; isExample = example;
     if (example) sampleKey = key || sampleKey; else userBundle = bundle;
     $("#exampleBadge").hidden = !example;

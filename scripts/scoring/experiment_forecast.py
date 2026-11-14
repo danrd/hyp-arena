@@ -9,10 +9,10 @@ import json
 import math
 import statistics
 
-from hyparena.backtest import tied_auc
-from hyparena.card import novelty_v34 as nv
-from hyparena.card import rules_v32 as r32
-from hyparena.card.effect_class import _FOLD, _RATIO, _SMD
+from hyparena.whole_system.backtest import tied_auc
+from hyparena.novelty import novelty_v34 as nv
+from hyparena.scoring import rules_v32 as r32
+from hyparena.reading.effect_class import _FOLD, _RATIO, _SMD
 from scripts.common.ablation import units
 from scripts.common.ceiling import CAL, design
 
@@ -57,7 +57,7 @@ def expected_effect(u: dict) -> tuple[float, bool, float]:
     e = r32.evaluate(card, cvs, u["alts"], v34=True)
     pre, out = nv.slots(card)
     by = {c.id: c for c in cvs}
-    claims = {c.id: c for c in __import__("hyparena.card.rules_v3", fromlist=["x"]).chain(card)}
+    claims = {c.id: c for c in __import__("hyparena.scoring.rules_v3", fromlist=["x"]).chain(card)}
     num = den = 0.0
     for i in out:
         cv = by.get(i)
@@ -69,7 +69,7 @@ def expected_effect(u: dict) -> tuple[float, bool, float]:
                 if side == "against":
                     d = 0.0
                 else:
-                    from hyparena.card.effect_class import d_from_ci
+                    from hyparena.reading.effect_class import d_from_ci
                     d = d_of(r.effect_reported)
                     d = d if d is not None else d_from_ci(r.effect_reported, r.n_total, r.comparison)
                 if d is None:

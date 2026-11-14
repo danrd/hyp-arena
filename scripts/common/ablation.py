@@ -13,14 +13,14 @@ from __future__ import annotations
 import json
 from contextlib import contextmanager
 
-from hyparena.backtest import tied_auc
-from hyparena.card import aspid_v3
-from hyparena.card import novelty_v34 as nv
-from hyparena.card import rules_v3 as r3
-from hyparena.card import rules_v32 as r32
-from hyparena.card import trend_genetics as tg
-from hyparena.card import v3_extra
-from hyparena.card import v3_levels as lv
+from hyparena.whole_system.backtest import tied_auc
+from hyparena.scoring import aspid_v3
+from hyparena.novelty import novelty_v34 as nv
+from hyparena.scoring import rules_v3 as r3
+from hyparena.scoring import rules_v32 as r32
+from hyparena.scoring import trend_genetics as tg
+from hyparena.scoring import v3_extra
+from hyparena.scoring import v3_levels as lv
 from hyparena.card.models import ClaimVerification, HypothesisCard
 from scripts.common.ceiling import CAL, endpoint
 
@@ -68,7 +68,7 @@ def units() -> list[dict]:
             it = r["items"][0]
             if us.get(h, {}).get("label") not in (0, 1) or not it.get("card") or not it.get("verification") or "v3" not in it:
                 continue
-            from hyparena.card import alternatives_d
+            from hyparena.alternatives import alternatives_d
             card = alternatives_d.apply(h, HypothesisCard.model_validate(it["card"]))
             cvs = [ClaimVerification.model_validate(c) for c in it["verification"]["claims"]]
             alts = {a: ClaimVerification.model_validate(v) for a, v in (it.get("v3_alternatives") or {}).items()}

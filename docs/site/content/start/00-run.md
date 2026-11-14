@@ -61,7 +61,7 @@ export ALLOW_PAID=1
 ## Шаг 4. Запустить проверку и рейтинг {#run-go}
 
 ```
-python -m hyparena.card.pipeline --paste мои_гипотезы.txt \
+python -m hyparena.pipeline --paste мои_гипотезы.txt \
     --config configs/v2-direct.yaml --max-calls 200 --out runs/mine.v2.json
 ```
 
@@ -70,13 +70,13 @@ python -m hyparena.card.pipeline --paste мои_гипотезы.txt \
 ## Шаг 5. Собрать файл для страницы {#run-export}
 
 ```
-python -m hyparena.site export --v2 runs/mine.v2.json \
+python -m hyparena.reports.site export --v2 runs/mine.v2.json \
     --title "Мои гипотезы" --out runs/site/mine.json
 ```
 
 Затем откройте главную страницу сайта, нажмите «Открыть свой прогон» и выберите файл `runs/site/mine.json`. Файл можно и перетащить на страницу.
 
-Чтобы рядом был рейтинг Elo (турнир, в котором модели спорят о гипотезах), прогоните те же тексты турниром командой `python -m hyparena.live run --import-file …` и добавьте в команду выше параметры `--elo` и `--pool`.
+Чтобы рядом был рейтинг Elo (турнир, в котором модели спорят о гипотезах), прогоните те же тексты турниром командой `python -m hyparena.coscientist.live run --import-file …` и добавьте в команду выше параметры `--elo` и `--pool`.
 
 **Что вы увидите, если всё хорошо.** Команда печатает путь к созданному файлу. На главной странице вместо примера появляются ваши гипотезы: метка «Пример» исчезает, в полосе стоит название вашего прогона, а во вкладке «Сравнение» — ваш рейтинг.
 

@@ -14,8 +14,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 from scipy.stats import spearmanr
 
-from hyparena.card import rules_v3 as r3
-from hyparena.card import rules_v32 as r32
+from hyparena.scoring import rules_v3 as r3
+from hyparena.scoring import rules_v32 as r32
 from hyparena.card.models import ClaimVerification
 from scripts.common.reread_v11 import CONFIG, items
 from scripts.reading.split_reader import relabel
@@ -46,8 +46,8 @@ def run() -> dict:
     if os.environ.get("ALLOW_PAID") != "1":
         raise SystemExit("paid: set ALLOW_PAID=1")
     from hyparena.card.llm import ask
-    from hyparena.card.pipeline import _client
-    from hyparena.card.verifier import verify_claim
+    from hyparena.pipeline import _client
+    from hyparena.reading.verifier import verify_claim
     from hyparena.tools import pubmed
     want = set(sample())
     done = json.loads(OUT.read_text()) if OUT.exists() else {}

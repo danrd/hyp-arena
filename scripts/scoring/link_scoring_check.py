@@ -10,8 +10,8 @@ from collections import Counter
 
 from scipy.stats import spearmanr
 
-from hyparena.backtest import tied_auc
-from hyparena.card import rules_v32 as r32
+from hyparena.whole_system.backtest import tied_auc
+from hyparena.scoring import rules_v32 as r32
 from scripts.common.ablation import units
 from scripts.common.ceiling import CAL
 from scripts.common.v34_check import PROS, parts

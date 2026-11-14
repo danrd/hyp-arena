@@ -253,7 +253,7 @@ def auc(pos, neg) -> float:
 
 
 def baseline(units: list[dict] | None = None) -> dict:
-    from hyparena.backtest import bootstrap_auc
+    from hyparena.whole_system.backtest import bootstrap_auc
     units = units or _units()
     feats = {r["id"]: r for r in json.loads(FEATURES.read_text())["units"]}
     out = {}
@@ -277,7 +277,7 @@ def baseline(units: list[dict] | None = None) -> dict:
 def dry(limit: int | None = None, config: str = "configs/v2-flash.yaml") -> dict:
     """The pipeline with the fake LLM on every unit, each as of its own date: counts calls per role and the tokens of the
     prompts actually built (the fake answers are short, so output tokens come from the earlier paid run, below)."""
-    from hyparena.card.pipeline import run as v2
+    from hyparena.pipeline import run as v2
     texts = [json.loads(l) for l in TEXTS.read_text().splitlines()][:limit]
     calls = Counter()
     tin = defaultdict(int)
@@ -300,7 +300,7 @@ def sample(n: int = 20, seed: int = 0, config: str = "configs/v2-gemma31free.yam
     LLM, each as of its own date. The number of claims per card, and so of verifier calls, comes from real cards; the paid
     normalizer may extract a few more or fewer claims."""
     from hyparena.card.normalizer import normalize
-    from hyparena.card.pipeline import _client, run as v2
+    from hyparena.pipeline import _client, run as v2
     texts = [json.loads(l) for l in TEXTS.read_text().splitlines()]
     pick = random.Random(seed).sample(texts, n)
     client, fams = _client(config, False, 4 * n)
@@ -342,7 +342,7 @@ def pilot(n: int = 6, extra: int = 0, tag: str = "", only: set | None = None) ->
     """Paid (ALLOW_PAID=1): the whole method v2 of B1 (configs/v2-flash.yaml) on `n` trials outside the benchmark, each as of
     its own date, plus the gpt-4o card of each text (configs/v2-gpt4o.yaml), to look at by hand before the main run."""
     from hyparena.card.normalizer import normalize
-    from hyparena.card.pipeline import _client, run as v2
+    from hyparena.pipeline import _client, run as v2
     texts = build_texts(pilot_units(n, extra=extra), PILOT_TEXTS)
     dest = PILOT_OUT.with_name(PILOT_OUT.stem + tag + ".json") if tag else PILOT_OUT
     if only:

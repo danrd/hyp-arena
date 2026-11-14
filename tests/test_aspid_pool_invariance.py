@@ -4,8 +4,9 @@ import random
 import pytest
 import numpy as np
 
-from hyparena.aspid import aggregate, IndicatorSpec
-from hyparena.card import pipeline, verifier
+from hyparena.scoring.aspid import aggregate, IndicatorSpec
+from hyparena import pipeline
+from hyparena.reading import verifier
 from hyparena.tools import pubmed
 from hyparena.llm.fake import FakeLLMClient
 import json

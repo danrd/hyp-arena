@@ -7,11 +7,11 @@ from __future__ import annotations
 import argparse
 import json
 
-from hyparena.card import evolution_rules as er
-from hyparena.card import improvements as imp
-from hyparena.card import novelty_v34 as nv
-from hyparena.card import v3_extra
-from hyparena.card.evolve_v3 import parent_parts
+from hyparena.evolution import evolution_rules as er
+from hyparena.evolution import improvements as imp
+from hyparena.novelty import novelty_v34 as nv
+from hyparena.scoring import v3_extra
+from hyparena.evolution.evolve_v3 import parent_parts
 from scripts.common.v34_check import PROS
 
 

@@ -3,8 +3,8 @@ import math
 import numpy as np
 from scipy.stats import kendalltau
 from dataclasses import replace
-from hyparena.aspid import IndicatorSpec, aggregate, Profile, load_profiles
-from hyparena.card.indicators import INDICATORS
+from hyparena.scoring.aspid import IndicatorSpec, aggregate, Profile, load_profiles
+from hyparena.scoring.indicators import INDICATORS
 
 def _generate_random_pool(n_hypotheses: int, rng: np.random.Generator, specs: list[IndicatorSpec]) -> dict[str, dict[str, object]]:
     """Generates a random pool of hypotheses with values for the given indicators."""

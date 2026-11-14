@@ -7,7 +7,7 @@ from __future__ import annotations
 import json
 from collections import Counter
 
-from hyparena.card import rules_v32 as r32
+from hyparena.scoring import rules_v32 as r32
 from scripts.argon.pack10_sources import DIR
 from scripts.common.v34_check import CAL, PROS, parts
 

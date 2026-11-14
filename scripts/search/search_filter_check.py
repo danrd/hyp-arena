@@ -91,7 +91,7 @@ def run() -> dict:
     if os.environ.get("ALLOW_PAID") != "1":
         raise SystemExit("paid: set ALLOW_PAID=1")
     from hyparena.card.llm import ask
-    from hyparena.card.pipeline import _client
+    from hyparena.pipeline import _client
     done = json.loads(OUT.read_text()) if OUT.exists() else {}
     js = [j for j in jobs() if not all(f"{j['sid']}|{j['claim']}|{p}" in done for p in j["ids"])]
     client, _ = _client(CONFIG, False, len(js) * 2 + 10)

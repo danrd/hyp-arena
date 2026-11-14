@@ -1,0 +1,1063 @@
+"""Deterministic rules over the card (no LLM): validation, admission, claim statuses, the evidence profile and
+the known-result check (card spec sections 4a, 7, 8, 10).
+
+The verifier (an LLM) only extracts evidence records with verbatim quotes and their match to the claim's
+context; every status and every profile value is computed here from those records."""
+from __future__ import annotations
+
+import re
+from typing import Iterable, Optional
+
+from hyparena.card.contexts import CONTEXT_FLAGS
+from hyparena.card.models import (HUMAN_RUNGS, INHERITABLE, MOLECULAR, ORGANISM_RELATIONS, RUNGS, UNKNOWN, Admission,
+                                  Claim, ClaimVerification, Conflict, DeclaredAlternative, Entity, EvidenceProfile,
+                                  EvidenceRecord, HypothesisCard, Refusal, Verification)
+
+ADMISSIBLE_TYPES = {"A_text", "B_curated", "C_measurement"}
+SAME_INTERVENTION = {"exact", "dose_differs", "regimen_differs"}
+MAMMALS = {"mouse", "mice", "mus musculus", "rat", "rats", "rattus norvegicus", "dog", "monkey", "macaque",
+           "rhesus", "marmoset", "ncbitaxon:10090", "ncbitaxon:10116", "ncbitaxon:9544", "ncbitaxon:9615",
+           "ncbitaxon:9483", "mammal", "mammals"}
+INVERTEBRATES = {"worm", "worms", "c. elegans", "caenorhabditis elegans", "nematode", "fly", "flies", "drosophila",
+                 "drosophila melanogaster", "yeast", "saccharomyces cerevisiae", "ncbitaxon:6239", "ncbitaxon:7227",
+                 "ncbitaxon:4932", "ncbitaxon:559292"}     # yeast: grouped with non-mammalian model organisms
+HUMAN = {"human", "humans", "homo sapiens", "ncbitaxon:9606", "older adults", "people"}
+LIFESPAN_RELATIONS = {"extends_lifespan_in", "shortens_lifespan_in", "no_lifespan_effect_in"}
+
+
+def _norm(s: str) -> str:
+    return re.sub(r"\s+", " ", (s or "").strip().lower())
+
+
+# ---- validation and admission (sections 4a, 10) ----
+
+def _core_fields(card: HypothesisCard) -> list[tuple[str, object, bool]]:
+    """(name, the object holding `span`, whether its value is known) for the core fields of normalize_card/v12."""
+    p, e, unk = card.pico, card.decisive_experiment, lambda v: v is None or str(v).strip().lower() in ("", UNKNOWN)
+    out = [("pico.population", p.population, not unk(p.population.label))]
+    out += [(f"pico.intervention[{i}]", x, True) for i, x in enumerate(p.intervention)]
+    out += [(f"pico.background[{i}]", x, True) for i, x in enumerate(getattr(p, "background", []) or [])]
+    out += [("pico.comparator", p.comparator, not (unk(p.comparator.type) and unk(p.comparator.label))),
+            ("pico.outcome", p.outcome, not unk(p.outcome.metric)),
+            ("decisive_experiment", e, not all(unk(v) for v in (e.design, e.control, e.n_planned, e.primary_outcome)))]
+    return out
+
+
+def core_span_problems(card: HypothesisCard, raw_text: str) -> list[str]:
+    """normalize_card/v12 (2026-11-12, user decision): every known core field (population, each intervention, comparator,
+    outcome, the stated experiment) carries the exact phrase of the text that states it, as claims do."""
+    text, out = _norm(raw_text), []
+    for name, obj, known in _core_fields(card):
+        span = getattr(obj, "span", "") or ""
+        if known and not span:
+            out.append(f"core {name}: span is missing (copy the exact phrase of the text that states it)")
+        elif span and _norm(span) not in text:
+            out.append(f"core {name}: span is not a verbatim fragment of the text: {span!r}")
+    return out
+
+
+def anchor_core(card: HypothesisCard, raw_text: str) -> list[str]:
+    """After the rounds: a span that is not verbatim is cleared; every known core field without a verbatim span is listed in
+    `card.unanchored` (its value is kept and shown as not anchored)."""
+    text, missing = _norm(raw_text), []
+    for name, obj, known in _core_fields(card):
+        if getattr(obj, "span", "") and _norm(obj.span) not in text:
+            obj.span = ""
+        if known and not getattr(obj, "span", ""):
+            missing.append(name)
+    card.unanchored = missing
+    return missing
+
+
+def validate_card(card: HypothesisCard, raw_text: Optional[str] = None, max_claims: int = 8) -> list[str]:
+    """Problems with a declared card; empty when it is valid. normalize_card/v15 allows 12 claims (one measure per outcome)."""
+    problems = []
+    outcomes = [c for c in card.claims if c.role == "outcome"]
+    if len(outcomes) != 1:
+        problems.append(f"exactly one claim must have role outcome (found {len(outcomes)})")
+    if len(card.claims) > max_claims:
+        problems.append(f"at most {max_claims} claims (found {len(card.claims)})")
+    ids = {c.id for c in card.claims}
+    if len(ids) != len(card.claims):
+        problems.append("claim ids must be unique")
+    for e in card.edges:
+        if e.from_ not in ids or e.to not in ids:
+            problems.append(f"edge {e.from_} -> {e.to} references a missing claim")
+    requires = {}
+    for e in card.edges:
+        if e.type == "requires":
+            requires.setdefault(e.from_, []).append(e.to)
+    if _has_cycle(requires):
+        problems.append("cycle through `requires` edges")
+    alternatives = {a.id: a for a in card.declared_alternatives}
+    if len(alternatives) != len(card.declared_alternatives) or ids & set(alternatives):
+        problems.append("alternative ids must be unique and differ from claim ids")
+    rejected = [a for a in card.declared_alternatives if a.stated_as == "rejected"]
+    spanned = [a for a in card.declared_alternatives if a.note != "listed as plain text"]   # plain strings carry no span
+    if raw_text is not None:
+        text = _norm(raw_text)
+        for c in [*card.claims, *spanned]:
+            if not c.source_span:
+                problems.append(f"{c.id}: source_span is missing")
+            elif _norm(c.source_span) not in text:
+                problems.append(f"{c.id}: source_span is not a verbatim fragment of the text: {c.source_span!r}")
+    for c in [*card.claims, *rejected]:
+        if c.relation == "other" and not c.note:
+            problems.append(f"{c.id}: relation `other` needs a short note")
+        problems += _inheritance_problems(c, card)
+    # contrast "mainly X, not Y" (spec 6, 10): the reference and the rejected alternative come together
+    referenced = set()
+    for c in card.claims:
+        ref = c.qualifiers.get("contrast")
+        if not ref:
+            continue
+        referenced.add(ref)
+        if ref not in alternatives or alternatives[ref].stated_as != "rejected":
+            problems.append(f"{c.id}: qualifiers.contrast must name a declared alternative with stated_as rejected ({ref!r})")
+    for a in rejected:
+        if a.id not in referenced:
+            problems.append(f"{a.id}: a rejected alternative needs a claim with qualifiers.contrast: {a.id}")
+    return problems
+
+
+def pico_value(card: HypothesisCard, key: str) -> str:
+    p = card.pico
+    return {"species": p.population.label, "strain": p.population.strain, "sex": p.population.sex,
+            "age_at_start": p.population.age_at_start,
+            "comparator": p.comparator.label if _known(p.comparator.label) else p.comparator.type}.get(key, UNKNOWN)
+
+
+def same_value(key: str, a: str, b: str) -> bool:
+    """Qualifier values that name the same thing; species compared by organism ("older adults" = human)."""
+    if key == "species":
+        sa, sb = species_key(a), species_key(b)
+        return bool(sa) and sa == sb
+    na, nb = _norm(a).replace("_", " "), _norm(b).replace("_", " ")
+    return bool(na) and (na == nb or na in nb or nb in na)
+
+
+def _inheritance_problems(c, card: HypothesisCard) -> list[str]:
+    """Spec 9, 10: only species and strain; with the PICO value; only into claims about the intervention, not
+    into molecular relations; mandatory when the span does not name the key."""
+    out = []
+    for key in c.inherited_from_pico:
+        if key not in INHERITABLE:
+            out.append(f"{c.id}: {key!r} cannot be inherited from PICO (allowed: {', '.join(INHERITABLE)})")
+        elif not same_value(key, c.qualifiers.get(key, ""), pico_value(card, key)):
+            out.append(f"{c.id}: inherited {key} must equal the PICO value ({pico_value(card, key)!r})")
+    if c.inherited_from_pico and not inherits(c, card):
+        out.append(f"{c.id}: qualifiers are inherited only into non-molecular claims whose subject is the intervention")
+    for key in _owed(c, card):
+        out.append(f"{c.id}: {key} must be inherited from PICO ({pico_value(card, key)!r}): the span does not name it")
+    if "species" not in c.inherited_from_pico and _species_unstated(c) and c.role != "analog":
+        out.append(f"{c.id}: species {c.qualifiers['species']!r} is not stated in the span; it may only be inherited "
+                   f"from PICO into a claim about the intervention (list it in inherited_from_pico), otherwise leave it out")
+    return out
+
+
+def inherits(c, card: HypothesisCard) -> bool:
+    """Spec 9: a claim (or rejected alternative) about the intervention itself, not a molecular relation."""
+    return same_intervention(c, card) and c.relation not in MOLECULAR and c.relation != "other"
+
+
+def _span_names(c, key: str) -> bool:
+    span = c.source_span or ""
+    if key == "species":                                 # an organism in the span ("in mice") names the species
+        return bool(quote_organisms(span)) or (_known(c.qualifiers.get("species")) and _norm(c.qualifiers["species"]) in _norm(span))
+    value = c.qualifiers.get(key, "")
+    return _known(value) and _norm(value) in _norm(span)
+
+
+def _owed(c, card: HypothesisCard) -> list[str]:
+    """Keys the claim must inherit and does not list (spec 9: mandatory when the conditions hold)."""
+    if not inherits(c, card):
+        return []
+    owed = []
+    for key in INHERITABLE:
+        pico = pico_value(card, key)
+        if not _known(pico) or key in c.inherited_from_pico:
+            continue
+        if key == "species" and _span_names(c, "species"):
+            continue
+        if key == "strain" and _norm(pico) in _norm(c.source_span):
+            continue
+        owed.append(key)
+    return owed
+
+
+def _has_cycle(graph: dict[str, list[str]]) -> bool:
+    state: dict[str, int] = {}
+
+    def visit(n):
+        if state.get(n) == 1:
+            return True
+        if state.get(n) == 2:
+            return False
+        state[n] = 1
+        if any(visit(m) for m in graph.get(n, [])):
+            return True
+        state[n] = 2
+        return False
+
+    return any(visit(n) for n in list(graph))
+
+
+def _known(v: Optional[str]) -> bool:
+    return bool(v) and _norm(v) not in (UNKNOWN, "", "none", "n/a")
+
+
+def admit(card: HypothesisCard) -> Admission:
+    """Is this a hypothesis (a decisive experiment can be defined)? Critical fields per type (section 4a)."""
+    p = card.pico
+    has_population = _known(p.population.taxon) or _known(p.population.label)
+    has_endpoint = p.outcome.endpoint != "unknown"
+    outcome = card.outcome_claim
+    missing = []
+    if card.hypothesis_type == "interventional":
+        if not p.intervention:
+            missing.append("pico.intervention")
+        if not has_population:
+            missing.append("pico.population")
+        if not has_endpoint:
+            missing.append("pico.outcome.endpoint")
+    elif card.hypothesis_type == "mechanistic":
+        if not (p.intervention or (outcome and _known(outcome.subject.label))):
+            missing.append("subject entity or intervention")
+        # the explanation is a mechanism claim or the outcome claim itself (spec 6: in a mechanistic hypothesis
+        # the outcome is the explanation, the effect being explained is a premise)
+        if outcome is None and not any(c.role == "premise" for c in card.claims):
+            missing.append("the effect being explained (outcome or premise claim)")
+        if outcome is None and not any(c.role == "mechanism" for c in card.claims):
+            missing.append("a mechanism claim")
+    elif card.hypothesis_type == "biomarker":
+        pred = next((c for c in card.claims if c.relation == "predicts"), None)
+        if pred is None:
+            missing.append("a `predicts` claim (marker and predicted outcome)")
+        if not has_population:
+            missing.append("pico.population")
+    else:                                                    # observational
+        if not (p.intervention or (outcome and _known(outcome.subject.label))):
+            missing.append("exposure or variant")
+        if outcome is None and not has_endpoint:
+            missing.append("outcome")
+        if not has_population:
+            missing.append("pico.population")
+    specificity = sum([has_population, _known(p.population.sex),
+                       _known(p.population.age_at_start),
+                       any(_known(i.regimen) for i in p.intervention), _known(p.comparator.type)])
+    nothing_measurable = (not p.intervention and not has_endpoint
+                          and (outcome is None or outcome.relation in ("other", "associated_with")))
+    if nothing_measurable:          # also when the type's fields look complete ("Senescent cells are bad for health")
+        return Admission(raw_id=card.raw_id, decision="not_a_hypothesis", missing_critical=missing,
+                         context_specificity=specificity,
+                         reason="no intervention and no measurable outcome: stored as a direction, not ranked")
+    if not missing:
+        flags = ["unmapped_relation"] if outcome is not None and outcome.relation == "other" else []
+        return Admission(raw_id=card.raw_id, decision="accepted", context_specificity=specificity, flags=flags)
+    return Admission(raw_id=card.raw_id, decision="needs_refinement", missing_critical=missing,
+                     context_specificity=specificity)
+
+
+# ---- claim statuses (section 7) ----
+
+def claim_endpoint(claim: Claim, card: Optional[HypothesisCard] = None) -> Optional[str]:
+    """The endpoint a finding must measure to support or refute this claim (None: no endpoint check)."""
+    if claim.relation in LIFESPAN_RELATIONS:
+        return "lifespan"
+    if claim.relation == "improves_healthspan_in":
+        return "healthspan"
+    if claim.relation in ("changes_biomarker", "predicts"):
+        return "biomarker"
+    return None
+
+
+# Graded admission (calibration 2026-11-02, configs with `admission: graded`): for a claim about humans, a record from an
+# adjacent population (population, age, dose or comparator marked "no") or, for a non-compound intervention (exercise,
+# programme, device), from the same class of intervention, counts one step lower instead of not at all. Species and sex
+# mismatches, related compounds, background sentences and other endpoints still do not count. Off by default: earlier runs
+# keep the strict rule.
+GRADED_CONTEXT = False
+# Experiments of 2026-11-02 (calibration on registry trials outside the benchmark), off by default:
+KNOWN_MIN_INDEPENDENT = 1     # E1: a known result needs this many independent exact supporting sources (2 in the experiment)
+REVIEWS_FOR_ROBUSTNESS = False  # E3: reviews about the same intervention that support the outcome make it "replicated"
+DEDUP_OUTCOME_PAPERS = False  # E4: a paper counted for the outcome claim does not count again for premises or mechanisms
+ADJACENT_KEYS = {"population", "age_at_start", "dose", "comparator"}
+
+
+def _human_claim(claim: Claim) -> bool:
+    return species_key(claim.qualifiers.get("species", "")) == "human" or species_key(claim.object.label) == "human"
+
+
+def adjacent(record: EvidenceRecord, claim: Claim) -> bool:
+    """Graded admission applies and the record differs only in adjacent context or intervention class."""
+    if not GRADED_CONTEXT or not _human_claim(claim):
+        return False
+    no = {k for k, v in record.qualifiers_match.items() if v == "no" and k != "intervention_match"}
+    # a non-compound intervention marked "related_compound" by the name check of runs before 2026-11-02 is the same class
+    cls = record.qualifiers_match.get("intervention_match") in ("class", "related_compound") and not claim.subject.id
+    return bool(no or cls) and no <= ADJACENT_KEYS
+
+
+def admissible(record: EvidenceRecord, claim: Claim) -> bool:
+    """A record counts for or against a claim only if it is a finding of an admissible epistemic type, its
+    context matches (no qualifier marked "no"), it is about the claim's own intervention (not a related compound
+    or class), it is not retracted, and it measures the claim's endpoint. Graded admission: see `adjacent`."""
+    if record.quote_role != "finding" or record.epistemic_type not in ADMISSIBLE_TYPES or "retracted" in record.flags:
+        return False
+    near = adjacent(record, claim)
+    if not near and any(v == "no" for k, v in record.qualifiers_match.items() if k != "intervention_match"):
+        return False
+    if record.system in ("ex_vivo", "in_vitro") and claim_organism(claim):
+        return False                                     # ex vivo ≠ in vivo: cells do not support a claim about an organism
+    im = record.qualifiers_match.get("intervention_match")
+    if (im == "related_compound" and not near) or (im == "class" and not near):
+        return False                                     # spec 8: related compounds and classes count only as analogs
+    need = claim_endpoint(claim)
+    if need == "healthspan" and record.endpoint == "biomarker" and species_key(record.species) == "human":
+        return True                                      # a human healthspan claim counts markers at its markers rung
+    return not (need and record.endpoint not in ("unknown", need))
+
+
+def claim_organism(claim) -> bool:
+    """The claim is about a living organism: a species qualifier or an organism as the object."""
+    return bool(species_key(claim.qualifiers.get("species", ""))) or _species_rung(claim.object.label) is not None
+
+
+def claim_status(cv: ClaimVerification, claim: Claim) -> str:
+    return _status_of(cv, claim, cv.evidence, cv.counterevidence)
+
+
+SUBGROUP_FLAGS = ("subgroup_only", "secondary_outcome")
+SEX_STRATA_PROGRAMS = ("ITP", "CITP")                    # protocols that fix sex as a stratum in advance
+SEX_SCOPE_ANY = re.compile(r"\b(?:at least one sex|either sex|any sex|one or both sexes|one or both of the sexes)\b", re.I)
+
+
+def sex_scope_from_text(text: str) -> str:
+    """`any` when the text itself says the effect holds "in at least one sex" (also "either sex"), else `unspecified`."""
+    return "any" if SEX_SCOPE_ANY.search(text or "") else "unspecified"
+
+
+def set_sex_scope(card: HypothesisCard, raw_text: str) -> None:
+    """Fill `sex_scope` of the claims the text states with that scope: the claim's own span, or, for the outcome
+    claim, the hypothesis text. A value the normalizer wrote stays."""
+    for c in card.claims:
+        if c.sex_scope == "unspecified" and (sex_scope_from_text(c.source_span) == "any" or
+                                              (c.role == "outcome" and sex_scope_from_text(raw_text) == "any")):
+            c.sex_scope = "any"
+
+
+def prespecified_sex(r: EvidenceRecord) -> bool:
+    """A one-sex result of a protocol that fixed sex as a stratum in advance: not a post hoc subgroup."""
+    return r.sex in ("male", "female") and "sex" in r.strata
+
+
+def mark_strata(records: list[EvidenceRecord]) -> None:
+    """Mark the records of ITP and CITP papers (the curated rows and the PubMed records of the same papers) with the
+    stratum `sex`, and give a PubMed record with unknown sex the sex of the paper's curated rows when they all agree
+    on one. Idempotent."""
+    papers: dict[str, set[str]] = {}
+    for r in records:
+        if r.program and r.program.name in SEX_STRATA_PROGRAMS and r.linked_pmid:
+            papers.setdefault(r.linked_pmid, set()).add(r.sex)
+    for r in records:
+        pmid = r.linked_pmid or (r.record_id[5:] if r.record_id.startswith("PMID:") else "")
+        if (r.program and r.program.name in SEX_STRATA_PROGRAMS) or pmid in papers:
+            if "sex" not in r.strata:
+                r.strata.append("sex")
+            if "subgroup_only" in r.flags and "subgroup_only set by code" in r.notes:
+                r.flags.remove("subgroup_only")           # a flag the code set before the stratum was known
+            sexes = papers.get(pmid, set())
+            if r.sex == "unknown" and len(sexes) == 1 and next(iter(sexes)) in ("male", "female"):
+                r.sex = next(iter(sexes))
+                r.notes += "; sex taken from the curated row of the same ITP/CITP paper"
+
+
+def _subgroup_record(r: EvidenceRecord) -> bool:
+    return any(f in r.flags for f in SUBGROUP_FLAGS) and not prespecified_sex(r)
+
+
+def subgroup_only(support: list[EvidenceRecord]) -> bool:
+    """All the support is from a post hoc subgroup or a secondary outcome (spec 7, "Subgroup-only support"). A
+    one-sex result of a protocol that fixed sex in advance (ITP, CITP) is not one."""
+    return bool(support) and all(_subgroup_record(r) for r in support)
+
+
+def _single_sex_null(r: EvidenceRecord) -> bool:
+    return r.sex in ("male", "female") and r.effect != "decrease"
+
+
+def scoped_against(claim, support: list[EvidenceRecord], against: list[EvidenceRecord]) -> list[EvidenceRecord]:
+    """The records against a claim that count. Under `sex_scope: any` a null result in one sex is not against "an
+    effect in at least one sex": it counts only for a sex that has support too, or when both sexes are null
+    (a decrease in a sex always counts). Without the scope nothing changes."""
+    if getattr(claim, "sex_scope", "unspecified") != "any":
+        return against
+    if any(r.sex not in ("male", "female", "both") for r in support):
+        return against                                    # support of unknown sex may be the same sex
+    support_sexes = {x for r in support for x in (("male", "female") if r.sex == "both" else (r.sex,))}
+    nulls = {r.sex for r in against if _single_sex_null(r)}
+    if nulls >= {"male", "female"}:
+        return against
+    return [r for r in against if not (_single_sex_null(r) and r.sex not in support_sexes)]
+
+
+def sex_conflict(cv: ClaimVerification, claim) -> bool:
+    """Without `sex_scope: any` the claim is contested only because the support and every record against come from
+    different single sexes (an effect in males, none in females)."""
+    if getattr(claim, "sex_scope", "unspecified") == "any":
+        return False
+    support = [r for r in cv.evidence if admissible(r, claim)]
+    against = [r for r in cv.counterevidence if admissible(r, claim)]
+    if not support or not against:
+        return False
+    sup = {r.sex for r in support}
+    return all(s in ("male", "female") for s in sup) and all(r.sex in ("male", "female") and r.sex not in sup for r in against)
+
+
+def _status_of(cv: ClaimVerification, claim, evidence, counter) -> str:
+    """Status from the records for and against (spec 7). Support only from subgroups or secondary outcomes never
+    gives `supported` on its own: with an admissible null or negative finding for the claim it is contested, also
+    when that finding sits at another human rung (PEARL: primary outcome a marker, positive subgroup a marker and
+    pain); without one (the whole-sample result was not found) it is unverified, flag `subgroup_unchecked`."""
+    if cv.unresolved or claim.relation == "other":       # `other` is ignored by symbolic checks (spec 5)
+        return "unresolved"
+    support = [r for r in evidence if admissible(r, claim)]
+    against = scoped_against(claim, support, [r for r in counter if admissible(r, claim)])
+    if support and against:
+        return "contested"
+    if support:
+        if subgroup_only(support):
+            return "contested" if any(admissible(r, claim) for r in cv.counterevidence) else "unverified"
+        return "supported"
+    if against:
+        return "refuted"
+    return "unverified"
+
+
+def subgroup_unchecked(cv: ClaimVerification, claim) -> bool:
+    """Some rung (or the claim) is unverified only because its support is subgroup-only and no whole-sample or
+    primary-outcome result was found: the same case as `contrast_unchecked`, an unfound null is not a finding."""
+    if cv.unresolved or claim.relation == "other" or any(admissible(r, claim) for r in cv.counterevidence):
+        return False
+    return any(subgroup_only([r for r in sup if admissible(r, claim)]) for sup, _ in rung_views(claim, cv).values())
+
+
+def record_rungs(r: EvidenceRecord) -> list[str]:
+    """Human rungs of a record (spec 8): set by the verifier in `human_rungs`; otherwise markers for biomarker
+    endpoints, clinical for lifespan and disease; none when the endpoint does not tell (healthspan)."""
+    if r.human_rungs:
+        return list(r.human_rungs)
+    return {"biomarker": ["human_markers"], "lifespan": ["human_clinical"], "disease": ["human_clinical"]}.get(r.endpoint, [])
+
+
+def rung_views(claim, cv: ClaimVerification) -> dict[str, tuple[list[EvidenceRecord], list[EvidenceRecord]]]:
+    """Rung → (records for, records against). A human claim is judged per rung, each record at the rungs of
+    its own endpoints (spec 8); other claims have one rung."""
+    base = claim_rung(claim, cv)
+    if not base.startswith("human"):
+        return {base: (cv.evidence, cv.counterevidence)}
+    views: dict[str, tuple[list, list]] = {}
+    for side, records in ((0, cv.evidence), (1, cv.counterevidence)):
+        for r in records:
+            for rung in record_rungs(r) or [base]:
+                views.setdefault(rung, ([], []))[side].append(r)
+    return dict(sorted(views.items(), key=lambda kv: RUNGS.index(kv[0]))) or {base: ([], [])}
+
+
+def rung_statuses(claim, cv: ClaimVerification) -> dict[str, str]:
+    """Status per rung; for a contrast outcome the contrast status holds at its rung."""
+    views = rung_views(claim, cv)
+    if cv.contrast and cv.status:
+        return {rung: cv.status for rung in views}
+    return {rung: _status_of(cv, claim, sup, ag) for rung, (sup, ag) in views.items()}
+
+
+def contrast_status(x: str, y: str) -> tuple[str, list[str]]:
+    """Outcome of a contrast "mainly X, not Y" from the statuses of X and of the rejected alternative Y, in
+    order of precedence (spec 7): X refuted or Y supported refute it; a contested Y contests it; an unchecked
+    Y leaves a supported X unverified (no support for free)."""
+    if x == "refuted" or y == "supported":
+        return "refuted", []
+    if y == "contested":
+        return "contested", []
+    if y == "refuted":
+        return x, []
+    if x == "supported":
+        return "unverified", ["contrast_unchecked"]
+    return x, []
+
+
+def _same_context(x: Claim, y: DeclaredAlternative) -> bool:
+    """Spec 7: same species, and same strain if both state it (unknown matches)."""
+    for key in ("species", "strain"):
+        a, b = x.qualifiers.get(key, ""), y.qualifiers.get(key, "")
+        if _known(a) and _known(b) and not same_value(key, a, b):
+            return False
+    return True
+
+
+def statuses(card: HypothesisCard, ver: Verification) -> dict[str, str]:
+    """Status of every verified claim and checked alternative; contrast outcomes follow the contrast rule.
+    Also records the inputs on the outcome claim (`contrast`) and the flags `contrast_unchecked` and
+    `subgroup_unchecked`."""
+    out = {}
+    for cv in ver.claims:
+        claim = claim_of(card, cv)
+        if claim is not None:
+            out[cv.id] = claim_status(cv, claim)
+            ignored = getattr(claim, "sex_scope", "unspecified") == "any" and len(scoped_against(
+                claim, [r for r in cv.evidence if admissible(r, claim)], [r for r in cv.counterevidence if admissible(r, claim)])) < \
+                len([r for r in cv.counterevidence if admissible(r, claim)])
+            cv.flags = [f for f in cv.flags if f not in ("subgroup_unchecked", "sex_conflict", "other_sex_null")] + \
+                (["subgroup_unchecked"] if subgroup_unchecked(cv, claim) else []) + \
+                (["sex_conflict"] if sex_conflict(cv, claim) else []) + (["other_sex_null"] if ignored else [])
+    alternatives = {a.id: a for a in card.declared_alternatives}
+    for cv in ver.claims:
+        claim = claim_of(card, cv)
+        ref = claim.qualifiers.get("contrast") if isinstance(claim, Claim) else None
+        if not ref or ref not in alternatives:
+            continue
+        x = out[cv.id]
+        y = out.get(ref, "unverified")
+        if not _same_context(claim, alternatives[ref]):
+            y = "unverified"                               # Y checked in another context does not decide X
+        out[cv.id], flags = contrast_status(x, y)
+        cv.contrast = {"alternative": ref, "x_status": x, "y_status": y}
+        cv.flags = [f for f in cv.flags if f != "contrast_unchecked"] + flags
+    return out
+
+
+def claim_of(card: HypothesisCard, cv: ClaimVerification):
+    """The claim a verification is about: a verifier-added claim, a declared claim or a checked alternative."""
+    if cv.claim is not None:
+        return cv.claim
+    for c in [*card.claims, *card.declared_alternatives]:
+        if c.id == cv.id:
+            return c
+    return None
+
+
+# ---- evidence profile (section 8) ----
+
+ORGANISM_PATTERNS = {
+    "human": r"\b(?:humans?|patients?|people|adults|participants|volunteers|women|men|subjects)\b",
+    "mouse": r"\b(?:mice|mouse|murine)\b", "rat": r"\brats?\b",
+    "worm": r"\b(?:elegans|nematodes?|worms?)\b", "fly": r"\b(?:drosophila|flies|fly)\b",
+    "yeast": r"\b(?:yeast|cerevisiae)\b"}
+
+
+def quote_organisms(text: str) -> set[str]:
+    """Organisms a sentence names."""
+    return {k for k, pat in ORGANISM_PATTERNS.items() if re.search(pat, text or "", flags=re.I)}
+
+
+def _species_unstated(c) -> bool:
+    """The claim has a species that its own span does not name."""
+    value = c.qualifiers.get("species", "")
+    return bool(species_key(value)) and bool(c.source_span) and species_key(value) not in quote_organisms(c.source_span) \
+        and _norm(value) not in _norm(c.source_span)
+
+
+def mark_inherited(card: HypothesisCard) -> HypothesisCard:
+    """Spec 9, applied by code so the result is deterministic: species and strain from PICO go into every
+    non-molecular claim (and rejected alternative) about the intervention whose span does not name them; for
+    organism relations the inherited species also fills the object (a non-organism object moves to
+    `qualifiers.measure`). Marks on keys the span names, or on claims that may not inherit, are removed.
+    A species that differs from PICO and is not in the span is left for validation."""
+    for c in [*card.claims, *card.declared_alternatives]:
+        c.inherited_from_pico = [k for k in dict.fromkeys(c.inherited_from_pico) if k in INHERITABLE]
+        if not inherits(c, card):
+            c.inherited_from_pico = []
+            continue
+        species, strain = pico_value(card, "species"), pico_value(card, "strain")
+        if _span_names(c, "species"):
+            if "species" in c.inherited_from_pico:
+                c.inherited_from_pico.remove("species")
+        elif species_key(species):
+            current = c.qualifiers.get("species", "")
+            if not _known(current) or same_value("species", current, species):
+                c.qualifiers["species"] = species_key(species)       # clean value: "human", not "healthy older adults"
+                if "species" not in c.inherited_from_pico:
+                    c.inherited_from_pico.append("species")
+                if c.relation in ORGANISM_RELATIONS and _species_rung(c.object.label) is None:
+                    if _known(c.object.label) and "measure" not in c.qualifiers:
+                        c.qualifiers["measure"] = c.object.label
+                    c.object = Entity(label=species, id=card.pico.population.taxon)
+        if _known(strain):
+            if _norm(strain) in _norm(c.source_span):
+                if "strain" in c.inherited_from_pico:
+                    c.inherited_from_pico.remove("strain")
+            elif not _known(c.qualifiers.get("strain")) or same_value("strain", c.qualifiers["strain"], strain):
+                c.qualifiers["strain"] = strain
+                if "strain" not in c.inherited_from_pico:
+                    c.inherited_from_pico.append("strain")
+    return card
+
+
+def species_key(text: str) -> str:
+    """A canonical organism name for comparisons ("" when unknown)."""
+    t = _norm(text)
+    if not t or t == UNKNOWN:
+        return ""
+    if t in HUMAN or "human" in t or "patients" in t or "adults" in t or "people" in t:
+        return "human"
+    for key, words in (("mouse", ("mouse", "mice", "mus musculus", "10090")), ("rat", ("rat", "rats", "rattus", "10116")),
+                       ("worm", ("elegans", "worm", "nematode", "6239")), ("fly", ("drosophila", "fly", "flies", "7227")),
+                       ("yeast", ("yeast", "cerevisiae", "4932", "559292"))):
+        if t in words or any(w in t for w in words if len(w) > 3):
+            return key
+    return t
+
+
+def _species_rung(text: str) -> Optional[str]:
+    t = _norm(text)
+    if not t or t == UNKNOWN:
+        return None
+    if t in HUMAN or "human" in t or "patients" in t or "adults" in t:
+        return "human"
+    if t in MAMMALS or any(m in t for m in ("mouse", "mice", "rat ")):
+        return "mammals"
+    if t in INVERTEBRATES or any(m in t for m in ("elegans", "drosophila", "worm", "fly", "yeast")):
+        return "invertebrates"
+    return None
+
+
+def claim_rung(claim: Claim, cv: ClaimVerification) -> str:
+    """Rung of a claim: set by the verifier, or from the organism of the claim and the type of its evidence."""
+    if cv.rung:
+        return cv.rung
+    records = cv.evidence + cv.counterevidence
+    if records and all(r.system in ("ex_vivo", "in_vitro") for r in records):
+        return "cells"
+    species = None
+    for text in (claim.object.id or "", claim.object.label, claim.qualifiers.get("species", ""),
+                 *(r.species for r in records)):
+        species = _species_rung(text)
+        if species:
+            break
+    if species == "human":
+        endpoint = claim_endpoint(claim)
+        return "human_clinical" if endpoint == "lifespan" or claim.relation == "no_lifespan_effect_in" else "human_markers"
+    return species or "none"
+
+
+def _parts(label: str) -> set[str]:
+    return {p for p in re.split(r"\s*(?:\+|,|\bplus\b|\band\b|/)\s*", _norm(label)) if p}
+
+
+def same_intervention(claim: Claim, card: HypothesisCard) -> bool:
+    """The claim's subject is the hypothesis's intervention (or the whole combination): by identifiers when
+    the subject and every intervention have one (a combination subject is "CHEBI:a+CHEBI:b"), else by name."""
+    ids = [i.id for i in card.pico.intervention]
+    if claim.subject.id and ids and all(ids):
+        return set(claim.subject.id.split("+")) == set(ids)
+    labels = set().union(*(_parts(i.label) for i in card.pico.intervention)) if card.pico.intervention else set()
+    return bool(labels) and _parts(claim.subject.label) == labels
+
+
+def _all_claims(card: HypothesisCard, ver: Verification) -> list[tuple[Claim, ClaimVerification]]:
+    """Declared and verifier-added claims (alternatives only enter through the contrast rule)."""
+    by_id = {c.id: c for c in card.claims}
+    out = []
+    for cv in ver.claims:
+        claim = cv.claim or by_id.get(cv.id)
+        if claim is not None:
+            out.append((claim, cv))
+    return out
+
+
+def _grade(records: Iterable[EvidenceRecord]) -> str:
+    grades = [r.qualifiers_match.get("intervention_match", "exact") for r in records]
+    if GRADED_CONTEXT:                                    # an adjacent-context record counts one step lower
+        grades = ["regimen_differs" if g in ("exact", "dose_differs") and any(v == "no" for k, v in r.qualifiers_match.items()
+                                                                              if k in ADJACENT_KEYS) else g
+                  for g, r in zip(grades, records)]
+    order = ["exact", "dose_differs", "regimen_differs", "related_compound", "class"]
+    return max(grades, key=order.index) if grades else ""
+
+
+def evidence_profile(card: HypothesisCard, ver: Verification) -> EvidenceProfile:
+    pairs = _all_claims(card, ver)
+    status = statuses(card, ver)
+    prof = EvidenceProfile()
+
+    # gate: a refuted outcome, mechanism or premise claim filters the hypothesis out
+    by_id = {cv.id: cv for cv in ver.claims}
+    for c, cv in pairs:
+        if c.role in ("outcome", "mechanism", "premise") and status[cv.id] == "refuted" and cv.claim is None:
+            refuting = [r for r in cv.counterevidence if admissible(r, c)]
+            rec = next((r for r in refuting if r.program), None) or next(iter(refuting), None)
+            alt = by_id.get(cv.contrast.get("alternative", ""))
+            if rec is None and alt is not None and cv.contrast.get("y_status") == "supported":
+                y = next((r for r in alt.evidence if admissible(r, claim_of(card, alt))), None)
+                reason = f"contrast rule: {alt.id} supported ({y.record_id if y else 'evidence'})"
+            else:
+                reason = (f"PMID:{rec.linked_pmid}" if rec and rec.linked_pmid else rec.record_id) if rec else f"{c.id} refuted"
+            prof.gate, prof.gate_reason = "filtered", reason
+            break
+
+    # claims that may set the effect level: the outcome claim, or analog / translation claims with the same
+    # intervention; human claims count per rung
+    qualifying = []                                       # (claim, rung, status at the rung, records for, against)
+    models = {"disease_model": set(), "aging_model": set()}
+    for c, cv in pairs:
+        if is_disease_analog(c):                          # records from disease and ageing models: listed, not counted
+            for r in cv.evidence + cv.counterevidence:
+                models.get(r.model_type, set()).add(r.record_id)
+            continue
+        if c.role == "outcome" or (c.role in ("analog", "translation") and same_intervention(c, card)):
+            support = [r for r in cv.evidence if admissible(r, c)]
+            if c.role != "outcome" and support and _grade(support) not in SAME_INTERVENTION:
+                continue                                  # related compounds and classes count only as analogs
+            per_rung = rung_statuses(c, cv)
+            if not claim_rung(c, cv).startswith("human") and not cv.contrast:
+                per_rung = {rung: status[cv.id] for rung in per_rung}
+            views = rung_views(c, cv)
+            for rung, st in per_rung.items():
+                sup, ag = views.get(rung, ([], []))
+                against = [r for r in ag if admissible(r, c)]
+                if st == "contested" and not against:     # contested by the subgroup rule: the null finding elsewhere
+                    against = [r for r in cv.counterevidence if admissible(r, c)]
+                qualifying.append((c, rung, st, [r for r in sup if admissible(r, c)], against))
+    supported = [q for q in qualifying if q[2] == "supported"]
+    if supported:
+        prof.effect_level = max((q[1] for q in supported), key=RUNGS.index)
+        records = [r for q in supported if q[1] == prof.effect_level for r in q[3]]
+        prof.intervention_match = _grade(records)
+        prof.robustness = "replicated" if _independent(records) >= 2 or any(
+            r.program and (r.program.sites_with_effect or 0) >= 2 for r in records) else "single"
+        if REVIEWS_FOR_ROBUSTNESS and prof.robustness == "single":           # E3
+            ok_im = ("exact", "dose_differs", "regimen_differs", "class")
+            def _reviews(rs):
+                return [r for r in rs if r.study_type == "review" and r.qualifiers_match.get("intervention_match", "exact") in ok_im
+                        and r.qualifiers_match.get("species") != "no"]
+            rev_for = [r for c, cv in pairs if c.role == "outcome" for r in _reviews(cv.evidence)]
+            rev_against = [r for c, cv in pairs if c.role == "outcome" for r in _reviews(cv.counterevidence)]
+            if rev_for and not rev_against:
+                prof.robustness = "replicated"
+        if records and all(any(f in CONTEXT_FLAGS for f in r.flags) for r in records):
+            prof.effect_level_note = f"{prof.effect_level} (special diet only)"
+        if prof.effect_level.startswith("human"):
+            if records and all(r.study_type == "observational" for r in records):
+                prof.effect_level_note = f"{prof.effect_level} (observational only)"
+            elif prof.effect_level == "human_markers" and records and all(r.marker_validation == "exploratory" for r in records):
+                prof.effect_level_note = "human_markers (exploratory only)"
+    prof.disease_models, prof.aging_models = len(models["disease_model"]), len(models["aging_model"])
+    level = RUNGS.index(prof.effect_level)
+    prof.effect_contested = sorted({q[1] for q in qualifying if q[2] == "contested" and RUNGS.index(q[1]) > level},
+                                   key=RUNGS.index)
+
+    # multi-site program flag, over the qualifying claims
+    pos = any(r.program for q in qualifying for r in q[3])
+    neg = any(r.program for q in qualifying for r in q[4])
+    if pos or neg:
+        prof.multi_site_program = {"tested": "yes", "outcome": "mixed" if pos and neg else "positive" if pos else "negative"}
+    if supported and prof.multi_site_program.get("outcome") == "positive":
+        prof.robustness = "replicated"                # multi_site_positive is a condition of the level, not an indicator (2026-10-23)
+    prof.no_literature = not any(cv.evidence or cv.counterevidence for c, cv in pairs)
+
+    # mechanism axis
+    mech = [status[cv.id] for c, cv in pairs if c.role in ("mechanism", "premise") and cv.claim is None]
+    if any(s == "refuted" for s in mech):
+        prof.mechanism = "refuted"
+    elif mech and all(s == "supported" for s in mech):
+        prof.mechanism = "supported"
+    elif any(s == "supported" for s in mech):
+        prof.mechanism = "partial"
+    else:
+        prof.mechanism = "unverified"
+
+    # conflicts: contested rungs of the qualifying claims, with both sides
+    for c, rung, st, sup, against in qualifying:
+        if st == "contested":
+            prof.conflicts.append(Conflict(rung=rung, **{"for": list(dict.fromkeys(r.record_id for r in sup))},
+                                           against=list(dict.fromkeys(r.record_id for r in against)),
+                                           against_is_program=any(r.program for r in against)))
+    prof.next_step = next_step(prof)
+    return prof
+
+
+def _independent(records: list[EvidenceRecord]) -> int:
+    """Independent sources: distinct labs or cohorts; reviews, reanalyses and curated copies of a paper
+    already counted do not add."""
+    keys = set()
+    primary_ids = {r.record_id for r in records if not r.derived_from and not r.linked_pmid}
+    for r in records:
+        if r.derived_from:
+            continue
+        if r.linked_pmid and (f"PMID:{r.linked_pmid}" in primary_ids or r.linked_pmid in primary_ids):
+            continue
+        keys.add(r.lab_or_cohort or r.record_id)
+    return len(keys)
+
+
+def next_step(prof: EvidenceProfile) -> str:
+    """Single source at an animal rung → replicate there; a contested higher rung → resolve it; otherwise the
+    next rung up (section 8, derived)."""
+    if prof.gate == "filtered":
+        return ""
+    level = prof.effect_level
+    if prof.robustness == "single" and level in ("cells", "invertebrates", "mammals"):
+        return f"{level}: independent{' (ideally multi-site)' if level == 'mammals' else ''} replication"
+    if prof.effect_contested:
+        rung = prof.effect_contested[0]
+        return f"{rung}: " + ("trial with pre-registered primary outcome" if rung.startswith("human") else "resolve the conflicting results")
+    if level == "human_clinical":
+        return "human_clinical: independent confirmation"
+    nxt = RUNGS[min(RUNGS.index(level) + 1, len(RUNGS) - 1)]
+    return f"{nxt}: first test at this rung"
+
+
+HETEROGENEOUS = ("um-het3", "het3", "genetically heterogeneous", "outbred", "swiss", "cd-1", "nmri", "wistar",
+                 "sprague", "long-evans", "diversity outbred")
+STRAIN_ANALOG = "same intervention and species, strain other than"
+DISEASE_ANALOG = "same intervention and species, animals with a disease or an ageing model:"
+OUTCOME_RELATIONS = LIFESPAN_RELATIONS | {"improves_healthspan_in", "slows_aging_in"}   # claims about lifespan, health and ageing
+
+
+def is_disease_analog(claim) -> bool:
+    return claim is not None and (claim.note or "").startswith(DISEASE_ANALOG)
+
+
+def valid_model_label(r: EvidenceRecord) -> bool:
+    """A disease or ageing model counts only with the name of the disease (or model) and the place where it is
+    named; the bare flag `disease_model` (set by an extractor) does not."""
+    return r.model_type in ("disease_model", "aging_model") and bool(r.disease.strip()) and bool(r.disease_evidence.strip())
+
+
+def claim_disease(claim, card: HypothesisCard) -> str:
+    """The disease a claim about animals is about: `qualifiers.disease`, else a known disease named in the
+    population, the strain or the qualifiers. Empty: the claim is about animals without a stated disease, which
+    for lifespan, health and ageing means animals that are not a disease model (a rule on the type of the
+    outcome, not a judgement of a model)."""
+    from hyparena.card.contexts import disease_in
+    named = claim.qualifiers.get("disease")
+    if _known(named):
+        return named
+    pop = card.pico.population
+    return disease_in(" ".join([pop.label, pop.strain, *(v for k, v in claim.qualifiers.items() if k != "contrast")]))
+
+
+def disease_match(claim, card: HypothesisCard, r: EvidenceRecord, restored: frozenset = frozenset()) -> Optional[str]:
+    """yes | no for a record against a claim about lifespan, health or ageing; None when the rule does not apply
+    (another kind of claim, or a record with no valid model label). A record from a disease model does not speak for
+    animals without a stated disease, and a record from another disease does not speak for a claim about a disease;
+    ageing models are not counted yet. An expert can restore a record (expert point `disease_context`)."""
+    from hyparena.card.contexts import same_disease
+    if claim.relation not in OUTCOME_RELATIONS or not valid_model_label(r):
+        return None
+    if r.record_id in restored:
+        return "yes"
+    if r.model_type == "aging_model":
+        return "no"
+    want = claim_disease(claim, card)
+    return "yes" if want and same_disease(want, r.disease) else "no"
+
+GENERIC_HETEROGENEOUS = {"geneticallyheterogeneous", "heterogeneous", "outbred"}
+
+
+def strain_key(text: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", (text or "").lower().replace("‐", "-"))
+
+
+def strain_match(claim, record: EvidenceRecord) -> Optional[str]:
+    """yes | no | n/a for the claim's strain against the record's (spec 7); None when the record does not
+    report its strain (the key is then left out)."""
+    want = claim.qualifiers.get("strain", "")
+    if not _known(want):
+        return "n/a"
+    if not _known(record.strain):
+        return None
+    a, b = strain_key(want), strain_key(record.strain)
+    if a in GENERIC_HETEROGENEOUS and any(strain_key(h) in b for h in HETEROGENEOUS):
+        return "yes"                                  # "genetically heterogeneous mice" covers UM-HET3, outbred stocks
+    return "yes" if a == b or a in b or b in a else "no"
+
+
+def undo_disease_analogs(ver: Verification) -> Verification:
+    """Put the records of the disease analogs back into the claims they came from (and drop the refusals):
+    the analogs are rebuilt by `add_disease_analogs`, so the step can be applied again."""
+    by_id = {cv.id: cv for cv in ver.claims}
+    for cv in [cv for cv in ver.claims if cv.claim is not None and is_disease_analog(cv.claim)]:
+        main = by_id.get(cv.notes.split("from ")[-1].split()[0]) if "from " in cv.notes else None
+        if main is not None:
+            main.evidence += cv.evidence
+            main.counterevidence += cv.counterevidence
+            main.refusals = [x for x in main.refusals if x.type != "population_mismatch"]
+        ver.claims.remove(cv)
+    for cv in ver.claims:
+        for r in cv.evidence + cv.counterevidence:
+            if r.qualifiers_match.get("disease") in ("no", "n/a"):
+                r.qualifiers_match.pop("disease", None)
+    return ver
+
+
+def add_disease_analogs(card: HypothesisCard, ver: Verification, restored: frozenset = frozenset()) -> Verification:
+    """Context rule for disease models (2026-10-22): for a claim about lifespan, health or ageing, a record from a
+    disease model (valid label: a disease name and where it is named) does not give or take away the status when the
+    claim names no such disease, or another one. It moves to an analog an<N> of type disease_model, which feeds the
+    alternatives and the line "disease models" of the profile but not the effect level; the claim keeps a refusal
+    `population_mismatch`. When the claim is about the disease, the records of that disease count. Records from
+    ageing models are not counted yet (decision postponed). The expert can restore a record."""
+    ver = undo_disease_analogs(ver)
+    by_id = {c.id: c for c in card.claims}
+    taken = {cv.id for cv in ver.claims}
+    added = []
+    for cv in list(ver.claims):
+        claim = by_id.get(cv.id)
+        if claim is None or cv.claim is not None or claim.relation not in OUTCOME_RELATIONS:
+            continue
+        moved = []
+        for side in ("evidence", "counterevidence"):
+            for r in getattr(cv, side):
+                m = disease_match(claim, card, r, restored)
+                if m is not None:
+                    r.qualifiers_match["disease"] = m
+                if m == "no":
+                    moved.append((side, r))
+        if not moved:
+            continue
+        for side, r in moved:
+            getattr(cv, side).remove(r)
+        names = sorted({r.disease for _, r in moved})
+        n = 1
+        while f"an{n}" in taken:
+            n += 1
+        taken.add(f"an{n}")
+        analog = Claim(id=f"an{n}", subject=claim.subject, relation=claim.relation, object=claim.object,
+                       qualifiers={k: v for k, v in claim.qualifiers.items() if k not in ("contrast", "disease")},
+                       role="analog", note=f"{DISEASE_ANALOG} {', '.join(names)} (added by the verifier)")
+        for _, r in moved:
+            cv.refusals.append(Refusal(type="population_mismatch", record_id=r.record_id, quote=r.quote,
+                                       notes=f"{r.model_type.replace('_', ' ')}: {r.disease}; "
+                                             f"the claim is about animals {'with ' + claim_disease(claim, card) if claim_disease(claim, card) else 'without a stated disease'}; counted for {analog.id}"))
+
+        def relabel(r):
+            r = r.model_copy(deep=True)
+            r.qualifiers_match["disease"] = "n/a"
+            return r
+        added.append(ClaimVerification(id=analog.id, claim=analog,
+                                       evidence=[relabel(r) for s, r in moved if s == "evidence"],
+                                       counterevidence=[relabel(r) for s, r in moved if s == "counterevidence"],
+                                       notes=f"records of disease or ageing models from {cv.id}"))
+    ver.claims += added
+    return ver
+
+
+def add_strain_analogs(card: HypothesisCard, ver: Verification) -> Verification:
+    """Spec 7 (strain): a record in another strain of the same species does not support a claim that names a
+    strain directly; it moves to an analog claim an<N> (same intervention and species, other strain), which
+    counts for the effect level but not for the known-result check. An inherited strain that differs also
+    leaves a soft refusal (inherited_mismatch) on the claim."""
+    by_id = {c.id: c for c in card.claims}
+    taken = {cv.id for cv in ver.claims}
+    added = []
+    for cv in list(ver.claims):
+        claim = claim_of(card, cv)
+        for r in (cv.evidence + cv.counterevidence) if claim is not None else []:
+            m = strain_match(claim, r)                    # code sets the key; left out when the record has none
+            if m is None:
+                r.qualifiers_match.pop("strain", None)
+            else:
+                r.qualifiers_match["strain"] = m
+        claim = by_id.get(cv.id)
+        if claim is None or cv.claim is not None or not _known(claim.qualifiers.get("strain")) \
+                or not same_intervention(claim, card):
+            continue
+        other = lambda r: r.qualifiers_match.get("strain") == "no" and all(
+            v != "no" for k, v in r.qualifiers_match.items() if k not in ("strain", "intervention_match"))
+        moved = ([r for r in cv.evidence if other(r)], [r for r in cv.counterevidence if other(r)])
+        if not moved[0] and not moved[1]:
+            continue
+        cv.evidence = [r for r in cv.evidence if not other(r)]
+        cv.counterevidence = [r for r in cv.counterevidence if not other(r)]
+        strain = claim.qualifiers["strain"]
+        if "strain" in claim.inherited_from_pico:
+            cv.refusals += [Refusal(type="inherited_mismatch", record_id=r.record_id, quote=r.quote,
+                                    notes=f"strain {r.strain} vs {strain} inherited from PICO; counted for analog")
+                            for r in moved[0] + moved[1]]
+        n = 1
+        while f"an{n}" in taken:
+            n += 1
+        taken.add(f"an{n}")
+        analog = Claim(id=f"an{n}", subject=claim.subject, relation=claim.relation, object=claim.object,
+                       qualifiers={k: v for k, v in claim.qualifiers.items() if k not in ("strain", "contrast")},
+                       role="analog", note=f"{STRAIN_ANALOG} {strain} (added by the verifier)")
+
+        def relabel(r):
+            r = r.model_copy(deep=True)
+            r.qualifiers_match["strain"] = "n/a"
+            return r
+        added.append(ClaimVerification(id=analog.id, claim=analog, evidence=[relabel(r) for r in moved[0]],
+                                       counterevidence=[relabel(r) for r in moved[1]],
+                                       notes=f"records from {cv.id} in another strain"))
+    ver.claims += added
+    return ver
+
+
+def known_result(card: HypothesisCard, ver: Verification) -> bool:
+    """The outcome claim matches an already supported finding exactly (same intervention, context)."""
+    out = card.outcome_claim
+    cv = next((v for v in ver.claims if out and v.id == out.id), None)
+    if out is None or cv is None or statuses(card, ver).get(cv.id) != "supported":
+        return False
+    support = [r for r in cv.evidence if admissible(r, out)]
+    exact = [r for r in support if r.qualifiers_match.get("intervention_match", "exact") == "exact"]
+    if KNOWN_MIN_INDEPENDENT > 1 and _independent(exact) < KNOWN_MIN_INDEPENDENT:
+        return False                                     # E1: one study does not settle a question
+    if any(admissible(r, out) for r in cv.counterevidence):
+        return False                                     # admissible counterevidence: the finding is not settled (calibration 2026-11-02)
+    return any(r.qualifiers_match.get("intervention_match", "exact") == "exact"
+               and all(v in ("yes", "n/a") for k, v in r.qualifiers_match.items() if k != "intervention_match")
+               for r in support)
+
+
+def finalize(card: HypothesisCard, ver: Verification) -> Verification:
+    """Fill computed statuses, the evidence profile, the known-result flag and the alternatives row."""
+    if DEDUP_OUTCOME_PAPERS:                              # E4
+        out = card.outcome_claim
+        ocv = next((cv for cv in ver.claims if out and cv.id == out.id), None)
+        if ocv is not None:
+            used = {r.record_id for r in ocv.evidence + ocv.counterevidence}
+            by_id = {c.id: c for c in card.claims}
+            for cv in ver.claims:
+                c = by_id.get(cv.id)
+                if c is not None and c.role in ("premise", "mechanism"):
+                    cv.evidence = [r for r in cv.evidence if r.record_id not in used]
+                    cv.counterevidence = [r for r in cv.counterevidence if r.record_id not in used]
+    st = statuses(card, ver)
+    for cv in ver.claims:
+        if cv.id in st:
+            cv.status = st[cv.id]
+            claim = claim_of(card, cv)
+            cv.rung_status = rung_statuses(claim, cv) if claim is not None and claim_rung(claim, cv).startswith("human") else {}
+    ver.evidence_profile = evidence_profile(card, ver)
+    ver.known_result = known_result(card, ver)
+    from hyparena.alternatives.alternatives import rows               # declared and checklist alternatives (spec 8c)
+    ver.alternatives = rows(card, ver)
+    return ver
+
+
+def verified_layer_problems(card: HypothesisCard, ver: Verification,
+                            sources: Optional[dict[str, str]] = None) -> list[str]:
+    """Section 10 checks of the verified layer: statuses carry records; quotes are verbatim in the source."""
+    problems = []
+    st_all = statuses(card, ver)
+    for cv in ver.claims:
+        claim = claim_of(card, cv)
+        if claim is None:
+            problems.append(f"{cv.id}: no such claim")
+            continue
+        st = st_all[cv.id]
+        if cv.contrast:                                   # set by the contrast rule: the alternative carries the records
+            st = claim_status(cv, claim)
+        if st in ("supported", "contested") and not cv.evidence:
+            problems.append(f"{cv.id}: {st} without evidence records")
+        if st == "refuted" and not cv.counterevidence:
+            problems.append(f"{cv.id}: refuted without counterevidence")
+        if sources:
+            for r in cv.evidence + cv.counterevidence:
+                text = sources.get(r.record_id)
+                if text is not None and r.quote and _norm(r.quote) not in _norm(text):
+                    problems.append(f"{cv.id}: quote not found verbatim in {r.record_id}")
+    return problems

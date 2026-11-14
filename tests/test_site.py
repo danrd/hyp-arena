@@ -1,7 +1,7 @@
 """Site bundle: export from a saved v2 run joins the tournament by pool ids; embed replaces the page's example."""
 import json
 
-from hyparena import site
+from hyparena.reports import site
 
 
 def _v2(tmp_path):

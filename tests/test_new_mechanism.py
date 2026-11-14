@@ -2,9 +2,9 @@
 but a link between two supported neighbours has fewer than 5 PubMed records on its own subject and object before T."""
 import pytest
 
-from hyparena.card import aspid_v3
-from hyparena.card import novelty_v34 as nv
-from hyparena.card import rules_v3 as r3
+from hyparena.scoring import aspid_v3
+from hyparena.novelty import novelty_v34 as nv
+from hyparena.scoring import rules_v3 as r3
 from hyparena.card.models import ClaimVerification
 from tests.test_analyze import _case, rec
 

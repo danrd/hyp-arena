@@ -13,7 +13,7 @@ import os
 import re
 from collections import Counter
 
-from hyparena.card import rules_v32 as r32
+from hyparena.scoring import rules_v32 as r32
 from hyparena.card.models import Claim
 from scripts.common.v34_check import CAL, PROS, parts
 
@@ -111,7 +111,7 @@ def run(part: str, version: str) -> dict:
     if os.environ.get("ALLOW_PAID") != "1":
         raise SystemExit("paid: set ALLOW_PAID=1")
     from hyparena.card.llm import ask
-    from hyparena.card.pipeline import _client
+    from hyparena.pipeline import _client
     out_p = (CAL if part == "calibration" else PROS) / f"test_model_{part}_{version}.json"
     done = json.loads(out_p.read_text()) if out_p.exists() else {}
     todo = [u for u in units(part) if u[0] not in done]

@@ -3,7 +3,7 @@ import pytest
 
 from hyparena.llm.client import Reply
 from hyparena.llm.providers import CallCapExceeded, GuardedClient
-from hyparena.usage import cost, estimate_tokens, stage_of, summarize
+from hyparena.reports.usage import cost, estimate_tokens, stage_of, summarize
 
 
 def test_cost_and_peak_hours():

@@ -39,7 +39,7 @@ def targets() -> list[dict]:
     for rid, k in key.items():
         want[k["pool"]][(k["unit"], k["claim_id"])] = rid
     from hyparena.card.models import Claim
-    from hyparena.card.search import ALTERNATIVE_NOTE
+    from hyparena.search.search import ALTERNATIVE_NOTE
     out = []
     for pool, ws in want.items():
         for h, as_of, card, cvs, logs in items(pool):
@@ -107,8 +107,8 @@ def run(system: str, limit: int = 0) -> dict:
     if os.environ.get("ALLOW_PAID") != "1":
         raise SystemExit("paid: set ALLOW_PAID=1")
     from hyparena.card.llm import ask
-    from hyparena.card.pipeline import _client
-    from hyparena.card.verifier import verify_claim
+    from hyparena.pipeline import _client
+    from hyparena.reading.verifier import verify_claim
     out_p = DIR / f"bench_reading_{system}.json"
     done = json.loads(out_p.read_text()) if out_p.exists() else {}
     ts = [t for t in targets() if t["rid"] not in done][: limit or None]

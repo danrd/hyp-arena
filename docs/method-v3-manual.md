@@ -5,8 +5,8 @@ an outside reviewer can score a hypothesis and read its report from it alone. Ea
 [`docs/system/`](system/) (so far: [the card](system/card.md)); this manual is their compressed aggregate. How the rules
 came to be what they are, with the checks behind each change, is in the [change log](system/changelog.md), not here.
 
-Where the code is: rules [`hyparena/card/rules_v32.py`](../hyparena/card/rules_v32.py), novelty
-[`hyparena/card/novelty_v34.py`](../hyparena/card/novelty_v34.py), ranking [`hyparena/card/aspid_v3.py`](../hyparena/card/aspid_v3.py)
+Where the code is: rules [`hyparena/scoring/rules_v32.py`](../hyparena/scoring/rules_v32.py), novelty
+[`hyparena/novelty/novelty_v34.py`](../hyparena/novelty/novelty_v34.py), ranking [`hyparena/scoring/aspid_v3.py`](../hyparena/scoring/aspid_v3.py)
 with the profiles in [`configs/profiles_v3.yaml`](../configs/profiles_v3.yaml). The constants (section 14), the worked example
 (section 13) and the names table (section 10a) are checked against the code by [`tests/test_manual.py`](../tests/test_manual.py):
 when the code changes, the test fails until this manual is updated.
@@ -68,7 +68,7 @@ section 10. Rules for a model writing such a report:
 - **Do not report your own resources** (calls, tokens, cost, time): a model cannot count them. Write "не вычислено"; the
   code counts them from its log, and work done outside the code is estimated from the size of its texts (section 15).
 - A report written this way is an approximation. The authoritative report is the one the code builds
-  (`python -m hyparena.analyze RUN.json`), from the same rules and the records the reader extracted.
+  (`python -m hyparena.reports.analyze RUN.json`), from the same rules and the records the reader extracted.
 
 ## 1. What is evaluated
 
@@ -305,13 +305,13 @@ ranked). Nothing else filters: an undeveloped but promising hypothesis keeps its
   matched for attention rules out "any attention helps"); d = 0.5 when the experiment only measures the variable the
   alternative depends on, without an arm that separates them; d = 0 otherwise. A design label alone ("factorial 2×2",
   "double-blind") gives nothing until each alternative is named with the arm and the result that would rule it out. d is
-  judged by a model (prompt `judge_alternatives/v2`, [`hyparena/card/alternatives_d.py`](../hyparena/card/alternatives_d.py))
+  judged by a model (prompt `judge_alternatives/v2`, [`hyparena/alternatives/alternatives_d.py`](../hyparena/alternatives/alternatives_d.py))
   from the registry text current at T (for a retrospective trial, the version registered before T), never from the trial's
   publications or other texts after T, writing what the hypothesis and the alternative predict for each named arm, with the
   separating phrase copied verbatim (a "cuts off" without one becomes "weakens").
 - **Headroom I** = I if the experiment cut off every supported alternative (d = 1): what improving the experiment could add;
   an input of the room to improve (section 11).
-- **Novelty N** ([`novelty_v34.novelty`](../hyparena/card/novelty_v34.py)): the distance of the hypothesis to what was already
+- **Novelty N** ([`novelty_v34.novelty`](../hyparena/novelty/novelty_v34.py)): the distance of the hypothesis to what was already
   asked before T, from the usable records on either side (a question already asked is not new, whatever the answer). On the
   outcome link, by the closest record: **new context** (the same intervention and outcome in the claim's species, another
   population, age, sex or dose), **translation** (the same intervention, only in another species), **analog** (only a related
@@ -342,7 +342,7 @@ not depend on the rest of the pool. An unknown value is drawn over its whole ran
 |---|---|---|
 | I | informativeness of the stated experiment (headroom I, of an improved one, feeds the room to improve, section 11) | linear, 0-1 |
 | W | scope of the mechanism | local < organ < hallmark |
-| feasibility | the mean of the known parts (an unknown part is left out): system (data analysis and cells 1, yeast 0.9, worm and fly 0.85, mouse and rat 0.5, human 0), duration (weeks 1, months 2/3, years 1/3, decades 0), planned n (under 50: 1, under 200: 2/3, under 1000: 1/3, more: 0), readiness of the intervention (approved or not a compound 1, in trials 0.5, neither 0); [`v3_extra.feasibility`](../hyparena/card/v3_extra.py) | 0-1; does not yet count arms or invasive measures (section 11, rule 7) |
+| feasibility | the mean of the known parts (an unknown part is left out): system (data analysis and cells 1, yeast 0.9, worm and fly 0.85, mouse and rat 0.5, human 0), duration (weeks 1, months 2/3, years 1/3, decades 0), planned n (under 50: 1, under 200: 2/3, under 1000: 1/3, more: 0), readiness of the intervention (approved or not a compound 1, in trials 0.5, neither 0); [`v3_extra.feasibility`](../hyparena/scoring/v3_extra.py) | 0-1; does not yet count arms or invasive measures (section 11, rule 7) |
 | best_design_outcome | best design among the records of the outcome link | cells … RCT |
 | independent_outcome | independent sources for the outcome link | 0-5 |
 | against_share | share of the chain's weight against (in no profile) | 0-1, lower better |
@@ -414,8 +414,8 @@ codes, module names, prompt versions, method tags in titles) are never shown; na
 **A report holds exactly what this section lists**: no columns of earlier method versions, no axes that left the profiles
 (non-refutation P, support share, share against), no notes of the writer's own on records or rules.
 
-**Pool report** (`python -m hyparena.report_v2 prospective --n 60` → `report_<n>_v2.html`; data shaped by
-[`hyparena/report_v2.py`](../hyparena/report_v2.py), page [`hyparena/templates/pool_report_v2.html`](../hyparena/templates/pool_report_v2.html)).
+**Pool report** (`python -m hyparena.reports.report_v2 prospective --n 60` → `report_<n>_v2.html`; data shaped by
+[`hyparena/reports/report_v2.py`](../hyparena/reports/report_v2.py), page [`hyparena/templates/pool_report_v2.html`](../hyparena/templates/pool_report_v2.html)).
 A header band (pool title, cut-off date, how many scored; fixed at the top on a wide screen only) and five tabs, in this
 order. **Width:** the page uses the width of the screen: the header band and the content sit in one container
 `max-w-[1600px] w-full mx-auto` (Tailwind; not `max-w-7xl` or narrower), wide tables scroll sideways inside their own block,
@@ -524,8 +524,8 @@ follows it, so that two reports of the same pool can be compared:
   it are this manual's (section 14). Short ids, triples and the separation of text and numbers follow section 10.
 - **Check**: an outside report is read against this table and list before its content is compared with the code report.
 
-The table is the code's own ([`hyparena/report_html.py`](../hyparena/report_html.py) IND_NAMES, LINK_NAMES, NOVELTY_NAMES,
-DESIGN_NAMES, DISC; [`hyparena/report_v2.py`](../hyparena/report_v2.py) FLAG_NAMES, PROFILE_LABEL);
+The table is the code's own ([`hyparena/reports/report_html.py`](../hyparena/reports/report_html.py) IND_NAMES, LINK_NAMES, NOVELTY_NAMES,
+DESIGN_NAMES, DISC; [`hyparena/reports/report_v2.py`](../hyparena/reports/report_v2.py) FLAG_NAMES, PROFILE_LABEL);
 [`tests/test_manual.py`](../tests/test_manual.py) checks that every entry is here.
 
 | Kind | Code | Russian | English |
@@ -581,7 +581,7 @@ DESIGN_NAMES, DISC; [`hyparena/report_v2.py`](../hyparena/report_v2.py) FLAG_NAM
 
 ## 11. Improvements and evolution
 
-**The improvement list** ([`hyparena/card/improvements.py`](../hyparena/card/improvements.py)) is computed by code from the
+**The improvement list** ([`hyparena/evolution/improvements.py`](../hyparena/evolution/improvements.py)) is computed by code from the
 analysis of each hypothesis and shown in its report ("What would raise it"). Each item says what to do, which link or
 alternative it concerns, the facts it rests on (PMID and quote) and its expected effect: the indicators before and after and
 the score under each profile before and after, computed by the same rules with the item done (fixed scales, so the expected
@@ -607,10 +607,10 @@ rewritten refuted link is scored without its records against, and an experiment 
 alternatives.
 
 **Choosing hypotheses for evolution** = the largest room under the profile the user names
-(`python -m hyparena.card.evolve_v3 --top 10 --profile frontier --dry` prints the choice free; without `--dry` and with
+(`python -m hyparena.evolution.evolve_v3 --top 10 --profile frontier --dry` prints the choice free; without `--dry` and with
 `ALLOW_PAID=1` it runs the evolution). The room of every hypothesis of the prospective pool is in its report.
 
-**Evolution** ([`hyparena/card/evolve_v3.py`](../hyparena/card/evolve_v3.py), on request) improves chosen hypotheses and scores
+**Evolution** ([`hyparena/evolution/evolve_v3.py`](../hyparena/evolution/evolve_v3.py), on request) improves chosen hypotheses and scores
 the improved versions the same way as every hypothesis. A tuned version is the same hypothesis with its fixable defects
 repaired; a free version may be another hypothesis.
 
@@ -627,7 +627,7 @@ Tuning costs about 21 calls per improved hypothesis, up to twice that with a ret
 writer named by `--writer`.
 
 **Rules every improved version keeps (all modes).** They are part of the method, not advice: the code checks them
-([`hyparena/card/evolution_rules.py`](../hyparena/card/evolution_rules.py)), and a model or outside reader that evolves a
+([`hyparena/evolution/evolution_rules.py`](../hyparena/evolution/evolution_rules.py)), and a model or outside reader that evolves a
 hypothesis from this manual (section 0) applies them the same way. A version that breaks one is shown with the broken rule,
 not scored as improved.
 
@@ -698,7 +698,7 @@ number of hypotheses and the writer model are parameters; texts written in a cha
 | profile | as structured, plus the profile's order and what raises its top tiers | as structured, plus the profile's target: frontier = the checks of directed evolution (one new link between supported neighbours, PubMed absence count); funding = feasibility and a functional or clinical endpoint; evidence = known records on every link and an experiment that separates the supported alternatives |
 
 **Diversity** is controlled within a run and against the database: typed proximity of the cards (duplicate, variant,
-analog, competitor; [`hyparena/card/proximity.py`](../hyparena/card/proximity.py)) and text distance; a duplicate is rejected
+analog, competitor; [`hyparena/novelty/proximity.py`](../hyparena/novelty/proximity.py)) and text distance; a duplicate is rejected
 and rewritten once, a duplicate of a database row is linked to it, not added. Each run reports the share of variant and
 analog pairs and the number of distinct interventions and outcomes. With T = today there is no outcome to test against: an
 outside check (novel before T, plausible, testable, on topic, best profile; its grouping against ours) is part of the mode.
@@ -843,7 +843,7 @@ profiles:
 Every model call the code makes is logged with the time (UTC), the stage, the template, the model and the tokens the API
 returned ([`hyparena/card/llm.py`](../hyparena/card/llm.py)). The cost is computed by code from those tokens and the price
 table [`configs/prices.yaml`](../configs/prices.yaml) (USD per million tokens in and out; a family's peak hours multiply
-its price), never taken from a model. [`hyparena/usage.py`](../hyparena/usage.py) sums a run by stage — card, search,
+its price), never taken from a model. [`hyparena/reports/usage.py`](../hyparena/reports/usage.py) sums a run by stage — card, search,
 reading, alternatives, endpoint, versions, generation — with calls, tokens, seconds and USD, and per hypothesis; a pipeline
 run keeps the summary as `usage`. A model without a price is counted with its tokens and listed as unpriced.
 
@@ -852,5 +852,5 @@ crosses it finishes and the next one is refused; what was done is kept.
 
 Work done outside the code — an outside reader or a model working from this manual in a chat — has no API count: its
 tokens are estimated from the text it was given and the text it returned (characters / 3.6, Cyrillic / 2.6; about ±20%) and
-marked as an estimate (`python -m hyparena.usage --pack TASK ANSWER`).
+marked as an estimate (`python -m hyparena.reports.usage --pack TASK ANSWER`).
 

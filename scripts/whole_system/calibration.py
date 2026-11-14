@@ -131,7 +131,7 @@ def units(step: int) -> list[dict]:
 
 def run(step: int, config: str = "configs/v2-flash.yaml", tag: str = "", only: str = "", max_calls: int = 60) -> None:
     """`only`: a file with one unit id per line (the others are skipped); `max_calls`: per unit (the filtered search needs more)."""
-    from hyparena.card.pipeline import run as v2
+    from hyparena.pipeline import run as v2
     us = json.loads((CAL / f"units_{step}.json").read_text())
     texts = build_texts([{k: u[k] for k in ("id", "source", "written_on")} for u in us], CAL / f"texts_{step}.jsonl")
     out_p = CAL / f"run_{step}{tag}.json"
@@ -164,9 +164,9 @@ def run(step: int, config: str = "configs/v2-flash.yaml", tag: str = "", only: s
 def score(step: int, results: dict | None = None, tag: str = "") -> dict:
     """Tied AUC of evidence_first (without late_start) with the benchmark's order: known result 3 > ranked 2 + score >
     not evaluated 1 > filtered 0. Also how many positive-negative pairs tie."""
-    from hyparena.backtest import PRIMARY_DROP, bootstrap_tied_auc, tied_auc
-    from hyparena.aspid import aggregate, load_profiles
-    from hyparena.card import indicators as ind
+    from hyparena.whole_system.backtest import PRIMARY_DROP, bootstrap_tied_auc, tied_auc
+    from hyparena.scoring.aspid import aggregate, load_profiles
+    from hyparena.scoring import indicators as ind
     from dataclasses import replace
     us = {u["id"]: u for u in json.loads((CAL / f"units_{step}.json").read_text())}
     res = results or json.loads((CAL / f"run_{step}{tag}.json").read_text())
@@ -197,7 +197,7 @@ def score(step: int, results: dict | None = None, tag: str = "") -> dict:
 def score_v3(steps=(1, 2, 3), tag: str = "_v3", no_stance_as_support: bool = False, variant: str = "v3") -> dict:
     """Tied AUC of method v3's plausibility P and promise V against the outcomes (only P is meant to track outcomes;
     V is reported for reference). Filtered (gate) units score -1; units without a v3 result are left out."""
-    from hyparena.backtest import bootstrap_tied_auc, tied_auc
+    from hyparena.whole_system.backtest import bootstrap_tied_auc, tied_auc
     us, res = {}, {}
     for st in steps:
         f = CAL / f"run_{st}{tag}.json"
@@ -228,7 +228,7 @@ def rescore_v3(results: dict, no_stance_as_support: bool = False, variant: str =
     1.0, extraction-gold-v9, so most of these are relevant findings it did not give a stance). They are counted as support
     (a direction cannot be read from a record without a stance); the record's own design, n, comparison, effect class and
     context set its weight as for any record. Returns {unit: v3 result dict}."""
-    from hyparena.card import rules_v3
+    from hyparena.scoring import rules_v3
     from hyparena.card.models import ClaimVerification, HypothesisCard
     out = {}
     for h, r in results.items():
@@ -254,8 +254,8 @@ def explore_v3(steps=(1, 2, 3), tag: str = "_v3", variant: str = "v3") -> dict:
     with P, tied AUC against the outcomes, orientation: higher is better except against_share and unverified_links) and the
     ASPID expected values of the trial profiles over the v3 axes. Decides nothing."""
     from scipy.stats import spearmanr
-    from hyparena.backtest import tied_auc
-    from hyparena.card import aspid_v3, v3_extra
+    from hyparena.whole_system.backtest import tied_auc
+    from hyparena.scoring import aspid_v3, v3_extra
     from hyparena.card.models import ClaimVerification, HypothesisCard
     us, res = {}, {}
     for st in steps:
@@ -302,12 +302,12 @@ def explore_v3(steps=(1, 2, 3), tag: str = "_v3", variant: str = "v3") -> dict:
 
 
 def compare_v32(steps=(1, 2, 3), tag: str = "_v3") -> dict:
-    """v3, v3.1 and v3.2 (hyparena/card/rules_v32.py) on the saved records, no model calls: distinct values of P, the share
+    """v3, v3.1 and v3.2 (hyparena/scoring/rules_v32.py) on the saved records, no model calls: distinct values of P, the share
     of positive-negative pairs tied on P, tied AUC of P and V, and the sensitivity of v3.2 to its scale c (x0.5, x1.5):
     Kendall tau with the base order and the AUC."""
     from scipy.stats import kendalltau
-    from hyparena.backtest import tied_auc
-    from hyparena.card import rules_v32
+    from hyparena.whole_system.backtest import tied_auc
+    from hyparena.scoring import rules_v32
     from hyparena.card.models import ClaimVerification, HypothesisCard
     us, res = {}, {}
     for st in steps:
@@ -329,7 +329,7 @@ def compare_v32(steps=(1, 2, 3), tag: str = "_v3") -> dict:
         return {"distinct": len({round(v, 6) for v in scores.values()}), "tied_pairs": round(ties, 2),
                 "auc": round(tied_auc([(p, 0.0) for p in pos], [(q, 0.0) for q in neg]), 3)}
     out = {"n": len(items), "pos": sum(us[h]["label"] for h in items)}
-    from hyparena.card import rules_v3
+    from hyparena.scoring import rules_v3
     for var in ("v3", "v3.1"):
         ev = {h: rules_v3.evaluate(*x, variant=var) for h, x in items.items()}
         out[var] = {"P": stats({h: (-1.0 if e.gate == "filtered" else e.P) for h, e in ev.items()}),
@@ -347,7 +347,7 @@ def compare_v32(steps=(1, 2, 3), tag: str = "_v3") -> dict:
 
 
 def lv_link_order(variant: str):
-    from hyparena.card import v3_levels as lv
+    from hyparena.scoring import v3_levels as lv
     return lv.SCALES["link_v31" if variant == "v3.1" else "link"]
 
 

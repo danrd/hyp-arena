@@ -58,7 +58,7 @@ def run(part: str) -> dict:
     if os.environ.get("ALLOW_PAID") != "1":
         raise SystemExit("paid: set ALLOW_PAID=1")
     from hyparena.card.llm import ask
-    from hyparena.card.pipeline import _client
+    from hyparena.pipeline import _client
     run_ = json.loads((PROS / "run_60.json").read_text())
     texts = {json.loads(l)["id"]: json.loads(l)["text"] for l in (PROS / "texts_60.jsonl").read_text().splitlines() if l.strip()}
     out_p = PROS / f"judge_alternatives_{part}_{TEMPLATE[1]}.json"
@@ -119,7 +119,7 @@ def pool_run(pool: str) -> dict:
     if os.environ.get("ALLOW_PAID") != "1":
         raise SystemExit("paid: set ALLOW_PAID=1")
     from hyparena.card.llm import ask
-    from hyparena.card.pipeline import _client
+    from hyparena.pipeline import _client
     from scripts.common.v34_check import CAL
     assert pool == "calibration"
     texts = {}

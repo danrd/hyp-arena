@@ -56,7 +56,7 @@ def test_the_spec_fixes_units_and_the_policy_before_the_run():
 
 
 def test_negative_groups_never_reuse_an_excluded_finding():
-    from hyparena.negatives import select
+    from hyparena.whole_system.negatives import select
     rows = []
     for c in ("A", "B"):                                   # two findings with two significant increases each
         rows += [{"compound_name": c, "species": "worm", "avg_lifespan_significance": "S", "avg_lifespan_change_percent": "10",

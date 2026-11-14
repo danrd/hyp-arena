@@ -9,10 +9,10 @@ from __future__ import annotations
 import json
 from collections import Counter
 
-from hyparena.backtest import tied_auc
-from hyparena.card import novelty_v34 as nv
-from hyparena.card import rules_v32 as r32
-from hyparena.card import v3_extra
+from hyparena.whole_system.backtest import tied_auc
+from hyparena.novelty import novelty_v34 as nv
+from hyparena.scoring import rules_v32 as r32
+from hyparena.scoring import v3_extra
 from hyparena.card.models import ClaimVerification, HypothesisCard
 from scripts.data.ctgov_outcomes import KG
 
@@ -23,8 +23,8 @@ W_ORDER = ("local", "organ", "hallmark")
 
 def parts(it: dict, unit_id: str = ""):
     """card, claim verifications, alternative verifications of a saved run item; with `unit_id` the alternatives carry
-    the d judged from the registry text (hyparena/card/alternatives_d.py, the method since 2026-11-08)."""
-    from hyparena.card import alternatives_d
+    the d judged from the registry text (hyparena/alternatives/alternatives_d.py, the method since 2026-11-08)."""
+    from hyparena.alternatives import alternatives_d
     card = alternatives_d.apply(unit_id, HypothesisCard.model_validate(it["card"]))
     cvs = [ClaimVerification.model_validate(c) for c in it["verification"]["claims"]]
     alts = {a: ClaimVerification.model_validate(v) for a, v in (it.get("v3_alternatives") or {}).items()}

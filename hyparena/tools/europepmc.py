@@ -13,7 +13,7 @@ from typing import Optional
 
 import httpx
 
-from hyparena.state import Evidence
+from hyparena.coscientist.state import Evidence
 
 URL = "https://www.ebi.ac.uk/europepmc/webservices/rest/search"
 

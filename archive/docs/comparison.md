@@ -10,14 +10,14 @@ Status: protocol and tooling are ready; nothing here has been run on real models
 
 ## 2. Data and labels
 
-- **Pool:** hypotheses with a known outcome that the judge models cannot know. Current tooling: the ITP pool (`hyparena.backtest build-itp --as-of T`). For a fair comparison T must be after the training cutoff of every judge model (the "fresh slice", accumulated over time).
+- **Pool:** hypotheses with a known outcome that the judge models cannot know. Current tooling: the ITP pool (`hyparena.whole_system.backtest build-itp --as-of T`). For a fair comparison T must be after the training cutoff of every judge model (the "fresh slice", accumulated over time).
 - **Labels** live in a separate file the pipeline never reads; metrics are computed outside the graph.
 - **Splits:** each labelled item is `dev` (tuning prompts, weights, thresholds) or `test` (the one final comparison), stratified by label and deterministic. For the ITP pool with T = 2010-12-31: 5 positives and 18 negatives in dev, 5 and 19 in test.
-- **Leakage probe:** `hyparena.leakage` asks each judge model whether it knows the outcome of each item; an item a model names correctly with confidence ≥ 0.6 is "known" and is excluded (`--exclude-known`). Cost: one call per item and model, once per pool.
+- **Leakage probe:** `hyparena.whole_system.leakage` asks each judge model whether it knows the outcome of each item; an item a model names correctly with confidence ≥ 0.6 is "known" and is excluded (`--exclude-known`). Cost: one call per item and model, once per pool.
 
 ## 3. Arms: the ablation ladder
 
-Same upstream stages (normalization, retrieval, reviews) for every arm; only the ranking changes, one element per step (`hyparena/ladder.py`, `live run --ladder Lk`):
+Same upstream stages (normalization, retrieval, reviews) for every arm; only the ranking changes, one element per step (`hyparena/coscientist/ladder.py`, `live run --ladder Lk`):
 
 | Step | Change | Families | Verdict | Rating and pairing | Judge sees |
 |---|---|---|---|---|---|
@@ -55,15 +55,15 @@ Unrated items (rejected, merged, never compared) are placed at the bottom by def
 
 ```bash
 # 1. pool and labels (dates from PubMed); later: a post-cutoff fresh slice
-python -m hyparena.backtest build-itp --as-of <T>
+python -m hyparena.whole_system.backtest build-itp --as-of <T>
 # 2. leakage probe (one call per item and model)
-python -m hyparena.leakage --pool data/backtest/itp_<T>.json --labels data/backtest/itp_<T>_labels.json \
+python -m hyparena.whole_system.leakage --pool data/backtest/itp_<T>.json --labels data/backtest/itp_<T>_labels.json \
     --config configs/paid-test.yaml --out data/backtest/itp_<T>_known.json
 # 3. the grid (prints commands; --execute runs them, resumable)
-python -m hyparena.experiment --pool data/backtest/itp_<T>.json --as-of <T> \
+python -m hyparena.coscientist.experiment --pool data/backtest/itp_<T>.json --as-of <T> \
     --steps L0,L1,L2,L3,L4 --seeds 0,1,2 --budgets 200000,400000 --out-dir runs/exp
 # 4. tune on dev, then compare once on test
-python -m hyparena.backtest compare --labels data/backtest/itp_<T>_labels.json --split test \
+python -m hyparena.whole_system.backtest compare --labels data/backtest/itp_<T>_labels.json --split test \
     --exclude-known data/backtest/itp_<T>_known.json \
     --a "runs/exp/L4_b200000_s*.json" --b "runs/exp/L0_b200000_s*.json"
 ```

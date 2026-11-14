@@ -11,7 +11,7 @@ Gold, both free and outside the benchmark:
   the measure compares strategies, it is not an absolute recall.
 - animals and compounds: "X extends the lifespan of species S" as of the first DrugAge paper on (X, S); the gold is the DrugAge
   papers on X in other species published before that date.
-Strategies: S0 the current queries (hyparena.card.verifier.queries); S1 queries written by a model; S2 = S1 plus the references
+Strategies: S0 the current queries (hyparena.reading.verifier.queries); S1 queries written by a model; S2 = S1 plus the references
 and citing papers of its top hits (NCBI elink), dated by the guard; S3 the knowledge graph (longevity-kg extracted rows) for the
 animal claims. S3 is partly circular here: the graph's first corpus was built from DrugAge papers.
 Each strategy returns at most 20 PMIDs dated on or before T, the number the verifier reads.
@@ -67,7 +67,7 @@ def _refs(nct: str) -> list[dict]:
 
 
 def build() -> dict:
-    from hyparena.backtest import _pubdates, drugage_rows
+    from hyparena.whole_system.backtest import _pubdates, drugage_rows
     bench = {u["id"] for u in json.loads((Path(__file__).resolve().parents[2] / "data/benchmark/v2_units.json").read_text())["units"]}
     cands = {c["source_id"]: c for c in yaml.safe_load((KG / "hypothesis_sources/ctgov_candidates.yaml").read_text())["items"]}
     cache = json.loads(SCRATCH_REFS.read_text()) if SCRATCH_REFS.is_file() else {}
@@ -156,7 +156,7 @@ def claims() -> list[tuple[dict, object, object]]:
 
 def make_cards() -> None:
     from hyparena.card.normalizer import normalize
-    from hyparena.card.pipeline import _client
+    from hyparena.pipeline import _client
     texts = [json.loads(l) for l in (OUT / "human_texts.jsonl").read_text().splitlines()]
     client, fams = _client("configs/v2-flash.yaml", False, 4 * len(texts))
     p = OUT / "human_cards.json"
@@ -171,7 +171,7 @@ def make_cards() -> None:
 
 
 def make_queries() -> None:
-    from hyparena.card.pipeline import _client
+    from hyparena.pipeline import _client
     from hyparena.card.llm import parse_objects
     client, _ = _client("configs/v2-flash.yaml", False, 200)
     p = OUT / "llm_queries.json"
@@ -191,7 +191,7 @@ def make_queries() -> None:
 
 
 def _dated(pmids: list[str], as_of: str) -> list[str]:
-    from hyparena.backtest import _pubdates
+    from hyparena.whole_system.backtest import _pubdates
     d = _pubdates(pmids) if pmids else {}
     return [p for p in pmids if p in d and d[p] <= as_of]
 
@@ -250,7 +250,7 @@ def kg_lookup(item: dict) -> list[str]:
 
 
 def evaluate() -> dict:
-    from hyparena.card.verifier import queries
+    from hyparena.reading.verifier import queries
     llm = json.loads((OUT / "llm_queries.json").read_text()) if (OUT / "llm_queries.json").exists() else {}
     per = []
     for item, card, c in claims():
@@ -307,7 +307,7 @@ def relevance_task(per_group: int = 2) -> dict:
     """Blind relevance labelling (Jules): for 2 claims per group, the union of the S0 and S1+S2 lists with abstracts, shuffled,
     without the strategy names. Written to $KG_DIR (abstracts belong to their publishers)."""
     import random
-    from hyparena.card.verifier import queries
+    from hyparena.reading.verifier import queries
     from hyparena.tools import pubmed
     llm = json.loads((OUT / "llm_queries.json").read_text())
     groups = defaultdict(list)
@@ -335,9 +335,9 @@ def relevance_task(per_group: int = 2) -> dict:
 
 
 def eval_vocab() -> dict:
-    """S1 and S1+S2 with the vocabulary guard (hyparena.card.search_vocab) on the saved model queries, against the stored
+    """S1 and S1+S2 with the vocabulary guard (hyparena.search.search_vocab) on the saved model queries, against the stored
     unguarded numbers of eval.json; and what the guard dropped."""
-    from hyparena.card.search_vocab import filter_query, vocabulary
+    from hyparena.search.search_vocab import filter_query, vocabulary
     llm = json.loads((OUT / "llm_queries.json").read_text())
     prev = {r["id"]: r for r in json.loads((OUT / "eval.json").read_text())["per_claim"]}
     per, dropped_all = [], []

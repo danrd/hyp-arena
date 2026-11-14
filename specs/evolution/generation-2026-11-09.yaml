@@ -40,10 +40,10 @@ modes:
 diversity:   # controlled within a run and against the database
   within_run: >-
     the writer is told the hypotheses already written in this run; after the pipeline, typed proximity
-    (hyparena/card/proximity.py: duplicate, variant, analog, competitor) and text distance (1 - Jaccard of content words)
+    (hyparena/novelty/proximity.py: duplicate, variant, analog, competitor) and text distance (1 - Jaccard of content words)
     are computed for every pair; a duplicate or duplicate_approx of an earlier one is rejected and rewritten once
   against_database: "the same against every card of the database on the topic; a duplicate of an existing hypothesis is not added, it is linked to it (the database records 'regenerated')"
-  report: "per run: the share of pairs that are variants or analogs, the number of distinct interventions and of distinct outcome objects, and the families of the 'top without relatives' (hyparena/diversity.py)"
+  report: "per run: the share of pairs that are variants or analogs, the number of distinct interventions and of distinct outcome objects, and the families of the 'top without relatives' (hyparena/reports/diversity.py)"
   writers: "with several writer families, the share of each family among the accepted hypotheses is reported (self-preference of a judge is no issue here: the scores are rules, not a judge)"
 
 output:
@@ -63,5 +63,5 @@ limits: >-
   part of the mode, not an extra
 implementation:   # after the user's go
   code: "hyparena/card/generate.py (shared helpers with evolve_v3); prompts generate_free/v1, generate_structured/v1, generate_profile/v1; tests on fixed writer replies (a duplicate is rejected, a missing fixed field fails, a profile target failure is flagged)"
-  reuse: "hyparena/agents/generate.py (the first arena's generator with strategies literature, debate, assumptions, expansion) as the free mode's strategies"
+  reuse: "hyparena/coscientist/agents/generate.py (the first arena's generator with strategies literature, debate, assumptions, expansion) as the free mode's strategies"
   manual: "a new section 'Generation' next to section 11"

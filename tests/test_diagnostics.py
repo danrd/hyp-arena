@@ -1,4 +1,4 @@
-from hyparena import diagnostics as dg
+from hyparena.reports import diagnostics as dg
 
 
 def _items(rows):

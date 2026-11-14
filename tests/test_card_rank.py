@@ -4,7 +4,7 @@ from pathlib import Path
 import yaml
 
 from hyparena.card.models import HypothesisCard, Verification
-from hyparena.card.rank import rank
+from hyparena.rank import rank
 
 FIX = Path(__file__).parent / "fixtures" / "cards"
 
@@ -38,7 +38,7 @@ def test_rank_examples():
 
 
 def test_path_to_human_is_about_safety_only():
-    from hyparena.card.indicators import path_to_human
+    from hyparena.scoring.indicators import path_to_human
     assert path_to_human(True) == "0"                             # human safety data exist: cheap to test now
     assert path_to_human(False) == "1"                            # a preclinical safety package first
     assert path_to_human(None) is None                            # gene target without a drug: unknown

@@ -29,7 +29,7 @@ def _stratum(mouse: int, other: int) -> str:
 
 
 def build(as_of: str, per_stratum: int) -> dict:
-    from hyparena.backtest import _pubdates, drugage_rows
+    from hyparena.whole_system.backtest import _pubdates, drugage_rows
     from hyparena.tools import compounds as cp
     rows = [r for r in drugage_rows() if r["pubmed_id"].strip() and r["compound_name"].strip()]
     dates = _pubdates(sorted({r["pubmed_id"].strip() for r in rows}))
@@ -95,7 +95,7 @@ def _card(h: dict, template: dict, n: int) -> dict:
 
 
 def run(pool_path: str, out: str, template_path: str = "runs/stage5/g003.ab.json", K: int = 10000) -> dict:
-    from hyparena.card import pipeline
+    from hyparena import pipeline
     from hyparena.tools import pubmed
     pool = json.loads(Path(pool_path).read_text())
     template = json.loads(Path(template_path).read_text())["items"][0]["card"]
@@ -118,7 +118,7 @@ TITLE_RU = "Калибровка профилей: 40 соединений DrugA
 
 def bundle(run_path: str, pool_path: str, out: str) -> dict:
     """The site bundle of a pool run: titles name the stratum, the badge says it is a calibration pool (no models, no labels)."""
-    from hyparena.site import bundle_from_result
+    from hyparena.reports.site import bundle_from_result
     res = json.loads(Path(run_path).read_text())
     pool = {h["id"]: h for h in json.loads(Path(pool_path).read_text())["hypotheses"]}
     b = bundle_from_result(res, res["meta"]["ids"], None, TITLE_RU)

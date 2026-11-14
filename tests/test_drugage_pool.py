@@ -4,7 +4,7 @@ from pathlib import Path
 import yaml
 
 from hyparena.card.models import HypothesisCard
-from hyparena.card.rules import validate_card
+from hyparena.scoring.rules import validate_card
 from scripts.data import drugage_pool as dp
 
 

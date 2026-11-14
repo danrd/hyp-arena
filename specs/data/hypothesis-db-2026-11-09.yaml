@@ -33,10 +33,10 @@ row:   # one row per hypothesis version
   cluster: "cluster id and the typed relations to its neighbours"
 
 proximity_and_clusters:
-  typed: "hyparena/card/proximity.py on the cards: duplicate, duplicate_approx, variant, competitor, contradiction, analog, analog_weak, mechanism_neighbour (buckets, cheap for thousands)"
+  typed: "hyparena/novelty/proximity.py on the cards: duplicate, duplicate_approx, variant, competitor, contradiction, analog, analog_weak, mechanism_neighbour (buckets, cheap for thousands)"
   text: "an embedding of the text (an open biomedical sentence model, e.g. SapBERT already used for aliases, or a general one) for hypotheses whose card is not built yet, and as a second view"
   clusters: >-
-    families = connected components over duplicate / duplicate_approx / variant / analog (hyparena/diversity.py
+    families = connected components over duplicate / duplicate_approx / variant / analog (hyparena/reports/diversity.py
     FAMILY_TYPES); topics = clusters of the text embedding (HDBSCAN or agglomerative, threshold fixed on a hand-checked
     sample of 50 pairs before use); each cluster is labelled by its commonest intervention and outcome object
   dedup_across_sources: "a duplicate across sources is one idea with several rows (both kept, linked); counts of distinct ideas are reported per source and overall"
@@ -48,7 +48,7 @@ scoring_runs:
   comparison: "Bio Arena: Spearman of our ASPID scores with its Bradley-Terry rating, overall and within clusters; where they differ most, an Argon pack (why)"
 
 site:   # after the scoring runs and the rights check
-  what: "the database on the site (hyparena/site.py): search, filters by source, cluster, profile and status; each hypothesis with its card, links, records, scores under every profile and its history"
+  what: "the database on the site (hyparena/reports/site.py): search, filters by source, cluster, profile and status; each hypothesis with its card, links, records, scores under every profile and its history"
   rescoring: >-
     the living arena of method-v3.md section 10: watched queries per claim, new papers read weekly, rules re-run, a change
     log per hypothesis (link level before and after, the paper and its date), gate events shown; small moves not shown

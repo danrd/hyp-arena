@@ -17,7 +17,7 @@ from pathlib import Path
 
 import numpy as np
 
-from hyparena.backtest import tied_auc
+from hyparena.whole_system.backtest import tied_auc
 from scripts.data.ctgov_outcomes import KG
 
 CAL = KG / "hypothesis_sources" / "calibration"

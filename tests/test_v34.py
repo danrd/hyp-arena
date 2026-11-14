@@ -2,9 +2,9 @@
 outcome, novelty N, leverage and the evolution drift flag (hand-made drifted pairs and controls)."""
 import pytest
 
-from hyparena.card import novelty_v34 as nv
-from hyparena.card import rules_v3 as r3
-from hyparena.card import rules_v32 as r32
+from hyparena.novelty import novelty_v34 as nv
+from hyparena.scoring import rules_v3 as r3
+from hyparena.scoring import rules_v32 as r32
 from hyparena.card.models import ClaimVerification as CV
 from tests.test_rules_v3 import card, claim, rec
 
@@ -107,7 +107,7 @@ def test_controls_are_not_flagged():
 # ---- the room to improve (user decision 2026-11-07: replaces the evolution profile)
 
 def test_room_applies_the_fixable_items_together_and_shows_the_novelty_cost():
-    from hyparena.card import improvements as imp
+    from hyparena.evolution import improvements as imp
     c = mech_card()
     cvs = [CV(id="c1", evidence=[rec(1, "animal", n=40, effect="large")]),
            CV(id="c9", evidence=[rec(2, "rct", n=200)], counterevidence=[rec(3, "rct", n=300, qm={"population": "no"})])]
@@ -123,7 +123,7 @@ def test_room_applies_the_fixable_items_together_and_shows_the_novelty_cost():
 
 
 def test_population_query_for_a_specific_population_only():
-    from hyparena.card.search import population_query
+    from hyparena.search.search import population_query
     c = card([OUT])
     c.pico.population.label = "older adults with pre-sarcopenia"
     c.pico.intervention = [type(c.pico.population).__mro__[0] and __import__("hyparena.card.models", fromlist=["x"]).Intervention(label="squat exercise")]
@@ -134,7 +134,7 @@ def test_population_query_for_a_specific_population_only():
 
 
 def test_effect_parser_reads_formats_found_in_the_blind_comparison():
-    from hyparena.card.effect_class import from_phrase
+    from hyparena.reading.effect_class import from_phrase
     assert from_phrase("SMD = .67 ± .57") == "medium"
     assert from_phrase("- 1.20 standardised mean difference (SMD), 95% CI") == "large"
 

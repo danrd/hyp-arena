@@ -76,7 +76,7 @@ pilot:
     outside check are the guard.
 
 implementation:   # after the user's go
-  code: "hyparena/card/evolve_v3.py: MODES gains 'directed'; propose_directed + directed_problems (the checks above); prompt evolve_directed/v1; tests on hand-made pairs (a child with a new link between supported neighbours passes; with a known link, two new links, unsupported neighbours, another intervention, or drift fails)"
+  code: "hyparena/evolution/evolve_v3.py: MODES gains 'directed'; propose_directed + directed_problems (the checks above); prompt evolve_directed/v1; tests on hand-made pairs (a child with a new link between supported neighbours passes; with a known link, two new links, unsupported neighbours, another intervention, or drift fails)"
   manual: "section 11, the modes table gains the row 'directed'"
 
 argon_trial_2026_11_09:   # Argon applied this spec by hand to 4 prospective trials (report sent by the user; data read by Claude)
@@ -133,7 +133,7 @@ decision_mechanism_novelty_2026_11_11:   # user decision; manual sections 7, 11,
     supported (S > 1/2 with a record for), and the PubMed count on the link's own subject AND object before T is under 5
     (rule 6, the same code); no count, no level. Reason: the ladder already holds mechanism levels (new combination, new link)
     used only without outcome records; the new level is their counterpart when the outcome was studied.
-  code: "hyparena/card/novelty_v34.py (mechanism_candidates, mechanism_absence, new_mechanism_links, novelty(absence=...)); evolve_v3.compare counts when as_of is known; aspid_v3 N scale has six levels"
+  code: "hyparena/novelty/novelty_v34.py (mechanism_candidates, mechanism_absence, new_mechanism_links, novelty(absence=...)); evolve_v3.compare counts when as_of is known; aspid_v3 N scale has six levels"
   tests: "tests/test_new_mechanism.py: candidate only between supported neighbours; under 5 counts, 5 does not, no count does not; no change without outcome records; count on subject AND object only; loss of the level is drift"
   checks_pending: >-
     free: Argon's four directed versions (counts 0, 2, 0, 1 rechecked earlier) must get the level; hand counter-examples (a

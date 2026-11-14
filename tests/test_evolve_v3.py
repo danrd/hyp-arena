@@ -1,7 +1,7 @@
 import json
 
-from hyparena.card import evolve_v3 as ev
-from hyparena.card import rules_v3 as r3
+from hyparena.evolution import evolve_v3 as ev
+from hyparena.scoring import rules_v3 as r3
 from hyparena.llm.fake import FakeLLMClient
 from hyparena.llm.providers import GuardedClient
 from tests.test_analyze import _case
@@ -33,7 +33,7 @@ def test_compare_reports_indicator_and_score_changes(monkeypatch):
 
 
 def test_the_report_section_shows_the_pair(monkeypatch):
-    from hyparena import report_html as rh
+    from hyparena.reports import report_html as rh
     monkeypatch.setattr(r3, "established_by_approval", lambda claim, card: False)
     c, cvs, alts = _case()
     def item(card):
@@ -60,7 +60,7 @@ def test_tuning_and_free_modes_are_named_apart_and_free_marks_a_distant_child():
     assert f is not None and f["cited_pmids"] == ["12345678"]
     assert ev.distance(parent, parent) == 0.0 and ev.distance(parent, "a completely different text about yeast " * 10) > ev.NEW_AFTER
     assert ev.MODES == ("tune", "free")
-    from hyparena import report_html as rh
+    from hyparena.reports import report_html as rh
     assert "доработанная" in rh.evo_chip({"parent": "U1", "evo_mode": "tune"})
     assert "свободная" in rh.evo_chip({"parent": "U1", "evo_mode": "free", "new_after": True}) and "U1" in rh.evo_chip(
         {"parent": "U1", "evo_mode": "free", "new_after": True})

@@ -19,7 +19,7 @@ def run() -> dict:
     if os.environ.get("ALLOW_PAID") != "1":
         raise SystemExit("paid: set ALLOW_PAID=1")
     from hyparena.card.llm import ask
-    from hyparena.card.pipeline import _client
+    from hyparena.pipeline import _client
     from hyparena.tools import pubmed
     from scripts.reading.reader_v12 import CONFIG
     v13 = json.loads((PROS / "reader_v12_dev_v13.json").read_text())

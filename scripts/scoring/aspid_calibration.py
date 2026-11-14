@@ -5,8 +5,8 @@ from typing import Any, Optional
 
 import numpy as np
 
-from hyparena.aspid import IndicatorSpec, Profile, WeightSampler, _ordinal_mapping, aggregate, load_profiles
-from hyparena.card.indicators import INDICATORS, BY_ID
+from hyparena.scoring.aspid import IndicatorSpec, Profile, WeightSampler, _ordinal_mapping, aggregate, load_profiles
+from hyparena.scoring.indicators import INDICATORS, BY_ID
 
 def _get_profile_indicators(profile: Profile) -> list[IndicatorSpec]:
     """Return the indicator specs used by the profile."""

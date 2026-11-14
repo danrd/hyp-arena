@@ -3,7 +3,7 @@
 id: extraction-gold-v9
 date: 2026-11-05
 question: "With a second, narrower question for papers the verifier returns without a stance, does relevance reach 0.8 on fresh pairs, with the extraction fields still above their thresholds?"
-code: "scripts/reading/extraction_gold_v3.py --gold v9; hyparena/card/verifier.py relevance_targets, ask_relevance, merge_relevance (verify_claim relevance_check=True)"
+code: "scripts/reading/extraction_gold_v3.py --gold v9; hyparena/reading/verifier.py relevance_targets, ask_relevance, merge_relevance (verify_claim relevance_check=True)"
 prompts:
   verify_claim/v9: "v8 + the outcome rule: the outcome closest to the claim is the claim's object; when the claim or hypothesis names several outcomes, the first one named that the abstract reports; a null result on another outcome does not make effect_class none"
   relevance_check/v1: "one call per paper whose verbatim records all have stance neither: intervention same / same_kind / different, outcome same / same_domain / different, result supports / refutes / none, verbatim quote. Code gives the first record that stance (intervention_match class for same_kind, flag relevance_check) only when neither answer is 'different' and the quote is verbatim"

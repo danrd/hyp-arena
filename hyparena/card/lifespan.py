@@ -17,7 +17,7 @@ from typing import Optional, Union
 import yaml
 
 from hyparena.card.models import UNKNOWN, HypothesisCard
-from hyparena.card.rules import species_key, strain_key
+from hyparena.scoring.rules import species_key, strain_key
 
 TABLE = Path(__file__).resolve().parents[2] / "configs" / "lifespan_medians.yaml"
 DAYS = {"day": 1.0, "week": 7.0, "wk": 7.0, "month": 30.44, "mo": 30.44, "year": 365.25, "yr": 365.25}

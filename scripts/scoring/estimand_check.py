@@ -93,8 +93,8 @@ def kappa(a: list, b: list, weights=None) -> float:
 
 def score() -> dict:
     from scipy.stats import spearmanr
-    from hyparena.backtest import tied_auc
-    from hyparena.card import rules_v32
+    from hyparena.whole_system.backtest import tied_auc
+    from hyparena.scoring import rules_v32
     from hyparena.card.models import ClaimVerification, HypothesisCard
     d = json.loads(OUT.read_text())
     ts = texts()

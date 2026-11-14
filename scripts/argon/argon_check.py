@@ -10,11 +10,11 @@ import json
 import re
 from collections import Counter
 
-from hyparena import backtest
-from hyparena.backtest import tied_auc
-from hyparena.card import novelty_v34 as nv
-from hyparena.card import rules_v3 as r3
-from hyparena.card import rules_v32 as r32
+from hyparena.whole_system import backtest
+from hyparena.whole_system.backtest import tied_auc
+from hyparena.novelty import novelty_v34 as nv
+from hyparena.scoring import rules_v3 as r3
+from hyparena.scoring import rules_v32 as r32
 from hyparena.card.models import ClaimVerification, EvidenceRecord
 from hyparena.tools import pmc, pubmed
 from scripts.common.ablation import units

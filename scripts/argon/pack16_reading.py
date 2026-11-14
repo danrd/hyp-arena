@@ -19,7 +19,7 @@ import re
 import sys
 from pathlib import Path
 
-from hyparena.card import rules_v3 as r3
+from hyparena.scoring import rules_v3 as r3
 from hyparena.tools import pubmed
 from scripts.common.reread_v11 import items
 from scripts.common.v34_check import CAL

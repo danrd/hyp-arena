@@ -17,7 +17,7 @@ levels:
   other: "a different intervention, or the finding is about the comparator; weight 0"
 judged_at_the_claim_level: "as the v10 reading rule: when the claim names a kind ('resistance training'), any study of that kind is exact; class and category only when the claim names something more specific"
 code:
-  rules: "hyparena/card/rules_v3.py context_level: intervention_match 'category' -> adjacent (tests/test_rules_v3.py); no record of the existing runs has 'category', so no score changes"
+  rules: "hyparena/scoring/rules_v3.py context_level: intervention_match 'category' -> adjacent (tests/test_rules_v3.py); no record of the existing runs has 'category', so no score changes"
   pair_model: "longevity-kg tools/skeleton/session.py, adjudicate_v2: intervention exact | class | category | other, with the definitions above; the record is built by code with intervention_match = the answer"
 check:
   rerun: "re-ask the pair model (adjudicate_v2) on the same 1 725 stage-0 pairs; the parse is reused (about 0.11 USD, off-peak, with the user's consent)"

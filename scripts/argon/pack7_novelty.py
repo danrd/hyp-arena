@@ -7,9 +7,9 @@ from __future__ import annotations
 import json
 import sys
 
-from hyparena.card import novelty_v34 as nv
-from hyparena.card import rules_v3 as r3
-from hyparena.card import rules_v32 as r32
+from hyparena.novelty import novelty_v34 as nv
+from hyparena.scoring import rules_v3 as r3
+from hyparena.scoring import rules_v32 as r32
 from scripts.common.v34_check import CAL, PROS, parts
 
 DIR = CAL.parents[1] / "reviews" / "argon-2026-11-08"

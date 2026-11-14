@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from hyparena import snapshot
+from hyparena.whole_system import snapshot
 
 RUNS = [Path(p) for p in ("runs/stage4/itp2010_dev.reapplied.json", "runs/stage4/itp2010_test.reapplied.json")]
 
@@ -50,7 +50,7 @@ def test_diff_names_every_kind_of_change():
 @pytest.mark.skipif(not all(p.exists() for p in RUNS), reason="the saved runs are not in this checkout (runs/ is not tracked)")
 def test_snapshot_matches_the_saved_runs():
     """Recomputed from the saved verifications, no model calls: the pooled ranking at T must equal the snapshot."""
-    from hyparena.site import export_itp
+    from hyparena.reports.site import export_itp
     rows = snapshot.rows_from_bundle(export_itp(str(RUNS[0]), str(RUNS[1]), "data/backtest/itp_2010-12-31_labels.json"))
     assert snapshot.diff(snapshot.read(), rows) == []
 

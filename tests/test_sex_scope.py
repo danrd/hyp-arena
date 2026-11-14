@@ -6,12 +6,12 @@ from pathlib import Path
 import pytest
 import yaml
 
-from hyparena.card import indicators as ind
-from hyparena.card.alternatives import rows
+from hyparena.scoring import indicators as ind
+from hyparena.alternatives.alternatives import rows
 from hyparena.card.models import EvidenceRecord, HypothesisCard, ProgramInfo, Verification
-from hyparena.card.rules import (finalize, mark_strata, set_sex_scope, sex_scope_from_text, statuses,
+from hyparena.scoring.rules import (finalize, mark_strata, set_sex_scope, sex_scope_from_text, statuses,
                                  subgroup_only)
-from hyparena.card.verifier import mark_subgroup
+from hyparena.reading.verifier import mark_subgroup
 
 FIX = Path(__file__).parent / "fixtures" / "cards"
 
@@ -130,7 +130,7 @@ def test_reapplying_the_old_rules_reproduces_a_saved_run():
     2026-10-23 and 2026-10-25 (`multi_site_positive` is a condition of robustness, `novelty` is unknown without an anchor,
     `path_to_human` is about safety only)."""
     import json
-    from hyparena.card.pipeline import reapply_rules
+    from hyparena.pipeline import reapply_rules
     path = Path("runs/stage4/itp2010_test.json")
     if not path.exists():
         pytest.skip("the saved backtest runs are local (runs/ is not tracked)")

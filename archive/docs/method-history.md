@@ -10,9 +10,9 @@ support share (`rules_v32.EMPTY_SLOTS = "skip"`, specs/scoring/empty-slots-2026-
 longer shown in the report (it left the profiles in v3.5; the gate still filters refuted chains). v3.6 as of 2026-11-08 (`evaluate(..., v36=True)`, specs/scoring/record-weight-2026-11-08.yaml): the record
 weight rebuilt on the GRADE domains with fewer levels, and records for and against folded as a sum of log likelihood ratios
 (sections 5, 5a, 6); the signed axis is named the **evidence balance** (`chain_state` in the code). v3.5 as of 2026-11-08 (v3.4 + one signed axis in the profiles and a null record weighted
-by the power of its study, `evaluate(..., v35=True)`, specs/scoring/link-scoring-2026-11-08.yaml); v3.4 as of 2026-11-07 (`hyparena/card/rules_v32.py`, `evaluate(..., v34=True)`; novelty, leverage and the
-evolution drift flag in `hyparena/card/novelty_v34.py`; definitions in `specs/scoring/v34-frontier-2026-11-07.yaml`), on top of
-`rules_v3.py` variant v3.1 and `v3_levels.py`, aggregation by ASPID over the axes (`hyparena/card/aspid_v3.py`, `configs/profiles_v3.yaml`). v3.3
+by the power of its study, `evaluate(..., v35=True)`, specs/scoring/link-scoring-2026-11-08.yaml); v3.4 as of 2026-11-07 (`hyparena/scoring/rules_v32.py`, `evaluate(..., v34=True)`; novelty, leverage and the
+evolution drift flag in `hyparena/novelty/novelty_v34.py`; definitions in `specs/scoring/v34-frontier-2026-11-07.yaml`), on top of
+`rules_v3.py` variant v3.1 and `v3_levels.py`, aggregation by ASPID over the axes (`hyparena/scoring/aspid_v3.py`, `configs/profiles_v3.yaml`). v3.3
 (`evaluate(..., fold=True, neutral_unverified=True)`) differs only in P (section 7) and in two record weights (section 5). The
 specification with its history and decisions is `archive/docs/spec/method-v3.md` (in Russian, sections 9-13); this manual is the
 self-contained English description. The constants in section 14 and the numbers of the worked example in section 13 are
@@ -138,7 +138,7 @@ pool the rankings move moderately (Spearman 0.88-0.95 with v3.4, 7-9 of the top 
 
 ## Section 10: the first report layout
 
-**Pool report, first layout** (`python -m hyparena.report_html prospective --n 60`; one HTML page, built by code with fixed wording,
+**Pool report, first layout** (`python -m hyparena.reports.report_html prospective --n 60`; one HTML page, built by code with fixed wording,
 Russian and English in one page; layout redone 2026-11-07 after the structure of an outside reader's report). A header band
 (method, cut-off date, how many scored) and five tabs:
 
@@ -282,9 +282,9 @@ In v3 and v3.1, V = P × W × I with W = 1/3, 2/3, 1; in v3.1 the alternative's 
 
 ## Section 10: the report layout of 2026-11-08 (replaced 2026-11-11)
 
-**Pool report, main layout** (`python -m hyparena.report_v2 prospective --n 60` → `report_<n>_v2.html`; user decision
+**Pool report, main layout** (`python -m hyparena.reports.report_v2 prospective --n 60` → `report_<n>_v2.html`; user decision
 2026-11-07: the outside reader's (Argon's) report taken as the base and corrected towards the method; layout as of 2026-11-08).
-The same numbers as below, reshaped by `hyparena/report_v2.py` into one JSON object that the page template
+The same numbers as below, reshaped by `hyparena/reports/report_v2.py` into one JSON object that the page template
 `hyparena/templates/pool_report_v2.html` renders in the browser (Tailwind from its CDN, version pinned). Russian only.
 
 *Content.* Tabs: *Ranking* (profile tabs with the order of importance written out; one fixed table: place; hypothesis with
@@ -309,7 +309,7 @@ item per line where a cell holds several (no wrapped "a / b / c"); long headers 
 column; the page uses the full window width (up to 1920 px) and a larger base size on desktop (17 px from 1280 px, 18.5 px
 from 1680 px, 20 px from 2200 px). Colours carry meaning only for direction (red against, green for, amber for flags).
 
-The first layout (`python -m hyparena.report_html prospective --n 60`, bilingual, 2026-11-07) is kept in the code; its
+The first layout (`python -m hyparena.reports.report_html prospective --n 60`, bilingual, 2026-11-07) is kept in the code; its
 description is in `archive/method-history.md`.
 
 Reports on private hypotheses stay in the private repository (`longevity-kg`).
@@ -318,7 +318,7 @@ Reports on private hypotheses stay in the private repository (`longevity-kg`).
 coverage, novelty with the record that sets it, I, scope, places under the three profiles if there is a pool, and the room to improve under each), the chain table
 (id, type, claim, S with interval, R, F / A, link novelty level, main records), why (what lifts, what lowers, the
 alternatives), what to improve (actions with the score they would give, and the change of novelty they would cost),
-limitations, provenance. The older one-hypothesis report by code (`python -m hyparena.analyze`) still uses the v3 / v3.1
+limitations, provenance. The older one-hypothesis report by code (`python -m hyparena.reports.analyze`) still uses the v3 / v3.1
 levels.
 
 

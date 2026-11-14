@@ -2,7 +2,7 @@
 
     python -m scripts.search.search_misses        # longevity-kg/reviews/argon-2026-11-12/search_misses.json
 
-The search of one claim (hyparena/card/search.py `retrieve`, mode "model"): up to 4 LLM-written queries, each cut to the top
+The search of one claim (hyparena/search/search.py `retrieve`, mode "model"): up to 4 LLM-written queries, each cut to the top
 20 by relevance with the date guard (pdat <= T); the lists are interleaved, citation neighbours of the first seeds are added,
 keyword queries fill the rest; the first 20 go to the reader. Each gold paper of pack 18 (valid, on or before T) is put at
 the first step where it is lost:

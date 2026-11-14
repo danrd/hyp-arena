@@ -1,5 +1,5 @@
 # Prices of the models the method calls, USD per million tokens (input / output), as the API provider bills them.
-# Read by hyparena/usage.py; the cost of a run is computed by code from the logged tokens, never reported by a model.
+# Read by hyparena/reports/usage.py; the cost of a run is computed by code from the logged tokens, never reported by a model.
 # A model missing here is counted with tokens but no price ("price unknown" in the summary).
 # Checked against the provider's price list when a model is added; update the date when a price changes.
 checked_on: 2026-11-14

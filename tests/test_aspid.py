@@ -4,9 +4,9 @@ import math
 import numpy as np
 import pytest
 
-from hyparena.aspid import (IndicatorSpec, InfeasiblePreferences, Prefer, Profile, WeightSampler, aggregate,
+from hyparena.scoring.aspid import (IndicatorSpec, InfeasiblePreferences, Prefer, Profile, WeightSampler, aggregate,
                             check_feasible, load_profiles, next_pair)
-from hyparena.card.indicators import INDICATORS
+from hyparena.scoring.indicators import INDICATORS
 
 IDS = ["a", "b", "c", "d"]
 

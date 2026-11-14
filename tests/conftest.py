@@ -8,7 +8,7 @@ os.environ.setdefault("MESH_IDS", "0")   # no MeSH lookups on the network in tes
 
 from pathlib import Path
 
-from hyparena import backtest
+from hyparena.whole_system import backtest
 from hyparena.tools import chebi, compounds as cp, trials
 
 REAL_LOOKUP = cp.lookup          # the unpatched function, for tests of the cache itself (tests/test_entities.py)

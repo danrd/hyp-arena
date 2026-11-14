@@ -5,7 +5,7 @@ import json
 
 from scipy.stats import spearmanr
 
-from hyparena.card import rules_v32 as r32
+from hyparena.scoring import rules_v32 as r32
 from scripts.common.v34_check import CAL, PROS, parts
 
 
@@ -35,7 +35,7 @@ def ranks(bal: dict) -> dict:
     pa = pax()
     res = {}
     for prof, tiers in (("evidence", None), ("funding", None), ("frontier", None)):
-        from hyparena.card import aspid_v3
+        from hyparena.scoring import aspid_v3
         t = aspid_v3.load()[prof][0].tiers
         res[prof] = expected(pa, prof, t)
     return res

@@ -1,7 +1,7 @@
 id: evolution-v3-pilot-2026-11-06
 written_on: '2026-11-06'
 status: run (exploration; no criterion was set before, the run was to see the format)
-what: evolution v3 (hyparena/card/evolve_v3.py, prompt evolve_v3/v1) on the top 10 of the pilot under the evidence profile,
+what: evolution v3 (hyparena/evolution/evolve_v3.py, prompt evolve_v3/v1) on the top 10 of the pilot under the evidence profile,
   all fixable items (8 x experiment_alternatives; 1 x write_mechanism; 1 x three items)
 cost: about 311 calls (about 0.8 USD; estimate was 0.6)
 result:

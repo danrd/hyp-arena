@@ -54,14 +54,14 @@ A note on criteria: the full criteria set is used (`configs/criteria.yaml`), as 
 
 ```bash
 # 1. groups (4 calls per group: generate and verify variants of the finding, generate decoy variants, rewrite)
-ALLOW_PAID=1 python -m hyparena.negatives build --groups 6 --config configs/paid-test.yaml --writer zhipu --verifier google
+ALLOW_PAID=1 python -m hyparena.whole_system.negatives build --groups 6 --config configs/paid-test.yaml --writer zhipu --verifier google
 # 2. one tournament per group and arm (prints the commands; --execute runs them, resumable)
-ALLOW_PAID=1 python -m hyparena.negatives run --steps L0,L4 --seeds 0 --max-tokens 300000 --execute
+ALLOW_PAID=1 python -m hyparena.whole_system.negatives run --steps L0,L4 --seeds 0 --max-tokens 300000 --execute
 # 3. baseline without a tournament: one call ranks the whole group
-ALLOW_PAID=1 python -m hyparena.negatives listwise --config configs/paid-test.yaml --families openai,google
+ALLOW_PAID=1 python -m hyparena.whole_system.negatives listwise --config configs/paid-test.yaml --families openai,google
 # 4. metrics and a paired comparison
-python -m hyparena.negatives evaluate --runs runs/neg/L4_s0
-python -m hyparena.negatives compare --a runs/neg/L4_s0 --b runs/neg/L0_s0
+python -m hyparena.whole_system.negatives evaluate --runs runs/neg/L4_s0
+python -m hyparena.whole_system.negatives compare --a runs/neg/L4_s0 --b runs/neg/L0_s0
 ```
 
 `--fake` on `build`, `run` and `listwise` exercises everything with the fake LLM at no cost.
@@ -113,7 +113,7 @@ This needs more groups before it means anything. If it holds, a cheap listwise p
 
 ## 6. Method v2 on the same groups (2026-10-20)
 
-`ALLOW_PAID=1 python -m hyparena.negatives v2 --out-dir runs/neg_v2` (cards, verifier with evidence as of the day before the finding, rules, aggregation under `evidence_first`; `hyparena.card.pipeline.as_ladder_result` turns the result into one score: known result > ranked by expected value > not admitted > filtered). About 160 model calls for groups 1–5. Group 6 did not complete (the API quota ran out during it), so the comparison is over groups 1–5. The DrugAge rule for "shortens" and "no effect" claims was added after the run and applied with `v2-refresh` (no model calls).
+`ALLOW_PAID=1 python -m hyparena.whole_system.negatives v2 --out-dir runs/neg_v2` (cards, verifier with evidence as of the day before the finding, rules, aggregation under `evidence_first`; `hyparena.pipeline.as_ladder_result` turns the result into one score: known result > ranked by expected value > not admitted > filtered). About 160 model calls for groups 1–5. Group 6 did not complete (the API quota ran out during it), so the comparison is over groups 1–5. The DrugAge rule for "shortens" and "no effect" claims was added after the run and applied with `v2-refresh` (no model calls).
 
 | Arm (groups 1–5) | hit@1 | MRR | mean rank | AUC [95% CI] |
 |---|---|---|---|---|

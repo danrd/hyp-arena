@@ -8,9 +8,9 @@ import pytest
 import yaml
 
 from hyparena.card import contexts
-from hyparena.card.alternatives import rows
+from hyparena.alternatives.alternatives import rows
 from hyparena.card.models import EvidenceRecord, HypothesisCard, Verification
-from hyparena.card.rules import add_disease_analogs, finalize, is_disease_analog
+from hyparena.scoring.rules import add_disease_analogs, finalize, is_disease_analog
 
 FIX = Path(__file__).parent / "fixtures" / "cards"
 

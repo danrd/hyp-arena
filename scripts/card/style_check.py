@@ -38,7 +38,7 @@ def first_paragraph(text: str) -> str:
 
 
 def cmd_texts() -> None:
-    from hyparena.card.pipeline import _client
+    from hyparena.pipeline import _client
     d = json.loads(L18.read_text())
     client, _ = _client("configs/v2-flash.yaml", False, 40)
     out = {"as_of": AS_OF, "items": []}
@@ -64,7 +64,7 @@ def dataset(d: dict, style: str, path: Path) -> Path:
 def cmd_run(out: str, max_calls: int) -> None:
     from concurrent.futures import ThreadPoolExecutor
 
-    from hyparena.card import pipeline
+    from hyparena import pipeline
     d = json.loads(TEXTS.read_text())
     Path(out).mkdir(parents=True, exist_ok=True)
 
@@ -78,7 +78,7 @@ def cmd_run(out: str, max_calls: int) -> None:
         style, seed = arm
         ds = dataset(d, style, Path(out) / f"l0_{style}.dataset.json")
         dst = Path(out) / f"L0_{style}_s{seed}.json"
-        cmd = [sys.executable, "-m", "hyparena.live", "run", "--import-file", str(ds), "--ladder", "L0", "--seed", str(seed), "--as-of", AS_OF,
+        cmd = [sys.executable, "-m", "hyparena.coscientist.live", "run", "--import-file", str(ds), "--ladder", "L0", "--seed", str(seed), "--as-of", AS_OF,
                "--goal", GOAL, "--cycles", "4", "--matches", "3", "--max-calls", "300", "--config", "configs/paid-test.yaml",
                "--search", "europepmc", "--max-tokens", "300000", "--out", str(dst)]
         r = subprocess.run(cmd, capture_output=True, text=True)

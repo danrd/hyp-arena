@@ -83,7 +83,7 @@ def _span(place: str) -> tuple[int, int]:
 
 def summarize(res: dict) -> dict:
     """Per hypothesis (by order of the texts): outcome, status of the main claim, place range, facets."""
-    from hyparena.snapshot import places
+    from hyparena.whole_system.snapshot import places
     P = res["ranking"].get("evidence_first")
     pl = places({"expected": P["expected"], "std": P.get("std") or {}, "K": P.get("K") or res["meta"].get("K") or 10000, "order": P["order"]}) if P and P["order"] else {}
     out = []
@@ -116,7 +116,7 @@ def verdict(p_vs_o1: dict, o2_vs_o1: dict) -> dict:
 
 
 def cmd_paraphrase() -> None:
-    from hyparena.card.pipeline import _client
+    from hyparena.pipeline import _client
     d = json.loads(TEXTS.read_text())
     client, _ = _client("configs/v2-flash.yaml", False, 20)
     for r in d["items"]:
@@ -132,7 +132,7 @@ def cmd_paraphrase() -> None:
 def cmd_run(out: str, max_calls: int) -> None:
     from concurrent.futures import ThreadPoolExecutor
 
-    from hyparena.card import pipeline
+    from hyparena import pipeline
     d = json.loads(TEXTS.read_text())
     arms = {"O1": [r["text"] for r in d["items"]], "O2": [r["text"] for r in d["items"]], "P": [r["paraphrase"] for r in d["items"]]}
     Path(out).mkdir(parents=True, exist_ok=True)

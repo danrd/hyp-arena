@@ -91,7 +91,7 @@ def plan() -> dict:
     rows, stats = [], {"candidates": len(cands), "no_document": 0, "kept": 0}
     for c in cands:
         recs = pubmed.fetch(c["result_pmids"])
-        from hyparena.backtest import _pubdates
+        from hyparena.whole_system.backtest import _pubdates
         dates = _pubdates(c["result_pmids"])
         sources = []
         for p in c["result_pmids"]:

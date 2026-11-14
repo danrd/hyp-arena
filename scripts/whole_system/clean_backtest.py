@@ -97,7 +97,8 @@ def species_probes(card_obj):
 
 
 def run(pool_path: str, out: str, spec: str | None, K: int = 10000) -> dict:
-    from hyparena.card import pipeline, verifier
+    from hyparena import pipeline
+    from hyparena.reading import verifier
     from hyparena.tools import pubmed
     pool = json.loads(Path(pool_path).read_text())
     pubmed.search = lambda q, retmax=8, as_of=None: []          # curated sources only: no PubMed search, no abstracts
@@ -116,7 +117,7 @@ def run(pool_path: str, out: str, spec: str | None, K: int = 10000) -> dict:
 
 def permutation_p(pos: list, neg: list, K: int, n: int = 10000, seed: int = 0) -> float:
     """One-sided p of the tie-aware AUC under permutation of the labels over the scored units."""
-    from hyparena.backtest import tied_auc
+    from hyparena.whole_system.backtest import tied_auc
     obs = tied_auc(pos, neg, K)
     units, rng, hits = pos + neg, random.Random(seed), 0
     for _ in range(n):
@@ -127,8 +128,8 @@ def permutation_p(pos: list, neg: list, K: int, n: int = 10000, seed: int = 0) -
 
 def l33(labels: dict, res: dict, K: int = 10000, perms: int = 10000) -> dict:
     """Primary: tie-aware AUC per regimen (evidence_first without late_start), known results apart, filtered at the bottom."""
-    from hyparena.backtest import bootstrap_tied_auc, tied_auc, tied_scores
-    from hyparena.outcomes import spearman
+    from hyparena.whole_system.backtest import bootstrap_tied_auc, tied_auc, tied_scores
+    from hyparena.whole_system.outcomes import spearman
     score = tied_scores(labels, res, "all", K)
     known = [pid for pid, x in zip(res["meta"]["ids"], res["items"]) if x["outcome"] == "known_result"]
     pos = [score[p] for p in score if labels[p]["label"] == 1]
@@ -154,7 +155,7 @@ def l33(labels: dict, res: dict, K: int = 10000, perms: int = 10000) -> dict:
 
 def calibration(labels: dict, res: dict, profile: str = "evidence_first") -> dict:
     """P(A>B) of the run's ranking (the full profile, as it stores pairwise probabilities) against the observed order."""
-    from hyparena.outcomes import calibration as cal
+    from hyparena.whole_system.outcomes import calibration as cal
     by_item = dict(zip((x["id"] for x in res["items"]), res["meta"]["ids"]))
     pw = ((res.get("ranking") or {}).get(profile) or {}).get("pairwise") or {}
     pairwise = {by_item[a]: {by_item[b]: q for b, q in row.items() if b in by_item} for a, row in pw.items() if a in by_item}
@@ -163,7 +164,7 @@ def calibration(labels: dict, res: dict, profile: str = "evidence_first") -> dic
 
 def l39(labels: dict, res: dict, K: int = 10000, draws: int = 10000) -> dict:
     """Our rank against the naive "approved first" order, paired over compounds (scripts/whole_system/naive_baseline.py)."""
-    from hyparena.backtest import tied_scores
+    from hyparena.whole_system.backtest import tied_scores
     from scripts.whole_system.naive_baseline import compound_units, naive_scores, paired
     ours = tied_scores(labels, res, "all", K)
     naive = naive_scores(res, set(ours))

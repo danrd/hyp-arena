@@ -166,7 +166,7 @@ class GuardedClient:
         self._slots = threading.BoundedSemaphore(max(1, concurrency))
         self.calls = 0
         self.failures = 0
-        self.max_usd = max_usd                    # a cost cap in USD, priced by hyparena.usage from the tokens the API returned
+        self.max_usd = max_usd                    # a cost cap in USD, priced by hyparena.reports.usage from the tokens the API returned
         self.usd = 0.0
         self.tokens_in = self.tokens_out = 0
         self.by_family: dict[str, int] = {}
@@ -187,9 +187,9 @@ class GuardedClient:
             self._sleep(wait)
 
     def _count(self, reply, family: str) -> None:
-        """Tokens and USD of a reply (hyparena.usage prices it from configs/prices.yaml)."""
+        """Tokens and USD of a reply (hyparena.reports.usage prices it from configs/prices.yaml)."""
         from datetime import datetime, timezone
-        from hyparena.usage import cost
+        from hyparena.reports.usage import cost
         ti, to = int(getattr(reply, "tokens_in", 0) or 0), int(getattr(reply, "tokens_out", 0) or 0)
         usd = cost(getattr(reply, "model_id", "") or "", ti, to, getattr(reply, "family", "") or family,
                    datetime.now(timezone.utc).isoformat()) or 0.0

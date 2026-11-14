@@ -1,7 +1,7 @@
 """normalize_card/v13 (2026-11-12): role derived from primary / stated_as, background, code fields of the experiment."""
 from hyparena.card.models import HypothesisCard
 from hyparena.card.normalizer import author_refs, derive_roles, duration_class, registry_design, v13_code_fields
-from hyparena.card.rules import core_span_problems, validate_card
+from hyparena.scoring.rules import core_span_problems, validate_card
 
 TEXT = ("A trial registered to test the following.\nConditions: Sarcopenia\n"
         "Summary: whey protein with regular physical activity would increase muscle mass and strength in sarcopenic elderly "

@@ -1,7 +1,7 @@
 from hyparena.card import llm
 from hyparena.card.models import Claim, HypothesisCard
-from hyparena.card.search import ALTERNATIVE_NOTE, model_queries
-from hyparena.card.verifier import queries
+from hyparena.search.search import ALTERNATIVE_NOTE, model_queries
+from hyparena.reading.verifier import queries
 
 CARD = HypothesisCard.model_validate({
     "id": "H-1", "hypothesis_type": "interventional", "claim_plain": "Squats improve SPPB in pre-sarcopenia.",

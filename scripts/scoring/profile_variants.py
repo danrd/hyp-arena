@@ -13,9 +13,10 @@ import json
 
 from scipy.stats import spearmanr
 
-from hyparena.card import alternatives_d, aspid_v3, rules_v32, v3_extra
-from hyparena.card import novelty_v34 as nv
-from hyparena.card import trend_genetics as tg
+from hyparena.alternatives import alternatives_d
+from hyparena.scoring import aspid_v3, rules_v32, v3_extra
+from hyparena.novelty import novelty_v34 as nv
+from hyparena.scoring import trend_genetics as tg
 from hyparena.card.models import ClaimVerification, HypothesisCard
 from scripts.common.ablation import auc_of
 from scripts.common.v34_check import CAL, PROS

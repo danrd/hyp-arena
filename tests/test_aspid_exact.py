@@ -4,8 +4,8 @@ import math
 import numpy as np
 import pytest
 
-from hyparena.aspid import IndicatorSpec, Profile, aggregate
-from hyparena.snapshot import places
+from hyparena.scoring.aspid import IndicatorSpec, Profile, aggregate
+from hyparena.whole_system.snapshot import places
 
 def _exact_simplex_reference(Q: np.ndarray, mode: str, k_top: int = 2) -> dict:
     """Numerically calculate exact expected values and probabilities over a fine grid of weights."""

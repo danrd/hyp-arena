@@ -15,9 +15,9 @@ from scripts.common.v34_check import PROS, parts
 def run() -> dict:
     if os.environ.get("ALLOW_PAID") != "1":
         raise SystemExit("paid: set ALLOW_PAID=1")
-    from hyparena.card import alternatives_v3 as av
+    from hyparena.alternatives import alternatives_v3 as av
     from hyparena.card.llm import ask
-    from hyparena.card.pipeline import _client
+    from hyparena.pipeline import _client
     from hyparena.tools import pubmed
     run_ = json.loads((PROS / "run_60.json").read_text())
     texts = {json.loads(l)["id"]: json.loads(l)["text"] for l in (PROS / "texts_60.jsonl").read_text().splitlines() if l.strip()}

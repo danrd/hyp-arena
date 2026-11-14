@@ -10,7 +10,7 @@ from typing import Any, Callable, Optional
 
 from agent_kit.refine import RefineResult, loop
 
-from hyparena.state import Provenance
+from hyparena.coscientist.state import Provenance
 
 
 def parse_json(text: str) -> Optional[dict]:

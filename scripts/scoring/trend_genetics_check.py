@@ -12,8 +12,8 @@ from collections import Counter
 
 from scipy.stats import spearmanr
 
-from hyparena.backtest import tied_auc
-from hyparena.card import rules_v32, trend_genetics as tg, v3_extra
+from hyparena.whole_system.backtest import tied_auc
+from hyparena.scoring import rules_v32, trend_genetics as tg, v3_extra
 from hyparena.card.models import ClaimVerification, HypothesisCard
 from scripts.data.ctgov_outcomes import KG
 

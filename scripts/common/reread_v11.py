@@ -35,9 +35,9 @@ def items(pool: str):
 def run(pool: str, limit: int = 0, version: str = "v11") -> dict:
     if os.environ.get("ALLOW_PAID") != "1":
         raise SystemExit("paid: set ALLOW_PAID=1")
-    from hyparena.card import rules_v3 as r3
-    from hyparena.card.pipeline import _client
-    from hyparena.card.verifier import verify_claim
+    from hyparena.scoring import rules_v3 as r3
+    from hyparena.pipeline import _client
+    from hyparena.reading.verifier import verify_claim
     out_p = (PROS if pool == "prospective" else CAL) / f"reread_{version}.json"
     done = json.loads(out_p.read_text()) if out_p.exists() else {}
     tasks = []

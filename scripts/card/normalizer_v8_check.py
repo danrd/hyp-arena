@@ -31,7 +31,7 @@ def texts() -> list[dict]:
 
 def run() -> None:
     from hyparena.card.normalizer import normalize
-    from hyparena.card.pipeline import _client
+    from hyparena.pipeline import _client
     client, _ = _client("configs/v3-flash.yaml", False, 120)
     done = json.loads(OUT.read_text()) if OUT.exists() else {}
     for t in texts():
@@ -48,7 +48,7 @@ def measures(cards: dict, stated=MECHANISM_STATED) -> dict:
     the effect (delivery, engagement, pathway) or an effect link the text says leads to the outcome, i.e. any of these with
     a subject other than the intervention; parallel_as_chain: two or more effect links whose subject is the intervention."""
     from hyparena.card.models import HypothesisCard
-    from hyparena.card.rules import admit
+    from hyparena.scoring.rules import admit
     out = {"cards": len(cards), "unparsed": [], "mechanism": [], "parallel_as_chain": []}
     for u, c in cards.items():
         if c is None:

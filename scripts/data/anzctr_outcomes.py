@@ -67,7 +67,7 @@ def aging_itself(conds: list[str]) -> bool:
 
 def plan() -> dict:
     from hyparena.tools import pubmed
-    from hyparena.backtest import _pubdates
+    from hyparena.whole_system.backtest import _pubdates
     recs_all = {}
     for path in sorted(PAGES.iterdir()):
         r = record(path)

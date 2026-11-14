@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from hyparena.card import rules_v3 as r3
+from hyparena.scoring import rules_v3 as r3
 from hyparena.card.models import ClaimVerification
 from tests.test_rules_v3 import card, claim, rec
 

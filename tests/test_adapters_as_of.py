@@ -4,7 +4,7 @@ import pytest
 import httpx
 
 from hyparena.tools import europepmc, clinicaltrials, opengenes, pubtator, pubmed, search
-from hyparena.state import Evidence
+from hyparena.coscientist.state import Evidence
 from hyparena.tools.http import Http
 
 

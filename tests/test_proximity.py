@@ -2,7 +2,7 @@
 mechanism neighbour."""
 import time
 
-from hyparena.card import proximity as px
+from hyparena.novelty import proximity as px
 from hyparena.card.entities import resolve_card
 from hyparena.card.models import Claim, Entity, HypothesisCard
 from tests.test_card_rules import load
@@ -107,9 +107,9 @@ def test_groups_and_duplicates():
 
 
 def test_competitors_become_alternatives():
-    from hyparena.card import alternatives
+    from hyparena.alternatives import alternatives
     from hyparena.card.models import Verification
-    from hyparena.card.rules import finalize
+    from hyparena.scoring.rules import finalize
     d = load("ex5_resveratrol_endpoint")
     a = card(cid="H-0006")
     rival = mech(card(cid="H-9"), "activates", "SIRT1")

@@ -66,7 +66,7 @@ def run(limit: int = 0, ids: str = "", runs: int = 1) -> dict:
     if os.environ.get("ALLOW_PAID") != "1":
         raise SystemExit("paid: set ALLOW_PAID=1")
     from hyparena.card.normalizer import normalize_union
-    from hyparena.card.pipeline import _client
+    from hyparena.pipeline import _client
     out_p = DIR / f"bench_card_v2_ours_{VERSION}.json"
     done = json.loads(out_p.read_text()) if out_p.exists() else {}
     want = set(ids.split(",")) if ids else None

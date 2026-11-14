@@ -3,9 +3,9 @@ import json
 
 import pytest
 
-from hyparena.card import evolution_rules as er
-from hyparena.card import rules_v3 as r3
-from hyparena.card.evolve_v3 import parent_parts
+from hyparena.evolution import evolution_rules as er
+from hyparena.scoring import rules_v3 as r3
+from hyparena.evolution.evolve_v3 import parent_parts
 from scripts.common.v34_check import PROS
 
 RUN = PROS / "run_60.json"
@@ -60,7 +60,7 @@ def test_dropped_record_against_not_read_is_a_violation():
 
 def test_decomposition_of_identical_axes_is_zero_and_parts_sum():
     card, cvs, alts, _ = _parent()
-    from hyparena.card import improvements as imp
+    from hyparena.evolution import improvements as imp
     e = imp.evaluate(card, cvs, alts)
     a = imp.axes(e, None, {"feasibility": 0.5, "N": "analog"})
     # unknown values are drawn per entry, so identical axes differ by Monte Carlo noise (about 0.002 at K = 500)

@@ -40,7 +40,7 @@ def test_measure_counts_a_missing_record_as_wrong():
 
 
 def test_effect_class_rule_a():
-    from hyparena.card.effect_class import effect_class, from_phrase
+    from hyparena.reading.effect_class import effect_class, from_phrase
     assert from_phrase("odds ratio = 4.89, 95% CI 1.89-11.27") == "large"
     assert from_phrase("relative risk = 1.60, 95% CI: 1.03-2.49") == "medium"
     assert from_phrase("HR 0.79 (0.65-0.96)") == "medium" and from_phrase("RR 1.10 (95% CI 0.58, 2.07)") == "small"
@@ -73,7 +73,7 @@ def test_measure_v3_relevance_and_baselines():
 
 
 def test_relevance_check_targets_and_merge():
-    from hyparena.card.verifier import merge_relevance, relevance_targets
+    from hyparena.reading.verifier import merge_relevance, relevance_targets
     abstracts = {"1": {"title": "Exercise in old age.", "abstract": SOURCE.split(". ", 1)[1]}}
     neither = json.loads(_reply(stance="neither", intervention_match="exact"))["records"]
     assert relevance_targets(neither, abstracts) == ["1"]
@@ -96,7 +96,7 @@ def test_record_for_applies_saved_relevance_answers():
 
 
 def test_rescore_v3_counts_no_stance_records_only_in_the_sensitivity(monkeypatch):
-    from hyparena.card import rules_v3
+    from hyparena.scoring import rules_v3
     from scripts.whole_system.calibration import rescore_v3
     seen = []
     monkeypatch.setattr(rules_v3, "evaluate", lambda card, claims, alts, variant="v3": seen.append([len(c.evidence) for c in claims])

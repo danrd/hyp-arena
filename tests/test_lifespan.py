@@ -1,7 +1,7 @@
 """late_start (card spec 8a, 2026-10-21) and intervals in the aggregation (Aggregation_Spec 2)."""
 import numpy as np
 
-from hyparena.aspid import IndicatorSpec, aggregate, cardinal_range, expected_value
+from hyparena.scoring.aspid import IndicatorSpec, aggregate, cardinal_range, expected_value
 from hyparena.card import lifespan
 from hyparena.card.models import HypothesisCard
 from tests.test_card_rules import load

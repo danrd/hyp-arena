@@ -9,7 +9,7 @@ import threading
 from datetime import datetime, timezone
 from typing import Optional
 
-from hyparena.state import Evidence
+from hyparena.coscientist.state import Evidence
 from hyparena.tools.http import Http
 
 URL = "https://clinicaltrials.gov/api/v2/studies"

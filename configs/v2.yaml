@@ -1,4 +1,4 @@
-# Models for method v2 (hyparena/card/pipeline.py) through CometAPI. Needs COMET_API_KEY and ALLOW_PAID=1.
+# Models for method v2 (hyparena/pipeline.py) through CometAPI. Needs COMET_API_KEY and ALLOW_PAID=1.
 # The normalizer runs on the google family (gemini-3.5-flash): in a comparison on the card-spec examples
 # (2026-10-19) it split a mechanistic hypothesis into premise / outcome / mechanism as the specification
 # does, where gpt-5-nano, gemini-3.1-flash-lite and gpt-5-mini kept the premise as the outcome. The verifier

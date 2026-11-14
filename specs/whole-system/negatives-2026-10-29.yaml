@@ -1,10 +1,10 @@
 # Negative-sampling test on 20 new groups, 3 repeats of every arm: L2.1b, L2.2b, L3.6b (specs/whole-system/validation-criteria.yaml).
-# Fixed before the first model call (user decision 2026-10-29: 20 groups x 3 repeats). Code: hyparena/negatives.py.
+# Fixed before the first model call (user decision 2026-10-29: 20 groups x 3 repeats). Code: hyparena/whole_system/negatives.py.
 id: negatives-2026-10-29
 kind: negative_sampling
 
 groups:
-  source: DrugAge (current release), hyparena.negatives.select
+  source: DrugAge (current release), hyparena.whole_system.negatives.select
   n: 20
   size: 10
   min_pubs: 2
@@ -22,7 +22,7 @@ arms:
     verifiers: [deepseek]
     repeats: "r0 normalizes and verifies; r1 and r2 reuse the cards of r0 (--cards-from) and repeat verification and ranking. Reason: the normalizer agreed fully with itself under repeats of the same text (L1.8, L1.9), and it is the costliest call (Gemini 3.5 Flash)."
   L0:
-    what: Co-Scientist-style tournament, one family (hyparena.ladder L0)
+    what: Co-Scientist-style tournament, one family (hyparena.coscientist.ladder L0)
     config: configs/neg-l0-deepseek.yaml
     repeats: "seeds 0, 1, 2"
     cycles: 20

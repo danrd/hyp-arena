@@ -37,7 +37,7 @@ def subset() -> None:
 
 def run() -> None:
     for arm, cfg in ARMS.items():
-        subprocess.run([sys.executable, "-m", "hyparena.negatives", "v2", "--data", str(SUB), "--config", cfg, "--verifiers", "deepseek",
+        subprocess.run([sys.executable, "-m", "hyparena.whole_system.negatives", "v2", "--data", str(SUB), "--config", cfg, "--verifiers", "deepseek",
                         "--tag", f"nrm-{arm}", "--out-dir", str(OUT), "--max-calls", "200"], check=True)
 
 

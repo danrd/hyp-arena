@@ -4,10 +4,10 @@ from pathlib import Path
 
 import yaml
 
-from hyparena.card import rules_v3 as r3
-from hyparena.card import v3_levels as lv
-from hyparena.card.effect_class import from_phrase
-from hyparena.card import aspid_v3, rules_v32 as r32
+from hyparena.scoring import rules_v3 as r3
+from hyparena.scoring import v3_levels as lv
+from hyparena.reading.effect_class import from_phrase
+from hyparena.scoring import aspid_v3, rules_v32 as r32
 
 MANUAL = Path(__file__).resolve().parents[1] / "docs" / "method-v3-manual.md"
 HISTORY = Path(__file__).resolve().parents[1] / "archive" / "docs" / "method-history.md"   # earlier versions
@@ -51,11 +51,11 @@ def test_manual_v32_constants_and_profiles_equal_the_code():
     assert r32.precision(None) == v["precision"]["floor"] and r32.precision(v["precision"]["full_at_n"]) == 1.0
     assert r32.precision(v["precision"]["full_at_n"] - 1) < 1.0
     assert {k: p.tiers for k, (p, _) in aspid_v3.load().items()} == c["profiles"]
-    from hyparena.card import novelty_v34 as nv
+    from hyparena.novelty import novelty_v34 as nv
     assert c["v34"] == {"preclinical_precision": r32.PRECLINICAL_PRECISION, "novelty_levels": list(nv.LEVELS)}
-    from hyparena.card import review_kind as rk
+    from hyparena.reading import review_kind as rk
     assert c["meta_certainty"] == {**rk.CERTAINTY_WEIGHT, "not_reported": rk.NOT_REPORTED}
-    from hyparena.card import v3_extra as vx                   # feasibility, written out after an outside report (2026-11-11)
+    from hyparena.scoring import v3_extra as vx                   # feasibility, written out after an outside report (2026-11-11)
     f = c["feasibility"]
     assert f["system"] == vx.SYSTEM_COST
     assert {k: round(v, 6) for k, v in vx.DURATION_COST.items()} == f["duration"]
@@ -67,7 +67,7 @@ def test_manual_v32_constants_and_profiles_equal_the_code():
 def test_manual_worked_example_is_what_the_code_gives(monkeypatch):
     monkeypatch.setattr(r32, "EMPTY_SLOTS", "count")                     # history: v3.3-v3.6 averaged empty slots in
     monkeypatch.setattr(r32, "STEPS_SLOT", "separate")                   # history: each step was its own place until v3.10
-    from hyparena.card import rules_v3 as r3
+    from hyparena.scoring import rules_v3 as r3
     from hyparena.card.models import ClaimVerification
     from tests.test_analyze import _case
     from tests.test_rules_v3 import rec
@@ -83,7 +83,7 @@ def test_manual_worked_example_is_what_the_code_gives(monkeypatch):
     assert f"| S {e2.links['c2'][0]:.3f} | | {e2.P:.3f} | {e2.support_share:.3f} | | {e2.scope} | {e2.V:.3f} |" in text
     e3 = ev([ClaimVerification(id="c2", counterevidence=[rec(6, "animal", n=40, effect="large")])])
     assert f"| S {e3.links['c2'][0]:.3f} | | {e3.P:.3f} | {e3.support_share:.3f} |" in text
-    from hyparena.card import aspid_v3
+    from hyparena.scoring import aspid_v3
     pts = {k: ({"P": x.P, "scope": x.scope, "I": x.I, "headroom_I": x.I, "gate": "pass"}, {"support_share": x.support_share, "chain_state": x.chain_state}) for k, x in (("a", e), ("b", e2))}
     for prof in ("evidence", "funding"):
         r = aspid_v3.rank(pts, prof, K=10000)
@@ -93,7 +93,7 @@ def test_manual_worked_example_is_what_the_code_gives(monkeypatch):
 def test_manual_worked_example_v34(monkeypatch):
     monkeypatch.setattr(r32, "EMPTY_SLOTS", "count")                     # history: v3.3-v3.6 averaged empty slots in
     monkeypatch.setattr(r32, "STEPS_SLOT", "separate")                   # history: each step was its own place until v3.10
-    from hyparena.card import novelty_v34 as nv
+    from hyparena.novelty import novelty_v34 as nv
     from hyparena.card.models import ClaimVerification
     from tests.test_analyze import _case
     from tests.test_rules_v3 import rec
@@ -110,7 +110,7 @@ def test_manual_worked_example_v34(monkeypatch):
     e3 = ev([ClaimVerification(id="c2", counterevidence=[rec(6, "animal", n=40, effect="large")])])
     assert f"| v3.4, with one mouse study of 40 against c2 | | S {e3.links['c2'][0]:.3f} | | {e3.P:.3f} | {e3.support_share:.3f} |" in text
     assert nv.novelty(c, cvs, e) == "new_context" and "Novelty: new context" in text
-    from hyparena.card import aspid_v3
+    from hyparena.scoring import aspid_v3
     pts = {k: ({"P": x.P, "scope": x.scope, "I": x.I, "headroom_I": x.I, "gate": "pass"},
                {"support_share": x.support_share, "chain_state": x.chain_state, "N": "new_context"}) for k, x in (("a", e), ("b", e2))}
     for prof, (p, ids) in aspid_v3.load().items():
@@ -152,8 +152,8 @@ def test_manual_v36_constants_equal_the_code():
 
 def test_manual_names_table_matches_code():
     """Section 10a lists every display name the code uses (user note 2026-11-09: outside reports must use the same names)."""
-    from hyparena import report_html as rh
-    from hyparena import report_v2 as r2
+    from hyparena.reports import report_html as rh
+    from hyparena.reports import report_v2 as r2
     text = (Path(__file__).resolve().parents[1] / "docs" / "method-v3-manual.md").read_text(encoding="utf-8")
     sec = text[text.index("## 10a."):text.index("## 11.")]
     pairs = [(k, v[0]) for d in (rh.IND_NAMES, rh.LINK_NAMES, rh.DESIGN_NAMES, rh.DISC, r2.FLAG_NAMES) for k, v in d.items()]

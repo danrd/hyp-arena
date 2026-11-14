@@ -46,7 +46,7 @@ def _ask(client, family, k, p, meta, res, log):
 def run() -> dict:
     if os.environ.get("ALLOW_PAID") != "1":
         raise SystemExit("paid: set ALLOW_PAID=1")
-    from hyparena.card.pipeline import _client
+    from hyparena.pipeline import _client
     from hyparena.tools import pmc, pubmed
     out = {}
     usd = 0.0

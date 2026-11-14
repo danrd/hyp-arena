@@ -1,6 +1,6 @@
 from hyparena.card.models import Claim, EvidenceRecord
-from hyparena.card import rules_v32 as r32
-from hyparena.card.review_kind import certainty_factor, certainty_from_abstract, design_from_pubtypes
+from hyparena.scoring import rules_v32 as r32
+from hyparena.reading.review_kind import certainty_factor, certainty_from_abstract, design_from_pubtypes
 
 
 def test_design_follows_pubmed_publication_types():

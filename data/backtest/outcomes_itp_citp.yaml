@@ -1,6 +1,6 @@
 # Post-2022 outcomes of the multi-site programs (ITP: mice; CITP: Caenorhabditis), for backtests with T after
 # 2022 (card spec 8a, Data_Sources 9.4). Curated by hand from the PubMed abstracts of the batch papers on
-# 2026-10-20; every `quote` is verbatim from the abstract of `pmid` (python -m hyparena.backtest check-outcomes).
+# 2026-10-20; every `quote` is verbatim from the abstract of `pmid` (python -m hyparena.whole_system.backtest check-outcomes).
 # DrugAge is not a source here: its invertebrate entries end around 2021 and Build 5 added 7 papers from
 # 2023-2024 only.
 #

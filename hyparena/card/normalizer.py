@@ -12,7 +12,7 @@ from pydantic import ValidationError
 from hyparena.card.llm import ask
 from hyparena.card.models import Hallmark, HypothesisCard, Relation
 from hyparena.card.canonical import canonicalize
-from hyparena.card.rules import anchor_core, core_span_problems, mark_inherited, set_sex_scope, validate_card
+from hyparena.scoring.rules import anchor_core, core_span_problems, mark_inherited, set_sex_scope, validate_card
 
 TEMPLATE = ("normalize_card", "v6")       # v6 adopted 2026-10-29 by the user's decision, see archive/docs/rules-method.md
 

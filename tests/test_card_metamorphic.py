@@ -3,8 +3,8 @@ import pytest
 import yaml
 
 from hyparena.card.models import HypothesisCard, Verification, Intervention
-from hyparena.card.rules import finalize, statuses
-from hyparena.card import verifier
+from hyparena.scoring.rules import finalize, statuses
+from hyparena.reading import verifier
 from hyparena.tools import pubmed
 
 FIX = Path(__file__).parent / "fixtures" / "cards"

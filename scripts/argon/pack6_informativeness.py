@@ -7,7 +7,7 @@ from __future__ import annotations
 import json
 import sys
 
-from hyparena.card import rules_v32 as r32
+from hyparena.scoring import rules_v32 as r32
 from hyparena.card.models import Claim
 from scripts.common.v34_check import CAL, PROS, parts
 
