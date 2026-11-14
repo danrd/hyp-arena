@@ -208,7 +208,7 @@ def retrieve_filtered(client, family: str, avoid, claim, card, as_of: Optional[s
     4. a cheap model rates the first 100 from title and abstract (0-3);
     5. read: every paper rated 3, filled up to 10 with papers rated 2, at most 20.
     With no candidates the keyword queries of the verifier are used as before."""
-    from hyparena.card import rank
+    from hyparena.card import search_rank as rank
     from hyparena.card.verifier import queries as keyword_queries
     from hyparena.tools import pubmed
     qs = model_queries(client, family, avoid, claim, card, as_of, log)

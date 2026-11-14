@@ -28,7 +28,7 @@ KG = Path(__file__).resolve().parents[2] / "longevity-kg"
 DIR = KG / "reviews" / "argon-2026-11-12"
 CAL = KG / "hypothesis_sources" / "calibration"
 KEEP = 20
-from hyparena.card.rank import STOP, bm25, query_terms as _terms, tokens as _tok   # noqa: E402,F401
+from hyparena.card.search_rank import STOP, bm25, query_terms as _terms, tokens as _tok   # noqa: E402,F401
 
 
 def rrf(orders: list[list[str]], k: int = 60) -> list[str]:

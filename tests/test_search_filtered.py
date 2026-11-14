@@ -1,5 +1,5 @@
 """Search mode "filtered" (hyparena/card/search.py, retrieve_filtered; search benchmark 2026-11-14)."""
-from hyparena.card import rank, search
+from hyparena.card import search, search_rank as rank
 from hyparena.card.models import HypothesisCard
 
 
