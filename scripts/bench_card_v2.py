@@ -2,7 +2,7 @@
 not from a registry) and 20 (the 60 texts of pack 17 labelled again). specs/benchmark-card-2026-11-12.yaml.
 
     python -m scripts.bench_card_v2 dry                              # free: calls, tokens and the price
-    ALLOW_PAID=1 python -m scripts.bench_card_v2 run [--limit N]     # normalize_card/v15, two parses united
+    ALLOW_PAID=1 [CARD_VERSION=v16] python -m scripts.bench_card_v2 run [--ids P01,..|--registry] [--runs 1]
     python -m scripts.bench_card_v2 score [--system ours_v15]        # free
 
 Measures (claims matched one-to-one by phrase overlap, scripts/bench_card._match): claim recall and precision (one-to-one
@@ -29,7 +29,7 @@ DIR = KG / "reviews" / "argon-2026-11-13"
 OLD = KG / "reviews" / "argon-2026-11-12"
 CONFIG = "configs/v3-flash-n10.yaml"
 PRICE = {"google": (1.5, 9.0)}           # USD per M tokens (Gemini Flash, no peak price)
-VERSION = "v15"
+VERSION = os.environ.get("CARD_VERSION", "v15")   # normalize_card template; v16: CARD_VERSION=v16
 
 
 def texts() -> list[dict]:
@@ -44,12 +44,18 @@ def gold() -> dict:
     return g
 
 
-def dry() -> dict:
+def registry_ids() -> list[str]:
+    """The 40 registry trials of pack 20 (the text starts "A trial registered to test")."""
+    return [t["id"] for t in texts() if t["pack"] == 20 and t["text"].startswith("A trial registered")]
+
+
+def dry(ids: str = "", runs: int = 1) -> dict:
     tmpl = (Path(__file__).resolve().parents[1] / "hyparena" / "prompts" / "normalize_card" / f"{VERSION}.j2").read_text()
-    ts = texts()
+    want = set(ids.split(",")) if ids else None
+    ts = [t for t in texts() if want is None or t["id"] in want]
     tin = sum(len(tmpl) / 3.6 + 600 + len(t["text"]) / 3.2 for t in ts)          # template, lists, text
     # two parses; up to three rounds each; measured on v13 (pack 17): 3.85 calls and 3 640 output tokens per text
-    calls, tout = 3.85 * len(ts) * 1.15, 3640 * len(ts) * 1.15
+    calls, tout = 3.85 / 2 * runs * len(ts) * 1.15, 3640 / 2 * runs * len(ts) * 1.15
     tin_all = tin / len(ts) * calls
     usd = tin_all * PRICE["google"][0] / 1e6 + tout * PRICE["google"][1] / 1e6
     return {"texts": len(ts), "calls_est": round(calls), "tokens_in_est": round(tin_all), "tokens_out_est": round(tout),
@@ -184,13 +190,33 @@ def score_system(cards: dict, gold_: dict, v15: bool) -> dict:
             "population_condition": r("condition_ok", "condition_n")}
 
 
+def first_parse(cards: dict) -> dict:
+    """The union's first parse alone: the claims the second parse added are dropped (stability.added_from_second)."""
+    out = {}
+    for k, v in cards.items():
+        if not v.get("card"):
+            out[k] = v
+            continue
+        drop = set((v.get("stability") or {}).get("added_from_second") or [])
+        c = dict(v["card"], claims=[x for x in v["card"].get("claims") or [] if x.get("id") not in drop])
+        out[k] = dict(v, card=c)
+    return out
+
+
 def score() -> dict:
     g = gold()
     out = {}
-    f = DIR / f"bench_card_v2_ours_{VERSION}.json"
-    if f.exists():
+    reg = set(registry_ids())
+    greg = {k: v for k, v in g.items() if k in reg}
+    for ver in ("v15", "v16"):
+        f = DIR / f"bench_card_v2_ours_{ver}.json"
+        if not f.exists():
+            continue
         cards = json.loads(f.read_text())
-        out[f"ours_{VERSION}"] = {"all": score_system(cards, g, True),
+        out[f"ours_{ver}_registry40"] = score_system(cards, greg, True)
+        if ver == "v15":
+            out["ours_v15_first_parse_registry40"] = score_system(first_parse(cards), greg, True)
+        out[f"ours_{ver}"] = {"all": score_system(cards, g, True),
                                    "pack19": score_system(cards, {k: v for k, v in g.items() if k.startswith("N")}, True),
                                    "pack20": score_system(cards, {k: v for k, v in g.items() if k.startswith("P")}, True)}
     key20 = json.loads((DIR / "pack_20_key.json").read_text())
@@ -206,6 +232,8 @@ if __name__ == "__main__":
     ap.add_argument("cmd", choices=["dry", "run", "score"])
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--ids", default="")
+    ap.add_argument("--registry", action="store_true", help="the 40 registry texts of pack 20")
     ap.add_argument("--runs", type=int, default=1)
     a = ap.parse_args()
-    print(json.dumps({"dry": dry, "score": score}[a.cmd]() if a.cmd != "run" else run(a.limit, a.ids, a.runs), indent=1))
+    ids = ",".join(registry_ids()) if a.registry else a.ids
+    print(json.dumps(score() if a.cmd == "score" else dry(ids, a.runs) if a.cmd == "dry" else run(a.limit, ids, a.runs), indent=1))

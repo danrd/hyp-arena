@@ -126,3 +126,8 @@ two_parses_2026_11_14:   # free, the 90 v15 cards
 claim_matching_by_label_2026_11_14:
   change: "scripts/bench_card_v2.py: claims matched by phrase, then the rest by the system claim's object and measure against the gold object (recall_phrase_or_label)"
   result: "v15 90 texts: 0.71 / 0.69 (phrase only 0.57 / 0.56); pack 20 v15 0.67 / 0.70 vs v13 0.67 / 0.62; 22 weak: working model 0.71 / 0.63, strong 0.83 / 0.72; P04 0 -> 0.67"
+v16_registry40_2026_11_14:   # written BEFORE the run; CARD_VERSION=v16 scripts/bench_card_v2.py run --registry --runs 1
+  set: "the 40 registry trials of pack 20 (gold card_gold_v2); one parse (the working default); estimate 1.81 USD, cap MAX_USD 2.5"
+  compared_with: "v15 first parse on the same 40 texts (one parse each; claims added by v15's second parse dropped): recall phrase-or-label 0.59, precision 0.79, outcome / step / premise kappa 0.644, main outcome 0.85, main factor 1.0, population condition 0.725; v15 union of two parses reported apart (0.63 / 0.72, kappa 0.655, main outcome 0.925)"
+  pass_rule: "v16 replaces v11 as the working card (through the manual) when outcome / step / premise kappa and main outcome are not lower than v15 first parse's and recall phrase-or-label is not lower by more than 0.03; failed cards counted as empty"
+  extension: "the 50 other texts (pack 19 and the non-registry part of pack 20, about 2.3 USD) only if the result is within 0.03 of the rule or the non-registry route is decided"
