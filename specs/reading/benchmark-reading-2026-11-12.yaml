@@ -69,3 +69,13 @@ result:   # 2026-11-12 13:3x-14:1x UTC off-peak; scripts/reading/bench_reading.p
     baseline is better on alternatives (it is not held to the alternative's distinguishing part, which the gold does not
     ask either for every pair) and records many mechanism pairs Argon does not (P 0.17). v13 is ahead of v9 on both
     measures. Intervals are wide: 20 links.
+loss_breakdown_2026_11_14:
+  run: "v13 again on the 20 links of pack 16 with every step kept (scripts/reading/bench_reading.py run --system v13_trace, then losses); 0.051 USD"
+  stages: "of 94 gold findings: found 32; the filter said no 3; the reader answered none 57; the other side 2; code checks dropped 0"
+  by_kind: {same_intervention_primary: "18 of 22 (0.82)", same_class_or_category_primary: "4 of 23 (0.17)", review_or_meta_analysis: "7 of 26 (0.27)", alternative_without_distinguishing_part: "3 of 23"}
+  rule_consistent_recall: >-
+    a finding for a competing explanation counts only when it shows the part that differs from the hypothesis (method rule);
+    the gold marks 23 findings for alternatives with distinguishing_part_shown false: without them the recall of v13 is
+    29 of 71 = 0.41. Reported next to the recall of the original definition from now on; the pass rules stay as written.
+  files: "longevity-kg reviews/argon-2026-11-12/bench_reading_v13_trace.json, bench_reading_losses.json"
+
