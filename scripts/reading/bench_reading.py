@@ -213,10 +213,24 @@ def losses(system: str = TRACE) -> dict:
                 stage = "code_dropped"
             else:
                 stage = "found"
-            rows.append({"rid": item["id"], "pmid": pm, "stage": stage, "match": p.get("intervention_match"),
-                         "reader_match": rd.get("intervention_match"), "stratum": key[item["id"]]["stratum"]})
+            stratum = key[item["id"]]["stratum"]
+            if stratum == "alternative" and p.get("distinguishing_part_shown") is False:
+                kind = "alternative_without_distinguishing_part"
+            elif p.get("design") in ("meta_analysis", "review"):
+                kind = "review_or_meta_analysis"
+            elif p.get("intervention_match") in ("class", "category"):
+                kind = "same_class_primary"
+            else:
+                kind = "same_intervention_primary"
+            rows.append({"rid": item["id"], "pmid": pm, "stage": stage, "match": p.get("intervention_match"), "kind": kind,
+                         "reader_match": rd.get("intervention_match"), "stratum": stratum, "holdout": key[item["id"]]["holdout"]})
     by = lambda f: {k: dict(Counter(r["stage"] for r in rows if r[f] == k)) for k in sorted({r[f] for r in rows}, key=str)}
-    out = {"findings": len(rows), "stage": dict(Counter(r["stage"] for r in rows)), "by_intervention_match": by("match"),
+    rec = lambda rs: f"{sum(r['stage'] == 'found' for r in rs)} of {len(rs)}" if rs else None
+    rule = [r for r in rows if r["kind"] != "alternative_without_distinguishing_part"]
+    out = {"findings": len(rows), "found": rec(rows), "found_by_the_alternative_rule": rec(rule),
+           "found_holdout": rec([r for r in rows if r["holdout"]]),
+           "found_by_kind": {k: rec([r for r in rows if r["kind"] == k]) for k in sorted({r["kind"] for r in rows})},
+           "stage": dict(Counter(r["stage"] for r in rows)), "by_intervention_match": by("match"),
            "by_stratum": by("stratum"), "rows": rows}
     (DIR / ("bench_reading_losses.json" if system == TRACE else f"bench_reading_losses_{system}.json")).write_text(json.dumps(out, indent=1, ensure_ascii=False) + "\n")
     return {k: v for k, v in out.items() if k != "rows"}
