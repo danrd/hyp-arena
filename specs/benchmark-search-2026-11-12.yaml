@@ -77,3 +77,13 @@ gold_fixed_by_pack_21_2026_11_14:   # scripts/pack21_pmid_fix.py apply; longevit
     by_the_rule: "the citation step over the first 5 papers of the word-match order passes (+0.10 over word match alone, +0.24 over the round-robin merge; holdout +0.16); similar articles and review references pass each alone but add nothing at 20 per claim on top of citations (all three 0.42 < citations 0.44): the order, not the candidate set, is then the limit"
     reading: "with the three link kinds 84% of the gold is among the candidates of a trial (about 2400 papers); word match brings 42-44% into the 20 per claim. The remaining gap (0.44 -> 0.84) is a ranking problem: a relevance step that reads meaning (a cheap LLM or embeddings) and a budget shared over the hypothesis"
     caveat: "linked papers are dated by year only in this check (the pipeline dates them exactly)"
+  result_budget:   # scripts/search_budget_check.py; longevity-kg reviews/argon-2026-11-12/search_budget_check.json
+    searches: "240 over 30 trials: 68 of card claims, 54 of analog claims, 118 of proposed alternatives; each reads 20"
+    same_slots_shared_by_weights: {equal_20: "recall 0.436, holdout 0.56, 88 papers per trial", card_x2: "0.436, 0.56, 91", card_x4_alternatives_half: "0.43, 0.48, 104", card_x8_alternatives_quarter: "0.45, 0.50, 113", no_alternatives: "0.45, 0.50, 111", card_only: "0.45, 0.50, 129"}
+    by_the_rule: "no weighting passes: at most +0.014 recall, with more distinct papers to read and a lower holdout; the equal share stays"
+    caveat: "the gold lists the literature of the hypothesis, not of its alternatives: it cannot show what the alternatives' own searches are worth"
+filter_experiment_2026_11_14:   # written BEFORE the run; scripts/search_filter_check.py, prompt search_relevance/v1
+  set: "the 238 searches of the 30 trials; the first 100 candidates of each (top 200 of each query, citations of the first 5, BM25) rated 0-3 by the cheap model (deepseek flash) from title and abstract (900 characters), 20 records per call"
+  cost: "estimate 1.19 USD (1143 calls, 7.3 M tokens in); cap MAX_USD 1.5"
+  measure: "recall of the gold (153 papers) when the 20 read per search are the highest rated (BM25 order within a rating), against BM25 alone (0.436, holdout 0.56); also at depth 40 and 60, and keeping 10"
+  admission_rule: "the filter enters the proposal for the manual when it adds at least 0.05 recall over BM25 alone at 20 per search and is not below it on the holdout (a paid step must earn more than a free one); the ceiling at depth 100 is the share of the gold among the 100 candidates"
