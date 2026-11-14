@@ -1,4 +1,4 @@
-# Normalizer acceptance check (specs/normalizer-acceptance-2026-10-30.yaml), candidate A: method v2 as configs/v2-flash.yaml, but the
+# Normalizer acceptance check (specs/card/normalizer-acceptance-2026-10-30.yaml), candidate A: method v2 as configs/v2-flash.yaml, but the
 # normalizer (google family) is Gemini 3.5 Flash through its native endpoint with the hidden reasoning off (thinkingBudget 0);
 # through the OpenAI-compatible endpoint CometAPI cannot switch it off and bills it as output. Verifier unchanged (DeepSeek).
 rpm: 30

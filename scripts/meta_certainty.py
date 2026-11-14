@@ -1,4 +1,4 @@
-"""Certainty-aware weight of meta-analysis records (specs/meta-and-nulls-2026-11-09.yaml, meta_certainty).
+"""Certainty-aware weight of meta-analysis records (specs/reading/meta-and-nulls-2026-11-09.yaml, meta_certainty).
 
     ALLOW_PAID=1 python -m scripts.meta_certainty run     # -> calibration/meta_certainty.json
     python -m scripts.meta_certainty score                 # free

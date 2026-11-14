@@ -1,4 +1,4 @@
-"""Compare arms of the sources experiment (specs/sources-experiment-2026-11-07.yaml) on the 15 units, free:
+"""Compare arms of the sources experiment (specs/search/sources-experiment-2026-11-07.yaml) on the 15 units, free:
 old abstracts (v9, saved calibration runs), arm A (v10 + exact-population query), arm B (full texts, when run), Argon's graph.
 
     python -m scripts.sources_compare        # -> calibration/sources_compare.json

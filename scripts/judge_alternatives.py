@@ -1,4 +1,4 @@
-"""d of the proposed alternatives judged from the registry text (specs/informativeness-check-2026-11-08.yaml, fix_d).
+"""d of the proposed alternatives judged from the registry text (specs/alternatives/informativeness-check-2026-11-08.yaml, fix_d).
 Paid (DeepSeek V4.1 Flash through CometAPI), one call per trial.
 
     ALLOW_PAID=1 python -m scripts.judge_alternatives run --part dev|holdout   # -> prospective/judge_alternatives_<part>.json

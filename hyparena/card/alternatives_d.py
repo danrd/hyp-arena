@@ -1,5 +1,5 @@
 """The d of the proposed alternatives judged from the registry text (judge_alternatives/v2; user decision 2026-11-08,
-specs/informativeness-check-2026-11-08.yaml): it replaces the on_positive / on_negative that propose_alternatives/v1 set
+specs/alternatives/informativeness-check-2026-11-08.yaml): it replaces the on_positive / on_negative that propose_alternatives/v1 set
 from the compressed card. Applied where saved runs are read (scripts.v34_check.parts, scripts.ablation.units, the
 report builder). A unit without a judged d keeps its own."""
 from __future__ import annotations

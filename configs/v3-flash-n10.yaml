@@ -33,8 +33,8 @@ admission: graded
 
 # Method v3 (docs/archive/spec/method-v3.md): normalize_card/v7 (mechanism chain), the v3 verifier template, proposed alternatives, the
 # v3 rules (rules_v3: P, W, I, V, gate). verify_claim/v9 since 2026-11-05: extraction accepted on design, comparison and n
-# (specs/extraction-gold-v9-2026-11-05.yaml; relevance recall about 0.6, precision 1.0; the second relevance question is not used).
+# (specs/reading/extraction-gold-v9-2026-11-05.yaml; relevance recall about 0.6, precision 1.0; the second relevance question is not used).
 method: v3
 verify_version: v9
-normalize_version: v17   # normalize_card/v17 (2026-11-14): v16 + the experiment's prediction as a field, the control from the arms, one form for outcome claims (code checks); passed the rule on the 40 registry texts (specs/benchmark-card-2026-11-12.yaml, v17_all90_2026_11_14); v16: outcome / mechanism step / premise, main factor, population condition, topic and identifiers
+normalize_version: v17   # normalize_card/v17 (2026-11-14): v16 + the experiment's prediction as a field, the control from the arms, one form for outcome claims (code checks); passed the rule on the 40 registry texts (specs/card/benchmark-card-2026-11-12.yaml, v17_all90_2026_11_14); v16: outcome / mechanism step / premise, main factor, population condition, topic and identifiers
 normalize_runs: 1        # one parse (2026-11-14: a second parse added recall +0.04 and cost half of the calls; 2 = the union of two parses)

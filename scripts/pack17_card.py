@@ -1,4 +1,4 @@
-"""Argon pack 17: the card gold (docs/benchmarks/README.md, stage 2; specs/mechanism-chain-comparison-2026-11-11.yaml texts).
+"""Argon pack 17: the card gold (docs/benchmarks/README.md, stage 2; specs/card/mechanism-chain-comparison-2026-11-11.yaml texts).
 Free, deterministic (hash order), no model call. Writes the task in two parts and the hidden key to the private repository.
 
     python -m scripts.pack17_card build    # longevity-kg/reviews/argon-2026-11-12/pack_17{a,b}_task.json, pack_17_key.json

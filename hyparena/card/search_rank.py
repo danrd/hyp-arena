@@ -1,5 +1,5 @@
 """Ordering of search candidates before reading, by code: BM25 of the query terms against title and abstract (the
-search benchmark, specs/benchmark-search-2026-11-12.yaml, free_experiments_2026_11_14: recall 0.20 -> 0.34 at 20 per
+search benchmark, specs/search/benchmark-search-2026-11-12.yaml, free_experiments_2026_11_14: recall 0.20 -> 0.34 at 20 per
 claim over the round-robin merge of the queries)."""
 from __future__ import annotations
 

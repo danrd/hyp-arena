@@ -5,7 +5,7 @@
     Randomized Controlled Trial the reader called a review or "other" -> rct. Weights are unchanged (a systematic review
     without a pooled estimate still weighs as a review until a check says otherwise).
 (c) The certainty of a meta-analysis (GRADE) from its abstract by code; the design weight of a meta-analysis follows it:
-    high or moderate 1, low 1/2, very low 1/4, not reported 3/4 (specs/meta-and-nulls-2026-11-09.yaml, variant
+    high or moderate 1, low 1/2, very low 1/4, not reported 3/4 (specs/reading/meta-and-nulls-2026-11-09.yaml, variant
     "certainty": R2 0.697 and R3 0.582 against 0.702 and 0.593, inside the 0.03 rule; GRADE is GRADE's own rule).
 """
 from __future__ import annotations

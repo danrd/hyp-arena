@@ -6,7 +6,7 @@ the object, route words, Greek letters; prompt v6), on 15 regimens not used in L
     ALLOW_PAID=1 python -m scripts.repeat_l18_l19 run --out runs/stage5/l1_8b    # five pipeline runs: O1, O2, P, H, T
     python -m scripts.repeat_l18_l19 report --dir runs/stage5/l1_8b
 
-Measures and thresholds are those of L1.8 and L1.9 (specs/validation-criteria.yaml, L1.8b and L1.9b): the main claim is the outcome claim.
+Measures and thresholds are those of L1.8 and L1.9 (specs/whole-system/validation-criteria.yaml, L1.8b and L1.9b): the main claim is the outcome claim.
 The Co-Scientist baseline (L0) is not repeated; its numbers come from the first run of L1.9."""
 from __future__ import annotations
 

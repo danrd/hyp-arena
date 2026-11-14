@@ -1,4 +1,4 @@
-# One verifier family only, for the agreement check L1.10 (specs/validation-criteria.yaml): cards are reused, only the verifier changes,
+# One verifier family only, for the agreement check L1.10 (specs/whole-system/validation-criteria.yaml): cards are reused, only the verifier changes,
 # and with one family in the config the pipeline cannot fall back to another one. Needs COMET_API_KEY and ALLOW_PAID=1.
 rpm: 30
 concurrency: 4

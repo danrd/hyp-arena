@@ -410,7 +410,7 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
     cv.evidence += support
     cv.counterevidence += against
     pmids = []
-    full_text = search.endswith("+fulltext")              # sources experiment arm B (specs/sources-experiment-2026-11-07.yaml)
+    full_text = search.endswith("+fulltext")              # sources experiment arm B (specs/search/sources-experiment-2026-11-07.yaml)
     search = search.replace("+fulltext", "")
     if search == "fixed":                                 # read again the papers given in expert_pmids only (no search)
         pass

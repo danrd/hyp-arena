@@ -13,7 +13,7 @@ candidates:
 
   C1_context_by_code:
     idea: "the reader does not output the context label; code computes it from the claim's stated qualifiers and the paper's own context"
-    status: "covered by the paper skeleton (specs/paper-skeleton-2026-11-09.yaml): the skeleton stores the paper's context, longevity-kg tools/skeleton/match.py computes qualifiers_match and calls rules_v32.only_claim_qualifiers / context_v34 unchanged"
+    status: "covered by the paper skeleton (specs/reading/paper-skeleton-2026-11-09.yaml): the skeleton stores the paper's context, longevity-kg tools/skeleton/match.py computes qualifiers_match and calls rules_v32.only_claim_qualifiers / context_v34 unchanged"
     check: "none separate; adopted or not with the skeleton (its stage 1 and R2 / R3)"
 
   C2_same_finding_on_several_links:

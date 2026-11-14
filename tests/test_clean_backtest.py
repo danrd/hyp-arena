@@ -50,7 +50,7 @@ def test_probes_cover_the_other_species_only():
 
 def test_the_spec_fixes_units_and_the_policy_before_the_run():
     from hyparena import prespec
-    s = prespec.load("specs/clean-2024-12-31.yaml")
+    s = prespec.load("specs/whole-system/clean-2024-12-31.yaml")
     assert s["as_of"] == "2024-12-31" and s["policy"]["models"] == "none" and s["L3.3"]["dropped_indicators"] == ["late_start"]
     assert "per regimen" in s["units"]["L3.3"] and "per compound" in s["units"]["L3.9"] and s["expectations_before_run"]
 

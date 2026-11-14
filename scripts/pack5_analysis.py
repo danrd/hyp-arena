@@ -1,4 +1,4 @@
-"""Analysis of Argon pack 5 (specs/record-weight-2026-11-08.yaml references.R4_pairs_argon). Free.
+"""Analysis of Argon pack 5 (specs/scoring/record-weight-2026-11-08.yaml references.R4_pairs_argon). Free.
 
     python -m scripts.pack5_analysis
 """

@@ -19,7 +19,7 @@ from hyparena.card import rules_v32 as r32
 from hyparena.card.models import Claim, ClaimVerification, HypothesisCard
 
 STRICT_MODES = ("tune", "directed")          # rule 3 is a violation there; free mode reports the change
-ABSENCE_THRESHOLD = 5                        # rule 6: proposed in specs/directed-evolution-2026-11-09.yaml, fixed before a pilot
+ABSENCE_THRESHOLD = 5                        # rule 6: proposed in specs/evolution/directed-evolution-2026-11-09.yaml, fixed before a pilot
 INVASIVE = re.compile(r"\b(biops\w*|MRI|fMRI|PET|CT scan|computed tomography|imaging|ultrasound|HD-?sEMG|EMG|electromyograph\w*|"
                       r"lumbar puncture|CSF|cerebrospinal|muscle sample\w*|tissue sample\w*|endoscop\w*|clamp|tracer|isotope\w*)\b", re.I)
 ARMS = re.compile(r"\b(\d)\s*[x×]\s*(\d)(?:\s*[x×]\s*(\d))?\b|\b(\w+)[- ]arm(ed)?\b", re.I)

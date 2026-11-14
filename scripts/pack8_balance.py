@@ -1,4 +1,4 @@
-"""Argon pack 8: a second reader of the evidence balance, link by link (specs/balance-check-2026-11-08.yaml). Free.
+"""Argon pack 8: a second reader of the evidence balance, link by link (specs/scoring/balance-check-2026-11-08.yaml). Free.
 
     python -m scripts.pack8_balance build     # -> longevity-kg reviews/argon-2026-11-08/pack_8_task.json + pack_8_key.json
 """

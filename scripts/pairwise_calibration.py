@@ -5,7 +5,7 @@
 
 Units: pairs of regimens with different labels inside one half (the pairwise matrix is per pool). Forecast: P(positive beats negative).
 Measures: Brier score, ECE in 5 equal bins of the forecast, 95% bootstrap intervals resampling compounds. The criterion is in
-specs/validation-criteria.yaml (L3.11): pass = upper bound of the Brier interval below 0.25 and ECE not above 0.10; fail = Brier not below 0.25.
+specs/whole-system/validation-criteria.yaml (L3.11): pass = upper bound of the Brier interval below 0.25 and ECE not above 0.10; fail = Brier not below 0.25.
 """
 from __future__ import annotations
 

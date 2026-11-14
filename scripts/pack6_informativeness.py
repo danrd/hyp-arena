@@ -1,4 +1,4 @@
-"""Argon pack 6: a second reader of I (specs/informativeness-check-2026-11-08.yaml). Free (no model calls).
+"""Argon pack 6: a second reader of I (specs/alternatives/informativeness-check-2026-11-08.yaml). Free (no model calls).
 
     python -m scripts.pack6_informativeness build     # -> longevity-kg reviews/argon-2026-11-08/pack_6_task.json + pack_6_key.json
 """

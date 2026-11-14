@@ -1,4 +1,4 @@
-"""specs/record-weight-2026-11-08.yaml: the record weight and the fold of for / against, step by step. Free (no model calls;
+"""specs/scoring/record-weight-2026-11-08.yaml: the record weight and the fold of for / against, step by step. Free (no model calls;
 PubMed E-utilities for years and abstracts, cached in data/cache/pubmed).
 
     python -m scripts.record_weight_check step1          # -> calibration/record_weight_step1.json, prints the summary

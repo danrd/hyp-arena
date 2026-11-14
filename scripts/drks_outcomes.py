@@ -1,4 +1,4 @@
-"""Outcome labels for DRKS hypotheses (specs/drks-outcomes-2026-11-01.yaml).
+"""Outcome labels for DRKS hypotheses (specs/data/drks-outcomes-2026-11-01.yaml).
 
     python -m scripts.drks_outcomes plan                 # selection, documents, cost estimate (no model calls)
     ALLOW_PAID=1 python -m scripts.drks_outcomes run     # same labelling as scripts.ctgov_outcomes
@@ -90,7 +90,7 @@ def plan() -> dict:
             stats["kept"] += 1
             rows.append({"nct": did, "title": r["title"], "interventions": r["arms"][:600],
                          "primary_outcomes": [{"measure": r["primary_outcome"], "description": "", "time_frame": ""}], "sources": src[:co.MAX_PAPERS]})
-    CAND.write_text(yaml.safe_dump({"spec": "specs/drks-outcomes-2026-11-01.yaml", "items": cands}, allow_unicode=True, sort_keys=False, width=200))
+    CAND.write_text(yaml.safe_dump({"spec": "specs/data/drks-outcomes-2026-11-01.yaml", "items": cands}, allow_unicode=True, sort_keys=False, width=200))
     INPUTS.write_text("".join(json.dumps(x, ensure_ascii=False) + "\n" for x in rows))
     stats["est_usd"] = round(sum(len(json.dumps(x)) + 2500 for x in rows) / 4 / 1e6 * co.PRICE_IN, 4)
     return stats

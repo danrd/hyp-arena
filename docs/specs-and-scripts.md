@@ -1,23 +1,13 @@
-# Реестр спецификаций и скриптов (2026-11-12)
+# Реестр скриптов (2026-11-12; спецификации — в [`specs/README.md`](../specs/README.md))
 
 Спецификация (`specs/*.yaml`) — определения проверки, записанные до расчёта, и результат в конце. Скрипт (`scripts/*.py`) —
 её расчёт. Данные — в приватном `longevity-kg`, их реестр — `longevity-kg/DATA.md`. Статусы как там: **актуальный**
-(читается текущим методом v3.9, бенчмарком или планом в работе), **история** (на ней стоит число в мануале или решение;
+(читается текущим методом v3.10, бенчмарком или планом в работе), **история** (на ней стоит число в мануале или решение;
 не меняется), **заменено** (метод v1/v2; оставлено как запись решений).
 
-## Спецификации (60)
+## Спецификации
 
-| Группа | Спецификации | Статус |
-|---|---|---|
-| Планы и бенчмарки в работе | `benchmark-card-2026-11-12`, `benchmark-search-2026-11-12`, `benchmark-reading-2026-11-12`, `known-facts-test-2026-11-09`, `mechanism-chain-comparison-2026-11-11`, `paper-skeleton-2026-11-09`, `generation-2026-11-09`, `directed-evolution-2026-11-09`, `hypothesis-db-2026-11-09` (база собрана 2026-11-12, оценки и сайт — нет) | актуальный |
-| Предрегистрация (закреплено хешем) | `prospective-2026-11-06`, `prospective-llm-consensus-2026-11-07`, `prospective-pilot-2026-11-06` | актуальный, не меняется |
-| Метки исходов (эталон этапов 9 и 11) | `ctgov-outcomes-2026-10-30`, `ctgov-outcomes-2023-2026`, `isrctn-outcomes-2026-10-31`, `drks-`, `anzctr-`, `ntr-`, `umin-outcomes-2026-11-01`, `benchmark-v2`, `calibration-step3-2026-11-02`, `calibration-v3-2026-11-05`, `calibration-v3-fresh-2026-11-06`, `clean-2024-12-31`, `validation-criteria` | актуальный (источник меток) |
-| Проверки метода v3.x, принятые или отклонённые | `record-weight-2026-11-08`, `empty-slots-2026-11-09`, `informativeness-check-2026-11-08`, `novelty-check-2026-11-08`, `balance-check-2026-11-08`, `intervention-class-2026-11-11`, `meta-and-nulls-2026-11-09`, `llm-consensus-2026-11-07`, `v34-frontier-2026-11-07`, `v38-candidates-2026-11-10`, `link-scoring-2026-11-08`, `v32-independence-fold-2026-11-06`, `v33-2026-11-06`, `error-analysis-2026-11-06`, `estimand-2026-11-06`, `trend-genetics-2026-11-06`, `experiment-forecast-2026-11-07`, `evolution-v3-pilot-2026-11-06` | история |
-| Чтение и источники | `reading-gold-2026-11-08`, `reader-model-2026-11-08`, `reader-v12-2026-11-08`, `abstract-overstates-2026-11-09`, `sources-argon-2026-11-09`, `sources-experiment-2026-11-07`, `test-model-2026-11-09`, `argon-layers-2026-11-08`, `argon-comparison-2026-11-07` | история |
-| Карточка и извлечение | `normalizer-v8-2026-11-05`, `extraction-gold-v3-2026-11-04`, `-v3b-`, `-v8-`, `extraction-gold-v9-2026-11-05` | история |
-| Метод v1/v2 | `benchmark-v1`, `evolution-1`, `itp-backtest-2010`, `negatives-2026-10-29`, `normalizer-acceptance-2026-10-30` | заменено |
-
-Спецификации не удаляются: это запись того, что и почему было решено (как предрегистрация).
+Реестр спецификаций (65, по папкам этапов, со статусом и строкой о каждой) перенесён в [`specs/README.md`](../specs/README.md).
 
 ## Скрипты (100)
 
@@ -35,4 +25,4 @@
 `llm_catalog_check`, `rule_experiments` и их тесты (12 скриптов, 5 тестов); вернуть — из истории git.
 
 Оставлены: `aspid_calibration`, `aspid_sensitivity` (проверки агрегации ASPID, которая действует; тест —
-доказательство в `specs/validation-criteria.yaml`), `trace_page`, `clean_backtest`, `benchmark_v1`, `normalizer_acceptance`.
+доказательство в `specs/whole-system/validation-criteria.yaml`), `trace_page`, `clean_backtest`, `benchmark_v1`, `normalizer_acceptance`.

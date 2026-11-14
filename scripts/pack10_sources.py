@@ -1,4 +1,4 @@
-"""Argon pack 10: abstract vs PMC full text vs knowledge graph (specs/sources-argon-2026-11-09.yaml). Free (PubMed / PMC metadata).
+"""Argon pack 10: abstract vs PMC full text vs knowledge graph (specs/search/sources-argon-2026-11-09.yaml). Free (PubMed / PMC metadata).
 
     python -m scripts.pack10_sources build
 """

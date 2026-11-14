@@ -1,4 +1,4 @@
-"""Outcome labels for the ClinicalTrials.gov hypotheses (specs/ctgov-outcomes-2026-10-30.yaml).
+"""Outcome labels for the ClinicalTrials.gov hypotheses (specs/data/ctgov-outcomes-2026-10-30.yaml).
 
     python -m scripts.ctgov_outcomes plan                  # no model calls: final selection, outcome documents, cost estimate
     ALLOW_PAID=1 python -m scripts.ctgov_outcomes run      # DeepSeek reads the documents, one call per trial; quotes checked by code

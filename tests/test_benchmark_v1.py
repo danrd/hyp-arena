@@ -12,7 +12,7 @@ import pytest
 
 @pytest.mark.parametrize("v", ["benchmark-v1", "benchmark-v2"])
 def test_frozen_units_match_spec(v):
-    spec = yaml.safe_load((ROOT / f"specs/{v}.yaml").read_text())
+    spec = yaml.safe_load((ROOT / f"specs/data/{v}.yaml").read_text())
     data = (ROOT / spec["units"]["file"]).read_bytes()
     assert hashlib.sha256(data).hexdigest() == spec["units"]["sha256"]
     u = json.loads(data)["units"]

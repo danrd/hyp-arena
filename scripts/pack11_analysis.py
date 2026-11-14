@@ -1,4 +1,4 @@
-"""Analysis of Argon pack 11 (specs/abstract-overstates-2026-11-09.yaml). Free.
+"""Analysis of Argon pack 11 (specs/reading/abstract-overstates-2026-11-09.yaml). Free.
 
     python -m scripts.pack11_analysis
 """

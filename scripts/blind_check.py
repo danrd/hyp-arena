@@ -163,7 +163,7 @@ def status_compare(a: list[list[dict]], b: list[list[dict]]) -> dict:
             "jaccard": inter / union if union else None}
 
 
-# ---- acceptance of a candidate verifier (specs/validation-criteria.yaml, L1.13) ----
+# ---- acceptance of a candidate verifier (specs/whole-system/validation-criteria.yaml, L1.13) ----
 
 def mini_indices(items: list[dict], k: int = 4) -> list[int]:
     """The mini-sample: the first k calls whose saved reply has records and the first k whose reply is empty (deterministic)."""
@@ -279,7 +279,7 @@ def main() -> None:
     cr = sub.add_parser("candidate-report")
     cr.add_argument("--in", dest="inp", required=True)
     cr.add_argument("--mini", action="store_true")
-    cr.add_argument("--criteria", default="specs/validation-criteria.yaml")
+    cr.add_argument("--criteria", default="specs/whole-system/validation-criteria.yaml")
     cr.add_argument("--test", default="L1.13", help="L1.13 raw fields; L1.14, L1.15, L1.16 records that move a status")
     a = ap.parse_args()
     if a.cmd == "plan":

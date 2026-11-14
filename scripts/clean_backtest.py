@@ -1,7 +1,7 @@
 """L3.3 and L3.9 on the clean ITP + CITP pool (T = 2024-12-31) without an LLM verifier: no model reads the pool.
 
     python -m scripts.clean_backtest cards --pool data/backtest/outcomes_2024-12-31.json --out runs/clean/cards.json
-    python -m scripts.clean_backtest run --pool data/backtest/outcomes_2024-12-31.json --spec specs/clean-2024-12-31.yaml \\
+    python -m scripts.clean_backtest run --pool data/backtest/outcomes_2024-12-31.json --spec specs/whole-system/clean-2024-12-31.yaml \\
         --out runs/clean/clean_2024.json
     python -m scripts.clean_backtest evaluate --labels data/backtest/outcomes_2024-12-31_labels.json --run runs/clean/clean_2024.json
 
@@ -10,7 +10,7 @@ Policy (user decision 2026-10-29, Working_Notes 7j point 1): the card of each hy
 structured sources as of T: curated DrugAge records of papers public by T, ChEMBL first approval year and ClinicalTrials.gov start
 dates (path_to_human). PubMed search and every model are off. Besides the outcome claim, the verifier layer adds one probe per other
 DrugAge species (the same intervention extends lifespan in that species), as `analog_probes` does for human hypotheses; without them the
-curated records of other species would not reach the ranking. The protocol and the criteria are in specs/clean-2024-12-31.yaml.
+curated records of other species would not reach the ranking. The protocol and the criteria are in specs/whole-system/clean-2024-12-31.yaml.
 """
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Full-text re-read of 'for' RCT records on the outcome link (specs/abstract-overstates-2026-11-09.yaml, fulltext_reread).
+"""Full-text re-read of 'for' RCT records on the outcome link (specs/reading/abstract-overstates-2026-11-09.yaml, fulltext_reread).
 
     ALLOW_PAID=1 python -m scripts.fulltext_reread run      # -> <pool>/fulltext_reread.json
     python -m scripts.fulltext_reread score                  # free

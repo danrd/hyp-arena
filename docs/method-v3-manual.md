@@ -615,7 +615,7 @@ repaired; a free version may be another hypothesis.
 |---|---|---|---|---|---|---|
 | tune (доработка), `--mode tune` | repair the "fixable by rewriting" items | only what the items say, from their facts; the parent's new parts (links at "analog" or "new link") must stay | **constraint**: a version that moved towards the known (`novelty_v34.drift`) goes back to the writer with the reason, once; if it still drifts it is kept with the flag and "constraint not kept" | the whole pipeline again on the new text, parent's cut-off | "tuned version" | implemented (prompt `evolve_v3/v2`) |
 | free (свободная эволюция), `--mode free --profile P --writer F` | get the best hypothesis for the profile P | everything (claim, mechanism, population, outcome, experiment); the writer is told the profile's order and whether novelty comes first; it names the papers it relies on | **flag only**: a move towards the known is shown, not forbidden | the whole pipeline again; the papers it named count only if the reader finds them with a verbatim quote before the cut-off (named / found are reported); distance from the parent = 1 − Jaccard of content words; above 0.7 the version is marked "new hypothesis after" the parent | "free evolution" (+ "new hypothesis after") | implemented (prompt `evolve_free/v1`); for current pools only (the writer knows literature past the cut-off) |
-| directed (направленная эволюция), `--mode directed --profile frontier` | reach the target of a profile; first frontier: one new link | keep the intervention and every supported link; add exactly one new link between supported neighbours, with an experiment that tests it | **target**: N not lower and, when the outcome has records, at least "new mechanism of a known effect", one link at "new link", no drift, and a PubMed count of the new link's subject and object before T under a threshold (guard against reader misses) | the whole pipeline again, parent's cut-off; failed checks go back to the writer once, then kept with "target not reached" | "directed evolution (frontier)" | specified ([`specs/directed-evolution-2026-11-09.yaml`](../specs/directed-evolution-2026-11-09.yaml)), not implemented |
+| directed (направленная эволюция), `--mode directed --profile frontier` | reach the target of a profile; first frontier: one new link | keep the intervention and every supported link; add exactly one new link between supported neighbours, with an experiment that tests it | **target**: N not lower and, when the outcome has records, at least "new mechanism of a known effect", one link at "new link", no drift, and a PubMed count of the new link's subject and object before T under a threshold (guard against reader misses) | the whole pipeline again, parent's cut-off; failed checks go back to the writer once, then kept with "target not reached" | "directed evolution (frontier)" | specified ([`specs/evolution/directed-evolution-2026-11-09.yaml`](../specs/evolution/directed-evolution-2026-11-09.yaml)), not implemented |
 | controlled | test whether the list predicts the gain | one item at a time | — | the parent's card, records and alternatives are kept; only what the item changes is re-checked | — | planned |
 
 Every mode reports, next to the drift flag, the **share of links with support before the cut-off**, parent → child: a version
@@ -681,7 +681,7 @@ modes.
 
 ## 11a. Generation and the hypothesis database (specified, not implemented)
 
-**Generation** ([`specs/generation-2026-11-09.yaml`](../specs/generation-2026-11-09.yaml)) is a separate command,
+**Generation** ([`specs/evolution/generation-2026-11-09.yaml`](../specs/evolution/generation-2026-11-09.yaml)) is a separate command,
 `python -m hyparena.card.generate --mode free|structured|profile --topic ... [--profile P] [--n K] [--writer F] [--as-of T]
 [--fields FILE] [--from-texts FILE] [--dry]`. It is evolution without a parent: after the text the pipeline is the same
 (card, search before T, reading, alternatives, endpoint, record weights, ASPID under every profile on fixed scales). The
@@ -700,7 +700,7 @@ and rewritten once, a duplicate of a database row is linked to it, not added. Ea
 analog pairs and the number of distinct interventions and outcomes. With T = today there is no outcome to test against: an
 outside check (novel before T, plausible, testable, on topic, best profile; its grouping against ours) is part of the mode.
 
-**The hypothesis database** ([`specs/hypothesis-db-2026-11-09.yaml`](../specs/hypothesis-db-2026-11-09.yaml)) holds every
+**The hypothesis database** ([`specs/data/hypothesis-db-2026-11-09.yaml`](../specs/data/hypothesis-db-2026-11-09.yaml)) holds every
 hypothesis version from every source (registry trials, Bio Arena, other arenas and public sets, our generated and evolved
 ones), privately in `longevity-kg/hypothesis_db/`: text, source and terms, author kind (no names), the date written (T of its
 scoring), parent, outcome if known, the source's own scores apart from ours, our card, scores with method version and date,
@@ -714,7 +714,7 @@ the triage is in the database spec.
 - It does not predict whether a trial will succeed; trials are run where support exists but the question is open.
 - The search loses most of what a careful search must find before reading: of the papers an outside reader lists for a
   trial, our saved searches return a quarter, mostly because the model-written queries combine too many terms
-  ([`specs/benchmark-search-2026-11-12.yaml`](../specs/benchmark-search-2026-11-12.yaml)).
+  ([`specs/search/benchmark-search-2026-11-12.yaml`](../specs/search/benchmark-search-2026-11-12.yaml)).
 - The reader finds about 0.3 of the findings an outside reader sees in the same abstracts (reading benchmark); support from
   interventions of the same kind is often missed, so the balance is biased down for programmes and behavioural
   interventions.
@@ -732,7 +732,7 @@ the triage is in the database spec.
 - The calibration texts are the current registry versions: 40 of the 74 calibration trials were first posted after their
   primary completion (T is then the completion date), and 3 texts state the outcome in the title or a results part (H86,
   H113, H96). Numbers that rest on a model reading these texts carry that leak
-  ([`specs/calibration-leak-2026-11-12.yaml`](../specs/calibration-leak-2026-11-12.yaml)).
+  ([`specs/data/calibration-leak-2026-11-12.yaml`](../specs/data/calibration-leak-2026-11-12.yaml)).
 
 **Validation status.** Each line is a file in [`specs/`](../specs/) with its definitions written before the computation; the
 stage benchmarks are listed in the [benchmark registry](benchmarks/README.md). The references: **R2** — later RCTs and
@@ -741,21 +741,21 @@ known result (calibration pool); **R4** — the order of pairs of records given 
 
 | Step | Check | Result |
 |---|---|---|
-| card | an outside reader's card gold (definitions of the card manual), 90 texts | outcome / step / premise κ 0.67 (0.72 on the 60 registry and written-mechanism texts); main outcome 0.79; main factor 0.97; claims recall 0.57, precision 0.56 ([`specs/benchmark-card-2026-11-12.yaml`](../specs/benchmark-card-2026-11-12.yaml)) |
-| search | an outside reader's search gold, 30 calibration trials | saved searches return 0.25 [0.17, 0.35] of the gold papers, 0.10 on their own link; the closest prior work in 0.40 of trials ([`specs/benchmark-search-2026-11-12.yaml`](../specs/benchmark-search-2026-11-12.yaml)) |
-| reading | an outside reader's findings on 400 link-abstract pairs | recall 0.29, precision 0.64; a plain LLM 0.28 / 0.41, the difference not significant ([`specs/benchmark-reading-2026-11-12.yaml`](../specs/benchmark-reading-2026-11-12.yaml)) |
+| card | an outside reader's card gold (definitions of the card manual), 90 texts | outcome / step / premise κ 0.67 (0.72 on the 60 registry and written-mechanism texts); main outcome 0.79; main factor 0.97; claims recall 0.57, precision 0.56 ([`specs/card/benchmark-card-2026-11-12.yaml`](../specs/card/benchmark-card-2026-11-12.yaml)) |
+| search | an outside reader's search gold, 30 calibration trials | saved searches return 0.25 [0.17, 0.35] of the gold papers, 0.10 on their own link; the closest prior work in 0.40 of trials ([`specs/search/benchmark-search-2026-11-12.yaml`](../specs/search/benchmark-search-2026-11-12.yaml)) |
+| reading | an outside reader's findings on 400 link-abstract pairs | recall 0.29, precision 0.64; a plain LLM 0.28 / 0.41, the difference not significant ([`specs/reading/benchmark-reading-2026-11-12.yaml`](../specs/reading/benchmark-reading-2026-11-12.yaml)) |
 | reading: design, n, blinding | against an outside reader | 92-96% agreement |
-| intervention match: exact / class / category / other | an outside reader, 80 link-finding pairs blind | weighted κ 0.55, stance agreement 0.89 ([`specs/intervention-class-2026-11-11.yaml`](../specs/intervention-class-2026-11-11.yaml)) |
-| record weight | later RCTs and meta-analyses of the same link (R2) | AUC 0.70 ([`specs/record-weight-2026-11-08.yaml`](../specs/record-weight-2026-11-08.yaml)) |
+| intervention match: exact / class / category / other | an outside reader, 80 link-finding pairs blind | weighted κ 0.55, stance agreement 0.89 ([`specs/scoring/intervention-class-2026-11-11.yaml`](../specs/scoring/intervention-class-2026-11-11.yaml)) |
+| record weight | later RCTs and meta-analyses of the same link (R2) | AUC 0.70 ([`specs/scoring/record-weight-2026-11-08.yaml`](../specs/scoring/record-weight-2026-11-08.yaml)) |
 | record weight | order of 80 pairs of records by an outside reader (R4) | Kendall's τ-b 0.10 |
-| evidence balance | trial outcomes on the calibration pool (R3) | AUC 0.586, in-sample, wide intervals ([`specs/empty-slots-2026-11-09.yaml`](../specs/empty-slots-2026-11-09.yaml)) |
+| evidence balance | trial outcomes on the calibration pool (R3) | AUC 0.586, in-sample, wide intervals ([`specs/scoring/empty-slots-2026-11-09.yaml`](../specs/scoring/empty-slots-2026-11-09.yaml)) |
 | evidence balance per link | an outside reader's balance | Spearman 0.24 per link, 0.39 per trial; no refuted link called supported |
-| the same question asked to two models | trial outcomes, 63 trials the models do not remember | AUC 0.76 against 0.59 for our non-refutation P: the models' priors beat the literature count; leakage not excluded ([`specs/llm-consensus-2026-11-07.yaml`](../specs/llm-consensus-2026-11-07.yaml)) |
-| informativeness I (d of the alternatives) | an outside reader, holdout of 30 trials | κ 0.35 ([`specs/informativeness-check-2026-11-08.yaml`](../specs/informativeness-check-2026-11-08.yaml)) |
+| the same question asked to two models | trial outcomes, 63 trials the models do not remember | AUC 0.76 against 0.59 for our non-refutation P: the models' priors beat the literature count; leakage not excluded ([`specs/whole-system/llm-consensus-2026-11-07.yaml`](../specs/whole-system/llm-consensus-2026-11-07.yaml)) |
+| informativeness I (d of the alternatives) | an outside reader, holdout of 30 trials | κ 0.35 ([`specs/alternatives/informativeness-check-2026-11-08.yaml`](../specs/alternatives/informativeness-check-2026-11-08.yaml)) |
 | support a of the alternatives | an outside reader | Spearman 0.28 (the reader counts what it knows, we count found papers) |
 | missing competitors | an outside reader | in 78% of trials the reader adds a supported competitor |
 | novelty N | an outside reader (30 and 37 trials) | weighted κ −0.08 to 0.26; ours is farther from the known (in half of the 30 trials) |
-| prospective pool, 60 ongoing trials | outcomes 2026-11 … 2028-12 | scores frozen with a SHA-256 ([`specs/prospective-2026-11-06.yaml`](../specs/prospective-2026-11-06.yaml)): the clean test |
+| prospective pool, 60 ongoing trials | outcomes 2026-11 … 2028-12 | scores frozen with a SHA-256 ([`specs/whole-system/prospective-2026-11-06.yaml`](../specs/whole-system/prospective-2026-11-06.yaml)): the clean test |
 
 Against trial outcomes the record weights add nothing over counting records; they are kept for what they are for: ordering
 later trials of the same link (R2) and telling a large RCT from a cell study in the report.

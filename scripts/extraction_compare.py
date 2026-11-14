@@ -10,7 +10,7 @@ Gold (DrugAge): one cell per row, sex Male / Female, any other value (Unknown, P
 average lifespan (significant and positive: increase, significant and negative: decrease, not significant: no_effect), the change of the maximum
 lifespan if the average is missing. Prediction: a row of the graph (outcome lifespan, quote_role finding) or a record of a verifier family
 (endpoint lifespan, quote_role finding) with the effect direction.
-Measures (criterion L1.17 in specs/validation-criteria.yaml): found = share of gold cells with a predicted cell for the same compound, species and a
+Measures (criterion L1.17 in specs/whole-system/validation-criteria.yaml): found = share of gold cells with a predicted cell for the same compound, species and a
 compatible sex; correct = share with the same direction too; precision = share of predicted cells that match a gold cell (a lower bound:
 DrugAge may omit a result the article reports).
 """

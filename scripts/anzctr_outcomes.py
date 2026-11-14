@@ -1,4 +1,4 @@
-"""Outcome labels for ANZCTR hypotheses (specs/anzctr-outcomes-2026-11-01.yaml), from record pages saved by the user (MHTML).
+"""Outcome labels for ANZCTR hypotheses (specs/data/anzctr-outcomes-2026-11-01.yaml), from record pages saved by the user (MHTML).
 
     python -m scripts.anzctr_outcomes plan
     ALLOW_PAID=1 python -m scripts.anzctr_outcomes run
@@ -97,7 +97,7 @@ def plan() -> dict:
             stats["kept"] += 1
             rows.append({"nct": aid, "title": r["title"], "interventions": r["intervention"],
                          "primary_outcomes": [{"measure": r["primary_outcome"], "description": "", "time_frame": ""}], "sources": src[:co.MAX_PAPERS]})
-    CAND.write_text(yaml.safe_dump({"spec": "specs/anzctr-outcomes-2026-11-01.yaml", "items": cands}, allow_unicode=True, sort_keys=False, width=200))
+    CAND.write_text(yaml.safe_dump({"spec": "specs/data/anzctr-outcomes-2026-11-01.yaml", "items": cands}, allow_unicode=True, sort_keys=False, width=200))
     INPUTS.write_text("".join(json.dumps(x, ensure_ascii=False) + "\n" for x in rows))
     return stats
 

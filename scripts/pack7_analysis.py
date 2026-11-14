@@ -1,4 +1,4 @@
-"""Analysis of Argon pack 7 (specs/novelty-check-2026-11-08.yaml, measures fixed before sending). Free (PubMed for PMIDs).
+"""Analysis of Argon pack 7 (specs/novelty/novelty-check-2026-11-08.yaml, measures fixed before sending). Free (PubMed for PMIDs).
 
     python -m scripts.pack7_analysis
 """

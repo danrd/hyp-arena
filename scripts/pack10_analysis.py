@@ -1,4 +1,4 @@
-"""Analysis of Argon pack 10 (specs/sources-argon-2026-11-09.yaml). Free.
+"""Analysis of Argon pack 10 (specs/search/sources-argon-2026-11-09.yaml). Free.
 
     python -m scripts.pack10_analysis
 """

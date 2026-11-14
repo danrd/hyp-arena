@@ -1,4 +1,4 @@
-"""specs/link-scoring-2026-11-08.yaml: A (chain state), B (null weighted by power), G (silent links) on the calibration (AUC)
+"""specs/scoring/link-scoring-2026-11-08.yaml: A (chain state), B (null weighted by power), G (silent links) on the calibration (AUC)
 and on calibration + prospective (admission rule). Free.
 
     python -m scripts.link_scoring_check     # -> calibration/link_scoring_check.json

@@ -1,4 +1,4 @@
-"""Method v3.4 (specs/v34-frontier-2026-11-07.yaml): P as non-refutation, the species charged once, constant precision before the
+"""Method v3.4 (specs/scoring/v34-frontier-2026-11-07.yaml): P as non-refutation, the species charged once, constant precision before the
 outcome, novelty N, leverage and the evolution drift flag (hand-made drifted pairs and controls)."""
 import pytest
 
@@ -140,7 +140,7 @@ def test_effect_parser_reads_formats_found_in_the_blind_comparison():
 
 
 def test_only_qualifiers_the_claim_fixes_count():
-    """v3.5 amendment 2026-11-08 (specs/record-weight-2026-11-08.yaml): a "no" on a qualifier the claim does not state is
+    """v3.5 amendment 2026-11-08 (specs/scoring/record-weight-2026-11-08.yaml): a "no" on a qualifier the claim does not state is
     ignored; on one it states, the record stays adjacent."""
     o = card([OUT]).claims[0]                                      # fixes species (human) only
     r = rec(1, "rct", n=100, qm={"sex": "no", "dose": "no", "population": "no"})

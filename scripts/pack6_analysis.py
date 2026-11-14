@@ -1,4 +1,4 @@
-"""Analysis of Argon pack 6 (specs/informativeness-check-2026-11-08.yaml, measures fixed before sending). Free.
+"""Analysis of Argon pack 6 (specs/alternatives/informativeness-check-2026-11-08.yaml, measures fixed before sending). Free.
 
     python -m scripts.pack6_analysis
 """

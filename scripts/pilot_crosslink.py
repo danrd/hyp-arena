@@ -1,4 +1,4 @@
-"""Pilot: cross-link reading in small batches, then the split reader (specs/balance-check-2026-11-08.yaml, pilot_crosslink).
+"""Pilot: cross-link reading in small batches, then the split reader (specs/scoring/balance-check-2026-11-08.yaml, pilot_crosslink).
 
     ALLOW_PAID=1 python -m scripts.pilot_crosslink run     # -> prospective/pilot_crosslink.json
     python -m scripts.pilot_crosslink score                 # free

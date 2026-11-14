@@ -1,5 +1,5 @@
 # normalize_card/v8 on the 30 calibration texts, cards only, fixed before the call (user decision 2026-11-05: fix the
-# normalizer first; the v3 calibration showed it, not the rules, to be the limit: specs/calibration-v3-2026-11-05.yaml).
+# normalizer first; the v3 calibration showed it, not the rules, to be the limit: specs/whole-system/calibration-v3-2026-11-05.yaml).
 id: normalizer-v8
 date: 2026-11-05
 code: scripts/normalizer_v8_check.py

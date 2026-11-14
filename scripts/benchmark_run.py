@@ -1,4 +1,4 @@
-"""Benchmark v2 (specs/benchmark-v2.yaml), the free part: hypothesis texts, the formal baseline and a dry run with the cost.
+"""Benchmark v2 (specs/data/benchmark-v2.yaml), the free part: hypothesis texts, the formal baseline and a dry run with the cost.
 
     python -m scripts.benchmark_run texts       # $KG_DIR/hypothesis_sources/benchmark_v2_texts.jsonl (private: registry texts)
     python -m scripts.benchmark_run features    # data/benchmark/v2_features.json (registry header fields; no texts)

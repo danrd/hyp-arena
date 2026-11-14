@@ -3,7 +3,7 @@
     python -m scripts.naive_baseline --labels data/backtest/itp_2010-12-31_labels.json \\
         --runs runs/stage5/itp2010_dev.abp.json runs/stage5/itp2010_test.abp.json
 
-The criterion is fixed in specs/validation-criteria.yaml (L3.9): paired difference of the tie-aware AUC (our rank minus the naive order)
+The criterion is fixed in specs/whole-system/validation-criteria.yaml (L3.9): paired difference of the tie-aware AUC (our rank minus the naive order)
 on the same compounds, 95% bootstrap interval resampling compounds (10 000 draws). Pass: the interval is above 0. Fail: the point
 difference is not above 0. Otherwise: not proven. Known results are left out of both orders; hypotheses filtered by the gate sit at the bottom
 of both. Naive order: path_to_human level 0 first, higher levels later, unknown after the last level (ties share the place, count 0.5).

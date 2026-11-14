@@ -85,10 +85,10 @@ def test_the_pipeline_writes_the_stamp_into_the_meta(repo, monkeypatch):
 
 
 def test_spec_files_say_what_the_code_does():
-    itp = prespec.load("specs/itp-backtest-2010.yaml")
+    itp = prespec.load("specs/whole-system/itp-backtest-2010.yaml")
     assert itp["dropped_indicators"] == backtest.PRIMARY_DROP == site.ITP_DROP
     assert itp["k_top"] == 3 and itp["K"] == 10000 and itp["profile"] == evolve.PROFILE
-    evo = prespec.load("specs/evolution-1.yaml")
+    evo = prespec.load("specs/evolution/evolution-1.yaml")
     sig = inspect.signature(evolve.evolve).parameters
     assert {k: sig[k].default for k in ("rounds", "parents", "children", "max_calls", "writer")} == \
         {k: evo[k] for k in ("rounds", "parents", "children", "max_calls", "writer")}

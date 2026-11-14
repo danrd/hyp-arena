@@ -19,7 +19,7 @@ primary:
     unclear: "otherwise"
   expected_power: "with 14 clean units the CI is about +-0.25: unclear is the likely reading unless the effect is strong; the clean part is the test, the orientation part and the pooled 44 are reported"
 normalizer_check:
-  measures: "as specs/normalizer-v8-2026-11-05.yaml on the 44 cards: unparsed, mechanism recall on the 8 texts hand-labelled as stating a reason (MECHANISM_STATED_FRESH), parallel outcomes written as a chain"
+  measures: "as specs/card/normalizer-v8-2026-11-05.yaml on the 44 cards: unparsed, mechanism recall on the 8 texts hand-labelled as stating a reason (MECHANISM_STATED_FRESH), parallel outcomes written as a chain"
   thresholds: {unparsed: "at most 2 of 44", mechanism_recall: "at least 6 of 8", parallel_as_chain: "0"}
 reported_not_judged:
   - "V; the gate; sensitivity with no-stance findings as support; v3.1 offline; ASPID trial profiles; the additional indicators (explore-v3)"

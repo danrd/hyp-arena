@@ -1,5 +1,5 @@
 """Free: the evidence balance with every step before the outcome as one place (by the weakest step with data, or by the
-mean), against the current places (specs/merge-steps-2026-11-14.yaml). Same references as specs/empty-slots-2026-11-09.yaml:
+mean), against the current places (specs/card/merge-steps-2026-11-14.yaml). Same references as specs/scoring/empty-slots-2026-11-09.yaml:
 R3 (calibration trial outcomes, AUC), the outside reader's trial balance (pack 8, Spearman), how many prospective units
 move, and the rankings (Spearman of the expected score, top 10 kept)."""
 from __future__ import annotations

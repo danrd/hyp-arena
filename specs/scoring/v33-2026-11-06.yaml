@@ -2,7 +2,7 @@ id: v33-2026-11-06
 written_on: '2026-11-06'
 status: rule registered before the calibration rerun is scored
 decision: >-
-  user 2026-11-06 after the error analysis (specs/error-analysis-2026-11-06.yaml): a link without any usable record no
+  user 2026-11-06 after the error analysis (specs/scoring/error-analysis-2026-11-06.yaml): a link without any usable record no
   longer multiplies P by 0.5 (it penalised hypotheses that write out their mechanism); how much of the mechanism is checked
   becomes a separate ASPID indicator
 rule:

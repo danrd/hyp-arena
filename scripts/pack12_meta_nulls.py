@@ -1,4 +1,4 @@
-"""Argon pack 12: meta-analyses read as for, RCTs read as against (specs/meta-and-nulls-2026-11-09.yaml). Free.
+"""Argon pack 12: meta-analyses read as for, RCTs read as against (specs/reading/meta-and-nulls-2026-11-09.yaml). Free.
 
     python -m scripts.pack12_meta_nulls build
 """

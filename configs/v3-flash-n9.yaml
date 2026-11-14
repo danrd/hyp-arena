@@ -1,4 +1,4 @@
-# As configs/v3-flash.yaml with normalize_card/v9 (fresh calibration sample, specs/calibration-v3-fresh-2026-11-06.yaml).
+# As configs/v3-flash.yaml with normalize_card/v9 (fresh calibration sample, specs/whole-system/calibration-v3-fresh-2026-11-06.yaml).
 # Method v3 on the calibration setup of configs/v2-flash-msearch.yaml.
 # Method v2 as configs/v2-flash.yaml, with the model-written literature search (search: model, at the end).
 # Method v2 with DeepSeek V4.1 Flash (snapshot 2026-10-17) as the verifier, through CometAPI (COMET_API_KEY,
@@ -33,7 +33,7 @@ admission: graded
 
 # Method v3 (docs/archive/spec/method-v3.md): normalize_card/v7 (mechanism chain), the v3 verifier template, proposed alternatives, the
 # v3 rules (rules_v3: P, W, I, V, gate). verify_claim/v9 since 2026-11-05: extraction accepted on design, comparison and n
-# (specs/extraction-gold-v9-2026-11-05.yaml; relevance recall about 0.6, precision 1.0; the second relevance question is not used).
+# (specs/reading/extraction-gold-v9-2026-11-05.yaml; relevance recall about 0.6, precision 1.0; the second relevance question is not used).
 method: v3
 verify_version: v9
 normalize_version: v9   # normalize_card/v9 (2026-11-06): relation map, hedged reasons and condition facts as chain links, parallel outcomes; cards in calibration/cards_v3_v9.json

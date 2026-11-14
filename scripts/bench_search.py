@@ -1,4 +1,4 @@
-"""Search benchmark (specs/benchmark-search-2026-11-12.yaml) on Argon pack 18: 30 calibration trials. Free, no model call.
+"""Search benchmark (specs/search/benchmark-search-2026-11-12.yaml) on Argon pack 18: 30 calibration trials. Free, no model call.
 
     python -m scripts.bench_search check   # PubMed E-utilities: every gold PMID exists, its date on or before T (cached)
     python -m scripts.bench_search score   # recall of our saved searches, closest prior work, novelty agreement

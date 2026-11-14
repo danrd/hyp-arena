@@ -5,7 +5,7 @@
     ALLOW_PAID=1 python -m scripts.paraphrase_check run --out runs/stage5/l1_8  # three pipeline runs (as of 2010-12-31)
     python -m scripts.paraphrase_check report --dir runs/stage5/l1_8
 
-The criterion and procedure are in specs/validation-criteria.yaml (L1.8), committed before the first call.
+The criterion and procedure are in specs/whole-system/validation-criteria.yaml (L1.8), committed before the first call.
 Arms: O1 and O2 (the same original texts, normalized and verified twice) and P (the paraphrases). Agreement is computed
 for P against O1 and for O2 against O1; P passes a measure if it is not below the repeat agreement minus 0.05.
 """

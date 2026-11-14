@@ -1,4 +1,4 @@
-"""Outcome labels for ISRCTN hypotheses (specs/isrctn-outcomes-2026-10-31.yaml).
+"""Outcome labels for ISRCTN hypotheses (specs/data/isrctn-outcomes-2026-10-31.yaml).
 
     python -m scripts.isrctn_outcomes plan                 # no model calls: selection, documents, cost estimate
     ALLOW_PAID=1 python -m scripts.isrctn_outcomes run     # same labelling as scripts.ctgov_outcomes, one call per trial
@@ -86,7 +86,7 @@ def select() -> list[dict]:
 def plan() -> dict:
     from hyparena.tools import pubmed
     cands = select()
-    CAND.write_text(yaml.safe_dump({"spec": "specs/isrctn-outcomes-2026-10-31.yaml", "n": len(cands), "items": cands},
+    CAND.write_text(yaml.safe_dump({"spec": "specs/data/isrctn-outcomes-2026-10-31.yaml", "n": len(cands), "items": cands},
                                    allow_unicode=True, sort_keys=False, width=200))
     rows, stats = [], {"candidates": len(cands), "no_document": 0, "kept": 0}
     for c in cands:

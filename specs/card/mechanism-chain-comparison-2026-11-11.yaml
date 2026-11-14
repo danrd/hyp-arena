@@ -9,7 +9,7 @@ why: >-
   Method v3 (2026-11-03) replaced v2's unconnected claims with a typed chain (delivery -> engagement -> pathway -> effect ->
   outcome). The step v2 -> v3 (outcome AUC 0.46 -> about 0.59) changed many things at once; on registry trials the chain is
   rarely written (10 of 30 calibration cards) and written chains of 3+ slots went with null results
-  (specs/argon-layers-2026-11-08.yaml). No comparison with another decomposition was made. docs/walkthrough/H49.md, stage 2.
+  (specs/scoring/argon-layers-2026-11-08.yaml). No comparison with another decomposition was made. docs/walkthrough/H49.md, stage 2.
 
 variants:   # the same text, the same date T, the same search, reader and weights after the card; only the decomposition differs
   A_outcome_only: "the card's outcome claims only (parallel outcomes kept); no links before the outcome"
@@ -42,7 +42,7 @@ measures:
   M3_weakest_step: "share of texts where the variant's weakest slot (lowest S among slots with a record, else first empty slot) is Argon's weakest step"
   M4_later_trials: >-
     R2 per step: on the steps of the 20 registry texts, do the records published before T predict later RCTs and
-    meta-analyses of the same step (as specs/record-weight-2026-11-08.yaml); per variant AUC
+    meta-analyses of the same step (as specs/scoring/record-weight-2026-11-08.yaml); per variant AUC
   M5_cost: "calls and USD per text"
   not_a_criterion: "the trial outcome (written chains go with null results on calibration; the comparison would reward A)"
 

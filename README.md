@@ -29,7 +29,7 @@ ClinicalTrials.gov and other trial registries. Code under the MIT licence ([`LIC
 
 - **Method manual** (the current rules, why each one, how to read a report, validation status): [`docs/method-v3-manual.md`](docs/method-v3-manual.md)
 - **How the system works, step by step, and how each step is checked** (in Russian): [`docs/system/steps.md`](docs/system/steps.md), diagram [`docs/system/scheme.drawio`](docs/system/scheme.drawio); stage manuals: the card — [`docs/system/card.md`](docs/system/card.md)
-- **Benchmarks by stage**: [`docs/benchmarks/README.md`](docs/benchmarks/README.md); checks and decisions, one file each: [`specs/`](specs/); plans of work in progress: [`docs/plans/`](docs/plans/)
+- **Benchmarks by stage**: [`docs/benchmarks/README.md`](docs/benchmarks/README.md); checks and decisions, one file each, by stage: [`specs/`](specs/README.md); plans of work in progress: [`docs/plans/`](docs/plans/)
 - Benchmark of registry hypotheses: [`docs/benchmark.md`](docs/benchmark.md)
 - Card format and relation vocabulary (shared with the knowledge graph): [`docs/spec/hypothesis-card-spec.md`](docs/spec/hypothesis-card-spec.md); the ranking method (ASPID / SMAA): [`docs/spec/aggregation-spec.md`](docs/spec/aggregation-spec.md); data sources: [`docs/spec/data-sources.md`](docs/spec/data-sources.md)
 - Commands (tests, runs, reports, tools): [`docs/commands.md`](docs/commands.md)

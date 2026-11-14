@@ -5,12 +5,12 @@ user_decisions: >-
   2026-11-09: a hypothesis generation mode so that the user can start testing; a separate command (not a mode of
   evolution), sharing its code; three modes: free by topic, structured by the card's fields, by profile on a topic; the
   number of hypotheses and the model are parameters (in a chat with an outside model the user sets them there); diversity
-  is controlled; every generated hypothesis goes to the hypothesis database (specs/hypothesis-db-2026-11-09.yaml); the
+  is controlled; every generated hypothesis goes to the hypothesis database (specs/data/hypothesis-db-2026-11-09.yaml); the
   user tests through Argon
 relation_to_evolution: >-
   generation is evolution without a parent: after the text the pipeline is the same (card, PubMed search before T, reading,
   alternatives, endpoint, v3.6 rules, ASPID under every profile on fixed scales), and the profile mode reuses the checks of
-  directed evolution (specs/directed-evolution-2026-11-09.yaml)
+  directed evolution (specs/evolution/directed-evolution-2026-11-09.yaml)
 
 command:
   cli: "python -m hyparena.card.generate --mode free|structured|profile --topic TEXT [--profile P] [--n K] [--writer FAMILY] [--as-of DATE] [--fields FILE] [--dry]"

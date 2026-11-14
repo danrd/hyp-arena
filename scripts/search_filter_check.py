@@ -1,5 +1,5 @@
 """Paid experiment: a cheap LLM as the relevance filter before reading (plan docs/plans/search-2026-11-14.md, option Б4; rule
-in specs/benchmark-search-2026-11-12.yaml, filter_experiment_2026_11_14).
+in specs/search/benchmark-search-2026-11-12.yaml, filter_experiment_2026_11_14).
 
     python -m scripts.search_filter_check dry                 # free: calls, tokens, price
     ALLOW_PAID=1 MAX_USD=1.5 python -m scripts.search_filter_check run

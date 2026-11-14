@@ -1,4 +1,4 @@
-"""Argon's graph on the v3.6 rules: R2 and the evidence balance, ours vs graph vs union (specs/sources-experiment-2026-11-07.yaml,
+"""Argon's graph on the v3.6 rules: R2 and the evidence balance, ours vs graph vs union (specs/search/sources-experiment-2026-11-07.yaml,
 graph_v36_2026_11_08). Free.
 
     python -m scripts.graph_r2      # -> calibration/graph_r2.json

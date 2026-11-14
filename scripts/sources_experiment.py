@@ -1,4 +1,4 @@
-"""Sources experiment (specs/sources-experiment-2026-11-07.yaml): the same 15 calibration trials read with abstracts (arm A,
+"""Sources experiment (specs/search/sources-experiment-2026-11-07.yaml): the same 15 calibration trials read with abstracts (arm A,
 exact-population query, configs/v3-flash-n11.yaml) and with PMC full texts where allowed (arm B,
 configs/v3-flash-n11-fulltext.yaml). The cards are the frozen v10 cards, so the arms differ only in the sources. Paid.
 
@@ -18,7 +18,7 @@ ARMS = {"A": "configs/v3-flash-n11.yaml", "B": "configs/v3-flash-n11-fulltext.ya
 def unit_ids() -> list[str]:
     import yaml
     from pathlib import Path
-    spec = yaml.safe_load((Path(__file__).resolve().parents[1] / "specs" / "sources-experiment-2026-11-07.yaml").read_text())
+    spec = yaml.safe_load((Path(__file__).resolve().parents[1] / "specs" / "search" / "sources-experiment-2026-11-07.yaml").read_text())
     return list(spec["units"])
 
 

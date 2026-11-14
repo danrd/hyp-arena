@@ -1,4 +1,4 @@
-"""Reader v12 pilot (specs/reader-v12-2026-11-08.yaml): a relevance filter before reading and an answer for every paper.
+"""Reader v12 pilot (specs/reading/reader-v12-2026-11-08.yaml): a relevance filter before reading and an answer for every paper.
 
     ALLOW_PAID=1 python -m scripts.reader_v12 run --part dev|holdout [--rev v12]   # -> prospective/reader_v12_<part>.json
     python -m scripts.reader_v12 score --part dev|holdout                           # free

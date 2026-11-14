@@ -1,4 +1,4 @@
-"""Argon pack 11: does the abstract overstate the trial? (specs/abstract-overstates-2026-11-09.yaml). Free (PubMed / Europe PMC).
+"""Argon pack 11: does the abstract overstate the trial? (specs/reading/abstract-overstates-2026-11-09.yaml). Free (PubMed / Europe PMC).
 
     python -m scripts.pack11_overstates build
 """

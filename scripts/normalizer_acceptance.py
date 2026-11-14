@@ -1,4 +1,4 @@
-"""L1.18: can a cheaper normalizer replace Gemini 3.5 Flash with hidden reasoning (specs/normalizer-acceptance-2026-10-30.yaml)?
+"""L1.18: can a cheaper normalizer replace Gemini 3.5 Flash with hidden reasoning (specs/card/normalizer-acceptance-2026-10-30.yaml)?
 
     python -m scripts.normalizer_acceptance subset                 # no calls: groups g001-g010 of the 2026-10-29 negative groups
     ALLOW_PAID=1 python -m scripts.normalizer_acceptance run       # the repeat of the reference and candidates A and B (method v2 on each group)

@@ -20,7 +20,7 @@ from hyparena.card import rules_v32 as r32
 from hyparena.card.models import ClaimVerification, HypothesisCard
 
 V34 = {"v36": True}      # v3.6 (2026-11-08): GRADE-shaped record weight, log-likelihood fold (name kept for callers)
-_V34_DOC = None       # method v3.4 (specs/v34-frontier-2026-11-07.yaml); v3.3 was {"fold": True, "neutral_unverified": True}
+_V34_DOC = None       # method v3.4 (specs/scoring/v34-frontier-2026-11-07.yaml); v3.3 was {"fold": True, "neutral_unverified": True}
 ENDPOINT_UP = {"biomarker": "function", "patient_reported": "function"}
 ADJ_KEYS = ("population", "age_at_start", "sex")
 

@@ -6,12 +6,12 @@ The text is kept as it was. The worked examples below are still computed and che
 ## Version note of the manual before the 2026-11-11 clean-up
 
 Version: rules **v3.7** as of 2026-11-09 = v3.6 with a slot that has no record left out of the evidence balance and the
-support share (`rules_v32.EMPTY_SLOTS = "skip"`, specs/empty-slots-2026-11-09.yaml; section 7), and non-refutation P no
-longer shown in the report (it left the profiles in v3.5; the gate still filters refuted chains). v3.6 as of 2026-11-08 (`evaluate(..., v36=True)`, specs/record-weight-2026-11-08.yaml): the record
+support share (`rules_v32.EMPTY_SLOTS = "skip"`, specs/scoring/empty-slots-2026-11-09.yaml; section 7), and non-refutation P no
+longer shown in the report (it left the profiles in v3.5; the gate still filters refuted chains). v3.6 as of 2026-11-08 (`evaluate(..., v36=True)`, specs/scoring/record-weight-2026-11-08.yaml): the record
 weight rebuilt on the GRADE domains with fewer levels, and records for and against folded as a sum of log likelihood ratios
 (sections 5, 5a, 6); the signed axis is named the **evidence balance** (`chain_state` in the code). v3.5 as of 2026-11-08 (v3.4 + one signed axis in the profiles and a null record weighted
-by the power of its study, `evaluate(..., v35=True)`, specs/link-scoring-2026-11-08.yaml); v3.4 as of 2026-11-07 (`hyparena/card/rules_v32.py`, `evaluate(..., v34=True)`; novelty, leverage and the
-evolution drift flag in `hyparena/card/novelty_v34.py`; definitions in `specs/v34-frontier-2026-11-07.yaml`), on top of
+by the power of its study, `evaluate(..., v35=True)`, specs/scoring/link-scoring-2026-11-08.yaml); v3.4 as of 2026-11-07 (`hyparena/card/rules_v32.py`, `evaluate(..., v34=True)`; novelty, leverage and the
+evolution drift flag in `hyparena/card/novelty_v34.py`; definitions in `specs/scoring/v34-frontier-2026-11-07.yaml`), on top of
 `rules_v3.py` variant v3.1 and `v3_levels.py`, aggregation by ASPID over the axes (`hyparena/card/aspid_v3.py`, `configs/profiles_v3.yaml`). v3.3
 (`evaluate(..., fold=True, neutral_unverified=True)`) differs only in P (section 7) and in two record weights (section 5). The
 specification with its history and decisions is `docs/archive/spec/method-v3.md` (in Russian, sections 9-13); this manual is the
@@ -59,7 +59,7 @@ clear positive. A record about another intervention altogether weighs 0. Retract
 fully, every further record of the group with 1/4. F and A are the folded sums.
 
 The distance to the clinic is charged once: links before the outcome use the preclinical design scale, the outcome link the
-clinical one. **v3.4** (`specs/v34-frontier-2026-11-07.yaml`, after an outside review):
+clinical one. **v3.4** (`specs/scoring/v34-frontier-2026-11-07.yaml`, after an outside review):
 
 - on the outcome link of a claim about humans, another species is charged by the design scale only (an animal study 2/7), no
   longer also by the context factor; another population, age, sex, dose or comparator still makes the record adjacent (2/3).
@@ -106,7 +106,7 @@ one RCT of 120 with a medium effect about 0.63; a mouse study of 40 with a large
   checked slots before any score was used (that one moved with P, |ρ| 0.74, and two thirds of the chains have one slot).
   Consequence (v3.4): finding support for an unchecked link leaves P at 1 and raises the support share; under every profile
   the hypothesis's score goes up (section 13).
-- Why (specs/error-analysis-2026-11-06.yaml): under v3.2 a link without data multiplied P by 0.5, so a hypothesis that
+- Why (specs/scoring/error-analysis-2026-11-06.yaml): under v3.2 a link without data multiplied P by 0.5, so a hypothesis that
   wrote out its mechanism lost a factor of 2 per unchecked link; on the calibration P then ordered the 18 hypotheses with a
   mechanism backwards. The signal of P against trial outcomes came from data against, not from support.
 
@@ -174,7 +174,7 @@ change for one.
 
 ## Section 11: the first evolution run (2026-11-06)
 
-**First run** (2026-11-06, `specs/evolution-v3-pilot-2026-11-06.yaml`): the top 10 of the pilot under the evidence
+**First run** (2026-11-06, `specs/evolution/evolution-v3-pilot-2026-11-06.yaml`): the top 10 of the pilot under the evidence
 profile; about 311 calls (about 0.8 USD). The score under the evidence profile rose for 2 and fell for 8 (down to −0.17),
 against an expected +0.04 … +0.11. The reason is the design of the mode, not the hypotheses: (1) the whole pipeline ran
 again, so a new card, a new search and new alternatives changed everything at once (I fell for 3, because the alternatives
@@ -202,7 +202,7 @@ outcome alone actually rests on. The controlled and free modes above answer the 
 | P vs trial outcome, fresh sample 2000-2022 (26 decisive) | v3 0.534 "no signal"; v3.2 0.64 (not pre-registered) |
 | evolution, first run (pilot top 10) | scores fell for 8 of 10: the mode re-ran the whole pipeline and forced a mechanism; see section 11 |
 | error analysis on the calibration (exploration) | P's signal comes from data against the outcome (AUC 0.63), support does not separate; unchecked links penalised written mechanisms → v3.3 (0.66 on the same data, not a test) |
-| prospective pool: 60 ongoing trials ending 2026-11 … 2028-12 | scores frozen 2026-11-06 with a SHA-256 (`specs/prospective-2026-11-06.yaml`); the clean test of v3.2, when the trials report; v3.4 scores in `scores_60_v34.json` (the frozen file is not rewritten) |
+| prospective pool: 60 ongoing trials ending 2026-11 … 2028-12 | scores frozen 2026-11-06 with a SHA-256 (`specs/whole-system/prospective-2026-11-06.yaml`); the clean test of v3.2, when the trials report; v3.4 scores in `scores_60_v34.json` (the frozen file is not rewritten) |
 | error analysis, 74 units rerun (normalize v10) under v3.3 | P 0.60, support share 0.54, the outcome link alone 0.61; with a written mechanism P is at chance (0.46, 17 units) |
 | v3.4 (P non-refutation, two weight changes) | P 0.584 vs v3.3 0.589 on the same 72 calibration units: the same order, the paradox removed (exploration) |
 | novelty, leverage, frontier profile | cannot be checked against trial outcomes; they rest on the admission rule and the protections above |

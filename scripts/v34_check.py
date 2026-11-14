@@ -1,4 +1,4 @@
-"""Method v3.4 check on the saved runs, no model calls (specs/v34-frontier-2026-11-07.yaml): P v3.4 vs v3.3 on the
+"""Method v3.4 check on the saved runs, no model calls (specs/scoring/v34-frontier-2026-11-07.yaml): P v3.4 vs v3.3 on the
 calibration (tied AUC, exploration only), and the admission rule (separation, |Spearman rho| < 0.7) for the new indicators on
 the 74 calibration + 60 prospective units. PubMed counts (literature density) are free and cached.
 

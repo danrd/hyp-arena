@@ -1,4 +1,4 @@
-"""Full texts from the PubMed Central open-access subset (sources experiment, specs/sources-experiment-2026-11-07.yaml; user
+"""Full texts from the PubMed Central open-access subset (sources experiment, specs/search/sources-experiment-2026-11-07.yaml; user
 decision 2026-11-07: open access only, nothing that bypasses a site's access rules; only extracted fields are stored in the
 repositories, the texts stay in the local cache `data/cache/pmc/`, which is not committed).
 

@@ -1,4 +1,4 @@
-"""Two-step reading on the pack-9 links (specs/reading-gold-2026-11-08.yaml, two_step_test). Paid for `run`.
+"""Two-step reading on the pack-9 links (specs/reading/reading-gold-2026-11-08.yaml, two_step_test). Paid for `run`.
 
     ALLOW_PAID=1 python -m scripts.two_step_reading run    # -> prospective/two_step_reading.json
     python -m scripts.two_step_reading score

@@ -1,4 +1,4 @@
-# Arm B of the sources experiment (specs/sources-experiment-2026-11-07.yaml): as configs/v3-flash-n11.yaml, the verifier
+# Arm B of the sources experiment (specs/search/sources-experiment-2026-11-07.yaml): as configs/v3-flash-n11.yaml, the verifier
 # reads PMC full texts (methods, results, tables) where PMC allows it (full_text: pmc, hyparena/tools/pmc.py).
 # Earlier: as configs/v3-flash-n10.yaml with the exact-population query first (search: model_population, hyparena/card/search.py,
 # 2026-11-07; not yet run). Earlier: as configs/v3-flash.yaml with normalize_card/v10 (the prospective pool, scripts/prospective.py).
@@ -36,7 +36,7 @@ admission: graded
 
 # Method v3 (docs/archive/spec/method-v3.md): normalize_card/v7 (mechanism chain), the v3 verifier template, proposed alternatives, the
 # v3 rules (rules_v3: P, W, I, V, gate). verify_claim/v9 since 2026-11-05: extraction accepted on design, comparison and n
-# (specs/extraction-gold-v9-2026-11-05.yaml; relevance recall about 0.6, precision 1.0; the second relevance question is not used).
+# (specs/reading/extraction-gold-v9-2026-11-05.yaml; relevance recall about 0.6, precision 1.0; the second relevance question is not used).
 method: v3
 verify_version: v10
 normalize_version: v10   # normalize_card/v10 (2026-11-06): v9 + AI-role tag, endpoint and registry population by code

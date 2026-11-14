@@ -3,7 +3,7 @@
 # B4 not used). Fixed before any ranking of these units. Changed only by a new version (v2, ...) after a substantial update of the
 # sources (a new registry or source, or more than 10% new units); every change is recorded here with its date and reason.
 id: benchmark-v2
-supersedes: specs/benchmark-v1.yaml (data/benchmark/v1_units.json kept unchanged)
+supersedes: specs/data/benchmark-v1.yaml (data/benchmark/v1_units.json kept unchanged)
 frozen_on: 2026-11-01
 units:
   file: data/benchmark/v2_units.json            # ids, labels, dates, flags; no texts (texts stay in the private longevity-kg)

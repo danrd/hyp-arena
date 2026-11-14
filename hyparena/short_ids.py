@@ -9,7 +9,7 @@ Row of the registry:
     {"id": "ctgov:NCT07726758", "short": "H49", "pool": "prospective-60", "added": "2026-11-11"}
     {"id": "evo:ctgov:NCT07726758/tune/1", "short": "H49д", "parent": "ctgov:NCT07726758", "mode": "tune", ...}
 
-The stable id follows `specs/hypothesis-db-2026-11-09.yaml`: source prefix + source id (ctgov:NCT..., bioarena:<uuid>,
+The stable id follows `specs/data/hypothesis-db-2026-11-09.yaml`: source prefix + source id (ctgov:NCT..., bioarena:<uuid>,
 gen:<run>/<k>, evo:<parent>/<mode>/<k>).
 """
 from __future__ import annotations

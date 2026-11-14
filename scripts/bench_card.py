@@ -1,4 +1,4 @@
-"""Card benchmark (specs/benchmark-card-2026-11-12.yaml) on Argon pack 17: 60 texts, the card gold.
+"""Card benchmark (specs/card/benchmark-card-2026-11-12.yaml) on Argon pack 17: 60 texts, the card gold.
 
     python -m scripts.bench_card dry                              # free: calls, tokens and the price of each system
     ALLOW_PAID=1 python -m scripts.bench_card run --system ours|base_a [--limit N]
@@ -193,7 +193,7 @@ def dedup_saved() -> dict:
 
 
 def score() -> dict:
-    """By the measures of specs/benchmark-card-2026-11-12.yaml (written before Argon's answer and before any run)."""
+    """By the measures of specs/card/benchmark-card-2026-11-12.yaml (written before Argon's answer and before any run)."""
     gold = {i["id"]: i for i in json.loads((DIR / "pack_17_answer.json").read_text())["items"]}
     key = json.loads((DIR / "pack_17_key.json").read_text())
     out = {}

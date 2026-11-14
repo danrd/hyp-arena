@@ -1,5 +1,5 @@
 """Free experiments, part 2: candidates from links between papers, ordered by word match (plan docs/plans/search-2026-11-14.md,
-options Г1 and Г2; rule in specs/benchmark-search-2026-11-12.yaml, free_experiments_2026_11_14). PubMed only, no model call.
+options Г1 and Г2; rule in specs/search/benchmark-search-2026-11-12.yaml, free_experiments_2026_11_14). PubMed only, no model call.
 
     python -m scripts.search_expand_check     # longevity-kg/reviews/argon-2026-11-12/search_expand_check.json
 

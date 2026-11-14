@@ -112,7 +112,7 @@ NEW_AFTER = 0.7
 
 
 def endpoint(client, text: str) -> Optional[str]:
-    """The endpoint category of a text by two families (as specs/estimand-2026-11-06.yaml); None when they disagree."""
+    """The endpoint category of a text by two families (as specs/scoring/estimand-2026-11-06.yaml); None when they disagree."""
     from scripts import estimand_check as ec
     vals = set()
     for fam in ec.FAMILIES:

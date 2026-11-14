@@ -1,4 +1,4 @@
-"""Claim vs results table (specs/abstract-overstates-2026-11-09.yaml, claim_vs_results): one narrow question per 'for' RCT
+"""Claim vs results table (specs/reading/abstract-overstates-2026-11-09.yaml, claim_vs_results): one narrow question per 'for' RCT
 record on the outcome link with an open paper, from the Results sections and tables; a 'no' or 'not_measured' counts only
 with a verbatim quote and the agreement of a second model family.
 

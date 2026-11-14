@@ -33,8 +33,8 @@ step1_descriptive:
 
 step2_extraction_reliability:
   earlier: >-
-    from specs/extraction-gold-v9-2026-11-05.yaml (16 relevant pairs): design 0.88, comparison 0.88, n_total 0.81,
-    effect_class 0.81 (= constant baseline); from specs/sources-experiment-2026-11-07.yaml: intervention match and effect
+    from specs/reading/extraction-gold-v9-2026-11-05.yaml (16 relevant pairs): design 0.88, comparison 0.88, n_total 0.81,
+    effect_class 0.81 (= constant baseline); from specs/search/sources-experiment-2026-11-07.yaml: intervention match and effect
     numbers are the weak fields. No earlier gold for the context label (intervention_match, qualifiers).
   context_check:
     sample: >-
@@ -223,7 +223,7 @@ step3:   # python -m scripts.record_weight_check step3 -> calibration/record_wei
   R1_noise: "9 of 27 links with a meta-analysis and enough history have meta-analyses that disagree (one third): the meta-analysis verdict is itself a noisy label"
   R2: "195 targets on 71 links (146 for, 49 against), median 3 earlier records per target; AUC 0.666 (95% CI by links 0.57-0.75)"
   R2_noise: "in 26 of the 71 links later trials disagree among themselves"
-  R3: "chain state AUC 0.609 on the 73 calibration units (as specs/link-scoring-2026-11-08.yaml)"
+  R3: "chain state AUC 0.609 on the 73 calibration units (as specs/scoring/link-scoring-2026-11-08.yaml)"
   context_variants: >-
     claim_qualifiers: one more record counts (596); R1 the same, R2 0.657 (0.56-0.75), R3 0.608: inside 0.03 of the
     verifier's label, i.e. equal by the decision rule

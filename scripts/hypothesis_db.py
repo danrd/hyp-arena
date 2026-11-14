@@ -1,4 +1,4 @@
-"""The hypothesis database (specs/hypothesis-db-2026-11-09.yaml): one row per hypothesis or version, from every source we
+"""The hypothesis database (specs/data/hypothesis-db-2026-11-09.yaml): one row per hypothesis or version, from every source we
 hold, with a stable id, the short id, the text, the date it was written, the cut-off of its scoring, the outcome when known,
 and where it is used (pools, Argon packs, data files). Free, deterministic, no model call. Rows and texts are private.
 

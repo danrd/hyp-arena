@@ -6,7 +6,7 @@ literature on each before T. Free, deterministic, no model call.
     python -m scripts.pack22_alternatives check   # after the answer: every PMID against PubMed (title, first author, date <= T)
 
 The texts and dates T are pack 18's (registry text as the text builder writes it); new ids, new order, and nothing of our
-own alternatives is shown. Measures and the rule: specs/benchmark-alternatives-2026-11-14.yaml (written before the answer).
+own alternatives is shown. Measures and the rule: specs/alternatives/benchmark-alternatives-2026-11-14.yaml (written before the answer).
 """
 from __future__ import annotations
 

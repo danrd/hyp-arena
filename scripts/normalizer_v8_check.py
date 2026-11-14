@@ -1,5 +1,5 @@
 """normalize_card/v8 on the 30 calibration texts, cards only (no verification), against the v7 cards of the v3 calibration.
-Criterion fixed before the call: specs/normalizer-v8-2026-11-05.yaml.
+Criterion fixed before the call: specs/card/normalizer-v8-2026-11-05.yaml.
 
     ALLOW_PAID=1 python -m scripts.normalizer_v8_check run      # 30 normalizer calls (Gemini 3.5 Flash, configs/v3-flash.yaml)
     python -m scripts.normalizer_v8_check score                 # the measures for v7 and v8, free

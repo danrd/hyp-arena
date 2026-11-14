@@ -1,4 +1,4 @@
-"""The declared chain claims read again with verify_claim/v11 on the same papers (specs/record-weight-2026-11-08.yaml,
+"""The declared chain claims read again with verify_claim/v11 on the same papers (specs/scoring/record-weight-2026-11-08.yaml,
 reread_v11). Paid (DeepSeek V4.1 Flash through CometAPI).
 
     ALLOW_PAID=1 python -m scripts.reread_v11 run --pool calibration|prospective   # -> <pool>/reread_v11.json

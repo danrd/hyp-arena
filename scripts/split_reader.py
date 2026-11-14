@@ -1,4 +1,4 @@
-"""Split reader (specs/reader-model-2026-11-08.yaml, split_reader): DeepSeek's records, Gemini re-labels only the intervention
+"""Split reader (specs/reading/reader-model-2026-11-08.yaml, split_reader): DeepSeek's records, Gemini re-labels only the intervention
 match and the contradicted qualifiers, one short call per claim. Paid for `run`.
 
     ALLOW_PAID=1 python -m scripts.split_reader run      # -> prospective/split_reader.json

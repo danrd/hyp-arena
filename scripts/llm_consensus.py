@@ -135,10 +135,10 @@ def prospective(n: int = 60) -> str:
     spec = SPECS / f"prospective-llm-consensus-{today}.yaml"
     spec.write_text(yaml.safe_dump({
         "id": spec.stem, "frozen_on": today,
-        "what": f"answers of {', '.join(FAMILIES)} to 'will the hypothesis be confirmed?' (prompt predict_outcome/v1) for the {n} ongoing trials of the prospective pool, before any outcome exists (Eternal Search baseline, specs/llm-consensus-2026-11-07.yaml)",
+        "what": f"answers of {', '.join(FAMILIES)} to 'will the hypothesis be confirmed?' (prompt predict_outcome/v1) for the {n} ongoing trials of the prospective pool, before any outcome exists (Eternal Search baseline, specs/whole-system/llm-consensus-2026-11-07.yaml)",
         "answers_file": f"longevity-kg hypothesis_sources/prospective/llm_consensus_{n}.json", "answers_sha256": hashlib.sha256(body).hexdigest(),
         "answered": sum(1 for v in done.values() if v), "of": len(done),
-        "test_when_outcomes_exist": "tied AUC of the models' mean probability and of unanimous yes, next to P (scores_60_v34.json) and to their combination; same outcome labels and rule as specs/prospective-2026-11-06.yaml",
+        "test_when_outcomes_exist": "tied AUC of the models' mean probability and of unanimous yes, next to P (scores_60_v34.json) and to their combination; same outcome labels and rule as specs/whole-system/prospective-2026-11-06.yaml",
     }, allow_unicode=True, sort_keys=False))
     return str(spec)
 

@@ -1,4 +1,4 @@
-"""I on the calibration with the d judged from the registry text vs the proposer's d (specs/informativeness-check-2026-11-08.yaml,
+"""I on the calibration with the d judged from the registry text vs the proposer's d (specs/alternatives/informativeness-check-2026-11-08.yaml,
 item 3 of 2026-11-08). Free. Exploration: the 73 units built the method; an AUC moves by about 0.065 by chance.
 
     python -m scripts.i_recalibration      # -> calibration/i_recalibration.json

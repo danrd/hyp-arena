@@ -1,5 +1,5 @@
 # Outcome labels for ISRCTN hypotheses (scripts/isrctn_outcomes.py). Fixed 2026-10-31 before any outcome document was read.
-# Same method as specs/ctgov-outcomes-2026-10-30.yaml unless stated here.
+# Same method as specs/data/ctgov-outcomes-2026-10-30.yaml unless stated here.
 id: isrctn-outcomes-2026-10-31
 source: "ISRCTN registry (WHO primary registry, ICMJE-accepted); public API https://www.isrctn.com/api/query (robots.txt disallows only /search)"
 selection: "API query condition:<term> for ageing, aging, frailty, sarcopenia, 'healthy ageing', 'healthy aging' (ISRCTN conditions are free text, so the match is on the condition field, not the whole string as in CT.gov; condition texts are listed in the inputs and read at the recheck); unique ISRCTN ids; overall end date before 2026-10-31; prospective: registration date (isrctn dateAssigned) before the overall end date (ISRCTN has no primary completion date); at least one output of type resultsarticle with a PubMed link"

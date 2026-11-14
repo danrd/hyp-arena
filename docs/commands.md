@@ -6,7 +6,7 @@ skips families whose key is not set; the aggregators CometAPI and OpenRouter are
 
 ## Benchmark v2 (registry hypotheses)
 
-Protocol: [`benchmark.md`](benchmark.md), [`specs/benchmark-v2.yaml`](../specs/benchmark-v2.yaml). Texts are private
+Protocol: [`benchmark.md`](benchmark.md), [`specs/data/benchmark-v2.yaml`](../specs/data/benchmark-v2.yaml). Texts are private
 (`$KG_DIR/hypothesis_sources`); the public repository holds ids, labels, dates and flags only.
 
 - Unit list: `python -m scripts.benchmark_v1` (writes `data/benchmark/v2_units.json` and prints its sha256)

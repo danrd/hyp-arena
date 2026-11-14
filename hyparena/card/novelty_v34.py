@@ -1,4 +1,4 @@
-"""Novelty, leverage and the drift flag of method v3.4 (specs/v34-frontier-2026-11-07.yaml), computed by code from the saved
+"""Novelty, leverage and the drift flag of method v3.4 (specs/scoring/v34-frontier-2026-11-07.yaml), computed by code from the saved
 records, no model calls.
 
 - N (ordinal, low to high): new_context < translation < analog < new_mechanism < new_combination < new_link, the distance

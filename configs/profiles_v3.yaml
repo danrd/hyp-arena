@@ -2,18 +2,18 @@
 # aggregates them with random weights under each profile's order of importance, instead of the fixed product V = P x W x I
 # (which is one point of this family: equal weights on the log scale). hyparena/card/aspid_v3.py.
 # Indicators: P, W, I, I_headroom (I if the experiment cut off every supported alternative), feasibility (method-v3.md 9.4),
-# endpoint_clinical (2026-11-06, specs/estimand-2026-11-06.yaml: kappa 0.93 between two families, |rho| <= 0.42 with every
+# endpoint_clinical (2026-11-06, specs/scoring/estimand-2026-11-06.yaml: kappa 0.93 between two families, |rho| <= 0.42 with every
 # other indicator) in the lowest tier of evidence and funding; trial-2 profiles. Earlier: in the lowest tier three refinements from the records (hyparena/card/v3_extra.py): best design for the outcome link,
 # independent sources for it, share of the chain's weight against. Unknown values are drawn over their range.
 # the v2 indicator set: human safety data exist or not; unknown is drawn over its range). P, I and I_headroom are on log
 # scales, so the aggregation is a randomly weighted geometric mean: a near-zero plausibility is not compensated.
-# v3.4 (2026-11-07, specs/v34-frontier-2026-11-07.yaml): P is non-refutation; against_share left every profile (|rho| with P
+# v3.4 (2026-11-07, specs/scoring/v34-frontier-2026-11-07.yaml): P is non-refutation; against_share left every profile (|rho| with P
 # 0.87 on 127 units, the admission rule); novelty N joined evolution and funding; frontier is a fourth profile. leverage,
 # W_potential and literature_density are defined (aspid_v3.SPECS) but failed the admission rule on the trial pools and are in
 # no profile.
 # 2026-11-07 (user decision): the evolution profile is removed; the room to improve is computed under every profile from the
 # improvement list (improvements.room) and chooses the hypotheses for evolution.
-# v3.5 (2026-11-08, specs/link-scoring-2026-11-08.yaml): one signed axis, chain_state, replaces P and support_share in every
+# v3.5 (2026-11-08, specs/scoring/link-scoring-2026-11-08.yaml): one signed axis, chain_state, replaces P and support_share in every
 # profile (same AUC as P, far better separation); a null record weighs by the power of its study; the gate stays.
 profiles:
   evidence:

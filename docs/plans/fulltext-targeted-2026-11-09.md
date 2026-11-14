@@ -1,7 +1,7 @@
 # Targeted full-text re-read of records whose abstract may overstate (plan, 2026-11-09)
 
-Status: plan; Argon pack 11 sent as the gold; no paid call yet. Numbers of record: specs/sources-argon-2026-11-09.yaml,
-specs/abstract-overstates-2026-11-09.yaml.
+Status: plan; Argon pack 11 sent as the gold; no paid call yet. Numbers of record: specs/search/sources-argon-2026-11-09.yaml,
+specs/reading/abstract-overstates-2026-11-09.yaml.
 
 ## Why
 

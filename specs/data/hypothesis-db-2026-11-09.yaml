@@ -13,7 +13,7 @@ sources:   # first set; Argon is asked for more (below)
   bio_arena: "985 accepted hypotheses of the 2026-10-19 export (longevity-kg external/bioarena/2026-10-19, private: text, dossier, rating with interval, matches); human and organisation authors already anonymised in the export"
   ohf_hypothesis_arena: "OHF (Hypothesis Arena, a separate company project, Working_Notes 2026-11): 29 ageing cards seen on staging; to be exported only with the project's consent"
   omega_point: "the 60 selected hypotheses Eternal Search keeps with timestamps (Working_Notes 7n), if the team shares them"
-  ours: "every generated (specs/generation-2026-11-09.yaml) and evolved hypothesis (tuning, free, directed), with its parent"
+  ours: "every generated (specs/evolution/generation-2026-11-09.yaml) and evolved hypothesis (tuning, free, directed), with its parent"
   chatgpt_set: "longevity-kg external/chatgpt_hypotheses.json (earlier test set, private)"
   to_check: "PersonaAI (114 hypotheses over 12 hallmarks, bioRxiv 2026) and any public set Argon finds"
 

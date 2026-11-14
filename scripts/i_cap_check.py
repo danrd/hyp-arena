@@ -1,4 +1,4 @@
-"""Sensitivity of I to its cap (specs/informativeness-check-2026-11-08.yaml, cap_check). Free.
+"""Sensitivity of I to its cap (specs/alternatives/informativeness-check-2026-11-08.yaml, cap_check). Free.
 
     python -m scripts.i_cap_check      # -> calibration/i_cap_check.json
 """

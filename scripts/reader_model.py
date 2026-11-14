@@ -1,4 +1,4 @@
-"""Is a stronger reader model worth it? (specs/reader-model-2026-11-08.yaml). Paid for `run`.
+"""Is a stronger reader model worth it? (specs/reading/reader-model-2026-11-08.yaml). Paid for `run`.
 
     ALLOW_PAID=1 python -m scripts.reader_model run     # Gemini 3.5 Flash on 30 claims -> prospective/reader_gemini.json
     python -m scripts.reader_model score                 # free

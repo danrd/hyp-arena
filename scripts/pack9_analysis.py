@@ -1,4 +1,4 @@
-"""Analysis of Argon pack 9 (specs/reading-gold-2026-11-08.yaml, measures fixed before sending). Free.
+"""Analysis of Argon pack 9 (specs/reading/reading-gold-2026-11-08.yaml, measures fixed before sending). Free.
 
     python -m scripts.pack9_analysis
 """

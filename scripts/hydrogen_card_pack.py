@@ -1,5 +1,5 @@
 """Card task for an outside strong model (Hydrogen): the 22 texts where normalize_card/v15 on the working model made
-substantive errors (specs/benchmark-card-2026-11-12.yaml, full_run_v15_2026_11_14.weak_texts). Free, no model call.
+substantive errors (specs/card/benchmark-card-2026-11-12.yaml, full_run_v15_2026_11_14.weak_texts). Free, no model call.
 
     python -m scripts.hydrogen_card_pack build   # longevity-kg/reviews/hydrogen-2026-11-14/card_task.json, card_key.json
     python -m scripts.hydrogen_card_pack score   # after card_answer.json: the same code steps as our pipeline, then the

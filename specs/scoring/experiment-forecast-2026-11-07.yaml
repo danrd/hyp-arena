@@ -5,7 +5,7 @@ why: >-
   User decision 2026-11-07: move from "is the hypothesis true" to "what will this experiment show": characterise the decisive
   experiment (start with registry trials, whose protocol is known), estimate the effect it can expect from the literature,
   its power, its cost, and build the forecast from that. The outcome label of a trial depends on power and on the room for
-  bias (specs/error-analysis-2026-11-06.yaml, ceiling: open trials positive 63% vs 38%), which P does not see.
+  bias (specs/scoring/error-analysis-2026-11-06.yaml, ceiling: open trials positive 63% vs 38%), which P does not see.
 
 protocol:
   source: ClinicalTrials.gov API v2 (designModule, armsInterventionsModule, outcomesModule), cached; free.
@@ -36,7 +36,7 @@ forecast:
 
 report:
   - tied AUC on the calibration (74 trials) of the forecast, of its parts (power alone, pi alone, alpha_eff alone), next to
-    P v3.4 (0.595) and the models' probability (0.761 without remembered trials, specs/llm-consensus-2026-11-07.yaml);
+    P v3.4 (0.595) and the models' probability (0.761 without remembered trials, specs/whole-system/llm-consensus-2026-11-07.yaml);
   - the same with the enrollment replaced by the median (the leak check);
   - the share of trials with a numeric expected effect (what full texts should raise, direction 2).
   - exploration only: these samples built the method.

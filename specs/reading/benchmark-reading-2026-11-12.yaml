@@ -36,7 +36,7 @@ sets:
   public_later: "SciFact dev (CC BY 4.0 / ODC-By), then evidence inference 1.0 (MIT annotations; PMC texts private) - a separate spec"
 systems:
   ours_v9: "verify_claim/v9 with its code checks (verbatim quote, retry, effect class, fallback family): the reader the prospective pool was scored with"
-  ours_v13: "relevance filter v2, then verify_claim/v13 in batches of 10 with an answer for every paper (the reader of specs/reader-v12-2026-11-08.yaml); added 2026-11-12 before any call"
+  ours_v13: "relevance filter v2, then verify_claim/v13 in batches of 10 with an answer for every paper (the reader of specs/reading/reader-v12-2026-11-08.yaml); added 2026-11-12 before any call"
   baseline_a: >-
     the same model as our reader, the same items (claim + the same abstracts in one call), the task in one sentence and the
     output schema, no reading rules, no code checks (no quote verification, no retry). User decision 2026-11-12: baseline (a) only.

@@ -1,4 +1,4 @@
-"""Re-check of Argon's pack 3 (specs/sources-experiment-2026-11-07.yaml, arm C and the gold labels), free:
+"""Re-check of Argon's pack 3 (specs/search/sources-experiment-2026-11-07.yaml, arm C and the gold labels), free:
 quotes verbatim (abstract, or the PMC full text where PMC allows it), publication date before the cut-off, PMID exists;
 then the labels against our records, the graph against our search, and the graph scored by the v3.4 rules.
 

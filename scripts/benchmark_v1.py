@@ -1,4 +1,4 @@
-"""Frozen unit list of the benchmark (specs/benchmark-v2.yaml; v1 kept in data/benchmark/v1_units.json): human registry hypotheses with decisive outcomes.
+"""Frozen unit list of the benchmark (specs/data/benchmark-v2.yaml; v1 kept in data/benchmark/v1_units.json): human registry hypotheses with decisive outcomes.
 
     python -m scripts.benchmark_v1        # writes data/benchmark/v1_units.json (ids, labels, dates, flags; no texts) and prints its sha256
 

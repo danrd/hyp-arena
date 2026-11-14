@@ -1,4 +1,4 @@
-"""The test model of a hypothesis (specs/test-model-2026-11-09.yaml): arms, prediction matrix, decision criteria, rigour.
+"""The test model of a hypothesis (specs/reading/test-model-2026-11-09.yaml): arms, prediction matrix, decision criteria, rigour.
 
     ALLOW_PAID=1 python -m scripts.test_model run --part dev|holdout|calibration [--version v1]
     python -m scripts.test_model score --part dev|holdout [--version v1]     # free

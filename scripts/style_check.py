@@ -7,7 +7,7 @@
 The 15 texts and the arms O1 and O2 (original style, twice) are those of L1.8 (data/validation/l1_8_texts.json, runs/stage5/l1_8).
 Our method: Kendall tau-b between the expected scores of the profile evidence_first of the same 15 hypotheses in two styles;
 the three style pairs (O1, H, T) must each not fall below tau(O1, O2) minus 0.05. The baseline (L0, one family, Elo, seeds 0 and 1 for
-the original style) is reported next to it with no threshold. The criterion is in specs/validation-criteria.yaml (L1.9).
+the original style) is reported next to it with no threshold. The criterion is in specs/whole-system/validation-criteria.yaml (L1.9).
 """
 from __future__ import annotations
 

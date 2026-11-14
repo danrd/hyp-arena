@@ -1,5 +1,5 @@
 """Alternatives proposed with the registry text and a checklist of competitor kinds (propose_alternatives/v2), d judged by
-judge_alternatives/v2 (specs/informativeness-check-2026-11-08.yaml, fix_d step2). Paid; holdout trials only.
+judge_alternatives/v2 (specs/alternatives/informativeness-check-2026-11-08.yaml, fix_d step2). Paid; holdout trials only.
 
     ALLOW_PAID=1 python -m scripts.propose_v2 run      # -> prospective/alternatives_v2_holdout.json
 """

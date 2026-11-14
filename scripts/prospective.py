@@ -4,7 +4,7 @@
                                                        # 2026-11-01 .. 2028-12-31 (no model calls)
     python -m scripts.prospective pick --n 60           # a subsample, balanced by intervention type, SHA-1 order (fixed before scoring)
     ALLOW_PAID=1 python -m scripts.prospective run      # method v3 (configs/v3-flash-n10.yaml) on the picked trials, as of today
-    ALLOW_PAID=1 python -m scripts.prospective estimand # endpoint category by two families (specs/estimand-2026-11-06.yaml)
+    ALLOW_PAID=1 python -m scripts.prospective estimand # endpoint category by two families (specs/scoring/estimand-2026-11-06.yaml)
     python -m scripts.prospective score                 # v3.2 P with its interval, I, V, scope, ASPID profiles (no calls)
     python -m scripts.prospective freeze                # the scores and their SHA-256 into specs/prospective-<date>.yaml
 
@@ -29,7 +29,7 @@ import yaml
 from scripts.ctgov_outcomes import KG
 
 OUT = KG / "hypothesis_sources" / "prospective"
-SPECS = Path(__file__).resolve().parents[1] / "specs"
+SPECS = Path(__file__).resolve().parents[1] / "specs" / "whole-system"
 CONFIG = "configs/v3-flash-n10.yaml"
 STATUSES = ("RECRUITING", "ACTIVE_NOT_RECRUITING", "NOT_YET_RECRUITING", "ENROLLING_BY_INVITATION")
 WINDOW = ("2026-11-01", "2028-12-31")
@@ -132,8 +132,8 @@ def endpoint_clinical(n: int, h: str):
 
 
 def score(n: int = 60) -> dict:
-    """Method v3.4 (specs/v34-frontier-2026-11-07.yaml) -> scores_{n}_v34.json; scores_{n}.json (v3.2, frozen by its hash in
-    specs/prospective-2026-11-06.yaml) is never rewritten."""
+    """Method v3.4 (specs/scoring/v34-frontier-2026-11-07.yaml) -> scores_{n}_v34.json; scores_{n}.json (v3.2, frozen by its hash in
+    specs/whole-system/prospective-2026-11-06.yaml) is never rewritten."""
     from hyparena.card import aspid_v3, rules_v32, v3_extra
     from hyparena.card import novelty_v34 as nv
     from hyparena.card.models import ClaimVerification, HypothesisCard

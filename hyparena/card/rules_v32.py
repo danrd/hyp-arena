@@ -14,15 +14,15 @@ target, pathway cascades as one slot):
   of each link;
 - alternative support a = max(0, 2 (S - 0.5)): continuous above "no record";
 - scope W is not a factor of V: V = P x I; W stays an indicator of ASPID;
-- fold=True (2026-11-06, specs/v32-independence-fold-2026-11-06.yaml): records of one independence group (one trial in
+- fold=True (2026-11-06, specs/scoring/v32-independence-fold-2026-11-06.yaml): records of one independence group (one trial in
   several papers) count as one source: the heaviest fully, the rest with FOLD_REST.
 
-v3.3 = evaluate(..., fold=True, neutral_unverified=True) (specs/v33-2026-11-06.yaml): a link with no usable record on either
+v3.3 = evaluate(..., fold=True, neutral_unverified=True) (specs/scoring/v33-2026-11-06.yaml): a link with no usable record on either
 side counts as 1 in P and its interval instead of 0.5, and `coverage` (share of the chain's slots with a usable record or
 established by approval) is reported; the ASPID indicator is `support_share`, the mean over the slots of
-max(0, 2 (S - 0.5)): how much of the chain is supported, continuous (amendment before scoring, specs/v33-2026-11-06.yaml).
+max(0, 2 (S - 0.5)): how much of the chain is supported, continuous (amendment before scoring, specs/scoring/v33-2026-11-06.yaml).
 
-v3.4 = evaluate(..., v34=True) (specs/v34-frontier-2026-11-07.yaml), fold on: P is non-refutation, the product over the
+v3.4 = evaluate(..., v34=True) (specs/scoring/v34-frontier-2026-11-07.yaml), fold on: P is non-refutation, the product over the
 slots of R = (1 + cF) / (1 + cF + cA) (1 when nothing is against; support is in support_share alone; no interval); on the
 outcome link of a claim about humans another species is charged by the design scale only; on the links before the outcome
 precision is a constant 1/2.
@@ -43,7 +43,7 @@ from hyparena.card.models import Claim, ClaimVerification, EvidenceRecord, Hypot
 
 C_ANCHOR = 4 / 0.6
 VARIANT_BASE = "v3.1"
-FOLD_REST = 0.25        # fold=True: further records of one independence group (specs/v32-independence-fold-2026-11-06.yaml)
+FOLD_REST = 0.25        # fold=True: further records of one independence group (specs/scoring/v32-independence-fold-2026-11-06.yaml)
 
 
 def group_key(rec: EvidenceRecord) -> str:
@@ -110,7 +110,7 @@ def _claim_fixes(claim: Claim, key: str) -> bool:
 
 
 def only_claim_qualifiers(rec: EvidenceRecord, claim: Claim) -> EvidenceRecord:
-    """v3.5 amendment (user decision 2026-11-08, specs/record-weight-2026-11-08.yaml context_variants.claim_qualifiers): a
+    """v3.5 amendment (user decision 2026-11-08, specs/scoring/record-weight-2026-11-08.yaml context_variants.claim_qualifiers): a
     "no" in qualifiers_match counts only on a qualifier the claim fixes; the verifier marked sex, dose or population "no"
     for claims that say nothing about them (53 of 98 adjacent records)."""
     qm = {k: v for k, v in rec.qualifiers_match.items() if k == "intervention_match" or v != "no" or _claim_fixes(claim, k)}
@@ -132,7 +132,7 @@ def context_v34_verifier(rec: EvidenceRecord, claim: Claim) -> Optional[str]:
     return "exact" if no == {"species"} else ctx
 
 
-NULL_POWER_D, NULL_POWER_N_UNKNOWN = 0.4, 40     # specs/link-scoring-2026-11-08.yaml, B
+NULL_POWER_D, NULL_POWER_N_UNKNOWN = 0.4, 40     # specs/scoring/link-scoring-2026-11-08.yaml, B
 
 
 def null_power(n: Optional[int], comparison: str) -> float:
@@ -156,7 +156,7 @@ from hyparena.card.review_kind import certainty_factor  # noqa: E402
 
 
 def record_weight_v36(rec: EvidenceRecord, claim: Claim, against: bool) -> float:
-    """v3.6 (specs/record-weight-2026-11-08.yaml, user decision 2026-11-08): GRADE-shaped weight.
+    """v3.6 (specs/scoring/record-weight-2026-11-08.yaml, user decision 2026-11-08): GRADE-shaped weight.
     design: on the outcome link of a human claim RCT and meta-analysis 1, non-randomised and observational 1/2, else 1/4
     (before the outcome the preclinical scale as before); precision: a null by its power (v3.5), a record for min(1, ln n /
     ln 300) (1/2 before the outcome); effect: a record for with a stated effect of at least medium size 1, else (small, none,
@@ -305,16 +305,16 @@ class V32Result:
 
 # Steps before the outcome in the evidence balance: "separate" (v3.9: each step a place, consecutive cellular processes one
 # place by their best link); "min" or "mean": all steps one place, by the weakest step with data or by their mean (v3.10
-# candidate: an added well-supported step cannot raise the balance; specs/merge-steps-2026-11-14.yaml)
+# candidate: an added well-supported step cannot raise the balance; specs/card/merge-steps-2026-11-14.yaml)
 STEPS_SLOT = os.environ.get("STEPS_SLOT", "min")             # v3.10 (2026-11-14)
-EMPTY_SLOTS = os.environ.get("EMPTY_SLOTS", "skip")       # v3.7 (user 2026-11-09, specs/empty-slots-2026-11-09.yaml): "skip"; "count" = v3.6
+EMPTY_SLOTS = os.environ.get("EMPTY_SLOTS", "skip")       # v3.7 (user 2026-11-09, specs/scoring/empty-slots-2026-11-09.yaml): "skip"; "count" = v3.6
 
 
 def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
              alt_verifications: Optional[dict[str, ClaimVerification]] = None, c: float = C_ANCHOR,
              fold: bool = False, neutral_unverified: bool = False, v34: bool = False, null_power: bool = False,
              v35: bool = False, v36: bool = False) -> V32Result:
-    """v3.5 (2026-11-08, specs/link-scoring-2026-11-08.yaml) = v3.4 + a null weighted by its power; the profiles use the
+    """v3.5 (2026-11-08, specs/scoring/link-scoring-2026-11-08.yaml) = v3.4 + a null weighted by its power; the profiles use the
     signed chain state (mean of 2S - 1 over the slots) instead of P and the support share."""
     global NULL_POWER, V36
     if v36:

@@ -1,4 +1,4 @@
-# Normalizer acceptance check (specs/normalizer-acceptance-2026-10-30.yaml), candidate B: method v2 with DeepSeek V4.1 Flash (thinking
+# Normalizer acceptance check (specs/card/normalizer-acceptance-2026-10-30.yaml), candidate B: method v2 with DeepSeek V4.1 Flash (thinking
 # off) as the normalizer as well as the verifier (`normalizer_family: deepseek`). The normalizer is a parser, not a judge, so the
 # independence rule of the verifier does not apply to it.
 rpm: 30

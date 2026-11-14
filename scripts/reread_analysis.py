@@ -1,4 +1,4 @@
-"""Measures of the v11 re-read (specs/record-weight-2026-11-08.yaml, reread_v11). Free.
+"""Measures of the v11 re-read (specs/scoring/record-weight-2026-11-08.yaml, reread_v11). Free.
 
     python -m scripts.reread_analysis      # -> calibration/reread_v11_analysis.json
 """

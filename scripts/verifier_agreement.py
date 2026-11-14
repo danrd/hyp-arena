@@ -6,7 +6,7 @@
 
 Cards come from the earlier ITP runs (no normalizer); evidence is read as of today (no date guard: the check is about the verifiers agreeing
 with one another, not about the date), alternatives and duplicates off. Statuses: supported, refuted, contested, unverified.
-The criterion is in specs/validation-criteria.yaml (L1.10).
+The criterion is in specs/whole-system/validation-criteria.yaml (L1.10).
 """
 from __future__ import annotations
 

@@ -6,7 +6,7 @@ why: >-
   the loss is in reading (pack 8: 19% of key papers are records on their link; cross-link and reader v13 reach 0.29), and
   every check of reading so far is a sample read by an outside reader (packs 8, 9, 11, 13). Curated databases give
   thousands of facts with the paper that shows each one, so recall, direction and context can be measured by code, cheaply,
-  for the current reader, the paper skeleton (specs/paper-skeleton-2026-11-09.yaml) and a future specialised reader
+  for the current reader, the paper skeleton (specs/reading/paper-skeleton-2026-11-09.yaml) and a future specialised reader
 what_it_is_not: >-
   not a test of choosing hypotheses that later succeed (that is the registry benchmark and the prospective pool) and not
   the negative-sampling test of 2026-10 (date cut before the finding, which leaves the finding unverifiable): there is no

@@ -3,7 +3,7 @@ written_on: 2026-11-09
 status: definitions fixed before the pack was built or sent
 why: >-
   User request 2026-11-09: let Argon run the sources test (abstract vs full text vs knowledge graph) that our paid arm B
-  (PMC full texts, specs/sources-experiment-2026-11-07.yaml) never ran. Question: how much does reading the full text change
+  (PMC full texts, specs/search/sources-experiment-2026-11-07.yaml) never ran. Question: how much does reading the full text change
   what a paper says about a link (stance, effect size, n, design, population), and how much does a curated knowledge graph
   add beyond the papers, link by link.
 pack: Argon pack 10 (longevity-kg reviews/argon-2026-11-08/pack_10_task.json; hidden key pack_10_key.json)

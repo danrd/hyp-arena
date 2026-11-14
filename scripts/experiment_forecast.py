@@ -1,4 +1,4 @@
-"""Forecast from the experiment (specs/experiment-forecast-2026-11-07.yaml): protocol from ClinicalTrials.gov, expected effect
+"""Forecast from the experiment (specs/scoring/experiment-forecast-2026-11-07.yaml): protocol from ClinicalTrials.gov, expected effect
 from the records of the outcome slot, power, room for bias -> P(positive). Free; exploration on the calibration.
 
     python -m scripts.experiment_forecast          # -> $KG_DIR/hypothesis_sources/calibration/experiment_forecast.json

@@ -1,5 +1,5 @@
 """Free experiment, part 3: how to share the reading budget of a hypothesis over its searches (plan
-docs/plans/search-2026-11-14.md; rule in specs/benchmark-search-2026-11-12.yaml, free_experiments_2026_11_14).
+docs/plans/search-2026-11-14.md; rule in specs/search/benchmark-search-2026-11-12.yaml, free_experiments_2026_11_14).
 
     python -m scripts.search_budget_check     # longevity-kg/reviews/argon-2026-11-12/search_budget_check.json, search_orders.json
 

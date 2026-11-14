@@ -1,4 +1,4 @@
-"""Free: v3.6 balance with empty slots counted (as now) vs skipped (specs/empty-slots-2026-11-09.yaml)."""
+"""Free: v3.6 balance with empty slots counted (as now) vs skipped (specs/scoring/empty-slots-2026-11-09.yaml)."""
 from __future__ import annotations
 
 import json

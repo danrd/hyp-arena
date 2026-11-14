@@ -3,11 +3,11 @@
 """Method v3 extraction against hand-made gold, with the v2 verifier (verify_claim/v5) on the same inputs for comparison.
 
 Two criteria, each fixed before its first call:
-- `--gold manual`: specs/extraction-gold-v3-2026-11-04.yaml, verify_claim/v6 on 20 pairs (not passed; the gold mixed relevance
+- `--gold manual`: specs/reading/extraction-gold-v3-2026-11-04.yaml, verify_claim/v6 on 20 pairs (not passed; the gold mixed relevance
   with extraction);
-- `--gold v3`: specs/extraction-gold-v3b-2026-11-04.yaml, verify_claim/v7 on all 45 pairs: relevance on all of them,
+- `--gold v3`: specs/reading/extraction-gold-v3b-2026-11-04.yaml, verify_claim/v7 on all 45 pairs: relevance on all of them,
   extraction on the 26 the gold marks relevant (not passed on relevance);
-- `--gold v8`: specs/extraction-gold-v8-2026-11-04.yaml, verify_claim/v8 on 29 fresh pairs from calibration steps 2-3
+- `--gold v8`: specs/reading/extraction-gold-v8-2026-11-04.yaml, verify_claim/v8 on 29 fresh pairs from calibration steps 2-3
   (`pairs` builds them): the same measures.
 
     python -m scripts.extraction_gold_v3 run --fake                  # free dry run with the fake model (checks the plumbing)

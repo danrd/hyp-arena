@@ -1,4 +1,4 @@
-"""Argon pack 16: one full reading gold per (link, paper) for the reading benchmark (specs/benchmark-reading-2026-11-12.yaml).
+"""Argon pack 16: one full reading gold per (link, paper) for the reading benchmark (specs/reading/benchmark-reading-2026-11-12.yaml).
 Free, deterministic (hash order, no model call). Writes the task in two parts and the hidden key to the private repository.
 
     python -m scripts.pack16_reading build      # writes longevity-kg/reviews/argon-2026-11-12/pack_16{a,b}_task.json, pack_16_key.json

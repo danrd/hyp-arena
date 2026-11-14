@@ -36,7 +36,7 @@ replacement for trials.
 ## What is scored before the analysis (frozen with a hash)
 
 1. Our method v3.4 on each hypothesis (P, support share, novelty, the ASPID profiles), with the literature cut-off = today.
-2. The baseline "will it be confirmed?" by two model families (as specs/llm-consensus-2026-11-07.yaml).
+2. The baseline "will it be confirmed?" by two model families (as specs/whole-system/llm-consensus-2026-11-07.yaml).
 3. Optional: Argon's reading of the same hypotheses (blind).
 
 ## Outcome and test

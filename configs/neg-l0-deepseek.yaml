@@ -1,4 +1,4 @@
-# Co-Scientist baseline (L0) on the negative-sampling groups of 2026-10-29 (specs/negatives-2026-10-29.yaml), through
+# Co-Scientist baseline (L0) on the negative-sampling groups of 2026-10-29 (specs/whole-system/negatives-2026-10-29.yaml), through
 # CometAPI (COMET_API_KEY, ALLOW_PAID=1). One family, as in Co-Scientist: DeepSeek V4.1 Flash, the same pinned snapshot as
 # the verifier of method v2 (configs/v2-flash.yaml), so both arms run on a model of the same tier and price.
 rpm: 30

@@ -1,4 +1,4 @@
-"""Analysis of Argon pack 8 (specs/balance-check-2026-11-08.yaml, measures fixed before sending). Free (PubMed for PMIDs).
+"""Analysis of Argon pack 8 (specs/scoring/balance-check-2026-11-08.yaml, measures fixed before sending). Free (PubMed for PMIDs).
 
     python -m scripts.pack8_analysis
 """

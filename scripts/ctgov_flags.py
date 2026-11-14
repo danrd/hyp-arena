@@ -1,5 +1,5 @@
 """Flag candidates for ClinicalTrials.gov trials whose registry text may have been edited after the result
-(specs/ctgov-outcomes-2026-10-30.yaml: flags, flag_rules).
+(specs/data/ctgov-outcomes-2026-10-30.yaml: flags, flag_rules).
 
     python -m scripts.ctgov_flags            # writes $KG_DIR/hypothesis_sources/ctgov_flags_candidates.yaml
 

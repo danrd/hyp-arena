@@ -1,4 +1,4 @@
-"""Analysis of Argon pack 12 (specs/meta-and-nulls-2026-11-09.yaml). Free.
+"""Analysis of Argon pack 12 (specs/reading/meta-and-nulls-2026-11-09.yaml). Free.
 
     python -m scripts.pack12_analysis
 """

@@ -224,7 +224,7 @@ def score_v3(steps=(1, 2, 3), tag: str = "_v3", no_stance_as_support: bool = Fal
 def rescore_v3(results: dict, no_stance_as_support: bool = False, variant: str = "v3") -> dict:
     """Method v3's rules applied again to saved v3 results, without model calls. With `no_stance_as_support`, the findings
     the verifier returned with stance neither (`no_stance`, kept since verify_claim/v6) count as records for the claim:
-    the sensitivity analysis fixed in specs/calibration-v3-2026-11-05.yaml (the verifier's recall is about 0.6 with precision
+    the sensitivity analysis fixed in specs/whole-system/calibration-v3-2026-11-05.yaml (the verifier's recall is about 0.6 with precision
     1.0, extraction-gold-v9, so most of these are relevant findings it did not give a stance). They are counted as support
     (a direction cannot be read from a record without a stance); the record's own design, n, comparison, effect class and
     context set its weight as for any record. Returns {unit: v3 result dict}."""
@@ -250,7 +250,7 @@ def rescore_v3(results: dict, no_stance_as_support: bool = False, variant: str =
 
 
 def explore_v3(steps=(1, 2, 3), tag: str = "_v3", variant: str = "v3") -> dict:
-    """The exploratory look fixed in specs/calibration-v3-2026-11-05.yaml: each additional indicator of v3_extra (Spearman
+    """The exploratory look fixed in specs/whole-system/calibration-v3-2026-11-05.yaml: each additional indicator of v3_extra (Spearman
     with P, tied AUC against the outcomes, orientation: higher is better except against_share and unverified_links) and the
     ASPID expected values of the trial profiles over the v3 axes. Decides nothing."""
     from scipy.stats import spearmanr

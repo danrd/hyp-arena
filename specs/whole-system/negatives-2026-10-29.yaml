@@ -1,4 +1,4 @@
-# Negative-sampling test on 20 new groups, 3 repeats of every arm: L2.1b, L2.2b, L3.6b (specs/validation-criteria.yaml).
+# Negative-sampling test on 20 new groups, 3 repeats of every arm: L2.1b, L2.2b, L3.6b (specs/whole-system/validation-criteria.yaml).
 # Fixed before the first model call (user decision 2026-10-29: 20 groups x 3 repeats). Code: hyparena/negatives.py.
 id: negatives-2026-10-29
 kind: negative_sampling

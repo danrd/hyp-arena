@@ -14,7 +14,7 @@ step_1_weights_and_P:
     outcomes one slot by the primary or the mean) of R = (1 + cF) / (1 + cF + cA), c = 4 / 0.6. R = 1 when nothing is
     against, whatever the support; data against lower it, data for soften that. Support is carried by support_share alone.
     Removes the first-evidence paradox of v3.3 (a first modest record for a link lowered P from 1 to S). Motivation in the
-    data: under v3.2 and v3.3 the signal of P against trial outcomes came from data against (specs/error-analysis-2026-11-06.yaml).
+    data: under v3.2 and v3.3 the signal of P against trial outcomes came from data against (specs/scoring/error-analysis-2026-11-06.yaml).
     No interval: P_lo = P_hi = P (the uncertainty of support is in support_share; of refutation, in the records against).
   species_once: >-
     On the outcome link of a claim about humans, a record about another species is charged by the design scale only

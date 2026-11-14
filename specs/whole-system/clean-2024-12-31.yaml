@@ -1,6 +1,6 @@
 # L3.3 (main test) and L3.9 (clean half) on the ITP + CITP pool with T = 2024-12-31, without an LLM verifier.
 # Fixed before the run (user decisions 2026-10-29: policy "no model reads the pool"; all 33 tests; units as below).
-# Code: scripts/clean_backtest.py (committed together with this file). Criteria: specs/validation-criteria.yaml (L3.3, L3.9).
+# Code: scripts/clean_backtest.py (committed together with this file). Criteria: specs/whole-system/validation-criteria.yaml (L3.3, L3.9).
 id: clean-backtest-2024-12-31
 kind: backtest
 as_of: "2024-12-31"

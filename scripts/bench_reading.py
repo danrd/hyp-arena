@@ -1,4 +1,4 @@
-"""Reading benchmark (specs/benchmark-reading-2026-11-12.yaml) on Argon pack 16: 20 links, 400 link-abstract pairs.
+"""Reading benchmark (specs/reading/benchmark-reading-2026-11-12.yaml) on Argon pack 16: 20 links, 400 link-abstract pairs.
 
     python -m scripts.bench_reading dry                          # free: calls, tokens and the price of every system
     ALLOW_PAID=1 python -m scripts.bench_reading run --system v9|v13|base_a [--limit N]

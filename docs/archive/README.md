@@ -13,6 +13,6 @@ Documents kept for their ideas and history, not as a description of the current 
 | [spec/hypothesis-card-examples.md](spec/hypothesis-card-examples.md) | Hand-built v1 cards | examples of the card format |
 | [rules-method.md](rules-method.md) | Method v2: verified card → rule-based indicators → aggregation | the baseline that v3 replaced (calibration AUC 0.46) |
 | [approach.md](approach.md), [architecture.md](architecture.md) | The Co-Scientist-style approach and multi-agent graph | the Elo / TrueSkill baselines still in the code |
-| [comparison.md](comparison.md), [negative-sampling.md](negative-sampling.md), [evolution-experiment.md](evolution-experiment.md) | Protocols of the v2-era tests | their criteria are in `specs/validation-criteria.yaml` |
+| [comparison.md](comparison.md), [negative-sampling.md](negative-sampling.md), [evolution-experiment.md](evolution-experiment.md) | Protocols of the v2-era tests | their criteria are in `specs/whole-system/validation-criteria.yaml` |
 | [demo.md](demo.md) | The Gradio demo of v2 | the demo app (archived code: [`archive/code/`](../../archive/code/README.md)) |
 | [handoffs/](handoffs/) | Hand-offs between sessions, 2026-10-29 … 11-12 (morning) | the chain of decisions |

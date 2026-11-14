@@ -1,4 +1,4 @@
-"""Argon pack 7: a second reader of novelty N (specs/novelty-check-2026-11-08.yaml). Free (no model calls).
+"""Argon pack 7: a second reader of novelty N (specs/novelty/novelty-check-2026-11-08.yaml). Free (no model calls).
 
     python -m scripts.pack7_novelty build     # -> longevity-kg reviews/argon-2026-11-08/pack_7_task.json + pack_7_key.json
 """

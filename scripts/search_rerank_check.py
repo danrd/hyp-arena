@@ -1,5 +1,5 @@
 """Free experiments on choosing the 20 papers per claim (plan docs/plans/search-2026-11-14.md, step 2; the admission rule is in
-specs/benchmark-search-2026-11-12.yaml, free_experiments_2026_11_14). PubMed only, no model call.
+specs/search/benchmark-search-2026-11-12.yaml, free_experiments_2026_11_14). PubMed only, no model call.
 
     python -m scripts.search_rerank_check     # longevity-kg/reviews/argon-2026-11-12/search_rerank_check.json
 

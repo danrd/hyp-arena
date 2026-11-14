@@ -1,5 +1,5 @@
 """Tests computed from posted group values for ClinicalTrials.gov trials labelled not_reported
-(specs/ctgov-outcomes-2026-10-30.yaml: recompute_rules).
+(specs/data/ctgov-outcomes-2026-10-30.yaml: recompute_rules).
 
     python -m scripts.ctgov_recompute --multi   # second rule: several time points / subscales -> ctgov_recomputed_multi.yaml
     python -m scripts.ctgov_recompute      # writes $KG_DIR/hypothesis_sources/ctgov_recomputed.yaml (no model calls)

@@ -1,4 +1,4 @@
-"""Two indicators from public data, no model calls (specs/trend-genetics-2026-11-06.yaml):
+"""Two indicators from public data, no model calls (specs/scoring/trend-genetics-2026-11-06.yaml):
 
 - trend_pubmed: is the intervention gaining attention in the literature, as of T: ln((a+1)/(b+1)) - ln(N_A/N_B) with a, b
   the PubMed records on the term in [T-3y, T) and [T-6y, T-3y) and N the records of all PubMed in the same windows;

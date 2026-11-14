@@ -1,4 +1,4 @@
-"""Argon pack 9: a gold of findings per (link, paper) for the reader's recall (specs/reading-gold-2026-11-08.yaml). Free.
+"""Argon pack 9: a gold of findings per (link, paper) for the reader's recall (specs/reading/reading-gold-2026-11-08.yaml). Free.
 
     python -m scripts.pack9_reading build
 """
