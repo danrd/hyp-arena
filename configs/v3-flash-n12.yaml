@@ -1,4 +1,4 @@
-# As configs/v3-flash-n10.yaml with the filtered search (2026-11-14; not yet the working config: a confirming run first).
+# As configs/v3-flash-n10.yaml with the filtered search: the config of the confirming run (2026-11-14), which passed; the working config n10 now has the same search.
 # As configs/v3-flash.yaml with normalize_card/v10 (the prospective pool, scripts/whole_system/prospective.py).
 # Method v3 on the calibration setup of configs/v2-flash-msearch.yaml.
 # Method v2 as configs/v2-flash.yaml, with the model-written literature search (search: model, at the end).

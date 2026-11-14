@@ -165,8 +165,11 @@ The detailed rules, every field with its origin and what reads it, and a worked 
 
 ## 4. Evidence records
 
-A reader model reads each abstract found for a claim (PubMed, date-cut at T, queries written by a model, citation
-expansion) and returns records:
+A reader model reads each abstract found for a claim and returns records. The search (`search: filtered`): the queries a
+model writes and a query on the exact population, up to 200 PubMed papers each, date-cut at T; ordered by the match of the
+query words with title and abstract (BM25); the references and citing papers of the first 5 added (also before T) and the
+list ordered again; a cheap model rates the first 100 from 0 to 3 for the claim; every paper rated 3 is read, filled up to
+10 with papers rated 2, at most 20 per search. The records:
 
 - a verbatim quote (checked by code; a quote not in the abstract is dropped);
 - stance: supports / refutes / neither (only supports and refutes are scored);
@@ -714,8 +717,8 @@ the triage is in the database spec.
 How the method is checked, by level (the system itself, against other approaches, overall quality against outcomes, generation): [`docs/system/testing.md`](system/testing.md). Generation is compared with an LLM in a chat under [`specs/evolution/generation-comparison-2026-11-14.yaml`](../specs/evolution/generation-comparison-2026-11-14.yaml) ([manual](system/generation-arena.md)).
 
 - It does not predict whether a trial will succeed; trials are run where support exists but the question is open.
-- The search loses most of what a careful search must find before reading: of the papers an outside reader lists for a
-  trial, our saved searches return a quarter, mostly because the model-written queries combine too many terms
+- The search gives the reader about half of what a careful search must find before T (0.49 of the papers an outside reader
+  lists for a trial; papers on the mechanism steps 0.27, none of them read)
   ([`specs/search/benchmark-search-2026-11-12.yaml`](../specs/search/benchmark-search-2026-11-12.yaml)).
 - The reader finds about 0.3 of the findings an outside reader sees in the same abstracts (reading benchmark); support from
   interventions of the same kind is often missed, so the balance is biased down for programmes and behavioural
@@ -744,7 +747,7 @@ known result (calibration pool); **R4** — the order of pairs of records given 
 | Step | Check | Result |
 |---|---|---|
 | card | an outside reader's card gold (definitions of the card manual), 90 texts | outcome / step / premise κ 0.67 (0.72 on the 60 registry and written-mechanism texts); main outcome 0.79; main factor 0.97; claims recall 0.57, precision 0.56 ([`specs/card/benchmark-card-2026-11-12.yaml`](../specs/card/benchmark-card-2026-11-12.yaml)) |
-| search | an outside reader's search gold, 30 calibration trials | saved searches return 0.25 [0.17, 0.35] of the gold papers, 0.10 on their own link; the closest prior work in 0.40 of trials ([`specs/search/benchmark-search-2026-11-12.yaml`](../specs/search/benchmark-search-2026-11-12.yaml)) |
+| search | an outside reader's search gold, 30 calibration trials | the reader gets 0.49 [0.38, 0.60] of the gold papers, 0.31 on their own link, at a median of 52 papers per hypothesis; the closest prior work in 0.73 of trials ([`specs/search/benchmark-search-2026-11-12.yaml`](../specs/search/benchmark-search-2026-11-12.yaml)) |
 | reading | an outside reader's findings on 400 link-abstract pairs | recall 0.29, precision 0.64; a plain LLM 0.28 / 0.41, the difference not significant ([`specs/reading/benchmark-reading-2026-11-12.yaml`](../specs/reading/benchmark-reading-2026-11-12.yaml)) |
 | reading: design, n, blinding | against an outside reader | 92-96% agreement |
 | intervention match: exact / class / category / other | an outside reader, 80 link-finding pairs blind | weighted κ 0.55, stance agreement 0.89 ([`specs/scoring/intervention-class-2026-11-11.yaml`](../specs/scoring/intervention-class-2026-11-11.yaml)) |
