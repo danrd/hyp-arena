@@ -226,7 +226,7 @@
     const cap1 = s => { s = String(s || ''); return s.charAt(0).toUpperCase() + s.slice(1); };
 
     // ---- origin chips (words only)
-    const MODE = {tune: 'доработка', free: 'свободная эволюция', directed: 'направленная эволюция'};
+    const MODE = {tune: 'доработка', profile: 'доработка по профилю', free: 'свободная эволюция', directed: 'направленная эволюция'};
     function origin(r) {
       let s = r.is_evolved ? `<span class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-900 text-[11px]">${esc(MODE[r.evo_mode] || 'версия')}</span>`
                            : '<span class="px-2 py-0.5 rounded-full bg-stone-100 text-stone-700 text-[11px]">исходная</span>';

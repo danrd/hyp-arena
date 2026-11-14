@@ -22,7 +22,7 @@ from pathlib import Path
 KG = Path(os.environ.get("KG_DIR", "/home/user/longevity-kg"))
 REGISTRY = KG / "hypothesis_db" / "short_ids.jsonl"
 
-MODE_LETTER = {"tune": "д", "free": "с", "directed": "н"}
+MODE_LETTER = {"tune": "д", "profile": "п", "free": "с", "directed": "н"}   # н: directed versions written before tuning by profile took its target
 _REGISTRY_PREFIX = [("NCT", "ctgov"), ("ISRCTN", "isrctn"), ("UMIN", "umin"), ("NTR", "ntr"), ("DRKS", "drks"),
                     ("ACTRN", "anzctr")]
 _SHORT = re.compile(r"^H(\d+)$")

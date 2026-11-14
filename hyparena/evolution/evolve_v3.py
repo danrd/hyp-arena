@@ -33,9 +33,28 @@ from hyparena.scoring import rules_v3 as r3
 from hyparena.card.llm import ask
 from hyparena.card.models import ClaimVerification, HypothesisCard
 
-TEMPLATE = ("evolve_v3", "v2")          # tuning; v1 forced a "Mechanism:" line (first run, 2026-11-06)
-FREE_TEMPLATE = ("evolve_free", "v1")
-MODES = ("tune", "free")                  # user decision 2026-11-07: tuning and free evolution are separate and named
+TEMPLATE = ("evolve_v3", "v3")          # tuning and tuning by profile; v3 adds the profile and the frontier target (v2: tuning only)
+FREE_TEMPLATE = ("evolve_free", "v2")     # v2: the profile is optional (without it the goal is a better hypothesis overall)
+MODES = ("tune", "profile", "free")       # доработка, доработка по профилю, свободная эволюция (manual section 11)
+PROFILE_ITEMS = 3                         # tuning by profile: at most this many items, those that raise the profile's score most
+
+
+def profile_order(profile: str) -> tuple[str, bool]:
+    """The profile's order of importance as text, and whether novelty is its first tier."""
+    from hyparena.scoring import aspid_v3
+    prof = aspid_v3.load()[profile][0]
+    return " > ".join("{" + ", ".join(t) + "}" if len(t) > 1 else t[0] for t in prof.tiers), "N" in prof.tiers[0]
+
+
+def items_for_profile(items: list[dict], profile: str, k: int = PROFILE_ITEMS) -> list[dict]:
+    """Tuning by profile: the "fixable by rewriting" items whose expected score under `profile` rises, the largest gain
+    first, at most k. An item whose effect cannot be computed in advance (write_mechanism) is not chosen."""
+    def gain(i):
+        sc = ((i.get("expected") or {}).get("score") or {}).get(profile)
+        return (sc[1] - sc[0]) if sc else None
+    ranked = [(gain(i), i) for i in items if i.get("cls") == "rewrite" and gain(i) is not None and gain(i) > 0]
+    ranked.sort(key=lambda x: -x[0])
+    return [{**i, "gain": round(g, 4)} for g, i in ranked[:k]]
 
 
 def _words(s: str) -> set[str]:
@@ -54,8 +73,10 @@ def problems(value: dict, parent: str, intervention: str, allowed: set[str]) -> 
     if key and not any(w in wc for w in key):
         out.append(f"the intervention ({intervention}) must stay the same and be named")
     applied = set((value or {}).get("applied") or [])
-    if not applied or not applied <= allowed:
+    if allowed and (not applied or not applied <= allowed):
         out.append(f"applied must list the improvements applied, from {sorted(allowed)}")
+    if not allowed and applied:
+        out.append("no improvement was given: applied must be empty")
     return out
 
 
@@ -67,13 +88,19 @@ def parent_parts(run_item: dict) -> tuple[HypothesisCard, list[ClaimVerification
 
 
 def propose(client, family: str, parent_text: str, intervention: str, items: list[dict], log: Optional[list] = None,
-            novel: Optional[list[str]] = None, feedback: str = "") -> Optional[dict]:
+            novel: Optional[list[str]] = None, feedback: str = "", profile: Optional[str] = None) -> Optional[dict]:
     allowed = {i["id"] for i in items}
+    order = profile_order(profile)[0] if profile else ""
     variables = {"parent": parent_text, "items": [{**i, "what": i["what"][1]} for i in items], "novel": novel or [],
-                 "feedback": feedback}
+                 "feedback": feedback, "profile": profile or "", "order": order, "frontier_target": profile == "frontier"}
+    def check(v):
+        out = problems(v, parent_text, intervention, allowed)
+        if profile == "frontier" and not (v or {}).get("new_link"):
+            out.append('name the new step in "new_link" (subject — relation — object)')
+        return out
     value, _ = ask(client, role="evolve_v3", family=family, template=TEMPLATE[0], version=TEMPLATE[1], variables=variables,
-                   validate=lambda v: problems(v, parent_text, intervention, allowed), rounds=2, log=log)
-    if value is None or problems(value, parent_text, intervention, allowed):
+                   validate=check, rounds=2, log=log)
+    if value is None or check(value):
         return None
     return value
 
@@ -87,13 +114,11 @@ def free_problems(value: dict) -> list[str]:
     return out
 
 
-def propose_free(client, family: str, parent_text: str, items: list[dict], profile: str, novelty: Optional[str], as_of: str,
-                 log: Optional[list] = None) -> Optional[dict]:
-    from hyparena.scoring import aspid_v3
-    prof = aspid_v3.load()[profile][0]
-    order = " > ".join("{" + ", ".join(t) + "}" if len(t) > 1 else t[0] for t in prof.tiers)
-    variables = {"parent": parent_text, "items": [{**i, "what": i["what"][1]} for i in items], "profile": profile,
-                 "order": order, "novelty": novelty or "unknown", "novelty_first": "N" in prof.tiers[0], "as_of": as_of}
+def propose_free(client, family: str, parent_text: str, items: list[dict], profile: Optional[str], novelty: Optional[str],
+                 as_of: str, log: Optional[list] = None) -> Optional[dict]:
+    order, novelty_first = profile_order(profile) if profile else ("", False)
+    variables = {"parent": parent_text, "items": [{**i, "what": i["what"][1]} for i in items], "profile": profile or "",
+                 "order": order, "novelty": novelty or "unknown", "novelty_first": novelty_first, "as_of": as_of}
     value, _ = ask(client, role="evolve_free", family=family, template=FREE_TEMPLATE[0], version=FREE_TEMPLATE[1],
                    variables=variables, validate=free_problems, rounds=2, log=log)
     if value is None or free_problems(value):
@@ -132,12 +157,15 @@ def _novel_parts(card: HypothesisCard, cvs: list[ClaimVerification]) -> list[str
 
 def evolve(run: dict, units: list[str], extras: dict[str, dict], config: str, item_choice: str = "rewrite",
            writer: str = "google", fake: bool = False, max_calls: int = 60, out_path: Optional[Path] = None,
-           mode: str = "tune", profile: str = "evidence", retries: int = 1) -> dict:
+           mode: str = "tune", profile: Optional[str] = None, retries: int = 1) -> dict:
     """`run` {unit: saved pipeline result}; `extras` {unit: indicator values not in the card (endpoint, trend, ...)}.
 
     mode "tune" (доработка): only the "fixable by rewriting" items; the parent's new parts must stay; a child that moved towards
     the known (novelty_v34.drift) is sent back to the writer with the reason, `retries` times, and kept with the flag if it
-    still drifts. mode "free" (свободная эволюция): everything may change, for the named profile; the writer names its papers
+    still drifts. mode "profile" (доработка по профилю): as tune, with only the items that raise the score under `profile`
+    most (items_for_profile); under "frontier" the writer also adds one new step between supported neighbours (the target of
+    directed evolution). mode "free" (свободная эволюция): everything may change, for the named profile or, without one, for a
+    better hypothesis overall; the writer names its papers
     (counted only if the verifier finds them before the cut-off); drift is flagged, never constrained; a child far from the
     parent (distance > NEW_AFTER) is marked "a new hypothesis after" it. Free mode is for current pools only (the writer
     knows literature past the cut-off)."""
@@ -145,6 +173,8 @@ def evolve(run: dict, units: list[str], extras: dict[str, dict], config: str, it
     from hyparena.pipeline import _client, run as pipeline
     if mode not in MODES:
         raise ValueError(f"mode must be one of {MODES}")
+    if mode == "profile" and not profile:
+        raise ValueError("tuning by profile needs a profile")
     client, _ = _client(config, fake, (max_calls + 10) * len(units) * (1 + retries) + 10)
     done = json.loads(out_path.read_text()) if out_path and out_path.exists() else {"pairs": {}}
     for u in units:
@@ -157,21 +187,24 @@ def evolve(run: dict, units: list[str], extras: dict[str, dict], config: str, it
         as_of = r["meta"].get("as_of")
         entry = {"mode": mode, "profile": profile, "all_items": items}
         log: list = []
-        if mode == "tune":
-            if item_choice == "rewrite":
+        if mode in ("tune", "profile"):
+            if mode == "profile":
+                chosen = items_for_profile(items, profile)
+            elif item_choice == "rewrite":
                 chosen = [i for i in items if i["cls"] == "rewrite"]
             else:
                 ids = set(item_choice.split(","))
                 chosen = [i for i in items if i["id"] in ids and i["cls"] == "rewrite"]
             entry["items"] = chosen
-            if not chosen:
+            if not chosen and not (mode == "profile" and profile == "frontier"):
                 entry["skipped"] = "no rewrite item"
                 done["pairs"][u] = entry
                 continue
             intervention = card.pico.intervention[0].label if card.pico.intervention else ""
             novel, feedback, attempts = _novel_parts(card, cvs), "", []
             for k in range(retries + 1):
-                value = propose(client, writer, it["text"], intervention, chosen, log, novel=novel, feedback=feedback)
+                value = propose(client, writer, it["text"], intervention, chosen, log, novel=novel, feedback=feedback,
+                                profile=profile if mode == "profile" else None)
                 if value is None:
                     break
                 child = pipeline([value["text"]], writer="evolution", config=config, as_of=as_of, max_calls=max_calls,
@@ -190,7 +223,8 @@ def evolve(run: dict, units: list[str], extras: dict[str, dict], config: str, it
             last = attempts[-1]
             entry.update({"child_text": last["value"]["text"], "applied": last["value"]["applied"],
                           "changes": last["value"].get("changes", []), "child_run": last["child_run"],
-                          "attempts": len(attempts), "constraint_kept": not (last["drift"] or {}).get("drift_to_known", False)})
+                          "attempts": len(attempts), "constraint_kept": not (last["drift"] or {}).get("drift_to_known", False),
+                          "new_link": last["value"].get("new_link")})
         else:
             entry["items"] = items
             value = propose_free(client, writer, it["text"], items, profile, nv.novelty(card, cvs), as_of or "", log)
@@ -287,9 +321,10 @@ def main() -> None:
     ap.add_argument("--n", type=int, default=60)
     ap.add_argument("--units", default="", help="comma-separated unit ids (or choose with --top)")
     ap.add_argument("--top", type=int, default=0, help="choose this many hypotheses by the room to improve")
-    ap.add_argument("--profile", default="evidence", help="profile under which the room is computed")
+    ap.add_argument("--profile", default=None, help="profile: the room is computed under it (default evidence); tuning by profile "
+                    "chooses its items by it; free evolution writes for it (without it: a better hypothesis overall)")
     ap.add_argument("--dry", action="store_true", help="only print the choice (free)")
-    ap.add_argument("--mode", choices=MODES, default="tune", help="tune (доработка) or free (свободная эволюция)")
+    ap.add_argument("--mode", choices=MODES, default="tune", help="tune (доработка), profile (доработка по профилю) or free (свободная эволюция)")
     ap.add_argument("--writer", default="google", help="model family that writes the improved text")
     ap.add_argument("--items", default="rewrite", help="'rewrite' (all fixable items) or item ids, e.g. i1,i3")
     ap.add_argument("--config", default="configs/v3-flash-n10.yaml")
@@ -301,14 +336,15 @@ def main() -> None:
     extras = {u: {k: scores.get(u, {}).get(k) for k in ("endpoint_clinical", "trend_pubmed", "ai_role", "feasibility")} for u in run}
     units = [u for u in a.units.split(",") if u]
     if a.top:
-        picked = choose(run, extras, a.profile, a.top)
+        picked = choose(run, extras, a.profile or "evidence", a.top)
         print(json.dumps(picked, indent=1, ensure_ascii=False))
         units = [x["unit"] for x in picked]
     if a.dry or not units:
         return
     if os.environ.get("ALLOW_PAID") != "1":
         raise SystemExit("paid: set ALLOW_PAID=1")
-    out = OUT / (f"evolution_{a.n}.json" if a.mode == "tune" else f"evolution_free_{a.n}.json")
+    out = OUT / {"tune": f"evolution_{a.n}.json", "profile": f"evolution_profile_{a.profile}_{a.n}.json",
+                 "free": f"evolution_free_{a.n}.json"}[a.mode]
     res = evolve(run, units, extras, a.config, a.items, writer=a.writer, out_path=out, mode=a.mode, profile=a.profile)
     print(json.dumps({u: {k: v for k, v in e.items() if k in ("skipped", "applied")} for u, e in res["pairs"].items()}, indent=1))
 

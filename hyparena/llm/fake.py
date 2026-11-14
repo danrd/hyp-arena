@@ -166,8 +166,11 @@ class FakeLLMClient:
         m = re.search(r"<<<PARENT\n(.*?)\nPARENT>>>", prompt, flags=re.S)
         parent = (m.group(1) if m else "a fake hypothesis").strip()
         ids = list(dict.fromkeys(re.findall(r"^- (i\d+) \(", prompt, flags=re.M)))
-        return json.dumps({"text": parent + "\nDecisive experiment: adds an attention-matched control arm.",
-                           "applied": ids, "changes": [{"item": i, "what_changed": "fake change"} for i in ids]})
+        out = {"text": parent + "\nDecisive experiment: adds an attention-matched control arm.",
+               "applied": ids, "changes": [{"item": i, "what_changed": "fake change"} for i in ids]}
+        if '"new_link"' in prompt:
+            out["new_link"] = "x — activates — a new target"
+        return json.dumps(out)
 
     def _evolve_free(self, rng, prompt, n):
         m = re.search(r"<<<PARENT\n(.*?)\nPARENT>>>", prompt, flags=re.S)

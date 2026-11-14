@@ -713,8 +713,10 @@ GLOSSARY_EXTRA = {
           "Record weight: the product of design, precision (from n; 1/2 before the outcome), effect, comparison (between groups 1, before/after 2/3, none 1/3) and context (exact 1, adjacent 2/3, related intervention 1/3)."),
     "tuned": ("Доработанная версия: к гипотезе применены только исправимые пункты её разбора; новые части родителя сохранены (версия, сдвинутая к известному, возвращается писателю).",
               "Tuned version: only the fixable items of the analysis were applied; the parent's new parts are kept (a version that moved towards the known goes back to the writer)."),
-    "free": ("Свободная эволюция: писатель мог изменить всё под выбранный профиль; названные им статьи засчитаны, только если их нашёл проверяющий до даты среза.",
-             "Free evolution: the writer could change anything for the chosen profile; the papers it named count only if the verifier found them before the cut-off."),
+    "tuned_profile": ("Доработка по профилю: применены только те исправимые пункты разбора, что больше всего поднимают оценку под выбранным профилем; новые части родителя сохранены. Под профилем «фронтир» добавлен один новый шаг между поддержанными звеньями.",
+                      "Tuned for a profile: only the fixable items that raise the score under the chosen profile most were applied; the parent's new parts are kept. Under the frontier profile one new step between supported links is added."),
+    "free": ("Свободная эволюция: писатель мог изменить всё под выбранный профиль (без профиля — ради лучшей гипотезы в целом); названные им статьи засчитаны, только если их нашёл проверяющий до даты среза.",
+             "Free evolution: the writer could change anything for the chosen profile (without one, for a better hypothesis overall); the papers it named count only if the verifier found them before the cut-off."),
     "drift": ("Сдвиг к известному: у улучшенной версии новизна ниже, чем у родителя, или сохранённое звено стало ближе к уже показанному, или пропало новое звено. Версия остаётся в рейтинге, флаг лишь предупреждает.",
               "Moved towards the known: the improved version is less novel than the parent, a kept link moved closer to what is shown, or the new link disappeared. The version stays in the ranking; the flag only warns."),
     "flags": ("Флаги — подсказки для улучшения: механизм не выписан, нет подкреплённых альтернатив, эксперимент оставляет альтернативы, спорное звено и др.",
@@ -731,7 +733,7 @@ GLOSSARY_NAMES = {"score": ("ожидаемая оценка", "expected score")
                   "FA": ("веса F / A", "weights F / A"), "R": ("неопровергнутость звена R", "link non-refutation R"),
                   "link_N": ("новизна звена", "link novelty"), "records": ("записи PubMed", "PubMed records"), "link": ("звено", "link"),
                   "alt": ("альтернатива", "alternative"), "side": ("за / против", "for / against"), "design": ("дизайн", "design"),
-                  "w": ("вес записи", "record weight"), "flags": ("флаги", "flags"), "tuned": ("доработанная версия", "tuned version"),
+                  "w": ("вес записи", "record weight"), "flags": ("флаги", "flags"), "tuned": ("доработанная версия", "tuned version"), "tuned_profile": ("доработка по профилю", "tuned for a profile"),
                   "free": ("свободная эволюция", "free evolution"), "drift": ("сдвиг к известному", "moved towards the known")}
 
 
@@ -1042,6 +1044,8 @@ def evo_chip(x: dict) -> str:
         if x.get("new_after"):
             c += f'<span class="chip">{t("новая гипотеза после ","new hypothesis after ")}{e(x["parent"])}</span> '
         return c
+    if x.get("evo_mode") == "profile":
+        return '<span class="chip ok">' + tip("tuned_profile", t("доработка по профилю","tuned for a profile")) + '</span> '
     return '<span class="chip ok">' + tip("tuned", t("доработанная версия","tuned version")) + '</span> '
 
 

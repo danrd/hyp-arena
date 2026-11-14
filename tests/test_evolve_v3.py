@@ -59,7 +59,7 @@ def test_tuning_and_free_modes_are_named_apart_and_free_marks_a_distant_child():
     f = ev.propose_free(client, "google", parent, items, "frontier", "analog", "2026-11-06")
     assert f is not None and f["cited_pmids"] == ["12345678"]
     assert ev.distance(parent, parent) == 0.0 and ev.distance(parent, "a completely different text about yeast " * 10) > ev.NEW_AFTER
-    assert ev.MODES == ("tune", "free")
+    assert ev.MODES == ("tune", "profile", "free")
     from hyparena.reports import report_html as rh
     assert "доработанная" in rh.evo_chip({"parent": "U1", "evo_mode": "tune"})
     assert "свободная" in rh.evo_chip({"parent": "U1", "evo_mode": "free", "new_after": True}) and "U1" in rh.evo_chip(
@@ -68,3 +68,41 @@ def test_tuning_and_free_modes_are_named_apart_and_free_marks_a_distant_child():
     from hyparena.card.llm import render
     assert "TUNING" in render("evolve_v3", "v2", parent="p", items=[], novel=["n"], feedback="f", history_text="")
     assert "Mechanism: ... (only if" in render("evolve_v3", "v2", parent="p", items=[], novel=[], feedback="", history_text="")
+
+
+def test_tuning_by_profile_takes_the_items_that_raise_that_profile_most():
+    def item(i, cls, ev_score):
+        return {"id": i, "cls": cls, "type": "experiment_alternatives", "what": ("ru", "en"), "facts": [],
+                "expected": None if ev_score is None else {"score": ev_score}}
+    items = [item("i1", "rewrite", {"funding": [0.4, 0.5], "evidence": [0.4, 0.41]}),
+             item("i2", "rewrite", {"funding": [0.4, 0.45], "evidence": [0.4, 0.6]}),
+             item("i3", "rewrite", {"funding": [0.4, 0.38], "evidence": [0.4, 0.4]}),
+             item("i4", "rewrite", None),                                   # write_mechanism: not computable, not chosen
+             item("i5", "research", {"funding": [0.4, 0.9]})]               # needs new data, not a new text
+    assert [i["id"] for i in ev.items_for_profile(items, "funding")] == ["i1", "i2"]
+    assert [i["id"] for i in ev.items_for_profile(items, "evidence")] == ["i2", "i1"]
+    assert len(ev.items_for_profile(items * 3, "funding", k=3)) == 3
+
+
+def test_prompts_of_the_three_modes():
+    from hyparena.card.llm import render
+    base = dict(parent="p", items=[], novel=[], feedback="", history_text="")
+    tune = render("evolve_v3", "v3", **base, profile="", order="", frontier_target=False)
+    prof = render("evolve_v3", "v3", **base, profile="funding", order="W > I", frontier_target=False)
+    front = render("evolve_v3", "v3", **base, profile="frontier", order="N > B", frontier_target=True)
+    assert "TUNING" in tune and "profile" not in tune.split("This is TUNING")[0]
+    assert '"funding"' in prof and "W > I" in prof and "new_link" not in prof
+    assert "exactly one new step" in front and '"new_link"' in front
+    free = dict(parent="p", items=[], novelty="analog", as_of="2026-11-14", history_text="")
+    assert "better research hypothesis overall" in render("evolve_free", "v2", **free, profile="", order="", novelty_first=False)
+    assert '"frontier"' in render("evolve_free", "v2", **free, profile="frontier", order="N", novelty_first=True)
+
+
+def test_free_evolution_without_a_profile_and_tuning_by_profile_on_the_fake_llm():
+    client = GuardedClient(FakeLLMClient(0), rpm=0, max_calls=10)
+    parent = "Title: x improves function in older adults.\n" + "Hypothesis: x activates AMPK and improves function. " * 6
+    items = [{"id": "i1", "type": "experiment_alternatives", "what": ("ru", "rule out exercise"), "facts": []}]
+    assert ev.propose_free(client, "google", parent, items, None, "analog", "2026-11-14") is not None
+    v = ev.propose(client, "google", parent, "x activates", items, profile="frontier")
+    assert v is not None and v["new_link"]
+    assert ev.propose(client, "google", parent, "x activates", [], profile="frontier") is not None   # the target alone

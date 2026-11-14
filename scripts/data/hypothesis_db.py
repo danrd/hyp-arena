@@ -25,7 +25,7 @@ HA = Path(__file__).resolve().parents[2]
 KG = HA.parent / "longevity-kg"
 HS = KG / "hypothesis_sources"
 DB = KG / "hypothesis_db"
-MODE_LETTER = {"tune": "д", "free": "с", "directed": "н"}
+MODE_LETTER = {"tune": "д", "profile": "п", "free": "с", "directed": "н"}   # н: directed versions written before tuning by profile took its target
 REG_ID = re.compile(r"\b(NCT\d{8}|ISRCTN\d{8}|ACTRN\d{14}|DRKS\d{8}|NTR\d{3,5}|NL\d{4,6}|UMIN\d{9}|ChiCTR[\w-]+|CTRI/[\d/]+|jRCT\w+)\b")
 
 
