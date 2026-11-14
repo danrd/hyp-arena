@@ -87,3 +87,11 @@ filter_experiment_2026_11_14:   # written BEFORE the run; scripts/search_filter_
   cost: "estimate 1.19 USD (1143 calls, 7.3 M tokens in); cap MAX_USD 1.5"
   measure: "recall of the gold (153 papers) when the 20 read per search are the highest rated (BM25 order within a rating), against BM25 alone (0.436, holdout 0.56); also at depth 40 and 60, and keeping 10"
   admission_rule: "the filter enters the proposal for the manual when it adds at least 0.05 recall over BM25 alone at 20 per search and is not below it on the holdout (a paid step must earn more than a free one); the ceiling at depth 100 is the share of the gold among the 100 candidates"
+  result:   # 1143 calls, 6.90 M tokens in, 0.05 M out, 1.07 USD by the call log (0.036 USD per hypothesis); every record rated
+    at_20_per_search: {bm25_alone: "recall 0.436, holdout 0.56, 88 papers per trial", filter_over_100: "0.517, holdout 0.62, 81 papers", filter_over_60: "0.483, 0.60", filter_over_40: "0.477, 0.58"}
+    at_10_per_search: {bm25_alone: "0.322, 0.36, 46 papers", filter_over_100: "0.456, 0.50, 41 papers"}
+    by_rating: "of 22 679 records: 3 = 8%, 2 = 37%, 1 = 42%, 0 = 13%; gold papers among the candidates: 3 in 55% of their pairs, 2 in 40%, 1 or 0 in 6%"
+    threshold_variants: {only_rated_3_up_to_20: "0.389, 22 papers per trial", all_rated_3_then_2_up_to_10: "0.51, 43 papers", rated_3_then_2_up_to_30: "0.57, 100 papers"}
+    ceiling: "0.664 of the gold is among the first 100 candidates of the searches (424 papers per trial)"
+  by_the_rule: "the filter passes: +0.08 recall over word match at 20 per search (holdout +0.06). With it, reading 10 per search finds more than word match finds with 20 (0.456 vs 0.436), and 'every record rated 3, filled to 10 with those rated 2' reaches 0.51 with half of today's reading (43 papers per hypothesis)"
+  reading: "from the saved search to the best variant at the same reading: 0.33 -> 0.52; the filter costs about 0.04 USD per hypothesis and can pay for itself by halving the reading. Left: 0.52 -> 0.66 is still lost in the order (gold papers rated 2 among thousands of 2s), 0.66 -> 0.84 by taking only 100 candidates per search"
