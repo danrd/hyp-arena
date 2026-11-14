@@ -10,6 +10,7 @@ Systems (the same claim and the same abstracts, as our reader saw them):
   base_a  the same model (DeepSeek V4.1 Flash), the task in one sentence (prompts/reading_baseline/v1), no reading rules, no
           code checks (no quote check, no retry, no fallback family).
   v13_trace  v13 with every step kept, for the loss breakdown (`losses`): where each finding of the gold is lost.
+  v14     as v13_trace with verify_claim/v14 (the same-kind and meta-analysis rules first, with examples).
 
     python -m scripts.reading.bench_reading losses                       # free, after a v13_trace run
 Outputs: longevity-kg/reviews/argon-2026-11-12/bench_reading_<system>.json, bench_reading_score.json.
@@ -32,8 +33,9 @@ from scripts.common.reread_v11 import CONFIG, items
 KG = Path(__file__).resolve().parents[3] / "longevity-kg"
 DIR = KG / "reviews" / "argon-2026-11-12"
 PRICE = {"deepseek": (0.15, 0.6), "google": (1.5, 9.0)}      # USD per M tokens off-peak (DeepSeek x2 on weekdays 01-04, 06-10 UTC)
-SYSTEMS = ("v9", "v13", "base_a")
+SYSTEMS = ("v9", "v13", "base_a", "v13_trace", "v14")
 TRACE = "v13_trace"          # v13 again with every step kept: the filter answers, the reader's answer per paper, the records code kept
+TRACED = ("v13_trace", "v14")   # runs that keep every step (v14: verify_claim/v14, the same filter and batches as v13)
 
 
 def targets() -> list[dict]:
@@ -149,11 +151,11 @@ def run(system: str, limit: int = 0) -> dict:
             for i in range(0, len(kept), rv.BATCH):
                 cv = verify_claim(client, "deepseek", frozenset({"google"}), t["claim"], t["card"], t["as_of"], log=log,
                                   fallback="google", expert_pmids=[(p, "benchmark") for p in kept[i:i + rv.BATCH]],
-                                  search="fixed", template_version="v13", check_subgroups=False)
+                                  search="fixed", template_version="v14" if system == "v14" else "v13", check_subgroups=False)
                 recs.update({k: v for k, v in _records(cv.model_dump()).items() if k not in recs})
             trace = {"rule_pass": cand, "filter": ans, "kept": kept, "reader": _reader_answers(log)}
         with lock:
-            done[t["rid"]] = {"records": {k: list(v) for k, v in recs.items()}, **({"trace": trace} if system == TRACE else {}),
+            done[t["rid"]] = {"records": {k: list(v) for k, v in recs.items()}, **({"trace": trace} if system in TRACED else {}),
                               "calls": [{k: x.get(k) for k in ("template", "family", "tokens_in", "tokens_out", "error")} for x in log]}
             for x in log:
                 tok[f"{x.get('family') or ''}_in"] += int(x.get("tokens_in") or 0)
@@ -171,7 +173,7 @@ def _reader_answers(log: list) -> dict:
     from hyparena.card.llm import parse_fullest
     out = {}
     for x in log:
-        if not str(x.get("template", "")).startswith("verify_claim/v13"):
+        if not str(x.get("template", "")).startswith(("verify_claim/v13", "verify_claim/v14")):
             continue
         v = parse_fullest(x.get("reply") or "") or {}
         match = {str(r.get("pmid", "")).replace("PMID:", "").strip(): r.get("intervention_match") for r in v.get("records") or [] if isinstance(r, dict)}
@@ -182,10 +184,10 @@ def _reader_answers(log: list) -> dict:
     return out
 
 
-def losses() -> dict:
+def losses(system: str = TRACE) -> dict:
     """Where each finding of the gold (pack 16) is lost in the v13_trace run: the publication-type rule, the filter, the
     reader's answer, the code checks after it; by the gold's intervention match and stratum."""
-    res = json.loads((DIR / f"bench_reading_{TRACE}.json").read_text())
+    res = json.loads((DIR / f"bench_reading_{system}.json").read_text())
     key = json.loads((DIR / "pack_16_key.json").read_text())
     rows = []
     for item in json.loads((DIR / "pack_16_answer.json").read_text())["items"]:
@@ -216,7 +218,7 @@ def losses() -> dict:
     by = lambda f: {k: dict(Counter(r["stage"] for r in rows if r[f] == k)) for k in sorted({r[f] for r in rows}, key=str)}
     out = {"findings": len(rows), "stage": dict(Counter(r["stage"] for r in rows)), "by_intervention_match": by("match"),
            "by_stratum": by("stratum"), "rows": rows}
-    (DIR / "bench_reading_losses.json").write_text(json.dumps(out, indent=1, ensure_ascii=False) + "\n")
+    (DIR / ("bench_reading_losses.json" if system == TRACE else f"bench_reading_losses_{system}.json")).write_text(json.dumps(out, indent=1, ensure_ascii=False) + "\n")
     return {k: v for k, v in out.items() if k != "rows"}
 
 
@@ -279,8 +281,11 @@ def score() -> dict:
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("cmd", choices=["dry", "run", "score", "losses"])
-    ap.add_argument("--system", choices=SYSTEMS + (TRACE,))
+    ap.add_argument("--system", choices=SYSTEMS)
     ap.add_argument("--limit", type=int, default=0)
     a = ap.parse_args()
-    r = {"dry": dry, "score": score, "losses": losses}.get(a.cmd)
-    print(json.dumps(r() if r else run(a.system, a.limit), indent=1, default=str))
+    if a.cmd == "losses":
+        print(json.dumps(losses(a.system or TRACE), indent=1, default=str))
+    else:
+        r = {"dry": dry, "score": score}.get(a.cmd)
+        print(json.dumps(r() if r else run(a.system, a.limit), indent=1, default=str))

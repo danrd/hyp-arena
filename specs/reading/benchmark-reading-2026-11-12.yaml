@@ -78,4 +78,9 @@ loss_breakdown_2026_11_14:
     the gold marks 23 findings for alternatives with distinguishing_part_shown false: without them the recall of v13 is
     29 of 71 = 0.41. Reported next to the recall of the original definition from now on; the pass rules stay as written.
   files: "longevity-kg reviews/argon-2026-11-12/bench_reading_v13_trace.json, bench_reading_losses.json"
+reader_v14_2026_11_14:
+  what: "verify_claim/v14 = v13 with two rules put first, with examples: a result for an intervention of the same kind is 'for' or 'against' with intervention_match class; a meta-analysis or systematic review that states its own pooled result is a finding. Each paper's answer also names its intervention match and, for 'none', a reason. The same filter, batches and model (DeepSeek V4.1 Flash) as v13"
+  run: "bench_reading run --system v14 on the 20 links of pack 16, every step kept; about 0.05 USD"
+  noise: "two runs of v13 gave recall 0.287 and 0.340, precision 0.643 and 0.640: run-to-run difference about 0.05"
+  pass_rule: "v14 replaces v13 as the reader to be proposed for the working config when its recall is at least 0.39 (the higher v13 run + 0.05) and its precision at least 0.59 (the lower v13 run - 0.05); the holdout links (4) and the recall by kind (same class, review or meta-analysis, same intervention) and by the method's alternative rule are reported, not tested"
 
