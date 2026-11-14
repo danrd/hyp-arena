@@ -83,4 +83,14 @@ reader_v14_2026_11_14:
   run: "bench_reading run --system v14 on the 20 links of pack 16, every step kept; about 0.05 USD"
   noise: "two runs of v13 gave recall 0.287 and 0.340, precision 0.643 and 0.640: run-to-run difference about 0.05"
   pass_rule: "v14 replaces v13 as the reader to be proposed for the working config when its recall is at least 0.39 (the higher v13 run + 0.05) and its precision at least 0.59 (the lower v13 run - 0.05); the holdout links (4) and the recall by kind (same class, review or meta-analysis, same intervention) and by the method's alternative rule are reported, not tested"
+  result_2026_11_14:
+    cost: "0.066 USD by the run's tokens (about 0.05 named)"
+    recall: "0.628 (59 of 94); v13 0.287 and 0.340"
+    precision: "0.573 (59 of 103 records); v13 0.643 and 0.640"
+    holdout: "recall 0.90 (19 of 21), precision 0.53; v13 0.10 and 0.19"
+    by_kind: {same_intervention_primary: "20 of 22 (v13 18)", same_class_primary: "9 of 23 (v13 4)", review_or_meta_analysis: "19 of 26 (v13 7)", alternative_without_distinguishing_part: "11 of 23 (v13 3)"}
+    by_the_alternative_rule: "48 of 71 = 0.68 (v13 0.41)"
+    side: "0.91 (v13 0.94)"
+    wrong_records: "44 of 103: on another outcome (gold none, other_outcome) 21, another intervention (other_intervention) 15, the other side 6, background 2; v13: 18 of 50"
+    by_the_rule: "not passed: recall 0.628 >= 0.39, but precision 0.573 < 0.59. v14 is not proposed for the working config; the loss is mostly records on another outcome than the claim's"
 
