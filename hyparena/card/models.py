@@ -186,6 +186,9 @@ class DecisiveExperiment(BaseModel):
     duration: str = UNKNOWN                      # v13: as the text gives it; duration_class is computed from it by code
     registry: dict = Field(default_factory=dict) # v13: design fields of a registry text parsed by code (allocation, model, masking, arms)
     arms: list[str] = Field(default_factory=list)   # v15: the arms or test manipulations the text names (an added antigen, a knockout)
+    # v17: the result the text predicts for its experiment ({label, direction, span}); for an explanatory hypothesis the test of the
+    # asserted consequence; reference for the report and the alternatives step
+    prediction: dict = Field(default_factory=dict)
     span: str = ""                               # normalize_card/v12: the exact phrase of the text that states this field ("" before v12)
 
 

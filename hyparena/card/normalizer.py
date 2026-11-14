@@ -103,6 +103,9 @@ def _problems(value: dict, raw_text: str, card_id: str, core: bool = False, v15:
     problems = validate_card(card, raw_text, max_claims=12 if v15 else 8) + (core_span_problems(card, raw_text) if core else [])
     if v15:
         problems += extra + v15_problems(card)
+        sp = (card.decisive_experiment.prediction or {}).get("span") or ""
+        if sp and _norm_text(sp) not in _norm_text(raw_text):
+            problems.append(f"decisive_experiment.prediction.span is not a verbatim fragment of the text: {sp!r}")
     return mark_inherited(card), problems
 
 
@@ -493,6 +496,10 @@ def primary_from_registry(card: HypothesisCard, raw_text: str) -> list[str]:
     return problems
 
 
+def _norm_text(s: str) -> str:
+    return re.sub(r"\s+", " ", (s or "").replace("*", "")).strip().lower()
+
+
 def v15_problems(card: HypothesisCard) -> list[str]:
     """Checks of normalize_card/v15, sent back to the model like the span checks: English labels; part and link agree; a chain
     claim starts from the main factor, the intervention or an earlier step; the link fits the level (docs/system/card.md)."""
@@ -530,6 +537,20 @@ def v15_problems(card: HypothesisCard) -> list[str]:
         if c.part == "premise" and mf and _toks(c.subject.label) and _toks(c.subject.label) <= mf:
             out.append(f"{c.id}: its subject is the main factor, so it is a chain claim (a known result of the main factor is an "
                        f"outcome or a step with stated_as known), not a premise")
+    life = {"extends_lifespan_in", "shortens_lifespan_in", "no_lifespan_effect_in", "slows_aging_in"}
+    outs = [c for c in card.claims if c.link == "outcome" and c.part != "premise" and c.relation not in life]
+    org = [c.id for c in outs if c.relation == "improves_healthspan_in"]
+    val = [c.id for c in outs if c.relation != "improves_healthspan_in"]
+    if org and val:
+        out.append(f"outcome claims use two forms ({', '.join(val)}: the measure as the object; {', '.join(org)}: "
+                   f"improves_healthspan_in the organism with a measure): use one form for all outcome claims")
+    ctl = [a for a in card.decisive_experiment.arms if re.search(r"\b(control|placebo|vehicle|sham|untreated)\b", a, re.I)]
+    if card.pico.comparator.type == "unknown" and ctl and len(card.decisive_experiment.arms) > 1:
+        out.append(f"pico.comparator is unknown, but an arm names a control ({ctl[0]!r}): write that control as the comparator "
+                   f"with the phrase of the text that names it")
+    pr = card.decisive_experiment.prediction or {}
+    if pr.get("label") and re.search(r"[а-яА-ЯёЁ]", pr["label"]):
+        out.append("decisive_experiment.prediction.label: write it in English")
     steps = [c for c in card.claims if c.link == "step"]
     if len(steps) > 4:
         out.append(f"{len(steps)} steps before the outcomes: keep at most 4 that the reasoning of the text needs (merge the rest)")

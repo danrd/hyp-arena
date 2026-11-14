@@ -100,3 +100,21 @@ def test_design_from_registry_randomized():
     design_from_registry(c, "Title: x\nDesign: randomized, sequential, masking single (participant), primary purpose prevention\n")
     assert c.decisive_experiment.design == "rct"
     assert c.decisive_experiment.registry["model"] == "sequential"
+
+
+def test_outcome_forms_mixed_and_one_form():
+    mixed = _card([_c("c1", "squat exercise", "muscle mass", link="outcome", part="chain", level="tissue", primary=True),
+                   dict(_c("c2", "squat exercise", "human", link="outcome", part="chain", level="organism", measure="SPPB"),
+                        relation="improves_healthspan_in")])
+    assert any("two forms" in p for p in v15_problems(mixed))
+    one = _card([_c("c1", "squat exercise", "muscle mass", link="outcome", part="chain", level="tissue", primary=True),
+                 _c("c2", "squat exercise", "physical performance", link="outcome", part="chain", level="organism")])
+    assert not any("two forms" in p for p in v15_problems(one))
+
+
+def test_control_named_by_an_arm():
+    c = _card([_c("c1", "squat exercise", "muscle mass", link="outcome", part="chain", level="tissue", primary=True)])
+    c.decisive_experiment.arms = ["added age-specific peptide", "control peptide"]
+    assert any("comparator is unknown" in p for p in v15_problems(c))
+    c.pico.comparator.type = "placebo"
+    assert not any("comparator is unknown" in p for p in v15_problems(c))
