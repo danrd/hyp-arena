@@ -99,6 +99,11 @@ def _gold_label(c: dict) -> str:
     return "premise" if c.get("part") == "premise" else (c.get("link") or "premise")
 
 
+def _three(label: str) -> str:
+    """outcome / step / premise: the classes the method reads (method v3.10)."""
+    return label if label in ("outcome", "premise") else "step"
+
+
 def _sys_claims(card: dict, v15: bool) -> list[dict]:
     out = []
     for c in card.get("claims") or []:
@@ -137,6 +142,8 @@ def score_system(cards: dict, gold_: dict, v15: bool) -> dict:
     return {"texts": rows["texts"], "recall": r("matched", "gold"), "precision": r("matched", "sys"),
             "recall_m2o": r("gold_found_m2o", "gold"), "precision_m2o": r("sys_right_m2o", "sys"),
             "link_kappa": b._kappa(pairs), "link_kappa_without_outcome": b._kappa([p for p in pairs if "outcome" not in p]),
+            "kappa_3": b._kappa([(_three(a), _three(c)) for a, c in pairs]),
+            "agree_3": round(sum(_three(a) == _three(c) for a, c in pairs) / len(pairs), 3) if pairs else None,
             "chain_premise_agree": round(sum((a == "premise") == (c == "premise") for a, c in pairs) / len(pairs), 3) if pairs else None,
             "by_gold": {l: f"{sum(c == l for a, c in pairs if a == l)}/{sum(a == l for a, _ in pairs)}"
                         for l in ("delivery", "engagement", "pathway", "effect", "outcome", "premise")},

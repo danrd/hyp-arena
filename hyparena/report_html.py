@@ -47,7 +47,7 @@ NOVELTY_NAMES = {"new_context": ("новый контекст", "new context"), 
                  "new_mechanism": ("новый механизм известного эффекта", "new mechanism of a known effect"), "new_combination": ("новое сочетание", "new combination"),
                  "new_link": ("новое звено", "new link"), None: ("неизвестно", "unknown")}
 LINK_NAMES = {"delivery": ("доставка", "delivery"), "engagement": ("действие на мишень", "target engagement"),
-              "pathway": ("клеточный процесс", "cellular process"), "effect": ("промежуточный эффект", "intermediate effect"),
+              "pathway": ("клеточный процесс", "cellular process"), "step": ("шаг механизма", "mechanism step"), "effect": ("промежуточный эффект", "intermediate effect"),
               "outcome": ("исход", "outcome")}
 SCOPE_NAMES = {"local": ("локальный", "local"), "organ": ("орган / система", "organ or system"),
                "hallmark": ("признак старения", "hallmark of ageing")}

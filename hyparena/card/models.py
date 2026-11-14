@@ -19,7 +19,7 @@ Relation = Literal[
     "promotes", "suppresses", "part_of", "associated_with", "affects_hallmark", "translates_to", "other"]
 Role = Literal["premise", "mechanism", "analog", "outcome", "translation"]
 # Method v3 (docs/archive/spec/method-v3.md): the place of a claim in the mechanism chain, from the intervention to the outcome
-Link = Literal["delivery", "engagement", "pathway", "effect", "outcome"]
+Link = Literal["delivery", "engagement", "pathway", "effect", "step", "outcome"]   # v16: "step" = any step before the outcome
 EdgeType = Literal["requires", "supports_if_true", "analog_of", "contradicts"]
 Endpoint = Literal["lifespan", "healthspan", "biomarker", "disease", "mechanism", "unknown"]
 System = Literal["cells", "worm", "fly", "yeast", "mouse", "rat", "human", "data_analysis", "unknown"]

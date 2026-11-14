@@ -541,6 +541,7 @@ DESIGN_NAMES, DISC; [`hyparena/report_v2.py`](../hyparena/report_v2.py) FLAG_NAM
 | link type | `delivery` | доставка | delivery |
 | link type | `engagement` | действие на мишень | target engagement |
 | link type | `pathway` | клеточный процесс | cellular process |
+| link type | `step` | шаг механизма | mechanism step |
 | link type | `effect` | промежуточный эффект | intermediate effect |
 | link type | `outcome` | исход | outcome |
 | novelty level | `new_context` | новый контекст | new context |

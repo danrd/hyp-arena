@@ -303,6 +303,10 @@ class V32Result:
         return asdict(self)
 
 
+# Steps before the outcome in the evidence balance: "separate" (v3.9: each step a place, consecutive cellular processes one
+# place by their best link); "min" or "mean": all steps one place, by the weakest step with data or by their mean (v3.10
+# candidate: an added well-supported step cannot raise the balance; specs/merge-steps-2026-11-14.yaml)
+STEPS_SLOT = os.environ.get("STEPS_SLOT", "separate")
 EMPTY_SLOTS = os.environ.get("EMPTY_SLOTS", "skip")       # v3.7 (user 2026-11-09, specs/empty-slots-2026-11-09.yaml): "skip"; "count" = v3.6
 
 
@@ -377,15 +381,20 @@ def _evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
     res.P, res.P_lo, res.P_hi = (round(x, 5) for x in tri)
     res.weakest = min(links, key=lambda x: res.links[x.id][0]).id
     slots, run_ = [], []
-    for cl in links + [None]:
-        if cl is not None and cl.link == "pathway" and cl not in outs:
-            run_.append(cl.id)
-            continue
-        if run_:
-            slots.append(run_)
-            run_ = []
-        if cl is not None and cl not in outs:
-            slots.append([cl.id])
+    if STEPS_SLOT != "separate":                    # every step before the outcome is one place (method v3.10, see below)
+        steps = [cl.id for cl in links if cl not in outs]
+        if steps:
+            slots.append(steps)
+    else:
+        for cl in links + [None]:
+            if cl is not None and cl.link == "pathway" and cl not in outs:
+                run_.append(cl.id)
+                continue
+            if run_:
+                slots.append(run_)
+                run_ = []
+            if cl is not None and cl not in outs:
+                slots.append([cl.id])
     if outs:
         slots.append([primary.id] if primary is not None else [o.id for o in outs])
     res.coverage = round(sum(1 for sl in slots if any(i in checked for i in sl)) / len(slots), 4) if slots else 0.0
@@ -396,6 +405,10 @@ def _evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
             # outcome pulled a supported slot from 1.0 to 0.83, and would soften a refuted one; as v3.7 for empty slots)
             known = [i for i in sl if res.links[i][3] + res.links[i][4] > 0] or sl
             return sum(res.links[i][0] for i in known) / len(known)
+        if STEPS_SLOT != "separate" and not (outs and sl[0] in {o.id for o in outs}):
+            known = [i for i in sl if res.links[i][3] + res.links[i][4] > 0] or sl
+            vals = [res.links[i][0] for i in known]
+            return min(vals) if STEPS_SLOT == "min" else sum(vals) / len(vals)
         return max(res.links[i][0] for i in sl)                         # a cascade: its best link
     # EMPTY_SLOTS = "skip" (v3.7, user 2026-11-09): a slot none of whose links has a counting record is left out of the
     # balance and the support share ("nothing known" is not averaged in; gaps show in coverage and the improvement list)

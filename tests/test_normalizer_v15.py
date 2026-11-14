@@ -71,3 +71,10 @@ def test_registry_arms_with_a_colon_in_the_label():
          "Intervention: Usual Care (no intervention): No specific resistance training.")
     arms = registry_design(t)["arms"]
     assert [a["type"] for a in arms] == ["experimental", "no intervention"] and arms[1]["label"] == "Intervention: Usual Care"
+
+
+def test_v16_steps_cap_and_premise_of_the_main_factor():
+    claims = [_c(f"c{i}", "squat exercise" if i == 1 else f"x{i - 1}", f"x{i}", "step", "chain", "cell") for i in range(1, 6)]
+    claims.append(_c("c9", "squat exercise", "fewer falls", None, "premise", "organism"))
+    probs = " | ".join(v15_problems(_card(claims)))
+    assert "5 steps before the outcomes" in probs and "c9: its subject is the main factor" in probs

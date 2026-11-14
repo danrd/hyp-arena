@@ -677,7 +677,8 @@ def verify(client, families: list[str], writer: str, card: HypothesisCard, as_of
     allowed = [f for f in families if f != writer] or families
     # mouse probes are method v2 (effect level below the human rungs); method v3 does not use them (H49 walkthrough 2026-11-11)
     probes = analog_probes(card) if probes else []
-    claims = card.claims + card.rejected_alternatives + probes
+    # premises about the problem (normalize_card/v15+) are not scored, so they are not searched or read (2026-11-14)
+    claims = [c for c in card.claims if c.part != "premise"] + card.rejected_alternatives + probes
     # the family asked when the first returns nothing: the next verifier, else another family of the config (a
     # provider content filter blocks some abstracts: DeepSeek on PMID 22587563, 2026-10-21)
     spare = [f for f in (fallback_families or []) if f != writer and f not in allowed]

@@ -192,7 +192,7 @@ def scope_with(card: HypothesisCard, cvs: list[ClaimVerification], raised: set[s
         return "hallmark"
     if any(c.object.hallmark or c.subject.hallmark for c in supported):
         return "organ"
-    if any(c.link in ("engagement", "pathway", "effect") or c.role == "mechanism" for c in supported):
+    if any(c.link in ("engagement", "pathway", "effect", "step") or c.role == "mechanism" for c in supported):
         return "organ"
     return "local"
 

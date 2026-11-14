@@ -258,7 +258,7 @@ def normalize_union(client, family: str, raw_text: str, card_id: str, log: Optio
 
 
 # ---- normalize_card/v13 (2026-11-12, user decisions of the card walkthrough) ------------------------------------------------
-PRE_OUTCOME = ("delivery", "engagement", "pathway", "effect")
+PRE_OUTCOME = ("delivery", "engagement", "pathway", "effect", "step")
 CONTROL_BY_COMPARATOR = {"placebo": "placebo", "sham": "placebo", "active": "active", "usual_care": "usual_care",
                          "no_intervention": "none"}
 
@@ -485,4 +485,11 @@ def v15_problems(card: HypothesisCard) -> list[str]:
                        f"process) is inside cells, an effect is a state of a tissue, organ or body system - fix the link or the level")
         if c.part == "chain":
             seen |= _toks(c.object.label) | _toks(c.qualifiers.get("measure", ""))
+        mf = _toks((card.main_factor or {}).get("label", ""))
+        if c.part == "premise" and mf and _toks(c.subject.label) and _toks(c.subject.label) <= mf:
+            out.append(f"{c.id}: its subject is the main factor, so it is a chain claim (a known result of the main factor is an "
+                       f"outcome or a step with stated_as known), not a premise")
+    steps = [c for c in card.claims if c.link == "step"]
+    if len(steps) > 4:
+        out.append(f"{len(steps)} steps before the outcomes: keep at most 4 that the reasoning of the text needs (merge the rest)")
     return out

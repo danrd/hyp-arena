@@ -20,7 +20,7 @@ TOP_DESIGNS = ("rct", "meta_analysis")
 STRONG, MODERATE = 1.5, 0.6
 I_CAP = 1.5                                        # "one and a half well-supported alternatives cut off" is the maximum
 VARIANTS = ("v3", "v3.1")                          # v3.1: method-v3.md section 12 (2026-11-05); "v3" is what runs record
-PRECLINICAL_LINKS = ("delivery", "engagement", "pathway", "effect")
+PRECLINICAL_LINKS = ("delivery", "engagement", "pathway", "effect", "step")
 
 
 def _lw(level: str, variant: str) -> float:
@@ -126,7 +126,7 @@ def established_by_approval(claim: Claim, card: HypothesisCard) -> bool:
     """Section 9.2 (simplified, 2026-11-03): an engagement link whose subject is an approved drug (ChEMBL max phase 4) with a
     known mechanism of action. The spec asks that the target match the link; ChEMBL gives target ids, not names, so the match is
     not checked yet and the level is "moderate" (5/6), not 0.9."""
-    if claim.link != "engagement":
+    if claim.link not in ("engagement", "step"):            # v16: a step naming an approved drug and its target
         return False
     try:
         from hyparena.card.entities import subject_compounds
@@ -227,7 +227,7 @@ def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
             level = "moderate"
             res.flags.append(f"{c.id}_established_by_approval")
         res.links[c.id], res.weights[c.id] = level, [round(F, 3), round(A, 3)]
-        if level == "refuted" and (c.role in ("outcome", "mechanism") or c.link in ("engagement", "pathway", "effect", "outcome")):
+        if level == "refuted" and (c.role in ("outcome", "mechanism") or c.link in ("engagement", "pathway", "effect", "step", "outcome")):
             res.gate, res.gate_reason = "filtered", f"{c.id} refuted by a randomised between-group finding against"
     # plausibility: product over the chain; parallel outcomes count once: the primary outcome, else their mean
     # v3.1 (section 12 point 4): consecutive pathway links (a cascade written as several steps) are one slot, their
@@ -261,7 +261,7 @@ def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
         res.scope = "hallmark"
     elif variant == "v3.1" and any(c.object.hallmark or c.subject.hallmark for c in supported):
         res.scope = "organ"
-    elif any(c.link in ("engagement", "pathway", "effect") or c.role == "mechanism" for c in supported):
+    elif any(c.link in ("engagement", "pathway", "effect", "step") or c.role == "mechanism" for c in supported):
         res.scope = "organ"
     res.W = round(lv.weight("scope", res.scope), 4)
     # informativeness over the proposed alternatives
@@ -290,7 +290,7 @@ def evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
     res.V = round(res.P * res.W * res.I, 5) if res.gate == "pass" else 0.0
     res.headroom_V = round(res.P * res.W * res.headroom_I, 5) if res.gate == "pass" else 0.0
     # evolution flags (section 5): never filters
-    if not any(c.link in ("engagement", "pathway", "effect") or c.role == "mechanism" for c in links):
+    if not any(c.link in ("engagement", "pathway", "effect", "step") or c.role == "mechanism" for c in links):
         res.flags.append("build_mechanism")
     if not card.proposed_alternatives or all(v["a"] == 0 for v in res.alternatives.values()):
         res.flags.append("name_supported_alternatives")
