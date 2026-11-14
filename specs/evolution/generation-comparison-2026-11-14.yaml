@@ -1,6 +1,6 @@
 id: generation-comparison-2026-11-14
 written_on: 2026-11-14
-status: "definitions and pass rules fixed before any hypothesis is generated or judged; the tasks, the answer checks and the comparison are built (2026-11-14), no judge called"
+status: "definitions and pass rules fixed before any hypothesis is generated or judged; the tasks, the answer checks and the comparison are built (2026-11-14), no judge called; on hold: no generation until the whole system is debugged"
 level: "4 of the system checks (docs/system/testing.md): generation of hypotheses; manual docs/system/generation-arena.md"
 why: >-
   Does the system write better research hypotheses on a topic than an LLM asked in a chat, and does the system's evolution

@@ -113,6 +113,9 @@ Co-Scientist (турнир из кода v2) — возможный участн
 
 ## Как запускать
 
+**Сейчас не запускается:** генерация отложена до окончания отладки системы целиком. Задания A и B собраны, но не
+отправляются.
+
 Задания и проверки — [`scripts/argon/generation_tasks.py`](../../scripts/argon/generation_tasks.py), сравнение —
 [`scripts/evolution/generation_compare.py`](../../scripts/evolution/generation_compare.py), судьи и модель приведения к
 виду — [`configs/judges-generation.yaml`](../../configs/judges-generation.yaml), промпты `format_hypothesis/v1`,
