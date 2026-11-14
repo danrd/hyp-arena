@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import glob
 import json
-import math
 import re
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -29,32 +28,7 @@ KG = Path(__file__).resolve().parents[2] / "longevity-kg"
 DIR = KG / "reviews" / "argon-2026-11-12"
 CAL = KG / "hypothesis_sources" / "calibration"
 KEEP = 20
-STOP = set("and or not the of in on for with to a an by from tiab mesh mh pt majr title abstract terms all fields nm sh la "
-           "review humans human english".split())
-
-
-def _terms(queries: list[str]) -> list[str]:
-    words = []
-    for q in queries:
-        q = re.sub(r"\[[^\]]*\]", " ", q)
-        words += [w for w in re.findall(r"[a-z][a-z0-9-]{2,}", q.lower()) if w not in STOP]
-    return list(dict.fromkeys(words))
-
-
-def _tok(s: str) -> list[str]:
-    return re.findall(r"[a-z][a-z0-9-]{2,}", (s or "").lower())
-
-
-def bm25(terms: list[str], docs: dict[str, list[str]]) -> list[str]:
-    n = len(docs) or 1
-    avg = sum(len(d) for d in docs.values()) / n or 1
-    df = Counter(t for d in docs.values() for t in set(d))
-    score = {}
-    for p, d in docs.items():
-        tf = Counter(d)
-        score[p] = sum(math.log(1 + (n - df[t] + 0.5) / (df[t] + 0.5)) * tf[t] * 2.2 / (tf[t] + 1.2 * (0.25 + 0.75 * len(d) / avg))
-                       for t in terms if t in tf)
-    return sorted(docs, key=lambda p: -score[p])
+from hyparena.card.rank import STOP, bm25, query_terms as _terms, tokens as _tok   # noqa: E402,F401
 
 
 def rrf(orders: list[list[str]], k: int = 60) -> list[str]:

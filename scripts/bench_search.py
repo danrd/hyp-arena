@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import glob
 import json
+import os
 import random
 import re
 import sys
@@ -52,7 +53,7 @@ def _load() -> tuple[dict, dict, dict]:
     ans = gold_answer()
     key = json.loads((DIR / "pack_18_key.json").read_text())
     runs = {}
-    for f in sorted(glob.glob(str(CAL / "run_*_v10.json"))):
+    for f in sorted(glob.glob(str(CAL / os.environ.get("SEARCH_RUNS", "run_*_v10.json")))):   # SEARCH_RUNS: another run set
         runs.update(json.loads(Path(f).read_text()))
     return ans, key, runs
 

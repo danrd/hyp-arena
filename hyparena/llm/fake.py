@@ -186,6 +186,10 @@ class FakeLLMClient:
     def _search_queries(self, rng, prompt, n):
         return json.dumps({"queries": []})                  # no queries: the keyword search fills up (search.py)
 
+    def _search_relevance(self, rng, prompt, n):
+        k = len(re.findall(r"^\[\d+\] ", prompt, flags=re.M))
+        return json.dumps({"scores": {str(i + 1): rng.choice([0, 1, 2, 2, 3]) for i in range(k)}})
+
     def _propose_alternatives(self, rng, prompt, n):
         import re as _re
         pmids = _re.findall(r"\[PMID (\d+)\]", prompt)

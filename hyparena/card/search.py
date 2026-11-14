@@ -15,6 +15,8 @@ from collections import Counter
 from typing import Optional
 
 TOP_SEEDS, KEEP_SEEDS = 5, 10
+PER_QUERY, LINKED_MAX, RATED, FILL, CAP = 200, 600, 100, 10, 20      # search mode "filtered" (retrieve_filtered)
+FILTER_FAMILY, FILTER_BATCH, FILTER_ABSTRACT = "deepseek", 20, 900
 ALTERNATIVE_NOTE = "proposed alternative"   # set by the pipeline on the claim made from a proposed alternative
 
 
@@ -159,3 +161,99 @@ def retrieve(client, family: str, avoid, claim, card, as_of: Optional[str], retm
             break
         pmids += [p for p in pubmed.search(q, retmax=retmax, as_of=as_of) if p not in pmids]
     return pmids[:retmax]
+
+
+def _target(claim) -> str:
+    """What the relevance filter is told this search is about."""
+    m = claim.qualifiers.get("measure", "")
+    triple = f"{claim.subject.label} — {claim.relation} — {claim.object.label}" + (f" (measure: {m})" if m and m != "unknown" else "")
+    if claim.note == ALTERNATIVE_NOTE:
+        return f"a competing explanation of the hypothesis's result: {triple}"
+    if claim.id.startswith("an"):
+        return f"the same effect in another species or for a related intervention: {triple}"
+    return f"claim of the hypothesis: {triple}"
+
+
+def relevance(client, avoid, claim, card, queries: list[str], ids: list[str], recs: dict, log: Optional[list] = None,
+              family: str = FILTER_FAMILY) -> dict[str, int]:
+    """Ratings 0-3 of the candidates by a cheap model from title and abstract (prompt search_relevance/v1, batches of 20).
+    A record the model leaves unrated gets no rating (it is not read unless the rated ones are too few)."""
+    from hyparena.card.llm import ask
+    p = card.pico
+    base = {"claim_plain": card.claim_plain, "intervention": "; ".join(i.label for i in p.intervention) or claim.subject.label,
+            "population": p.population.who, "target": _target(claim), "queries": " | ".join(queries)[:1500]}
+    out: dict[str, int] = {}
+    for b in range(0, len(ids), FILTER_BATCH):
+        batch = ids[b:b + FILTER_BATCH]
+        rows = [{"n": i + 1, "title": (recs.get(x) or {}).get("title", ""), "year": (recs.get(x) or {}).get("year", ""),
+                 "types": ", ".join(((recs.get(x) or {}).get("pubtypes") or [])[:3]),
+                 "abstract": ((recs.get(x) or {}).get("abstract") or "")[:FILTER_ABSTRACT]} for i, x in enumerate(batch)]
+        n = len(batch)
+        ok = lambda v, n=n: [] if isinstance(v.get("scores"), dict) and len(v["scores"]) >= n - 1 else [f'"scores" must rate all {n} records']
+        value, _ = ask(client, role="search_relevance", family=family, template="search_relevance", version="v1",
+                       variables={**base, "records": rows}, validate=ok, rounds=2, avoid=avoid, log=log)
+        for i, x in enumerate(batch):
+            s = ((value or {}).get("scores") or {}).get(str(i + 1))
+            if isinstance(s, (int, float)) and 0 <= s <= 3:
+                out[x] = int(s)
+    return out
+
+
+def retrieve_filtered(client, family: str, avoid, claim, card, as_of: Optional[str], log: Optional[list] = None,
+                      population_first: bool = True) -> list[str]:
+    """Search mode "filtered" (search benchmark 2026-11-14, docs/plans/search-2026-11-14.md):
+    1. the model-written queries (and the exact-population query for an outcome claim), each up to 200 papers before T;
+    2. the candidates ordered by BM25 of the query terms against title and abstract;
+    3. the references and citing papers of the first 5 join (dated before T), and BM25 orders all again;
+    4. a cheap model rates the first 100 from title and abstract (0-3);
+    5. read: every paper rated 3, filled up to 10 with papers rated 2, at most 20.
+    With no candidates the keyword queries of the verifier are used as before."""
+    from hyparena.card import rank
+    from hyparena.card.verifier import queries as keyword_queries
+    from hyparena.tools import pubmed
+    qs = model_queries(client, family, avoid, claim, card, as_of, log)
+    pq = population_query(claim, card) if population_first else None
+    if pq:
+        qs = [pq] + qs
+    cand: list[str] = []
+    for q in qs:
+        cand += [p for p in pubmed.search(q, retmax=PER_QUERY, as_of=as_of) if p not in cand]
+    cand = _dated(cand, as_of)
+    if not cand:
+        out: list[str] = []
+        for q in keyword_queries(claim, card):
+            out += [p for p in pubmed.search(q, retmax=CAP, as_of=as_of) if p not in out]
+            if len(out) >= CAP:
+                break
+        if log is not None:
+            log.append({"kind": "search_filter", "claim": claim.id, "candidates": 0, "fallback": "keywords", "selected": out[:CAP]})
+        return out[:CAP]
+    terms = rank.query_terms(qs)
+    recs = pubmed.fetch(cand)
+    doc = lambda p: rank.tokens(f"{(recs.get(p) or {}).get('title', '')} {(recs.get(p) or {}).get('abstract', '')}")
+    order = rank.bm25(terms, {p: doc(p) for p in cand})
+    linked: Counter = Counter()
+    for s in order[:TOP_SEEDS]:
+        for name in ("pubmed_pubmed_refs", "pubmed_pubmed_citedin"):
+            linked.update(_links(s, name))
+    new = _dated([p for p, _ in linked.most_common() if p not in cand][:LINKED_MAX], as_of)
+    if new:
+        recs.update(pubmed.fetch(new))
+        order = rank.bm25(terms, {p: doc(p) for p in cand + new})
+    top = order[:RATED]
+    scores = relevance(client, avoid, claim, card, qs, top, recs, log=log)
+    chosen = rank.select(top, scores, fill=FILL, cap=CAP)
+    if log is not None:
+        log.append({"kind": "search_filter", "claim": claim.id, "candidates": len(cand), "linked": len(new),
+                    "rated": len(scores), "ratings": dict(Counter(scores.values())), "selected": chosen})
+    return chosen
+
+
+def _links(pmid: str, name: str) -> list[str]:
+    import httpx
+    try:
+        r = httpx.get("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi",
+                      params={"dbfrom": "pubmed", "db": "pubmed", "id": pmid, "linkname": name, "retmode": "json"}, timeout=60).json()
+        return [str(x) for ls in r.get("linksets", []) for db in ls.get("linksetdbs", []) for x in db.get("links", [])]
+    except Exception:                                     # noqa: BLE001 - a failed link is no candidates, not an error
+        return []
