@@ -18,6 +18,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Callable, Optional
 
+from hyparena.card.pipeline import split_hypotheses
 from hyparena.aggregate import mrsp
 from hyparena.graph import build_graph
 from hyparena.live import _context
@@ -46,20 +47,6 @@ EVIDENCE_RU = {"primary_text": "первичная работа", "review_text":
                "machine_derived": "машинная подсказка, не доказательство", "quality_metadata": "метаданные качества",
                "plans": "реестр: планы и статус, не результаты"}
 REVIEW_RU = {"initial": "Первичная", "full": "С литературой", "deep": "Глубокая проверка"}
-
-
-def split_hypotheses(text: str) -> list[str]:
-    """Pasted text -> hypotheses: numbered items ("1." / "1)") if there are at least two, else blocks
-    separated by blank lines."""
-    text = text.strip()
-    if not text:
-        return []
-    marks = list(re.finditer(r"(?m)^\s*\d{1,2}[.)]\s+", text))
-    if len(marks) >= 2:
-        parts = [text[m.end():(marks[i + 1].start() if i + 1 < len(marks) else len(text))] for i, m in enumerate(marks)]
-    else:
-        parts = re.split(r"\n\s*\n", text)
-    return [p.strip() for p in parts if p.strip()]
 
 
 def cycle_of(state) -> int:

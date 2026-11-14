@@ -25,8 +25,8 @@ SPECIES = {"mouse": "Mus musculus", "mice": "Mus musculus", "mus musculus": "Mus
 
 @lru_cache(maxsize=1)
 def _rows() -> list[dict]:
-    from hyparena.backtest import drugage_rows
-    return drugage_rows()
+    from hyparena.tools import drugage
+    return drugage.rows()
 
 
 def _key(s: str) -> str:

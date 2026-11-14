@@ -67,7 +67,9 @@ def _drugage_rows() -> list[dict]:
 
 @pytest.fixture(autouse=True)
 def offline_compounds(monkeypatch):
-    monkeypatch.setattr(backtest, "drugage_rows", _drugage_rows)  # no DrugAge download in tests
+    from hyparena.tools import drugage
+    monkeypatch.setattr(drugage, "rows", _drugage_rows)          # no DrugAge download in tests
+    monkeypatch.setattr(backtest, "drugage_rows", _drugage_rows)
     monkeypatch.setenv("HYPARENA_EMBEDDER", "none")             # no model download in tests
     monkeypatch.setattr(chebi, "classes", lambda cid, max_descendants=100: [c for c in CHEBI_CLASSES.get(cid, []) if c[2] <= max_descendants])
     monkeypatch.setattr(cp, "lookup", lambda name: OFFLINE.get(cp.key(name)))

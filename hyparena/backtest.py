@@ -39,80 +39,19 @@ from pathlib import Path
 
 import httpx
 
-DRUGAGE_URL = "https://genomics.senescence.info/drugs/dataset.zip"
+from hyparena.tools import drugage, pubdates
+from hyparena.tools.drugage import DRUGAGE_URL
 OUT = Path(__file__).resolve().parents[1] / "data" / "backtest"
 
 
-_MONTHS = {m: i for i, m in enumerate(("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"), 1)}
-
-
-DATES_CACHE = Path("data/cache/pubdates.json")      # found dates only: a paper never gets an earlier first date
-
-
-def _pubmed_date(text: str) -> str | None:
-    """ISO date from a PubMed date string ("2016 Nov 14", "2016 Dec", "2016/11/15 06:00"); a missing day or
-    month counts as the first."""
-    parts = text.replace("/", " ").replace("-", " ").split()
-    if not parts or not parts[0].isdigit() or len(parts[0]) != 4:
-        return None
-    month, day = 1, 1
-    if len(parts) > 1:
-        month = int(parts[1]) if parts[1].isdigit() else _MONTHS.get(parts[1][:3].lower(), 1)
-    if len(parts) > 2 and parts[2].isdigit():
-        day = int(parts[2])
-    return f"{parts[0]}-{month:02d}-{day:02d}"
-
-
 def _pubdates(pmids: list[str]) -> dict[str, str]:
-    """PubMed id -> ISO date of first public appearance, via NCBI E-utilities (batches of 150): the earliest
-    of the electronic, print and PubMed-entry dates. (The print date alone can come weeks after the paper
-    was online, which let a backtest's evidence cut-off include the paper itself.)"""
-    from hyparena.tools import pubmed                # shares PubMed's rate limit with the verifier's threads
-    try:
-        cache = json.loads(DATES_CACHE.read_text())
-    except (OSError, ValueError):
-        cache = {}
-    dates = {p: cache[p] for p in pmids if p in cache}
-    todo = [p for p in pmids if p not in dates]
-    for i in range(0, len(todo), 150):
-        batch = todo[i:i + 150]
-        r = pubmed._get("esummary.fcgi", {"db": "pubmed", "id": ",".join(batch), "retmode": "json"})
-        res = r.json().get("result", {})
-        for p in batch:
-            rec = res.get(p) or {}
-            found = [_pubmed_date(rec.get(k) or "") for k in ("epubdate", "pubdate", "sortpubdate")]
-            found += [_pubmed_date(h.get("date", "")) for h in rec.get("history") or []
-                      if h.get("pubstatus") in ("entrez", "pubmed", "aheadofprint")]
-            found = [d for d in found if d]
-            if found:
-                dates[p] = min(found)
-                cache[p] = dates[p]
-    if todo:
-        DATES_CACHE.parent.mkdir(parents=True, exist_ok=True)
-        DATES_CACHE.write_text(json.dumps(cache, sort_keys=True))
-    return dates
-
-
-DRUGAGE_CACHE = Path("data/cache/drugage.zip")      # the last good download (the site sometimes answers with a bot-check page)
+    """PubMed id -> first public date (hyparena/tools/pubdates.py)."""
+    return pubdates.pubdates(pmids)
 
 
 def drugage_rows() -> list[dict]:
-    """All rows of the current DrugAge release (downloaded each time; about 0.5 MB). When the download is not a zip archive
-    (2026-11-02: the site answered with a reload page), the last good download in data/cache is used."""
-    raw = b""
-    try:
-        raw = httpx.get(DRUGAGE_URL, timeout=120, follow_redirects=True).content
-    except httpx.HTTPError:
-        pass
-    if raw[:2] == b"PK":
-        DRUGAGE_CACHE.parent.mkdir(parents=True, exist_ok=True)
-        DRUGAGE_CACHE.write_bytes(raw)
-    elif DRUGAGE_CACHE.exists():
-        raw = DRUGAGE_CACHE.read_bytes()
-    else:
-        raise RuntimeError("DrugAge: the download is not a zip archive and there is no cached copy (data/cache/drugage.zip)")
-    z = zipfile.ZipFile(io.BytesIO(raw))
-    return list(csv.DictReader(io.TextIOWrapper(z.open("drugage.csv"), encoding="utf-8", errors="replace")))
+    """All rows of the current DrugAge release (hyparena/tools/drugage.py)."""
+    return drugage.rows()
 
 
 def _pct(v: str) -> Optional[float]:

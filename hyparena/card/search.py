@@ -23,8 +23,8 @@ ALTERNATIVE_NOTE = "proposed alternative"   # set by the pipeline on the claim m
 def _dated(pmids: list[str], as_of: Optional[str]) -> list[str]:
     if not as_of or not pmids:
         return list(pmids)
-    from hyparena import backtest
-    d = backtest._pubdates(pmids)
+    from hyparena.tools import pubdates
+    d = pubdates.pubdates(pmids)
     return [p for p in pmids if p in d and d[p] <= as_of]
 
 

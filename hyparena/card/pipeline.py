@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import time
 
 import yaml
@@ -426,8 +427,21 @@ def _with_duplicates(hyps: dict, res: dict) -> dict:
     return hyps
 
 
+def split_hypotheses(text: str) -> list[str]:
+    """Pasted text -> hypotheses: numbered items ("1." / "1)") if there are at least two, else blocks
+    separated by blank lines."""
+    text = text.strip()
+    if not text:
+        return []
+    marks = list(re.finditer(r"(?m)^\s*\d{1,2}[.)]\s+", text))
+    if len(marks) >= 2:
+        parts = [text[m.end():(marks[i + 1].start() if i + 1 < len(marks) else len(text))] for i, m in enumerate(marks)]
+    else:
+        parts = re.split(r"\n\s*\n", text)
+    return [p.strip() for p in parts if p.strip()]
+
+
 def main() -> None:
-    from hyparena.showcase import split_hypotheses
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--paste", required=True, help="text file with hypotheses (numbered or separated by blank lines)")
     ap.add_argument("--writer", default="unknown")

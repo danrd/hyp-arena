@@ -284,8 +284,8 @@ def drugage_map() -> dict[str, Optional[int]]:
 
 def build_drugage_map(log=print, workers: int = 3) -> dict:
     from concurrent.futures import ThreadPoolExecutor
-    from hyparena.backtest import drugage_rows
-    names = sorted({r["compound_name"] for r in drugage_rows()})
+    from hyparena.tools import drugage
+    names = sorted({r["compound_name"] for r in drugage.rows()})
     out = dict(drugage_map())
     todo = [n for n in names if key(n) not in out]
 

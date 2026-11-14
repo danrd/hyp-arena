@@ -220,8 +220,8 @@ def curated(claim, card: HypothesisCard, as_of: Optional[str] = None) -> tuple[l
     for r in support + against:
         r.qualifiers_match["intervention_match"] = curated_intervention_match(card, r)
     if as_of and (support or against):
-        from hyparena.backtest import _pubdates
-        dates = _pubdates([r.linked_pmid for r in support + against])
+        from hyparena.tools import pubdates
+        dates = pubdates.pubdates([r.linked_pmid for r in support + against])
         allowed = {p for p, d in dates.items() if d <= as_of}
         support = [r for r in support if r.linked_pmid in allowed]
         against = [r for r in against if r.linked_pmid in allowed]
@@ -234,8 +234,8 @@ def date_guard(pmids: list[str], as_of: Optional[str]) -> tuple[list[str], dict[
     earliest public date. A PMID without a date is dropped. Returns (kept, {dropped pmid: reason})."""
     if not as_of or not pmids:
         return list(pmids), {}
-    from hyparena import backtest
-    dates = backtest._pubdates(list(pmids))
+    from hyparena.tools import pubdates
+    dates = pubdates.pubdates(list(pmids))
     kept, dropped = [], {}
     for p in pmids:
         if p not in dates:

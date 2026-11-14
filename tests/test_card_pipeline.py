@@ -474,8 +474,8 @@ def test_human_healthspan_prompt_counts_markers():
 # D1/D2: a run on date T never reads a paper first public after T, and a paper without a date is dropped.
 
 def _dated(monkeypatch, dates):
-    from hyparena import backtest
-    monkeypatch.setattr(backtest, "_pubdates", lambda pmids: {p: dates[p] for p in pmids if p in dates})
+    from hyparena.tools import pubdates
+    monkeypatch.setattr(pubdates, "pubdates", lambda pmids: {p: dates[p] for p in pmids if p in dates})
 
 
 def test_date_guard_drops_late_and_undated_papers(monkeypatch):
