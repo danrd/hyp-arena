@@ -71,6 +71,14 @@ class Claim(BaseModel):
     stated_as: Optional[Literal["claimed", "known", "analogy"]] = None
     level: Optional[Literal["molecule", "cell", "tissue", "organ", "organism"]] = None   # reference only (not scored)
     sex_scope: Literal["any", "unspecified"] = "unspecified"   # `any`: the text claims the effect in at least one sex (an effect in one sex is enough)
+    @field_validator("level", mode="before")
+    @classmethod
+    def _level(cls, v):
+        """An organelle is the cell level; any other value outside the list is left unknown (a card is not lost for it)."""
+        if v in (None, "", "molecule", "cell", "tissue", "organ", "organism"):
+            return v or None
+        return "cell" if str(v).lower() in ("organelle", "subcellular") else None
+
     # normalize_card/v15 (docs/system/card.md, "Звенья"): a claim is on the chain of the main factor or a premise about the problem
     part: Optional[Literal["chain", "premise"]] = None
     premise_kind: Optional[Literal["population_state", "problem_mechanism"]] = None
