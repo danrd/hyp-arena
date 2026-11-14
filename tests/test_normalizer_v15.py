@@ -91,3 +91,12 @@ def test_condition_is_not_the_conditions_list():
     assert any("population.condition" in p for p in v15_problems(card))
     card.pico.population.condition = "obese older adults at risk for disability"
     assert not any("population.condition" in p for p in v15_problems(card))
+
+
+def test_design_from_registry_randomized():
+    from hyparena.card.normalizer import design_from_registry
+    c = _card([_c("c1", "squat exercise", "physical performance", link="outcome", primary=True)])
+    c.decisive_experiment.design = "unknown"
+    design_from_registry(c, "Title: x\nDesign: randomized, sequential, masking single (participant), primary purpose prevention\n")
+    assert c.decisive_experiment.design == "rct"
+    assert c.decisive_experiment.registry["model"] == "sequential"

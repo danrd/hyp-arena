@@ -96,6 +96,7 @@ def _problems(value: dict, raw_text: str, card_id: str, core: bool = False, v15:
     if v15:
         v15_prepare(card)                               # premises off the chain before roles are derived
         extra = primary_from_registry(card, raw_text)   # the main outcome is the registry's primary outcome (code)
+        design_from_registry(card, raw_text)            # a randomized registry trial is an rct whatever the model wrote
     derive_roles(card)                                  # v13: `role` from `primary` and `stated_as` (no-op before v13)
     set_sex_scope(card, raw_text)                       # `any` from the words "at least one sex" when the model left it out
     canonicalize(card)                                  # dose and age in one wording (L1.8)
@@ -244,6 +245,7 @@ def normalize_union(client, family: str, raw_text: str, card_id: str, log: Optio
         if v15:
             v15_prepare(card)
             primary_from_registry(card, raw_text)
+            design_from_registry(card, raw_text)
         problems = validate_card(card, raw_text, max_claims=12 if v15 else 8) + (v15_problems(card) if v15 else [])
         if int((version or TEMPLATE[1]).lstrip("v") or 0) >= 13:
             stab["deduplicated"] = dedupe_claims(card)  # near-duplicates the union added (card benchmark 2026-11-12)
@@ -454,6 +456,18 @@ def v15_prepare(card: HypothesisCard) -> None:
         if c.part == "premise":
             c.link = None
             c.primary = False
+
+
+def design_from_registry(card: HypothesisCard, raw_text: str) -> None:
+    """The registry's Design line decides randomization: a randomized trial left as `unknown` or `other` by the model is an
+    rct; the parsed design fields go to decisive_experiment.registry (H49: "Design: randomized, sequential, ..." read as unknown)."""
+    reg = registry_design(raw_text)
+    if not reg:
+        return
+    e = card.decisive_experiment
+    e.registry = {**reg, **(e.registry or {})}
+    if reg.get("allocation") == "randomized" and e.design in ("unknown", "other"):
+        e.design = "rct"
 
 
 def primary_from_registry(card: HypothesisCard, raw_text: str) -> list[str]:

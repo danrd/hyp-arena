@@ -36,5 +36,5 @@ admission: graded
 # (specs/extraction-gold-v9-2026-11-05.yaml; relevance recall about 0.6, precision 1.0; the second relevance question is not used).
 method: v3
 verify_version: v9
-normalize_version: v11   # normalize_card/v11 (2026-11-11): v10 + a direction for value links (H49: an undirected 'changes body composition' could take no side); v10 (2026-11-06): AI-role tag, endpoint and registry population by code
+normalize_version: v16   # normalize_card/v16 (2026-11-14): outcome / mechanism step / premise, main factor, population condition, topic and identifiers (MeSH, code); passed the rule on the 40 registry texts of pack 20 (specs/benchmark-card-2026-11-12.yaml, v16_registry40_2026_11_14)
 normalize_runs: 1        # one parse (2026-11-14: a second parse added recall +0.04 and cost half of the calls; 2 = the union of two parses)

@@ -111,7 +111,7 @@ asked. Validation status is in section 12.
 A model (the normaliser) turns the text into a **card**: the hypothesis split into parts that can be checked one by one.
 The card holds only what the text says; everything found later (papers, weights, alternatives, scores) is kept apart.
 The detailed rules, every field with its origin and what reads it, and a worked example are in the
-[card manual](system/card.md). In short:
+[card manual](system/card.md). Template `normalize_card/v16` (config `normalize_version`). In short:
 
 - **Core (the hypothesis itself):** population; interventions; background (what every group receives alike, which is not
   the intervention); the hypothesis's outcome and direction; the expected effect when the text names one; and the
