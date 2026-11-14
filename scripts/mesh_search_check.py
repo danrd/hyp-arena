@@ -22,6 +22,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from hyparena.tools import mesh
+from scripts.bench_search import valid
 from scripts.search_misses import _blocks, _esearch, _kind
 
 KG = Path(__file__).resolve().parents[2] / "longevity-kg"
@@ -79,7 +80,7 @@ def run() -> dict:
         for sid, g in sorted(ans.items()):
             k = key[sid]; T = k["T"] if len(k["T"]) > 7 else k["T"] + "-28"
             r = runs[k["unit"]]; card = r["items"][0].get("card") or {}
-            gold[sid] = {p["pmid"] for p in g["papers"] if pm.get(p["pmid"], {}).get("exists") and (pm[p["pmid"]].get("earliest") or "") <= T}
+            gold[sid] = {p["pmid"] for p in g["papers"] if valid(pm, p["pmid"]) and (pm[p["pmid"]].get("earliest") or "") <= T}
             ents = {lab: mesh.synonyms(lab) for lab in _entities(card)}
             for c in r["calls"]:
                 if c.get("kind") != "search_plan":

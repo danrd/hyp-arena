@@ -20,6 +20,7 @@ from __future__ import annotations
 import glob
 import json
 import random
+import re
 import sys
 import time
 import urllib.parse
@@ -112,6 +113,53 @@ def _ours(run: dict) -> dict:
             "status": it["outcome"], "n_returned": len(set().union(alt, *by_claim.values()))}
 
 
+WORDS_OFF = set("the a an of in on and or to for with by from as at is are was were be that this these those it its into than "
+                "after before during not no effect effects study trial randomized controlled results older adults elderly people "
+                "patients among between showing significantly showed week weeks year years group groups compared improved "
+                "increased reduced review systematic clinical human humans months".split())
+
+
+def _content(s: str) -> set:
+    return {w[:6] for w in re.findall(r"[a-z0-9]{4,}", (s or "").lower())} - {w[:6] for w in WORDS_OFF}
+
+
+def described() -> dict:
+    """Is the paper behind a gold PMID the paper the gold describes? The share of the content words of Argon's description
+    (`shows`) that the PubMed title and abstract contain; under AS_DESCRIBED the PMID points to another paper (a wrong
+    number) and is dropped. Written into pack_18_pubmed.json (`as_described`)."""
+    from hyparena.tools import pubmed
+    ans, _, _ = _load()
+    f = DIR / "pack_18_pubmed.json"
+    pm = json.loads(f.read_text())
+    desc = {}
+    for g in ans.values():
+        for p in g["papers"]:
+            desc[p["pmid"]] = p.get("shows", "")
+        cp = g["closest_prior_work"]
+        if cp.get("pmid"):
+            desc.setdefault(cp["pmid"], " ".join(str(v) for k, v in cp.items() if k != "pmid"))
+    ids = [p for p in desc if pm.get(p, {}).get("exists")]
+    rec = {}
+    for i in range(0, len(ids), 50):
+        rec.update(pubmed.fetch(ids[i:i + 50]))
+    for p in ids:
+        a = _content(desc[p])
+        b = _content(f"{(rec.get(p) or {}).get('title') or pm[p].get('title', '')} {(rec.get(p) or {}).get('abstract') or ''}")
+        pm[p]["as_described"] = round(len(a & b) / len(a), 2) if a else None
+    f.write_text(json.dumps(pm, indent=1, ensure_ascii=False) + "\n")
+    bad = [p for p in ids if pm[p]["as_described"] is not None and pm[p]["as_described"] < AS_DESCRIBED]
+    return {"checked": len(ids), "another_paper": len(bad)}
+
+
+AS_DESCRIBED = 0.25
+
+
+def valid(pm: dict, pmid: str) -> bool:
+    """A gold PMID counts when it is in PubMed and its paper is the one the gold describes."""
+    i = pm.get(pmid, {})
+    return bool(i.get("exists")) and (i.get("as_described") is None or i["as_described"] >= AS_DESCRIBED)
+
+
 def _rows(ans: dict, key: dict, runs: dict, pm: dict) -> tuple[list[dict], list[dict], Counter]:
     papers, trials, drop = [], [], Counter()
     for sid, g in sorted(ans.items()):
@@ -121,6 +169,9 @@ def _rows(ans: dict, key: dict, runs: dict, pm: dict) -> tuple[list[dict], list[
             info = pm.get(p["pmid"], {})
             if not info.get("exists"):
                 drop["not_in_pubmed"] += 1
+                continue
+            if not valid(pm, p["pmid"]):
+                drop["another_paper"] += 1
                 continue
             if info["earliest"] and info["earliest"] > k["T"]:
                 drop["after_T"] += 1
@@ -133,7 +184,7 @@ def _rows(ans: dict, key: dict, runs: dict, pm: dict) -> tuple[list[dict], list[
                            "on_link": p["pmid"] in on_link, "read": p["pmid"] in o["read"]})
         cp = g["closest_prior_work"].get("pmid") or ""
         cinfo = pm.get(cp, {})
-        cp_ok = bool(cinfo.get("exists")) and not (cinfo.get("earliest") and cinfo["earliest"] > k["T"])
+        cp_ok = valid(pm, cp) and not (cinfo.get("earliest") and cinfo["earliest"] > k["T"])
         trials.append({"sid": sid, "short": k["short"], "holdout": k["holdout"], "outcome": (k.get("outcome") or {}).get("label"),
                        "argon_level": g["novelty_level"], "our_level": o["novelty"], "cp_valid": cp_ok,
                        "cp_found": cp_ok and cp in o["all"], "cp_read": cp_ok and cp in o["read"],
@@ -215,4 +266,4 @@ def score() -> dict:
 
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "score"
-    print(json.dumps({"check": check, "score": score}[cmd](), indent=1, ensure_ascii=False))
+    print(json.dumps({"check": check, "described": described, "score": score}[cmd](), indent=1, ensure_ascii=False))

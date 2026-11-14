@@ -26,6 +26,8 @@ import urllib.request
 from collections import Counter, defaultdict
 from pathlib import Path
 
+from scripts.bench_search import valid
+
 KG = Path(__file__).resolve().parents[2] / "longevity-kg"
 DIR = KG / "reviews" / "argon-2026-11-12"
 CAL = KG / "hypothesis_sources" / "calibration"
@@ -120,7 +122,7 @@ def run() -> dict:
             given_all = set().union(*given.values()) if given else set()
             read = {e["record_id"].split(":", 1)[-1] for cv in ((it.get("verification") or {}).get("claims") or [])
                     for e in (cv.get("evidence") or []) + (cv.get("counterevidence") or [])}
-            gold = [p for p in g["papers"] if pm.get(p["pmid"], {}).get("exists") and
+            gold = [p for p in g["papers"] if valid(pm, p["pmid"]) and
                     (pm[p["pmid"]].get("earliest") or "") <= T]
             ids = " OR ".join(f"{p['pmid']}[uid]" for p in gold)
             in_pdat = set(_esearch(f"({ids})", T, cache)["ids"]) if gold else set()
