@@ -320,3 +320,14 @@ coverage, novelty with the record that sets it, I, scope, places under the three
 alternatives), what to improve (actions with the score they would give, and the change of novelty they would cost),
 limitations, provenance. The older one-hypothesis report by code (`python -m hyparena.analyze`) still uses the v3 / v3.1
 levels.
+
+
+## Worked example under v3.7-v3.9 (each step its own place)
+
+Removed from the manual on 2026-11-14 when every step before the outcome became one place of the balance (v3.10).
+
+| | c1 engagement | c2 pathway | c3 outcome | evidence balance | | I | W | |
+|---|---|---|---|---|---|---|---|---|
+| v3.7 | S 0.936 (F 1.000) | no record, not averaged | S 0.905 (F 0.839) | evidence balance 0.841 | | 0.581 | organ | |
+| v3.7, with one mouse study of 40 for c2 | | S 0.793 | | evidence balance 0.756 | | | | |
+| v3.7, with one mouse study of 40 against c2 | | S 0.342 | | evidence balance 0.455 | | | | |

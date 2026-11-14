@@ -306,7 +306,7 @@ class V32Result:
 # Steps before the outcome in the evidence balance: "separate" (v3.9: each step a place, consecutive cellular processes one
 # place by their best link); "min" or "mean": all steps one place, by the weakest step with data or by their mean (v3.10
 # candidate: an added well-supported step cannot raise the balance; specs/merge-steps-2026-11-14.yaml)
-STEPS_SLOT = os.environ.get("STEPS_SLOT", "separate")
+STEPS_SLOT = os.environ.get("STEPS_SLOT", "min")             # v3.10 (2026-11-14)
 EMPTY_SLOTS = os.environ.get("EMPTY_SLOTS", "skip")       # v3.7 (user 2026-11-09, specs/empty-slots-2026-11-09.yaml): "skip"; "count" = v3.6
 
 

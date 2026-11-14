@@ -49,7 +49,8 @@ def test_scope_is_not_a_factor_of_v():
     assert res.V == pytest.approx(res.P * res.I, rel=1e-3)
 
 
-def test_v33_links_without_records_do_not_count_and_coverage_says_so():
+def test_v33_links_without_records_do_not_count_and_coverage_says_so(monkeypatch):
+    monkeypatch.setattr(r32, "STEPS_SLOT", "separate")                   # history: each step its own place until v3.10
     out = claim("c9", "x", "improves_healthspan_in", "human", "outcome", "outcome")
     long_ = card([claim(f"c{i}", "x", "activates", f"y{i}", link) for i, link in enumerate(("engagement", "pathway", "effect"), 1)] + [out])
     short = card([out])

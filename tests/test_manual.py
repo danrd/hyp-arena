@@ -66,6 +66,7 @@ def test_manual_v32_constants_and_profiles_equal_the_code():
 
 def test_manual_worked_example_is_what_the_code_gives(monkeypatch):
     monkeypatch.setattr(r32, "EMPTY_SLOTS", "count")                     # history: v3.3-v3.6 averaged empty slots in
+    monkeypatch.setattr(r32, "STEPS_SLOT", "separate")                   # history: each step was its own place until v3.10
     from hyparena.card import rules_v3 as r3
     from hyparena.card.models import ClaimVerification
     from tests.test_analyze import _case
@@ -91,6 +92,7 @@ def test_manual_worked_example_is_what_the_code_gives(monkeypatch):
 
 def test_manual_worked_example_v34(monkeypatch):
     monkeypatch.setattr(r32, "EMPTY_SLOTS", "count")                     # history: v3.3-v3.6 averaged empty slots in
+    monkeypatch.setattr(r32, "STEPS_SLOT", "separate")                   # history: each step was its own place until v3.10
     from hyparena.card import novelty_v34 as nv
     from hyparena.card.models import ClaimVerification
     from tests.test_analyze import _case
@@ -120,6 +122,7 @@ def test_manual_worked_example_v34(monkeypatch):
 
 def test_manual_worked_example_v36(monkeypatch):
     monkeypatch.setattr(r32, "EMPTY_SLOTS", "count")                     # history: v3.3-v3.6 averaged empty slots in
+    monkeypatch.setattr(r32, "STEPS_SLOT", "separate")                   # history: each step was its own place until v3.10
     from hyparena.card.models import ClaimVerification
     from tests.test_analyze import _case
     from tests.test_rules_v3 import rec
@@ -160,7 +163,8 @@ def test_manual_names_table_matches_code():
 
 
 def test_manual_worked_example_v37(monkeypatch):
-    """v3.7: a slot with no record is left out of the balance."""
+    """v3.7: a slot with no record is left out of the balance (history: each step its own place until v3.10)."""
+    monkeypatch.setattr(r32, "STEPS_SLOT", "separate")
     from hyparena.card.models import ClaimVerification
     from tests.test_analyze import _case
     from tests.test_rules_v3 import rec
@@ -168,7 +172,24 @@ def test_manual_worked_example_v37(monkeypatch):
     monkeypatch.setattr(r32, "EMPTY_SLOTS", "skip")
     c, cvs, alts = _case()
     e = r32.evaluate(c, cvs, alts, v36=True)
+    text = _with_history()
+    assert f"| v3.7 | S {e.links['c1'][0]:.3f} (F {e.links['c1'][3]:.3f}) | no record, not averaged | S {e.links['c3'][0]:.3f} (F {e.links['c3'][3]:.3f}) | evidence balance {e.chain_state:.3f} |" in text
+    e2 = r32.evaluate(c, cvs + [ClaimVerification(id="c2", evidence=[rec(5, "animal", n=40, effect="large")])], alts, v36=True)
+    assert f"| v3.7, with one mouse study of 40 for c2 | | S {e2.links['c2'][0]:.3f} | | evidence balance {e2.chain_state:.3f} |" in text
+
+
+def test_manual_worked_example_current(monkeypatch):
+    """v3.10: every step before the outcome is one place, by its weakest step with data (STEPS_SLOT = "min")."""
+    from hyparena.card.models import ClaimVerification
+    from tests.test_analyze import _case
+    from tests.test_rules_v3 import rec
+    monkeypatch.setattr(r3, "established_by_approval", lambda claim, card: False)
+    assert r32.STEPS_SLOT == "min" == _constants()["v310"]["steps_slot"] and r32.EMPTY_SLOTS == "skip"
+    c, cvs, alts = _case()
+    e = r32.evaluate(c, cvs, alts, v36=True)
     text = MANUAL.read_text()
-    assert f"| as given | S {e.links['c1'][0]:.3f} (F {e.links['c1'][3]:.3f}) | no record, not averaged | S {e.links['c3'][0]:.3f} (F {e.links['c3'][3]:.3f}) | evidence balance {e.chain_state:.3f} |" in text
+    assert f"| as given | S {e.links['c1'][0]:.3f} (F {e.links['c1'][3]:.3f}) | no record | S {e.links['c3'][0]:.3f} (F {e.links['c3'][3]:.3f}) | evidence balance {e.chain_state:.3f} |" in text
     e2 = r32.evaluate(c, cvs + [ClaimVerification(id="c2", evidence=[rec(5, "animal", n=40, effect="large")])], alts, v36=True)
     assert f"| with one mouse study of 40 for c2 | | S {e2.links['c2'][0]:.3f} | | evidence balance {e2.chain_state:.3f} |" in text
+    e3 = r32.evaluate(c, cvs + [ClaimVerification(id="c2", counterevidence=[rec(5, "animal", n=40, effect="none")])], alts, v36=True)
+    assert f"| with one mouse study of 40 against c2 | | S {e3.links['c2'][0]:.3f} | | evidence balance {e3.chain_state:.3f} |" in text

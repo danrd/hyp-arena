@@ -1,6 +1,6 @@
 # Method v3 manual: how a hypothesis is scored and how to read the report
 
-This manual describes the current rules of the method (version **v3.9**) as one self-contained text: a reader, a model or
+This manual describes the current rules of the method (version **v3.10**) as one self-contained text: a reader, a model or
 an outside reviewer can score a hypothesis and read its report from it alone. Each stage has its own detailed manual in
 [`docs/system/`](system/) (so far: [the card](system/card.md)); this manual is their compressed aggregate. How the rules
 came to be what they are, with the checks behind each change, is in the [change log](system/changelog.md), not here.
@@ -120,15 +120,17 @@ The detailed rules, every field with its origin and what reads it, and a worked 
   the text states it (**claimed** as its own hypothesis, **known**, or an **analogy** from another species or a related
   intervention). Every core field carries the shortest verbatim phrase of the text that states it, checked by code; a field
   without one is shown as "from the text, not anchored".
-- **Link types:** `delivery` (the intervention is given and reaches the site: exposure for a compound, adherence for a
-  programme), `engagement` (it acts on its target), `pathway` (a molecular or cellular process changes), `effect` (the state
-  of a tissue or organ changes), `outcome` (the stated result for a person or animal). Every step on the way to the outcome
-  keeps its link, whether claimed or known. The link types adapt accepted schemes: Pfizer's "three pillars" of Phase II
-  survival (exposure at the site of action, target binding, functional pharmacological activity;
-  [Morgan et al., Drug Discov Today 2012](https://pubmed.ncbi.nlm.nih.gov/22227532/)) and the adverse outcome pathway
-  (initiating event, key events, adverse outcome, weight of evidence per relationship;
-  [Ankley et al., Environ Toxicol Chem 2010](https://pubmed.ncbi.nlm.nih.gov/20821501/)). If the text argues a mechanism,
-  the chain is written; a missing link is a flag ("build mechanism"), not an error.
+- **Link types:** a claim of the chain is the **outcome** (what the hypothesis promises to change; defined by its role in the
+  text, not by its level) or a **mechanism step** (`step`: anything on the way from the main factor to the outcome — the
+  intervention carried out and reaching its site, its action on a named molecule, a process inside cells, a state of a
+  tissue or organ). The level of a step (molecule, cell, tissue, organ) is kept as a reference field. At most 4 steps. A
+  claim whose subject is not the main factor nor an earlier step is a **premise** about the problem (a state of the
+  population or a mechanism of the problem): it has no link, is not searched and does not score. The chain follows the
+  adverse outcome pathway idea (initiating event, key events, adverse outcome, weight of evidence per relationship;
+  [Ankley et al., Environ Toxicol Chem 2010](https://pubmed.ncbi.nlm.nih.gov/20821501/)); cards made before normaliser v16
+  keep the finer step types (delivery, engagement, pathway, effect), which count as steps. An engagement of one approved
+  drug with its target is recognised by code (section 6). If the text argues a mechanism, the chain is written; a missing
+  step is a flag ("build mechanism"), not an error.
 - **Main outcome:** one claim with link outcome: the trial's primary outcome, else the first named. Other outcomes are
   parallel: they stand beside the main one and do not continue the chain.
 - **A value link has a direction:** "changes a value" is used only when the text gives no direction anywhere; otherwise the
@@ -264,7 +266,7 @@ population weighs 0.839 on the outcome link (S 0.905 alone); one mouse study of 
 link before the outcome weighs 0.5 (S 0.793); a mouse null of 40 weighs 0.24 by its power. A link without records has
 S 0.5 and is left out of the evidence balance (section 7).
 
-**Approved action.** An engagement link whose subject is one approved drug (ChEMBL phase 4) with one of its ChEMBL targets
+**Approved action.** A step (or an engagement link of an older card) whose subject is one approved drug (ChEMBL phase 4) with one of its ChEMBL targets
 named in the link is taken as at least 5/6 without search.
 
 **Gate (the only filter).** A key link is refuted when there is a record against of the top design (RCT or meta-analysis),
@@ -275,8 +277,9 @@ ranked). Nothing else filters: an undeveloped but promising hypothesis keeps its
 
 - **Evidence balance** (`chain_state` in the code), the main axis of every profile = the mean of 2S − 1 over the chain's
   **places that have at least one counting record**, from −1 (the data are against the links) through 0 (for and against
-  balanced) to +1 (supported). A place is one link; consecutive pathway links are one place (its best link); parallel
-  outcomes are one place: the primary one when there is a single primary outcome, else the mean over the outcomes that have
+  balanced) to +1 (supported). There are two places: **the steps** before the outcome (every step of the chain, valued by
+  its weakest step that has a counting record, so that an added well-supported step cannot raise the balance and a weak or
+  refuted one lowers it) and **the outcome**. Parallel outcomes are one place: the primary one when there is a single primary outcome, else the mean over the outcomes that have
   a counting record. The primary is the outcome matching the registry's primary outcome by its words; when the registry
   lists several primary outcomes they are equal and there is no single primary; with one primary outcome and no word match,
   the card's main outcome claim is primary. A place with no record is not averaged in. Gaps are shown by the coverage and
@@ -738,7 +741,7 @@ known result (calibration pool); **R4** — the order of pairs of records given 
 
 | Step | Check | Result |
 |---|---|---|
-| card | an outside reader's card gold, 60 texts | claims recall 0.64, precision 0.74 (a system claim may cover part of a gold claim); link type κ 0.31; "how it is stated" κ 0.82 ([`specs/benchmark-card-2026-11-12.yaml`](../specs/benchmark-card-2026-11-12.yaml)) |
+| card | an outside reader's card gold (definitions of the card manual), 90 texts | outcome / step / premise κ 0.67 (0.72 on the 60 registry and written-mechanism texts); main outcome 0.79; main factor 0.97; claims recall 0.57, precision 0.56 ([`specs/benchmark-card-2026-11-12.yaml`](../specs/benchmark-card-2026-11-12.yaml)) |
 | search | an outside reader's search gold, 30 calibration trials | saved searches return 0.25 [0.17, 0.35] of the gold papers, 0.10 on their own link; the closest prior work in 0.40 of trials ([`specs/benchmark-search-2026-11-12.yaml`](../specs/benchmark-search-2026-11-12.yaml)) |
 | reading | an outside reader's findings on 400 link-abstract pairs | recall 0.29, precision 0.64; a plain LLM 0.28 / 0.41, the difference not significant ([`specs/benchmark-reading-2026-11-12.yaml`](../specs/benchmark-reading-2026-11-12.yaml)) |
 | reading: design, n, blinding | against an outside reader | 92-96% agreement |
@@ -763,15 +766,17 @@ Hypothesis: "x activates AMPK, AMPK suppresses senescent cells (hallmark: cellul
 older adults". Records: two mouse studies for c1 (n = 40 each, large effect, between groups); none for c2; one RCT of 120 for
 c3 (medium effect). One proposed alternative with an observational study of 300 for it, cut off by the stated experiment.
 
-| | c1 engagement | c2 pathway | c3 outcome | evidence balance | | I | W | |
+| | c1 step (engagement) | c2 step (pathway) | c3 outcome | evidence balance | | I | W | |
 |---|---|---|---|---|---|---|---|---|
-| as given | S 0.936 (F 1.000) | no record, not averaged | S 0.905 (F 0.839) | evidence balance 0.841 | | 0.581 | organ | |
-| with one mouse study of 40 for c2 | | S 0.793 | | evidence balance 0.756 | | | | |
-| with one mouse study of 40 against c2 | | S 0.342 | | evidence balance 0.455 | | | | |
+| as given | S 0.936 (F 1.000) | no record | S 0.905 (F 0.839) | evidence balance 0.841 | | 0.581 | organ | |
+| with one mouse study of 40 for c2 | | S 0.793 | | evidence balance 0.698 | | | | |
+| with one mouse study of 40 against c2 | | S 0.342 | | evidence balance 0.247 | | | | |
 
-The empty c2 is not averaged in, so the balance is that of c1 and c3 (0.841). A mouse study of 40 for c2 then adds a place
-weaker than the other two and lowers the balance to 0.756: the balance says how strong what is known is, and the coverage
-(2 of 3 places → 3 of 3) says how much is known.
+c1 and c2 are steps before the outcome, so they are one place of the balance, valued by the weakest step that has a
+counting record. As given, only c1 has records: the steps' place is c1 (0.936) and the balance is that of the steps and the
+outcome (0.841). A mouse study of 40 for c2 makes c2 the weakest step with data (0.793) and lowers the balance to 0.698; a
+mouse null of 40 against c2 (S 0.342) lowers it to 0.247. A well-supported step added to a chain cannot raise the balance;
+a weak or refuted one lowers it. The coverage is 2 of 2 places in every row.
 
 The RCT of 120 with a medium effect weighs 0.839 (its effect counts in full), each link's strength S comes from F − A, and a
 mouse null of 40 weighs by its power (0.24; preclinical design 1, between groups 1) against 0.5 for the mouse study for.
@@ -788,6 +793,8 @@ v32:
   p_floor_aspid: 0.01
 v37:
   empty_slots: skip          # a slot with no record is not averaged into the balance or the support share
+v310:
+  steps_slot: min            # every step before the outcome is one place, valued by its weakest step with data
 v36:
   loglr_lambda: 2.682397     # 2 atanh(2/3) / 0.6
   design_grade3: {rct: 1.0, meta_analysis: 1.0, non_randomised: 0.5, observational: 0.5, other: 0.25}

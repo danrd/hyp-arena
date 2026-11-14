@@ -1,0 +1,12 @@
+id: merge-steps-2026-11-14
+written_on: 2026-11-14
+status: adopted as method v3.10 (rules_v32.STEPS_SLOT = "min")
+why: "the finer step types (engagement, cellular process, effect) change almost nothing in the scoring (one preclinical weight scale, one scope rule); they are the least reliable part of the card; and each step as its own place lets an added well-supported step raise the balance (padding in evolution)"
+change: "every step before the outcome is one place of the evidence balance, valued by its weakest step with a counting record; the outcome place as before"
+check: "scripts/merge_steps.py (free; approval rule and compound lookups off in every variant - PubChem and ChEMBL unreachable here)"
+result:
+  separate: {R3: 0.584, pack8_trial_spearman: 0.401}
+  min: {R3: 0.594, pack8_trial_spearman: 0.401, units_moved: "1 of 59 prospective"}
+  mean: {R3: 0.586, pack8_trial_spearman: 0.402, units_moved: "1 of 59 prospective"}
+reading: "within the 0.03 rule for both; min chosen because only it keeps an added well-supported step from raising the balance; registry pools rarely state steps, so almost nothing moves; the ranking check of the script reads the saved scores and is not informative"
+related: "normalize_card/v16 (one step class, at most 4 steps, known facts about the target as steps), premises not searched (verifier), three-class agreement in the card benchmark"
