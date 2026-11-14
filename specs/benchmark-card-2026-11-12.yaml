@@ -91,3 +91,12 @@ pilot_v15_2026_11_13:   # 10 texts (P13 H86, P46 ChatGPT 27, P57 H49, P02, P03, 
   all_10: "no card with problems left after the rounds; main factor 10/10, main outcome 0.9, population condition 0.8; link kappa 0.57; chain / premise 0.91"
   pack20_6_v15_vs_v13: "claims 0.58 / 0.61 vs 0.46 / 0.50; link kappa 0.62 vs 0.58; main outcome 6/6 vs 4/6; population condition 6/6 vs 3/6; chain / premise 1.0 vs 0.91"
   seen: "ChatGPT 27: the hypothesis's own steps extracted, main factor thymus rejuvenation, the test peptides in arms; H49: SPPB main, body composition parallel, pre-sarcopenia the condition, the prevalence a premise; arms written in Russian by one parse (check added); stability understated by near-duplicates (jaccard_after_dedupe added)"
+full_run_v15_2026_11_14:   # scripts/bench_card_v2.py run / score; longevity-kg reviews/argon-2026-11-13/bench_card_v2_ours_v15.json, bench_card_v2_score.json
+  cost: "7.51 USD for 80 texts (estimate 6.4); 8.31 USD with the pilot; 390 calls"
+  failed: "3 of 90 (P23, P33, P51): risks written as objects failed the schema; fixed in the model (risks as text), the 3 to re-run (about 0.25 USD)"
+  all_87: "claims 0.57 / 0.56 (many-to-one 0.59 / 0.76); link kappa 0.63, without outcomes 0.52; chain / premise 0.87; main outcome 0.79; main factor 0.97; population condition 0.55"
+  pack20_57_vs_v13_60: "link kappa 0.69 vs 0.50; without outcomes 0.51 vs 0.32; main outcome 0.84 vs 0.55; chain / premise 0.92 vs 0.84; claims recall 0.53 vs 0.54, precision 0.56 vs 0.50; with the 3 failures counted as empty: recall 0.50, main outcome 0.80"
+  pack19_30: "link kappa 0.53; main outcome 0.70; main factor 0.90; claims 0.63 / 0.56"
+  pass_rule_reading: "link kappa and main outcome pass; claim recall passes on the cards made (-0.01) and fails with the failures counted (-0.04): decide after the 3 re-runs"
+  measure_caveat: "claims are matched by phrase overlap: the same claim anchored to the Primary outcomes line by us and to the aims sentence by the gold does not match (P04: 10 outcome claims, recall 0) - recall is a lower bound"
+  weak_texts: "substantive errors (main outcome or main factor wrong, two or more middle links wrong): N06 N08 N12 N14 N15 N20 N22 N25 N27 N28 N29 N30 P06 P20 P22 P30 P38 P43 P45 P52 P53 P55 (22) - the set for a stronger model"

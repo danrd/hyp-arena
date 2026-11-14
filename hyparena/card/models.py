@@ -229,6 +229,15 @@ class HypothesisCard(BaseModel):
     main_factor: Optional[dict] = None
     topic: Optional[dict] = None
 
+    @field_validator("risks", mode="before")
+    @classmethod
+    def _plain_risks(cls, v):
+        """normalize_card/v15 sometimes writes a risk as an object ({risk, span}); keep its text (3 of 90 cards were lost)."""
+        if not isinstance(v, list):
+            return v
+        return [x if isinstance(x, str) else str(x.get("risk") or x.get("label") or x.get("text") or next(iter(x.values()), ""))
+                if isinstance(x, dict) else str(x) for x in v]
+
     @field_validator("declared_alternatives", mode="before")
     @classmethod
     def _plain_alternatives(cls, v):
