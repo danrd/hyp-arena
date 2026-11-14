@@ -28,7 +28,7 @@ ClinicalTrials.gov and other trial registries. Code under the MIT licence ([`LIC
 ## Documentation
 
 - **Method manual** (the current rules, why each one, how to read a report, validation status): [`docs/method-v3-manual.md`](docs/method-v3-manual.md)
-- **How the system works, step by step, and how each step is checked** (in Russian): [`docs/system/steps.md`](docs/system/steps.md), diagram [`docs/system/scheme.drawio`](docs/system/scheme.drawio); stage manuals: the card — [`docs/system/card.md`](docs/system/card.md)
+- **How the system works, step by step, and how each step is checked** (in Russian): [`docs/system/steps.md`](docs/system/steps.md), diagram [`docs/system/scheme.drawio`](docs/system/scheme.drawio); stage manuals: the card — [`docs/system/card.md`](docs/system/card.md), the search — [`docs/system/search.md`](docs/system/search.md)
 - **How the system is checked, four levels** (the system itself, against other approaches, overall quality against outcomes, generation; in Russian): [`docs/system/testing.md`](docs/system/testing.md); level 4, generation compared with an LLM in a chat: [`docs/system/generation-arena.md`](docs/system/generation-arena.md)
 - **Benchmarks by stage**: [`docs/benchmarks/README.md`](docs/benchmarks/README.md); checks and decisions, one file each, by stage: [`specs/`](specs/README.md); plans of work in progress: [`docs/plans/`](docs/plans/)
 - Benchmark of registry hypotheses: [`docs/benchmark.md`](docs/benchmark.md)

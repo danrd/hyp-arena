@@ -165,7 +165,7 @@ The detailed rules, every field with its origin and what reads it, and a worked 
 
 ## 4. Evidence records
 
-A reader model reads each abstract found for a claim and returns records. The search (`search: filtered`): the queries a
+A reader model reads each abstract found for a claim and returns records. The search (`search: filtered`; stage manual [`docs/system/search.md`](system/search.md)): the queries a
 model writes and a query on the exact population, up to 200 PubMed papers each, date-cut at T; ordered by the match of the
 query words with title and abstract (BM25); the references and citing papers of the first 5 added (also before T) and the
 list ordered again; a cheap model rates the first 100 from 0 to 3 for the claim; every paper rated 3 is read, filled up to
