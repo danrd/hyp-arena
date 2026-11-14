@@ -108,3 +108,10 @@ strong_model_hydrogen_2026_11_14:   # longevity-kg reviews/hydrogen-2026-11-14/c
   result_strong_vs_working: {claims: "0.71 / 0.61 vs 0.55 / 0.49", many_to_one: "0.74 / 0.76 vs 0.59 / 0.71", link_kappa: "0.53 vs 0.36", without_outcomes: "0.31 vs 0.14", chain_premise: "0.80 vs 0.73", main_outcome: "0.77 vs 0.18", main_factor: "1.0 vs 0.86", population_condition: "0.82 vs 0.41", engagement: "1/7 vs 1/7", pathway: "1/8 vs 0/6"}
   caveat: "the 22 were chosen because the working model failed on them: a second run of the working model would also do better on some (regression to the mean); without that control the gain of the strong model is overstated"
   reading: "the strong model reads main outcome, main factor and population much better on hard texts; the middle links (engagement, pathway) stay near chance for both - an ambiguity of the task and the gold, not of model size"
+weak_card_signals_2026_11_14:   # free, on the 90 v15 cards
+  weak: "substantive error: main outcome or main factor wrong, or 2+ errors of outcome / step / premise; 25 of 90 (28%)"
+  population_condition_measure: "the word-overlap measure counts synonyms as misses (old / aged, old mouse follicles / aged ovarian follicles): 41 'misses' are mostly not errors; the measure needs a synonym list before it is used"
+  code_signals: "problems left after the rounds: precision 0.31, recall 0.36; low stability: 0.25 / 0.16; parse conflicts: 0.32 / 0.68 - no better than the base rate 0.28: the code cannot tell a weak card by itself"
+  text_kind: "not a registry text: precision 0.44, recall 0.88 (22 of the 25 weak cards); non-interventional: 0.55 / 0.48; main outcome right in 0.93 of registry texts, 0.68 of the others"
+  strong_model_by_kind: "on the 19 non-registry weak texts the strong model: main outcome 0.79 vs 0.21, outcome / step / premise kappa 0.56 vs 0.36, main factor 1.0 vs 0.84"
+  reading: "route by text kind, not by code signals: registry texts on the working model, written hypotheses (Bio Arena, ChatGPT, generated, evolved) on a stronger model"
