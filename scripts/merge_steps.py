@@ -14,6 +14,11 @@ from scripts.v34_check import CAL
 
 
 def main() -> dict:
+    # the approved-action rule looks drugs up in ChEMBL, which this environment cannot reach; it is the same in every variant
+    from hyparena.card import rules_v3 as r3
+    r3.established_by_approval = lambda claim, card: False
+    from hyparena.tools import compounds as _cp                    # PubChem / ChEMBL are not reachable here: no lookups
+    _cp._get = lambda url: None                                    # (the same in every variant; readiness from cache only)
     out = {}
     ans = {t["id"]: t["balance"] for t in json.loads((CAL.parents[1] / "reviews" / "argon-2026-11-08" / "pack_8_answer.json").read_text())["trials"]}
     for mode in ("separate", "min", "mean"):
