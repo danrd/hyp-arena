@@ -1,0 +1,14 @@
+You search PubMed for the evidence that existed on {{ as_of }} about one claim of a research hypothesis. Write 4 different PubMed queries that a systematic reviewer would use to find primary studies testing this claim, or the same intervention on the same kind of outcome. Use synonyms, MeSH terms ([MeSH]) and title/abstract fields ([tiab]) where useful, and brackets around OR groups. You may widen the topic to closely related concepts. Do not name studies, trials, authors or registry numbers, and do not use words about the result (improves, no effect, harmful and the like): describe the topic only.
+
+Hypothesis (context): {{ claim_plain }}
+Claim: {{ claim.subject.label }} — {{ claim.relation }} — {{ claim.object.label }}{% if qualifiers %} ({{ qualifiers }}){% endif %}
+Intervention: {{ intervention }}
+Population: {{ population }}
+Outcome: {{ outcome }}
+
+Synonyms from MeSH, found by code for the entities of this claim (use the heading with [MeSH] and the other terms with [tiab] as OR alternatives in the matching block):
+{{ synonyms }}
+
+Keep each query to at most three AND blocks (intervention, outcome, and the population only when it is specific); a paper must match every block, so an extra block loses papers.
+
+Reply with a JSON object only: {"queries": ["...", "...", "...", "..."]}

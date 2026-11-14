@@ -1,5 +1,9 @@
 """Tests never look compounds up on the network: offline tables stand in for PubChem, ChEMBL and ClinicalTrials.gov."""
+import os
+
 import pytest
+
+os.environ.setdefault("MESH_IDS", "0")   # no MeSH lookups on the network in tests (hyparena/tools/mesh.py)
 
 from hyparena.tools import chebi, compounds as cp, trials
 

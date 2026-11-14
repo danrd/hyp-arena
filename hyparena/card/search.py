@@ -30,6 +30,20 @@ ORGANISM_RELATIONS = ("improves_healthspan_in", "extends_lifespan_in", "shortens
                       "no_lifespan_effect_in")
 
 
+def _synonyms(card, claim) -> str:
+    """MeSH headings and entry terms of the card's entities this claim names (intervention, population, its outcome)."""
+    if not getattr(card, "identifiers", None):
+        return ""
+    from hyparena.tools import mesh
+    names = [i.label for i in card.pico.intervention] + [card.pico.population.who, link_outcome(claim), claim.object.label]
+    lines = []
+    for lab in dict.fromkeys(n for n in names if n in card.identifiers):
+        syn = mesh.synonyms(lab)
+        if syn:
+            lines.append(f"{lab}: " + "; ".join(syn) + f" (MeSH heading: {card.identifiers[lab]['name']})")
+    return "\n".join(lines)
+
+
 def link_outcome(claim) -> str:
     """The outcome line of the query prompt is the link's own object (its measure where the object is the organism), not all
     outcomes of the trial (user decision 2026-11-11: on H49 the body-composition link got queries about SPPB)."""
@@ -46,12 +60,13 @@ def model_queries(client, family: str, avoid, claim, card, as_of: Optional[str],
     variables = {"as_of": as_of or "today", "claim_plain": card.claim_plain, "claim": claim,
                  "qualifiers": ", ".join(f"{k}: {v}" for k, v in claim.qualifiers.items() if v and v != "unknown"),
                  "intervention": "; ".join(i.label for i in p.intervention) or claim.subject.label,
-                 "population": p.population.who, "outcome": link_outcome(claim)}
+                 "population": p.population.who, "outcome": link_outcome(claim), "synonyms": _synonyms(card, claim)}
     if claim.note == ALTERNATIVE_NOTE:      # a competing explanation is searched on its own terms, not the hypothesis's
         variables.update({"claim_plain": f"a competing explanation of the hypothesis's result: {claim.subject.label} — "
                                          f"{claim.relation} — {claim.object.label}",
                           "intervention": claim.subject.label, "outcome": claim.object.label})
-    value, _ = ask(client, role="search_queries", family=family, template="search_queries", version="v1", variables=variables,
+    version = "v2" if variables["synonyms"] else "v1"        # v2: MeSH synonyms of the card's entities (code, docs/system/card.md)
+    value, _ = ask(client, role="search_queries", family=family, template="search_queries", version=version, variables=variables,
                    validate=lambda v: [] if isinstance(v.get("queries"), list) and v["queries"] else ['"queries" must be a non-empty list'],
                    rounds=2, avoid=avoid, log=log)
     raw = [q for q in (value or {}).get("queries", []) if isinstance(q, str) and q.strip()][:4]
@@ -105,6 +120,9 @@ def population_query(claim, card) -> Optional[str]:
     if set(words) & EXERCISE_WORDS:
         words += ["exercise", "training"]                  # another programme of the same kind counts (class, 1/3)
     variants = {pop, pop.replace("-", " "), pop.replace("-", "")}
+    d = card.identifiers.get(card.pico.population.who) if getattr(card, "identifiers", None) else None
+    if d:                                                  # the condition's MeSH heading (its entry terms come with [mh])
+        variants.add(d["name"].lower())
     for v in list(variants):                               # sarcopenia -> sarcopenic
         if v.endswith("ia"):
             variants.add(v[:-2] + "ic")

@@ -139,7 +139,14 @@ def build_texts(units: list[dict] | None = None, out_path: Path | None = None) -
             f = [("Title", c.get("title")), ("Conditions", "; ".join(map(str, _list(c.get("conditions"))))),
                  ("Interventions", _clip(c.get("intervention"))), ("Summary", _clip(c.get("summary"))), ("Primary outcomes", _clip(po))]
         text = "A trial registered to test the following.\n" + _text([(k, str(v)) for k, v in f])
-        out.append({"id": u["id"], "as_of": u["written_on"], "b2_clean": u.get("b2_clean", False), "text": text,
+        flags = {}
+        if s.startswith("ctgov"):                        # the record was first posted after the primary completion (leak check)
+            st = _ctgov(u["id"], cache).get("statusModule") or {}
+            fp = (st.get("studyFirstPostDateStruct") or {}).get("date", "")
+            pc = (st.get("primaryCompletionDateStruct") or {}).get("date", "")
+            flags = {"first_posted": fp, "primary_completion": pc,
+                     "written_after_completion": bool(fp and pc and fp[:10] > (pc + "-01" if len(pc) == 7 else pc)[:10])}
+        out.append({"id": u["id"], "as_of": u["written_on"], "b2_clean": u.get("b2_clean", False), "text": text, "registry_flags": flags,
                     "result_words": sorted({m.group(0).lower() for m in RESULT_WORDS.finditer(text)})})
     (out_path or TEXTS).write_text("".join(json.dumps(x, ensure_ascii=False) + "\n" for x in out))
     (ROOT / "data" / "cache").mkdir(parents=True, exist_ok=True)

@@ -142,6 +142,8 @@ def normalize(client, family: str, raw_text: str, card_id: str, log: Optional[li
         v13_code_fields(card, raw_text)
     if card is not None and core:
         anchor_core(card, raw_text)
+    if card is not None and vnum >= 16:
+        add_identifiers(card)
     return card, problems
 
 
@@ -518,3 +520,23 @@ def v15_problems(card: HypothesisCard) -> list[str]:
     if len(steps) > 4:
         out.append(f"{len(steps)} steps before the outcomes: keep at most 4 that the reasoning of the text needs (merge the rest)")
     return out
+
+
+def add_identifiers(card: HypothesisCard) -> None:
+    """normalize_card/v16: MeSH descriptors of the card's entities by code (exact descriptor or entry term, else none) and the
+    topic's descriptor (diseases, processes, behaviour). Off with MESH_IDS=0 (tests, offline runs)."""
+    import os
+    if os.environ.get("MESH_IDS", "1") == "0":
+        return
+    from hyparena.tools import mesh
+    p = card.pico
+    labels = [i.label for i in p.intervention] + [p.population.condition, p.outcome.metric]
+    for c in card.claims:
+        labels += [c.object.label, c.qualifiers.get("measure", "")]
+    for lab in dict.fromkeys(x for x in labels if x and x.lower() != "unknown"):
+        d = mesh.lookup(lab)
+        if d:
+            card.identifiers[lab] = {"ui": d["ui"], "name": d["name"], "trees": d["trees"][:3]}
+    if card.topic and card.topic.get("label"):
+        t = mesh.topic(card.topic["label"])
+        card.topic["mesh"] = {"ui": t["ui"], "name": t["name"]} if t else None

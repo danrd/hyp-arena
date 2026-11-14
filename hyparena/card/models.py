@@ -138,7 +138,7 @@ Route = Literal["diet", "water", "oral", "injection", "topical", "other", "unkno
 
 
 class Intervention(BaseModel):
-    type: Literal["compound", "gene", "diet", "procedure", "other"] = "other"
+    type: Literal["compound", "gene", "cell", "diet", "exercise", "behavioural", "device", "procedure", "exposure", "other"] = "other"   # v16: Argon's kinds
     label: str
     id: Optional[str] = None
     regimen: str = UNKNOWN
@@ -242,6 +242,10 @@ class HypothesisCard(BaseModel):
     # it is about; {label, kind: intervention | exposure | condition | process, span} and {label, span, mesh}
     main_factor: Optional[dict] = None
     topic: Optional[dict] = None
+    # v16: the text reports a result instead of stating a hypothesis ({value: bool, span}); reference, for leak checks
+    reads_as_result: Optional[dict] = None
+    # v16: MeSH descriptors of the card's entities found by code ({label: {ui, name, trees}}), for search synonyms
+    identifiers: dict = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def _control_from_comparator(self):
