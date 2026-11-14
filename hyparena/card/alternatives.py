@@ -52,7 +52,7 @@ class Fields:
 def fields(card: HypothesisCard, ver: Verification) -> Fields:
     pairs = _all_claims(card, ver)
     support = [r for c, cv in pairs if not is_disease_analog(c)
-               if c.role == "outcome" or (c.role in ("analog", "translation") and same_intervention(c, card))
+               if c.role == "outcome" or c.link == "outcome" or (c.role in ("analog", "translation") and same_intervention(c, card))
                for r in cv.evidence if admissible(r, c)]
     models = [r for c, cv in pairs if is_disease_analog(c) for r in cv.evidence + cv.counterevidence]
     target = [(c, cv) for c, cv in pairs if c.relation in ("inhibits", "activates")]
@@ -204,7 +204,7 @@ def check(client, family: str, card: HypothesisCard, ver: Verification, pmids: O
         return ver
     variables = {"claim_plain": card.claim_plain,
                  "intervention": "; ".join(i.label for i in card.pico.intervention) or "unknown",
-                 "population": card.pico.population.label, "endpoint": card.pico.outcome.endpoint,
+                 "population": card.pico.population.who, "endpoint": card.pico.outcome.endpoint,
                  "alternatives": [{"id": a.id, "explanation": a.explanation, "design": a.discriminating_design} for a in todo],
                  "abstracts": [{"pmid": k, "year": a["year"], "title": a["title"], "abstract": a["abstract"]}
                                for k, a in abstracts.items()]}

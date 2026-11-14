@@ -37,4 +37,4 @@ admission: graded
 method: v3
 verify_version: v9
 normalize_version: v11   # normalize_card/v11 (2026-11-11): v10 + a direction for value links (H49: an undirected 'changes body composition' could take no side); v10 (2026-11-06): AI-role tag, endpoint and registry population by code
-normalize_runs: 2        # v3.9 (user decision 2026-11-11): the card is the union of two independent parses; runs before used one
+normalize_runs: 1        # one parse (2026-11-14: a second parse added recall +0.04 and cost half of the calls; 2 = the union of two parses)

@@ -116,6 +116,12 @@ class Population(BaseModel):
     age_class: str = ""                          # v15: MeSH age group set by code from age_at_start (normalizer.age_class)
     span: str = ""                               # normalize_card/v12: the exact phrase of the text that states this field ("" before v12)
 
+    @property
+    def who(self) -> str:
+        """The population as searched: the state the participants are selected for (v15+) when known, else the label."""
+        c = (self.condition or "").strip()
+        return c if c and c.lower() != UNKNOWN else self.label
+
     @model_validator(mode="before")
     @classmethod
     def _old_age(cls, v):
@@ -266,6 +272,11 @@ class HypothesisCard(BaseModel):
         return [{"id": f"a{i}", "subject": {"label": x}, "relation": "other", "object": {"label": UNKNOWN},
                  "stated_as": "listed", "note": "listed as plain text"} if isinstance(x, str) else x
                 for i, x in enumerate(v, start=1)]
+
+    @property
+    def outcome_claims(self) -> list[Claim]:
+        """Every outcome of the card: the main one and the parallel ones (v13+ cards mark them by link; older ones by role)."""
+        return [c for c in self.claims if c.link == "outcome" or c.role == "outcome"]
 
     @property
     def outcome_claim(self) -> Optional[Claim]:

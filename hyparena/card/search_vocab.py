@@ -79,7 +79,7 @@ def mesh_terms(phrase: str, cache: Optional[dict] = None) -> list[str]:
 def card_phrases(card) -> list[str]:
     """The card phrases that name concepts: intervention, population, outcome, claim subjects and objects."""
     p = card.pico
-    out = [i.label for i in p.intervention] + [p.population.label, p.outcome.metric or "", p.comparator.label or ""]
+    out = [i.label for i in p.intervention] + [p.population.label, p.population.condition or "", p.outcome.metric or "", p.comparator.label or ""]
     for c in card.claims:
         out += [c.subject.label, c.object.label, c.qualifiers.get("measure", "")]
     return [x for x in dict.fromkeys(o.strip() for o in out if o and o.strip() and o.lower() != "unknown")]

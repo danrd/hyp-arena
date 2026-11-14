@@ -46,7 +46,7 @@ def model_queries(client, family: str, avoid, claim, card, as_of: Optional[str],
     variables = {"as_of": as_of or "today", "claim_plain": card.claim_plain, "claim": claim,
                  "qualifiers": ", ".join(f"{k}: {v}" for k, v in claim.qualifiers.items() if v and v != "unknown"),
                  "intervention": "; ".join(i.label for i in p.intervention) or claim.subject.label,
-                 "population": p.population.label, "outcome": link_outcome(claim)}
+                 "population": p.population.who, "outcome": link_outcome(claim)}
     if claim.note == ALTERNATIVE_NOTE:      # a competing explanation is searched on its own terms, not the hypothesis's
         variables.update({"claim_plain": f"a competing explanation of the hypothesis's result: {claim.subject.label} — "
                                          f"{claim.relation} — {claim.object.label}",
@@ -94,7 +94,7 @@ def population_query(claim, card) -> Optional[str]:
     import re
     if not (claim.link == "outcome" or (not claim.link and claim.role == "outcome")):
         return None
-    pop = re.sub(r"\s+", " ", (card.pico.population.label or "").strip().lower())
+    pop = re.sub(r"\s+", " ", (card.pico.population.who or "").strip().lower())
     pop = re.sub(r"^(older|elderly|aged|community-dwelling)\s+(adults|people|persons|women|men)\s+(with|at risk of)\s+", "", pop)
     if pop in GENERIC_POPULATIONS or len(pop.split()) > 5:
         return None

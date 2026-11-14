@@ -144,11 +144,12 @@ def signature(card: HypothesisCard, targets: Optional[Callable[[HypothesisCard],
     keyed = lambda c: (triple_(c), direction(c))
     out = card.outcome_claim
     if card.hypothesis_type == "mechanistic":
-        explained = [c for c in card.claims if c.role == "premise"]
-        explaining = [c for c in card.claims if c.role in ("outcome", "mechanism")]
+        explained = [c for c in card.claims if c.role == "premise" and c.link != "outcome" and c.part != "premise"]
+        explaining = [c for c in card.claims if c.role in ("outcome", "mechanism") or c.link == "outcome"]
     else:
-        explained = [out] if out else []
-        explaining = [c for c in card.claims if c.role in ("mechanism", "premise")]
+        explained = card.outcome_claims or ([out] if out else [])      # parallel outcomes are outcomes, not premises
+        explaining = [c for c in card.claims if (c.role in ("mechanism", "premise") or c.link == "step")
+                      and c.link != "outcome" and c.part != "premise"]
     effect = frozenset(keyed(c) for c in explained if triple_(c)) or None
     own = intervention_key(card, names)
     nodes = set()

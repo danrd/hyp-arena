@@ -144,7 +144,7 @@ The detailed rules, every field with its origin and what reads it, and a worked 
   text names (PMID, DOI) by code; AI role (none / AI analyses the data / AI in the experiment loop / AI is the intervention,
   with a verbatim phrase; without one the code sets "none"; an indicator of the funding profile only); hypothesis type and
   one-sentence gist; what the author declares (alternatives, novelty, decision criteria, risks); the card's stability.
-- **Two parses, one card.** The text is parsed twice, independently; the card is the union: a claim of either parse counts
+- **One parse by default** (config `normalize_runs: 1`); with `normalize_runs: 2` the text is parsed twice, independently, and the card is the union: a claim of either parse counts
   if its phrase is verbatim; claims are matched by subject, relation and object (and the measure, where the object is the
   organism); the first parse keeps its ids and its main outcome; a field unknown in the first parse is taken from the
   second; a conflict keeps the first and is recorded; near-duplicates the union adds are removed. The share of claims the

@@ -75,7 +75,7 @@ def compute(card: HypothesisCard, ver: Verification, extra: Optional[dict] = Non
     pairs = _all_claims(card, ver)
     status = {cv.id: claim_status(cv, c) for c, cv in pairs}
     at_level = [r for c, cv in pairs
-                if (c.role == "outcome" or (c.role in ("analog", "translation") and same_intervention(c, card)))
+                if (c.role == "outcome" or c.link == "outcome" or (c.role in ("analog", "translation") and same_intervention(c, card)))
                 and status[cv.id] == "supported" and claim_rung(c, cv) == prof.effect_level
                 for r in cv.evidence if admissible(r, c)]
     sexes = {r.sex for r in at_level if r.sex != "unknown"}

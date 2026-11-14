@@ -118,7 +118,7 @@ def _first_intervention(label: str, card: HypothesisCard) -> str:
 
 def _population_words(card: HypothesisCard) -> str:
     """Short population words for a human claim ("older adults", "frail elderly"), else nothing."""
-    label = _clean(card.pico.population.label or "")
+    label = _clean(card.pico.population.who or "")
     words = label.split()
     if not 1 <= len(words) <= 3 or label.lower() in ("human", "humans", "unknown"):
         return ""

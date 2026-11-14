@@ -56,7 +56,7 @@ def dry() -> dict:
             "usd_est": round(usd, 2), "usd_per_text": round(usd / len(ts), 3), "model": "Gemini Flash (google family), no peak price"}
 
 
-def run(limit: int = 0, ids: str = "") -> dict:
+def run(limit: int = 0, ids: str = "", runs: int = 1) -> dict:
     if os.environ.get("ALLOW_PAID") != "1":
         raise SystemExit("paid: set ALLOW_PAID=1")
     from hyparena.card.normalizer import normalize_union
@@ -70,7 +70,7 @@ def run(limit: int = 0, ids: str = "") -> dict:
 
     def one(t):
         log: list = []
-        card, problems, stab = normalize_union(client, "google", t["text"], t["id"], log=log, runs=2, version=VERSION)
+        card, problems, stab = normalize_union(client, "google", t["text"], t["id"], log=log, runs=runs, version=VERSION)
         res = {"card": card.model_dump(by_alias=True) if card else None, "problems": problems, "stability": stab,
                "calls": [{k: x.get(k) for k in ("at", "template", "attempt", "family", "model", "seconds", "tokens_in", "tokens_out", "error")} for x in log]}
         with lock:
@@ -206,5 +206,6 @@ if __name__ == "__main__":
     ap.add_argument("cmd", choices=["dry", "run", "score"])
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--ids", default="")
+    ap.add_argument("--runs", type=int, default=1)
     a = ap.parse_args()
-    print(json.dumps({"dry": dry, "score": score}[a.cmd]() if a.cmd != "run" else run(a.limit, a.ids), indent=1))
+    print(json.dumps({"dry": dry, "score": score}[a.cmd]() if a.cmd != "run" else run(a.limit, a.ids, a.runs), indent=1))
