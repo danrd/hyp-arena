@@ -26,6 +26,8 @@ def test_age_class_mesh_groups():
     assert age_class("oldest old") == "Aged, 80 and over"
     assert age_class("20 months", "NCBITaxon:10090") == "old (mouse)"          # mice: their own life phases
     assert age_class("12 months", "NCBITaxon:10090") == "middle-aged (mouse)"
+    assert age_class("8 months", "NCBITaxon:10090") == "between young adult and middle age (mouse)"
+    assert age_class("4 months", "NCBITaxon:10090") == "young adult (mouse)"
     assert age_class("aged mice", "NCBITaxon:10090") == "old (mouse)"
     assert age_class("20 months", "NCBITaxon:7227") == ""                     # other species: no scale yet
     assert age_class("unknown") == ""

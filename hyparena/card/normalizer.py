@@ -395,10 +395,12 @@ AGE_WORDS = [(r"\b(oldest[- ]old|octogenarian|nonagenarian|over 80|80\+)", ["Age
              (r"\byoung adults?\b", ["Adult"])]
 
 
-# Life phases of laboratory mice (C57BL/6): mature adult 3-6 months, middle-aged 10-14, old 18-24 (Flurkey, Currer, Harrison
-# 2007, The Mouse in Biomedical Research, 2nd ed., as the Jackson Laboratory restates it). NOT YET CHECKED against the source
-# (the chapter is not in PubMed, jax.org is not reachable here); the gaps are closed by the lower phase. Reference only.
-MOUSE_PHASES = [(18, "old (mouse)"), (10, "middle-aged (mouse)"), (3, "mature adult (mouse)"), (0, "young (mouse)")]
+# Life phases of laboratory mice (Flurkey, Currer, Harrison 2007, "Mouse models in aging research", The Mouse in Biomedical
+# Research, 2nd ed., vol. 3, sec. II.C; checked 2026-11-14 against the authors' manuscript, kept in longevity-kg/reference):
+# young adult 3 to about 6 months; middle age 10 to 14-15 months; old from 18 months (upper limit 22-26 by genotype).
+# Ages between the phases get their neighbours' names. Reference only, not scored.
+MOUSE_PHASES = [(18, "old (mouse)"), (15, "between middle age and old (mouse)"), (10, "middle-aged (mouse)"),
+                (6, "between young adult and middle age (mouse)"), (3, "young adult (mouse)"), (0, "immature (mouse)")]
 _ANIMAL_TAXA = {"NCBITaxon:10090": "mouse", "NCBITaxon:10116": "rat"}
 
 
@@ -406,7 +408,7 @@ def _animal_age_class(t: str) -> str:
     m = re.search(r"(\d+(?:\.\d+)?)\s*(?:-|to|–)?\s*(\d+(?:\.\d+)?)?\s*(month|mo\b|week|wk|day)", t)
     if not m:
         words = [("old (mouse)", r"\b(old|aged|elderly|late[- ]life)\b"), ("middle-aged (mouse)", r"middle[- ]aged?"),
-                 ("young (mouse)", r"\b(young|juvenile)\b")]
+                 ("young adult (mouse)", r"\b(young|young adult)\b"), ("immature (mouse)", r"\b(juvenile|weanling|pup)s?\b")]
         return next((c for c, p in words if re.search(p, t)), "")
     v = float(m.group(1)) * {"month": 1, "mo": 1, "week": 12 / 52, "wk": 12 / 52, "day": 12 / 365}[m.group(3)]
     return next(c for bound, c in MOUSE_PHASES if v >= bound)
