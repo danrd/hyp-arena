@@ -1,5 +1,7 @@
 # Demonstration interface
 
+> Archived 2026-11-14: the code is in [`archive/code/app.py`](../../archive/code/app.py) and is no longer run or tested.
+
 A small page for showing the pipeline: paste or generate a few hypotheses and get a ranking. The interface is in Russian; prompts stay in English, hypotheses can be in any language, and the research overview is written in Russian.
 
 ```bash

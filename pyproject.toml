@@ -23,7 +23,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-demo = ["gradio>=5"]
 embed = ["onnxruntime", "tokenizers", "huggingface_hub"]
 site = ["markdown"]
 test = ["pytest", "hypothesis", "markdown"]   # markdown: the site tests build the pages
