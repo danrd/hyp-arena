@@ -41,8 +41,15 @@ OURS_RANK = {"known_result": 0, "new_context": 1, "translation": 2, "analog": 3,
              "new_mechanism": 4, "new_combination": 4, "new_link": 4}
 
 
+def gold_answer(original: bool = False) -> dict:
+    """Argon's search gold by trial; with the PMIDs corrected by pack 21 when that file exists (pack21_pmid_fix.py apply)."""
+    fixed = DIR / "pack_18_answer_fixed.json"
+    f = fixed if fixed.exists() and not original else DIR / "pack_18_answer.json"
+    return {i["id"]: i for i in json.loads(f.read_text())["items"]}
+
+
 def _load() -> tuple[dict, dict, dict]:
-    ans = {i["id"]: i for i in json.loads((DIR / "pack_18_answer.json").read_text())["items"]}
+    ans = gold_answer()
     key = json.loads((DIR / "pack_18_key.json").read_text())
     runs = {}
     for f in sorted(glob.glob(str(CAL / "run_*_v10.json"))):
@@ -63,13 +70,8 @@ def _date(s: str) -> str | None:
     return f"{y}-{m:02d}-{d:02d}"
 
 
-def check() -> dict:
-    """esummary for every gold PMID (papers and closest prior work); cached in pack_18_pubmed.json."""
-    ans, _, _ = _load()
-    pmids = sorted({p["pmid"] for i in ans.values() for p in i["papers"]} |
-                   {i["closest_prior_work"]["pmid"] for i in ans.values() if i["closest_prior_work"].get("pmid")})
-    f = DIR / "pack_18_pubmed.json"
-    cache = json.loads(f.read_text()) if f.exists() else {}
+def summaries(pmids: list[str], cache: dict) -> list[str]:
+    """esummary of the PMIDs not yet in `cache` (exists, dates, earliest date, title, first author); returns those fetched."""
     todo = [p for p in pmids if p not in cache]
     for k in range(0, len(todo), 100):
         batch = todo[k:k + 100]
@@ -87,6 +89,17 @@ def check() -> dict:
                         "first_author": (r.get("authors") or [{}])[0].get("name", ""), "journal": r.get("source", ""),
                         "pubtypes": r.get("pubtype", [])}
         time.sleep(0.4)
+    return todo
+
+
+def check() -> dict:
+    """esummary for every gold PMID (papers and closest prior work); cached in pack_18_pubmed.json."""
+    ans, _, _ = _load()
+    pmids = sorted({p["pmid"] for i in ans.values() for p in i["papers"]} |
+                   {i["closest_prior_work"]["pmid"] for i in ans.values() if i["closest_prior_work"].get("pmid")})
+    f = DIR / "pack_18_pubmed.json"
+    cache = json.loads(f.read_text()) if f.exists() else {}
+    todo = summaries(pmids, cache)
     f.write_text(json.dumps(cache, indent=1, ensure_ascii=False) + "\n")
     return {"pmids": len(pmids), "fetched": len(todo), "not_in_pubmed": sum(not v["exists"] for v in cache.values())}
 

@@ -15,7 +15,7 @@ import json
 import re
 from pathlib import Path
 
-from scripts.bench_search import valid
+from scripts.bench_search import gold_answer, valid
 from scripts.search_misses import _esearch
 
 KG = Path(__file__).resolve().parents[2] / "longevity-kg"
@@ -48,7 +48,7 @@ def variants(card: dict) -> dict:
 
 
 def run() -> dict:
-    ans = {i["id"]: i for i in json.loads((DIR / "pack_18_answer.json").read_text())["items"]}
+    ans = gold_answer()
     key = json.loads((DIR / "pack_18_key.json").read_text())
     pm = json.loads((DIR / "pack_18_pubmed.json").read_text())
     runs = {}

@@ -22,7 +22,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from hyparena.tools import pubmed
-from scripts.bench_search import valid
+from scripts.bench_search import gold_answer, valid
 from scripts.search_misses import _esearch
 from scripts.search_rerank_check import KEEP, _terms, _tok, bm25
 
@@ -55,7 +55,7 @@ def links(pmid: str, name: str, cache: dict) -> list[str]:
 
 
 def run() -> dict:
-    ans = {i["id"]: i for i in json.loads((DIR / "pack_18_answer.json").read_text())["items"]}
+    ans = gold_answer()
     key = json.loads((DIR / "pack_18_key.json").read_text())
     pm = json.loads((DIR / "pack_18_pubmed.json").read_text())
     runs = {}

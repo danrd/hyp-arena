@@ -26,7 +26,7 @@ import urllib.request
 from collections import Counter, defaultdict
 from pathlib import Path
 
-from scripts.bench_search import valid
+from scripts.bench_search import gold_answer, valid
 
 KG = Path(__file__).resolve().parents[2] / "longevity-kg"
 DIR = KG / "reviews" / "argon-2026-11-12"
@@ -96,7 +96,7 @@ def _kind(b: str, card: dict) -> str:
 
 
 def run() -> dict:
-    ans = {i["id"]: i for i in json.loads((DIR / "pack_18_answer.json").read_text())["items"]}
+    ans = gold_answer()
     key = json.loads((DIR / "pack_18_key.json").read_text())
     pm = json.loads((DIR / "pack_18_pubmed.json").read_text())
     runs = {}

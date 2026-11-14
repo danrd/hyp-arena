@@ -65,3 +65,9 @@ free_experiments_2026_11_14:   # written BEFORE the experiments; plan docs/plans
     saved_run: "0.359, holdout 0.343, 99 papers per trial (the run's own PubMed order, its citation step and keyword fallback)"
     by_the_rule: "bm25 over the top 200 of each query passes (+0.12 over round_robin, holdout +0.09); votes alone fail on the holdout; fusing votes with bm25 adds nothing; repeating a short query without its last block lowers recall (-0.05) and is dropped"
     reading: "word match against the abstract recovers a third of what the cut loses at no reading cost; the saved run is still a little higher, so its citation step earns its place: next, bm25 with the citation step, similar articles and the references of reviews on top"
+gold_fixed_by_pack_21_2026_11_14:   # scripts/pack21_pmid_fix.py apply; longevity-kg reviews/argon-2026-11-14/pack_21_check.json, argon-2026-11-12/pack_18_answer_fixed.json
+  answer: "51 items: 40 PMIDs corrected (title, first author, description against the abstract and the date on or before T all pass the code check), 10 substitutes (the closest real paper, marked), 1 not found (the described paper was published after T); 0 rejected"
+  gold_now: "153 papers over 30 trials (was 103 after the described-check); every closest prior work valid"
+  rescored_saved_search: {recall_all: "0.33 [0.24, 0.44]", on_link: 0.14, read: 0.12, holdout: 0.35, prior_work_found: "0.43 [0.27, 0.60]", trials_with_a_gold_paper: 0.80, novelty: "kappa -0.08 (unchanged)"}
+  rerank_at_20_per_claim: {round_robin: "0.20, holdout 0.28", bm25_200: "0.34, holdout 0.40", bm25_100: "0.32, 0.34", votes_200: "0.24, 0.26", votes_plus_bm25_200: "0.30, 0.34", relax: "0.13, 0.14", all_candidates_200: "0.57"}
+  reading: "the conclusions of the free experiments hold on the full gold: word match passes the rule (+0.13, holdout +0.12), votes and the relaxed queries do not"

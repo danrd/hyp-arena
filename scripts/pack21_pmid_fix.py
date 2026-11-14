@@ -45,7 +45,8 @@ in `note` how it differs. Nothing else is needed: categories and the rest of the
 
 
 def build() -> dict:
-    ans, key, _ = bs._load()
+    _, key, _ = bs._load()
+    ans = bs.gold_answer(original=True)
     pm = json.loads((bs.DIR / "pack_18_pubmed.json").read_text())
     items, keyd, seen = [], {}, {}
     for sid, g in sorted(ans.items()):
@@ -86,42 +87,66 @@ def _same(a: str, b: str) -> bool:
 
 
 def apply() -> dict:
+    """Check every new PMID against PubMed and write the corrected gold (pack_18_answer_fixed.json): an accepted PMID replaces
+    the wrong one; a rejected or not-found paper is removed from the gold; a substitute is kept and marked."""
     from hyparena.tools import pubmed
     key = json.loads((OUT / "pack_21_key.json").read_text())
     task = {i["id"]: i for i in json.loads((OUT / "pack_21_task.json").read_text())["items"]}
     ans = {i["id"]: i for i in json.loads((OUT / "pack_21_answer.json").read_text())["items"]}
+    pmf = bs.DIR / "pack_18_pubmed.json"
+    pm = json.loads(pmf.read_text())
     ids = [str(a["pmid"]) for a in ans.values() if a.get("found") and a.get("pmid")]
+    bs.summaries(ids, pm)
     rec = {}
     for i in range(0, len(ids), 50):
         rec.update(pubmed.fetch(ids[i:i + 50]))
-    dates = bs._dates(ids) if hasattr(bs, "_dates") else {}
     out, n = {}, {"accepted": 0, "substitute": 0, "not_found": 0, "rejected": 0}
     for fid, k in key.items():
         a = ans.get(fid) or {}
         if not a.get("found") or not a.get("pmid"):
-            out[fid] = {"status": "not_found"}; n["not_found"] += 1
+            out[fid] = {"status": "not_found", "note": a.get("note", "")}; n["not_found"] += 1
             continue
-        r = rec.get(str(a["pmid"])) or {}
+        pmid = str(a["pmid"]); info = pm.get(pmid, {}); r = rec.get(pmid) or {}
         why = []
-        if not r:
+        if not info.get("exists"):
             why.append("not in PubMed")
         else:
-            if not _same(a.get("title", ""), r.get("title", "")):
-                why.append("title differs from PubMed")
-            if (a.get("first_author") or "").lower()[:5] not in (r.get("first_author") or "").lower():
-                why.append("first author differs")
+            if not _same(a.get("title", ""), info.get("title", "")):
+                why.append(f"title differs from PubMed ({info.get('title', '')[:80]!r})")
+            if (a.get("first_author") or "").lower()[:5] not in (info.get("first_author") or "").lower():
+                why.append(f"first author differs ({info.get('first_author')})")
             d = bs._content(task[fid]["description"])
-            share = len(d & bs._content(f"{r.get('title', '')} {r.get('abstract', '')}")) / len(d) if d else 0
+            share = round(len(d & bs._content(f"{info.get('title', '')} {r.get('abstract', '')}")) / len(d), 2) if d else 0
             if share < bs.AS_DESCRIBED and not a.get("substitute"):
-                why.append(f"description does not fit the abstract ({share:.2f})")
-            if str(r.get("year") or "") > k["T"][:4]:
-                why.append("published after T")
+                why.append(f"description does not fit the title and abstract ({share})")
+            if info.get("earliest") and info["earliest"] > k["T"]:
+                why.append(f"published after T ({info['earliest']} > {k['T']})")
+            pm[pmid]["as_described"] = None if a.get("substitute") else share
         if why:
-            out[fid] = {"status": "rejected", "why": why, "pmid": str(a["pmid"])}; n["rejected"] += 1
+            out[fid] = {"status": "rejected", "why": why, "pmid": pmid}; n["rejected"] += 1
         else:
             st = "substitute" if a.get("substitute") else "accepted"
-            out[fid] = {"status": st, "pmid": str(a["pmid"]), "title": r.get("title"), "year": r.get("year")}; n[st] += 1
+            out[fid] = {"status": st, "pmid": pmid, "title": info.get("title"), "earliest": info.get("earliest"), "note": a.get("note", "")}
+            n[st] += 1
     (OUT / "pack_21_check.json").write_text(json.dumps(out, indent=1, ensure_ascii=False) + "\n")
+    pmf.write_text(json.dumps(pm, indent=1, ensure_ascii=False) + "\n")
+    gold = bs.gold_answer(original=True)
+    by = {(k["sid"], k["pmid_given"]): out[fid] for fid, k in key.items()}
+    for sid, g in gold.items():
+        papers = []
+        for p in g["papers"]:
+            fx = by.get((sid, p["pmid"]))
+            if fx is None:
+                papers.append(p)
+            elif fx["status"] in ("accepted", "substitute"):
+                papers.append({**p, "pmid": fx["pmid"], "pmid_was": p["pmid"], "substitute": fx["status"] == "substitute"})
+        g["papers"] = papers
+        cp = g["closest_prior_work"]
+        fx = by.get((sid, cp.get("pmid")))
+        if fx is not None:
+            cp["pmid_was"] = cp["pmid"]
+            cp["pmid"] = fx["pmid"] if fx["status"] in ("accepted", "substitute") else ""
+    (bs.DIR / "pack_18_answer_fixed.json").write_text(json.dumps({"task": "search_gold_v1", "fixed_by": "pack 21", "items": list(gold.values())}, indent=1, ensure_ascii=False) + "\n")
     return n
 
 
