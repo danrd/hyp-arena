@@ -62,14 +62,16 @@ ENDPOINT_BY_RELATION = {"changes_biomarker": "biomarker", "increases_expression"
 
 def registry_defaults(card: HypothesisCard, raw_text: str) -> list[str]:
     """normalize_card/v10 and later (fresh calibration 2026-11-06: 4 of 44 cards stopped at admission for a field the text
-    implies): an unknown endpoint is taken from the outcome claim's relation (for a registry text also promotes/suppresses:
-    a health measure of people); an unknown population of a registry text is the registry's conditions, in humans; an AI-role
+    implies): an unknown endpoint is taken from the outcome claim's relation (for a registry text also promotes, suppresses,
+    and - 2026-11-14, card v17 wrote 'associated_with' for an outcome whose direction the text leaves open - associated_with
+    and other: the registry's primary outcome is a health measure of people); an unknown population of a registry text is the registry's conditions, in humans; an AI-role
     span that is not verbatim in the text sets the role to "none". Returns what it filled."""
     filled = []
     registry = raw_text.startswith("A trial registered")
     out = card.outcome_claim
     if card.pico.outcome.endpoint == "unknown" and out is not None:
-        ep = ENDPOINT_BY_RELATION.get(out.relation) or ("healthspan" if registry and out.relation in ("promotes", "suppresses") else None)
+        ep = ENDPOINT_BY_RELATION.get(out.relation) or ("healthspan" if registry and out.relation in
+                                                         ("promotes", "suppresses", "associated_with", "other") else None)
         if ep:
             card.pico.outcome.endpoint = ep
             filled.append(f"endpoint {ep} from relation {out.relation}")

@@ -129,7 +129,8 @@ def units(step: int) -> list[dict]:
     return out
 
 
-def run(step: int, config: str = "configs/v2-flash.yaml", tag: str = "") -> None:
+def run(step: int, config: str = "configs/v2-flash.yaml", tag: str = "", only: str = "", max_calls: int = 60) -> None:
+    """`only`: a file with one unit id per line (the others are skipped); `max_calls`: per unit (the filtered search needs more)."""
     from hyparena.card.pipeline import run as v2
     us = json.loads((CAL / f"units_{step}.json").read_text())
     texts = build_texts([{k: u[k] for k in ("id", "source", "written_on")} for u in us], CAL / f"texts_{step}.jsonl")
@@ -139,12 +140,13 @@ def run(step: int, config: str = "configs/v2-flash.yaml", tag: str = "") -> None
     method, nv = cfg.get("method", "v2"), cfg.get("normalize_version")
     cards_p = CAL / ((f"cards_v3_{nv}.json" if nv else "cards_v3.json") if method == "v3" else "cards.json")   # frozen per method and normalizer
     frozen = json.loads(cards_p.read_text()) if cards_p.exists() else {}
+    keep = set(Path(only).read_text().split()) if only else None
     for t in texts:
-        if t["id"] in done:
+        if t["id"] in done or (keep is not None and t["id"] not in keep):
             continue
         card = frozen.get(t["id"])
         try:
-            res = v2([t["text"]], writer="human_registry", config=config, as_of=t["as_of"], max_calls=60, verifiers=["deepseek"],
+            res = v2([t["text"]], writer="human_registry", config=config, as_of=t["as_of"], max_calls=max_calls, verifiers=["deepseek"],
                      cards=[card] if card else None)
         except Exception as e:                            # e.g. PubMed answering 500: the unit is left for the next run
             print(json.dumps({"id": t["id"], "error": f"{type(e).__name__}: {str(e)[:200]}"}), flush=True)
@@ -355,6 +357,8 @@ def main() -> None:
     ap.add_argument("--step", type=int, default=1)
     ap.add_argument("--config", default="configs/v2-flash.yaml")
     ap.add_argument("--tag", default="", help="suffix of the run file, e.g. _msearch")
+    ap.add_argument("--only", default="", help="run: a file of unit ids to run (one per line)")
+    ap.add_argument("--max-calls", type=int, default=60, help="run: model calls per unit")
     ap.add_argument("--no-stance-as-support", action="store_true", help="score-v3: the sensitivity analysis (rescore_v3)")
     ap.add_argument("--steps", default="1,2,3", help="score-v3 / explore-v3: which steps (4: fresh clean, 5: fresh orientation)")
     ap.add_argument("--variant", default="v3", help="score-v3: rules variant, v3 (as run) or v3.1 (method-v3.md section 12)")
@@ -367,7 +371,7 @@ def main() -> None:
     elif a.cmd == "run":
         if os.environ.get("ALLOW_PAID") != "1":
             raise SystemExit("paid: set ALLOW_PAID=1")
-        run(a.step, a.config, a.tag)
+        run(a.step, a.config, a.tag, a.only, a.max_calls)
     elif a.cmd == "compare-v32":
         print(json.dumps(compare_v32(steps=tuple(int(x) for x in a.steps.split(",")), tag=a.tag or "_v3"), indent=1))
     elif a.cmd == "explore-v3":
