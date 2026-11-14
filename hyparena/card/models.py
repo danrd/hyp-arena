@@ -237,6 +237,17 @@ class HypothesisCard(BaseModel):
     main_factor: Optional[dict] = None
     topic: Optional[dict] = None
 
+    @model_validator(mode="after")
+    def _control_from_comparator(self):
+        """One source for the control: the comparator (pico.comparator.type). decisive_experiment.control is only its copy in
+        the experiment's vocabulary, kept for the code that reads it (2026-11-14: no longer a field of its own)."""
+        m = {"placebo": "placebo", "sham": "placebo", "active": "active", "usual_care": "usual_care",
+             "no_intervention": "none", "untreated": "none", "standard_care": "usual_care"}
+        t = (self.pico.comparator.type or "").lower()
+        if t in m:
+            self.decisive_experiment.control = m[t]
+        return self
+
     @field_validator("risks", mode="before")
     @classmethod
     def _plain_risks(cls, v):

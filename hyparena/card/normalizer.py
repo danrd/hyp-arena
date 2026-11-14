@@ -395,13 +395,32 @@ AGE_WORDS = [(r"\b(oldest[- ]old|octogenarian|nonagenarian|over 80|80\+)", ["Age
              (r"\byoung adults?\b", ["Adult"])]
 
 
+# Life phases of laboratory mice (C57BL/6): mature adult 3-6 months, middle-aged 10-14, old 18-24 (Flurkey, Currer, Harrison
+# 2007, The Mouse in Biomedical Research, 2nd ed., as the Jackson Laboratory restates it). NOT YET CHECKED against the source
+# (the chapter is not in PubMed, jax.org is not reachable here); the gaps are closed by the lower phase. Reference only.
+MOUSE_PHASES = [(18, "old (mouse)"), (10, "middle-aged (mouse)"), (3, "mature adult (mouse)"), (0, "young (mouse)")]
+_ANIMAL_TAXA = {"NCBITaxon:10090": "mouse", "NCBITaxon:10116": "rat"}
+
+
+def _animal_age_class(t: str) -> str:
+    m = re.search(r"(\d+(?:\.\d+)?)\s*(?:-|to|–)?\s*(\d+(?:\.\d+)?)?\s*(month|mo\b|week|wk|day)", t)
+    if not m:
+        words = [("old (mouse)", r"\b(old|aged|elderly|late[- ]life)\b"), ("middle-aged (mouse)", r"middle[- ]aged?"),
+                 ("young (mouse)", r"\b(young|juvenile)\b")]
+        return next((c for c, p in words if re.search(p, t)), "")
+    v = float(m.group(1)) * {"month": 1, "mo": 1, "week": 12 / 52, "wk": 12 / 52, "day": 12 / 365}[m.group(3)]
+    return next(c for bound, c in MOUSE_PHASES if v >= bound)
+
+
 def age_class(text: str, taxon: Optional[str] = None) -> str:
     """The MeSH age groups a stated age covers (people only; animals get their own scale later): a number or a range of
     years gives the groups from its lower bound to its upper one ("or older", "+", ">=" up to 80 and over); words map by a
     short list (elderly, older adults -> Aged); "" when nothing fits."""
+    t = (text or "").lower()
+    if taxon == "NCBITaxon:10090":
+        return _animal_age_class(t) if t and t != "unknown" else ""
     if taxon and taxon not in ("NCBITaxon:9606",):
         return ""
-    t = (text or "").lower()
     if not t or t == "unknown":
         return ""
     nums = [int(x) for x in re.findall(r"(\d{1,3})\s*(?:-|to|–|\s)?\s*(?=(?:\d{1,3}\s*)?(?:years?|yrs?|y\b|\+|or older|and older|and over|or over))", t)]

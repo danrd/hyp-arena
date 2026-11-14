@@ -55,3 +55,8 @@ cost_estimate: >-
   parses: 30 texts x (2 C + 2 C other family + 2 B) = 180 calls of about 5 000 tokens, about 1 USD off-peak; search and
   reading of the new steps of B: about 2 USD; Argon pack: no API cost. Price named again after a dry run.
 next: "build the text list (free), write mechanism_free/v1, dry run with the named price, Argon pack; user's go before the paid part"
+update_2026_11_14:
+  status: "variant B (untyped steps) is in effect as normaliser v16 (one class 'mechanism step', closed relations kept); the typed chain C is retired; the Argon gold for the decomposition exists (packs 19, 20)"
+  remaining_question: "does the steps place add to the evidence balance over the outcome alone (variant A)?"
+  free_check: {merged_steps_min: "R3 0.594, pack 8 trial balance Spearman 0.401", outcome_only: "R3 0.613, Spearman 0.397"}
+  reading: "on the registry pools the outcome alone is not worse (+0.019, inside the 0.03 rule, so by the rule the simpler variant would win); but these pools rarely state steps and the trial outcome is the only reference - the steps matter for written mechanisms (frontier, generated), where no outcome labels exist. The steps also feed novelty (new mechanism, new link), scope W, the gate and the flags regardless of the balance. User's decision: keep the steps place (v3.10) or the outcome alone in the balance"

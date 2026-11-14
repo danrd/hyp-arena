@@ -120,6 +120,30 @@ def _sys_claims(card: dict, v15: bool) -> list[dict]:
     return out
 
 
+def _match_label(sc: list[dict], gc: list[dict]) -> list[tuple[dict, dict]]:
+    """One-to-one by phrase overlap (bench_card._match), then the claims left over by their labels: the system claim's object
+    and measure against the gold claim's object, half of the shorter one's content words (synonyms on one word). The same
+    claim anchored to another sentence of the text (the Primary outcomes line against the aims) is then found."""
+    pairs = b._match(sc, gc)
+    used_s, used_g = {id(s) for s, _ in pairs}, {id(g_) for _, g_ in pairs}
+    cand = []
+    for s in sc:
+        if id(s) in used_s:
+            continue
+        for g_ in gc:
+            if id(g_) in used_g:
+                continue
+            ta, tb = _toks(s["obj"]), _toks(g_.get("object", ""))
+            if ta and tb:
+                ov = len(ta & tb) / min(len(ta), len(tb))
+                if ov >= 0.5:
+                    cand.append((ov, id(s), id(g_), s, g_))
+    for ov, i_s, i_g, s, g_ in sorted(cand, key=lambda x: -x[0]):
+        if i_s not in used_s and i_g not in used_g:
+            used_s.add(i_s); used_g.add(i_g); pairs.append((s, g_))
+    return pairs
+
+
 def score_system(cards: dict, gold_: dict, v15: bool) -> dict:
     pairs, rows = [], Counter()
     for tid, g in gold_.items():
@@ -130,6 +154,7 @@ def score_system(cards: dict, gold_: dict, v15: bool) -> dict:
         m = b._match(sc, gc)
         pairs += [(_gold_label(gl), s["lab"]) for s, gl in m]
         rows["texts"] += 1; rows["gold"] += len(gc); rows["sys"] += len(sc); rows["matched"] += len(m)
+        rows["matched_label"] += len(_match_label(sc, gc))
         ok = lambda a, c: (ta := b._toks(a["phrase"])) and (tb := b._toks(c["phrase"])) and len(ta & tb) / min(len(ta), len(tb)) >= 0.5
         rows["gold_found_m2o"] += sum(any(ok(s, gl) for s in sc) for gl in gc)
         rows["sys_right_m2o"] += sum(any(ok(s, gl) for gl in gc) for s in sc)
@@ -148,6 +173,7 @@ def score_system(cards: dict, gold_: dict, v15: bool) -> dict:
     r = lambda a, c: round(rows[a] / rows[c], 3) if rows[c] else None
     return {"texts": rows["texts"], "recall": r("matched", "gold"), "precision": r("matched", "sys"),
             "recall_m2o": r("gold_found_m2o", "gold"), "precision_m2o": r("sys_right_m2o", "sys"),
+            "recall_phrase_or_label": r("matched_label", "gold"), "precision_phrase_or_label": r("matched_label", "sys"),
             "link_kappa": b._kappa(pairs), "link_kappa_without_outcome": b._kappa([p for p in pairs if "outcome" not in p]),
             "kappa_3": b._kappa([(_three(a), _three(c)) for a, c in pairs]),
             "agree_3": round(sum(_three(a) == _three(c) for a, c in pairs) / len(pairs), 3) if pairs else None,

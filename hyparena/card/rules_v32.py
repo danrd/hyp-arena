@@ -381,7 +381,9 @@ def _evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
     res.P, res.P_lo, res.P_hi = (round(x, 5) for x in tri)
     res.weakest = min(links, key=lambda x: res.links[x.id][0]).id
     slots, run_ = [], []
-    if STEPS_SLOT != "separate":                    # every step before the outcome is one place (method v3.10, see below)
+    if STEPS_SLOT == "none":                        # a check only: the outcome alone (specs/mechanism-chain-comparison)
+        pass
+    elif STEPS_SLOT != "separate":                  # every step before the outcome is one place (method v3.10, see below)
         steps = [cl.id for cl in links if cl not in outs]
         if steps:
             slots.append(steps)

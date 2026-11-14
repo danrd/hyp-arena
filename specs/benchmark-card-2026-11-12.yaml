@@ -119,3 +119,10 @@ condition_measure_fix_2026_11_14:
   change: "scripts/bench_card_v2.py: age and species synonyms on one word before the word overlap (old / older / elderly / ageing -> aged; mice -> mouse; people -> human)"
   result: "population condition v15: 0.54 -> 0.76 on 90 texts; on the 22 weak texts working model 0.41 -> 0.68, strong model 0.82 -> 0.95"
   misses_left: "22: real ones - condition unknown where the text names it (N12, N27, P45), a wrong state (P20 'mature skin barrier'); and a pattern - the card copies the registry Conditions line whole (P24: ten diseases; P41, P55, P29), while the gold writes who is selected ('seriously ill hospitalized patients', 'mobility-limited older adults with SPPB <= 9'): the template should take the selection state from the eligibility wording, not the Conditions list"
+two_parses_2026_11_14:   # free, the 90 v15 cards
+  result: "union of two parses: claims 0.57 / 0.56, many-to-one 0.59 / 0.76, main outcome 0.79; first parse only: 0.53 / 0.62, 0.55 / 0.77, main outcome 0.74; outcome / step / premise kappa 0.67 vs 0.66"
+  cost: "4.27 calls per card with two parses; one parse about half"
+  reading: "the second parse adds recall (+0.04) and the main outcome (+0.045) at the cost of precision (-0.06) and about half of the calls; recall gain is just above the 0.03 rule"
+claim_matching_by_label_2026_11_14:
+  change: "scripts/bench_card_v2.py: claims matched by phrase, then the rest by the system claim's object and measure against the gold object (recall_phrase_or_label)"
+  result: "v15 90 texts: 0.71 / 0.69 (phrase only 0.57 / 0.56); pack 20 v15 0.67 / 0.70 vs v13 0.67 / 0.62; 22 weak: working model 0.71 / 0.63, strong 0.83 / 0.72; P04 0 -> 0.67"
