@@ -72,7 +72,7 @@ def run(limit: int = 0, ids: str = "") -> dict:
         log: list = []
         card, problems, stab = normalize_union(client, "google", t["text"], t["id"], log=log, runs=2, version=VERSION)
         res = {"card": card.model_dump(by_alias=True) if card else None, "problems": problems, "stability": stab,
-               "calls": [{k: x.get(k) for k in ("template", "attempt", "family", "tokens_in", "tokens_out", "error")} for x in log]}
+               "calls": [{k: x.get(k) for k in ("at", "template", "attempt", "family", "model", "seconds", "tokens_in", "tokens_out", "error")} for x in log]}
         with lock:
             done[t["id"]] = res
             for x in log:

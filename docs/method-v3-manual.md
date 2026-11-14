@@ -65,6 +65,8 @@ section 10. Rules for a model writing such a report:
 - **A version is scored on its own links**: every indicator of a version (balance, coverage, support share, I, scope W,
   novelty N) is recomputed from the version's chain; nothing is copied from the parent.
 - **Use the short ids you are given** (section 10, the hypothesis database); do not number hypotheses yourself.
+- **Do not report your own resources** (calls, tokens, cost, time): a model cannot count them. Write "не вычислено"; the
+  code counts them from its log, and work done outside the code is estimated from the size of its texts (section 15).
 - A report written this way is an approximation. The authoritative report is the one the code builds
   (`python -m hyparena.analyze RUN.json`), from the same rules and the records the reader extracted.
 
@@ -822,3 +824,20 @@ profiles:
   funding: [[chain_state], [feasibility], [trend_pubmed, ai_role, N], [I, W], [endpoint_clinical, best_design_outcome, independent_outcome]]
   frontier: [[N], [chain_state], [I], [feasibility], [W]]
 ```
+
+## 15. Resources of a run (calls, tokens, cost)
+
+Every model call the code makes is logged with the time (UTC), the stage, the template, the model and the tokens the API
+returned ([`hyparena/card/llm.py`](../hyparena/card/llm.py)). The cost is computed by code from those tokens and the price
+table [`configs/prices.yaml`](../configs/prices.yaml) (USD per million tokens in and out; a family's peak hours multiply
+its price), never taken from a model. [`hyparena/usage.py`](../hyparena/usage.py) sums a run by stage — card, search,
+reading, alternatives, endpoint, versions, generation — with calls, tokens, seconds and USD, and per hypothesis; a pipeline
+run keeps the summary as `usage`. A model without a price is counted with its tokens and listed as unpriced.
+
+A run can be capped: by the number of calls and by cost (`MAX_USD`). The cap is checked before each call, so the call that
+crosses it finishes and the next one is refused; what was done is kept.
+
+Work done outside the code — an outside reader or a model working from this manual in a chat — has no API count: its
+tokens are estimated from the text it was given and the text it returned (characters / 3.6, Cyrillic / 2.6; about ±20%) and
+marked as an estimate (`python -m hyparena.usage --pack TASK ANSWER`).
+

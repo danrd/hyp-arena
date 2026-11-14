@@ -152,7 +152,7 @@ class GuardedClient:
     are spent, the reply is empty with `error` set, so the pipeline's own validation deals with it
     instead of the whole run crashing. Exceeding the cap or a daily limit raises CallCapExceeded."""
 
-    def __init__(self, inner: LLMClient, *, rpm: float = 15, max_calls: Optional[int] = None,
+    def __init__(self, inner: LLMClient, *, rpm: float = 15, max_calls: Optional[int] = None, max_usd: Optional[float] = None,
                  retries: int = 2, backoff: float = 5.0, fallback_families: Optional[list[str]] = None,
                  deadline: Optional[float] = None, concurrency: int = 4,
                  sleep: Callable[[float], None] = time.sleep, clock: Callable[[], float] = time.monotonic):
@@ -166,6 +166,9 @@ class GuardedClient:
         self._slots = threading.BoundedSemaphore(max(1, concurrency))
         self.calls = 0
         self.failures = 0
+        self.max_usd = max_usd                    # a cost cap in USD, priced by hyparena.usage from the tokens the API returned
+        self.usd = 0.0
+        self.tokens_in = self.tokens_out = 0
         self.by_family: dict[str, int] = {}
 
     def _reserve(self, family: str) -> None:
@@ -173,6 +176,8 @@ class GuardedClient:
         with self._lock:
             if self.max_calls is not None and self.calls >= self.max_calls:
                 raise CallCapExceeded(f"call cap of {self.max_calls} reached")
+            if self.max_usd is not None and self.usd >= self.max_usd:
+                raise CallCapExceeded(f"cost cap of {self.max_usd} USD reached ({self.usd:.3f} USD spent)")
             self.calls += 1
             self.by_family[family] = self.by_family.get(family, 0) + 1
             start = max(self._clock(), self._next_start + self._interval)
@@ -180,6 +185,18 @@ class GuardedClient:
         wait = start - self._clock()
         if wait > 0:
             self._sleep(wait)
+
+    def _count(self, reply, family: str) -> None:
+        """Tokens and USD of a reply (hyparena.usage prices it from configs/prices.yaml)."""
+        from datetime import datetime, timezone
+        from hyparena.usage import cost
+        ti, to = int(getattr(reply, "tokens_in", 0) or 0), int(getattr(reply, "tokens_out", 0) or 0)
+        usd = cost(getattr(reply, "model_id", "") or "", ti, to, getattr(reply, "family", "") or family,
+                   datetime.now(timezone.utc).isoformat()) or 0.0
+        with self._lock:
+            self.tokens_in += ti
+            self.tokens_out += to
+            self.usd += usd
 
     def _failed(self) -> None:
         with self._lock:
@@ -202,6 +219,7 @@ class GuardedClient:
                     break
                 self._sleep(self.backoff * (attempt + 1))
                 continue
+            self._count(reply, family)
             if reply.text.strip():
                 return reply, ""
             error = "empty reply"
@@ -266,15 +284,17 @@ def build_runners(specs: list[ModelSpec], cfg: ProvidersConfig) -> dict[str, tup
 
 
 def build_client(config_path: str | Path = DEFAULT_CONFIG, *, max_calls: Optional[int] = None,
-                 allow_paid: Optional[bool] = None, families: Optional[list[str]] = None
+                 allow_paid: Optional[bool] = None, families: Optional[list[str]] = None, max_usd: Optional[float] = None
                  ) -> tuple[GuardedClient, list[JudgeSpec], ProvidersConfig]:
-    """Guarded client plus the judge pool (one model per enabled family)."""
+    """`max_usd` (or the environment variable MAX_USD): stop the run once its priced cost reaches it."""
     cfg = load_config(config_path)
+    import os
+    max_usd = max_usd if max_usd is not None else (float(os.environ["MAX_USD"]) if os.environ.get("MAX_USD") else None)
     specs = active_specs(cfg, allow_paid)
     if families:
         specs = [s for s in specs if s.family in families]
     inner = RunnerLLMClient(build_runners(specs, cfg))
-    client = GuardedClient(inner, rpm=cfg.rpm, max_calls=max_calls, deadline=cfg.deadline,
+    client = GuardedClient(inner, rpm=cfg.rpm, max_calls=max_calls, max_usd=max_usd, deadline=cfg.deadline,
                            concurrency=cfg.concurrency,
                            fallback_families=[s.family for s in specs])
     return client, [JudgeSpec(s.family, s.model) for s in specs], cfg

@@ -1,0 +1,20 @@
+# Prices of the models the method calls, USD per million tokens (input / output), as the API provider bills them.
+# Read by hyparena/usage.py; the cost of a run is computed by code from the logged tokens, never reported by a model.
+# A model missing here is counted with tokens but no price ("price unknown" in the summary).
+# Checked against the provider's price list when a model is added; update the date when a price changes.
+checked_on: 2026-11-14
+peak:                      # weekday hours (UTC) when a family's price is multiplied
+  deepseek: {weekdays: [0, 1, 2, 3, 4], hours: [[1, 4], [6, 10]], multiplier: 2.0}
+family_default:            # older logs that kept only the family: the model the working config used for it
+  google: gemini-3.5-flash
+  deepseek: deepseek-v4.1-flash-1017
+models:
+  gemini-3.5-flash: {in: 1.5, out: 9.0}
+  deepseek-v4.1-flash-1017: {in: 0.15, out: 0.6}
+  gemini-3.1-flash-lite-preview: {in: 0.25, out: 1.5}
+  gpt-5-nano: {in: 0.05, out: 0.4}
+  claude-haiku-4-5-20251001: {in: 1.0, out: 5.0}
+  qwen3.8-flash: {in: 0.15, out: 0.47}
+  glm-5.3-flash: {in: 0.15, out: 0.5}
+  mimo-v2.5: {in: 0.14, out: 0.28}
+  grok-4.3: {in: 1.25, out: 2.5}

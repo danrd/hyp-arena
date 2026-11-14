@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import time
+from datetime import datetime, timezone
 from typing import Callable, Optional
 
 from hyparena.llm.prompts import render
@@ -46,7 +47,8 @@ def ask(client, *, role: str, family: str, template: str, version: str, variable
         value = parse(reply.text)
         problems = ["The reply did not contain a valid JSON object."] if value is None else (validate(value) if validate else [])
         if log is not None:
-            log.append({"kind": "llm", "role": role, "template": f"{template}/{version}", "attempt": attempt + 1,
+            log.append({"kind": "llm", "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                        "role": role, "template": f"{template}/{version}", "attempt": attempt + 1,
                         "asked_family": family, "family": reply.family, "model": reply.model_id,
                         "seconds": round(time.time() - started, 1), "tokens_in": reply.tokens_in,
                         "tokens_out": reply.tokens_out, "prompt": prompt, "reply": reply.text, "error": reply.error,

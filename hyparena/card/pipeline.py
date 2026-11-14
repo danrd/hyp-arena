@@ -292,6 +292,8 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
             "expert_skipped": [vars(c) for c in ranking.expert_skipped] if ranking else [],
             "filtered": ranking.filtered if ranking else {}, "known_results": ranking.known_results if ranking else [],
             "calls": log}
+    from hyparena.usage import summarize as _usage
+    result["usage"] = _usage(log)                       # calls, tokens, seconds and USD per stage (configs/prices.yaml)
     result["top_distinct"] = diversity.top_distinct(result, result["proximity"])
     result["meta"]["diagnostics"] = diagnostics.pool_diagnostics(result["items"], result["ranking"], [s.id for s in ind.INDICATORS])
     return result
