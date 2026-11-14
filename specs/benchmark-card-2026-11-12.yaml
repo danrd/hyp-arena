@@ -100,3 +100,5 @@ full_run_v15_2026_11_14:   # scripts/bench_card_v2.py run / score; longevity-kg 
   pass_rule_reading: "link kappa and main outcome pass; claim recall passes on the cards made (-0.01) and fails with the failures counted (-0.04): decide after the 3 re-runs"
   measure_caveat: "claims are matched by phrase overlap: the same claim anchored to the Primary outcomes line by us and to the aims sentence by the gold does not match (P04: 10 outcome claims, recall 0) - recall is a lower bound"
   weak_texts: "substantive errors (main outcome or main factor wrong, two or more middle links wrong): N06 N08 N12 N14 N15 N20 N22 N25 N27 N28 N29 N30 P06 P20 P22 P30 P38 P43 P45 P52 P53 P55 (22) - the set for a stronger model"
+rerun_failures_2026_11_14: "P23, P33, P51 re-run after the risks fix (0.27 USD): all 90 cards; pack 20 (60): claims 0.533 / 0.553 vs v13 0.538 / 0.50, link kappa 0.69 vs 0.50, main outcome 0.83 vs 0.55 - the pass rule is met"
+strong_model_task: "the 22 weak texts as a task for an outside strong model (Hydrogen): scripts/hydrogen_card_pack.py; longevity-kg reviews/hydrogen-2026-11-14/"
