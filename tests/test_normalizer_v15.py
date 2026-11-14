@@ -63,3 +63,11 @@ def test_other_labels_in_english():
     card = _card([_c("c1", "squat exercise", "muscle mass", "effect", "chain", "tissue")])
     card.decisive_experiment.arms = ["контрольный пептид"]
     assert any("arms[0]: write it in English" in p for p in v15_problems(card))
+
+
+def test_registry_arms_with_a_colon_in_the_label():
+    from hyparena.card.normalizer import registry_design
+    t = ("Arms: Squat Exercise (experimental): A 12-week squat exercise intervention is implemented.; "
+         "Intervention: Usual Care (no intervention): No specific resistance training.")
+    arms = registry_design(t)["arms"]
+    assert [a["type"] for a in arms] == ["experimental", "no intervention"] and arms[1]["label"] == "Intervention: Usual Care"

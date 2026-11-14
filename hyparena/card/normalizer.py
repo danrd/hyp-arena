@@ -309,8 +309,8 @@ def registry_design(raw_text: str) -> dict:
     m = re.search(r"^Arms:\s*(.+)$", raw_text, re.M)
     if m:
         out["arms"] = [{"label": a.group(1).strip(), "type": a.group(2).strip()}
-                       for a in re.finditer(r"(?:^|; )([^;:()]+?) \((experimental|active comparator|placebo comparator|sham comparator|"
-                                            r"no intervention|other)\)", m.group(1))]
+                       for a in re.finditer(r"(?:^|; )((?:(?!; )[^()])+?) \((experimental|active comparator|placebo comparator|"
+                                            r"sham comparator|no intervention|other)\)", m.group(1))]
     m = re.search(r"^Planned enrollment:\s*(\d+)", raw_text, re.M)
     if m:
         out["planned_enrollment"] = int(m.group(1))
