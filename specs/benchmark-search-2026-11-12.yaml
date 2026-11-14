@@ -53,3 +53,9 @@ gold_correction_2026_11_14:   # scripts/bench_search.py described, score; the ea
   mesh_and_blocks_rerun: "original 0.32, MeSH synonyms 0.32, at most three blocks 0.30 (unchanged conclusions)"
   simple_queries: "scripts/search_simple_check.py: code-built untagged queries (intervention AND outcome; intervention AND population; intervention alone; PubMed's automatic term mapping) find 0.10-0.12 alone at 100 per query and add nothing to the model-written ones; 11 of 30 trials give an empty intervention-AND-outcome query (card labels are long phrases)"
   to_do: "the gold needs the right PMIDs for the 49 (a task for Argon with the title and first author required, or a code search by the description); thresholds stay unmet (0.36 < 0.6)"
+free_experiments_2026_11_14:   # written BEFORE the experiments; plan docs/plans/search-2026-11-14.md, step 2
+  set: "the saved model-written queries of the 30 trials of pack 18, each with up to 500 PubMed ids before T (cached); gold: the 103 papers that pass the described-check (pack 21 will restore the others)"
+  budget: "20 papers per claim, as the pipeline reads now; recall of the gold in the union over the claims of a trial"
+  baselines: "the lists the saved run gave to the reader (with its citation step and keyword fallback); the round-robin merge of the queries re-run today"
+  admission_rule: "a variant enters the proposal for the manual when it adds at least 0.03 recall over the round-robin merge at the same 20 per claim, on all 30 trials and not below the baseline on the 10 holdout trials; variants are free (code and PubMed only); the chosen configuration is then run once, paid, with the working card"
+  variants: "B1 votes of the claim's queries (reciprocal rank fusion over the top 100 / 200 of each query); B2 word match (BM25 of the query terms against title and abstract within the claim's candidates); B1+B2 fused; V1 a query with under 20 hits repeated without its last block"
