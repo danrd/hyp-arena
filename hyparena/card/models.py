@@ -138,7 +138,7 @@ Route = Literal["diet", "water", "oral", "injection", "topical", "other", "unkno
 
 
 class Intervention(BaseModel):
-    type: Literal["compound", "gene", "cell", "diet", "exercise", "behavioural", "device", "procedure", "exposure", "other"] = "other"   # v16: Argon's kinds
+    type: Literal["compound", "gene", "cell", "diet", "exercise", "behavioural", "device", "procedure", "exposure", "unspecified", "other"] = "other"   # v16: Argon's kinds; v18: unspecified = the text names the change to achieve, not the means
     label: str
     id: Optional[str] = None
     regimen: str = UNKNOWN
