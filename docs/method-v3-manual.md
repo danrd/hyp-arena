@@ -760,7 +760,7 @@ known result (calibration pool); **R4** — the order of pairs of records given 
 | Step | Check | Result |
 |---|---|---|
 | card | an outside reader's card gold (definitions of the card manual), 90 texts | outcome / step / premise κ 0.67 (0.72 on the 60 registry and written-mechanism texts); main outcome 0.79; main factor 0.97; claims recall 0.57, precision 0.56 ([`specs/card/benchmark-card-2026-11-12.yaml`](../specs/card/benchmark-card-2026-11-12.yaml)) |
-| search | an outside reader's search gold, 30 calibration trials | the reader gets 0.49 [0.38, 0.60] of the gold papers, 0.31 on their own link, at a median of 52 papers per hypothesis; the closest prior work in 0.73 of trials ([`specs/search/benchmark-search-2026-11-12.yaml`](../specs/search/benchmark-search-2026-11-12.yaml)) |
+| search | an outside reader's search gold, 30 calibration trials | the reader gets 0.49 [0.38, 0.60] of the gold papers, 0.32 on their own link, at a median of 52 papers per hypothesis; the closest prior work in 0.73 of trials ([`specs/search/benchmark-search-2026-11-12.yaml`](../specs/search/benchmark-search-2026-11-12.yaml)) |
 | reading | an outside reader's findings on 400 link-abstract pairs | recall 0.29, precision 0.64; a plain LLM 0.28 / 0.41, the difference not significant ([`specs/reading/benchmark-reading-2026-11-12.yaml`](../specs/reading/benchmark-reading-2026-11-12.yaml)) |
 | reading: design, n, blinding | against an outside reader | 92-96% agreement |
 | intervention match: exact / class / category / other | an outside reader, 80 link-finding pairs blind | weighted κ 0.55, stance agreement 0.89 ([`specs/scoring/intervention-class-2026-11-11.yaml`](../specs/scoring/intervention-class-2026-11-11.yaml)) |
