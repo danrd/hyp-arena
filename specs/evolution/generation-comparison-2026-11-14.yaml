@@ -1,0 +1,97 @@
+id: generation-comparison-2026-11-14
+written_on: 2026-11-14
+status: "definitions and pass rules fixed before any hypothesis is generated or judged; not implemented, no call made"
+level: "4 of the system checks (docs/system/testing.md): generation of hypotheses; manual docs/system/generation-arena.md"
+why: >-
+  Does the system write better research hypotheses on a topic than an LLM asked in a chat, and does the system's evolution
+  make them better still, its own and another writer's? The comparison runs every stage at once on texts the system has not
+  seen, so it is also the main check of the whole system while it is being debugged, and later the basis of showing it.
+
+topic:
+  first_run: >-
+    bioelectric signalling in ageing: membrane potential, ion channels, gap junctions and endogenous electric fields as a
+    lever on ageing and on age-related loss of function
+  as_of: "the date of the run (T); no outcome exists, so the measures are judges and code checks, not outcomes"
+n_per_arm: 5
+
+arms:
+  A: {who: "outside LLM Argon (a Gemini model) in a new chat, by hand", gets: "the topic and a plain request: n hypotheses, each with a claim, a rationale, an experiment and the papers it relies on", family: google}
+  B: {who: "our generation, structured mode (specs/evolution/generation-2026-11-09.yaml)", gets: "the topic, T, the card template", writer_family: deepseek}
+  C: {who: "our evolution of B", how: "structured evolution (hyparena/card/evolve_v3.py --mode tune, all fixable items of the improvement list), one round, one child per parent", writer_family: deepseek}
+  D: {who: "our evolution of A", how: "as C"}
+  E: "a Co-Scientist-style generator (tournament from the v2 code): deferred"
+  argon_task: "a new chat, without our manual or earlier packs in context; the text of the task is in the pack, built by code"
+
+formatting:   # one form for every text the judges see
+  template: "claim; rationale; decisive experiment; at most 1 200 characters; no references, no names of models or of the method"
+  rewriter: "a model of a family that neither wrote nor judges (xiaomi MiMo or zhipu GLM), prompt format_hypothesis/v1"
+  meaning_check: "by code: the intervention, the outcome and the experiment's system and endpoint of the card of the original are found in the rewritten text; a failure is rewritten once, then the original text is shortened by hand rule (first sentences of each part) and marked"
+  references: "removed from what judges see; checked by code (below)"
+
+judges:
+  pool: [openai, anthropic, google, xai, deepseek, qwen, muse]
+  excluded: "google (author of A) and deepseek (our writer); a family that rewrote the texts"
+  used: [openai, anthropic, xai, qwen, "muse if available"]
+  models: "named with prices before the run"
+  blind: "a judge does not know who wrote a text"
+  order: "every pair judged twice, both orders; two different answers count as a tie"
+  pairwise:
+    prompt: judge_pair/v1
+    asks: "which of the two is the stronger research hypothesis on ageing, per criterion and overall, with a one-sentence reason"
+    pairs: {B_vs_A: 25, C_vs_A: 25, C_vs_B: "5 (parent and its version)", D_vs_A: "5 (parent and its version)"}
+  rubric:
+    prompt: judge_rubric/v1
+    asks: "each text alone, 1-10 per criterion"
+  criteria:
+    novelty: "not already in the literature; how far from what is known"
+    grounding: "consistent with known biology; the mechanism is plausible"
+    testability: "the experiment separates the hypothesis from its alternatives and can be done"
+    specificity: "intervention, population, outcome and mechanism links are named"
+    significance: "what a confirmation would mean for ageing and healthy lifespan"
+
+code_checks:   # independent of any judge
+  references: "per arm: the share of cited papers that exist in PubMed, were published before T and match by title"
+  novelty: "per hypothesis: the nearest prior work and the novelty level from our pipeline"
+  support: "per hypothesis: links of the mechanism with records, and their side"
+  diversity: "per arm: duplicate and variant pairs (typed proximity), distinct interventions and outcomes"
+
+reports:
+  per_hypothesis: "our full report for all 20 hypotheses, those of A included"
+  tabs: "judges (scores and reasons), comparison (arms side by side, results by pair), evolution (what changed from parent to version, by improvement item), references (the check by arm)"
+  showcase_page: "not now (debugging first)"
+
+measures:
+  win_share: "(wins + ties / 2) / judgements of X against Y, pooled over judges and both orders"
+  interval: "95% bootstrap over hypotheses (resampling the hypotheses of each arm)"
+  per_family: "the same win share for each judge family alone"
+  rubric: "mean score per criterion and arm, with the same bootstrap"
+
+pass_rule:   # written before the run
+  win: "X beats Y when its win share is above 0.5 and above 0.5 for a majority of judge families taken alone"
+  tested: {generation: "B over A", evolution_own: "C over B (pairs of parent and version)", evolution_other: "D over A (pairs of parent and version)"}
+  reported_not_tested: "C over A; the rubric means; the code checks"
+  pilot: >-
+    with 5 hypotheses per arm the interval is about +-0.2, so the first run is a pilot: a win is a reason to widen the
+    comparison, not a conclusion; the claim "the system writes better hypotheses" needs the lower bound of the interval
+    above 0.5 over several topics (about 20 hypotheses per arm), under a new spec
+
+cost_estimate_usd:
+  pipeline: "about 2 (20 hypotheses at about 0.09)"
+  writer_and_evolution: "below 0.1"
+  formatting: "below 0.05"
+  judges_cheap: "about 1.1 for gpt-5-nano, claude-haiku-4.5, grok-4.3 and qwen3.8-flash (about 140 judgements each, about 2 000 tokens in and 300 out)"
+  judges_strong: "about 5-10 for four stronger models; priced from the provider's list before the run"
+  total: "3-12; named exactly by a dry run before the user's go"
+
+limits:
+  - "a judge's preference is not truth: the judges measure how strong a hypothesis looks to models; truth is level 3"
+  - "the plain request to A and the template of B differ by design: A is the way most people would ask; our structure is part of the system being tested"
+  - "Argon also reads our manual in other tasks; the generation task runs in a new chat without it"
+  - "one topic: the result says nothing about other topics"
+
+implementation:   # after the user's go
+  - "generation, structured mode (specs/evolution/generation-2026-11-09.yaml)"
+  - "the Argon pack for arm A (task text and cover note), built by code"
+  - "the comparison: formatting with the meaning check, pairwise and rubric judges, win shares and intervals, code checks; prompts format_hypothesis/v1, judge_pair/v1, judge_rubric/v1; tests on the fake LLM"
+  - "the report tabs"
+  - "a dry run with the price; the run after the user's go"
