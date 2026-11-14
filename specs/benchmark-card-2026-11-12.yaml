@@ -115,3 +115,7 @@ weak_card_signals_2026_11_14:   # free, on the 90 v15 cards
   text_kind: "not a registry text: precision 0.44, recall 0.88 (22 of the 25 weak cards); non-interventional: 0.55 / 0.48; main outcome right in 0.93 of registry texts, 0.68 of the others"
   strong_model_by_kind: "on the 19 non-registry weak texts the strong model: main outcome 0.79 vs 0.21, outcome / step / premise kappa 0.56 vs 0.36, main factor 1.0 vs 0.84"
   reading: "route by text kind, not by code signals: registry texts on the working model, written hypotheses (Bio Arena, ChatGPT, generated, evolved) on a stronger model"
+condition_measure_fix_2026_11_14:
+  change: "scripts/bench_card_v2.py: age and species synonyms on one word before the word overlap (old / older / elderly / ageing -> aged; mice -> mouse; people -> human)"
+  result: "population condition v15: 0.54 -> 0.76 on 90 texts; on the 22 weak texts working model 0.41 -> 0.68, strong model 0.82 -> 0.95"
+  misses_left: "22: real ones - condition unknown where the text names it (N12, N27, P45), a wrong state (P20 'mature skin barrier'); and a pattern - the card copies the registry Conditions line whole (P24: ten diseases; P41, P55, P29), while the gold writes who is selected ('seriously ill hospitalized patients', 'mobility-limited older adults with SPPB <= 9'): the template should take the selection state from the eligibility wording, not the Conditions list"

@@ -86,8 +86,15 @@ def run(limit: int = 0, ids: str = "") -> dict:
     return {"texts_done": len(done), "this_run": len(ts), "tokens": dict(tok), "usd": round(usd, 3)}
 
 
+SYN = {"old": "aged", "older": "aged", "elderly": "aged", "ageing": "aged", "aging": "aged", "geriatric": "aged",
+       "mice": "mouse", "murine": "mouse", "rats": "rat", "humans": "human", "people": "human", "persons": "human",
+       "women": "woman", "men": "man"}
+
+
 def _toks(s: str) -> set:
-    return {w[:6] for w in re.findall(r"[a-z0-9]{3,}", (s or "").lower())} - {"the", "and", "with", "older", "adults", "elderl"}
+    """Content words (first 6 letters) with age and species synonyms on one word: "old mouse" = "aged mice"."""
+    words = [SYN.get(w, w) for w in re.findall(r"[a-z0-9]{3,}", (s or "").lower())]
+    return {w[:6] for w in words} - {"the", "and", "with", "adults", "adult"}
 
 
 def _ov(a: str, b_: str) -> bool:
