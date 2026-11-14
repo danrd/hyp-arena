@@ -78,3 +78,11 @@ def test_v16_steps_cap_and_premise_of_the_main_factor():
     claims.append(_c("c9", "squat exercise", "fewer falls", None, "premise", "organism"))
     probs = " | ".join(v15_problems(_card(claims)))
     assert "5 steps before the outcomes" in probs and "c9: its subject is the main factor" in probs
+
+
+def test_condition_is_not_the_conditions_list():
+    card = _card([_c("c1", "squat exercise", "muscle mass", "outcome", "chain", "tissue")])
+    card.pico.population.condition = "Obesity; Weight Loss; Diet Modification; Aging"
+    assert any("population.condition" in p for p in v15_problems(card))
+    card.pico.population.condition = "obese older adults at risk for disability"
+    assert not any("population.condition" in p for p in v15_problems(card))

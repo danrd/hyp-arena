@@ -466,6 +466,10 @@ def v15_problems(card: HypothesisCard) -> list[str]:
              ("population.condition", card.pico.population.condition)] + \
             [(f"decisive_experiment.arms[{i}]", a) for i, a in enumerate(card.decisive_experiment.arms)]
     out += [f"{name}: write it in English" for name, v in other if re.search(r"[а-яА-ЯёЁ]", v or "")]
+    cond = card.pico.population.condition or ""
+    if cond.count(";") >= 2 or cond.count(",") >= 3:
+        out.append("population.condition: write the state the participants are selected for as one short phrase (who is "
+                   "enrolled), not the list of the registry's Conditions")
     roots = _toks((card.main_factor or {}).get("label", "")) | set().union(*[_toks(i.label) for i in card.pico.intervention] or [set()])
     seen = set(roots)
     for c in card.claims:
