@@ -14,13 +14,22 @@ topic:
   as_of: "the date of the run (T); no outcome exists, so the measures are judges and code checks, not outcomes"
 n_per_arm: 5
 
+execution: >-
+  every arm is the same outside model (Argon, a Gemini model, or ChatGPT) working in a chat; the steps of the method
+  (generation, card, search, reading, alternatives, scoring, evolution, report) are done by that model following
+  docs/method-v3-manual.md, not by our code with its own reader model. The arms then differ only by the method (without the
+  manual: A; with it: B, C, D), so the method cannot lose by a weaker reader or another model, and the chats cost nothing.
+  Our code does only what does not depend on the model: checks the answers (references, verbatim quotes, format), puts the
+  texts into one form, calls the judges and computes the result. Each arm is a new chat, without earlier answers in context.
+writer_family: "google if Argon, openai if ChatGPT; the same for all arms"
+
 arms:
-  A: {who: "outside LLM Argon (a Gemini model) in a new chat, by hand", gets: "the topic and a plain request: n hypotheses, each with a claim, a rationale, an experiment and the papers it relies on", family: google}
-  B: {who: "our generation, structured mode (specs/evolution/generation-2026-11-09.yaml)", gets: "the topic, T, the card template", writer_family: deepseek}
-  C: {who: "our evolution of B", how: "structured evolution (hyparena/card/evolve_v3.py --mode tune, all fixable items of the improvement list), one round, one child per parent", writer_family: deepseek}
-  D: {who: "our evolution of A", how: "as C"}
+  A: {does: "writes the hypotheses", gets: "the topic and a plain request: n hypotheses, each with a claim, a rationale, an experiment and the papers it relies on"}
+  B: {does: "writes the hypotheses in the structured generation mode (by the card's fields), then goes through every step of the method by the manual", gets: "the topic, T, the manual, the card template"}
+  C: {does: "free evolution of the hypotheses of B by the manual (anything may change for a better hypothesis), then every step of the method again", gets: "the hypotheses of B and their reports"}
+  D: {does: "the same free evolution of the hypotheses of A", gets: "the hypotheses of A and their reports"}
   E: "a Co-Scientist-style generator (tournament from the v2 code): deferred"
-  argon_task: "a new chat, without our manual or earlier packs in context; the text of the task is in the pack, built by code"
+  reports_for_A: "the hypotheses of A go through every step of the method by the manual in a separate chat, after they are written"
 
 formatting:   # one form for every text the judges see
   template: "claim; rationale; decisive experiment; at most 1 200 characters; no references, no names of models or of the method"
@@ -30,8 +39,8 @@ formatting:   # one form for every text the judges see
 
 judges:
   pool: [openai, anthropic, google, xai, deepseek, qwen, muse]
-  excluded: "google (author of A) and deepseek (our writer); a family that rewrote the texts"
-  used: [openai, anthropic, xai, qwen, "muse if available"]
+  excluded: "the writer's family (google if Argon writes, openai if ChatGPT) and the family that rewrote the texts"
+  used: "the rest of the pool: with Argon openai, anthropic, xai, deepseek, qwen, muse if available"
   models: "named with prices before the run"
   blind: "a judge does not know who wrote a text"
   order: "every pair judged twice, both orders; two different answers count as a tie"
@@ -51,12 +60,13 @@ judges:
 
 code_checks:   # independent of any judge
   references: "per arm: the share of cited papers that exist in PubMed, were published before T and match by title"
-  novelty: "per hypothesis: the nearest prior work and the novelty level from our pipeline"
-  support: "per hypothesis: links of the mechanism with records, and their side"
+  quotes: "per report: the share of records whose quote is verbatim in the abstract of the named paper (as the check of earlier reports by the manual)"
+  novelty: "per hypothesis: the nearest prior work and the novelty level from the report by the manual, its PMIDs checked by code"
+  support: "per hypothesis: links of the mechanism with checked records, and their side"
   diversity: "per arm: duplicate and variant pairs (typed proximity), distinct interventions and outcomes"
 
 reports:
-  per_hypothesis: "our full report for all 20 hypotheses, those of A included"
+  per_hypothesis: "the full report of the method for all 20 hypotheses, those of A included, made by the manual and checked by code"
   tabs: "judges (scores and reasons), comparison (arms side by side, results by pair), evolution (what changed from parent to version, by improvement item), references (the check by arm)"
   showcase_page: "not now (debugging first)"
 
@@ -76,22 +86,22 @@ pass_rule:   # written before the run
     above 0.5 over several topics (about 20 hypotheses per arm), under a new spec
 
 cost_estimate_usd:
-  pipeline: "about 2 (20 hypotheses at about 0.09)"
-  writer_and_evolution: "below 0.1"
+  chats: "0 (generation, steps of the method, evolution and reports are chats of the outside model)"
   formatting: "below 0.05"
-  judges_cheap: "about 1.1 for gpt-5-nano, claude-haiku-4.5, grok-4.3 and qwen3.8-flash (about 140 judgements each, about 2 000 tokens in and 300 out)"
+  judges_cheap: "about 1.1 for four cheap models (about 140 judgements each, about 2 000 tokens in and 300 out)"
   judges_strong: "about 5-10 for four stronger models; priced from the provider's list before the run"
-  total: "3-12; named exactly by a dry run before the user's go"
+  total: "1-10; named exactly by a dry run before the user's go"
 
 limits:
   - "a judge's preference is not truth: the judges measure how strong a hypothesis looks to models; truth is level 3"
   - "the plain request to A and the template of B differ by design: A is the way most people would ask; our structure is part of the system being tested"
-  - "Argon also reads our manual in other tasks; the generation task runs in a new chat without it"
+  - "arm A runs in a new chat without the manual; B, C, D get it: that difference is what is tested"
+  - "the method run by a chat model is the method as written in the manual, not our code: the comparison checks the manual; differences from the code are a separate finding"
   - "one topic: the result says nothing about other topics"
 
 implementation:   # after the user's go
-  - "generation, structured mode (specs/evolution/generation-2026-11-09.yaml)"
-  - "the Argon pack for arm A (task text and cover note), built by code"
-  - "the comparison: formatting with the meaning check, pairwise and rubric judges, win shares and intervals, code checks; prompts format_hypothesis/v1, judge_pair/v1, judge_rubric/v1; tests on the fake LLM"
+  - "the tasks for the outside model, built by code, each with its task text and cover note and a JSON answer format: A; B (structured generation and the steps of the method); reports for A; free evolution for C and D; the manual gets a section on structured generation in a chat"
+  - "checks of the answers by code: references, verbatim quotes, format"
+  - "the comparison: formatting with the meaning check, pairwise and rubric judges, win shares and intervals; prompts format_hypothesis/v1, judge_pair/v1, judge_rubric/v1; tests on the fake LLM"
   - "the report tabs"
-  - "a dry run with the price; the run after the user's go"
+  - "a dry run with the price; the judges after the user's go"
