@@ -38,3 +38,9 @@ diagnosis_2026_11_13:   # scripts/search_misses.py (free, PubMed only); longevit
   reading: "of the 38 gold papers the reader got, 13 became records (34%)"
   caveat: "PubMed relevance order today may differ from the run's; the block kinds are named by a word rule (intervention words of the card, population words, the rest outcome / other)"
   reading_of_it: "the search loses about three quarters of the gold before reading: half by query wording (too many AND-blocks, intervention and outcome terms that the papers do not use), a quarter by the cut at 20 per claim; the reader then keeps a third of what it gets"
+mesh_synonyms_check_2026_11_14:   # scripts/mesh_search_check.py (free); longevity-kg reviews/argon-2026-11-12/mesh_search_check.json
+  set: "the 956 saved model-written queries of the 30 trials, re-run today with the date cut T, top 20 per query, union per trial; 152 gold papers"
+  result: {original: "recall 0.217, 19 trials with a gold paper", mesh_synonyms: "0.217 (446 queries changed, the same papers found)", synonyms_and_at_most_3_blocks: "0.204, 16 trials"}
+  why_no_gain: "only 29 of 165 card entities have an exact MeSH descriptor (labels are phrases: 'myofibrillar protein synthesis'); where one exists, the model's queries already carry the heading and its synonyms; dropping blocks makes the result set larger and the top-20 cut then loses the gold"
+  cut_per_query: {top_20: "recall 0.217, 228 papers returned per trial", top_50: "0.303, 486", top_100: "0.368, 826", top_200: "0.408, 1340"}
+  reading: "the cut at 20 per query is the lever (top 50: +0.09 recall), but every returned paper is read (paid): a larger cut needs a cheap relevance step before the reader; MeSH synonyms stay in the query prompt (no cost, no gain measured); the 'at most three blocks' instruction is withdrawn"
