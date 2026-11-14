@@ -1,0 +1,23 @@
+id: benchmark-alternatives-2026-11-14
+written_on: 2026-11-14
+status: "definitions fixed before Argon answers pack 22"
+why: >-
+  Stage 7 (competing explanations) spends half of the searches of a hypothesis (118 of 240 on the calibration trials) and
+  much of the reading, and has no gold for its literature; the earlier check (30 holdout trials) measured only the design
+  verdict (kappa 0.35) and found Argon adding an alternative we lacked in 78% of trials. This pack gives one gold for the
+  three parts: which alternatives, what the design does to them, and what literature weighs them.
+set: "the 30 calibration trials of the search gold (Argon pack 18; texts and T unchanged); new ids and order (scripts/pack22_alternatives.py); our saved runs (config v3-flash-n10, normaliser v10) have 5 proposed alternatives for 29 of them; holdout 10 as in pack 18"
+gold: "Argon: up to 5 alternatives per trial, ranked, substantive or methodological, with the distinguishing part, the design verdict under the expected and the null result (eliminated / weakened / unchanged) with the registry phrase it rests on; up to 5 papers on or before T for each substantive alternative of rank 1-3, each checked by code against PubMed (title, first author, date) before use"
+matching: "an Argon alternative and one of ours are the same when a judge says the two would be tested by the same evidence (same cause and same route to the outcome); judge: one LLM of a family other than the one that proposed ours, blind to which list is whose; 20 pairs checked by hand by the user before the numbers are read; priced before the run (about 0.02 USD)"
+measures:
+  coverage: "share of Argon's rank 1-3 alternatives matched by one of ours (all 5 of ours count); separately substantive and methodological"
+  precision: "share of our alternatives matched by any of Argon's 5"
+  kinds: "share methodological among ours and among Argon's"
+  design_verdict: "weighted kappa (eliminated > weakened > unchanged) on matched pairs, expected result; the same for the null result; ours read from on_positive / on_negative"
+  literature: "recall of Argon's valid papers of a matched alternative among (a) the candidates of our search for that alternative, (b) the first 20 by the relevance filter, (c) the papers our reader made a record of; and the share of those papers our reader marked as showing the distinguishing part"
+  budget_question: "recall of Argon's alternative papers by the hypothesis's own searches (card claims and analogs) without the alternatives' searches: if most are found anyway, the alternatives' own searches can be cut"
+thresholds:   # written before the answer
+  alternatives_ok: "coverage of rank 1-3 >= 0.6 and design-verdict weighted kappa >= 0.4"
+  separate_search_needed: "the alternatives' own searches stay when they add at least 0.1 recall of Argon's alternative papers over the hypothesis's own searches at the same reading; otherwise the budget question is answered 'cut'"
+baseline: "the same model as our proposer, the same text, the task in one sentence (list the main alternative explanations and what the design does to each); priced before the run"
+cost: "pack free; matching about 0.02 USD and the baseline about 0.05 USD, both after the answer and the user's go"
