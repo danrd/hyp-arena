@@ -1,10 +1,14 @@
-"""Tests never look compounds up on the network: offline tables stand in for PubChem, ChEMBL and ClinicalTrials.gov."""
+"""Tests never look compounds up on the network: offline tables stand in for PubChem, ChEMBL and ClinicalTrials.gov, and a
+saved DrugAge release (tests/fixtures/drugage.zip) for the DrugAge download."""
 import os
 
 import pytest
 
 os.environ.setdefault("MESH_IDS", "0")   # no MeSH lookups on the network in tests (hyparena/tools/mesh.py)
 
+from pathlib import Path
+
+from hyparena import backtest
 from hyparena.tools import chebi, compounds as cp, trials
 
 REAL_LOOKUP = cp.lookup          # the unpatched function, for tests of the cache itself (tests/test_entities.py)
@@ -50,8 +54,20 @@ CHEBI_CLASSES = {      # narrow is_a ancestors (id, label, size), from OLS4 on 2
     "CHEBI:27881": [("CHEBI:36027", "stilbenol", 30)]}
 
 
+DRUGAGE = Path(__file__).parent / "fixtures" / "drugage.zip"   # DrugAge release of 2024-11-29 (HAGR, CC BY 3.0; de Magalhães et al. 2024)
+
+
+def _drugage_rows() -> list[dict]:
+    import csv
+    import io
+    import zipfile
+    z = zipfile.ZipFile(DRUGAGE)
+    return list(csv.DictReader(io.TextIOWrapper(z.open("drugage.csv"), encoding="utf-8", errors="replace")))
+
+
 @pytest.fixture(autouse=True)
 def offline_compounds(monkeypatch):
+    monkeypatch.setattr(backtest, "drugage_rows", _drugage_rows)  # no DrugAge download in tests
     monkeypatch.setenv("HYPARENA_EMBEDDER", "none")             # no model download in tests
     monkeypatch.setattr(chebi, "classes", lambda cid, max_descendants=100: [c for c in CHEBI_CLASSES.get(cid, []) if c[2] <= max_descendants])
     monkeypatch.setattr(cp, "lookup", lambda name: OFFLINE.get(cp.key(name)))

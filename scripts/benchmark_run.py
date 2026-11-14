@@ -148,7 +148,8 @@ def build_texts(units: list[dict] | None = None, out_path: Path | None = None) -
                      "written_after_completion": bool(fp and pc and fp[:10] > (pc + "-01" if len(pc) == 7 else pc)[:10])}
         out.append({"id": u["id"], "as_of": u["written_on"], "b2_clean": u.get("b2_clean", False), "text": text, "registry_flags": flags,
                     "result_words": sorted({m.group(0).lower() for m in RESULT_WORDS.finditer(text)})})
-    (out_path or TEXTS).write_text("".join(json.dumps(x, ensure_ascii=False) + "\n" for x in out))
+    if out_path is not None or units is None:             # a subset never overwrites the benchmark's texts (2026-11-13: two
+        (out_path or TEXTS).write_text("".join(json.dumps(x, ensure_ascii=False) + "\n" for x in out))
     (ROOT / "data" / "cache").mkdir(parents=True, exist_ok=True)
     (ROOT / "data" / "cache" / "ctgov_protocols.json").write_text(json.dumps(cache))
     return out
