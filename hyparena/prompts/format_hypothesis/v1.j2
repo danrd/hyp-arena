@@ -1,0 +1,19 @@
+Rewrite one research hypothesis into a fixed form so that it can be compared blindly with hypotheses written by others. Keep its meaning exactly: the same intervention, population, outcome, mechanism and experiment. Do not add, remove, improve or weaken anything; do not judge it.
+
+Form:
+- "claim": what the hypothesis says (the intervention, in whom, what changes), one or two sentences;
+- "rationale": why it should be true (the mechanism and what it rests on), in plain prose;
+- "experiment": the experiment that would test it (system, design, control, endpoint, duration).
+At most {{ limit }} characters in all three together. Plain English prose: no lists, no headings, no references, no paper numbers, no author or model names, no words about novelty or importance that the text does not state.
+
+The hypothesis:
+<<<TEXT
+{{ text }}
+TEXT>>>
+
+Reply with a single JSON object and nothing else:
+{"claim": "", "rationale": "", "experiment": ""}
+{% if history_text %}
+
+{{ history_text }}
+{% endif %}

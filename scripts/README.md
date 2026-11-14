@@ -119,6 +119,7 @@ A script of a finished check stays: its spec names it as the calculation of its 
 | Script | What it does |
 |---|---|
 | [`evolution_check`](evolution/evolution_check.py) | Free: the evolution rules (manual section 11) and the hypothesis / experiment decomposition on saved evolution pairs. |
+| [`generation_compare`](evolution/generation_compare.py) | Level 4 of the checks: generation compared (specs/evolution/generation-comparison-2026-11-14.yaml, manual docs/system/generation-arena.md). The hypotheses of the arms (A: an outside model in a chat; B: the same model by the manual; C: B ... |
 
 ## [`whole_system/`](whole_system/) — Checks of the whole system against outcomes: calibration, benchmark runs, frozen forecasts, ITP backtests, baselines
 
@@ -140,6 +141,7 @@ A script of a finished check stays: its spec names it as the calculation of its 
 | Script | What it does |
 |---|---|
 | [`argon_check`](argon/argon_check.py) | Re-check of Argon's pack 3 (specs/search/sources-experiment-2026-11-07.yaml, arm C and the gold labels), free: quotes verbatim (abstract, or the PMC full text where PMC allows it), publication date before the cut-off, PMID exists; then ... |
+| [`generation_tasks`](argon/generation_tasks.py) | Level 4 of the checks (specs/evolution/generation-comparison-2026-11-14.yaml): the tasks for the outside model that writes every arm in a chat (Argon or ChatGPT), the checks of its answers by code, and the collection of the arms for ... |
 | [`hydrogen_card_pack`](argon/hydrogen_card_pack.py) | Card task for an outside strong model (Hydrogen): the 22 texts where normalize_card/v15 on the working model made substantive errors (specs/card/benchmark-card-2026-11-12.yaml, full_run_v15_2026_11_14.weak_texts). Free, no model call. |
 | [`pack10_analysis`](argon/pack10_analysis.py) | Analysis of Argon pack 10 (specs/search/sources-argon-2026-11-09.yaml). Free. |
 | [`pack10_sources`](argon/pack10_sources.py) | Argon pack 10: abstract vs PMC full text vs knowledge graph (specs/search/sources-argon-2026-11-09.yaml). Free (PubMed / PMC metadata). |

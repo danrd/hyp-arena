@@ -703,6 +703,19 @@ and rewritten once, a duplicate of a database row is linked to it, not added. Ea
 analog pairs and the number of distinct interventions and outcomes. With T = today there is no outcome to test against: an
 outside check (novel before T, plausible, testable, on topic, best profile; its grouping against ours) is part of the mode.
 
+**Generation and evolution in a chat** (level 4 of the checks, [`docs/system/generation-arena.md`](system/generation-arena.md)).
+An outside model can run this manual itself: the task (built by [`scripts/argon/generation_tasks.py`](../scripts/argon/generation_tasks.py))
+gives the topic, the date T, this manual and a JSON answer format. **Structured generation:** the model fills the card
+template of section 3 for each hypothesis (intervention, population, the mechanism as links before the outcome, the outcome,
+the decisive experiment with system, design, control, endpoint and duration) and writes the text from it (claim, rationale,
+experiment); the hypotheses of one run are different ideas (no two share the intervention and the outcome). It then takes
+each hypothesis through every step of the method as written here (search before T, records, weights, links and the gate,
+axes, profiles, improvement list), with the levels and names of this manual; a value it cannot find by the rule is "not
+computed". **Free evolution** in a chat follows the free mode of section 11 with "a better hypothesis" as the goal when no
+profile is named; the version is scored again from its own reading. Code then checks the answer: every PMID exists, was
+public before T and has the title given; every quote is verbatim in the abstract named; the card has an intervention, an
+outcome, at least one step and an experiment with system, design and endpoint.
+
 **The hypothesis database** ([`specs/data/hypothesis-db-2026-11-09.yaml`](../specs/data/hypothesis-db-2026-11-09.yaml)) holds every
 hypothesis version from every source (registry trials, Bio Arena, other arenas and public sets, our generated and evolved
 ones), privately in `longevity-kg/hypothesis_db/`: text, source and terms, author kind (no names), the date written (T of its

@@ -1,6 +1,6 @@
 id: generation-comparison-2026-11-14
 written_on: 2026-11-14
-status: "definitions and pass rules fixed before any hypothesis is generated or judged; not implemented, no call made"
+status: "definitions and pass rules fixed before any hypothesis is generated or judged; the tasks, the answer checks and the comparison are built (2026-11-14), no judge called"
 level: "4 of the system checks (docs/system/testing.md): generation of hypotheses; manual docs/system/generation-arena.md"
 why: >-
   Does the system write better research hypotheses on a topic than an LLM asked in a chat, and does the system's evolution
@@ -105,3 +105,9 @@ implementation:   # after the user's go
   - "the comparison: formatting with the meaning check, pairwise and rubric judges, win shares and intervals; prompts format_hypothesis/v1, judge_pair/v1, judge_rubric/v1; tests on the fake LLM"
   - "the report tabs"
   - "a dry run with the price; the judges after the user's go"
+built_2026_11_14:
+  tasks: "scripts/argon/generation_tasks.py (build-a, build-b, build-reports, build-evolve, check, collect); tasks A and B in longevity-kg reviews/generation-2026-11-14/"
+  comparison: "scripts/evolution/generation_compare.py (dry, format, judge, score); configs/judges-generation.yaml; prompts format_hypothesis/v1, judge_pair/v1, judge_rubric/v1; tests/test_generation_compare.py"
+  dry_run: "five cheap judges (gpt-5-nano, claude-haiku-4.5, grok-4.3, deepseek-v4.1-flash, qwen3.8-flash) and the rewriter mimo-v2.5: about 0.66 USD, 140 judgements per judge; muse not in the provider's catalog"
+  free_evolution_goal: "a better hypothesis overall when no profile is named (manual section 11a)"
+

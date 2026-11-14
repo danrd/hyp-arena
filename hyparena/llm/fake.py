@@ -202,3 +202,21 @@ class FakeLLMClient:
     def _check_alternatives(self, rng, prompt, n):
         ids = list(dict.fromkeys(re.findall(r"^- (alt\d+):", prompt, flags=re.M)))
         return json.dumps({"alternatives": [{"id": i, "found": "absent", "pmid": "", "quote": ""} for i in ids]})
+
+    # level 4: generation compared (scripts/evolution/generation_compare.py)
+
+    def _format_hypothesis(self, rng, prompt, n):
+        m = re.search(r"<<<TEXT\n(.*?)\nTEXT>>>", prompt, flags=re.S)
+        text = " ".join((m.group(1) if m else "a fake hypothesis").split())
+        third = max(1, len(text) // 3)
+        return json.dumps({"claim": text[:third], "rationale": text[third:2 * third], "experiment": text[2 * third:]})
+
+    def _judge_pair(self, rng, prompt, n):
+        crit = ("novelty", "grounding", "testability", "specificity", "significance")
+        v = {c: rng.choice(["1", "2", "tie"]) for c in crit}
+        return json.dumps({**v, "overall": rng.choice(["1", "2"]), "reason": "fake"})
+
+    def _judge_rubric(self, rng, prompt, n):
+        crit = ("novelty", "grounding", "testability", "specificity", "significance")
+        return json.dumps({**{c: rng.randint(3, 9) for c in crit}, "reason": "fake"})
+

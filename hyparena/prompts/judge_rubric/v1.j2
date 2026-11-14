@@ -1,0 +1,21 @@
+You are an expert reviewer of research hypotheses on ageing and healthy lifespan. Score one hypothesis on each criterion from 1 (very weak) to 10 (excellent). Do not reward length or fluency.
+
+Topic: {{ topic }}
+
+<<<H
+{{ text }}
+H>>>
+
+Criteria:
+- novelty: not already established in the literature; how far it goes beyond what is known;
+- grounding: consistent with known biology; the mechanism is plausible;
+- testability: the experiment would separate the hypothesis from its alternatives and can be done;
+- specificity: intervention, population, outcome and mechanism are named concretely;
+- significance: what a confirmation would mean for ageing and healthy lifespan.
+
+Reply with a single JSON object and nothing else:
+{"novelty": 5, "grounding": 5, "testability": 5, "specificity": 5, "significance": 5, "reason": "one or two sentences"}
+{% if history_text %}
+
+{{ history_text }}
+{% endif %}
