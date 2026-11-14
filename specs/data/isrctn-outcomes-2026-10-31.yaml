@@ -1,4 +1,4 @@
-# Outcome labels for ISRCTN hypotheses (scripts/isrctn_outcomes.py). Fixed 2026-10-31 before any outcome document was read.
+# Outcome labels for ISRCTN hypotheses (scripts/data/isrctn_outcomes.py). Fixed 2026-10-31 before any outcome document was read.
 # Same method as specs/data/ctgov-outcomes-2026-10-30.yaml unless stated here.
 id: isrctn-outcomes-2026-10-31
 source: "ISRCTN registry (WHO primary registry, ICMJE-accepted); public API https://www.isrctn.com/api/query (robots.txt disallows only /search)"

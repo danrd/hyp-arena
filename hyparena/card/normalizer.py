@@ -14,7 +14,7 @@ from hyparena.card.models import Hallmark, HypothesisCard, Relation
 from hyparena.card.canonical import canonicalize
 from hyparena.card.rules import anchor_core, core_span_problems, mark_inherited, set_sex_scope, validate_card
 
-TEMPLATE = ("normalize_card", "v6")       # v6 adopted 2026-10-29 by the user's decision, see docs/archive/rules-method.md
+TEMPLATE = ("normalize_card", "v6")       # v6 adopted 2026-10-29 by the user's decision, see archive/docs/rules-method.md
 
 # relations an outcome claim can take, with the words that point to them (for the re-parse hint, spec 5)
 OUTCOME_RELATIONS = {

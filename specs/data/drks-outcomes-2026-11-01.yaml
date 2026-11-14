@@ -1,4 +1,4 @@
-# Outcome labels for DRKS (German Clinical Trials Register) hypotheses (scripts/drks_outcomes.py). Fixed 2026-11-01 before any outcome
+# Outcome labels for DRKS (German Clinical Trials Register) hypotheses (scripts/data/drks_outcomes.py). Fixed 2026-11-01 before any outcome
 # document was read. Same method as specs/data/isrctn-outcomes-2026-10-31.yaml unless stated here.
 id: drks-outcomes-2026-11-01
 source: "DRKS, WHO primary registry; public record pages https://drks.de/search/en/trial/<id> (server-rendered HTML)"

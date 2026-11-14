@@ -1,4 +1,4 @@
-from scripts.naive_baseline import MIN_POSITIVES, compound_units, naive_scores, paired
+from scripts.whole_system.naive_baseline import MIN_POSITIVES, compound_units, naive_scores, paired
 
 
 def _res(levels):

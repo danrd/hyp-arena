@@ -3,7 +3,7 @@ written_on: 2026-11-12
 status: "definitions fixed before Argon answered pack 18; scored 2026-11-12 (result below)"
 why: "Benchmark registry, stages 3 (search) and 6 (novelty): do our searches find before T what a careful search must find; does the novelty level match the closest prior work."
 sets:
-  pack_18: "30 calibration trials (T 2009-2025, 14 positive and 16 null outcomes), none in packs 16-17, holdout 10; Argon gets the registry text and T only, not our chain; longevity-kg reviews/argon-2026-11-12/pack_18_task.json, key pack_18_key.json (scripts/pack18_search.py)"
+  pack_18: "30 calibration trials (T 2009-2025, 14 positive and 16 null outcomes), none in packs 16-17, holdout 10; Argon gets the registry text and T only, not our chain; longevity-kg reviews/argon-2026-11-12/pack_18_task.json, key pack_18_key.json (scripts/argon/pack18_search.py)"
   code_built_later: "registry references before registration (prior trials), DrugAge and Open Genes facts with their PMIDs (the known-facts set), Argon pack 8 key papers (59 prospective trials) - each a separate part of this benchmark"
 gold: "Argon's papers on or before T: closest prior work, prior trials, direct, step, against, review; up to 5 must_find; every PMID and date checked by code against PubMed before use (a PMID after T or not in PubMed is dropped and counted)"
 systems:
@@ -20,7 +20,7 @@ thresholds:
   search_ok: "recall_must at least 0.6 on the saved searches; below it the search is the bottleneck before reading"
   novelty_ok: "weighted kappa at least 0.4 and ours farther from the known in under 25% of trials"
 cost: "pack free; ours free; ours_now and base_b priced after a dry run, user's go"
-result_2026_11_12:   # scripts/bench_search.py check, score; longevity-kg reviews/argon-2026-11-12/bench_search_score.json
+result_2026_11_12:   # scripts/search/bench_search.py check, score; longevity-kg reviews/argon-2026-11-12/bench_search_score.json
   gold_check: "154 papers given (about 5 per trial); 2 PMIDs not in PubMed, dropped; 0 after T (date = earliest of electronic, print and PubMed entry date; one paper is public before T by its entry date only); 4 years differ from PubMed, kept; 152 papers left"
   gold_caveat: "Argon marked must_find on 146 of 152 papers (5 per trial, the cap): must_find does not separate the key papers, so recall_must is about recall_all"
   ours_saved_v10: {recall_must: "0.25 [0.17, 0.34]", recall_must_on_link: "0.10 [0.05, 0.16]", read_must: 0.09, recall_all: "0.25 [0.17, 0.35]", trials_with_a_gold_paper_found: 0.70, returned_per_trial_median: 99}
@@ -30,28 +30,28 @@ result_2026_11_12:   # scripts/bench_search.py check, score; longevity-kg review
   novelty: "weighted kappa -0.08 [-0.33, 0.13] on 22 trials (8 without a level: 3 filtered, 1 unparsed, 4 ranked with none); ours farther from the known 0.50 [0.29, 0.71], nearer 0.09; Argon: new_context 23 of 30, analog 3, known_result 3, translation 1; ours: new_context 10, analog 9, new_link 2, known_result 1; the main disagreement is ours 'analog' where Argon has 'new_context' (9)"
   holdout_10: "recall_all 0.26, prior work found 0.40, kappa 0.03, ours farther 0.29"
   thresholds: "search_ok not met (0.25 < 0.6): the search is a bottleneck before reading; novelty_ok not met (kappa -0.08 < 0.4, farther 50% > 25%)"
-  limits: "saved searches are of method v3 with config v3-flash-n10 and normaliser v10 (8 of 30 cards have a step claim, which bounds step recall); the current search (ours_now) is not run; no LLM baseline (base_b) yet; Argon's gold is one reader, not checked against a second; 30 calibration texts, see the leak check (scripts/calibration_leak.py): 14 of the 30 were registered after primary completion"
-diagnosis_2026_11_13:   # scripts/search_misses.py (free, PubMed only); longevity-kg reviews/argon-2026-11-12/search_misses.json
+  limits: "saved searches are of method v3 with config v3-flash-n10 and normaliser v10 (8 of 30 cards have a step claim, which bounds step recall); the current search (ours_now) is not run; no LLM baseline (base_b) yet; Argon's gold is one reader, not checked against a second; 30 calibration texts, see the leak check (scripts/data/calibration_leak.py): 14 of the 30 were registered after primary completion"
+diagnosis_2026_11_13:   # scripts/search/search_misses.py (free, PubMed only); longevity-kg reviews/argon-2026-11-12/search_misses.json
   where_lost: "of 152 gold papers: read 13 (9%); given to the reader, no record 25 (16%); a saved query matches it but it is cut before the 20 given per claim 39 (26%); no saved query matches it 75 (49%); the date guard 0"
   no_query: "16 have no claim of their kind on the card (mostly step papers: 8 of 30 v10 cards have a step claim); of the other 59, the closest query of their link misses by 1 AND-block for 17, 2 for 20, 3 or more for 22; where one block decides, it is the intervention wording 27 times, the outcome 23, the population 4"
   queries: "956 saved LLM queries: median 4 AND-blocks, median 54 hits before T, 56 with no hit, 328 under 20"
   reading: "of the 38 gold papers the reader got, 13 became records (34%)"
   caveat: "PubMed relevance order today may differ from the run's; the block kinds are named by a word rule (intervention words of the card, population words, the rest outcome / other)"
   reading_of_it: "the search loses about three quarters of the gold before reading: half by query wording (too many AND-blocks, intervention and outcome terms that the papers do not use), a quarter by the cut at 20 per claim; the reader then keeps a third of what it gets"
-mesh_synonyms_check_2026_11_14:   # scripts/mesh_search_check.py (free); longevity-kg reviews/argon-2026-11-12/mesh_search_check.json
+mesh_synonyms_check_2026_11_14:   # scripts/search/mesh_search_check.py (free); longevity-kg reviews/argon-2026-11-12/mesh_search_check.json
   set: "the 956 saved model-written queries of the 30 trials, re-run today with the date cut T, top 20 per query, union per trial; 152 gold papers"
   result: {original: "recall 0.217, 19 trials with a gold paper", mesh_synonyms: "0.217 (446 queries changed, the same papers found)", synonyms_and_at_most_3_blocks: "0.204, 16 trials"}
   why_no_gain: "only 29 of 165 card entities have an exact MeSH descriptor (labels are phrases: 'myofibrillar protein synthesis'); where one exists, the model's queries already carry the heading and its synonyms; dropping blocks makes the result set larger and the top-20 cut then loses the gold"
   cut_per_query: {top_20: "recall 0.217, 228 papers returned per trial", top_50: "0.303, 486", top_100: "0.368, 826", top_200: "0.408, 1340"}
   reading: "the cut at 20 per query is the lever (top 50: +0.09 recall), but every returned paper is read (paid): a larger cut needs a cheap relevance step before the reader; MeSH synonyms stay in the query prompt (no cost, no gain measured); the 'at most three blocks' instruction is withdrawn"
-gold_correction_2026_11_14:   # scripts/bench_search.py described, score; the earlier blocks above use the uncorrected gold
+gold_correction_2026_11_14:   # scripts/search/bench_search.py described, score; the earlier blocks above use the uncorrected gold
   finding: "49 of the 152 gold PMIDs point to another paper than the one Argon describes (a plant-pathology guide for a carotenoid review, 'Atrial torsades de pointes' for an Xbox Kinect trial): wrong numbers, real descriptions. The first check tested only that a PMID exists and its date"
   check: "share of the content words of Argon's description found in the PubMed title and abstract; under 0.25 the PMID is dropped (40 of the 49 share under 0.1); 103 papers left; 4 closest-prior-work PMIDs invalid"
   rescored_saved_search: {recall_all: "0.36 [0.25, 0.48] (was 0.25)", on_link: 0.15, read: 0.13, prior_work_found: "0.46 [0.27, 0.65]", by_population: "exact 0.39, adjacent 0.34", novelty: "unchanged (kappa -0.08)"}
   where_lost: "of 103: read 13 (13%); given to the reader, no record 24 (23%); matched by a saved query but cut before the 20 per claim 38 (37%); no saved query matches 28 (27%; 9 of them have no claim of their kind on the card)"
   reading: "the model-written queries match 73% of the gold; the cut and the order lose half of that. The main loss is ranking, not query wording (the earlier reading 'half lost by wording' counted the wrong PMIDs as unmatched)"
   mesh_and_blocks_rerun: "original 0.32, MeSH synonyms 0.32, at most three blocks 0.30 (unchanged conclusions)"
-  simple_queries: "scripts/search_simple_check.py: code-built untagged queries (intervention AND outcome; intervention AND population; intervention alone; PubMed's automatic term mapping) find 0.10-0.12 alone at 100 per query and add nothing to the model-written ones; 11 of 30 trials give an empty intervention-AND-outcome query (card labels are long phrases)"
+  simple_queries: "scripts/search/search_simple_check.py: code-built untagged queries (intervention AND outcome; intervention AND population; intervention alone; PubMed's automatic term mapping) find 0.10-0.12 alone at 100 per query and add nothing to the model-written ones; 11 of 30 trials give an empty intervention-AND-outcome query (card labels are long phrases)"
   to_do: "the gold needs the right PMIDs for the 49 (a task for Argon with the title and first author required, or a code search by the description); thresholds stay unmet (0.36 < 0.6)"
 free_experiments_2026_11_14:   # written BEFORE the experiments; plan docs/plans/search-2026-11-14.md, step 2
   set: "the saved model-written queries of the 30 trials of pack 18, each with up to 500 PubMed ids before T (cached); gold: the 103 papers that pass the described-check (pack 21 will restore the others)"
@@ -59,30 +59,30 @@ free_experiments_2026_11_14:   # written BEFORE the experiments; plan docs/plans
   baselines: "the lists the saved run gave to the reader (with its citation step and keyword fallback); the round-robin merge of the queries re-run today"
   admission_rule: "a variant enters the proposal for the manual when it adds at least 0.03 recall over the round-robin merge at the same 20 per claim, on all 30 trials and not below the baseline on the 10 holdout trials; variants are free (code and PubMed only); the chosen configuration is then run once, paid, with the working card"
   variants: "B1 votes of the claim's queries (reciprocal rank fusion over the top 100 / 200 of each query); B2 word match (BM25 of the query terms against title and abstract within the claim's candidates); B1+B2 fused; V1 a query with under 20 hits repeated without its last block"
-  result_rerank:   # scripts/search_rerank_check.py; longevity-kg reviews/argon-2026-11-12/search_rerank_check.json
+  result_rerank:   # scripts/search/search_rerank_check.py; longevity-kg reviews/argon-2026-11-12/search_rerank_check.json
     at_20_per_claim: {round_robin: "recall 0.214, holdout 0.257, 90 papers per trial", votes_200: "0.272, holdout 0.229", bm25_100: "0.301, 0.286", bm25_200: "0.330, 0.343, 88 papers", votes_plus_bm25_200: "0.320, 0.286", relax: "0.165, 0.171", relax_votes_bm25_100: "0.320, 0.314"}
     ceiling: "all candidates: 0.524 at 100 per query (740 papers per trial), 0.583 at 200 (1142)"
     saved_run: "0.359, holdout 0.343, 99 papers per trial (the run's own PubMed order, its citation step and keyword fallback)"
     by_the_rule: "bm25 over the top 200 of each query passes (+0.12 over round_robin, holdout +0.09); votes alone fail on the holdout; fusing votes with bm25 adds nothing; repeating a short query without its last block lowers recall (-0.05) and is dropped"
     reading: "word match against the abstract recovers a third of what the cut loses at no reading cost; the saved run is still a little higher, so its citation step earns its place: next, bm25 with the citation step, similar articles and the references of reviews on top"
-gold_fixed_by_pack_21_2026_11_14:   # scripts/pack21_pmid_fix.py apply; longevity-kg reviews/argon-2026-11-14/pack_21_check.json, argon-2026-11-12/pack_18_answer_fixed.json
+gold_fixed_by_pack_21_2026_11_14:   # scripts/argon/pack21_pmid_fix.py apply; longevity-kg reviews/argon-2026-11-14/pack_21_check.json, argon-2026-11-12/pack_18_answer_fixed.json
   answer: "51 items: 40 PMIDs corrected (title, first author, description against the abstract and the date on or before T all pass the code check), 10 substitutes (the closest real paper, marked), 1 not found (the described paper was published after T); 0 rejected"
   gold_now: "153 papers over 30 trials (was 103 after the described-check); every closest prior work valid"
   rescored_saved_search: {recall_all: "0.33 [0.24, 0.44]", on_link: 0.14, read: 0.12, holdout: 0.35, prior_work_found: "0.43 [0.27, 0.60]", trials_with_a_gold_paper: 0.80, novelty: "kappa -0.08 (unchanged)"}
   rerank_at_20_per_claim: {round_robin: "0.20, holdout 0.28", bm25_200: "0.34, holdout 0.40", bm25_100: "0.32, 0.34", votes_200: "0.24, 0.26", votes_plus_bm25_200: "0.30, 0.34", relax: "0.13, 0.14", all_candidates_200: "0.57"}
   reading: "the conclusions of the free experiments hold on the full gold: word match passes the rule (+0.13, holdout +0.12), votes and the relaxed queries do not"
-  result_links:   # scripts/search_expand_check.py on the fixed gold (153 papers); longevity-kg reviews/argon-2026-11-12/search_expand_check.json
+  result_links:   # scripts/search/search_expand_check.py on the fixed gold (153 papers); longevity-kg reviews/argon-2026-11-12/search_expand_check.json
     at_20_per_claim: {bm25_200: "0.336, holdout 0.40", plus_citations: "0.436, holdout 0.56, 88 papers per trial", plus_similar_articles: "0.376, 0.44", plus_references_of_reviews: "0.403, 0.46", all_three: "0.423, 0.52, 97 papers"}
     ceiling_all_candidates: {queries_200: "0.57 (1142 per trial)", plus_citations: "0.77 (1746)", plus_similar: "0.69 (1662)", plus_reviews: "0.69 (1396)", all_three: "0.84, holdout 0.84 (2441)"}
     by_the_rule: "the citation step over the first 5 papers of the word-match order passes (+0.10 over word match alone, +0.24 over the round-robin merge; holdout +0.16); similar articles and review references pass each alone but add nothing at 20 per claim on top of citations (all three 0.42 < citations 0.44): the order, not the candidate set, is then the limit"
     reading: "with the three link kinds 84% of the gold is among the candidates of a trial (about 2400 papers); word match brings 42-44% into the 20 per claim. The remaining gap (0.44 -> 0.84) is a ranking problem: a relevance step that reads meaning (a cheap LLM or embeddings) and a budget shared over the hypothesis"
     caveat: "linked papers are dated by year only in this check (the pipeline dates them exactly)"
-  result_budget:   # scripts/search_budget_check.py; longevity-kg reviews/argon-2026-11-12/search_budget_check.json
+  result_budget:   # scripts/search/search_budget_check.py; longevity-kg reviews/argon-2026-11-12/search_budget_check.json
     searches: "240 over 30 trials: 68 of card claims, 54 of analog claims, 118 of proposed alternatives; each reads 20"
     same_slots_shared_by_weights: {equal_20: "recall 0.436, holdout 0.56, 88 papers per trial", card_x2: "0.436, 0.56, 91", card_x4_alternatives_half: "0.43, 0.48, 104", card_x8_alternatives_quarter: "0.45, 0.50, 113", no_alternatives: "0.45, 0.50, 111", card_only: "0.45, 0.50, 129"}
     by_the_rule: "no weighting passes: at most +0.014 recall, with more distinct papers to read and a lower holdout; the equal share stays"
     caveat: "the gold lists the literature of the hypothesis, not of its alternatives: it cannot show what the alternatives' own searches are worth"
-filter_experiment_2026_11_14:   # written BEFORE the run; scripts/search_filter_check.py, prompt search_relevance/v1
+filter_experiment_2026_11_14:   # written BEFORE the run; scripts/search/search_filter_check.py, prompt search_relevance/v1
   set: "the 238 searches of the 30 trials; the first 100 candidates of each (top 200 of each query, citations of the first 5, BM25) rated 0-3 by the cheap model (deepseek flash) from title and abstract (900 characters), 20 records per call"
   cost: "estimate 1.19 USD (1143 calls, 7.3 M tokens in); cap MAX_USD 1.5"
   measure: "recall of the gold (153 papers) when the 20 read per search are the highest rated (BM25 order within a rating), against BM25 alone (0.436, holdout 0.56); also at depth 40 and 60, and keeping 10"

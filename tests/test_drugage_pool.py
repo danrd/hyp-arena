@@ -5,7 +5,7 @@ import yaml
 
 from hyparena.card.models import HypothesisCard
 from hyparena.card.rules import validate_card
-from scripts import drugage_pool as dp
+from scripts.data import drugage_pool as dp
 
 
 def test_strata_follow_the_depth_of_evidence_at_t():

@@ -1,6 +1,6 @@
-# Outcome labels for the ClinicalTrials.gov hypotheses (scripts/ctgov_outcomes.py). Fixed before the first model call.
+# Outcome labels for the ClinicalTrials.gov hypotheses (scripts/data/ctgov_outcomes.py). Fixed before the first model call.
 id: ctgov-outcomes-2026-10-30
-selection: "scripts/hypothesis_sources_ctgov.py (aging itself as a condition, completed, first posted 2000-2022), then prospective registration only (first posted before the primary completion date) and at least one outcome document"
+selection: "scripts/data/hypothesis_sources_ctgov.py (aging itself as a condition, completed, first posted 2000-2022), then prospective registration only (first posted before the primary completion date) and at least one outcome document"
 counts_before_labelling: {candidates: 1085, retrospective: 216, no_outcome_document: 403, kept: 466, with_posted_results: 204, with_result_abstracts: 283}
 documents: "posted results of the primary outcome measures (groups, values, statistical analyses) rendered as text; up to 3 PubMed abstracts published after the primary completion date (result papers listed by the investigators first, then records carrying the NCT number), no protocols or reviews"
 model: {config: configs/v2-flash.yaml, family: deepseek, model: deepseek-v4.1-flash-1017, prompt: label_trial_outcome/v1, calls: "one per trial"}
@@ -34,7 +34,7 @@ recheck_result:
   second_pass: {checked: 61, agree: 49, corrections: 12}
   labels_final: {positive: 72, null: 102, negative: 1, mixed: 73, not_applicable: 71, not_reported: 147}
   human_checked: "every positive and mixed label; 32 of 102 null; the 1 negative is model-only"
-# Flag rules as code (fixed 2026-10-31 before the flag script was run on any trial; scripts/ctgov_flags.py):
+# Flag rules as code (fixed 2026-10-31 before the flag script was run on any trial; scripts/data/ctgov_flags.py):
 flag_rules:
   result_in_text_phrases: "case-insensitive regexes on brief_summary + detailed_description: 'this (study|trial) (showed|shows|demonstrated|found|revealed)', '\\bwe (found|observed|showed|demonstrated)\\b', '\\b(our|the) (results|findings|data) (showed|show|indicate|indicated|suggest|suggested|demonstrated|revealed)\\b', '\\b(was|were) significantly (improved|increased|reduced|decreased|higher|lower|better|greater)\\b', '\\bresulted in (a )?significant', '\\bno significant (difference|effect|change)s? (was|were) (found|observed|seen)'; a hit is only a candidate until Claude reads the sentence and confirms it reports this trial's own result (not prior studies)"
   outcome_mismatch_rule: "only trials with posted results; words = lower-case alphanumeric tokens of length >= 3 minus stop words; for each posted primary outcome the best overlap coefficient |A∩B|/min(|A|,|B|) against the registered primary outcomes; candidate if any posted primary outcome has best overlap < 0.5, or the counts differ; confirmed by Claude reading both lists"
@@ -48,7 +48,7 @@ flag_result:
   edited_after_result: {count: 3, use: "sensitivity analysis only", labels: [positive, mixed, mixed]}
   outcome_mismatch: {count: 0, note: "not detectable from the current record"}
   decisive_after_exclusion: {positive: 71, null: 102, negative: 1}
-# Recompute (fixed 2026-10-31 before the script was run on any trial; scripts/ctgov_recompute.py): trials labelled not_reported that
+# Recompute (fixed 2026-10-31 before the script was run on any trial; scripts/data/ctgov_recompute.py): trials labelled not_reported that
 # have posted results get a test computed from the posted group values, because the registry often posts means and spreads without p.
 recompute_rules:
   scope: "label not_reported (after the recheck) and posted results; PRIMARY outcome measures only"

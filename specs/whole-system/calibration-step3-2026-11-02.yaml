@@ -1,4 +1,4 @@
-# Calibration step 3, fixed before the run (user decision 2026-11-02). Trials outside the benchmark (scripts/calibration.py).
+# Calibration step 3, fixed before the run (user decision 2026-11-02). Trials outside the benchmark (scripts/whole_system/calibration.py).
 id: calibration-step3
 date: 2026-11-02
 question: "Does method v2 order registry hypotheses by their outcome at all, on 46 calibration units (steps 1-3)?"

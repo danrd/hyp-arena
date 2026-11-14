@@ -1,4 +1,4 @@
-from scripts.paraphrase_check import agreement, verdict
+from scripts.card.paraphrase_check import agreement, verdict
 
 
 def _it(status="supported", place="1", sub="a", ctx=("m",)):

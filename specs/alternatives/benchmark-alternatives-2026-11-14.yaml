@@ -6,7 +6,7 @@ why: >-
   much of the reading, and has no gold for its literature; the earlier check (30 holdout trials) measured only the design
   verdict (kappa 0.35) and found Argon adding an alternative we lacked in 78% of trials. This pack gives one gold for the
   three parts: which alternatives, what the design does to them, and what literature weighs them.
-set: "the 30 calibration trials of the search gold (Argon pack 18; texts and T unchanged); new ids and order (scripts/pack22_alternatives.py); our saved runs (config v3-flash-n10, normaliser v10) have 5 proposed alternatives for 29 of them; holdout 10 as in pack 18"
+set: "the 30 calibration trials of the search gold (Argon pack 18; texts and T unchanged); new ids and order (scripts/argon/pack22_alternatives.py); our saved runs (config v3-flash-n10, normaliser v10) have 5 proposed alternatives for 29 of them; holdout 10 as in pack 18"
 gold: "Argon: up to 5 alternatives per trial, ranked, substantive or methodological, with the distinguishing part, the design verdict under the expected and the null result (eliminated / weakened / unchanged) with the registry phrase it rests on; up to 5 papers on or before T for each substantive alternative of rank 1-3, each checked by code against PubMed (title, first author, date) before use"
 matching: "an Argon alternative and one of ours are the same when a judge says the two would be tested by the same evidence (same cause and same route to the outcome); judge: one LLM of a family other than the one that proposed ours, blind to which list is whose; 20 pairs checked by hand by the user before the numbers are read; priced before the run (about 0.02 USD)"
 measures:

@@ -4,7 +4,7 @@ id: calibration-v3-fresh
 date: 2026-11-06
 question: "Does P order fresh trials by their outcome, on trials not used before (clean part: first posted 2023-2026), with the normalizer fixed?"
 config: configs/v3-flash-n9.yaml   # normalize_card/v9, verify_claim/v9, proposed alternatives, rules_v3 (variant v3 as run)
-code: "scripts/calibration.py run --step 4 / --step 5 --config configs/v3-flash-n9.yaml --tag _v3; score-v3 --steps; cards frozen in calibration/cards_v3_v9.json"
+code: "scripts/whole_system/calibration.py run --step 4 / --step 5 --config configs/v3-flash-n9.yaml --tag _v3; score-v3 --steps; cards frozen in calibration/cards_v3_v9.json"
 units:
   clean_step4: "14 units (7 positive, 7 null): CT.gov first posted 2023-2026, late-registered or word-matched; 2 excluded before the run because the registry title states the result (units_4_excluded.json)"
   orientation_step5: "30 units (13 positive, 17 null or negative): CT.gov 2000-2022 word-matched and ISRCTN, DRKS, NTR, UMIN; results the models may remember"

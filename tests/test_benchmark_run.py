@@ -5,7 +5,7 @@ import random
 import numpy as np
 import pytest
 
-from scripts import benchmark_run as br
+from scripts.whole_system import benchmark_run as br
 
 
 def test_logreg_separates_and_cv_is_out_of_fold():

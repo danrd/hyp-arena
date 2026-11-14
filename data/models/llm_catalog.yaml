@@ -1,4 +1,4 @@
-# LLM catalogue (data/models/jules_task_llm_catalog.md). Imported 2026-10-30 from hyp-arena PR #20 after review: the list of models
+# LLM catalogue (archive/tasks/jules_task_llm_catalog.md). Imported 2026-10-30 from hyp-arena PR #20 after review: the list of models
 # and `released` = the date the model appeared in the aggregator's catalogue (OpenRouter or CometAPI `created`), which can be later than
 # the developer's own release. Knowledge cutoffs are NOT filled yet: the 18 values of the PR were removed (quotes copied from other
 # models' pages, e.g. o1's cutoff on o3, Llama 3's on Llama 3.3, and not verified verbatim). Fill a cutoff only from the developer's page.

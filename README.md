@@ -34,6 +34,7 @@ ClinicalTrials.gov and other trial registries. Code under the MIT licence ([`LIC
 - Card format and relation vocabulary (shared with the knowledge graph): [`docs/spec/hypothesis-card-spec.md`](docs/spec/hypothesis-card-spec.md); the ranking method (ASPID / SMAA): [`docs/spec/aggregation-spec.md`](docs/spec/aggregation-spec.md); data sources: [`docs/spec/data-sources.md`](docs/spec/data-sources.md)
 - Commands (tests, runs, reports, tools): [`docs/commands.md`](docs/commands.md)
 - Deferred work: [`docs/backlog.md`](docs/backlog.md); changes by stage: [`docs/system/changelog.md`](docs/system/changelog.md)
-- Archive (method v2, earlier v3 rules, old hand-offs and drafts): [`docs/archive/`](docs/archive/README.md)
+- Calculations of the checks, by stage: [`scripts/`](scripts/README.md)
+- Archive (method v2, earlier v3 rules, hand-offs, drafts, old code and agent tasks): [`archive/`](archive/README.md)
 
 Quick start: `pip install -e . pytest && python -m pytest tests/`.

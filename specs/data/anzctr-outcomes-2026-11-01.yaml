@@ -1,4 +1,4 @@
-# Outcome labels for ANZCTR hypotheses (scripts/anzctr_outcomes.py). Fixed 2026-11-01 before any outcome document was read.
+# Outcome labels for ANZCTR hypotheses (scripts/data/anzctr_outcomes.py). Fixed 2026-11-01 before any outcome document was read.
 # Same method as specs/data/ntr-outcomes-2026-11-01.yaml unless stated here.
 id: anzctr-outcomes-2026-11-01
 source: "ANZCTR (Australia / New Zealand, WHO primary registry). The site answers 403 to automated requests from this environment, so the record pages were saved by the user in a browser (MHTML) for the 59 ACTRN ids found in PubMed result papers on aging (longevity-kg/hypothesis_sources/anzctr_ids_from_pubmed.txt); the user skipped most records marked retrospective, one link did not open; pages kept in longevity-kg/hypothesis_sources/anzctr_pages/"

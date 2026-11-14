@@ -103,7 +103,7 @@ asked. Validation status is in section 12.
   summary, description, design (allocation, model, masking and who is masked, purpose), arms with their type and
   description, the planned enrollment (only while the registry gives it as planned: an actual count is written after
   recruitment and would carry information from after T), primary outcomes. The text builder is
-  [`scripts/benchmark_run.py`](../scripts/benchmark_run.py) (`build_texts`); the lines and what each becomes in the card are
+  [`scripts/whole_system/benchmark_run.py`](../scripts/whole_system/benchmark_run.py) (`build_texts`); the lines and what each becomes in the card are
   listed in the [card manual](system/card.md#4-как-поля-реестра-попадают-в-карточку).
 
 ## 3. The card
@@ -288,7 +288,7 @@ ranked). Nothing else filters: an undeveloped but promising hypothesis keeps its
 - **Coverage**: the share of the chain's places with at least one counting record. It says how much is known; the balance
   says how strong it is. The report shows it under the balance ("покрыто 3 из 4") and the chain with its empty links.
 - **Non-refutation P** and the **support share** are still computed by the code for older reports but are in no profile;
-  definitions in [`archive/method-history.md`](archive/method-history.md).
+  definitions in [`archive/method-history.md`](../archive/docs/method-history.md).
 - **Scope W**, from supported links only: a hallmark of ageing (needs a link at least moderate), an organ or system, else
   local. A scope that is claimed but not supported counts as local. A hallmark is the link's own object (a measured hallmark
   process: senescent cells, proteostasis markers, mitochondrial function), not something inferred from the kind of

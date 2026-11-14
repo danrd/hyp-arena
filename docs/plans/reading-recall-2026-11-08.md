@@ -46,7 +46,7 @@ The search is not the bottleneck. Two reading steps are:
 2. Should the split reader (Gemini re-labels the context; κ 0.40 vs 0.13) be run on both pools now (about 1.8 USD) and
    checked on R2 / R3, or wait until cross-link reading is settled, since both change the records?
 
-## Diagnostics (free, done 2026-11-08; `scripts/reading_recall.py` -> calibration/reading_recall.json)
+## Diagnostics (free, done 2026-11-08; `scripts/reading/reading_recall.py` -> calibration/reading_recall.json)
 
 **Why papers read for their own link leave no record** (169 key papers of pack 8):
 

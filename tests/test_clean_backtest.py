@@ -3,7 +3,7 @@ import json
 import pytest
 
 from hyparena.card.models import HypothesisCard
-from scripts import clean_backtest as cb
+from scripts.whole_system import clean_backtest as cb
 
 POOL = "data/backtest/outcomes_2024-12-31.json"
 

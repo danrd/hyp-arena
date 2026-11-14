@@ -1,6 +1,6 @@
 id: prospective-2026-11-06
 frozen_on: '2026-11-06'
-what: scores of 60 ongoing trials (scripts/prospective.py), before any outcome exists
+what: scores of 60 ongoing trials (scripts/whole_system/prospective.py), before any outcome exists
 method: 'v3 run (configs/v3-flash-n10.yaml: normalize_card/v10, verify_claim/v9) scored
   with rules_v32, fold=True (P with a 90% interval, I, V = P x I, scope) and the ASPID
   trial profiles'

@@ -89,7 +89,7 @@ amendment_before_use:
     the gain is multiplied by the mean support of the other slots (0 for a one-slot chain). Seen: correlations and separation
     only, no outcome.
 
-result:   # scripts/v34_check.py -> calibration/v34_check.json; 127 units passing the gate (72 calibration + 55 prospective)
+result:   # scripts/common/v34_check.py -> calibration/v34_check.json; 127 units passing the gate (72 calibration + 55 prospective)
   auc_calibration: {P_v33: 0.589, P_v34: 0.584, support_share_v34: 0.535, N: 0.508, literature_density: 0.494}   # exploration
   P_v34: "1.0 for 67% of units (nothing against); |rho| with against_share 0.87 -> against_share left every profile"
   N: {levels: {analog: 50, new_context: 25, new_combination: 5, translation: 3, new_link: 1}, unknown: 43, top_share: 0.595,

@@ -1,4 +1,4 @@
-# Outcome labels for the Netherlands Trial Register (NTR, now onderzoekmetmensen.nl) hypotheses (scripts/ntr_outcomes.py).
+# Outcome labels for the Netherlands Trial Register (NTR, now onderzoekmetmensen.nl) hypotheses (scripts/data/ntr_outcomes.py).
 # Fixed 2026-11-01 before any outcome document was read. Same method as specs/data/drks-outcomes-2026-11-01.yaml unless stated here.
 id: ntr-outcomes-2026-11-01
 source: "NTR (WHO primary registry data provider via onderzoekmetmensen.nl); record lookup by trial id (search?trial_id=) and the public XML API /nl/api/v1/trial/<node>"

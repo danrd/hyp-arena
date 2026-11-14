@@ -1,6 +1,6 @@
 """Golden snapshot of the ITP-2010 backtest: one row per tested regimen (status of the main claim, place under the
 `evidence_first` profile, expectation, P(top-k)), written from the site bundle that `site.export_itp` builds from the
-saved runs. No model calls. A change in the snapshot must be recorded in docs/itp_2010_changes_after_first_run.csv
+saved runs. No model calls. A change in the snapshot must be recorded in archive/docs/itp_2010_changes_after_first_run.csv
 (`tests/test_snapshot.py` compares the two)."""
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ import math
 from pathlib import Path
 
 SNAPSHOT = Path("tests/fixtures/itp2010_snapshot.csv")
-CHANGES = Path("docs/itp_2010_changes_after_first_run.csv")
+CHANGES = Path("archive/docs/itp_2010_changes_after_first_run.csv")
 PROFILE = "evidence_first"
 FIELDS = ["id", "compound", "dose", "start", "later_label", "outcome", "main_status", "place", "expected", "p_topk"]
 

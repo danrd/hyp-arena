@@ -24,7 +24,7 @@ caveat: >-
 decision: >-
   worth switching when the context kappa rises by at least 0.15 over both DeepSeek readings with coverage, design and n not
   worse by more than 0.05, and the user accepts the price multiple
-result:   # 2026-11-08; prospective/reader_gemini.json, calibration/reader_model.json; python -m scripts.reader_model score
+result:   # 2026-11-08; prospective/reader_gemini.json, calibration/reader_model.json; python -m scripts.reading.reader_model score
   run: "28 of the 30 claims read (two had no search log), 362 k tokens in, 26 k out: 0.78 USD at list price (about 0.028 USD per claim vs 0.0025 for DeepSeek: 11x)"
   argon_labelled_records: 97
   deepseek_original: {coverage: 1.00, context_kappa: 0.13, design: 0.95, n: 0.90}   # coverage 1 by construction (the pack was sampled from this reading)

@@ -1,6 +1,6 @@
 import json
 
-from scripts.extraction_gold_v3 import baselines, measure, record_for
+from scripts.reading.extraction_gold_v3 import baselines, measure, record_for
 
 SOURCE = ("Exercise in old age. Sixty-six healthy older adults were randomised to training or control. "
           "Grip strength rose by 2.4 kg (p = 0.01) after training.")
@@ -61,7 +61,7 @@ def test_review_keeps_design_review():
 
 
 def test_measure_v3_relevance_and_baselines():
-    from scripts.extraction_gold_v3 import measure_v3
+    from scripts.reading.extraction_gold_v3 import measure_v3
     g = {"design": "rct", "comparison": "between_groups", "n_total": 66, "effect_class": "medium", "effect_reported": "2.4 kg"}
     gold = [{"pair_id": "a", "relevant": True, **g}, {"pair_id": "b", "relevant": False}, {"pair_id": "c", "relevant": False}]
     pred = {"a": record_for([_reply()], "1", SOURCE), "b": record_for([_reply(stance="neither")], "1", SOURCE), "c": None}
@@ -97,7 +97,7 @@ def test_record_for_applies_saved_relevance_answers():
 
 def test_rescore_v3_counts_no_stance_records_only_in_the_sensitivity(monkeypatch):
     from hyparena.card import rules_v3
-    from scripts.calibration import rescore_v3
+    from scripts.whole_system.calibration import rescore_v3
     seen = []
     monkeypatch.setattr(rules_v3, "evaluate", lambda card, claims, alts, variant="v3": seen.append([len(c.evidence) for c in claims])
                         or type("R", (), {"as_dict": lambda self: {"P": 0.5}})())

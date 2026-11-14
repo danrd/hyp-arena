@@ -1,4 +1,4 @@
-from scripts.ctgov_flags import overlap, posted_primary, sentences_with_hits, words
+from scripts.data.ctgov_flags import overlap, posted_primary, sentences_with_hits, words
 
 
 def test_phrases_hit_own_result_and_skip_plans():

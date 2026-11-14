@@ -29,7 +29,7 @@ reading:
   missed_refutations: "links Argon calls refuted (moderate or strong) that we score above +0.33 are listed one by one: they are the dangerous errors"
   recall: "if fewer than half of Argon's key PMIDs are among our records, the search is the bottleneck of the balance too"
   note: "Argon is a second reader with its own knowledge, generous on support in pack 6; decisions go to the user"
-result:   # Argon pack 8 answer 2026-11-08 (longevity-kg reviews/argon-2026-11-08/pack_8_answer.json); python -m scripts.pack8_analysis
+result:   # Argon pack 8 answer 2026-11-08 (longevity-kg reviews/argon-2026-11-08/pack_8_answer.json); python -m scripts.argon.pack8_analysis
   verdicts: "Argon: supported 106, mixed 36, refuted 5, no evidence 3 of 150 links"
   link: "Spearman of our 2S - 1 with Argon's signed score 0.24; sign agreement 0.41; ours 0 -> Argon supported 56, ours negative -> Argon supported 12"
   trial: "Spearman of the evidence balance 0.39; mean balance ours 0.08, Argon 0.45"
@@ -62,7 +62,7 @@ pilot_crosslink:   # user decision 2026-11-08 ("run", about 0.9 USD); written be
   decision: >-
     go to both pools in full (then R2 / R3 under the 0.03 rule) when recall at least doubles and the link Spearman with
     pack 8 rises by more than the gap between the two v9 readings
-pilot_crosslink_result:   # 2026-11-08; prospective/pilot_crosslink.json, calibration/pilot_crosslink.json; python -m scripts.pilot_crosslink score
+pilot_crosslink_result:   # 2026-11-08; prospective/pilot_crosslink.json, calibration/pilot_crosslink.json; python -m scripts.reading.pilot_crosslink score
   run: "102 links of 30 trials, 57.4 papers read per link; DeepSeek 4.46 M in / 0.29 M out, Gemini 0.26 M / 0.01 M: 1.34 USD (named about 0.9: the union was larger than estimated)"
   same_30_trials:   # recall of pack-8 key papers on their link / link Spearman / trial Spearman / counting papers per link / mean balance
     original:              "0.16 (53/327) / 0.19 / 0.44 / 1.9 / -0.03"

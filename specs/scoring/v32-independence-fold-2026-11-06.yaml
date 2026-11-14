@@ -21,6 +21,6 @@ result:
   verdict: adopted for the prospective pilot (no AUC drop). All 4 changed links are several records of one paper on one
     side (the record_id key); no two papers on these links share a trial id.
   correction: >-
-    the OHF probe (scripts/ohf_probe.py) reported 15 of 48 links with records sharing a trial; it counted links where one
+    the OHF probe (scripts/scoring/ohf_probe.py) reported 15 of 48 links with records sharing a trial; it counted links where one
     paper gives several records (a PMID listed twice). With unique PMIDs: 0 of 45 links with several papers. Fixed in the
     probe, method-v3.md section 13 and KB Working_Notes.

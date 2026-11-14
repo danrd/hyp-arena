@@ -63,7 +63,7 @@ result:   # 2026-11-09 10:22-10:45 UTC off-peak; prospective/test_model_{dev,hol
     hand review a draw). It stays a report-only description (arms, criteria, add_arm). Rigour does not enter I in either form
     for now: its effect on agreement is not stable between dev and holdout, and on outcomes R runs the other way (AUC 0.43)
     as expected. The choice between I_a and I_b is moot until rigour is adopted; both columns are above.
-fixcheck_2026_11_09:   # user request "проверь"; free, saved v2 answers; scripts/test_model_fixcheck.py
+fixcheck_2026_11_09:   # user request "проверь"; free, saved v2 answers; scripts/reading/test_model_fixcheck.py
   rule: "a proposed competitor whose claim names a checklist kind (natural course, expectation, practice, attention, selection, co-intervention) inherits that row's held_equal and cells"
   kappa: "dev 0.28 -> 0.28, holdout 0.19 -> 0.20 (judge 0.40 / 0.27)"
   five_known_errors: >-

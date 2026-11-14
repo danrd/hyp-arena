@@ -24,7 +24,7 @@ reading: >-
   if a fifth or more of the meta-analyses are low or very low certainty, the design weight of a meta-analysis should follow
   its certainty (GRADE), to be tested on R2 / R3; if a fifth or more of the nulls are underpowered, the power weight of
   nulls (v3.5) is checked against the full-text sample size calculations
-result:   # Argon pack 12 answer 2026-11-09 (longevity-kg reviews/argon-2026-11-08/pack_12_answer.json); python -m scripts.pack12_analysis
+result:   # Argon pack 12 answer 2026-11-09 (longevity-kg reviews/argon-2026-11-08/pack_12_answer.json); python -m scripts.argon.pack12_analysis
   meta_analyses_for: >-
     18 of 20 read; the abstract overstates in 17 (the reader is generous: 'other' 14; of the named kinds high heterogeneity 9,
     a subgroup 8, the claim's outcome not pooled 7, low certainty not in the abstract 4, small-study bias 3); GRADE reported

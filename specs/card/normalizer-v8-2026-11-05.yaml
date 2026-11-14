@@ -2,7 +2,7 @@
 # normalizer first; the v3 calibration showed it, not the rules, to be the limit: specs/whole-system/calibration-v3-2026-11-05.yaml).
 id: normalizer-v8
 date: 2026-11-05
-code: scripts/normalizer_v8_check.py
+code: scripts/card/normalizer_v8_check.py
 prompt: "normalize_card/v8 = v7 + (1) a verb-to-relation map, 'other' only for claims that are not about an effect or association; (2) a reason stated as background or hedged is a mechanism step; (3) parallel outcomes are outcome links (one primary), not effect links. Examples in the new rules are invented (an earlier draft used phrases of these texts: removed before the call)"
 config: configs/v3-flash.yaml   # Gemini 3.5 Flash, thinking minimal, temperature 0
 gold: "hand label (Claude, 2026-11-05, before the call): 12 of 30 summaries state a reason or mechanism (MECHANISM_STATED in the script)"

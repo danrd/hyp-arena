@@ -22,7 +22,7 @@ measures:
   skipped: "Argon's findings the reading did not mention at all (from the saved replies where available)"
 reading:
   note: "Argon is a second reader, not a gold standard; with recall below 0.6 on this gold the reader is the bottleneck, as pack 8 suggested"
-result:   # Argon pack 9 answer 2026-11-08 (longevity-kg reviews/argon-2026-11-08/pack_9_answer.json); python -m scripts.pack9_analysis
+result:   # Argon pack 9 answer 2026-11-08 (longevity-kg reviews/argon-2026-11-08/pack_9_answer.json); python -m scripts.argon.pack9_analysis
   gold: "200 pairs on 10 links: own finding on the claim in 21 (for 15, against 6); 179 none (reviews without a result, other outcomes, other interventions)"
   original:  {recall: "8/21 = 0.38", precision: "8/16 = 0.50", stance: "8/8"}
   second_v9: {recall: "9/21 = 0.43", precision: "9/18 = 0.50", stance: "9/9"}

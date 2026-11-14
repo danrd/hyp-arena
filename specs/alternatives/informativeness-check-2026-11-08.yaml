@@ -41,7 +41,7 @@ reading:
   I_unreproducible: "Spearman of our I with (ii) below 0.5: I does not survive a second reader"
   generator_gaps: "recall of missing supported alternatives in half the trials or more: propose_alternatives misses the main competitors"
   note: "Argon is a second reader, not a gold standard; decisions go to the user"
-result:   # Argon pack 6 answer 2026-11-08 (longevity-kg reviews/argon-2026-11-08/pack_6_answer.json); python -m scripts.pack6_analysis
+result:   # Argon pack 6 answer 2026-11-08 (longevity-kg reviews/argon-2026-11-08/pack_6_answer.json); python -m scripts.argon.pack6_analysis
   coverage: "59 trials, 293 alternatives, all answered"
   d: >-
     weighted kappa 0.07 (threshold 0.4): our d is not reproduced. The disagreement is one-sided: Argon calls 124 alternatives
@@ -85,7 +85,7 @@ fix_d:   # user decision 2026-11-08 ("do 1-4"); written before any call
     Argon's missing alternatives (pack 6) are covered, judged by hand by Claude on the holdout trials. The support a of
     new alternatives needs the verifier (search + verify), priced separately before it runs.
   cost: "judge about 0.02-0.05 USD for 59 calls; propose v2 about 0.05-0.1 USD (DeepSeek V4.1 Flash 0.15 / 0.60 USD per million tokens, off-peak)"
-fix_d_result:   # 2026-11-08; prospective/judge_alternatives_<part>_<version>.json; python -m scripts.judge_alternatives score
+fix_d_result:   # 2026-11-08; prospective/judge_alternatives_<part>_<version>.json; python -m scripts.alternatives.judge_alternatives score
   dev_v1: "weighted kappa 0.22 (old d on the same trials 0.14); 16 eliminated; main gap: ours weakened where Argon eliminated (45 of 143)"
   revision: >-
     one revision on dev numbers only: judge_alternatives/v2 makes the model write what the hypothesis and the alternative
@@ -107,11 +107,11 @@ fix_step2_result:   # 2026-11-08; prospective/alternatives_v2_holdout.json, alte
 adopted_judged_d:   # user decision 2026-11-08 ("item 1: adopt the judge of d and recompute I and the room")
   code: >-
     hyparena/card/alternatives_d.py: the d of judge_alternatives/v2 replaces on_positive / on_negative where saved runs are
-    read (scripts.v34_check.parts(it, unit_id), scripts.ablation.units, scripts.prospective.score, the report builder);
+    read (scripts.common.v34_check.parts(it, unit_id), scripts.common.ablation.units, scripts.whole_system.prospective.score, the report builder);
     JUDGED_D=0 reproduces earlier numbers. Calibration pool judged: 73 units, 0.045 USD; prospective: the dev + holdout runs
   prospective: "I mean 0.164 -> 0.325, I > 0 in 29 -> 42 trials; ASPID order Spearman 0.936 / 0.982 / 0.965 (evidence / funding / frontier), top 10 kept 7 / 10 / 8"
   room: "mean room to improve 0.147 -> 0.110 (evidence), 0.057 -> 0.047 (funding), 0.072 -> 0.056 (frontier): many experiments already cut off alternatives, so 'an experiment that rules them out' gains less"
-i_recalibration:   # item 3 of 2026-11-08; scripts/i_recalibration.py -> calibration/i_recalibration.json (73 calibration units, v3.6)
+i_recalibration:   # item 3 of 2026-11-08; scripts/alternatives/i_recalibration.py -> calibration/i_recalibration.json (73 calibration units, v3.6)
   proposer_d: {I_auc: 0.442, I_positive_share: 0.556, I_mean: 0.184, evidence: {all: 0.558, without_I: 0.564}, funding: {all: 0.601, without_I: 0.609}, frontier: {all: 0.570, without_I: 0.579}}
   judged_d: {I_auc: 0.509, I_positive_share: 0.764, I_mean: 0.348, evidence: {all: 0.570, without_I: 0.564}, funding: {all: 0.610, without_I: 0.609}, frontier: {all: 0.585, without_I: 0.579}}
   reading: >-
@@ -130,7 +130,7 @@ cap_check:   # user request 2026-11-08 ("check the 1.5"); written before computi
     the cap only matters through saturation: a cap that sends many hypotheses to I = 1 throws away order. Prefer the cap
     with the highest agreement with the outside reader at little saturation; change it only if it beats 1.5 by more than
     0.05 on the outside Spearman (the order-only 'no cap' is the ceiling of what any cap can give)
-cap_check_result:   # scripts/i_cap_check.py -> calibration/i_cap_check.json
+cap_check_result:   # scripts/alternatives/i_cap_check.py -> calibration/i_cap_check.json
   table:   # cap: share I=1 / Spearman with I from Argon's d (our a) / ASPID ranks vs 1.5 (rho evidence, funding, frontier; top 10 kept) / calibration AUC of I and of the profiles
     "0.5":  "0.41 / 0.719 / 0.955, 0.983, 0.979; 8, 9, 10 / I 0.511; 0.557, 0.595, 0.558"
     "0.75": "0.29 / 0.790 / 0.976, 0.989, 0.985; 9, 9, 10 / I 0.512; 0.559, 0.598, 0.569"

@@ -3,7 +3,7 @@ written_on: 2026-11-12
 status: definitions fixed before Argon answers pack 17 and before any model call
 why: "Benchmark registry, stage 2 (the card): gold by Argon, no human labellers (leadership, 2026-11-12)."
 set:
-  pack_17: "60 texts (20 registry trials with a stated reason, 20 without, 20 hypotheses written with a mechanism: Bio Arena 12, ChatGPT set 8); registry texts as the current text builder writes them; holdout 18; longevity-kg reviews/argon-2026-11-12/pack_17{a,b}_task.json, key pack_17_key.json (scripts/pack17_card.py)"
+  pack_17: "60 texts (20 registry trials with a stated reason, 20 without, 20 hypotheses written with a mechanism: Bio Arena 12, ChatGPT set 8); registry texts as the current text builder writes them; holdout 18; longevity-kg reviews/argon-2026-11-12/pack_17{a,b}_task.json, key pack_17_key.json (scripts/argon/pack17_card.py)"
 gold: "Argon, from the text only (the weakest step may use the literature before T); no Claude labels"
 systems:
   ours: "normalize_card/v11, two parses united, code checks (method v3.9)"
@@ -21,9 +21,9 @@ intervals: "bootstrap over texts, 2000 resamples; groups and holdout separately"
 thresholds:
   ours_better: "ours above base_a on claim recall or precision with the 95% interval of the paired difference above 0, the other not lower by more than 0.05"
   link_types_usable: "kappa of the link type with Argon at least 0.4 (as in mechanism-chain-comparison); below it the typed chain is not reliable"
-cost: "dry run 2026-11-12 (scripts/bench_card.py dry): ours and ours_v12 about 4.8 USD each (216 calls), base_a about 0.8 USD; user's go"
+cost: "dry run 2026-11-12 (scripts/card/bench_card.py dry): ours and ours_v12 about 4.8 USD each (216 calls), base_a about 0.8 USD; user's go"
 scoring_check: "a run equal to the gold scores 1.0 on claims, steps, link kappa and comparator (2026-11-12, after fixing word splitting for Russian texts)"
-result:   # 2026-11-12 15:4x-16:3x UTC; scripts/bench_card.py run/score; longevity-kg reviews/argon-2026-11-12/bench_card_{ours_v13,base_a}.json, bench_card_score.json
+result:   # 2026-11-12 15:4x-16:3x UTC; scripts/card/bench_card.py run/score; longevity-kg reviews/argon-2026-11-12/bench_card_{ours_v13,base_a}.json, bench_card_score.json
   cost: "ours_v13 4.01 USD (231 calls: 120 passed in round 1, 72 in round 2, 39 in round 3), base_a 0.60 USD; two smoke texts of v13 before the run 0.13 USD (a template bug: role still required by the model, fixed)"
   ran: "ours_v13 and base_a only (user: 'make v13, run the benchmark'); v11 and v12 not run"
   claims:     {ours_v13: "recall 0.63 (104/166), precision 0.36 (104/287)", base_a: "recall 0.42, precision 0.50"}
@@ -43,7 +43,7 @@ result:   # 2026-11-12 15:4x-16:3x UTC; scripts/bench_card.py run/score; longevi
     intervention vs 0.36); comparator and design; core spans (one field unanchored in 60 cards); almost no invented steps.
     Level (0.48) is moderate: keep it as reference. Next: dedupe the union (match claims by span overlap, not by labels), then
     re-score without new calls on the saved cards; the link-type disagreements by kind.
-follow_up:   # 2026-11-12, free, on the saved v13 cards (scripts/bench_card.py dedup, score)
+follow_up:   # 2026-11-12, free, on the saved v13 cards (scripts/card/bench_card.py dedup, score)
   dedup: "normalizer.dedupe_claims (same link, targets and subjects sharing half of the shorter's words) removes 45 of 287 claims: recall 0.63 -> 0.61, precision 0.36 -> 0.42 (base 0.50), link kappa 0.33, stated_as 0.84, level 0.49; in the code for v13 from now (after the union)"
   precision_gap: >-
     Of our 140 unmatched claims 71 repeat the phrase of a gold claim they did not take one-to-one: our card splits what Argon
@@ -57,7 +57,7 @@ follow_up:   # 2026-11-12, free, on the saved v13 cards (scripts/bench_card.py d
   next: "prompt fix (a known step on the way keeps its link; effect = a state of a tissue or organ, pathway = a molecular or cellular process, using the level) and a re-run of v13 on the 60 texts (about 4 USD), user's go"
 post_hoc_measure:   # added 2026-11-12 AFTER the first run; a diagnosis of granularity, not the measure the rule was written for
   why: "pack 17 did not tell Argon the manual's atomic rule (one relation, one claim); Argon often wrote several outcome measures as one claim, our card one claim each"
-  definition: "many-to-one: a system claim is right when its phrase shares half of the shorter one's words with some gold claim; a gold claim is found when at least one system claim does (scripts/bench_card.py _m2o)"
+  definition: "many-to-one: a system claim is right when its phrase shares half of the shorter one's words with some gold claim; a gold claim is found when at least one system claim does (scripts/card/bench_card.py _m2o)"
   result: {ours_v13: "recall 0.64, precision 0.74", ours_v13_dedup: "0.63 / 0.72", base_a: "0.45 / 0.72", paired_v13_minus_base: "recall +0.19 [0.12, 0.27], precision +0.02 [-0.07, 0.12]"}
   weak_group: "registry texts with a stated reason: ours precision 0.56 vs base 0.67 (the steps: known ones off the chain, effect / pathway)"
   rule_reading: "the rule as written (one-to-one) is not met; under the post-hoc measure ours is higher on recall and not lower on precision. The decision on v13 / v14 stays with the user; future packs state the atomic rule"
@@ -66,32 +66,32 @@ prompt_fix:
   known_steps_without_link: "v13: 37 of 287 claims (33 after dedupe); base_a: 0"
 part_2_non_registry:   # 2026-11-13
   why: "the hypothesis database is mostly not registry trials (Bio Arena 985, ChatGPT 27 - in Russian); pack 17 had 20 such texts, all scored with registry-style definitions"
-  set: "Argon pack 19: 30 texts not in pack 17 - Bio Arena 12 (at most 3 per author), ChatGPT 10, our evolved versions 8; holdout 9 (scripts/pack19_card.py; longevity-kg reviews/argon-2026-11-13/)"
+  set: "Argon pack 19: 30 texts not in pack 17 - Bio Arena 12 (at most 3 per author), ChatGPT 10, our evolved versions 8; holdout 9 (scripts/argon/pack19_card.py; longevity-kg reviews/argon-2026-11-13/)"
   gold: "card_gold_v2: hypothesis kind and main factor, topic, population with condition and age as stated, outcomes first (one measure each), intervention chain vs premises about the problem (population state, problem mechanism), link types as in docs/system/card.md, test manipulations in the experiment arms, labels in English"
   measures: "as part 1 (claims one-to-one and many-to-one, link kappa) plus: main factor right, chain / premise agreement, outcome agreement, population condition found"
   status: "gold received 2026-11-13 (30 texts, 134 claims, all phrases verbatim); scored after the next normaliser template"
-link_ontology_check_2026_11_13:   # scripts/link_ontology_check.py (free, PubMed term mapping and MeSH trees); longevity-kg reviews/argon-2026-11-12/link_ontology_check.json
+link_ontology_check_2026_11_13:   # scripts/card/link_ontology_check.py (free, PubMed term mapping and MeSH trees); longevity-kg reviews/argon-2026-11-12/link_ontology_check.json
   set: "102 claim pairs where our v13 card and pack 17 gold match by phrase; gold population_state and none = premise (off the chain)"
   result: {llm: "kappa 0.37 (outcome 40/45, pathway 11/30, effect 0/8, engagement 1/5, premise 5/13)", premise_rule: "kappa 0.41 (premise 11/13, pathway 7/30)", ontology: "kappa 0.34 (pathway 3/30, effect 1/8); 31 of 38 steps mapped"}
   without_outcome: "kappa on the middle links about 0 for every variant"
   reading: "the premise rule helps (premises 5 -> 11 of 13) but drops pathways where the chain's subject is the cause of a mechanistic hypothesis, not an intervention: the rule must use the hypothesis's main factor; the MeSH head-term level is worse than the model (the head term of a phrase is often a place or a mis-mapped word: 'TCA cycle activity' -> Exercise, 'BDNF in hippocampus' -> Hippocampus); agreement on the middle links is near chance for all, so the gold itself (loose definitions of pack 17) limits the measure: pack 19 gives a gold under the new definitions"
 relabel_pack_20:   # 2026-11-13
   why: "agreement on the middle links (engagement, pathway, effect) is near chance for the model, the premise rule and the ontology alike: the gold of pack 17 (loose definitions) limits the measure"
-  set: "Argon pack 20: the 60 texts of pack 17 unchanged, new ids and order, card_gold_v2 instructions with the registry rules (scripts/pack20_relabel.py)"
+  set: "Argon pack 20: the 60 texts of pack 17 unchanged, new ids and order, card_gold_v2 instructions with the registry rules (scripts/argon/pack20_relabel.py)"
   measures: "the card measures of part 1 against the new gold; Argon pack 17 against pack 20 on the same texts (kappa of the link type, chain / premise): how much the definitions change the labels"
   status: "gold received 2026-11-13 (60 texts, 225 claims, all 843 phrases verbatim)"
   result: {argon_old_vs_new: "kappa 0.53; old pathways kept 7 of 34 (16 -> premise, 9 -> outcome), engagements 0 of 9, outcomes 52/54, premises 24/25", ours_v13_vs_new_gold: "kappa 0.50, without outcomes 0.32 (old gold: 0.37 and about 0); main errors premise -> pathway 12, outcome -> pathway or effect 13; claims one-to-one recall 0.54, precision 0.50"}
   reading: "the old gold's middle links were the problem as much as the model: under the new definitions the outside reader is consistent with the levels and our saved cards agree better; the rules of the card manual target the two remaining errors"
 normaliser_v15:   # 2026-11-13
   template: "hyparena/prompts/normalize_card/v15.j2; code: normalizer.v15_prepare, primary_from_registry, v15_problems, age_class (tests/test_normalizer_v15.py)"
-  run: "scripts/bench_card_v2.py on packs 19 and 20 (90 texts); dry run 7.9 USD (0.088 per text, Gemini Flash)"
+  run: "scripts/card/bench_card_v2.py on packs 19 and 20 (90 texts); dry run 7.9 USD (0.088 per text, Gemini Flash)"
   earlier_system_on_pack_20: {ours_v13: "claims 0.54 / 0.50 (many-to-one 0.57 / 0.76); link kappa 0.50, without outcomes 0.32; chain / premise 0.84; main outcome 0.55; population condition 0.45"}
   pass_rule: "v15 replaces v11 as the working card when, on pack 20, link kappa and main outcome are not lower than v13's and claim recall is not lower by more than 0.03; pack 19 reported apart (no earlier system)"
 pilot_v15_2026_11_13:   # 10 texts (P13 H86, P46 ChatGPT 27, P57 H49, P02, P03, P09, N01, N02, N04, N06); 0.80 USD
   all_10: "no card with problems left after the rounds; main factor 10/10, main outcome 0.9, population condition 0.8; link kappa 0.57; chain / premise 0.91"
   pack20_6_v15_vs_v13: "claims 0.58 / 0.61 vs 0.46 / 0.50; link kappa 0.62 vs 0.58; main outcome 6/6 vs 4/6; population condition 6/6 vs 3/6; chain / premise 1.0 vs 0.91"
   seen: "ChatGPT 27: the hypothesis's own steps extracted, main factor thymus rejuvenation, the test peptides in arms; H49: SPPB main, body composition parallel, pre-sarcopenia the condition, the prevalence a premise; arms written in Russian by one parse (check added); stability understated by near-duplicates (jaccard_after_dedupe added)"
-full_run_v15_2026_11_14:   # scripts/bench_card_v2.py run / score; longevity-kg reviews/argon-2026-11-13/bench_card_v2_ours_v15.json, bench_card_v2_score.json
+full_run_v15_2026_11_14:   # scripts/card/bench_card_v2.py run / score; longevity-kg reviews/argon-2026-11-13/bench_card_v2_ours_v15.json, bench_card_v2_score.json
   cost: "7.51 USD for 80 texts (estimate 6.4); 8.31 USD with the pilot; 390 calls"
   failed: "3 of 90 (P23, P33, P51): risks written as objects failed the schema; fixed in the model (risks as text), the 3 to re-run (about 0.25 USD)"
   all_87: "claims 0.57 / 0.56 (many-to-one 0.59 / 0.76); link kappa 0.63, without outcomes 0.52; chain / premise 0.87; main outcome 0.79; main factor 0.97; population condition 0.55"
@@ -101,8 +101,8 @@ full_run_v15_2026_11_14:   # scripts/bench_card_v2.py run / score; longevity-kg 
   measure_caveat: "claims are matched by phrase overlap: the same claim anchored to the Primary outcomes line by us and to the aims sentence by the gold does not match (P04: 10 outcome claims, recall 0) - recall is a lower bound"
   weak_texts: "substantive errors (main outcome or main factor wrong, two or more middle links wrong): N06 N08 N12 N14 N15 N20 N22 N25 N27 N28 N29 N30 P06 P20 P22 P30 P38 P43 P45 P52 P53 P55 (22) - the set for a stronger model"
 rerun_failures_2026_11_14: "P23, P33, P51 re-run after the risks fix (0.27 USD): all 90 cards; pack 20 (60): claims 0.533 / 0.553 vs v13 0.538 / 0.50, link kappa 0.69 vs 0.50, main outcome 0.83 vs 0.55 - the pass rule is met"
-strong_model_task: "the 22 weak texts as a task for an outside strong model (Hydrogen): scripts/hydrogen_card_pack.py; longevity-kg reviews/hydrogen-2026-11-14/"
-strong_model_hydrogen_2026_11_14:   # longevity-kg reviews/hydrogen-2026-11-14/card_score.json (scripts/hydrogen_card_pack.py score)
+strong_model_task: "the 22 weak texts as a task for an outside strong model (Hydrogen): scripts/argon/hydrogen_card_pack.py; longevity-kg reviews/hydrogen-2026-11-14/"
+strong_model_hydrogen_2026_11_14:   # longevity-kg reviews/hydrogen-2026-11-14/card_score.json (scripts/argon/hydrogen_card_pack.py score)
   set: "the 22 weak texts; the outside strong model got the v15 instructions for all texts at once, one pass, no code rounds and no union; its cards then went through our code steps"
   schema: "5 of 22 cards used level 'organelle' and failed the schema; the card model now reads organelle as cell and any other unknown level as empty"
   result_strong_vs_working: {claims: "0.71 / 0.61 vs 0.55 / 0.49", many_to_one: "0.74 / 0.76 vs 0.59 / 0.71", link_kappa: "0.53 vs 0.36", without_outcomes: "0.31 vs 0.14", chain_premise: "0.80 vs 0.73", main_outcome: "0.77 vs 0.18", main_factor: "1.0 vs 0.86", population_condition: "0.82 vs 0.41", engagement: "1/7 vs 1/7", pathway: "1/8 vs 0/6"}
@@ -116,7 +116,7 @@ weak_card_signals_2026_11_14:   # free, on the 90 v15 cards
   strong_model_by_kind: "on the 19 non-registry weak texts the strong model: main outcome 0.79 vs 0.21, outcome / step / premise kappa 0.56 vs 0.36, main factor 1.0 vs 0.84"
   reading: "route by text kind, not by code signals: registry texts on the working model, written hypotheses (Bio Arena, ChatGPT, generated, evolved) on a stronger model"
 condition_measure_fix_2026_11_14:
-  change: "scripts/bench_card_v2.py: age and species synonyms on one word before the word overlap (old / older / elderly / ageing -> aged; mice -> mouse; people -> human)"
+  change: "scripts/card/bench_card_v2.py: age and species synonyms on one word before the word overlap (old / older / elderly / ageing -> aged; mice -> mouse; people -> human)"
   result: "population condition v15: 0.54 -> 0.76 on 90 texts; on the 22 weak texts working model 0.41 -> 0.68, strong model 0.82 -> 0.95"
   misses_left: "22: real ones - condition unknown where the text names it (N12, N27, P45), a wrong state (P20 'mature skin barrier'); and a pattern - the card copies the registry Conditions line whole (P24: ten diseases; P41, P55, P29), while the gold writes who is selected ('seriously ill hospitalized patients', 'mobility-limited older adults with SPPB <= 9'): the template should take the selection state from the eligibility wording, not the Conditions list"
 two_parses_2026_11_14:   # free, the 90 v15 cards
@@ -124,9 +124,9 @@ two_parses_2026_11_14:   # free, the 90 v15 cards
   cost: "4.27 calls per card with two parses; one parse about half"
   reading: "the second parse adds recall (+0.04) and the main outcome (+0.045) at the cost of precision (-0.06) and about half of the calls; recall gain is just above the 0.03 rule"
 claim_matching_by_label_2026_11_14:
-  change: "scripts/bench_card_v2.py: claims matched by phrase, then the rest by the system claim's object and measure against the gold object (recall_phrase_or_label)"
+  change: "scripts/card/bench_card_v2.py: claims matched by phrase, then the rest by the system claim's object and measure against the gold object (recall_phrase_or_label)"
   result: "v15 90 texts: 0.71 / 0.69 (phrase only 0.57 / 0.56); pack 20 v15 0.67 / 0.70 vs v13 0.67 / 0.62; 22 weak: working model 0.71 / 0.63, strong 0.83 / 0.72; P04 0 -> 0.67"
-v16_registry40_2026_11_14:   # written BEFORE the run; CARD_VERSION=v16 scripts/bench_card_v2.py run --registry --runs 1
+v16_registry40_2026_11_14:   # written BEFORE the run; CARD_VERSION=v16 scripts/card/bench_card_v2.py run --registry --runs 1
   set: "the 40 registry trials of pack 20 (gold card_gold_v2); one parse (the working default); estimate 1.81 USD, cap MAX_USD 2.5"
   compared_with: "v15 first parse on the same 40 texts (one parse each; claims added by v15's second parse dropped): recall phrase-or-label 0.59, precision 0.79, outcome / step / premise kappa 0.644, main outcome 0.85, main factor 1.0, population condition 0.725; v15 union of two parses reported apart (0.63 / 0.72, kappa 0.655, main outcome 0.925)"
   pass_rule: "v16 replaces v11 as the working card (through the manual) when outcome / step / premise kappa and main outcome are not lower than v15 first parse's and recall phrase-or-label is not lower by more than 0.03; failed cards counted as empty"
@@ -138,7 +138,7 @@ v16_registry40_2026_11_14:   # written BEFORE the run; CARD_VERSION=v16 scripts/
   pass_rule_reading: "met: kappa 0.657 >= 0.644, main outcome 0.925 >= 0.85, recall +0.04; precision lower (0.71 vs 0.79), as the two-parse union of v15; population condition +0.23 (selection state from the eligibility wording). v16 is the working card (configs/v3-flash-n10.yaml, normalize_version: v16)"
   found: "design left unknown in 8 of 40 although 6 of them have a randomized Design line (P57 = H49): the design is now taken from the registry line by code (normalizer.design_from_registry); 'reads as a result' false on all 40, the gold marks one (P13 = H86, title 'Supplementation ... Increases Muscle Mass'): one case, no rate; the code flag written_after_completion stays the measure"
   extension: "not run: the 50 non-registry texts wait for the routing decision (written hypotheses on a stronger model)"
-v17_all90_2026_11_14:   # written BEFORE the run; CARD_VERSION=v17 scripts/bench_card_v2.py run --runs 1
+v17_all90_2026_11_14:   # written BEFORE the run; CARD_VERSION=v17 scripts/card/bench_card_v2.py run --runs 1
   set: "all 90 texts of packs 19 and 20, one parse; estimate 4.1 USD, cap MAX_USD 5"
   compared_with: "the 40 registry texts: v16 one parse (recall phrase-or-label 0.634, kappa 0.657, main outcome 0.925); the 50 other texts: v15 first parse (computed by score before the run is read)"
   pass_rule: "v17 replaces v16 as the working card when, on the 40 registry texts, outcome / step / premise kappa and main outcome are not lower than v16's by more than 0.03 and recall phrase-or-label is not lower by more than 0.03 (run-to-run noise of one parse is of this size); failed cards counted as empty; the 50 other texts are reported, with the same three measures against v15 first parse, and do not decide"

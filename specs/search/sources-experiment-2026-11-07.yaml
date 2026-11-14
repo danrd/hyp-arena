@@ -24,7 +24,7 @@ decision_rule: >-
   an arm is worth adopting if it raises recall or field accuracy by at least 10 points, or the share with a numeric effect
   by at least 15 points, at a cost below 3x of A; downstream AUC is reported but not used to decide (too few units).
 
-result_arm_C_and_gold:   # scripts/argon_check.py -> calibration/argon_pack3_check.json; Argon's answers in longevity-kg reviews/argon-2026-11-07/task_cd.json
+result_arm_C_and_gold:   # scripts/argon/argon_check.py -> calibration/argon_pack3_check.json; Argon's answers in longevity-kg reviews/argon-2026-11-07/task_cd.json
   recheck: {items: 222, pmid_exists: 222, quote_verbatim: 213, before_cutoff: 222}   # 96% of quotes verbatim (abstract or PMC full text)
   gold_vs_our_extraction_86_records:
     stance: "72 agree; 9 ours for -> Argon not about the link; 5 ours against -> Argon for"
@@ -55,7 +55,7 @@ fixes_2026_11_08:   # user decision: fix the intervention match and the numeric 
     exact); the effect phrase must not be empty when the abstract gives any number. configs/v3-flash-n11*.yaml use it. Not
     run yet: checked by the rerun of arm A (paid, price before the run).
 
-result_arm_A_2026_11_08:   # v10 prompt + exact-population query, 15 units, same frozen cards; scripts/sources_compare.py
+result_arm_A_2026_11_08:   # v10 prompt + exact-population query, 15 units, same frozen cards; scripts/search/sources_compare.py
   link_paper_pairs: {old_v9: 63, arm_A: 63}
   argon_graph_pairs_found: {old_v9: "44 of 128", arm_A: "23 of 128"}
   argon_graph_papers_on_outcome_link: {old_v9: "27 of 73", arm_A: "10 of 73"}
@@ -80,7 +80,7 @@ graph_v36_2026_11_08:   # user decision 2026-11-08 (item 3), written before comp
   reading: >-
     exploration: 15 trials and a few dozen R2 targets; the question is whether a fuller literature makes the balance a better
     predictor of later trials of the same link (R2), the reference the record weight was chosen on, not the trial outcome
-graph_v36_result:   # scripts/graph_r2.py -> calibration/graph_r2.json
+graph_v36_result:   # scripts/search/graph_r2.py -> calibration/graph_r2.json
   ours:  {records: 68,  R2: 0.757, R2_targets: 22, against_targets: 4,  balance_auc_15: 0.634}
   graph: {records: 128, R2: 0.542, R2_targets: 49, against_targets: 9,  balance_auc_15: 0.661}
   union: {records: 147, R2: 0.619, R2_targets: 61, against_targets: 13, balance_auc_15: 0.661}

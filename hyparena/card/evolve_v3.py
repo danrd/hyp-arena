@@ -113,7 +113,7 @@ NEW_AFTER = 0.7
 
 def endpoint(client, text: str) -> Optional[str]:
     """The endpoint category of a text by two families (as specs/scoring/estimand-2026-11-06.yaml); None when they disagree."""
-    from scripts import estimand_check as ec
+    from scripts.scoring import estimand_check as ec
     vals = set()
     for fam in ec.FAMILIES:
         value, _ = ask(client, role="verify_claim", family=fam, template="estimand", version="v1", variables={"text": text},
@@ -294,7 +294,7 @@ def main() -> None:
     ap.add_argument("--items", default="rewrite", help="'rewrite' (all fixable items) or item ids, e.g. i1,i3")
     ap.add_argument("--config", default="configs/v3-flash-n10.yaml")
     a = ap.parse_args()
-    from scripts.prospective import OUT
+    from scripts.whole_system.prospective import OUT
     run = json.loads((OUT / f"run_{a.n}.json").read_text())
     sf = OUT / f"scores_{a.n}_v34.json"
     scores = json.loads((sf if sf.exists() else OUT / f"scores_{a.n}.json").read_text())

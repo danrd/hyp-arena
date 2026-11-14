@@ -1,5 +1,5 @@
-from scripts.style_check import tau, verdict as style_verdict
-from scripts.verifier_agreement import kappa, verdict as agree_verdict
+from scripts.card.style_check import tau, verdict as style_verdict
+from scripts.reading.verifier_agreement import kappa, verdict as agree_verdict
 
 
 def test_style_verdict_passes_only_if_every_pair_is_within_the_repeat_minus_the_tolerance():

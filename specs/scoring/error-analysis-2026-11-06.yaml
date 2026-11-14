@@ -7,7 +7,7 @@ why: >-
 caution: >-
   these samples were used to build v3 / v3.1 / v3.2; nothing here is a test. A change suggested here is written as a rule
   and tested on the frozen benchmark (237 hypotheses, thresholds set before)
-script: scripts/error_analysis.py (no model calls; PubMed counts cached)
+script: scripts/scoring/error_analysis.py (no model calls; PubMed counts cached)
 result:
   units: 74 (63 scored; 11 not: unparsed / needs_refinement, all from the older normaliser of steps 1-3)
   labels_scored: {positive: 30, null: 33}
@@ -36,7 +36,7 @@ result:
     units. Found here, so not evidence; to be registered as a secondary score for the benchmark before its run
 
 # Addition (same day): rerun of all 74 calibration units under normalize v10, scored by v3.3 (fold + neutral unverified),
-# `python -m scripts.error_analysis --v33` -> calibration/error_analysis_v33.json. Exploration only: these samples were used
+# `python -m scripts.scoring.error_analysis --v33` -> calibration/error_analysis_v33.json. Exploration only: these samples were used
 # to build v3.3, so nothing here is a test; the benchmark is the test.
 v33_result:
   scored: 73          # of 74; positives 37, nulls 36
@@ -55,7 +55,7 @@ v33_result:
     with a mechanism written P orders the trials at chance; P works only through the outcome link. support_share alone
     is weak (0.54). The benchmark pre-registration should therefore keep, as secondary, the outcome link alone and P v3.2.
 
-# Addition 2026-11-07: ceiling analysis (scripts/ceiling.py -> calibration/ceiling.json), free, exploration only. Design of each
+# Addition 2026-11-07: ceiling analysis (scripts/common/ceiling.py -> calibration/ceiling.json), free, exploration only. Design of each
 # trial from ClinicalTrials.gov (64 of 72 units with an NCT id).
 ceiling_2026_11_07:
   single_auc: {P_v34: 0.584, outcome_link: 0.603, support_share: 0.535, masking: 0.377, placebo_or_sham: 0.371,
@@ -73,7 +73,7 @@ ceiling_2026_11_07:
     the mechanism; within placebo or sham trials the outcome link reaches 0.75 (n 20, very uncertain). The benchmark
     pre-registration should stratify by blinding and placebo (or make the blinded subset primary).
 
-# Addition 2026-11-07: ablation (scripts/ablation.py -> calibration/ablation.json), free, exploration only, 73 units.
+# Addition 2026-11-07: ablation (scripts/common/ablation.py -> calibration/ablation.json), free, exploration only, 73 units.
 ablation_2026_11_07:
   P: {v34: 0.595, v33: 0.600, without_any_one_weight_factor: "0.595-0.598", all_weights_1: 0.602}
   outcome_link_alone: 0.614

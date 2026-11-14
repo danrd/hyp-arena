@@ -1,5 +1,5 @@
 """The paired name-dependence check: masking by token and the agreement counts (no model calls)."""
-from scripts import blind_check as bc
+from scripts.reading import blind_check as bc
 
 
 def test_masking_replaces_whole_tokens_case_insensitively_and_leaves_the_rest():
@@ -67,7 +67,7 @@ def test_candidate_verdict_is_uninformative_with_too_few_shared_records_and_flag
 
 
 def test_counted_keys_follow_the_effect_direction_for_lifespan_findings_and_the_stance_otherwise():
-    from scripts.blind_check import counted_keys, status_compare
+    from scripts.reading.blind_check import counted_keys, status_compare
     a = [{"pmid": "1", "endpoint": "lifespan", "quote_role": "finding", "effect": "increase", "stance": "neither"},
          {"pmid": "2", "endpoint": "biomarker", "quote_role": "finding", "effect": "increase", "stance": "neither"},
          {"pmid": "3", "endpoint": "biomarker", "quote_role": "finding", "effect": "unknown", "stance": "refutes"}]

@@ -24,7 +24,7 @@ G_silent_links:
 report: AUC on the calibration of chain_state (with and without B), P with B, support share; separation and |rho| < 0.7
   against the other indicators on 73 + 55.
 
-result:   # scripts/link_scoring_check.py -> calibration/link_scoring_check.json; AUC on 73 calibration, admission on 127 (73 + 55 passing the gate)
+result:   # scripts/scoring/link_scoring_check.py -> calibration/link_scoring_check.json; AUC on 73 calibration, admission on 127 (73 + 55 passing the gate)
   auc: {P: 0.595, support_share: 0.548, chain_state_A: 0.597, P_with_B: 0.599, chain_state_A_with_B: 0.609, silent_share_G: 0.461}
   separation_top_share: {P: 0.669, support_share: 0.543, chain_state: 0.331, silent_share: 0.748}
   rho: {chain_state~support_share: 0.886, chain_state~P: 0.596, chain_state_B~chain_state: 0.956, P_B~P: 0.994}

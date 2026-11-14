@@ -1,4 +1,4 @@
-from scripts.extraction_compare import compare, gold_cells, kg_cells, record_cells, totals
+from scripts.reading.extraction_compare import compare, gold_cells, kg_cells, record_cells, totals
 
 
 def _g(name, sp, pct, sig, sex="Male", mx=""):

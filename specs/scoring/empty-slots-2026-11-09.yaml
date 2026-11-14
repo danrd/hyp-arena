@@ -13,7 +13,7 @@ measures:
   pack8: "Spearman of the trial balance with Argon's pack 8 balance (59 prospective trials)"
   movement: "units whose balance changes; Spearman of the prospective ranking under each profile and top-10 overlap"
 adopt_if: "R3 not worse by more than 0.03 and pack 8 trial Spearman not lower by more than 0.05; the user decides on meaning"
-result:   # python -m scripts.empty_slots -> calibration/empty_slots.json
+result:   # python -m scripts.scoring.empty_slots -> calibration/empty_slots.json
   R3: "0.593 (count) -> 0.586 (skip): -0.007, inside 0.03"
   pack8_trial_spearman: "0.393 -> 0.398"
   prospective: "12 of 59 units change their balance; mean balance 0.156 -> 0.185; rankings: Spearman 0.996 / 0.992 / 0.997 (evidence / funding / frontier), top 10 kept 9 / 9 / 10"

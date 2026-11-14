@@ -6,7 +6,7 @@
 3. The queries run as of T and their lists are merged in turn (each query gets its best hits in).
 4. Citation expansion: the references and citing papers of the top 5 hits (NCBI elink), most frequent first, dated by T.
 5. The keyword queries of hyparena.card.verifier.queries fill up to `retmax` if fewer were found.
-Retrieval calibration (scripts/retrieval_eval.py): at least one gold paper among the 20 read for 38% of 48 claims, against 12%
+Retrieval calibration (scripts/search/retrieval_eval.py): at least one gold paper among the 20 read for 38% of 48 claims, against 12%
 for the keyword queries; relevance labels on 16 claims: 3.8 directly relevant papers per claim against 1.9.
 """
 from __future__ import annotations

@@ -43,10 +43,10 @@ reading:
     (the Frontier profile rewards it); the fix is in the class label and in the search for the closest prior work
   leakage: "Argon's PMIDs after T or not found are reported and excluded from the direction measure"
   note: "Argon is a second reader, not a gold standard; decisions go to the user"
-built:   # python -m scripts.pack7_novelty build
+built:   # python -m scripts.argon.pack7_novelty build
   pack: "59 trials, 150 links, T = 2026-11-06 for all"
   key_N: "computed under the current rules (v3.6 weights): analog 22, unknown 22, new context 11, new combination 3, new link 1 (one trial moves from new link to unknown against the scores file)"
-result:   # Argon pack 7 answer 2026-11-08 (longevity-kg reviews/argon-2026-11-08/pack_7_answer.json); python -m scripts.pack7_analysis
+result:   # Argon pack 7 answer 2026-11-08 (longevity-kg reviews/argon-2026-11-08/pack_7_answer.json); python -m scripts.argon.pack7_analysis
   outcome_N: >-
     weighted kappa 0.14 on the 37 trials both readers levelled (threshold 0.4: not reproduced). Confusion ours->Argon:
     analog->new_context 18, unknown->new_context 15, new_context->new_context 11, unknown->analog 5, analog->analog 4,

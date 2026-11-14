@@ -1,8 +1,8 @@
 id: calibration-leak-2026-11-12
 written_on: 2026-11-12
 status: checked (free, no model call)
-why: "The calibration texts (74 trials with known outcomes) are the current registry versions, while T = min(first posted, primary completion) (scripts/calibration.py as_of); the H86 walkthrough found a title that states the result. Does the text carry knowledge from after T?"
-how: "scripts/calibration_leak.py: dates from the ClinicalTrials.gov API v2 (current record: first posted, start, primary completion, last update, results posted) and the candidate files (ISRCTN, UMIN, NTR); the text as the pipeline reads it; output longevity-kg hypothesis_sources/calibration/leak_check.json"
+why: "The calibration texts (74 trials with known outcomes) are the current registry versions, while T = min(first posted, primary completion) (scripts/whole_system/calibration.py as_of); the H86 walkthrough found a title that states the result. Does the text carry knowledge from after T?"
+how: "scripts/data/calibration_leak.py: dates from the ClinicalTrials.gov API v2 (current record: first posted, start, primary completion, last update, results posted) and the candidate files (ISRCTN, UMIN, NTR); the text as the pipeline reads it; output longevity-kg hypothesis_sources/calibration/leak_check.json"
 grades:
   outcome_in_text: "the title states the result or the text has its own Results / Conclusion part: the label can be read off the text"
   written_after_data: "first posted after the primary completion: T is the completion date, the whole text was written after the data were collected"

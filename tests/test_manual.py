@@ -10,7 +10,7 @@ from hyparena.card.effect_class import from_phrase
 from hyparena.card import aspid_v3, rules_v32 as r32
 
 MANUAL = Path(__file__).resolve().parents[1] / "docs" / "method-v3-manual.md"
-HISTORY = Path(__file__).resolve().parents[1] / "docs" / "archive" / "method-history.md"   # earlier versions
+HISTORY = Path(__file__).resolve().parents[1] / "archive" / "docs" / "method-history.md"   # earlier versions
 
 
 def _with_history() -> str:

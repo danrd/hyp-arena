@@ -1,4 +1,4 @@
-from scripts.benchmark_run import _ctgov_design, _text
+from scripts.whole_system.benchmark_run import _ctgov_design, _text
 
 P = {"designModule": {"designInfo": {"allocation": "RANDOMIZED", "interventionModel": "PARALLEL",
                                      "primaryPurpose": "PREVENTION",

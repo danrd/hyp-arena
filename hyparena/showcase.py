@@ -1,7 +1,7 @@
 """Demonstration run: a handful of pasted or generated hypotheses -> ranking, as one JSON-serializable
 result and a self-contained HTML page (Russian interface). Used by the Gradio app (hyparena/app.py).
 
-    python -m hyparena.showcase --paste data/demo/example_input.txt --config configs/paid-test.yaml --out runs/demo.json
+    python -m hyparena.showcase --paste archive/data/demo/example_input.txt --config configs/paid-test.yaml --out runs/demo.json
     python -m hyparena.showcase --goal "..." --generate 5 --fake --out runs/demo.json
     python -m hyparena.showcase --render runs/demo.json --html runs/demo.html
 

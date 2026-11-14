@@ -1048,7 +1048,7 @@ def evo_chip(x: dict) -> str:
 
 
 def prospective(n: int = 60) -> tuple[dict, str]:
-    from scripts.ctgov_outcomes import KG
+    from scripts.data.ctgov_outcomes import KG
     d = KG / "hypothesis_sources" / "prospective"
     run = json.loads((d / f"run_{n}.json").read_text())
     sf = d / f"scores_{n}_v34.json"

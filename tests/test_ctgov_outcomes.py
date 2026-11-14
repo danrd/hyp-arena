@@ -1,4 +1,4 @@
-from scripts import ctgov_outcomes as co
+from scripts.data import ctgov_outcomes as co
 
 
 def test_only_prospective_registrations_are_kept():

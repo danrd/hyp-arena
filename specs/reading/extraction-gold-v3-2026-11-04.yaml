@@ -1,9 +1,9 @@
 # Method v3 extraction against the hand-made gold for numbers, fixed before the first call (user decisions 2026-11-04:
-# thresholds written in advance; compare with the v2 verifier on the same inputs). docs/archive/spec/method-v3.md, sections 2 and 7.
+# thresholds written in advance; compare with the v2 verifier on the same inputs). archive/docs/spec/method-v3.md, sections 2 and 7.
 id: extraction-gold-v3
 date: 2026-11-04
 question: "Does verify_claim/v6 extract design, total n, comparison and effect class the way the hand-made gold does?"
-code: scripts/extraction_gold_v3.py
+code: scripts/reading/extraction_gold_v3.py
 config: configs/v3-flash.yaml          # DeepSeek V4.1 Flash (snapshot 1017), thinking off, temperature 0
 gold: "longevity-kg hypothesis_sources/calibration/extraction_gold/labels_manual.jsonl (20 pairs, labelled by hand 2026-11-03, rules in the README next to it)"
 input: "per pair the claim of its frozen calibration card (calibration/cards.json) and that one abstract, fetched from PubMed; no search, no date cut, no subgroup check; v5 and v6 get the same input"

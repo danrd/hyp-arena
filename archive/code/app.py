@@ -4,7 +4,7 @@
     ALLOW_PAID=1 COMET_API_KEY=... python -m hyparena.app            # http://127.0.0.1:7860
     python -m hyparena.app --share                                    # temporary public link (embeddable)
 
-Two tabs: a saved example (opens instantly, for demonstrations; results in data/demo/*.json) and a new run
+Two tabs: a saved example (opens instantly, for demonstrations; results in archive/data/demo/*.json) and a new run
 (3-6 minutes for five hypotheses on the cheap models, progress shown by stage). The page can be embedded
 in another page with an iframe."""
 from __future__ import annotations
@@ -22,8 +22,8 @@ import gradio as gr
 from hyparena import showcase
 from hyparena.llm.providers import ALLOW_PAID_ENV
 
-ROOT = Path(__file__).resolve().parents[1]
-EXAMPLES = ROOT / "data" / "demo"
+ROOT = Path(__file__).resolve().parents[2]
+EXAMPLES = ROOT / "archive" / "data" / "demo"
 MODELS = {"Дешёвые платные модели (CometAPI)": ("configs/paid-test.yaml", False),
           "Бесплатные модели (OpenRouter)": ("configs/models.yaml", False),
           "Без моделей: проверка интерфейса": ("configs/paid-test.yaml", True)}

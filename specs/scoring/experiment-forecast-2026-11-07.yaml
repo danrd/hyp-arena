@@ -46,7 +46,7 @@ cost:
     a cost model by enrollment, duration, number of visits and system, checked against NIH RePORTER awards that name the
     trial's NCT id (rank correlation). Next step; the RePORTER link field is checked first.
 
-result:   # scripts/experiment_forecast.py -> calibration/experiment_forecast.json; 73 trials
+result:   # scripts/scoring/experiment_forecast.py -> calibration/experiment_forecast.json; 73 trials
   with_numeric_expected_effect: 31   # 42%: the rest fall back to the prior d 0.2
   auc: {forecast: 0.545, forecast_with_median_enrollment: 0.572, power: 0.558, pi_S_outcome: 0.614, alpha_eff_bias_room: 0.613,
         d_exp: 0.554, log_enrollment: 0.392, P_v34: 0.595, models: 0.798}

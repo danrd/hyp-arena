@@ -1,7 +1,7 @@
 """The profile report on a tiny synthetic bundle (no saved runs needed)."""
 import json
 
-from scripts import profile_report as pr
+from scripts.scoring import profile_report as pr
 
 SPECS = [{"id": "a", "kind": "ordinal", "levels": ["no", "yes"]}, {"id": "b", "kind": "ordinal", "levels": ["no", "yes"]},
          {"id": "c", "kind": "cardinal"}]

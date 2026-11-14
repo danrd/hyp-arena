@@ -1,6 +1,6 @@
 import math
 
-from scripts.ctgov_recompute import _sd, compare
+from scripts.data.ctgov_recompute import _sd, compare
 
 
 def _m(groups, values, n, param="MEAN", disp="Standard Deviation", cats=1):

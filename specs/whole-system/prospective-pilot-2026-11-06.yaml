@@ -26,7 +26,7 @@ method:
     as of the run date
   score: hyparena/card/rules_v32.py (P with 90% interval, I, V = P x I, scope) + ASPID
     trial profiles (configs/profiles_v3.yaml)
-  frozen: scores file and SHA-256 written to specs/ by scripts/prospective.py freeze,
+  frozen: scores file and SHA-256 written to specs/ by scripts/whole_system/prospective.py freeze,
     before any outcome
 checks_now:
   run_health: cards parsed >= 55/60; needs_refinement <= 6; units with an error after
@@ -34,7 +34,7 @@ checks_now:
   ties: 'share of P ties (rounded to 3 digits) <= 15% (v3.2 on the fresh sample: 8%)'
   ai_role: 'report counts only (no criterion: tag not validated yet)'
 test_when_outcomes_exist:
-  labels: benchmark outcome rules (scripts/fresh_outcomes.py), labelled blind to the
+  labels: benchmark outcome rules (scripts/data/fresh_outcomes.py), labelled blind to the
     scores
   primary: P tied AUC with 95% bootstrap CI on units with a decisive label
   signal: AUC >= 0.60 and lower CI bound > 0.45
@@ -50,7 +50,7 @@ amendments_before_scores:
   what: >-
     score with rules_v32 fold=True (specs/scoring/v32-independence-fold-2026-11-06.yaml, passed) and ASPID profiles trial-2
     (endpoint_clinical in the lowest tier of evidence and funding; specs/scoring/estimand-2026-11-06.yaml); the endpoint category
-    is extracted from the 60 texts by both families (scripts/prospective.py estimand, about 120 calls, 0.15 USD), unknown
+    is extracted from the 60 texts by both families (scripts/whole_system/prospective.py estimand, about 120 calls, 0.15 USD), unknown
     when they disagree. Decided by the user while the run was in progress; no outcome exists, no score was computed yet.
 run_result:
   units: 60

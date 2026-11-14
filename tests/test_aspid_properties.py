@@ -176,7 +176,7 @@ def test_sensitivity_script_function():
     from pathlib import Path
 
     # Add scripts to path to import it
-    scripts_dir = str(Path(__file__).parent.parent / "scripts")
+    scripts_dir = str(Path(__file__).parent.parent / "scripts" / "scoring")
     if scripts_dir not in sys.path:
         sys.path.append(scripts_dir)
 

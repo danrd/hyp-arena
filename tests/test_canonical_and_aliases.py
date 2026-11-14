@@ -1,6 +1,6 @@
 from hyparena.card import canonical
 from hyparena.tools import compounds as cp
-from scripts.paraphrase_check import facets, main_index
+from scripts.card.paraphrase_check import facets, main_index
 
 
 def test_age_is_written_in_one_form():

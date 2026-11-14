@@ -26,7 +26,7 @@ measures:
 next: >-
   a cheap model check of each abstract (DeepSeek: is the between-group result of the named primary outcome given? is the
   positive result restricted to a subgroup?) is scored against this gold before any full-text re-read is run; priced then
-result:   # Argon pack 11 answer 2026-11-09 (longevity-kg reviews/argon-2026-11-08/pack_11_answer.json); python -m scripts.pack11_analysis
+result:   # Argon pack 11 answer 2026-11-09 (longevity-kg reviews/argon-2026-11-08/pack_11_answer.json); python -m scripts.argon.pack11_analysis
   targeted: "full text read 26 of 28; overstates 12/26, of serious kinds (primary omitted, subgroup, secondary as main, within as between) 8/26; stance for -> null or against 2/26"
   control:  "full text read 18 of 20; overstates 11/18, serious 6/18; stance flips 2/18"
   kinds_all: "other 14, per-protocol only 12 (mostly attrition), within-group as between 10, secondary as main 3, primary omitted 3, subgroup 2"
@@ -51,7 +51,7 @@ fulltext_reread:   # user decision 2026-11-09 ("go"); written before the run; ab
     pack 11); agreement of the new stance with pack 11's full-text finding where the papers overlap; pack 8 link and trial
     Spearman; R2 / R3 under the 0.03 rule
   adopt_if: "R2 and R3 not worse by more than 0.03 and the known cases caught; then the full-text re-read of 'for' RCT records becomes a step of the method"
-fulltext_reread_result:   # 2026-11-09 10:49-10:55 UTC off-peak; {prospective,calibration}/fulltext_reread.json; python -m scripts.fulltext_reread score
+fulltext_reread_result:   # 2026-11-09 10:49-10:55 UTC off-peak; {prospective,calibration}/fulltext_reread.json; python -m scripts.reading.fulltext_reread score
   cost_usd: "prospective 0.053, calibration 0.029: 0.082 (named 0.05-0.08)"
   sample: "77 'for' RCT records on the outcome link with an open paper (52 prospective, 25 calibration) of 231"
   new_stance: "for 56, none 12, against 9: 22 of 77 (29%) leave 'for', but 'none' is partly the reader dropping a record (the known recall loss), not a null"
@@ -65,7 +65,7 @@ fulltext_reread_result:   # 2026-11-09 10:49-10:55 UTC off-peak; {prospective,ca
     gap between the abstract's claim and the results table (a question, not a re-read) is the next candidate.
 claim_vs_results:   # user decision 2026-11-09 ("запускай", about 0.07 USD, stop at 0.15); written before the run
   why: "the full-text re-read kept 'for' where the claim's outcome was not significant: the same reader reads the same text the same way; a narrow question is asked instead"
-  sample: "the same 77 'for' RCT records on the outcome link with an open paper (scripts.fulltext_reread.targets)"
+  sample: "the same 77 'for' RCT records on the outcome link with an open paper (scripts.reading.fulltext_reread.targets)"
   text: "abstract + a new Results-and-tables excerpt (pmc.results_excerpt: Results sections, then every table with at least half of 20 000 characters; methods left out)"
   question: "claim_vs_results/v1, DeepSeek: is there a significant BETWEEN-GROUP difference on the claim's outcome Y at the primary time point: yes | no | not_measured | unclear; a verbatim quote from the results; which outcomes did differ"
   second_family: "every 'no' or 'not_measured' with a verbatim quote is asked again of Gemini; a change counts only when both say no / not_measured with verbatim quotes"
@@ -86,7 +86,7 @@ claim_vs_results_amendment:   # 2026-11-09, user choice "В" after the partial r
   rule: "'no' with a verbatim results quote -> null (weighed by power); 'not_measured' with a verbatim outcomes quote -> removed; otherwise unchanged"
   note: "the not_measured rule was changed after seeing the partial run (it could never fire as written); stated here as such"
   stop_usd: 0.05
-claim_vs_results_result:   # 2026-11-09 11:36-11:50 UTC; all 77 records; python -m scripts.claim_results score
+claim_vs_results_result:   # 2026-11-09 11:36-11:50 UTC; all 77 records; python -m scripts.reading.claim_results score
   cost_usd: "0.152 (first 35, with Gemini) + 0.028 (the other 42, DeepSeek only) = 0.180"
   first_reading: "yes 40, no 16, not_measured 19, unclear 2; verbatim results quote 49 of 77"
   counted: "null 11, removed 8, unchanged 58; 16 'no' or 'not_measured' not counted (quote not verbatim, or v1 without an outcomes quote)"

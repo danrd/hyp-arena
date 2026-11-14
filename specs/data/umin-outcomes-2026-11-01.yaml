@@ -1,4 +1,4 @@
-# Outcome labels for UMIN-CTR (Japan) hypotheses (scripts/umin_outcomes.py). Fixed 2026-11-01 before any outcome document was read.
+# Outcome labels for UMIN-CTR (Japan) hypotheses (scripts/data/umin_outcomes.py). Fixed 2026-11-01 before any outcome document was read.
 # Same method as specs/data/ntr-outcomes-2026-11-01.yaml unless stated here.
 id: umin-outcomes-2026-11-01
 source: "UMIN-CTR, WHO primary registry; public English pages: search form index.cgi (ctrno) and ctr_view.cgi?recptno="

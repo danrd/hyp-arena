@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 
-from scripts.aspid_calibration import run_calibration
+from scripts.scoring.aspid_calibration import run_calibration
 from hyparena.aspid import load_profiles
 
 def test_calibration_fast():
@@ -81,7 +81,7 @@ def test_calibration_can_fail():
             w[:, 0] = 1.0
             return w
 
-    with patch('scripts.aspid_calibration.WeightSampler', FakeSampler):
+    with patch('scripts.scoring.aspid_calibration.WeightSampler', FakeSampler):
         ece, brier, results, bins = run_calibration(
             profile_name="evidence_first",
             m=8,

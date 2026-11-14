@@ -1,4 +1,4 @@
-# Historical ITP check at T = 2010-12-31 (docs/archive/spec/working-notes.md A2; docs/archive/rules-method.md, stage 4).
+# Historical ITP check at T = 2010-12-31 (archive/docs/spec/working-notes.md A2; archive/docs/rules-method.md, stage 4).
 # The first run was made before this file existed; it is the frozen protocol for any new run on this sample.
 id: itp-backtest-2010
 kind: backtest
@@ -12,5 +12,5 @@ dropped_indicators: [late_start]
 primary_metric: tied_auc_per_regimen
 tie_rule: abs(dE) < 1.96 * sqrt((sa^2 + sb^2) / K)
 halves: [dev, test]
-changes_after_first_run: docs/itp_2010_changes_after_first_run.csv
+changes_after_first_run: archive/docs/itp_2010_changes_after_first_run.csv
 date_policy: final run, records without a date fail the audit (backtest audit --final)

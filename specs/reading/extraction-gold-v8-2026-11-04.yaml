@@ -3,7 +3,7 @@
 id: extraction-gold-v8
 date: 2026-11-04
 question: "With the same-class rule, does the verifier keep relevant papers (relevance >= 0.8) without losing the extraction quality of v7, on pairs it was not tuned on?"
-code: "scripts/extraction_gold_v3.py --gold v8 (pairs: per calibration unit of steps 2-3, SHA-1 order, one paper the v2 verifier recorded something for and one it did not; papers of the 45 earlier pairs left out)"
+code: "scripts/reading/extraction_gold_v3.py --gold v8 (pairs: per calibration unit of steps 2-3, SHA-1 order, one paper the v2 verifier recorded something for and one it did not; papers of the 45 earlier pairs left out)"
 prompt: "verify_claim/v8 = v7 + one rule: a finding for an intervention of the same kind on the claim's outcome, or in another population, is supports or refutes with intervention_match class or related_compound, never neither (examples in the rule are generic, written from the v3b misses before labelling these pairs)"
 config: configs/v3-flash.yaml
 gold: "longevity-kg extraction_gold/labels_v8.jsonl: 29 pairs (task_v8.jsonl) labelled by hand 2026-11-04 by the rules of the README (relevance rule of gold v3); 18 relevant, 11 not; 6 borderline relevance calls noted (4 reviews, oxidative markers, fat-free milk review)"

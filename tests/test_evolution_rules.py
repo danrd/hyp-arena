@@ -6,7 +6,7 @@ import pytest
 from hyparena.card import evolution_rules as er
 from hyparena.card import rules_v3 as r3
 from hyparena.card.evolve_v3 import parent_parts
-from scripts.v34_check import PROS
+from scripts.common.v34_check import PROS
 
 RUN = PROS / "run_60.json"
 pytestmark = pytest.mark.skipif(not RUN.exists(), reason="private runs not present")

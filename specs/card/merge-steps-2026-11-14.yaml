@@ -3,7 +3,7 @@ written_on: 2026-11-14
 status: adopted as method v3.10 (rules_v32.STEPS_SLOT = "min")
 why: "the finer step types (engagement, cellular process, effect) change almost nothing in the scoring (one preclinical weight scale, one scope rule); they are the least reliable part of the card; and each step as its own place lets an added well-supported step raise the balance (padding in evolution)"
 change: "every step before the outcome is one place of the evidence balance, valued by its weakest step with a counting record; the outcome place as before"
-check: "scripts/merge_steps.py (free; approval rule and compound lookups off in every variant - PubChem and ChEMBL unreachable here)"
+check: "scripts/card/merge_steps.py (free; approval rule and compound lookups off in every variant - PubChem and ChEMBL unreachable here)"
 result:
   separate: {R3: 0.584, pack8_trial_spearman: 0.401}
   min: {R3: 0.594, pack8_trial_spearman: 0.401, units_moved: "1 of 59 prospective"}

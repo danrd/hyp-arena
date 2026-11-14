@@ -1,5 +1,5 @@
 """E1: the golden snapshot of the ITP-2010 backtest. A change of status, outcome or place needs a line in the
-list `docs/itp_2010_changes_after_first_run.csv`; the numbers are compared within the Monte Carlo error."""
+list `archive/docs/itp_2010_changes_after_first_run.csv`; the numbers are compared within the Monte Carlo error."""
 import csv
 from pathlib import Path
 
