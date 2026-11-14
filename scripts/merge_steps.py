@@ -18,6 +18,7 @@ def main() -> dict:
     ans = {t["id"]: t["balance"] for t in json.loads((CAL.parents[1] / "reviews" / "argon-2026-11-08" / "pack_8_answer.json").read_text())["trials"]}
     for mode in ("separate", "min", "mean"):
         r32.STEPS_SLOT = mode
+        print("mode", mode, flush=True)
         p = prospective()
         hs = [h for h in ans if h in p]
         sp = spearmanr([-1.0 if p[h][0] != "pass" else p[h][1] for h in hs], [ans[h] for h in hs]).statistic
@@ -43,4 +44,6 @@ def main() -> dict:
 
 
 if __name__ == "__main__":
-    print(json.dumps(main(), indent=1))
+    res = main()
+    (CAL.parent / "merge_steps.json").write_text(json.dumps(res, indent=1) + "\n")
+    print(json.dumps(res, indent=1))
