@@ -208,14 +208,17 @@ def score() -> dict:
     out = {}
     reg = set(registry_ids())
     greg = {k: v for k, v in g.items() if k in reg}
-    for ver in ("v15", "v16"):
+    gnon = {k: v for k, v in g.items() if k not in reg}
+    for ver in ("v15", "v16", "v17"):
         f = DIR / f"bench_card_v2_ours_{ver}.json"
         if not f.exists():
             continue
         cards = json.loads(f.read_text())
         out[f"ours_{ver}_registry40"] = score_system(cards, greg, True)
+        out[f"ours_{ver}_other50"] = score_system(cards, gnon, True)
         if ver == "v15":
             out["ours_v15_first_parse_registry40"] = score_system(first_parse(cards), greg, True)
+            out["ours_v15_first_parse_other50"] = score_system(first_parse(cards), gnon, True)
         out[f"ours_{ver}"] = {"all": score_system(cards, g, True),
                                    "pack19": score_system(cards, {k: v for k, v in g.items() if k.startswith("N")}, True),
                                    "pack20": score_system(cards, {k: v for k, v in g.items() if k.startswith("P")}, True)}
