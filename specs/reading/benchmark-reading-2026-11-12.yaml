@@ -133,4 +133,9 @@ reader_v16_confirming_2026_11_15:
     by_category_read: "prior trials 0.56 -> 0.58, direct 0.18 -> 0.18, reviews 0.17 -> 0.22, against 0.21 -> 0.21, mechanism steps 0 -> 0"
     why_the_gold_stays: "of the 33 gold papers the reader got but did not record, 21 came only from the search of a proposed alternative and were read against that alternative (a finding counts for it only by its distinguishing part), never against the outcome or a step; 8 more came from an alternative and the outcome"
     by_the_rule: "not passed: AUC 0.661 >= 0.515, but the share of gold papers recorded 0.272 < 0.35. v16 is not made the working reader; the gap is the reading of a paper against one claim only (cross-link reading), not the reader"
+cross_link_reading_2026_11_15:
+  what: "over the v16 replay (run_*_n13r.json): every claim of the hypothesis (outcome and steps) also reads the papers its other searches found (mostly those of the proposed alternatives); the cheap relevance model (search_relevance/v1) rates them for the claim and the claim reads every one rated 3, filled up to 10 with those rated 2, at most 20; new records join the claim's records of the v16 replay; the alternatives keep their reading (scripts/reading/reader_replay.py cross, tag n14x)"
+  why: "of the 33 gold papers the v16 reader got and did not record, 21 came only from an alternative's search and were read only against it"
+  cost: "about 0.6 USD named (rating about 4 800 papers, reading the picked ones); cap 1.0"
+  pass_rule: "written before the run, the same as for v16 against the saved search run n12: the share of gold must-find papers that became records at least 0.35 and the AUC of the evidence balance at least 0.515; the v16 replay alone (0.272, 0.661) reported beside"
 
