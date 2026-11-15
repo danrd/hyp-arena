@@ -33,14 +33,14 @@ arms:
 
 formatting:   # one form for every text the judges see
   template: "claim; rationale; decisive experiment; at most 1 200 characters; no references, no names of models or of the method"
-  rewriter: "a model of a family that neither wrote nor judges (xiaomi MiMo or zhipu GLM), prompt format_hypothesis/v1"
+  rewriter: "a model of a family that neither wrote nor judges (xiaomi MiMo), prompt format_hypothesis/v1"
   meaning_check: "by code: the intervention, the outcome and the experiment's system and endpoint of the card of the original are found in the rewritten text; a failure is rewritten once, then the original text is shortened by hand rule (first sentences of each part) and marked"
   references: "removed from what judges see; checked by code (below)"
 
 judges:
-  pool: [openai, anthropic, google, xai, deepseek, qwen, muse]
+  pool: [openai, anthropic, google, xai, deepseek, qwen, zhipu, muse]   # zhipu: GLM
   excluded: "the writer's family (google if Argon writes, openai if ChatGPT) and the family that rewrote the texts"
-  used: "the rest of the pool: with Argon openai, anthropic, xai, deepseek, qwen, muse if available"
+  used: "the rest of the pool: with Argon openai, anthropic, xai, deepseek, qwen, zhipu (GLM), muse if available"
   models: "named with prices before the run"
   blind: "a judge does not know who wrote a text"
   order: "every pair judged twice, both orders; two different answers count as a tie"
@@ -108,6 +108,6 @@ implementation:   # after the user's go
 built_2026_11_14:
   tasks: "scripts/argon/generation_tasks.py (build-a, build-b, build-reports, build-evolve, check, collect); tasks A and B in longevity-kg reviews/generation-2026-11-14/"
   comparison: "scripts/evolution/generation_compare.py (dry, format, judge, score); configs/judges-generation.yaml; prompts format_hypothesis/v1, judge_pair/v1, judge_rubric/v1; tests/test_generation_compare.py"
-  dry_run: "five cheap judges (gpt-5-nano, claude-haiku-4.5, grok-4.3, deepseek-v4.1-flash, qwen3.8-flash) and the rewriter mimo-v2.5: about 0.66 USD, 140 judgements per judge; muse not in the provider's catalog"
+  dry_run: "six cheap judges (gpt-5-nano, claude-haiku-4.5, grok-4.3, deepseek-v4.1-flash, qwen3.8-flash, glm-5.3-flash) and the rewriter mimo-v2.5: about 0.70 USD, 140 judgements per judge; muse not in the provider's catalog"
   free_evolution_goal: "a better hypothesis overall when no profile is named (manual section 11a)"
 
