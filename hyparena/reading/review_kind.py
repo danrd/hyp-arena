@@ -5,7 +5,7 @@
     Randomized Controlled Trial the reader called a review or "other" -> rct. Weights are unchanged (a systematic review
     without a pooled estimate still weighs as a review until a check says otherwise).
 (c) The certainty of a meta-analysis (GRADE) from its abstract by code; the design weight of a meta-analysis follows it:
-    high or moderate 1, low 1/2, very low 1/4, not reported 3/4 (specs/reading/meta-and-nulls-2026-11-09.yaml, variant
+    high or moderate 1, low 1/2, very low 1/4, not reported 1 since 2026-11-15, 3/4 before (specs/reading/meta-and-nulls-2026-11-09.yaml, variant
     "certainty": R2 0.697 and R3 0.582 against 0.702 and 0.593, inside the 0.03 rule; GRADE is GRADE's own rule).
 """
 from __future__ import annotations
@@ -16,7 +16,7 @@ from typing import Optional
 GRADE_RX = re.compile(r"(high|moderate|low|very[- ]low)[- ](certainty|quality)[^.]{0,40}(evidence|GRADE)|"
                       r"GRADE[^.]{0,80}?\b(high|moderate|low|very[- ]low)\b", re.I)
 CERTAINTY_WEIGHT = {"high": 1.0, "moderate": 1.0, "low": 0.5, "very_low": 0.25}
-NOT_REPORTED = 0.75
+NOT_REPORTED = 1.0      # 2026-11-15 (pack 23): a meta-analysis whose certainty is not stated weighs as a trial; 0.75 before
 
 
 def certainty_from_abstract(text: str) -> str:

@@ -15,7 +15,7 @@ def test_grade_certainty_from_the_abstract_sets_the_meta_analysis_weight():
     assert certainty_from_abstract("Moderate certainty evidence showed that resistance exercise ...") == "moderate"
     assert certainty_from_abstract("very low quality of evidence (GRADE)") == "very_low"
     assert certainty_from_abstract("no grading here") == ""
-    assert (certainty_factor("high"), certainty_factor("low"), certainty_factor("very_low"), certainty_factor("")) == (1.0, 0.5, 0.25, 0.75)
+    assert (certainty_factor("high"), certainty_factor("low"), certainty_factor("very_low"), certainty_factor("")) == (1.0, 0.5, 0.25, 1.0)
 
 
 def _rec(**k):
@@ -32,7 +32,7 @@ def test_a_meta_analysis_weighs_by_its_certainty_on_the_outcome_link():
     w_mod = r32.record_weight_v36(_rec(certainty="moderate"), claim, False)
     w_none = r32.record_weight_v36(_rec(certainty=""), claim, False)
     w_low = r32.record_weight_v36(_rec(certainty="low"), claim, False)
-    assert w_mod > w_none > w_low and abs(w_none / w_mod - 0.75) < 1e-9
+    assert w_mod == w_none > w_low      # 2026-11-15: certainty not stated weighs as moderate (pack 23)
     with r32.method():                                   # the current rules (v3.6 and later), as the reports use them
         f = r32.weight_factors(_rec(certainty="low"), claim, False)
     assert f["design"] == ["meta_analysis (low)", 0.5]

@@ -28,4 +28,8 @@ result_2026_11_15:
   meta_vs_trial: "Argon puts the meta-analysis first in 38 of 46 pairs; our weights put the trial first in 16 of those and call 8 even: a meta-analysis whose certainty is not stated weighs 0.75 of a trial (review_kind.NOT_REPORTED), and our reader recorded no certainty for any of them; Argon reads 'not stated' in 38 of 46 and still puts the meta-analysis first"
   labels: "design agrees in 213 of 218 records"
   by_the_reading: "concordance 0.646, just under 0.65: not acceptable as written; the meta-analysis-against-trial stratum (0.44, 36 non-tied pairs) orders against the outside reader and goes to the method's review; the other strata are 0.67-0.93"
+method_change_2026_11_15:
+  change: "a meta-analysis whose certainty is not stated weighs as a trial (hyparena/reading/review_kind.NOT_REPORTED 0.75 -> 1.0)"
+  pack_23_again: "concordance 0.646 -> 0.688 (154 non-tied pairs), meta-analysis against trial 16 of 36 -> 28 of 45; in sample: the rule was changed on this pack, so this shows the direction only"
+  outcomes: "AUC of the evidence balance on the 30 trials of pack 18 with the working reader 0.710 -> 0.705"
 

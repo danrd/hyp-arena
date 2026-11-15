@@ -235,7 +235,7 @@ list ordered again; a cheap model rates the first 100 from 0 to 3 for the claim;
 
 | Factor (GRADE domain) | Levels |
 |---|---|
-| design (starting level), outcome link of a claim about humans | RCT 1; meta-analysis by its GRADE certainty: high or moderate 1, low 1/2, very low 1/4, not reported 3/4; non-randomised and observational 1/2; review (systematic or narrative), animal, cells, other 1/4 |
+| design (starting level), outcome link of a claim about humans | RCT 1; meta-analysis by its GRADE certainty: high or moderate 1, low 1/2, very low 1/4, not reported 1 (as a trial); non-randomised and observational 1/2; review (systematic or narrative), animal, cells, other 1/4 |
 | design, links before the outcome or a claim about animals | cells 1/3, review 2/3, primary study 1 |
 | precision (imprecision) | record for: min(1, ln n / ln 300), at least 1/4, n unknown 1/4; before the outcome 1/2. Record against (a null): the power of its study to detect d = 0.4 |
 | effect (rating up for a large effect) | record for: a stated effect of at least medium size (d ≥ 0.5, ratio ≥ 1.25, ≥ 5%, the authors' "moderate") 1; small, none or not stated 1/2. Record against: 1 |
@@ -820,7 +820,7 @@ v36:
   loglr_lambda: 2.682397     # 2 atanh(2/3) / 0.6
   design_grade3: {rct: 1.0, meta_analysis: 1.0, non_randomised: 0.5, observational: 0.5, other: 0.25}
   effect_full_from: 0.71875  # the continuous effect weight of d = 0.5
-meta_certainty: {high: 1.0, moderate: 1.0, low: 0.5, very_low: 0.25, not_reported: 0.75}
+meta_certainty: {high: 1.0, moderate: 1.0, low: 0.5, very_low: 0.25, not_reported: 1.0}
 v34:
   preclinical_precision: 0.5
   novelty_levels: [new_context, translation, analog, new_mechanism, new_combination, new_link]
