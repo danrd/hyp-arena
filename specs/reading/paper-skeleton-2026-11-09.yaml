@@ -1,6 +1,6 @@
 id: paper-skeleton-2026-11-09
 written_on: 2026-11-09
-status: specification; the extraction is not run; Codex task for the code (longevity-kg reviews/codex-2026-11-09-skeleton/TASK.md)
+status: "stage 0 done (parses, code checks, adjudicate_v4; see the result sections below); stage 1 (reading the claims through the skeleton against pack 16) not run"
 user_decisions: >-
   2026-11-09: reading moves to the level of the paper now (the core of the knowledge graph): each paper is parsed once into a
   fixed format, as fully as possible, so that it rarely has to be read again; a link of a hypothesis takes only the part it

@@ -37,6 +37,7 @@ templates in [`templates/`](templates/). Run modules from the repository root, e
 
 | Module | What it does |
 |---|---|
+| [`cross_link`](reading/cross_link.py) | Cross-link reading: every claim of the hypothesis (outcome or step) also reads the papers the other searches of the hypothesis found, those the cheap relevance model rates 3, filled to 10 with 2s (docs/system/reading.md, section 3). |
 | [`effect_class`](reading/effect_class.py) | Effect class by code from the verbatim effect phrase (user decision 2026-11-04, option A; archive/docs/spec/method-v3.md, section 2). |
 | [`review_kind`](reading/review_kind.py) | Review kind and meta-analysis certainty by code (user decision 2026-11-11, H49 walkthrough stage 5). |
 | [`sources`](reading/sources.py) | Curated evidence for lifespan claims from DrugAge (HAGR, CC BY 3.0): deterministic, no LLM. One record per publication and species for the claim's compound: supporting if any row of that paper ... |
@@ -123,6 +124,7 @@ templates in [`templates/`](templates/). Run modules from the repository root, e
 | [`showcase`](coscientist/showcase.py) | Demonstration run: a handful of pasted or generated hypotheses -> ranking, as one JSON-serializable result and a self-contained HTML page (Russian interface). Used by the Gradio app (hyparena/app.py). |
 | [`state`](coscientist/state.py) | Graph state and the records it holds. Hypotheses and matches are append-only. |
 | [`agents/`](coscientist/agents/) | the agents of the graph: generate, review, tournament, evolve, meta-review, report, supervisor |
+| [`agents/`](coscientist/agents/) | The graph's nodes, one module each: parse_goal, generate, normalize, retrieve, review, proximity, tournament, evolve, meta_review, supervisor, report. |
 
 ## `llm/` — Model clients, prompts, structured replies, the fake LLM
 

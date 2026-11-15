@@ -242,6 +242,12 @@ list ordered again; a cheap model rates the first 100 from 0 to 3 for the claim;
 | comparison (part of risk of bias) | between groups 1; within group or none 1/2 |
 | context (indirectness) | adjacent 1/2 (another population, age, sex, dose, comparator or species, only on qualifiers the claim states; or an intervention of the same broad category only, reading rule 1); class (another intervention of the same class) 3/4; exact 1 |
 
+Precision is measured against a sufficient size, not in proportion to n: 300 participants is the lower end of GRADE's
+optimal information size, so a record of 300 or more counts fully. The scale is logarithmic because the value of more
+participants grows ever more slowly (the precision of an estimate grows as √n): a trial of 30 weighs 0.6 (n/300 would give
+0.1 and drop small trials in practice; √(n/300) 0.32). The size at which small trials overstate effects in
+meta-epidemiological studies (a ratio of odds ratios about 0.5 under 50 participants) is in line with this curve.
+
 A record against (a null or opposite result from a comparison) is weighed by the power of its study to detect a
 standardised difference of 0.4 in place of precision and effect (two-sided 5%; between groups Φ(0.4·√(n/4) − 1.96),
 before-after Φ(0.4·√n − 1.96), n unknown → 40): a null of 20 people weighs little, a null of 300 fully. A record about another

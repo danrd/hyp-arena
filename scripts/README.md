@@ -76,6 +76,7 @@ A script of a finished check stays: its spec names it as the calculation of its 
 | [`fulltext_reread`](reading/fulltext_reread.py) | Full-text re-read of 'for' RCT records on the outcome link (specs/reading/abstract-overstates-2026-11-09.yaml, fulltext_reread). |
 | [`meta_certainty`](reading/meta_certainty.py) | Certainty-aware weight of meta-analysis records (specs/reading/meta-and-nulls-2026-11-09.yaml, meta_certainty). |
 | [`pilot_crosslink`](reading/pilot_crosslink.py) | Pilot: cross-link reading in small batches, then the split reader (specs/scoring/balance-check-2026-11-08.yaml, pilot_crosslink). |
+| [`reader_replay`](reading/reader_replay.py) | Confirming run of a reader without searching again: the saved searches read with another reader (`run`), the cross-link reading over it (`cross`), scores and the AUC of the evidence balance (specs/reading/benchmark-reading-2026-11-12.yaml). `run` and `cross` are paid. |
 | [`reader_model`](reading/reader_model.py) | Is a stronger reader model worth it? (specs/reading/reader-model-2026-11-08.yaml). Paid for `run`. |
 | [`reader_v12`](reading/reader_v12.py) | Reader v12 pilot (specs/reading/reader-v12-2026-11-08.yaml): a relevance filter before reading and an answer for every paper. |
 | [`reading_recall`](reading/reading_recall.py) | Reading recall diagnostics (docs/plans/reading-recall-2026-11-08.md, steps 1-2, free). |
@@ -97,6 +98,7 @@ A script of a finished check stays: its spec names it as the calculation of its 
 | [`error_analysis`](scoring/error_analysis.py) | Error analysis of P on the calibration samples (steps 1-5), no model calls (specs/scoring/error-analysis-2026-11-06.yaml). |
 | [`estimand_check`](scoring/estimand_check.py) | Estimand check (specs/scoring/estimand-2026-11-06.yaml): five ICH E9(R1) attributes from the registry texts by two model families, then the four admission conditions for an indicator. |
 | [`experiment_forecast`](scoring/experiment_forecast.py) | Forecast from the experiment (specs/scoring/experiment-forecast-2026-11-07.yaml): protocol from ClinicalTrials.gov, expected effect from the records of the outcome slot, power, room for bias -> P(positive). Free; exploration on the ... |
+| [`gate_variants`](scoring/gate_variants.py) | Free: the gate fixes as variants against R3 and the AUC on the 30 trials of pack 18, with the trials whose gate changes (specs/scoring/gate-fixes-2026-11-15.yaml). |
 | [`link_scoring_check`](scoring/link_scoring_check.py) | specs/scoring/link-scoring-2026-11-08.yaml: A (chain state), B (null weighted by power), G (silent links) on the calibration (AUC) and on calibration + prospective (admission rule). Free. |
 | [`ohf_probe`](scoring/ohf_probe.py) | Two OHF ideas checked on the saved records of the calibration (steps 1-5), no model calls (2026-11-06; method-v3.md section 13): four-axis indirectness (system, intervention, endpoint, comparison) in place of the context and comparison ... |
 | [`profile_report`](scoring/profile_report.py) | Which indicators separate the hypotheses of a saved run, how far the profiles pull the order apart, and which indicators move together. Reads the site bundles (runs/site/*.json); no model calls, nothing is changed. |
@@ -104,6 +106,7 @@ A script of a finished check stays: its spec names it as the calculation of its 
 | [`protocol_review`](scoring/protocol_review.py) | Protocol review of each calibration trial by two model families (Argon's layers 1-2, user decision 2026-11-08): endpoint signal-to-noise, add-on ceiling, time window, power realism, population enrichment, delivery, room for bias. A ... |
 | [`record_weight_check`](scoring/record_weight_check.py) | specs/scoring/record-weight-2026-11-08.yaml: the record weight and the fold of for / against, step by step. Free (no model calls; PubMed E-utilities for years and abstracts, cached in data/cache/pubmed). |
 | [`trend_genetics_check`](scoring/trend_genetics_check.py) | The check of specs/scoring/trend-genetics-2026-11-06.yaml on saved runs (no model calls). |
+| [`weight_variants`](scoring/weight_variants.py) | Free: the values of Argon pack 24 for the record weight, each as a variant against R2, R3, pack 23 and the AUC on 30 trials; `before 2026-11-15` reproduces the weights until then (specs/scoring/weight-sources-2026-11-15.yaml). |
 
 ## [`alternatives/`](alternatives/) — Stage: competing explanations and informativeness
 
@@ -136,7 +139,7 @@ A script of a finished check stays: its spec names it as the calculation of its 
 | [`trace_page`](whole_system/trace_page.py) | Build a step-by-step page (Russian) from a recorded run: every graph node in order, what it does, which code and prompt template run, every model and search call with its full prompt and reply, and what the node produced. |
 | [`validation_table`](whole_system/validation_table.py) | Render specs/whole-system/validation-criteria.yaml into docs/validation-criteria.md (summary, one table per level, the criteria below). |
 
-## [`argon/`](argon/) — Tasks for the outside reader (Argon): building packs 5-22 and analysing the answers
+## [`argon/`](argon/) — Tasks for the outside reader (Argon): building packs 5-24 and analysing the answers
 
 | Script | What it does |
 |---|---|
@@ -156,6 +159,9 @@ A script of a finished check stays: its spec names it as the calculation of its 
 | [`pack19_card`](argon/pack19_card.py) | Argon pack 19: the card gold on texts that are not registry trials (docs/benchmarks/README.md, stage 2). Free, deterministic (hash order), no model call. Writes the task and the hidden key to the private repository. |
 | [`pack20_relabel`](argon/pack20_relabel.py) | Argon pack 20: the 60 texts of pack 17 labelled again under the link-type definitions of docs/system/card.md (card_gold_v2, the same instructions as pack 19 plus the rules for registry texts). Free, deterministic, no model call. |
 | [`pack21_pmid_fix`](argon/pack21_pmid_fix.py) | Argon pack 21: the right PMIDs for the papers of the search gold (pack 18) whose number points to another paper. Free, deterministic, no model call. |
+| [`pack22_score`](argon/pack22_score.py) | Argon pack 22 scored: our proposed alternatives and a plain-LLM baseline against Argon's gold (coverage, precision, design verdict; specs/alternatives/benchmark-alternatives-2026-11-14.yaml). The judge and the baseline are paid. |
+| [`pack23_balance`](argon/pack23_balance.py) | Argon pack 23: pairs of records of one link ordered by the outside reader against the record weights (specs/scoring/balance-pairs-2026-11-15.yaml). Free. |
+| [`pack24_weight_sources`](argon/pack24_weight_sources.py) | Argon pack 24: the published grounds for each factor of a record's weight; `check` verifies PMIDs, titles and quotes (specs/scoring/weight-sources-2026-11-15.yaml). Free. |
 | [`pack22_alternatives`](argon/pack22_alternatives.py) | Argon pack 22: the gold for stage 7 (competing explanations): for the 30 calibration trials of the search gold (pack 18), the main alternative explanations of the result the trial would show, what the stated design does to each, and the ... |
 | [`pack5_analysis`](argon/pack5_analysis.py) | Analysis of Argon pack 5 (specs/scoring/record-weight-2026-11-08.yaml references.R4_pairs_argon). Free. |
 | [`pack6_analysis`](argon/pack6_analysis.py) | Analysis of Argon pack 6 (specs/alternatives/informativeness-check-2026-11-08.yaml, measures fixed before sending). Free. |
