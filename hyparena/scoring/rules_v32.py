@@ -148,6 +148,8 @@ NULL_POWER = False          # set by evaluate(..., null_power=True); module swit
 V36 = False                 # set by evaluate(..., v36=True)
 DESIGN_GRADE3 = {"rct": 1.0, "meta_analysis": 1.0, "non_randomised": 0.5, "observational": 0.5}   # else 1/4
 EFFECT_FULL_FROM = 0.25 + 0.75 * 0.5 / 0.8      # the continuous effect weight of d = 0.5 (medium)
+EFFECT_RULE = "medium"      # "medium": full weight from a stated effect of medium size; "stated": any stated effect (variant)
+CLASS_WEIGHT = 1.0          # the weight of a record about another intervention of the same class (context "class")
 LOGLR_LAMBDA = 2 * math.atanh(2 / 3) / 0.6      # F = 0.6 alone gives s = 2/3, as c did for the Beta
 
 
@@ -175,9 +177,12 @@ def record_weight_v36(rec: EvidenceRecord, claim: Claim, against: bool) -> float
         w *= null_power(rec.n_total, rec.comparison)
     else:
         w *= PRECLINICAL_PRECISION if pre else precision(rec.n_total)
-        w *= 1.0 if effect_weight(rec, False) >= EFFECT_FULL_FROM - 1e-9 else 0.5
+        if EFFECT_RULE == "stated":                     # variant (pack 24, F5): any stated effect 1, none stated 1/2
+            w *= 1.0 if (rec.effect_reported or "").strip() else 0.5
+        else:
+            w *= 1.0 if effect_weight(rec, False) >= EFFECT_FULL_FROM - 1e-9 else 0.5
     w *= 1.0 if rec.comparison == "between_groups" else 0.5
-    w *= 0.5 if ctx == "adjacent" else 1.0
+    w *= 0.5 if ctx == "adjacent" else (CLASS_WEIGHT if ctx == "class" else 1.0)
     return w
 
 

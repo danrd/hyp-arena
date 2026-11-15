@@ -1,6 +1,6 @@
 id: weight-sources-2026-11-15
 written_on: 2026-11-15
-status: "answered 2026-11-15; sources checked by code; the variants not yet evaluated"
+status: "answered 2026-11-15; sources checked by code; variants evaluated, none adopted yet"
 why: >-
   The record weight is shaped after GRADE (Guyatt et al., BMJ 2008), but its numbers are the method's own: GRADE rates
   certainty in levels, not multipliers. They were chosen as the simplest values compatible with GRADE and checked only
@@ -26,4 +26,18 @@ answer_2026_11_15:
     F9_link_strength: "too_high: a slope 1.5-1.7 instead of 2.68 (F - A = 1 for S 5/6), and no summing of weak studies against strong ones (GRADE, Guyatt 2011; vote counting biased, Verbeek 2012)"
   conflict: "F1 against pack 23: there Argon, judging pairs, put a meta-analysis before a trial in 38 of 46 pairs, and the weight of a meta-analysis without stated certainty was raised to 1 on 2026-11-15; here Argon, from the literature, finds 1 too high. Both go to the variant check below"
   next: "free: each suggested value as a variant against the method's references (R2 later trials of the link, R3 trial outcomes, the order of pack 23, the AUC on the 30 trials of pack 18); a variant enters through the manual only if none of them gets worse by more than 0.03"
+variants_2026_11_15:
+  code: "scripts/scoring/weight_variants.py (switches in hyparena/scoring/rules_v32.py: EFFECT_RULE, CLASS_WEIGHT; defaults unchanged); longevity-kg reviews/argon-2026-11-15/weight_variants.json"
+  current: "R2 0.702, R3 0.595, pack 23 0.688, AUC 30 trials 0.580 (reader v17) / 0.705 (v16)"
+  F1_not_stated_0.75: "R2 0.698, R3 0.594, pack 23 0.646 (-0.042), AUC 0.585 / 0.710: fails on pack 23"
+  F1_not_stated_0.5: "R2 0.689, R3 0.601, pack 23 0.599 (-0.089): fails"
+  F2_preclinical_review_1_3: "R2 0.705, R3 0.595, pack 23 0.675, AUC 0.580 / 0.705: within"
+  F5_any_stated_effect: "R2 0.695, R3 0.589, pack 23 0.669, AUC 0.560 / 0.712: within, slightly worse on four of five"
+  F7_class_0.75: "R2 0.694, R3 0.592, pack 23 0.682, AUC 0.594 / 0.714: within"
+  F7_class_0.5: "R2 0.677, R3 0.596, pack 23 0.682, AUC 0.605 / 0.714: within"
+  F8_fold_0: "unchanged on every reference"
+  F9_slope_1.6: "R2 0.702, R3 0.601, pack 23 0.688, AUC 0.580 / 0.714: within, not worse anywhere"
+  combination_F2_F7_0.75_F8_F9: "R2 0.695, R3 0.602, pack 23 0.669, AUC 0.598 / 0.714: within"
+  combination_with_F5: "R2 0.691, R3 0.599, pack 23 0.665, AUC 0.576 / 0.732: within"
+  reading: "the sources' F1 (a meta-analysis without stated certainty below a trial) fails against Argon's own order of pairs (pack 23); the others are eligible by the rule; F8 and F9 change nothing measurable here (one trial rarely gives two records on one link after the fold; the slope moves S but not the order)"
 
