@@ -7,7 +7,7 @@ package or tested, except the worked examples of [`docs/method-history.md`](docs
 | Folder | What is in it |
 |---|---|
 | [`docs/`](docs/README.md) | Documents of method v2 and earlier v3 rules, drafts of specifications, notes on Bio Arena and Co-Scientist |
-| [`handoffs/`](handoffs/) | Hand-offs between sessions (2026-10-29 … 2026-11-12): the chain of decisions |
+| [`handoffs/`](handoffs/) | Hand-offs between sessions (2026-10-29 … 2026-11-15): the chain of decisions |
 | [`code/`](code/README.md) | Code v3 does not use: the v2 demonstration page and tournament simulation, v2 checks and metrics with their tests |
 | [`data/demo/`](data/demo/) | Example inputs and runs of the demonstration page |
 | [`tasks/`](tasks/) | Task texts for other coding agents (Jules): the LLM catalogue and parts B and C of the knowledge-graph extraction set |
