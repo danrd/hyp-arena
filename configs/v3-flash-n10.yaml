@@ -35,7 +35,7 @@ admission: graded
 # v3 rules (rules_v3: P, W, I, V, gate). verify_claim/v9 since 2026-11-05: extraction accepted on design, comparison and n
 # (specs/reading/extraction-gold-v9-2026-11-05.yaml; relevance recall about 0.6, precision 1.0; the second relevance question is not used).
 method: v3
-verify_version: v16   # 2026-11-15: verify_claim/v16 (the claim's own outcome or a narrower measure, the same kind of intervention, meta-analyses), in batches of 10, with the cross-link reading; passed its confirming run (specs/reading/benchmark-reading-2026-11-12.yaml, cross_link_reading_2026_11_15); before: v9 in one call per claim
+verify_version: v17   # 2026-11-15: verify_claim/v17 (v16 + the same programme under another name or the one it is based on is the same intervention: novelty N agrees with the outside reader at kappa 0.45 instead of 0.20); before it verify_claim/v16 (the claim's own outcome or a narrower measure, the same kind of intervention, meta-analyses), in batches of 10, with the cross-link reading; passed its confirming run (specs/reading/benchmark-reading-2026-11-12.yaml, cross_link_reading_2026_11_15); before: v9 in one call per claim
 read_batch: 10
 cross_link: true
 normalize_version: v17   # normalize_card/v17 (2026-11-14): v16 + the experiment's prediction as a field, the control from the arms, one form for outcome claims (code checks); passed the rule on the 40 registry texts (specs/card/benchmark-card-2026-11-12.yaml, v17_all90_2026_11_14); v16: outcome / mechanism step / premise, main factor, population condition, topic and identifiers

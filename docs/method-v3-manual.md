@@ -165,7 +165,7 @@ The detailed rules, every field with its origin and what reads it, and a worked 
 
 ## 4. Evidence records
 
-A reader model (template `verify_claim/v16`, in batches of 10 abstracts) reads each abstract found for a claim and returns
+A reader model (template `verify_claim/v17`, in batches of 10 abstracts) reads each abstract found for a claim and returns
 records; an outcome or a step also reads, by the cross-link reading, the papers the hypothesis's other searches found
 (mostly its alternatives'), those the cheap relevance model rates 3 for it, filled up to 10 with those rated 2. The search (`search: filtered`; stage manual [`docs/system/search.md`](system/search.md)): the queries a
 model writes and a query on the exact population, up to 200 PubMed papers each, date-cut at T; ordered by the match of the
@@ -764,7 +764,7 @@ known result (calibration pool); **R4** — the order of pairs of records given 
 |---|---|---|
 | card | an outside reader's card gold (definitions of the card manual), 90 texts | outcome / step / premise κ 0.67 (0.72 on the 60 registry and written-mechanism texts); main outcome 0.79; main factor 0.97; claims recall 0.57, precision 0.56 ([`specs/card/benchmark-card-2026-11-12.yaml`](../specs/card/benchmark-card-2026-11-12.yaml)) |
 | search | an outside reader's search gold, 30 calibration trials | the reader gets 0.49 [0.38, 0.60] of the gold papers, 0.32 on their own link, at a median of 52 papers per hypothesis; the closest prior work in 0.73 of trials ([`specs/search/benchmark-search-2026-11-12.yaml`](../specs/search/benchmark-search-2026-11-12.yaml)) |
-| reading | an outside reader's findings on 400 link-abstract pairs; the search gold of 30 trials | reader v16: recall 0.57, precision 0.79 (mean of two runs; v13 0.29-0.34 / 0.64; a plain LLM 0.28 / 0.41); with the cross-link reading 0.38 of the gold papers of a careful search become records (0.26 before) and the AUC of the evidence balance on the 30 trials is 0.71 (0.55 before) ([`specs/reading/benchmark-reading-2026-11-12.yaml`](../specs/reading/benchmark-reading-2026-11-12.yaml)) |
+| reading | an outside reader's findings on 400 link-abstract pairs; the search gold of 30 trials | reader v17: recall 0.55, precision 0.79 (mean of two runs; v16 0.57 / 0.79, v13 0.29-0.34 / 0.64, a plain LLM 0.28 / 0.41); with the cross-link reading 0.39 of the gold papers of a careful search become records (0.26 with reader v9); the AUC of the evidence balance on the 30 trials 0.58 (v16 0.71, v9 0.55; wide intervals) ([`specs/reading/benchmark-reading-2026-11-12.yaml`](../specs/reading/benchmark-reading-2026-11-12.yaml)) |
 | reading: design, n, blinding | against an outside reader | 92-96% agreement |
 | intervention match: exact / class / category / other | an outside reader, 80 link-finding pairs blind | weighted κ 0.55, stance agreement 0.89 ([`specs/scoring/intervention-class-2026-11-11.yaml`](../specs/scoring/intervention-class-2026-11-11.yaml)) |
 | record weight | later RCTs and meta-analyses of the same link (R2) | AUC 0.70 ([`specs/scoring/record-weight-2026-11-08.yaml`](../specs/scoring/record-weight-2026-11-08.yaml)) |
@@ -775,7 +775,7 @@ known result (calibration pool); **R4** — the order of pairs of records given 
 | informativeness I (d of the alternatives) | an outside reader, holdout of 30 trials | κ 0.35 ([`specs/alternatives/informativeness-check-2026-11-08.yaml`](../specs/alternatives/informativeness-check-2026-11-08.yaml)) |
 | support a of the alternatives | an outside reader | Spearman 0.28 (the reader counts what it knows, we count found papers) |
 | missing competitors | an outside reader | in 78% of trials the reader adds a supported competitor |
-| novelty N | an outside reader (30 and 37 trials) | pack 18 (30 trials), N against the outside reader's level: weighted κ 0.41 with the filtered search and reader v9, 0.20 with reader v16 and the cross-link reading (ours farther from the known in 0.33 and 0.52 of the trials: v16 marks the closest prior work as the same class more often); pack 7: κ 0.14-0.26 (the numbers before 2026-11-15 compared the v2 indicator, not N) |
+| novelty N | an outside reader (30 and 37 trials) | pack 18 (30 trials), N against the outside reader's level: weighted κ 0.45 with reader v17 and the cross-link reading (0.41 with v9, 0.20 with v16; ours farther from the known in 0.24 of the trials); pack 7: κ 0.14-0.26 (the numbers before 2026-11-15 compared the v2 indicator, not N) |
 | prospective pool, 60 ongoing trials | outcomes 2026-11 … 2028-12 | scores frozen with a SHA-256 ([`specs/whole-system/prospective-2026-11-06.yaml`](../specs/whole-system/prospective-2026-11-06.yaml)): the clean test |
 
 Against trial outcomes the record weights add nothing over counting records; they are kept for what they are for: ordering
