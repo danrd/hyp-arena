@@ -150,4 +150,9 @@ adjudicate_v3_2026_11_15:
     false_positives: "9 pairs, mostly 'narrower' given to another construct of the same field: handgrip strength or gait speed for body composition, muscle strength or frailty for sarcopenia, functional capacity for sarcopenia - the gold reads these as another outcome"
     by_the_rule: "not passed: recall 0.667 >= 0.62, precision 0.609 < 0.70; the same trade-off as reader v14 (the outcome boundary too wide)"
     parses_kept: "longevity-kg reviews/codex-2026-11-09-skeleton/stage0_parses_2026-11-15.jsonl (177 extractions with their texts; load with tools.skeleton.store.load_jsonl), answers stage0_answers_adjudicate_v3.json"
+adjudicate_v4_2026_11_15:
+  what: "adjudicate_v3 plus: a narrower outcome is a measure of the same thing, not another side of the same field (strength is not mass, function is not mass, frailty is not sarcopenia, a strength or walking test is not body composition)"
+  why: "the 9 false positives of adjudicate_v3 on pack 9 were mostly 'narrower' given to another construct"
+  run: "the ambiguous pairs of pack 9 judged again on the parses of 2026-11-15 (no new parse); about 0.10 USD"
+  pass_rule: "written before the run, as for v3: recall at least 0.62 and precision at least 0.70 on pack 9"
 
