@@ -21,3 +21,14 @@ thresholds:   # written before the answer
   separate_search_needed: "the alternatives' own searches stay when they add at least 0.1 recall of Argon's alternative papers over the hypothesis's own searches at the same reading; otherwise the budget question is answered 'cut'"
 baseline: "the same model as our proposer, the same text, the task in one sentence (list the main alternative explanations and what the design does to each); priced before the run"
 cost: "pack free; matching about 0.02 USD and the baseline about 0.05 USD, both after the answer and the user's go"
+result_2026_11_15:
+  runs: "ours: the proposed alternatives of the confirming runs (run_*_n14x.json: card v17, filtered search, reader v16, cross-link); their design verdict is the proposer's on_positive / on_negative (the judged d exists only for the earlier cards); baseline: deepseek with the task in one sentence (prompt alt_baseline/v1); judge: qwen (prompt alt_match/v1); about 0.05 USD"
+  hand_check: "the 20 sampled pairs were accepted by the user, with the note that Argon's answers are more detailed"
+  coverage_rank_1_3: {ours: 0.489, baseline: 0.522}
+  coverage_substantive: {ours: 0.582, baseline: 0.455}
+  coverage_methodological: {ours: 0.343, baseline: 0.629}
+  precision: {ours: 0.299, baseline: 0.327}
+  design_verdict_wkappa: {ours_expected: 0.096, ours_null: -0.058, baseline_expected: 0.075, baseline_null: 0.026}
+  literature: "of 107 valid papers Argon names for its substantive alternatives of rank 1-3: given to our reader by the claims' searches 33, added by the alternatives' own searches 13 (0.12; holdout 2 of 35), recorded 43"
+  by_the_rule: "alternatives_ok not met (coverage 0.49 < 0.6, design-verdict kappa 0.10 < 0.4); separate_search_needed met (0.12 >= 0.1): the alternatives' own searches stay. Ours cover substantive alternatives better than the plain LLM (0.58 vs 0.46) and methodological ones worse (0.34 vs 0.63); the design verdict agrees with Argon at chance level for both"
+
