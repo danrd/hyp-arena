@@ -5,7 +5,8 @@
 
 The references are those of scripts/scoring/weight_variants.py (R2, R3, pack 23, the AUC of the evidence balance on the 30
 trials of pack 18 with the working reader and with reader v16), plus "moved": the records for whose effect factor rises
-from 1/2 to 1 under the variant (30 trials, working reader).
+from 1/2 to 1 under the variant (30 trials, working reader). "current" is the parser before E1 (the interval forms) was
+adopted on 2026-11-15; the working code is the row "E1 interval".
 """
 from __future__ import annotations
 

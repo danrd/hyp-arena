@@ -192,7 +192,9 @@ list ordered again; a cheap model rates the first 100 from 0 to 3 for the claim;
 
   Raw units ("+2.4 kg"), test statistics and p values alone are "unclear". A null result for the outcome closest to the claim
   is "none". A raw difference with its 95% interval is converted when n is known: SE = (hi − lo) / 3.92, SD = SE·√n / 2
-  between two groups (SE·√n before-after), standardised difference d = |difference| / SD.
+  between two groups (SE·√n before-after), standardised difference d = |difference| / SD. The interval is read in the forms
+  abstracts use: with the unit words between the number and the interval ("0.86 points on the SPPB scale (95% CI 0.32,
+  1.41)"), "CI = 62-123", "95% C.I. = 1.2-3.6", in braces ("46 m {20;72}").
 - A review restating one trial counts as that trial (an RCT of unknown size until the trial's own paper is found).
 - **Independence group**: a paper whose abstract names exactly one trial id (NCT, ISRCTN) belongs to that trial; else the
   paper is its own group. Several records of one group count once (section 5).

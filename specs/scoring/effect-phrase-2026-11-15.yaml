@@ -61,7 +61,7 @@ result_2026_11_15:
   reading: >-
     every difference is inside the noise of the references (R2 about +-0.09, the AUC on 30 trials about +-0.2): the
     extensions do not improve the order. The effect factor as it stands loses little by leaving these phrases unclear.
-  decision: "pending the user (the extensions are in the code, switched off; hyparena/reading/effect_class.py, EXTRA)"
+  decision: "E1 adopted 2026-11-15 (hyparena/reading/effect_class.py, EXTRA = interval; manual section 4); E2, E3, E4 not adopted, kept in the code switched off"
 
 argon_pack27:
   written_on: 2026-11-15

@@ -88,9 +88,10 @@ def d_from_ci(phrase: str, n: int | None, comparison: str) -> float | None:
     return abs(diff) / sd
 
 
-# Parser extensions scored as variants (specs/scoring/effect-phrase-2026-11-15.yaml). None is on by default: a switch
-# enters EXTRA only through the manual.
-EXTRA: frozenset = frozenset()          # of "interval", "means", "two_values", "p_value"
+# Parser extensions (specs/scoring/effect-phrase-2026-11-15.yaml). "interval" is part of the method since 2026-11-15 (more
+# written forms of the accepted rule "a raw difference with its 95% interval and n"); the others were scored as variants and
+# are off: a switch enters EXTRA only through the manual.
+EXTRA: frozenset = frozenset({"interval"})          # of "interval", "means", "two_values", "p_value"
 
 _N = r"([+-]?\d+(?:\.\d+)?)"
 _CI_WIDE = re.compile(_N + r"(?:\s*[a-zA-Z%/²°.-]+){0,8}\s*(?:\(|;|,|\[)?\s*(?:95\s*%\s*)?(?:confidence interval|C\.?I\.?)\b\.?"

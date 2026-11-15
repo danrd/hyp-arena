@@ -1,4 +1,4 @@
-"""The effect-phrase parser extensions (specs/scoring/effect-phrase-2026-11-15.yaml): off by default, and what each reads."""
+"""The effect-phrase parser extensions (specs/scoring/effect-phrase-2026-11-15.yaml): only "interval" is on, and what each reads."""
 import pytest
 
 from hyparena.reading import effect_class as ec
@@ -8,13 +8,15 @@ from hyparena.reading import effect_class as ec
 def on():
     def switch(*names):
         ec.EXTRA = frozenset(names)
+    saved = ec.EXTRA
     yield switch
-    ec.EXTRA = frozenset()
+    ec.EXTRA = saved
 
 
-def test_extensions_are_off_by_default():
-    assert ec.EXTRA == frozenset()
-    assert ec.d_extra("0.86 points on the SPPB scale (95% CI 0.32, 1.41)", 188, "between_groups") is None
+def test_only_the_interval_forms_are_on_by_default():
+    assert ec.EXTRA == frozenset({"interval"})
+    assert ec.d_extra("0.86 points on the SPPB scale (95% CI 0.32, 1.41)", 188, "between_groups") == pytest.approx(0.45, abs=0.01)
+    assert ec.d_extra("pre 14.1 ± 3.2 and post 17.5 ± 3.6", 15, "within_group") is None
     assert ec.class_two_values("45% vs 27%") == "unclear"
     assert ec.d_from_p("p = 0.002", 91, "between_groups") is None
 
@@ -46,3 +48,14 @@ def test_p_value_with_n(on):
     on("p_value")
     assert ec.d_from_p("p = 0.002", 91, "between_groups") == pytest.approx(0.65, abs=0.01)
     assert ec.d_from_p("p = 0.002", None, "between_groups") is None
+
+
+def test_the_interval_form_reaches_the_record_weight():
+    from hyparena.card.models import EvidenceRecord
+    from hyparena.scoring import rules_v32 as r32
+    rec = EvidenceRecord(source="PubMed", record_id="PMID:1", quote="q", n_total=40, comparison="between_groups",
+                         effect_reported="2.4 kg (95% C.I. = 1.2-3.6)", effect_class="unclear")
+    assert r32.effect_weight(rec, False) >= r32.EFFECT_FULL_FROM          # d 1.24: at least medium
+    rec.effect_reported = "0.86 points on the SPPB scale (95% CI 0.32, 1.41)"
+    rec.n_total = 188
+    assert r32.effect_weight(rec, False) < r32.EFFECT_FULL_FROM           # d 0.45: below medium
