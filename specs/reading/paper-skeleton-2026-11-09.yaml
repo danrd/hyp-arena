@@ -143,4 +143,11 @@ adjudicate_v3_2026_11_15:
   run: "stage 0 again on the 200 pairs of pack 9: the 188 papers parsed anew (parse_v2, with the fixed quote checks; the stage-0 database of 2026-11-10 was not kept), then the pairs judged by adjudicate_v3; about 0.55-0.85 USD; the parses dumped into the repository this time"
   baseline: "stage 0 of 2026-11-10 (adjudicate_v2, old checks): recall 0.52 (11 of 21), precision 0.85; reader v13 0.52 / 0.73"
   pass_rule: "written before the run: adjudicate_v3 replaces v2 when recall on pack 9 is at least 0.62 (11 of 21 + 2) and precision at least 0.70; reported: the loss per step, and v2 on the same parses if run"
+  result_2026_11_15:
+    cost: "0.48 USD (parse 0.377: 177 of 188 parsed, 11 failed schema validation in 2 rounds - extra fields, an abstract conclusion or arm reference the parse did not define, a control value outside the list; adjudicate_v3 0.10)"
+    pack_9: "recall 0.667 (14 of 21), precision 0.609 (14 of 23), stance 13 of 14; losses: 6 rejected by the model, 1 not parsed"
+    baseline: "adjudicate_v2 on the parses of 2026-11-10: 0.52 / 0.85; reader v13 0.52 / 0.73"
+    false_positives: "9 pairs, mostly 'narrower' given to another construct of the same field: handgrip strength or gait speed for body composition, muscle strength or frailty for sarcopenia, functional capacity for sarcopenia - the gold reads these as another outcome"
+    by_the_rule: "not passed: recall 0.667 >= 0.62, precision 0.609 < 0.70; the same trade-off as reader v14 (the outcome boundary too wide)"
+    parses_kept: "longevity-kg reviews/codex-2026-11-09-skeleton/stage0_parses_2026-11-15.jsonl (177 extractions with their texts; load with tools.skeleton.store.load_jsonl), answers stage0_answers_adjudicate_v3.json"
 
