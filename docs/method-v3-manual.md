@@ -775,7 +775,7 @@ known result (calibration pool); **R4** — the order of pairs of records given 
 | informativeness I (d of the alternatives) | an outside reader, holdout of 30 trials | κ 0.35 ([`specs/alternatives/informativeness-check-2026-11-08.yaml`](../specs/alternatives/informativeness-check-2026-11-08.yaml)) |
 | support a of the alternatives | an outside reader | Spearman 0.28 (the reader counts what it knows, we count found papers) |
 | missing competitors | an outside reader | in 78% of trials the reader adds a supported competitor |
-| novelty N | an outside reader (30 and 37 trials) | weighted κ −0.08 to 0.26; ours is farther from the known (in half of the 30 trials) |
+| novelty N | an outside reader (30 and 37 trials) | pack 18 (30 trials), N against the outside reader's level: weighted κ 0.41 with the filtered search and reader v9, 0.20 with reader v16 and the cross-link reading (ours farther from the known in 0.33 and 0.52 of the trials: v16 marks the closest prior work as the same class more often); pack 7: κ 0.14-0.26 (the numbers before 2026-11-15 compared the v2 indicator, not N) |
 | prospective pool, 60 ongoing trials | outcomes 2026-11 … 2028-12 | scores frozen with a SHA-256 ([`specs/whole-system/prospective-2026-11-06.yaml`](../specs/whole-system/prospective-2026-11-06.yaml)): the clean test |
 
 Against trial outcomes the record weights add nothing over counting records; they are kept for what they are for: ordering
