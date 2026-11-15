@@ -1,0 +1,28 @@
+id: gate-fixes-2026-11-15
+written_on: 2026-11-15
+status: "rule written before the evaluation"
+why: >-
+  The gate filters a hypothesis when a key link has a top-design (RCT or meta-analysis) between-group record against it in
+  the claim's exact context and no such record for it (hyparena/scoring/rules_v3.strong_refutation). With reader v17 and the
+  cross-link reading the AUC of the evidence balance on the 30 trials of pack 18 fell from 0.705 (v16) to 0.580; the gate
+  filtered two positive trials (NCT03477097, NCT03600402) and one negative (NCT04796701). In all three the records for the
+  link are RCTs or meta-analyses of the same kind of intervention (context "class"), which the gate does not count as a
+  counterweight; in NCT03600402 the null RCT has 32 participants.
+variants:
+  G1_named_outcome: >-
+    a record against counts for the gate only when its quote names the claim's outcome (the object of the link or its
+    stated measure): a content word of the outcome (4 letters or more, compared on its first 5 letters) appears in the quote.
+    A lexical check, since the record has no outcome-match field.
+  G2_counterweight_any_context: >-
+    a top-design between-group record for the link counts as a counterweight in any counting context (exact, class or
+    adjacent), not only in the exact one.
+  G1_and_G2: both.
+references:
+  - "R3: AUC of the evidence balance on the calibration trials (74 trials, saved v10 runs), the filtered taken as -1"
+  - "AUC of the evidence balance on the 30 trials of pack 18 with reader v17 + cross-link (run_*_n15x) and reader v16 (run_*_n14x)"
+  - "the count of filtered trials among the negative and the positive ones, per reference"
+pass_rule: >-
+  A variant enters through the manual only when none of the three AUCs gets worse by more than 0.03 against the current
+  rule, and it does not lift the gate on more negative trials than positive ones over the references together. The trials
+  whose gate changes are listed with the records that decide them.
+code: "switches GATE_OUTCOME_NAMED and GATE_SUPPORT_CONTEXTS in hyparena/scoring/rules_v3.py (defaults: the current rule); scripts/scoring/gate_variants.py"
