@@ -98,4 +98,13 @@ reader_v15_2026_11_15:
   why: "v14: 21 of its 44 wrong records were on another outcome than the claim's, 15 on an intervention the gold calls another"
   run: "bench_reading run --system v15 on the 20 links of pack 16, every step kept; about 0.07 USD"
   pass_rule: "as for v14, written before this run: recall at least 0.39 and precision at least 0.59; holdout, recall by kind and by the alternative rule reported, not tested"
+  result_2026_11_15:
+    cost: "0.060 USD by the run's tokens"
+    recall: "0.383 (36 of 94); v14 0.628, v13 0.287 / 0.340"
+    precision: "0.783 (36 of 46 records); v14 0.573, v13 0.64"
+    holdout: "recall 0.48, precision 1.0"
+    by_kind: {same_intervention_primary: "15 of 22 (v14 20)", same_class_primary: "5 of 23 (v14 9)", review_or_meta_analysis: "13 of 26 (v14 19)", alternative_without_distinguishing_part: "2 of 23"}
+    by_the_alternative_rule: "33 of 71 = 0.46 (v14 0.68, v13 0.41)"
+    lost_against_v14: "25 findings v14 had: 16 the reader called none on an intervention the gold calls the same class, 3 on the same intervention (the strict outcome), 4 the class wrongly given"
+    by_the_rule: "not passed: precision 0.783 >= 0.59, recall 0.383 < 0.39 (by 0.007, inside the run-to-run noise of about 0.05). The 'another kind is none' examples cut the class findings the gold keeps"
 
