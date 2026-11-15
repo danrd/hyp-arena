@@ -69,6 +69,12 @@ def precision(n: Optional[int]) -> float:
     return max(0.25, min(1.0, math.log(n) / math.log(300)))
 
 
+# The kinds of code-computed d (effect_class.d_from_numbers) the weight reads: those the manual's effect rule already names (a
+# standardised difference, a ratio, a raw difference with its interval). "means" and "change_sd" are kept on the record and
+# enter only through the manual (two means with their spread were scored as variant E2 and not adopted).
+EFFECT_D_KINDS = frozenset({"smd", "ratio", "interval"})
+
+
 def effect_weight(rec: EvidenceRecord, against: bool) -> float:
     if against:
         return 1.0
@@ -86,9 +92,11 @@ def effect_weight(rec: EvidenceRecord, against: bool) -> float:
     if d is None:                                         # 2026-11-08: a raw difference with its 95% CI and n
         from hyparena.reading.effect_class import d_from_ci
         d = d_from_ci(p, rec.n_total, rec.comparison)
-    if d is None and rec.effect_class != "none":          # extensions, off by default (effect_class.EXTRA)
+    if d is None and rec.effect_class != "none":          # more written forms of the interval (effect_class.EXTRA)
         from hyparena.reading import effect_class as ec
         d = ec.d_extra(p, rec.n_total, rec.comparison)
+    if d is None and rec.effect_class != "none" and rec.effect_d is not None and rec.effect_d_kind in EFFECT_D_KINDS:
+        d = rec.effect_d                                  # reader v18: the effect's numbers as fields, d computed by code
     if d is None:
         if rec.effect_class == "unclear":                 # 2026-11-08: a percent change the extractor class missed
             from hyparena.reading import effect_class as ec

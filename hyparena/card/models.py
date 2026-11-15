@@ -362,6 +362,12 @@ class EvidenceRecord(BaseModel):
     comparison: Literal["between_groups", "within_group", "none", "unknown"] = "unknown"
     effect_reported: str = ""                    # the verbatim effect size ("+2.4 kg", "RR 0.79 (0.65-0.96)")
     effect_class: Literal["none", "small", "medium", "large", "unclear"] = "unclear"
+    # verify_claim/v18 (2026-11-15): where the quoted result sits relative to the claim's outcome, and the numbers of the effect
+    outcome_match: Literal["same", "narrower", "broader", "other", ""] = ""
+    outcome_measure: str = ""                    # the abstract's own words for the measure, verbatim
+    effect_numbers: dict[str, str] = Field(default_factory=dict)   # each number as the abstract writes it, checked verbatim
+    effect_d: Optional[float] = None             # the standardised difference code computes from effect_numbers
+    effect_d_kind: str = ""                      # smd | ratio | interval | means | change_sd: which numbers it comes from
     blinding: Literal["double_blind", "single_blind", "assessor_blind", "open", "not_reported", "not_applicable",
                       "unknown"] = "unknown"      # verify_claim/v11 (2026-11-08): of the study the finding comes from
     outcome_subjective: Optional[bool] = None    # verify_claim/v11: the outcome of the quote is self-reported or rated

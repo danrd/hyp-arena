@@ -196,10 +196,70 @@ def parse_records(text: str) -> Optional[dict]:
     return {"records": records, "truncated": True} if records else None
 
 
-def _validate(value: dict, abstracts: dict[str, dict]) -> list[str]:
+INTERVENTIONS = ("same", "same_kind", "component", "other")
+OUTCOMES = ("same", "narrower", "broader", "other")
+
+
+def paper_answers(value: dict) -> dict[str, dict]:
+    """PMID -> the reader's entry of "papers" (verify_claim/v18: intervention, outcome, own_result, finding)."""
+    return {str(x.get("pmid", "")).replace("PMID:", "").strip(): x for x in (value.get("papers") or []) if isinstance(x, dict)}
+
+
+def paper_problems(value: dict, abstracts: dict[str, dict], own_part_only: bool = False) -> list[str]:
+    """verify_claim/v18: the three answers per abstract against its finding and its record. An abstract whose intervention
+    is the claim's or of its kind, whose result is on the claim's outcome or a narrower measure and which has a result of
+    its own must be a finding with a record; a finding needs a record and an outcome that is the claim's. For a competing
+    explanation (`own_part_only`) "none" stays allowed: the finding counts only by the part that differs."""
+    if value.get("truncated"):
+        return []
+    papers = paper_answers(value)
+    recorded = {str(r.get("pmid", "")).replace("PMID:", "").strip() for r in value.get("records") or [] if isinstance(r, dict)
+                and r.get("stance") in ("supports", "refutes")}
+    problems = [f"PMID {p}: no entry in \"papers\" (every abstract needs one)" for p in abstracts if p not in papers]
+    for p, x in papers.items():
+        if p not in abstracts:
+            continue
+        iv, oc, own, finding = x.get("intervention"), x.get("outcome"), x.get("own_result"), x.get("finding")
+        if iv not in INTERVENTIONS or oc not in OUTCOMES or own not in ("yes", "no") or finding not in ("for", "against", "none"):
+            problems.append(f"PMID {p}: \"papers\" needs intervention ({' | '.join(INTERVENTIONS)}), outcome "
+                            f"({' | '.join(OUTCOMES)}), own_result (yes | no) and finding (for | against | none)")
+            continue
+        fits = iv != "other" and oc in ("same", "narrower") and own == "yes"
+        if fits and finding == "none" and not own_part_only:
+            problems.append(f"PMID {p}: intervention {iv}, outcome {oc}, own_result yes, but finding \"none\": by rule 1d it is "
+                            "\"for\" or \"against\" with a record (or correct the answer that is wrong)")
+        elif finding != "none" and not fits:
+            problems.append(f"PMID {p}: finding \"{finding}\" but intervention {iv}, outcome {oc}, own_result {own}: by rule 1d "
+                            "it is \"none\" (or correct the answer that is wrong)")
+        elif finding != "none" and p not in recorded:
+            problems.append(f"PMID {p}: finding \"{finding}\" but no record with stance supports or refutes in \"records\"")
+    return problems
+
+
+def v18_fields(rec: EvidenceRecord, r: dict, paper: dict, source: str) -> None:
+    """verify_claim/v18: the outcome match (the record's own, else the paper entry's), the measure's words when verbatim,
+    the effect numbers that are written in the abstract and the standardised difference code computes from them; a study of
+    one part of the claim's combined intervention is the same class."""
+    from hyparena.reading.effect_class import clean_numbers, d_from_numbers
+    om = r.get("outcome_match") if r.get("outcome_match") in OUTCOMES else paper.get("outcome")
+    rec.outcome_match = om if om in OUTCOMES else ""
+    measure = _text(r.get("outcome_measure")) or _text(paper.get("outcome_measure"))
+    rec.outcome_measure = measure if measure and _norm(measure) in _norm(source) else ""
+    rec.effect_numbers = clean_numbers(r.get("effect_numbers"), source)
+    d, kind = d_from_numbers(rec.effect_numbers, rec.n_total, rec.comparison)
+    rec.effect_d, rec.effect_d_kind = (round(d, 3) if d is not None else None), kind
+    if paper.get("intervention") == "component" and rec.qualifiers_match.get("intervention_match") in (
+            "exact", "dose_differs", "regimen_differs"):
+        rec.qualifiers_match["intervention_match"] = "class"
+        rec.notes += "; one part of the claim's combined intervention: counted as the same class"
+
+
+def _validate(value: dict, abstracts: dict[str, dict], papers_check: bool = False, own_part_only: bool = False) -> list[str]:
     if not isinstance(value.get("records"), list):
         return ['the reply must be an object with a "records" list']
     problems = ["the reply was cut off before the end: reply again, complete"] if value.get("truncated") else []
+    if papers_check:
+        problems += paper_problems(value, abstracts, own_part_only)
     for i, r in enumerate(value.get("records") or []):
         if not isinstance(r, dict):
             problems.append(f"record {i}: not an object")
@@ -469,15 +529,18 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
                                 "review": pubmed.is_review(a)} for k, a in abstracts.items()]}
     version = template_version or TEMPLATE[1]
     keep_no_stance = int(version.lstrip("v") or 0) >= 6     # v3 templates
+    v18 = int(version.lstrip("v") or 0) >= 18               # the three answers per abstract, checked against the finding
+    own_part = claim.role == "alternative" or claim.note == ALTERNATIVE_NOTE
+    check = lambda v, part: _validate(v, part, papers_check=v18, own_part_only=own_part)
 
     def read(part: dict) -> tuple[Optional[dict], str]:
         vs = {**variables, "abstracts": [x for x in variables["abstracts"] if x["pmid"] in part]}
         value, fam = ask(client, role="verify_claim", family=family, template=TEMPLATE[0], version=version,
-                         variables=vs, validate=lambda v: _validate(v, part), rounds=2, avoid=avoid, log=log,
+                         variables=vs, validate=lambda v: check(v, part), rounds=2, avoid=avoid, log=log,
                          parse=parse_records)
         if fallback and fallback != fam and (value is None or (value.get("truncated") and not value.get("records"))):
             value, fam = ask(client, role="verify_claim", family=fallback, template=TEMPLATE[0], version=version,
-                             variables=vs, validate=lambda v: _validate(v, part), rounds=2, avoid=avoid,
+                             variables=vs, validate=lambda v: check(v, part), rounds=2, avoid=avoid,
                              log=log, parse=parse_records)
         return value, fam
     keys = list(abstracts)
@@ -489,12 +552,14 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
             continue
         fam = f
         value = v if value is None else {"records": (value.get("records") or []) + (v.get("records") or []),
+                                         "papers": (value.get("papers") or []) + (v.get("papers") or []),
                                          "truncated": bool(value.get("truncated") or v.get("truncated"))}
     if relevance_check and value and value.get("records"):
         checks = [c for c in (ask_relevance(client, fam, avoid, claim, card, pmid, abstracts[pmid], log=log)
                               for pmid in relevance_targets(value["records"], abstracts)) if c]
         value = {**value, "records": merge_relevance(value["records"], checks, abstracts)}
     rejected = []
+    papers = paper_answers(value or {}) if v18 else {}
     for r in (value or {}).get("records") or []:
         if not isinstance(r, dict):
             continue
@@ -545,6 +610,11 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
                 rec.qualifiers_match["intervention_match"] = "class"
                 rec.notes += "; the quote and the title do not name the intervention: counted as the same class"
         stance = r.get("stance")
+        if v18:
+            v18_fields(rec, r, papers.get(pmid) or {}, a["title"] + " " + a["abstract"])
+            if stance in ("supports", "refutes") and rec.outcome_match in ("broader", "other"):
+                rec.notes += f"; the result is on a {rec.outcome_match} outcome than the claim's: not counted (the reader said {stance})"
+                stance = "neither"
         need = claim_endpoint(claim)
         effect = r.get("effect") if r.get("effect") in ("increase", "decrease", "no_effect") else "unknown"
         rec.effect = effect

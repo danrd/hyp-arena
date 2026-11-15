@@ -35,9 +35,9 @@ from scripts.common.reread_v11 import CONFIG, items
 KG = Path(__file__).resolve().parents[3] / "longevity-kg"
 DIR = KG / "reviews" / "argon-2026-11-12"
 PRICE = {"deepseek": (0.15, 0.6), "google": (1.5, 9.0)}      # USD per M tokens off-peak (DeepSeek x2 on weekdays 01-04, 06-10 UTC)
-SYSTEMS = ("v9", "v13", "base_a", "v13_trace", "v14", "v15", "v16", "v16_2", "v17", "v17_2")
+SYSTEMS = ("v9", "v13", "base_a", "v13_trace", "v14", "v15", "v16", "v16_2", "v17", "v17_2", "v18", "v18_2")
 TRACE = "v13_trace"          # v13 again with every step kept: the filter answers, the reader's answer per paper, the records code kept
-TRACED = ("v13_trace", "v14", "v15", "v16", "v16_2", "v17", "v17_2")   # runs that keep every step (v14: verify_claim/v14, the same filter and batches as v13)
+TRACED = ("v13_trace", "v14", "v15", "v16", "v16_2", "v17", "v17_2", "v18", "v18_2")   # runs that keep every step (v14: verify_claim/v14, the same filter and batches as v13)
 
 
 def targets() -> list[dict]:
@@ -89,8 +89,9 @@ def dry() -> dict:
                 tin += (sum(len(p["title"]) + 600 for p in papers) + 2500) / 4   # filter: titles and abstract starts
                 tout += 25 * len(papers)
                 kept = 0.45 * text                                     # the filter kept 7.8 of 20 papers on pack-9 links
-                tin += (kept + 10000 * max(1, round(0.45 * len(papers) / 10))) / 4
-                tout += 110 * 0.45 * len(papers)
+                long = s.startswith("v18")                             # v18: a longer template, three answers per abstract, effect numbers
+                tin += (kept + (20000 if long else 10000) * max(1, round(0.45 * len(papers) / 10))) / 4 * (1.3 if long else 1)
+                tout += (260 if long else 110) * 0.45 * len(papers) * (1.3 if long else 1)   # 1.3: replies sent back by the code checks
                 calls += 1 + max(1, round(0.45 * len(papers) / 10))
         usd = tin / 1e6 * PRICE["deepseek"][0] + tout / 1e6 * PRICE["deepseek"][1]
         est[s] = {"calls": calls, "tokens_in": round(tin), "tokens_out": round(tout), "usd_offpeak": round(usd, 3),
@@ -149,13 +150,19 @@ def run(system: str, limit: int = 0) -> dict:
             ans = {str(x.get("pmid", "")).replace("PMID:", "").strip(): x.get("own_result")
                    for x in (value or {}).get("papers") or [] if isinstance(x, dict)}
             kept = [p for p in cand if ans.get(p) in ("yes", "unsure", None)]
-            recs = {}
+            recs, fields = {}, {}
             for i in range(0, len(kept), rv.BATCH):
                 cv = verify_claim(client, "deepseek", frozenset({"google"}), t["claim"], t["card"], t["as_of"], log=log,
                                   fallback="google", expert_pmids=[(p, "benchmark") for p in kept[i:i + rv.BATCH]],
-                                  search="fixed", template_version=system.split("_")[0] if system.startswith(("v14", "v15", "v16", "v17")) else "v13", check_subgroups=False)
+                                  search="fixed", template_version=system.split("_")[0] if system.startswith(("v14", "v15", "v16", "v17", "v18")) else "v13", check_subgroups=False)
                 recs.update({k: v for k, v in _records(cv.model_dump()).items() if k not in recs})
-            trace = {"rule_pass": cand, "filter": ans, "kept": kept, "reader": _reader_answers(log)}
+                for r in cv.evidence + cv.counterevidence + cv.no_stance:       # reader v18: outcome match and effect numbers
+                    if r.outcome_match or r.effect_numbers:
+                        fields.setdefault(r.record_id.replace("PMID:", ""), {
+                            "outcome_match": r.outcome_match, "outcome_measure": r.outcome_measure, "effect_numbers": r.effect_numbers,
+                            "effect_d": r.effect_d, "effect_d_kind": r.effect_d_kind, "effect_reported": r.effect_reported,
+                            "n_total": r.n_total, "counted": r in cv.evidence or r in cv.counterevidence})
+            trace = {"rule_pass": cand, "filter": ans, "kept": kept, "reader": _reader_answers(log), **({"fields": fields} if fields else {})}
         with lock:
             done[t["rid"]] = {"records": {k: list(v) for k, v in recs.items()}, **({"trace": trace} if system in TRACED else {}),
                               "calls": [{k: x.get(k) for k in ("template", "family", "tokens_in", "tokens_out", "error")} for x in log]}
@@ -175,14 +182,15 @@ def _reader_answers(log: list) -> dict:
     from hyparena.card.llm import parse_fullest
     out = {}
     for x in log:
-        if not str(x.get("template", "")).startswith(("verify_claim/v13", "verify_claim/v14", "verify_claim/v15", "verify_claim/v16", "verify_claim/v17")):
+        if not str(x.get("template", "")).startswith(("verify_claim/v13", "verify_claim/v14", "verify_claim/v15", "verify_claim/v16", "verify_claim/v17", "verify_claim/v18")):
             continue
         v = parse_fullest(x.get("reply") or "") or {}
         match = {str(r.get("pmid", "")).replace("PMID:", "").strip(): r.get("intervention_match") for r in v.get("records") or [] if isinstance(r, dict)}
         for q in v.get("papers") or []:
             if isinstance(q, dict):
                 pm = str(q.get("pmid", "")).replace("PMID:", "").strip()
-                out[pm] = {"finding": q.get("finding"), "intervention_match": match.get(pm)}
+                out[pm] = {"finding": q.get("finding"), "intervention_match": match.get(pm),
+                           **{k: q[k] for k in ("intervention", "outcome", "outcome_measure", "own_result", "why_none") if q.get(k)}}
     return out
 
 

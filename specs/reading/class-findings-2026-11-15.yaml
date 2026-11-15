@@ -35,3 +35,37 @@ rule:
   outcome_field_usable_when: kappa at least 0.6 and at least 0.95 of the phrases verbatim; then scripts/scoring/gate_variants.py is rerun with the field for rule G1
   second_round: a candidate written after seeing the losses on the 14 links is scored on the 6 reserve links only
   pack_usable_when: the gold has at least 30 class findings from primary studies; fewer, and class_recall is reported with its interval but decides nothing
+
+reader_v18:
+  written_on: 2026-11-15
+  status: the template and the code checks are written; nothing below was run when this was written
+  template: hyparena/prompts/verify_claim/v18.j2 (v17 plus rules 1c and 1d, the papers table with three answers, three record fields)
+  changes:
+    three_answers: >-
+      for every abstract the reader answers separately: the intervention (same | same_kind | component | other), the
+      outcome its result is on (same | narrower | broader | other, with the abstract's words for the measure) and whether
+      the abstract has a result of its own (yes | no); the finding follows from the three
+    code_checks: >-
+      an abstract that fits on all three and is called "none", a finding whose three answers do not fit, a finding without
+      a record, an abstract without an entry: the reply goes back to the reader (two rounds, as for a quote that is not
+      verbatim); a competing explanation may still be "none" (it counts only by its own part). A record whose outcome is
+      broader or another is kept apart and not counted
+    component_rule: a study of one part of the claim's combined intervention is the same class (manual section 4, reading rule 1)
+    effect_numbers: >-
+      the numbers of the result as fields (values per group or before and after, standard deviations, the difference, its
+      95% interval, p, a ratio, a standardised difference), each kept only when written in the abstract; code computes the
+      standardised difference. The record weight reads it for the kinds the manual already names (standardised difference,
+      ratio, difference with its interval); a d from two means or from one standard deviation is stored and not weighed
+  step_1_pack_16:
+    run: "bench_reading v18 and v18_2 (the same filter and batches as v17), two runs"
+    cost: "dry count 0.09 USD a run off-peak; the dry count of v17 was 0.051 against 0.063 spent, so about 0.11 a run, 0.25 for both; cap MAX_USD 0.4"
+    rule: >-
+      mean of the two runs against v17 (recall 0.55, precision 0.79): recall and precision not lower by more than 0.03.
+      Pack 16 is the pack the examples come from: passing here only admits v18 to the fresh pack, it does not make it the
+      working reader
+    reported_not_judged: >-
+      same-class primary findings found (v17: 6 of 23); "none" answers by which of the three answers failed; replies sent
+      back by the code checks and how many changed; records not counted for a broader or another outcome, against the gold;
+      share of records for with numbers, and with a d, by kind (v17: the size was readable in 68 of 297)
+  step_2_pack_25: the rule of this spec above (candidate_replaces_v17_when, outcome_field_usable_when), after Argon's answer
+  step_3: "if both pass: the confirming run on the 30 trials of pack 18 with the cross-link reading (specs/reading/benchmark-reading-2026-11-12.yaml), priced by its own dry count"

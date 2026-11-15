@@ -211,7 +211,9 @@ list ordered again; a cheap model rates the first 100 from 0 to 3 for the claim;
    intervention: when the claim names a kind ("resistance training", "adequate protein intake"), any study of that kind is
    exact; class only when the claim names a specific product, compound or programme and the study used another member of
    its kind. A programme that merely includes the named intervention among several components is *class*, and only when its
-   result can be read for that arm; otherwise it is not a record for this claim. *Another intervention altogether* (aerobic
+   result can be read for that arm; otherwise it is not a record for this claim. The reverse holds too: when the claim's
+   intervention combines several parts (a stimulation with an exercise, a supplement with training) and a study tests one
+   of those parts alone on the claim's outcome, it is *class*. *Another intervention altogether* (aerobic
    training for a resistance claim) weighs 0.
 2. **Against means null or opposite, not small.** A record is *against* when the result for the claim's own measure is no
    effect (not significant against control, or no change in a before-after design) or the opposite direction. A significant

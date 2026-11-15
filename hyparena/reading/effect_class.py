@@ -164,6 +164,63 @@ def d_from_p(phrase: str, n: int | None, comparison: str) -> float | None:
     return (2 if comparison == "between_groups" else 1) * z / n ** 0.5
 
 
+NUMBER_KEYS = ("intervention", "control", "before", "after", "sd_intervention", "sd_control", "sd_before", "sd_after",
+               "difference", "ci_low", "ci_high", "p", "ratio", "smd")
+
+
+def _f(x) -> float | None:
+    try:
+        return float(str(x).replace("−", "-").replace("–", "-").replace(",", ".").lstrip("<>=≤≥ ").rstrip("% "))
+    except ValueError:
+        return None
+
+
+def clean_numbers(numbers, source: str) -> dict[str, str]:
+    """The effect numbers of a reader's record (verify_claim/v18) that are written in the abstract: a value whose digits do
+    not occur in the source is dropped; "unit" and "ratio_kind" are kept as words."""
+    if not isinstance(numbers, dict):
+        return {}
+    src = source.replace("−", "-").replace("–", "-").replace("·", ".")
+    out = {}
+    for k in NUMBER_KEYS:
+        v = str(numbers.get(k) if numbers.get(k) is not None else "").strip()
+        digits = v.lstrip("+-<>=≤≥ ").rstrip("% ")
+        if digits and _f(v) is not None and re.search(r"(?<![\d.])" + re.escape(digits) + r"(?![\d])", src):
+            out[k] = v
+    for k in ("unit", "ratio_kind"):
+        if isinstance(numbers.get(k), str) and numbers[k].strip() and out:
+            out[k] = numbers[k].strip()[:40]
+    return out
+
+
+def d_from_numbers(numbers: dict, n: int | None, comparison: str) -> tuple[float | None, str]:
+    """(d, kind) from the checked effect numbers, the first that applies: "smd" (a standardised difference as stated);
+    "ratio" (ln(ratio) * sqrt(3) / pi); "interval" (a difference with its 95% interval and n, as d_from_ci); "means" (two
+    values with their standard deviations: the difference over the pooled SD); "change_sd" (a stated difference over the one
+    standard deviation given). The record weight uses the kinds the manual names (rules_v32.EFFECT_D_KINDS)."""
+    g = {k: _f(v) for k, v in numbers.items() if k in NUMBER_KEYS}
+    g = {k: v for k, v in g.items() if v is not None}
+    if "smd" in g:
+        return abs(g["smd"]), "smd"
+    if g.get("ratio", 0) > 0:
+        import math
+        return abs(math.log(g["ratio"])) * math.sqrt(3) / math.pi, "ratio"
+    pair = next(((a, b) for a, b in (("intervention", "control"), ("after", "before")) if a in g and b in g), None)
+    diff = g.get("difference", (g[pair[0]] - g[pair[1]]) if pair else None)
+    if diff is not None and "ci_low" in g and "ci_high" in g and n and n >= 4 and min(g["ci_low"], g["ci_high"]) <= diff <= max(g["ci_low"], g["ci_high"]):
+        d = _d_interval(diff, g["ci_low"], g["ci_high"], n, comparison)
+        if d is not None:
+            return d, "interval"
+    if pair:
+        sds = [g.get("sd_" + pair[0]), g.get("sd_" + pair[1])]
+        if all(x and x > 0 for x in sds):
+            return abs(g[pair[0]] - g[pair[1]]) / ((sds[0] ** 2 + sds[1] ** 2) / 2) ** 0.5, "means"
+    sd = next((g[k] for k in ("sd_control", "sd_before", "sd_intervention", "sd_after") if g.get(k, 0) > 0), None)
+    if diff is not None and sd:
+        return abs(diff) / sd, "change_sd"
+    return None, ""
+
+
 def effect_class(phrase: str, extractor_class: str) -> str:
     """"none" when the extractor says the finding closest to the claim is null; otherwise the class of the phrase."""
     if extractor_class == "none":
