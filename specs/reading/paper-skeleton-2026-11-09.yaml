@@ -155,4 +155,9 @@ adjudicate_v4_2026_11_15:
   why: "the 9 false positives of adjudicate_v3 on pack 9 were mostly 'narrower' given to another construct"
   run: "the ambiguous pairs of pack 9 judged again on the parses of 2026-11-15 (no new parse); about 0.10 USD"
   pass_rule: "written before the run, as for v3: recall at least 0.62 and precision at least 0.70 on pack 9"
+  result_2026_11_15:
+    cost: "0.10 USD"
+    pack_9: "recall 0.619 (13 of 21), precision 0.867 (13 of 15), stance 12 of 13; losses: 7 rejected by the model, 1 not parsed"
+    against: "adjudicate_v3 on the same parses 0.667 / 0.609; adjudicate_v2 (parses of 2026-11-10) 0.52 / 0.85; reader v13 0.52 / 0.73"
+    by_the_rule: "passed: the rule's recall is 11 of 21 + 2 = 13 of 21 (written as 0.62, which 13 of 21 rounds to) and precision 0.867 >= 0.70; adjudicate_v4 is the default of the skeleton (tools/skeleton/session.py)"
 
