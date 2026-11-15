@@ -65,6 +65,7 @@
 | [`link-scoring-2026-11-08`](scoring/link-scoring-2026-11-08.yaml) | одна знаковая ось звена, вес нулевого результата по мощности | принято (v3.5) |
 | [`empty-slots-2026-11-09`](scoring/empty-slots-2026-11-09.yaml) | звено без записей не входит в баланс | принято (v3.7) |
 | [`intervention-class-2026-11-11`](scoring/intervention-class-2026-11-11.yaml) | три уровня совпадения интервенции | принято (v3.8) |
+| [`weight-sources-2026-11-15`](scoring/weight-sources-2026-11-15.yaml) | опубликованные основания чисел веса записи: пакет Argon 24 | в работе |
 | [`balance-pairs-2026-11-15`](scoring/balance-pairs-2026-11-15.yaml) | порядок нынешних весов записей против Argon: 175 пар, пакет 23 | в работе |
 | [`balance-check-2026-11-08`](scoring/balance-check-2026-11-08.yaml) | баланс доказательств против суждения Argon | история |
 | [`v38-candidates-2026-11-10`](scoring/v38-candidates-2026-11-10.yaml) | кандидаты правил v3.8 (не приняты) | история |

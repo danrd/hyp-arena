@@ -1,0 +1,14 @@
+id: weight-sources-2026-11-15
+written_on: 2026-11-15
+status: "pack built and sent to the outside reader; no answer yet"
+why: >-
+  The record weight is shaped after GRADE (Guyatt et al., BMJ 2008), but its numbers are the method's own: GRADE rates
+  certainty in levels, not multipliers. They were chosen as the simplest values compatible with GRADE and checked only
+  against the method's own references (later trials of a link, trial outcomes, the order of record pairs by Argon in packs
+  5 and 23). Pack 24 asks for the published grounds of each number.
+asked: "for each of 9 factors (design on the outcome link, the preclinical scale, precision, the weight of a null, the effect size, the comparison, the context, records of one trial, records to link strength): up to 5 PubMed sources with numbers and a verbatim quote, handbook sections, a verdict on our value (supported / too_high / too_low / no_evidence) and a suggested value (scripts/argon/pack24_weight_sources.py; longevity-kg reviews/argon-2026-11-15/pack_24_task.json)"
+checked_by_code: "every PMID exists and matches its title; every quote is verbatim in the abstract (pack24_weight_sources.py check)"
+use: >-
+  written before the answer: a value changes only through the manual, when the sources the code accepts give a number for
+  it and the change does not make the method's references worse by more than 0.03 (R2, R3, and the order of pack 23); a
+  factor with no evidence keeps its value and is marked in the stage manual as the method's own choice
