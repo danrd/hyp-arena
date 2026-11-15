@@ -122,3 +122,16 @@ stage_0_amended_2026_11_10:   # user decision 2026-11-10: include the ambiguous-
     direction, outcome name, significance); Argon rates 0 skeletons usable as they are, 13 partly, 17 not. The checks are
     too strict for matching: fix them (Codex task 2026-11-11, part 2.3) before stage 1. Part C: 3 of the 4 failed papers have
     long subgroup tables, the fourth is a protocol without results.
+quote_checks_fixed_2026_11_15:
+  why: "Argon pack 15: 459 of 609 field errors were fields our checks emptied; comparison, direction and significance (432) because the row quote alone carried no word for them, outcome names because their own quote failed"
+  rules: >-
+    a results row's comparison, direction and significance are checked against the row quote with the sentence before and
+    after it in the text and against the row's structure, not each against a quote of its own: comparison between groups
+    when the row compares two arms or the window says so, within group when it has one arm or the window says so;
+    direction kept unless the quote negates it, or the opposite direction is stated without its own; no_effect dropped when
+    a significant test is stated; significance kept only when a test (p, interval, "significantly", "not significant") in
+    the field quote, the row quote, the effect phrase or the window agrees with it; an outcome's name or measure is kept
+    when it is named anywhere in the text
+  code: "longevity-kg tools/skeleton/checks.py (row_field_ok, window, row_evidence_significance); tests/test_skeleton.py"
+  not_yet_measured: "the raw stage-0 extractions were not kept (build/ is not committed), so the effect on pack 15 needs a new parse of its 30 papers"
+
