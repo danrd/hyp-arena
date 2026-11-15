@@ -113,3 +113,9 @@ filtered_search_2026_11_14:   # written BEFORE the confirming run
     files: "longevity-kg reviews/argon-2026-11-12/bench_search_score_n12.json; runs hypothesis_sources/calibration/run_{1..5}_n12.json"
     by_the_rule: "passed (0.49 >= 0.45, median 52 <= 60, holdout not below): the filtered search becomes the search of the working config configs/v3-flash-n10.yaml"
   differences_from_the_experiment: "new cards (v17 lists steps; the experiment used v10 cards), new queries written by the model in this run, exact dates for linked papers, the population query added; the run can therefore differ from 0.48"
+novelty_measured_with_N_2026_11_15:
+  correction: "until 2026-11-15 the novelty agreement compared Argon's level with the run's indicators.novelty, the v2 indicator; method v3 scores hypotheses with N (hyparena/novelty/novelty_v34.py). scripts/search/bench_search.py now computes N from each run's card and records"
+  with_N: {saved_v10: "weighted kappa 0.198 [0.00, 0.44], ours farther 0.50", filtered_search_n12: "0.411 [0.16, 0.67], ours farther 0.33, the same level 0.67", reader_v16_n13r: "0.238 [0.06, 0.45], ours farther 0.52", v16_cross_link_n14x: "0.197, ours farther 0.52"}
+  earlier_numbers: "the kappas -0.08 (v10) and 0.03 (n12) reported before were of the v2 indicator, not of N"
+  reading: "with the filtered search N agrees moderately with Argon; the reader v16 lowers it: in 14 trials Argon calls the level new context (the same intervention tested before in another context) where our N gives analog, because v16 marks the closest prior work as an intervention of the same class (intervention_match class), and a class record gives the level analog"
+

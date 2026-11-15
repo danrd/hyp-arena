@@ -4,14 +4,14 @@
     python -m scripts.search.bench_search score   # recall of our saved searches, closest prior work, novelty agreement
 
 Gold: Argon's papers per trial (prior_trial, direct, step, against, review; up to 5 must_find) and the closest prior work
-with a novelty level. A gold PMID that PubMed does not know, or whose earliest date is after T, is
+with a novelty level (ours: N of method v3). A gold PMID that PubMed does not know, or whose earliest date is after T, is
 dropped and counted (earliest = electronic, print or PubMed entry date: when it became public); a year that differs from PubMed's is counted, the paper kept.
 
 Ours: the saved searches of the calibration runs (longevity-kg hypothesis_sources/calibration/run_{s}_v10.json, method v3,
 config v3-flash-n10, search 'model', date guard T): every PMID the search returned for each claim and alternative, before
 reading. A paper is "found" when any search of the trial returned it; "found on its link" when a search of a claim with the
 matching link returned it (gold step -> delivery / engagement / pathway / effect; the rest -> outcome); "read" when it
-became a record of a claim (evidence or counterevidence). Our novelty level is the run's `indicators.novelty`.
+became a record of a claim (evidence or counterevidence). Our novelty level is N of method v3, computed from the run (before 2026-11-15: the run's v2 `indicators.novelty`).
 
 Outputs: longevity-kg/reviews/argon-2026-11-12/pack_18_pubmed.json (cache), bench_search_score.json.
 """
@@ -105,6 +105,19 @@ def check() -> dict:
     return {"pmids": len(pmids), "fetched": len(todo), "not_in_pubmed": sum(not v["exists"] for v in cache.values())}
 
 
+def _novelty_v3(it: dict):
+    """The novelty N of method v3 (hyparena/novelty/novelty_v34.py), computed from the run's card and records; the run's
+    `indicators.novelty` (the v2 indicator) only for a run without the v3 parts. Until 2026-11-15 the benchmark compared the
+    v2 indicator, not N."""
+    if it.get("card") and it.get("verification") and "v3" in it:
+        from scripts.common.v34_check import parts
+        from hyparena.scoring import rules_v32 as r32
+        from hyparena.novelty import novelty_v34 as nv
+        card, cvs, alts = parts(it, it.get("id", ""))
+        return nv.novelty(card, cvs, r32.evaluate(card, cvs, alts, v34=True))
+    return (it.get("indicators") or {}).get("novelty")
+
+
 def _ours(run: dict) -> dict:
     it = run["items"][0]
     links = {c["id"]: c.get("link") for c in ((it.get("card") or {}).get("claims") or [])}
@@ -123,7 +136,7 @@ def _ours(run: dict) -> dict:
     step = set().union(*[v for k, v in by_claim.items() if links.get(k) in STEP_LINKS] or [set()])
     return {"all": set().union(alt, *by_claim.values()), "outcome": outcome, "step": step, "read": read,
             "has_step_claim": any(links.get(k) in STEP_LINKS for k in by_claim),
-            "novelty": "known_result" if it["outcome"] == "known_result" else (it.get("indicators") or {}).get("novelty"),
+            "novelty": "known_result" if it["outcome"] == "known_result" else _novelty_v3(it),
             "status": it["outcome"], "n_returned": len(set().union(alt, *by_claim.values()))}
 
 
