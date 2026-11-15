@@ -133,5 +133,8 @@ quote_checks_fixed_2026_11_15:
     the field quote, the row quote, the effect phrase or the window agrees with it; an outcome's name or measure is kept
     when it is named anywhere in the text
   code: "longevity-kg tools/skeleton/checks.py (row_field_ok, window, row_evidence_significance); tests/test_skeleton.py"
-  not_yet_measured: "the raw stage-0 extractions were not kept (build/ is not committed), so the effect on pack 15 needs a new parse of its 30 papers"
-
+  measured_2026_11_15:
+    run: "the 30 papers of pack 15 part A parsed anew from the pack's exact texts (parse_v2, DeepSeek; 29 parsed, 1 failed to give a valid skeleton in 2 rounds; 0.078 USD); the old and the new checks applied to the same raw parse (longevity-kg reviews/argon-2026-11-11/reparse_pack15.py, reparse_pack15_compare.json; raw parses in reparse/)"
+    emptied_by_the_checks_of_307_rows: {comparison: "239 -> 49", direction: "186 -> 16", significance: "72 -> 63", outcome_name: "78 -> 43", effect_reported: "128 -> 128"}
+    against_argon: "of the fields Argon flagged on rows found again by their quote (359): 232 now have Argon's value, 58 another value, 69 still empty; 214 flagged fields are on rows the new parse quotes differently"
+    reading: "the fix gives back most of what the checks emptied, at about 0.8 agreement with Argon on the fields given back; significance stays strict by design (a test must be stated near the row); effect phrases are unchanged and are the next field to look at"
