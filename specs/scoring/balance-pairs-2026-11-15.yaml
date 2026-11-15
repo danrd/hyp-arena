@@ -1,0 +1,22 @@
+id: balance-pairs-2026-11-15
+written_on: 2026-11-15
+status: "definitions fixed before the pack was sent"
+why: >-
+  Stage 5 (link strength and the evidence balance) rests on the record weights. The only outside check of their order is
+  Argon pack 5 (80 pairs, v3.5 weights, 2026-11-08): tau-b 0.10, a weak order; there a meta-analysis was put after a trial
+  by our weights in 7 of 7 pairs and first by Argon. v3.6 changed the weights (GRADE-shaped, a meta-analysis by its
+  certainty) without a new outside check. Pack 23 checks the current weights on more pairs.
+pool: "the records of the 60 prospective hypotheses (run_60.json), current weights (hyparena/scoring/rules_v32.record_weight_v36); pairs of records of one link with distinct PMIDs; the pairs of pack 5 left out"
+strata: "the factor with the largest |log ratio| between the two records (design, precision, effect, comparison, context); a meta-analysis against an RCT as its own stratum; near-ties (|log wA/wB| < 0.15); 25 each, at most 4 pairs per link; order by SHA-1; a stratum short of pairs filled from the others and reported"
+built: "175 pairs and 20 swapped repeats in 3 parts of 65 (218 records, 56 claims): precision 48, meta-analysis against trial 46, effect 26, near-tie 29, comparison 15, design 11, context 0 (the pool has almost no adjacent-context pairs); scripts/argon/pack23_balance.py; files in longevity-kg reviews/argon-2026-11-15/"
+shown: "the claim; for each record PMID, title, abstract, the quote our reader took and whether it read it as for or against; not shown: weights, factors, levels"
+asked: "per pair: stronger as evidence about the claim whatever its direction (A / B / equal), confidence 1-3, reason codes; per record: design, n, context, certainty of a meta-analysis, effect phrase"
+measures:
+  order: "Kendall tau-b between Argon's order (A 1, equal 0, B -1) and sign(log wA/wB) with |log wA/wB| < 0.1 as a tie; concordance among pairs neither calls equal; per stratum"
+  repeatability: "agreement of the 20 swapped repeats (the ceiling of the order measures)"
+  labels: "agreement of design, n, context and meta-analysis certainty with our reader's"
+reading: >-
+  written before the answer: the current weights order records acceptably when the concordance is at least 0.65 overall;
+  a stratum with concordance under 0.5 (at least 10 non-tied pairs) means the weights order that factor against the outside
+  reader and goes to the method's review; Argon is a second reader, not a gold standard
+baseline: "later and paid: a plain LLM orders the same pairs (the price named before)"
