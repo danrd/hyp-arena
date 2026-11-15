@@ -20,3 +20,12 @@ reading: >-
   a stratum with concordance under 0.5 (at least 10 non-tied pairs) means the weights order that factor against the outside
   reader and goes to the method's review; Argon is a second reader, not a gold standard
 baseline: "later and paid: a plain LLM orders the same pairs (the price named before)"
+result_2026_11_15:
+  answers: "all 195 items and 218 records answered (longevity-kg reviews/argon-2026-11-15/pack_23_{1,2,3}_answer.json); score pack_23_score.json"
+  order: "tau-b 0.258 (pack 5 with the v3.5 weights: 0.10); concordance among the 144 pairs neither calls equal 0.646; Argon calls 1 pair equal"
+  repeatability: "20 of 20 swapped repeats agree"
+  per_stratum: {comparison: "14 of 15", design: "8 of 11", effect: "18 of 26", precision: "32 of 48", near_tie: "5 of 8", meta_vs_trial: "16 of 36"}
+  meta_vs_trial: "Argon puts the meta-analysis first in 38 of 46 pairs; our weights put the trial first in 16 of those and call 8 even: a meta-analysis whose certainty is not stated weighs 0.75 of a trial (review_kind.NOT_REPORTED), and our reader recorded no certainty for any of them; Argon reads 'not stated' in 38 of 46 and still puts the meta-analysis first"
+  labels: "design agrees in 213 of 218 records"
+  by_the_reading: "concordance 0.646, just under 0.65: not acceptable as written; the meta-analysis-against-trial stratum (0.44, 36 non-tied pairs) orders against the outside reader and goes to the method's review; the other strata are 0.67-0.93"
+
