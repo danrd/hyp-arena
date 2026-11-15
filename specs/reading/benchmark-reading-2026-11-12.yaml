@@ -112,4 +112,13 @@ reader_v16_2026_11_15:
   why: "v14 lost precision mostly on records about another outcome (21 of 44); v15's class examples cut 16 findings the gold keeps"
   run: "two runs on the 20 links of pack 16 (bench_reading run --system v16 and v16_2), every step kept; about 0.14 USD"
   pass_rule: "written before the runs: the mean of the two runs has recall at least 0.39 and precision at least 0.59; each run and their difference reported; holdout, recall by kind and by the alternative rule reported, not tested"
+  result_2026_11_15:
+    cost: "0.124 USD for the two runs (0.061 + 0.063)"
+    runs: {v16: "recall 0.596 (56 of 94), precision 0.812 (56 of 69)", v16_2: "recall 0.553 (52 of 94), precision 0.776 (52 of 67)"}
+    mean: "recall 0.574, precision 0.794; between the runs 0.043 and 0.036"
+    holdout: "recall 0.95 in both runs (20 of 21), precision 1.0"
+    by_kind_first_run: {same_intervention_primary: "20 of 22", same_class_primary: "8 of 23", review_or_meta_analysis: "17 of 26", alternative_without_distinguishing_part: "11 of 23"}
+    by_the_alternative_rule: "45 and 43 of 71 (0.63, 0.61)"
+    against: "v13 0.29-0.34 / 0.64; v14 0.63 / 0.57; v15 0.38 / 0.78; a plain LLM 0.28 / 0.41"
+    by_the_rule: "passed (mean recall 0.574 >= 0.39, mean precision 0.794 >= 0.59): v16 is the reader to propose for the working config; the pipeline reads with verify_claim/v9 in one call per claim, so the switch is a change of the pipeline and needs a confirming run, through the manual"
 
