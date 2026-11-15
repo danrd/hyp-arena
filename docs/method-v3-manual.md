@@ -2,7 +2,7 @@
 
 This manual describes the current rules of the method (version **v3.10**) as one self-contained text: a reader, a model or
 an outside reviewer can score a hypothesis and read its report from it alone. Each stage has its own detailed manual in
-[`docs/system/`](system/) (so far: [the card](system/card.md)); this manual is their compressed aggregate. How the rules
+[`docs/system/`](system/) ([the card](system/card.md), [the search](system/search.md), [the reading](system/reading.md)); this manual is their compressed aggregate. How the rules
 came to be what they are, with the checks behind each change, is in the [change log](system/changelog.md), not here.
 
 Where the code is: rules [`hyparena/scoring/rules_v32.py`](../hyparena/scoring/rules_v32.py), novelty
@@ -277,8 +277,11 @@ S 0.5 and is left out of the evidence balance (section 7).
 named in the link is taken as at least 5/6 without search.
 
 **Gate (the only filter).** A key link is refuted when there is a record against of the top design (RCT or meta-analysis),
-between groups, in the hypothesis's population, and no record for of that level. Then the hypothesis is filtered (not
-ranked). Nothing else filters: an undeveloped but promising hypothesis keeps its score and gets flags.
+between groups, in the hypothesis's population (exact context), and no record for of that level, between groups, in the exact
+context or about the same class of intervention: an RCT or meta-analysis of the same kind of intervention is a
+counterweight too (one null trial against several trials of the same kind of intervention is a conflict, not a refutation).
+A trial in an adjacent population is not: a small trial elsewhere does not cancel a large null in the claim's own population.
+Then the hypothesis is filtered (not ranked). Nothing else filters: an undeveloped but promising hypothesis keeps its score and gets flags.
 
 ## 7. Axes
 

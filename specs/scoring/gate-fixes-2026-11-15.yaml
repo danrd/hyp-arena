@@ -1,6 +1,6 @@
 id: gate-fixes-2026-11-15
 written_on: 2026-11-15
-status: "rule written before the evaluation; evaluated 2026-11-15, nothing adopted yet"
+status: "rule written before the evaluation; evaluated 2026-11-15; G2 adopted 2026-11-15 as G2a (exact or class), G1 not"
 why: >-
   The gate filters a hypothesis when a key link has a top-design (RCT or meta-analysis) between-group record against it in
   the claim's exact context and no such record for it (hyparena/scoring/rules_v3.strong_refutation). With reader v17 and the
@@ -33,3 +33,8 @@ result_2026_11_15:
   G2_counterweight_any_context: "R3 0.602, AUC 0.674 / 0.692; lifts NCT03477097 and NCT03600402 (positive; RCTs of the same kind of intervention on frailty and ankle range of motion) and NCT04796701 in both runs (negative; transitional care, 10 RCTs and 2 meta-analyses of the same kind for fewer readmissions against one null RCT of 544): passes"
   G1_and_G2: "R3 0.602, AUC 0.674 / 0.692; lifts 2 positive and 3 negative: fails"
   reading: "G2 passes the rule and removes the drop of the AUC under reader v17; G1 should not enter as a lexical check - an outcome-match field of the reader would be needed to test it"
+adoption_2026_11_15:
+  adopted: "G2a: the counterweight in the exact context or of the same class of intervention, not an adjacent population (rules_v3.GATE_SUPPORT_CONTEXTS)"
+  why_not_any_context: "with any context, tests/test_rules_v3.py::test_levothyroxine_restated_trial_triggers_the_gate fails: an RCT of 71 in another population with a small effect would cancel the TRUST null (n 737) in the claim's own population, a refutation the method should keep"
+  references: "G2a gives the same as G2 on every reference (R3 0.602, AUC 0.674 / 0.692; the same trials lifted): in all three the counterweight is of context class"
+  manual: "docs/method-v3-manual.md section 6"

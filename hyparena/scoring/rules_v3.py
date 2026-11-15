@@ -94,7 +94,8 @@ def _independent(records: list[EvidenceRecord]) -> int:
 
 # Variants of the gate (specs/scoring/gate-fixes-2026-11-15.yaml); the defaults are the current rule.
 GATE_OUTCOME_NAMED = False                  # G1: a record against counts only when its quote names the claim's outcome
-GATE_SUPPORT_CONTEXTS = ("exact",)          # G2: ("exact", "class", "adjacent") - a counterweight in any counting context
+GATE_SUPPORT_CONTEXTS = ("exact", "class")   # G2, adopted 2026-11-15: the same class of intervention is a counterweight too (was exact only);
+                                              # not an adjacent population: a small trial elsewhere must not cancel a large null in the claim's own
 
 
 def _names_outcome(rec: EvidenceRecord, claim: Claim) -> bool:
@@ -106,7 +107,7 @@ def _names_outcome(rec: EvidenceRecord, claim: Claim) -> bool:
 
 def strong_refutation(cv: ClaimVerification, claim: Claim, variant: str = "v3") -> bool:
     """The gate (section 3): a top-design, between-group record against in the claim's population (exact context), and no
-    record for of that level."""
+    top-design between-group record for the link in the exact context or of the same class of intervention (since 2026-11-15)."""
     def top(r, contexts=("exact",)):
         return usable(r, variant) and record_design(r) in TOP_DESIGNS and r.comparison in ("between_groups", "unknown") \
             and context_level(r) in contexts

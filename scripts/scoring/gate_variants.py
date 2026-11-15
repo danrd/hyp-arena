@@ -15,9 +15,10 @@ from scripts.scoring.weight_variants import OUT
 
 ALL = ("exact", "class", "adjacent")
 VARIANTS = {
-    "current": {},
+    "current": {},                                             # the rule before 2026-11-15: a counterweight in the exact context only
     "G1 named outcome": {"named": True},
     "G2 counterweight in any context": {"contexts": ALL},
+    "G2a counterweight exact or class (adopted)": {"contexts": ("exact", "class")},
     "G1 and G2": {"named": True, "contexts": ALL},
 }
 
