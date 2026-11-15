@@ -11,6 +11,7 @@ Systems (the same claim and the same abstracts, as our reader saw them):
           code checks (no quote check, no retry, no fallback family).
   v13_trace  v13 with every step kept, for the loss breakdown (`losses`): where each finding of the gold is lost.
   v14     as v13_trace with verify_claim/v14 (the same-kind and meta-analysis rules first, with examples).
+  v15     as v14 with the outcome held to the claim's own and the boundary of "the same kind" shown (verify_claim/v15).
 
     python -m scripts.reading.bench_reading losses                       # free, after a v13_trace run
 Outputs: longevity-kg/reviews/argon-2026-11-12/bench_reading_<system>.json, bench_reading_score.json.
@@ -33,9 +34,9 @@ from scripts.common.reread_v11 import CONFIG, items
 KG = Path(__file__).resolve().parents[3] / "longevity-kg"
 DIR = KG / "reviews" / "argon-2026-11-12"
 PRICE = {"deepseek": (0.15, 0.6), "google": (1.5, 9.0)}      # USD per M tokens off-peak (DeepSeek x2 on weekdays 01-04, 06-10 UTC)
-SYSTEMS = ("v9", "v13", "base_a", "v13_trace", "v14")
+SYSTEMS = ("v9", "v13", "base_a", "v13_trace", "v14", "v15")
 TRACE = "v13_trace"          # v13 again with every step kept: the filter answers, the reader's answer per paper, the records code kept
-TRACED = ("v13_trace", "v14")   # runs that keep every step (v14: verify_claim/v14, the same filter and batches as v13)
+TRACED = ("v13_trace", "v14", "v15")   # runs that keep every step (v14: verify_claim/v14, the same filter and batches as v13)
 
 
 def targets() -> list[dict]:
@@ -151,7 +152,7 @@ def run(system: str, limit: int = 0) -> dict:
             for i in range(0, len(kept), rv.BATCH):
                 cv = verify_claim(client, "deepseek", frozenset({"google"}), t["claim"], t["card"], t["as_of"], log=log,
                                   fallback="google", expert_pmids=[(p, "benchmark") for p in kept[i:i + rv.BATCH]],
-                                  search="fixed", template_version="v14" if system == "v14" else "v13", check_subgroups=False)
+                                  search="fixed", template_version=system if system in ("v14", "v15") else "v13", check_subgroups=False)
                 recs.update({k: v for k, v in _records(cv.model_dump()).items() if k not in recs})
             trace = {"rule_pass": cand, "filter": ans, "kept": kept, "reader": _reader_answers(log)}
         with lock:
@@ -173,7 +174,7 @@ def _reader_answers(log: list) -> dict:
     from hyparena.card.llm import parse_fullest
     out = {}
     for x in log:
-        if not str(x.get("template", "")).startswith(("verify_claim/v13", "verify_claim/v14")):
+        if not str(x.get("template", "")).startswith(("verify_claim/v13", "verify_claim/v14", "verify_claim/v15")):
             continue
         v = parse_fullest(x.get("reply") or "") or {}
         match = {str(r.get("pmid", "")).replace("PMID:", "").strip(): r.get("intervention_match") for r in v.get("records") or [] if isinstance(r, dict)}

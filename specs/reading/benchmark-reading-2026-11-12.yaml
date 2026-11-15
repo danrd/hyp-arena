@@ -93,4 +93,9 @@ reader_v14_2026_11_14:
     side: "0.91 (v13 0.94)"
     wrong_records: "44 of 103: on another outcome (gold none, other_outcome) 21, another intervention (other_intervention) 15, the other side 6, background 2; v13: 18 of 50"
     by_the_rule: "not passed: recall 0.628 >= 0.39, but precision 0.573 < 0.59. v14 is not proposed for the working config; the loss is mostly records on another outcome than the claim's"
+reader_v15_2026_11_15:
+  what: "verify_claim/v15 = v14 with three rules first: the outcome must be the claim's own (a related outcome is none); the same kind of intervention counts and another kind does not, with examples of the boundary; a meta-analysis's pooled result on the claim's outcome is a finding"
+  why: "v14: 21 of its 44 wrong records were on another outcome than the claim's, 15 on an intervention the gold calls another"
+  run: "bench_reading run --system v15 on the 20 links of pack 16, every step kept; about 0.07 USD"
+  pass_rule: "as for v14, written before this run: recall at least 0.39 and precision at least 0.59; holdout, recall by kind and by the alternative rule reported, not tested"
 
