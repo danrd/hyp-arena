@@ -62,3 +62,21 @@ result_2026_11_15:
     every difference is inside the noise of the references (R2 about +-0.09, the AUC on 30 trials about +-0.2): the
     extensions do not improve the order. The effect factor as it stands loses little by leaving these phrases unclear.
   decision: "pending the user (the extensions are in the code, switched off; hyparena/reading/effect_class.py, EXTRA)"
+
+argon_pack27:
+  written_on: 2026-11-15
+  status: definitions fixed before the pack was sent
+  why: >-
+    the thresholds of the effect class are conventions (0.5 and 0.8 for a standardised difference, 1.25 and 2 for a ratio)
+    or working values without a published ground (5% and 20% for a percent change); the weight uses one line only (at
+    least medium). Pack 24 asked whether the effect factor is justified, not where its line lies.
+  pack: longevity-kg reviews/argon-2026-11-15/pack_27_task.json; builder and check scripts/argon/pack27_effect_thresholds.py
+  asked: >-
+    six items (standardised difference; ratios and their conversion; percent change; the conversion from an interval;
+    minimal clinically important differences of ten common measures in older adults; one line or three classes and the
+    unknown size): up to 6 sources each with PMID, numbers and a verbatim quote, a verdict on our value and a suggested value
+  check: every PMID exists, the title matches, the quote is verbatim in the abstract (code)
+  rule: >-
+    a suggested threshold or rule is not adopted from the answer: it is scored as a variant on the references of this spec
+    (R2, R3, pack 23, the AUC on 30 trials) under the same rule (no reference worse by more than 0.03; simpler wins among
+    equals). A threshold the sources call groundless (verdict drop) may be removed when its removal passes the same rule.
