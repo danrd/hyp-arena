@@ -1,0 +1,12 @@
+Below is a registered trial as it stood on {{ as_of }}. List the main alternative explanations of its expected result (other reasons why the outcome could change as hypothesised), at most 5, most important first, and for each say what the trial's design does to it if the result is as expected and if it is null: eliminated, weakened or unchanged.
+
+<<<TRIAL
+{{ trial }}
+TRIAL>>>
+
+Reply with a single JSON object and nothing else:
+{"alternatives": [{"rank": 1, "kind": "substantive | methodological", "statement": "", "design_on_expected_result": "eliminated | weakened | unchanged", "design_on_null_result": "eliminated | weakened | unchanged"}]}
+{% if history_text %}
+
+{{ history_text }}
+{% endif %}

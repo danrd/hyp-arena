@@ -1,0 +1,21 @@
+Two lists of alternative explanations were written, independently, for the expected result of one registered trial. Decide which explanation of list X and which of list Y are THE SAME alternative: they would be tested by the same evidence (the same cause acting by the same route on the outcome). Two explanations that only share a word or a broad theme ("bias", "placebo") but name different causes or routes are not the same. An explanation can match at most one of the other list.
+
+Trial (registry text, shortened):
+<<<TRIAL
+{{ trial }}
+TRIAL>>>
+
+List X:
+{% for a in xs %}[{{ a.id }}] {{ a.text }}
+{% endfor %}
+
+List Y:
+{% for a in ys %}[{{ a.id }}] {{ a.text }}
+{% endfor %}
+
+Reply with a single JSON object and nothing else:
+{"pairs": [{"x": "X1", "y": "Y2", "reason": "one short sentence"}]}
+{% if history_text %}
+
+{{ history_text }}
+{% endif %}
