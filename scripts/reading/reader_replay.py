@@ -236,8 +236,9 @@ def main() -> None:
     ap.add_argument("--version", default="v16")
     ap.add_argument("--batch", type=int, default=10)
     ap.add_argument("--tag", default="n13r")
+    ap.add_argument("--base", default="n13r", help="cross: the replay whose own reading is kept")
     a = ap.parse_args()
-    fn = {"run": lambda: run(a.version, a.batch, a.tag), "cross": lambda: run_cross(a.version, a.batch, a.tag),
+    fn = {"run": lambda: run(a.version, a.batch, a.tag), "cross": lambda: run_cross(a.version, a.batch, a.tag, a.base),
           "score": lambda: score(a.tag)}[a.cmd]
     print(json.dumps(fn(), indent=1, default=str))
 
