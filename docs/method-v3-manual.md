@@ -236,11 +236,11 @@ list ordered again; a cheap model rates the first 100 from 0 to 3 for the claim;
 | Factor (GRADE domain) | Levels |
 |---|---|
 | design (starting level), outcome link of a claim about humans | RCT 1; meta-analysis by its GRADE certainty: high or moderate 1, low 1/2, very low 1/4, not reported 1 (as a trial); non-randomised and observational 1/2; review (systematic or narrative), animal, cells, other 1/4 |
-| design, links before the outcome or a claim about animals | cells 1/3, review 2/3, primary study 1 |
+| design, links before the outcome or a claim about animals | cells 1/3, review 1/3 (it adds no data of its own), primary study 1 |
 | precision (imprecision) | record for: min(1, ln n / ln 300), at least 1/4, n unknown 1/4; before the outcome 1/2. Record against (a null): the power of its study to detect d = 0.4 |
 | effect (rating up for a large effect) | record for: a stated effect of at least medium size (d ≥ 0.5, ratio ≥ 1.25, ≥ 5%, the authors' "moderate") 1; small, none or not stated 1/2. Record against: 1 |
 | comparison (part of risk of bias) | between groups 1; within group or none 1/2 |
-| context (indirectness) | adjacent 1/2 (another population, age, sex, dose, comparator or species, only on qualifiers the claim states; or an intervention of the same broad category only, reading rule 1); exact and class 1 |
+| context (indirectness) | adjacent 1/2 (another population, age, sex, dose, comparator or species, only on qualifiers the claim states; or an intervention of the same broad category only, reading rule 1); class (another intervention of the same class) 3/4; exact 1 |
 
 A record against (a null or opposite result from a comparison) is weighed by the power of its study to detect a
 standardised difference of 0.4 in place of precision and effect (two-sided 5%; between groups Φ(0.4·√(n/4) − 1.96),
@@ -248,11 +248,12 @@ before-after Φ(0.4·√n − 1.96), n unknown → 40): a null of 20 people weig
 intervention altogether weighs 0. Retracted papers weigh 0.
 
 **Folding by independence group.** On each side (for, against) the records of one group (one trial, or one paper) are
-folded: the heaviest counts fully, every further record of the group 1/4. F (for) and A (against) are the folded sums. The
-fold runs per link, so one paper can count on several links of a chain.
+folded: the heaviest counts, every further record of the group adds nothing (several outcomes or publications of one trial
+are one result, not several). F (for) and A (against) are the folded sums. The fold runs per link, so one paper can count
+on several links of a chain.
 
 **The distance to the clinic is charged once.** Links before the outcome use the preclinical design scale (cells 1/3,
-review 2/3, primary study 1) with precision 1/2 (replicates of cells or animals are not comparable with trial
+review 1/3, primary study 1) with precision 1/2 (replicates of cells or animals are not comparable with trial
 participants), and the context factor charges another species there; on the outcome link of a human claim another species
 is charged by the design scale only.
 
@@ -260,15 +261,16 @@ is charged by the design scale only.
 
 F = folded weight of the records for, A = against.
 
-**Strength** S = 1 / (1 + exp(−λ(F − A))), λ = 2 atanh(2/3) / 0.6 ≈ 2.68: every record is evidence with log likelihood
-ratio λw for the link (for) or −λw (against), and S is the probability after them from even odds. F = 0.6 with nothing
-against gives 5/6; F = A gives 0.5 whatever their size. S depends on the difference F − A, not on the ratio: three units for
-and one against (S 0.995) count more than one for and none against (0.936). The 90% interval shown with S is that of a Beta
+**Strength** S = 1 / (1 + exp(−λ(F − A))), λ = ln 5 ≈ 1.61: every record is evidence with log likelihood
+ratio λw for the link (for) or −λw (against), and S is the probability after them from even odds. One record of full
+weight (F = 1) with nothing against gives 5/6, the level called supported; a weaker record alone stays below it. F = A gives
+0.5 whatever their size. S depends on the difference F − A, not on the ratio: three units for and one against (S 0.962)
+count more than one for and none against (0.833). The 90% interval shown with S is that of a Beta
 distribution with F and A as counts: it shows how much data there are, not where the point lies.
 
 Reference points (the worked example of section 13): one RCT of 120 with a medium effect, between groups, in the exact
-population weighs 0.839 on the outcome link (S 0.905 alone); one mouse study of 40 with a large effect, between groups, on a
-link before the outcome weighs 0.5 (S 0.793); a mouse null of 40 weighs 0.24 by its power. A link without records has
+population weighs 0.839 on the outcome link (S 0.794 alone); one mouse study of 40 with a large effect, between groups, on a
+link before the outcome weighs 0.5 (S 0.691); a mouse null of 40 weighs 0.24 by its power. A link without records has
 S 0.5 and is left out of the evidence balance (section 7).
 
 **Approved action.** A step (or an engagement link of an older card) whose subject is one approved drug (ChEMBL phase 4) with one of its ChEMBL targets
@@ -789,14 +791,14 @@ c3 (medium effect). One proposed alternative with an observational study of 300 
 
 | | c1 step (engagement) | c2 step (pathway) | c3 outcome | evidence balance | | I | W | |
 |---|---|---|---|---|---|---|---|---|
-| as given | S 0.936 (F 1.000) | no record | S 0.905 (F 0.839) | evidence balance 0.841 | | 0.581 | organ | |
-| with one mouse study of 40 for c2 | | S 0.793 | | evidence balance 0.698 | | | | |
-| with one mouse study of 40 against c2 | | S 0.342 | | evidence balance 0.247 | | | | |
+| as given | S 0.833 (F 1.000) | no record | S 0.794 (F 0.839) | evidence balance 0.628 | | 0.444 | organ | |
+| with one mouse study of 40 for c2 | | S 0.691 | | evidence balance 0.485 | | | | |
+| with one mouse study of 40 against c2 | | S 0.403 | | evidence balance 0.198 | | | | |
 
 c1 and c2 are steps before the outcome, so they are one place of the balance, valued by the weakest step that has a
-counting record. As given, only c1 has records: the steps' place is c1 (0.936) and the balance is that of the steps and the
-outcome (0.841). A mouse study of 40 for c2 makes c2 the weakest step with data (0.793) and lowers the balance to 0.698; a
-mouse null of 40 against c2 (S 0.342) lowers it to 0.247. A well-supported step added to a chain cannot raise the balance;
+counting record. As given, only c1 has records: the steps' place is c1 (0.833) and the balance is that of the steps and the
+outcome (0.628). A mouse study of 40 for c2 makes c2 the weakest step with data (0.691) and lowers the balance to 0.485; a
+mouse null of 40 against c2 (S 0.403) lowers it to 0.198. A well-supported step added to a chain cannot raise the balance;
 a weak or refuted one lowers it. The coverage is 2 of 2 places in every row.
 
 The RCT of 120 with a medium effect weighs 0.839 (its effect counts in full), each link's strength S comes from F − A, and a
@@ -808,7 +810,7 @@ Novelty: new context (an RCT on the outcome exists).
 ```yaml
 v32:
   c_anchor: 6.666667          # 4 / 0.6
-  fold_rest: 0.25
+  fold_rest: 0.0
   precision: {floor: 0.25, full_at_n: 300}
   effect_d_full: 0.8
   p_floor_aspid: 0.01
@@ -817,7 +819,9 @@ v37:
 v310:
   steps_slot: min            # every step before the outcome is one place, valued by its weakest step with data
 v36:
-  loglr_lambda: 2.682397     # 2 atanh(2/3) / 0.6
+  loglr_lambda: 1.609438     # ln 5: F - A = 1 gives S 5/6
+  class_weight: 0.75
+  preclinical_review: 0.333333
   design_grade3: {rct: 1.0, meta_analysis: 1.0, non_randomised: 0.5, observational: 0.5, other: 0.25}
   effect_full_from: 0.71875  # the continuous effect weight of d = 0.5
 meta_certainty: {high: 1.0, moderate: 1.0, low: 0.5, very_low: 0.25, not_reported: 1.0}

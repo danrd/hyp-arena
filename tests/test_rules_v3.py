@@ -114,10 +114,11 @@ def test_approved_drug_engagement_link_is_moderate(monkeypatch):
     assert out.links["c1"] == "moderate" and "c1_established_by_approval" in out.flags
 
 
-def test_intervention_category_is_adjacent_and_class_keeps_full_weight():
-    # specs/scoring/intervention-class-2026-11-11.yaml: exact and narrow class 1, same broad category only 1/2 (v3.6 context)
+def test_intervention_category_is_adjacent_and_class_weighs_three_quarters():
+    # specs/scoring/intervention-class-2026-11-11.yaml: exact 1, same broad category only 1/2 (v3.6 context);
+    # narrow class 3/4 since 2026-11-15 (specs/scoring/weight-sources-2026-11-15.yaml, F7)
     from hyparena.scoring import rules_v32 as r32
     c = card([claim("c1", "multi-component nutritional formula", "improves_healthspan_in", "human", "outcome", "outcome")]).claims[0]
     w = lambda im: r32.record_weight_v36(rec(1, "rct", n=300, effect="large", qm={"intervention_match": im}), c, False)
     assert r3.context_level(rec(1, "rct", qm={"intervention_match": "category"})) == "adjacent"
-    assert w("exact") == pytest.approx(1.0) and w("class") == pytest.approx(1.0) and w("category") == pytest.approx(0.5)
+    assert w("exact") == pytest.approx(1.0) and w("class") == pytest.approx(0.75) and w("category") == pytest.approx(0.5)

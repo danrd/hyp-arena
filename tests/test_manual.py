@@ -1,4 +1,5 @@
 """docs/method-v3-manual.md section 12 states the constants of the rules; they must equal the code."""
+import math
 import re
 from pathlib import Path
 
@@ -11,6 +12,15 @@ from hyparena.scoring import aspid_v3, rules_v32 as r32
 
 MANUAL = Path(__file__).resolve().parents[1] / "docs" / "method-v3-manual.md"
 HISTORY = Path(__file__).resolve().parents[1] / "archive" / "docs" / "method-history.md"   # earlier versions
+
+
+def _weights_before_2026_11_15(monkeypatch):
+    """History rows were computed with the record weights in force before 2026-11-15 (weight-sources F2, F7, F8, F9)."""
+    from hyparena.scoring import v3_levels as lv
+    monkeypatch.setattr(r32, "LOGLR_LAMBDA", 2 * math.atanh(2 / 3) / 0.6)
+    monkeypatch.setattr(r32, "FOLD_REST", 0.25)
+    monkeypatch.setattr(r32, "CLASS_WEIGHT", 1.0)
+    monkeypatch.setattr(lv, "PRECLINICAL_REVIEW", 2 / 3)
 
 
 def _with_history() -> str:
@@ -65,6 +75,7 @@ def test_manual_v32_constants_and_profiles_equal_the_code():
 
 
 def test_manual_worked_example_is_what_the_code_gives(monkeypatch):
+    _weights_before_2026_11_15(monkeypatch)
     monkeypatch.setattr(r32, "EMPTY_SLOTS", "count")                     # history: v3.3-v3.6 averaged empty slots in
     monkeypatch.setattr(r32, "STEPS_SLOT", "separate")                   # history: each step was its own place until v3.10
     from hyparena.scoring import rules_v3 as r3
@@ -91,6 +102,7 @@ def test_manual_worked_example_is_what_the_code_gives(monkeypatch):
 
 
 def test_manual_worked_example_v34(monkeypatch):
+    _weights_before_2026_11_15(monkeypatch)
     monkeypatch.setattr(r32, "EMPTY_SLOTS", "count")                     # history: v3.3-v3.6 averaged empty slots in
     monkeypatch.setattr(r32, "STEPS_SLOT", "separate")                   # history: each step was its own place until v3.10
     from hyparena.novelty import novelty_v34 as nv
@@ -121,6 +133,7 @@ def test_manual_worked_example_v34(monkeypatch):
 
 
 def test_manual_worked_example_v36(monkeypatch):
+    _weights_before_2026_11_15(monkeypatch)
     monkeypatch.setattr(r32, "EMPTY_SLOTS", "count")                     # history: v3.3-v3.6 averaged empty slots in
     monkeypatch.setattr(r32, "STEPS_SLOT", "separate")                   # history: each step was its own place until v3.10
     from hyparena.card.models import ClaimVerification
@@ -145,6 +158,7 @@ def test_manual_v36_constants_equal_the_code():
     block = MANUAL.read_text().split("## 14. Constants (checked against the code)")[1].split("```yaml")[1].split("```")[0]
     v = yaml.safe_load(block)["v36"]
     assert abs(v["loglr_lambda"] - r32.LOGLR_LAMBDA) < 1e-5 and abs(v["effect_full_from"] - r32.EFFECT_FULL_FROM) < 1e-9
+    assert v["class_weight"] == r32.CLASS_WEIGHT and abs(v["preclinical_review"] - lv.PRECLINICAL_REVIEW) < 1e-5
     d = dict(v["design_grade3"])
     assert d.pop("other") == 0.25 and d == r32.DESIGN_GRADE3
     assert yaml.safe_load(block)["v37"]["empty_slots"] == r32.EMPTY_SLOTS
@@ -164,6 +178,7 @@ def test_manual_names_table_matches_code():
 
 def test_manual_worked_example_v37(monkeypatch):
     """v3.7: a slot with no record is left out of the balance (history: each step its own place until v3.10)."""
+    _weights_before_2026_11_15(monkeypatch)
     monkeypatch.setattr(r32, "STEPS_SLOT", "separate")
     from hyparena.card.models import ClaimVerification
     from tests.test_analyze import _case

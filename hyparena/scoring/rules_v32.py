@@ -43,7 +43,7 @@ from hyparena.card.models import Claim, ClaimVerification, EvidenceRecord, Hypot
 
 C_ANCHOR = 4 / 0.6
 VARIANT_BASE = "v3.1"
-FOLD_REST = 0.25        # fold=True: further records of one independence group (specs/scoring/v32-independence-fold-2026-11-06.yaml)
+FOLD_REST = 0.0         # fold=True: further records of one independence group (0.25 until 2026-11-15; specs/scoring/weight-sources-2026-11-15.yaml, F8)
 
 
 def group_key(rec: EvidenceRecord) -> str:
@@ -149,8 +149,8 @@ V36 = False                 # set by evaluate(..., v36=True)
 DESIGN_GRADE3 = {"rct": 1.0, "meta_analysis": 1.0, "non_randomised": 0.5, "observational": 0.5}   # else 1/4
 EFFECT_FULL_FROM = 0.25 + 0.75 * 0.5 / 0.8      # the continuous effect weight of d = 0.5 (medium)
 EFFECT_RULE = "medium"      # "medium": full weight from a stated effect of medium size; "stated": any stated effect (variant)
-CLASS_WEIGHT = 1.0          # the weight of a record about another intervention of the same class (context "class")
-LOGLR_LAMBDA = 2 * math.atanh(2 / 3) / 0.6      # F = 0.6 alone gives s = 2/3, as c did for the Beta
+CLASS_WEIGHT = 0.75         # (1 until 2026-11-15; weight-sources F7) the weight of a record about another intervention of the same class (context "class")
+LOGLR_LAMBDA = math.log(5)   # F - A = 1 (one record of full weight) gives S 5/6 (2 atanh(2/3) / 0.6 = 2.68 until 2026-11-15; weight-sources F9)
 
 
 META_CERTAINTY = True     # 2026-11-11 (user decision): GRADE certainty of a meta-analysis scales its design weight

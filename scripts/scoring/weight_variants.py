@@ -6,7 +6,8 @@ against the method's references; free, no model call.
 References: R2 (a later RCT or meta-analysis of the same link, scored from the earlier records: AUC), R3 (calibration trial
 outcomes, 74 trials, saved v10 runs: AUC of the evidence balance), pack 23 (concordance of the record order with the outside
 reader), and the AUC of the evidence balance on the 30 trials of pack 18 with the working reader (run_*_n15x.json) and with
-reader v16 (run_*_n14x.json). A variant enters through the manual only when none of them gets worse by more than 0.03.
+reader v16 (run_*_n14x.json). "current" is the code as it stands (since 2026-11-15: F2, F7 0.75, F8, F9 adopted);
+"before 2026-11-15" the weights until then. A variant enters through the manual only when none of them gets worse by more than 0.03.
 """
 from __future__ import annotations
 
@@ -22,8 +23,11 @@ from scripts.common.v34_check import CAL
 
 OUT = CAL.parents[1] / "reviews" / "argon-2026-11-15"
 
+BEFORE = {"preclinical_review": 2 / 3, "class_weight": 1.0, "fold_rest": 0.25, "slope": 2 * math.atanh(2 / 3) / 0.6}
+
 VARIANTS = {
     "current": {},
+    "before 2026-11-15": BEFORE,
     "F1 meta-analysis not stated 0.75": {"not_reported": 0.75},
     "F1 meta-analysis not stated 0.5": {"not_reported": 0.5},
     "F2 narrative review on the preclinical scale 1/3": {"preclinical_review": 1 / 3},
@@ -37,19 +41,17 @@ VARIANTS = {
 
 @contextmanager
 def variant(v: dict):
-    saved = (rk.NOT_REPORTED, r32.EFFECT_RULE, r32.CLASS_WEIGHT, r32.FOLD_REST, r32.LOGLR_LAMBDA, lv.weight)
+    saved = (rk.NOT_REPORTED, r32.EFFECT_RULE, r32.CLASS_WEIGHT, r32.FOLD_REST, r32.LOGLR_LAMBDA, lv.PRECLINICAL_REVIEW)
     try:
         rk.NOT_REPORTED = v.get("not_reported", rk.NOT_REPORTED)
         r32.EFFECT_RULE = v.get("effect_rule", r32.EFFECT_RULE)
         r32.CLASS_WEIGHT = v.get("class_weight", r32.CLASS_WEIGHT)
         r32.FOLD_REST = v.get("fold_rest", r32.FOLD_REST)
         r32.LOGLR_LAMBDA = v.get("slope", r32.LOGLR_LAMBDA)
-        if "preclinical_review" in v:
-            base = saved[5]
-            lv.weight = lambda scale, level, _b=base, _x=v["preclinical_review"]: _x if (scale == "design_animal" and level == "review") else _b(scale, level)
+        lv.PRECLINICAL_REVIEW = v.get("preclinical_review", lv.PRECLINICAL_REVIEW)
         yield
     finally:
-        rk.NOT_REPORTED, r32.EFFECT_RULE, r32.CLASS_WEIGHT, r32.FOLD_REST, r32.LOGLR_LAMBDA, lv.weight = saved
+        rk.NOT_REPORTED, r32.EFFECT_RULE, r32.CLASS_WEIGHT, r32.FOLD_REST, r32.LOGLR_LAMBDA, lv.PRECLINICAL_REVIEW = saved
 
 
 def r2_refs():
@@ -84,12 +86,12 @@ def pack23(v: dict) -> float:
         r, f = recs[rid], dict(factors)
         if r["design"] == "meta_analysis" and not r.get("certainty"):
             f["design"] = f["design"] / 0.75 * v.get("not_reported", 1.0)      # the key was built at 0.75
-        if "preclinical_review" in v and abs(f["design"] - 2 / 3) < 1e-6 and r["design"] == "review":
-            f["design"] = v["preclinical_review"]
+        if abs(f["design"] - 2 / 3) < 1e-6 and r["design"] == "review":       # the key was built at 2/3
+            f["design"] = v.get("preclinical_review", lv.PRECLINICAL_REVIEW)
         if v.get("effect_rule") == "stated" and r["side"] == "for":
             f["effect"] = 1.0 if (r.get("effect_reported") or "").strip() else 0.5
         if r.get("context") == "class":
-            f["context"] = v.get("class_weight", 1.0)
+            f["context"] = v.get("class_weight", r32.CLASS_WEIGHT)
         return math.prod(f.values())
     ok = []
     for p in kd["pairs"]:

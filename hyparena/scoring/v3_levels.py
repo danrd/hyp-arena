@@ -22,13 +22,18 @@ SCALES: dict[str, tuple[str, ...]] = {
     "scope": ("local", "organ", "hallmark"),
     "discrimination": ("unchanged", "weakened", "eliminated"),   # weight (i-1)/(k-1): unchanged 0, weakened 0.5, eliminated 1
 }
-ZERO_BASED = {"discrimination"}          # a scale whose lowest level means "nothing": 0 .. 1 instead of 1/k .. 1
+ZERO_BASED = {"discrimination"}
+# A departure from equal steps (specs/scoring/weight-sources-2026-11-15.yaml, F2): a narrative review on the preclinical
+# scale weighs as cells, not between cells and a primary study (it adds no data of its own).
+PRECLINICAL_REVIEW = 1 / 3          # a scale whose lowest level means "nothing": 0 .. 1 instead of 1/k .. 1
 
 
 def weight(scale: str, level: str) -> float:
     levels = SCALES[scale]
     if scale == "effect" and level == "unclear":
         return 0.5
+    if scale == "design_animal" and level == "review":
+        return PRECLINICAL_REVIEW
     if level not in levels:
         raise ValueError(f"{scale}: unknown level {level!r} (levels: {', '.join(levels)})")
     i = levels.index(level)
