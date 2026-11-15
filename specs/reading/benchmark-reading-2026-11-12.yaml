@@ -144,4 +144,9 @@ cross_link_reading_2026_11_15:
     against: "v16 alone 0.272 / 0.661 / 415 records; the saved search run (reader v9) 0.259 / 0.545 / 345"
     by_category_read: "prior trials 0.56 -> 0.72, direct 0.18 -> 0.36, reviews 0.17 -> 0.26, mechanism steps 0 -> 0.10, against 0.21 -> 0.21; the closest prior work read 0.47 -> 0.60"
     by_the_rule: "passed (0.381 >= 0.35, AUC 0.710 >= 0.515): the working config reads with verify_claim/v16 in batches of 10 and the cross-link reading (configs/v3-flash-n10.yaml: verify_version v16, read_batch 10, cross_link true; code hyparena/reading/cross_link.py, called by the pipeline after the alternatives)"
+reader_v17_2026_11_15:
+  what: "verify_claim/v17 = v16 with a rule first: the claim's programme under another name, the programme it is based on, or the same programme in another setting or population is the same intervention (intervention_match exact; the population or setting goes in qualifiers_match); only another programme of the same kind with its own protocol is class. The example is not from any benchmark set"
+  why: "with v16 the novelty N agrees with the outside reader at weighted kappa 0.20 against 0.41 with v9: in 14 of 30 trials of pack 18 v16 marks the closest prior work as the same class (N 'analog') where Argon sees the same intervention in a new context"
+  runs: "two runs on pack 16 (about 0.13 USD); then the 30 trials of pack 18 read again with v17 and the cross-link reading on the saved searches (about 1.0 USD)"
+  pass_rule: "written before the runs: v17 replaces v16 when, on pack 16, the mean recall of two runs is at least 0.52 (v16's 0.574 - 0.05) and the mean precision at least 0.59, and, on the 30 trials, the weighted kappa of N with Argon is at least 0.35, the share of gold papers recorded at least 0.35 and the AUC of the evidence balance at least 0.515"
 

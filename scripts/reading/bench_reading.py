@@ -35,9 +35,9 @@ from scripts.common.reread_v11 import CONFIG, items
 KG = Path(__file__).resolve().parents[3] / "longevity-kg"
 DIR = KG / "reviews" / "argon-2026-11-12"
 PRICE = {"deepseek": (0.15, 0.6), "google": (1.5, 9.0)}      # USD per M tokens off-peak (DeepSeek x2 on weekdays 01-04, 06-10 UTC)
-SYSTEMS = ("v9", "v13", "base_a", "v13_trace", "v14", "v15", "v16", "v16_2")
+SYSTEMS = ("v9", "v13", "base_a", "v13_trace", "v14", "v15", "v16", "v16_2", "v17", "v17_2")
 TRACE = "v13_trace"          # v13 again with every step kept: the filter answers, the reader's answer per paper, the records code kept
-TRACED = ("v13_trace", "v14", "v15", "v16", "v16_2")   # runs that keep every step (v14: verify_claim/v14, the same filter and batches as v13)
+TRACED = ("v13_trace", "v14", "v15", "v16", "v16_2", "v17", "v17_2")   # runs that keep every step (v14: verify_claim/v14, the same filter and batches as v13)
 
 
 def targets() -> list[dict]:
@@ -153,7 +153,7 @@ def run(system: str, limit: int = 0) -> dict:
             for i in range(0, len(kept), rv.BATCH):
                 cv = verify_claim(client, "deepseek", frozenset({"google"}), t["claim"], t["card"], t["as_of"], log=log,
                                   fallback="google", expert_pmids=[(p, "benchmark") for p in kept[i:i + rv.BATCH]],
-                                  search="fixed", template_version=system.split("_")[0] if system.startswith(("v14", "v15", "v16")) else "v13", check_subgroups=False)
+                                  search="fixed", template_version=system.split("_")[0] if system.startswith(("v14", "v15", "v16", "v17")) else "v13", check_subgroups=False)
                 recs.update({k: v for k, v in _records(cv.model_dump()).items() if k not in recs})
             trace = {"rule_pass": cand, "filter": ans, "kept": kept, "reader": _reader_answers(log)}
         with lock:
@@ -175,7 +175,7 @@ def _reader_answers(log: list) -> dict:
     from hyparena.card.llm import parse_fullest
     out = {}
     for x in log:
-        if not str(x.get("template", "")).startswith(("verify_claim/v13", "verify_claim/v14", "verify_claim/v15", "verify_claim/v16")):
+        if not str(x.get("template", "")).startswith(("verify_claim/v13", "verify_claim/v14", "verify_claim/v15", "verify_claim/v16", "verify_claim/v17")):
             continue
         v = parse_fullest(x.get("reply") or "") or {}
         match = {str(r.get("pmid", "")).replace("PMID:", "").strip(): r.get("intervention_match") for r in v.get("records") or [] if isinstance(r, dict)}
