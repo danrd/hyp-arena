@@ -149,6 +149,7 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
     verify_version = cfg_extra.get("verify_version") or ("v6" if method == "v3" else "")   # v3: v6 or later (`verify_version`)
     from hyparena.reading import verifier as _verifier
     _verifier.READ_BATCH = int(cfg_extra.get("read_batch") or 0)          # papers per reader call (`read_batch`; 0 = all at once)
+    cross_link = bool(cfg_extra.get("cross_link"))                      # claims also read the other searches' papers (hyparena/reading/cross_link.py)
     from hyparena.scoring import rules as _rules
     _rules.GRADED_CONTEXT = cfg_extra.get("admission") == "graded"     # `admission: graded` in the config
     log: list = []
@@ -206,6 +207,7 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
         if "outcome" in x:
             continue
         card = x["card"]
+        log_start = len(log)                                # this hypothesis's log entries, for the cross-link reading
         ver = verify(client, verifiers or families, writer, card, as_of=as_of, log=log, map_fn=pool.map, search=search_mode,
                      template_version=verify_version,
                      expert_sources=ex.sources(layer, card.id), fallback_families=families,
@@ -232,6 +234,14 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
                 alt_ver[alt.id] = _vc(client, checker, frozenset({writer}), ac, card, as_of, log=log,
                                       expert_pmids=[(p, "proposed alternative support") for p in alt.support_pmids],
                                       search=search_mode, template_version=verify_version)
+            if cross_link:                                  # 2026-11-15: an outcome or step also reads the alternatives' papers
+                from hyparena.reading import cross_link as xl
+                own_log = log[log_start:]
+                searched = xl.searched_by_claim(own_log)
+                cvs, x["cross_link"] = xl.cross_read(client, checker, frozenset({writer}), card, x["verification"].claims,
+                                                     searched, as_of, verify_version, log=log, fallback=None,
+                                                     queries={c: xl.queries_of(own_log, c) for c in searched})
+                x["verification"] = xl.refinalize(card, x["verification"], cvs)
             x["v3"] = rules_v3.evaluate(card, x["verification"].claims, alt_ver).as_dict()
             x["v3_alternatives"] = {k: v.model_dump(by_alias=True) for k, v in alt_ver.items()}
         if check_alternatives and legacy and x["verification"].evidence_profile.gate == "pass":
@@ -289,7 +299,8 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
                        "verification": x["verification"].model_dump(by_alias=True) if x.get("verification") else None,
                        "indicators": x.get("indicators"), "extra": x.get("extra"),
                        "unresolved_compounds": x.get("unresolved_compounds", []),
-                       **({"v3": x["v3"], "v3_alternatives": x.get("v3_alternatives", {})} if "v3" in x else {})} for x in items],
+                       **({"v3": x["v3"], "v3_alternatives": x.get("v3_alternatives", {})} if "v3" in x else {}),
+                       **({"cross_link": x["cross_link"]} if "cross_link" in x else {})} for x in items],
             "ranking": profiles, "robust": ranking.robust if ranking else [],
             **unranked_lists(items),
             "proximity": [r.as_dict() for r in rels], "variant_groups": proximity.variant_groups(rels),

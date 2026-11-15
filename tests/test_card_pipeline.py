@@ -560,3 +560,32 @@ def test_reader_reads_in_batches_and_merges_the_records(monkeypatch):
     monkeypatch.setattr(verifier, "READ_BATCH", 0)
     verifier.verify_claim(None, "google", frozenset(), card.claims[0], card, retmax=25, check_subgroups=False)
     assert [len(c) for c in calls] == [25]
+
+
+def test_cross_link_reads_the_other_searches_papers_rated_for_the_claim(monkeypatch):
+    from hyparena.card.models import ClaimVerification, Verification
+    from hyparena.reading import cross_link as xl
+    from hyparena.search import search as srch
+    card = _fixture_card("ex3_rapamycin_mechanism")
+    claim = next(c for c in card.claims if c.part != "premise")
+    log = [{"kind": "search", "claim": claim.id, "pmids": ["1", "2"]},
+           {"kind": "search", "claim": "p1", "pmids": ["2", "3", "4", "5"]}]
+    searched = xl.searched_by_claim(log)
+    assert searched == {claim.id: ["1", "2"], "p1": ["2", "3", "4", "5"]}
+    monkeypatch.setattr(pubmed, "fetch", lambda pm: {p: {**ABSTRACT, "pmid": p} for p in pm})
+    rated = []
+    monkeypatch.setattr(srch, "relevance", lambda client, avoid, c, card, q, ids, recs, log=None: (rated.append(list(ids)), {"3": 3, "4": 1, "5": 2})[1])
+    read = []
+
+    def vc(client, family, avoid, c, card, as_of, log=None, fallback=None, expert_pmids=None, search="", template_version=""):
+        read.append([p for p, _ in expert_pmids])
+        cv = ClaimVerification(id=c.id)
+        cv.evidence = []
+        return cv
+    monkeypatch.setattr(verifier, "verify_claim", vc)
+    cvs, added = xl.cross_read(None, "deepseek", frozenset(), card, [ClaimVerification(id=claim.id)], searched, None, "v16")
+    assert rated == [["3", "4", "5"]]                                   # only the other searches' papers, not its own
+    assert read == [["3", "5"]]                                         # the 3 and the 2 (filled up to 10), not the 1
+    assert added[claim.id]["read"] == ["3", "5"] and added[claim.id]["extra"] == 3
+    v = xl.refinalize(card, Verification(card_id=card.id, claims=cvs, searched_pmids=[]), cvs)
+    assert [c.id for c in v.claims] == [claim.id]

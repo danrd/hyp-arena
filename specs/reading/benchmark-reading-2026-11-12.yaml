@@ -138,4 +138,10 @@ cross_link_reading_2026_11_15:
   why: "of the 33 gold papers the v16 reader got and did not record, 21 came only from an alternative's search and were read only against it"
   cost: "about 0.6 USD named (rating about 4 800 papers, reading the picked ones); cap 1.0"
   pass_rule: "written before the run, the same as for v16 against the saved search run n12: the share of gold must-find papers that became records at least 0.35 and the AUC of the evidence balance at least 0.515; the v16 replay alone (0.272, 0.661) reported beside"
+  result_2026_11_15:
+    cost: "0.40 USD by the call log (4 784 papers rated for the claims, 803 read)"
+    n14x: "gold must-find papers that became records 0.381 (holdout 0.306); AUC of the evidence balance 0.710 [0.50, 0.90] on 30 trials; 784 records"
+    against: "v16 alone 0.272 / 0.661 / 415 records; the saved search run (reader v9) 0.259 / 0.545 / 345"
+    by_category_read: "prior trials 0.56 -> 0.72, direct 0.18 -> 0.36, reviews 0.17 -> 0.26, mechanism steps 0 -> 0.10, against 0.21 -> 0.21; the closest prior work read 0.47 -> 0.60"
+    by_the_rule: "passed (0.381 >= 0.35, AUC 0.710 >= 0.515): the working config reads with verify_claim/v16 in batches of 10 and the cross-link reading (configs/v3-flash-n10.yaml: verify_version v16, read_batch 10, cross_link true; code hyparena/reading/cross_link.py, called by the pipeline after the alternatives)"
 

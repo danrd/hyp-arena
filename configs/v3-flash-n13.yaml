@@ -1,5 +1,5 @@
 # As configs/v3-flash-n10.yaml with reader v16 in batches of 10 (2026-11-15): the config of the confirming run of the reader;
-# not the working config until that run passes.
+# the working config n10 now reads with v16 in batches of 10 and the cross-link reading (2026-11-15).
 # As configs/v3-flash.yaml with normalize_card/v10 (the prospective pool, scripts/whole_system/prospective.py).
 # Method v3 on the calibration setup of configs/v2-flash-msearch.yaml.
 # Method v2 as configs/v2-flash.yaml, with the model-written literature search (search: model, at the end).

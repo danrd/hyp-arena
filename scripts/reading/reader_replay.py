@@ -71,7 +71,7 @@ def _queries(run: dict, cid: str) -> list[str]:
 
 
 def cross_one(client, run: dict, base_run: dict, version: str, log: list) -> dict:
-    """Cross-link reading: every claim of the hypothesis (outcome and steps) also reads the papers the hypothesis's other
+    """Cross-link reading (as hyparena/reading/cross_link.py, run over a saved replay): every claim of the hypothesis (outcome and steps) also reads the papers the hypothesis's other
     searches found (mostly those of its proposed alternatives). The cheap relevance model rates those papers for the claim
     (as in the search) and the claim reads, besides its own papers, every one rated 3 filled up to 10 with those rated 2.
     The proposed alternatives keep their own reading of the base replay."""
