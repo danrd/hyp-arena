@@ -72,6 +72,7 @@ A script of a finished check stays: its spec names it as the calculation of its 
 | [`blind_check`](reading/blind_check.py) | Paired check of name dependence of the verifier: the same saved prompt with and without the compound's names. |
 | [`claim_results`](reading/claim_results.py) | Claim vs results table (specs/reading/abstract-overstates-2026-11-09.yaml, claim_vs_results): one narrow question per 'for' RCT record on the outcome link with an open paper, from the Results sections and tables; a 'no' or ... |
 | [`extraction_compare`](reading/extraction_compare.py) | Extraction against the DrugAge gold, at the level of cells (compound, species, sex) with a direction. |
+| [`effect_phrases`](reading/effect_phrases.py) | What the effect phrase of a record for gives the code, a count by kind on the saved runs (specs/scoring/effect-phrase-2026-11-15.yaml). Free. |
 | [`extraction_gold_v3`](reading/extraction_gold_v3.py) | Method v3 extraction against hand-made gold, with the v2 verifier (verify_claim/v5) on the same inputs for comparison. |
 | [`fulltext_reread`](reading/fulltext_reread.py) | Full-text re-read of 'for' RCT records on the outcome link (specs/reading/abstract-overstates-2026-11-09.yaml, fulltext_reread). |
 | [`meta_certainty`](reading/meta_certainty.py) | Certainty-aware weight of meta-analysis records (specs/reading/meta-and-nulls-2026-11-09.yaml, meta_certainty). |
@@ -107,6 +108,7 @@ A script of a finished check stays: its spec names it as the calculation of its 
 | [`record_weight_check`](scoring/record_weight_check.py) | specs/scoring/record-weight-2026-11-08.yaml: the record weight and the fold of for / against, step by step. Free (no model calls; PubMed E-utilities for years and abstracts, cached in data/cache/pubmed). |
 | [`trend_genetics_check`](scoring/trend_genetics_check.py) | The check of specs/scoring/trend-genetics-2026-11-06.yaml on saved runs (no model calls). |
 | [`weight_variants`](scoring/weight_variants.py) | Free: the values of Argon pack 24 for the record weight, each as a variant against R2, R3, pack 23 and the AUC on 30 trials; `before 2026-11-15` reproduces the weights until then (specs/scoring/weight-sources-2026-11-15.yaml). |
+| [`effect_variants`](scoring/effect_variants.py) | Extensions of the effect-phrase parser (interval forms, two means, two values, p value) as variants against R2, R3, pack 23 and the AUC on 30 trials (specs/scoring/effect-phrase-2026-11-15.yaml). Free. |
 
 ## [`alternatives/`](alternatives/) — Stage: competing explanations and informativeness
 

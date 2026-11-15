@@ -88,6 +88,81 @@ def d_from_ci(phrase: str, n: int | None, comparison: str) -> float | None:
     return abs(diff) / sd
 
 
+# Parser extensions scored as variants (specs/scoring/effect-phrase-2026-11-15.yaml). None is on by default: a switch
+# enters EXTRA only through the manual.
+EXTRA: frozenset = frozenset()          # of "interval", "means", "two_values", "p_value"
+
+_N = r"([+-]?\d+(?:\.\d+)?)"
+_CI_WIDE = re.compile(_N + r"(?:\s*[a-zA-Z%/²°.-]+){0,8}\s*(?:\(|;|,|\[)?\s*(?:95\s*%\s*)?(?:confidence interval|C\.?I\.?)\b\.?"
+                      r"[^0-9+-]{0,20}" + _N + r"\s*(?:to|,|;|–|-)\s*" + _N, re.I)
+_CI_BRACE = re.compile(_N + r"\s*[a-zA-Z%/²°]*\s*\{\s*" + _N + r"\s*;\s*" + _N + r"\s*\}")
+_SMD_WIDE = re.compile(r"\bSMD\b[^0-9+-]{0,20}" + _N, re.I)
+_MEAN_SD = re.compile(_N + r"\s*(?:±|\+/-|\+-)\s*(\d+(?:\.\d+)?)")
+_FROM_TO = re.compile(r"\bfrom\s+" + _N + r"\s*[a-zA-Zµ%/]*\s+to\s+" + _N, re.I)
+_VERSUS = re.compile(r"(?<![/±\d.])" + _N + r"\s*(%?)\s*[a-zA-Zµ/]*\s*(?:vs\.?|versus|compared (?:with|to))\s+" + _N + r"\s*(%?)", re.I)
+_P_VALUE = re.compile(r"\bp\s*(=|<|≤)\s*(0?\.\d+)", re.I)
+
+
+def _d_interval(diff: float, lo: float, hi: float, n: int, comparison: str) -> float | None:
+    se = abs(hi - lo) / 3.92
+    return abs(diff) / (se * (n ** 0.5) / (2 if comparison == "between_groups" else 1)) if se > 0 else None
+
+
+def d_extra(phrase: str, n: int | None, comparison: str) -> float | None:
+    """A standardised difference from the switched-on extensions "interval" and "means", or None."""
+    p = (phrase or "").replace("−", "-")
+    if "interval" in EXTRA:
+        m = _SMD_WIDE.search(p)
+        if m:
+            return abs(float(m.group(1)))
+        m = _CI_WIDE.search(p) or _CI_BRACE.search(p)
+        if m and n and n >= 4:
+            diff, lo, hi = (float(m.group(k)) for k in (1, 2, 3))
+            if min(lo, hi) <= diff <= max(lo, hi):                 # the number before the interval is its own estimate
+                return _d_interval(diff, lo, hi, n, comparison)
+    if "means" in EXTRA:
+        ms = _MEAN_SD.findall(p)
+        if len(ms) == 2:
+            (m1, s1), (m2, s2) = ((float(a), float(b)) for a, b in ms)
+            sd = ((s1 ** 2 + s2 ** 2) / 2) ** 0.5
+            return abs(m1 - m2) / sd if sd > 0 else None
+    return None
+
+
+def class_two_values(phrase: str) -> str:
+    """"two_values": the class of "from X to Y" (relative change, percent thresholds) or "X vs Y" (ratio thresholds)."""
+    if "two_values" not in EXTRA:
+        return "unclear"
+    p = (phrase or "").replace("−", "-")
+    m = _FROM_TO.search(p)
+    if m:
+        x, y = float(m.group(1)), float(m.group(2))
+        if x == 0:
+            return "unclear"
+        c = abs(y - x) / abs(x) * 100
+        return "large" if c > 20 else "medium" if c >= 5 else "small"
+    m = _VERSUS.search(p)
+    if m:
+        x, y = float(m.group(1)), float(m.group(3))
+        if x * y <= 0:
+            return "unclear"
+        r = max(abs(x), abs(y)) / min(abs(x), abs(y))
+        return "large" if r >= 2 else "medium" if r >= 1.25 else "small"
+    return "unclear"
+
+
+def d_from_p(phrase: str, n: int | None, comparison: str) -> float | None:
+    """"p_value": d from a two-sided p and n (z from p; 2 z / sqrt(n) between groups, z / sqrt(n) within); "p < x" is a lower bound."""
+    if "p_value" not in EXTRA or not n or n < 4:
+        return None
+    m = _P_VALUE.search(phrase or "")
+    if not m or not 0 < float(m.group(2)) < 1:
+        return None
+    from statistics import NormalDist
+    z = NormalDist().inv_cdf(1 - float(m.group(2)) / 2)
+    return (2 if comparison == "between_groups" else 1) * z / n ** 0.5
+
+
 def effect_class(phrase: str, extractor_class: str) -> str:
     """"none" when the extractor says the finding closest to the claim is null; otherwise the class of the phrase."""
     if extractor_class == "none":

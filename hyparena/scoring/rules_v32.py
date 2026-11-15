@@ -86,13 +86,20 @@ def effect_weight(rec: EvidenceRecord, against: bool) -> float:
     if d is None:                                         # 2026-11-08: a raw difference with its 95% CI and n
         from hyparena.reading.effect_class import d_from_ci
         d = d_from_ci(p, rec.n_total, rec.comparison)
+    if d is None and rec.effect_class != "none":          # extensions, off by default (effect_class.EXTRA)
+        from hyparena.reading import effect_class as ec
+        d = ec.d_extra(p, rec.n_total, rec.comparison)
     if d is None:
         if rec.effect_class == "unclear":                 # 2026-11-08: a percent change the extractor class missed
-            from hyparena.reading.effect_class import from_phrase
-            c = from_phrase(p)
+            from hyparena.reading import effect_class as ec
+            c = ec.from_phrase(p)
+            if c == "unclear":
+                c = ec.class_two_values(p)
             if c != "unclear":
                 return lv.weight("effect", c)
-        return lv.weight("effect", rec.effect_class)
+            d = ec.d_from_p(p, rec.n_total, rec.comparison)
+        if d is None:
+            return lv.weight("effect", rec.effect_class)
     return 0.25 + 0.75 * min(1.0, d / 0.8)
 
 

@@ -1,0 +1,64 @@
+id: effect-phrase-2026-11-15
+written_on: 2026-11-15
+status: variants and the rule fixed before any variant was scored
+why: >-
+  The effect factor of a record for is 1 for a stated effect of at least medium size and 1/2 otherwise; the size is read by
+  code from the verbatim effect phrase. A count on the saved runs (scripts/reading/effect_phrases.py; 297 records for on the
+  outcome links of the 30 trials of pack 18, working reader) shows where the phrase gives no size: no phrase 91, a number
+  without an interval 111 (two values 30, a bare percent or share 23, a p value only 18, means with their spread 15, one
+  difference in units 7, other 17), words only 23, an interval the parser does not read 5; a ratio or a standardised
+  difference 28, a percent or the authors' word 23, a raw difference with its interval already converted 17. The case the
+  backlog named (an unstandardised effect with a stated interval left unclear) is 5 records; a table of clinically
+  important differences per measure would cover little (SPPB 4 records, gait speed 6; 112 of the 229 records without a
+  class name none of 15 common measures). So the candidates are parser extensions, not a reader change.
+cost: free (saved runs and packs, no model call)
+variants:
+  E1_interval: >-
+    the interval parser also reads unit words between the difference and the interval ("0.86 points on the SPPB scale (95%
+    CI 0.32, 1.41)"), "CI = 62-123", "95% C.I. = 1.2-3.6", an interval in braces ("46 m {20;72}"), and "SMD final value:
+    0.18". The rule itself (d from the difference, the interval and n) is unchanged
+  E2_means: >-
+    two means with their standard deviations (two groups, or before and after): d = |m1 - m2| / sqrt((s1^2 + s2^2) / 2). One
+    mean with a spread alone is not read (a change divided by the spread of the change overstates)
+  E3_two_values: >-
+    "from X to Y": the relative change |Y - X| / |X| by the percent thresholds (5 and 20); "X vs Y", "X versus Y", "X
+    compared with Y" with both of one sign: the ratio of the larger to the smaller by the ratio thresholds (1.25 and 2);
+    values of opposite sign or zero are not read
+  E4_p_value: >-
+    a p value with a known n: z from the two-sided p, d = 2 z / sqrt(n) between groups, z / sqrt(n) within a group (the
+    conversion of the Cochrane Handbook, section 6.5.2.3); "p < x" gives the lower bound
+  E_all: E1 to E4 together
+references:
+  R2: a later RCT or meta-analysis of the same link scored from the earlier records (AUC)
+  R3: outcomes of the 74 calibration trials, saved v10 runs (AUC of the evidence balance)
+  pack23: concordance of the record order with the outside reader (175 pairs)
+  auc30: AUC of the evidence balance on the 30 trials of pack 18, working reader (and reader v16)
+  moved: how many records for change their effect factor from 1/2 to 1 under the variant (30 trials, working reader)
+rule:
+  E1: a parser fix of an accepted rule; it enters unless a reference gets worse by more than 0.03
+  E2_E3_E4: >-
+    a variant enters only when no reference gets worse by more than 0.03 against the current code and at least one of R2 or
+    pack23 does not fall; a variant that moves fewer than 5 records decides nothing and stays out (simpler wins)
+  known_risk: counting any stated effect as full lowered the AUC on the 30 trials (specs/scoring/weight-sources-2026-11-15.yaml, F5); E3 is the nearest to it
+script: scripts/scoring/effect_variants.py -> longevity-kg reviews/argon-2026-11-15/effect_variants.json
+
+result_2026_11_15:
+  table:    # R2, R3, pack23, auc30 working reader, auc30 reader v16, records moved to the full effect factor
+    current:       [0.695, 0.602, 0.669, 0.674, 0.692, 0]
+    E1_interval:   [0.695, 0.602, 0.669, 0.679, 0.696, 3]
+    E2_means:      [0.697, 0.598, 0.658, 0.679, 0.692, 13]
+    E3_two_values: [0.688, 0.587, 0.669, 0.661, 0.679, 19]
+    E4_p_value:    [0.693, 0.595, 0.662, 0.674, 0.696, 6]
+    E_all:         [0.688, 0.577, 0.652, 0.670, 0.683, 38]
+  by_the_rule:
+    E1: passes (no reference worse; a fix of the accepted interval rule; 3 records)
+    E2: passes (no reference worse by more than 0.03; R2 does not fall); pack23 falls by 0.011
+    E3: >-
+      passes the letter of the rule (no reference worse by more than 0.03; pack23 does not fall), but R2, R3 and both AUCs
+      fall: the known risk
+    E4: fails (R2 and pack23 both fall)
+    E_all: fails (R2 and pack23 both fall)
+  reading: >-
+    every difference is inside the noise of the references (R2 about +-0.09, the AUC on 30 trials about +-0.2): the
+    extensions do not improve the order. The effect factor as it stands loses little by leaving these phrases unclear.
+  decision: "pending the user (the extensions are in the code, switched off; hyparena/reading/effect_class.py, EXTRA)"
