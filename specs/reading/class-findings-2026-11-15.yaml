@@ -1,0 +1,37 @@
+id: class-findings-2026-11-15
+written_on: 2026-11-15
+status: definitions fixed before the pack was sent and before any reader run on it
+why: >-
+  Reader v17 loses own studies of an intervention of the same class (6 of 23 on pack 16) and has no field that says whether
+  a record's result is on the claim's own outcome; code cannot check reading rule 0 and the gate rule "a null counts only on
+  the claim's outcome" could not be tested (specs/scoring/gate-fixes-2026-11-15.yaml, G1). Prompt examples for the class
+  boundary come from the loss analysis of pack 16, so they must be scored on abstracts the reader was never tuned on.
+cost: >-
+  the pack is free (Argon is the user's outside reader; PubMed E-utilities). Every reader run on it is paid: priced by a dry
+  count and run only after the user's go, off-peak.
+pack: Argon pack 25 (longevity-kg reviews/argon-2026-11-15/pack_25{a,b}_task.json; key pack_25_key.json); builder scripts/argon/pack25_reading.py
+sample: >-
+  20 outcome links, one per trial, of trials in none of packs 9, 13, 15, 16, 18 and not the walkthrough trial (10 prospective,
+  10 calibration); every abstract the link's saved search returned, at most 20: 382 link-abstract pairs. 14 links enriched
+  (most abstracts typed by PubMed as a trial or a meta-analysis whose title shares no word with the claim's subject: code
+  signals only), 6 random. Every third link in hash order (6 links) is a reserve.
+asked: >-
+  the fields of pack 16 (finding, none_reason, quote, result_on_claim_measure, comparison, effect_phrase, design, n_total,
+  intervention_match, context_differs, secondary_positive) plus outcome_match (same | narrower | broader | other) and
+  outcome_measure (the verbatim words that name the measure).
+measures:
+  recall: share of the gold's for / against findings the reader records on the same link with the same stance
+  precision: share of the reader's records the gold also calls a finding with the same stance
+  class_recall: recall on gold findings with intervention_match class and a primary-study design (the loss this spec is about)
+  outcome_field: >-
+    for records both readers have: Cohen kappa of outcome_match in two classes (same or narrower | broader or other); share
+    of the reader's outcome_measure phrases that are verbatim in the abstract
+  intervals: bootstrap over links
+rule:
+  baseline: reader v17 is scored on the 14 non-reserve links first (its own paid run); the numbers are written here before any candidate is run
+  candidate_replaces_v17_when: >-
+    on the 14 non-reserve links, mean of two runs: class_recall higher than v17's by at least 0.15, precision not lower by
+    more than 0.03, recall not lower; and on pack 16 recall and precision not lower than v17's by more than 0.03
+  outcome_field_usable_when: kappa at least 0.6 and at least 0.95 of the phrases verbatim; then scripts/scoring/gate_variants.py is rerun with the field for rule G1
+  second_round: a candidate written after seeing the losses on the 14 links is scored on the 6 reserve links only
+  pack_usable_when: the gold has at least 30 class findings from primary studies; fewer, and class_recall is reported with its interval but decides nothing

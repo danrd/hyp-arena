@@ -1,0 +1,33 @@
+id: novelty-high-levels-2026-11-15
+written_on: 2026-11-15
+status: definitions fixed before the pack was sent; our own N on these hypotheses is not computed yet
+why: >-
+  The novelty benchmark so far (pack 18, pack 7) is registry trials, almost all at "new context": the upper levels of N
+  (new mechanism of a known effect, new combination, new link) and novelty by absence (the PubMed count on a link's own
+  subject and object) have never been checked against an outside reader. They are what the frontier profile and directed
+  evolution rest on.
+cost: >-
+  the pack is free. Our N on the 30 hypotheses needs the pipeline (search, reading) on them: priced by a dry count and run
+  only after the user's go, off-peak.
+pack: Argon pack 26 (longevity-kg reviews/argon-2026-11-15/pack_26_task.json; key pack_26_key.json); builder scripts/argon/pack26_novelty.py
+sample: >-
+  30 hypotheses that are not registry trials, with a saved card of the working template (card benchmark, packs 19 and 20)
+  that has at least one mechanism step: 13 Bio Arena, 13 written in a chat, 4 evolved versions of registry trials with three
+  or more steps (expected near the known). One date T for all, 2026-10-14 (the earliest date a text of the set was written).
+shown: the text, T, the card's chain (steps and outcomes as subject - relation - object with qualifiers and how the text states them)
+asked:
+  per_hypothesis: >-
+    novelty (new_context | translation | analog | new_mechanism | new_combination | new_link | unknown), outcome_level under
+    a new_mechanism, up to 3 defining PMIDs, known_result with its PMID
+  per_link: "level, supported, up to 2 PMIDs; for a new_link the PubMed query on the link's subject AND object and its count before T"
+measures:
+  N: "linear-weighted Cohen kappa over the six ordered levels on hypotheses where neither reader says unknown; confusion table; agreement on unknown against a level"
+  direction: share of hypotheses where our level is farther from the known than Argon's, and nearer
+  absence: "for links either reader calls new: our PubMed count against Argon's (both under 5, both at least 5, split)"
+  pmids: "every PMID Argon gives is fetched from PubMed (exists, public on or before T); share valid; whether our search found it"
+  links: weighted kappa of the per-link levels
+rule:
+  pack_usable_when: Argon puts at least 8 of the 30 at new_mechanism or above and at least 5 at analog or below; else the pack does not separate the levels and decides nothing
+  N_passes_when: weighted kappa at least 0.4 and our level farther from the known in at most 0.25 of the hypotheses
+  absence_passes_when: our count and Argon's fall on the same side of 5 in at least 0.8 of the links either reader calls new
+  if_not: the misses are sorted by cause (search, reading, card chain, the level rule) before any rule is changed
