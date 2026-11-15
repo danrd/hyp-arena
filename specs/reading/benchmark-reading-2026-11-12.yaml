@@ -121,4 +121,9 @@ reader_v16_2026_11_15:
     by_the_alternative_rule: "45 and 43 of 71 (0.63, 0.61)"
     against: "v13 0.29-0.34 / 0.64; v14 0.63 / 0.57; v15 0.38 / 0.78; a plain LLM 0.28 / 0.41"
     by_the_rule: "passed (mean recall 0.574 >= 0.39, mean precision 0.794 >= 0.59): v16 is the reader to propose for the working config; the pipeline reads with verify_claim/v9 in one call per claim, so the switch is a change of the pipeline and needs a confirming run, through the manual"
+reader_v16_confirming_2026_11_15:
+  what: "the 30 calibration trials of pack 18 read again with verify_claim/v16 in batches of 10 on exactly the papers each claim and proposed alternative read in the confirming run of the filtered search (run_*_n12.json): cards, searches and alternatives kept, only the reader changes (scripts/reading/reader_replay.py, config configs/v3-flash-n13.yaml)"
+  baseline_n12: "gold must-find papers that became records 0.259 (holdout 0.224); AUC of the evidence balance against the outcomes 0.545 [0.33, 0.77] on 30 trials; 345 records"
+  cost: "about 0.7-0.9 USD named; cap 1.2"
+  pass_rule: "written before the run: v16 in batches of 10 becomes the reader of the working config (through the manual) when the share of gold must-find papers that became records is at least 0.35 and the AUC of the evidence balance is at least 0.515 (the n12 run - 0.03); the holdout and the number of records are reported"
 
