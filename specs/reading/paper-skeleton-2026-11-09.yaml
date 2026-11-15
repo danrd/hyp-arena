@@ -138,3 +138,9 @@ quote_checks_fixed_2026_11_15:
     emptied_by_the_checks_of_307_rows: {comparison: "239 -> 49", direction: "186 -> 16", significance: "72 -> 63", outcome_name: "78 -> 43", effect_reported: "128 -> 128"}
     against_argon: "of the fields Argon flagged on rows found again by their quote (359): 232 now have Argon's value, 58 another value, 69 still empty; 214 flagged fields are on rows the new parse quotes differently"
     reading: "the fix gives back most of what the checks emptied, at about 0.8 agreement with Argon on the fields given back; significance stays strict by design (a test must be stated near the row); effect phrases are unchanged and are the next field to look at"
+adjudicate_v3_2026_11_15:
+  what: "the ambiguous-pair model with the rules of reader verify_claim/v16 first, with examples of the boundary: the same kind of intervention counts and 'other' is only a different kind of means or the comparator; the outcome the link's own or a narrower measure; a meta-analysis's pooled result is a finding (longevity-kg tools/skeleton/session.py, SKELETON_ADJUDICATE=adjudicate_v3)"
+  run: "stage 0 again on the 200 pairs of pack 9: the 188 papers parsed anew (parse_v2, with the fixed quote checks; the stage-0 database of 2026-11-10 was not kept), then the pairs judged by adjudicate_v3; about 0.55-0.85 USD; the parses dumped into the repository this time"
+  baseline: "stage 0 of 2026-11-10 (adjudicate_v2, old checks): recall 0.52 (11 of 21), precision 0.85; reader v13 0.52 / 0.73"
+  pass_rule: "written before the run: adjudicate_v3 replaces v2 when recall on pack 9 is at least 0.62 (11 of 21 + 2) and precision at least 0.70; reported: the loss per step, and v2 on the same parses if run"
+
