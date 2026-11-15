@@ -147,6 +147,8 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
     legacy = bool(cfg_extra.get("legacy_v2_checks", method != "v3"))
     norm_runs = int(cfg_extra.get("normalize_runs", 1))               # v3.9: 2 = union of two parses (user decision 2026-11-11)
     verify_version = cfg_extra.get("verify_version") or ("v6" if method == "v3" else "")   # v3: v6 or later (`verify_version`)
+    from hyparena.reading import verifier as _verifier
+    _verifier.READ_BATCH = int(cfg_extra.get("read_batch") or 0)          # papers per reader call (`read_batch`; 0 = all at once)
     from hyparena.scoring import rules as _rules
     _rules.GRADED_CONTEXT = cfg_extra.get("admission") == "graded"     # `admission: graded` in the config
     log: list = []

@@ -396,6 +396,10 @@ def merge_relevance(records: list, checks: list, abstracts: dict) -> list:
     return out
 
 
+READ_BATCH = 0      # papers per reader call; 0 = all in one call. Set by the pipeline from the config's `read_batch`
+                    # (reading benchmark 2026-11-15: verify_claim/v16 was measured in batches of 10)
+
+
 def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisCard,
                  as_of: Optional[str] = None, retmax: int = RETMAX, log: Optional[list] = None,
                  fallback: Optional[str] = None, expert_pmids: Optional[list[tuple[str, str]]] = None,
@@ -465,13 +469,27 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
                                 "review": pubmed.is_review(a)} for k, a in abstracts.items()]}
     version = template_version or TEMPLATE[1]
     keep_no_stance = int(version.lstrip("v") or 0) >= 6     # v3 templates
-    value, fam = ask(client, role="verify_claim", family=family, template=TEMPLATE[0], version=version,
-                     variables=variables, validate=lambda v: _validate(v, abstracts), rounds=2, avoid=avoid, log=log,
-                     parse=parse_records)
-    if fallback and fallback != fam and (value is None or (value.get("truncated") and not value.get("records"))):
-        value, fam = ask(client, role="verify_claim", family=fallback, template=TEMPLATE[0], version=version,
-                         variables=variables, validate=lambda v: _validate(v, abstracts), rounds=2, avoid=avoid,
-                         log=log, parse=parse_records)
+
+    def read(part: dict) -> tuple[Optional[dict], str]:
+        vs = {**variables, "abstracts": [x for x in variables["abstracts"] if x["pmid"] in part]}
+        value, fam = ask(client, role="verify_claim", family=family, template=TEMPLATE[0], version=version,
+                         variables=vs, validate=lambda v: _validate(v, part), rounds=2, avoid=avoid, log=log,
+                         parse=parse_records)
+        if fallback and fallback != fam and (value is None or (value.get("truncated") and not value.get("records"))):
+            value, fam = ask(client, role="verify_claim", family=fallback, template=TEMPLATE[0], version=version,
+                             variables=vs, validate=lambda v: _validate(v, part), rounds=2, avoid=avoid,
+                             log=log, parse=parse_records)
+        return value, fam
+    keys = list(abstracts)
+    size = READ_BATCH if READ_BATCH and len(keys) > READ_BATCH else len(keys)
+    value, fam = None, family
+    for i in range(0, len(keys), size):                  # batches of READ_BATCH papers (reading benchmark: v13 and later)
+        v, f = read({k: abstracts[k] for k in keys[i:i + size]})
+        if v is None:
+            continue
+        fam = f
+        value = v if value is None else {"records": (value.get("records") or []) + (v.get("records") or []),
+                                         "truncated": bool(value.get("truncated") or v.get("truncated"))}
     if relevance_check and value and value.get("records"):
         checks = [c for c in (ask_relevance(client, fam, avoid, claim, card, pmid, abstracts[pmid], log=log)
                               for pmid in relevance_targets(value["records"], abstracts)) if c]

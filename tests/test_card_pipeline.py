@@ -537,3 +537,26 @@ def test_audit_fails_on_a_late_record_always_and_on_undated_ones_when_final(monk
     assert explore["ok"] and explore["undated"] == ["3"] and list(explore["undatable"]) == ["NCT00000001"]
     final = backtest.audit(_run_file(tmp_path, recs), strict=True)      # final run on T: any undated record fails
     assert not final["ok"] and final["undated_share"] > 0
+
+
+def test_reader_reads_in_batches_and_merges_the_records(monkeypatch):
+    card = _fixture_card("ex3_rapamycin_mechanism")
+    ids = [str(i) for i in range(1, 26)]
+    monkeypatch.setattr(pubmed, "search", lambda q, retmax=8, as_of=None: ids)
+    monkeypatch.setattr(pubmed, "fetch", lambda pm: {p: {**ABSTRACT, "pmid": p} for p in pm})
+    monkeypatch.setattr(verifier, "drugage_records", lambda claim, allowed=None, cid=None: ([], []))
+    calls = []
+
+    def ask(*a, variables=None, **k):
+        got = [x["pmid"] for x in variables["abstracts"]]
+        calls.append(got)
+        return {"records": [_record(pmid=got[0])]}, "fake"
+    monkeypatch.setattr(verifier, "ask", ask)
+    monkeypatch.setattr(verifier, "READ_BATCH", 10)
+    cv = verifier.verify_claim(None, "google", frozenset(), card.claims[0], card, retmax=25, check_subgroups=False)
+    assert [len(c) for c in calls] == [10, 10, 5] and sum(calls, []) == ids
+    assert {e.record_id for e in cv.evidence} == {"PMID:1", "PMID:11", "PMID:21"}
+    calls.clear()
+    monkeypatch.setattr(verifier, "READ_BATCH", 0)
+    verifier.verify_claim(None, "google", frozenset(), card.claims[0], card, retmax=25, check_subgroups=False)
+    assert [len(c) for c in calls] == [25]
