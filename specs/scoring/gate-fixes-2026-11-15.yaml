@@ -1,6 +1,6 @@
 id: gate-fixes-2026-11-15
 written_on: 2026-11-15
-status: "rule written before the evaluation"
+status: "rule written before the evaluation; evaluated 2026-11-15, nothing adopted yet"
 why: >-
   The gate filters a hypothesis when a key link has a top-design (RCT or meta-analysis) between-group record against it in
   the claim's exact context and no such record for it (hyparena/scoring/rules_v3.strong_refutation). With reader v17 and the
@@ -26,3 +26,10 @@ pass_rule: >-
   rule, and it does not lift the gate on more negative trials than positive ones over the references together. The trials
   whose gate changes are listed with the records that decide them.
 code: "switches GATE_OUTCOME_NAMED and GATE_SUPPORT_CONTEXTS in hyparena/scoring/rules_v3.py (defaults: the current rule); scripts/scoring/gate_variants.py"
+result_2026_11_15:
+  file: "longevity-kg reviews/argon-2026-11-15/gate_variants.json"
+  current: "R3 0.602, AUC 30 trials 0.598 (v17) / 0.714 (v16); filtered: R3 negative NCT04354896; v17 positive NCT03477097, NCT03600402, negative NCT04796701; v16 negative NCT04796701"
+  G1_named_outcome: "R3 0.602, AUC 0.645 / 0.714; lifts NCT03600402 (positive) and NCT04354896 (negative): passes by the count, but both by an artefact of the lexical check - in NCT03600402 the null RCT is on ankle range of motion, the claim's own measure, written 'ROM'; in NCT04354896 (levothyroxine, TRUST, n 737) the quote says 'secondary-outcome measures' without naming them. The check does what the rule asks, not what it means"
+  G2_counterweight_any_context: "R3 0.602, AUC 0.674 / 0.692; lifts NCT03477097 and NCT03600402 (positive; RCTs of the same kind of intervention on frailty and ankle range of motion) and NCT04796701 in both runs (negative; transitional care, 10 RCTs and 2 meta-analyses of the same kind for fewer readmissions against one null RCT of 544): passes"
+  G1_and_G2: "R3 0.602, AUC 0.674 / 0.692; lifts 2 positive and 3 negative: fails"
+  reading: "G2 passes the rule and removes the drop of the AUC under reader v17; G1 should not enter as a lexical check - an outcome-match field of the reader would be needed to test it"

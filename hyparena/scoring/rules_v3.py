@@ -6,6 +6,8 @@ with `method: v3` stores the result of `evaluate` next to the v2 output.
 """
 from __future__ import annotations
 
+import re
+
 from dataclasses import asdict, dataclass, field
 from typing import Optional
 
@@ -90,14 +92,27 @@ def _independent(records: list[EvidenceRecord]) -> int:
     return len({r.reports_trial or r.lab_or_cohort or r.record_id for r in records})
 
 
+# Variants of the gate (specs/scoring/gate-fixes-2026-11-15.yaml); the defaults are the current rule.
+GATE_OUTCOME_NAMED = False                  # G1: a record against counts only when its quote names the claim's outcome
+GATE_SUPPORT_CONTEXTS = ("exact",)          # G2: ("exact", "class", "adjacent") - a counterweight in any counting context
+
+
+def _names_outcome(rec: EvidenceRecord, claim: Claim) -> bool:
+    text = " ".join([claim.object.label, str(claim.qualifiers.get("measure", ""))]).lower()
+    stems = {w[:5] for w in re.findall(r"[a-z]{4,}", text)} - {"human", "older", "adult", "adults", "peopl"}
+    quote = rec.quote.lower()
+    return not stems or any(s in quote for s in stems)
+
+
 def strong_refutation(cv: ClaimVerification, claim: Claim, variant: str = "v3") -> bool:
     """The gate (section 3): a top-design, between-group record against in the claim's population (exact context), and no
     record for of that level."""
-    def top(r):
+    def top(r, contexts=("exact",)):
         return usable(r, variant) and record_design(r) in TOP_DESIGNS and r.comparison in ("between_groups", "unknown") \
-            and context_level(r) == "exact"
-    against = [r for r in cv.counterevidence if top(r) and (r.comparison == "between_groups" or r.reports_trial)]
-    support = [r for r in cv.evidence if top(r) and r.comparison == "between_groups"]
+            and context_level(r) in contexts
+    against = [r for r in cv.counterevidence if top(r) and (r.comparison == "between_groups" or r.reports_trial)
+               and (not GATE_OUTCOME_NAMED or _names_outcome(r, claim))]
+    support = [r for r in cv.evidence if top(r, GATE_SUPPORT_CONTEXTS) and r.comparison == "between_groups"]
     return bool(against) and not support
 
 
