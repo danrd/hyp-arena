@@ -1,6 +1,6 @@
 id: weight-sources-2026-11-15
 written_on: 2026-11-15
-status: "pack built and sent to the outside reader; no answer yet"
+status: "answered 2026-11-15; sources checked by code; the variants not yet evaluated"
 why: >-
   The record weight is shaped after GRADE (Guyatt et al., BMJ 2008), but its numbers are the method's own: GRADE rates
   certainty in levels, not multipliers. They were chosen as the simplest values compatible with GRADE and checked only
@@ -12,3 +12,18 @@ use: >-
   written before the answer: a value changes only through the manual, when the sources the code accepts give a number for
   it and the change does not make the method's references worse by more than 0.03 (R2, R3, and the order of pack 23); a
   factor with no evidence keeps its value and is marked in the stage manual as the method's own choice
+answer_2026_11_15:
+  checked: "40 sources, all 40 exist in PubMed with the title given and a verbatim quote in the abstract (pack_24_check.json)"
+  verdicts:
+    F1_design: "too_high: a meta-analysis whose certainty is not stated at 1 is too much (meta-analyses against later large RCTs agree only at kappa 0.35, LeLorier 1997); suggested not stated 0.5-0.75 (0.75 pooling RCTs only, 0.5 mixing non-randomised studies), moderate 0.75 or 1; the steps RCT 1, non-randomised and observational 1/2 supported (Ioannidis 2001; Hemkens 2016; Toews 2024; Balshem 2011)"
+    F2_preclinical: "supported, with narrative reviews lower: animal 1, systematic review 1, cells 1/3, narrative review 1/3 (Contopoulos-Ioannidis 2003: 19-27% of basic findings reach trials; Perel 2007; Sena 2010)"
+    F3_precision: "supported, keep: small trials overstate (n < 50: ratio of odds ratios 0.52, Dechartres 2013; Zhang 2013; Nuesch 2010); GRADE optimal information size about 300-400 (Guyatt 2011)"
+    F4_null_power: "supported, keep: a-priori power to detect d 0.4 (Freiman 1978; Turner 2013; minimal important difference about 0.5 SD, Norman 2003; Perera 2006 in older adults)"
+    F5_effect: "too_high: a bonus for a large effect is not supported (large effects come from small trials and shrink: Pereira 2012; winner's curse, Ioannidis 2008, Button 2013); suggested: any stated quantitative effect 1, unstated 1/2"
+    F6_comparison: "supported, keep 1/2 for before-after (spontaneous improvement and placebo are 44% of pre-post change, Krogsboll 2009; Hrobjartsson 2001; regression to the mean, Barnett 2005)"
+    F7_context: "too_high for the same class at 1: suggested class 0.5-0.75 (0.75 small molecules of one pharmacological class, 0.5 strains, multi-nutrient formulas, complex programmes), adjacent 1/2 supported, another species for a human claim 1/4 (GRADE indirectness, Guyatt 2011)"
+    F8_one_trial: "too_high: the trial, not the publication, is the unit (duplicate publication, Tramer 1997, von Elm 2004; outcome multiplicity, Tendal 2011): further records of one trial 0, or pooled so that one trial never exceeds 1"
+    F9_link_strength: "too_high: a slope 1.5-1.7 instead of 2.68 (F - A = 1 for S 5/6), and no summing of weak studies against strong ones (GRADE, Guyatt 2011; vote counting biased, Verbeek 2012)"
+  conflict: "F1 against pack 23: there Argon, judging pairs, put a meta-analysis before a trial in 38 of 46 pairs, and the weight of a meta-analysis without stated certainty was raised to 1 on 2026-11-15; here Argon, from the literature, finds 1 too high. Both go to the variant check below"
+  next: "free: each suggested value as a variant against the method's references (R2 later trials of the link, R3 trial outcomes, the order of pack 23, the AUC on the 30 trials of pack 18); a variant enters through the manual only if none of them gets worse by more than 0.03"
+
