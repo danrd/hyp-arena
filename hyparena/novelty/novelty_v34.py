@@ -25,6 +25,32 @@ ABSENCE_THRESHOLD = 5          # the same as evolution_rules.ABSENCE_THRESHOLD (
 LINK_LEVELS = ("new_context", "translation", "analog", "new_link")
 S_TARGET = 5 / 6
 A_TARGET = 2 * (S_TARGET - 0.5)
+# Candidate rules (specs/novelty/novelty-high-levels-2026-11-15.yaml, rules_2026_11_16), off by default:
+# REGIME: when the claim's subject names a regime (brief, pulsatile, timed ...), a record is the same question on the outcome
+#   only when its quote names a regime too;
+# MAIN_FACTOR: when the subject of the card's outcome claim is not the main factor (a later step: "SARM1 - destroys - axons"),
+#   that claim is a step of the chain for N, not its outcome.
+REGIME, MAIN_FACTOR = False, False
+_REGIME = (r"\b(brief|transient|transiently|short[- ]term|pulse[ds]?|pulsatile|intermittent(ly)?|cyclic(al)?|cycling|periodic|"
+           r"timed|timing|reversibl[ey]|fractionated|alternating|interval|pre-?injury|post-?exercise|window|on[- ]off|"
+           r"once[- ]weekly|weekly|every other|chrono\w*)\b")
+
+
+def _regime_named(text: str) -> bool:
+    import re
+    return bool(re.search(_REGIME, text or "", re.I))
+
+
+def _main_factor_words(card: HypothesisCard) -> set[str]:
+    import re
+    labels = [i.label for i in card.pico.intervention] or [c.subject.label for c in r3.chain(card)[:1]]
+    return {w for x in labels for w in re.findall(r"[a-z0-9]{4,}", (x or "").lower())}
+
+
+def _is_main_factor(card: HypothesisCard, claim: Claim) -> bool:
+    import re
+    words = set(re.findall(r"[a-z0-9]{4,}", (claim.subject.label or "").lower()))
+    return not words or bool(words & _main_factor_words(card))
 
 
 def evaluate(card: HypothesisCard, cvs: list[ClaimVerification], alts: Optional[dict] = None) -> r32.V32Result:
@@ -126,8 +152,14 @@ def novelty(card: HypothesisCard, cvs: list[ClaimVerification], e: Optional[r32.
     by = {c.id: c for c in cvs}
     claims = {c.id: c for c in r3.chain(card)}
     pre, out = slots(card)
+    if MAIN_FACTOR:
+        moved = [i for i in out if not _is_main_factor(card, claims[i])]
+        if moved and len(moved) == len(out):              # every outcome claim is a later step: the chain has no tested outcome
+            pre, out = pre + [[i] for i in moved], []
+    def same_question(r, i):
+        return not (REGIME and _regime_named(claims[i].subject.label) and not _regime_named(r.quote))
     lv = [x for i in out for r in ((by[i].evidence + by[i].counterevidence) if i in by else [])
-          if (x := record_level(r, claims[i]))]
+          if same_question(r, i) and (x := record_level(r, claims[i]))]
     if lv:
         if new_mechanism_links(card, cvs, absence, e):
             return "new_mechanism"

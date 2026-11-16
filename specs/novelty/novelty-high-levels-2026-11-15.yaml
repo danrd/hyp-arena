@@ -84,3 +84,16 @@ result_2026_11_16:
     it matches the claim's stated regime when the claim states one (the regime is part of the intervention the claim names);
     (2) the outcome link of N is the main factor on the outcome, not the last step: when the card's outcome claim's subject
     is a step, its records set the level of that step, not of the hypothesis. Neither is written into the method yet
+
+rules_2026_11_16:
+  written_on: 2026-11-16
+  status: written before the variants were scored
+  rules:
+    regime: "when the claim's subject names a regime (brief, transient, pulsatile, intermittent, timed, reversible, fractionated, pre-injury, post-exercise ...), a record is the same question on the outcome only when its quote names a regime too (novelty_v34.REGIME)"
+    main_factor: "when the subject of every outcome claim of the card is not the main factor (no content word of the intervention's label), those claims are steps of the chain for N, not its outcome (novelty_v34.MAIN_FACTOR)"
+  scored_on:
+    pack_26: "the 30 written hypotheses (where the causes were found: in-sample)"
+    pack_18: "the 30 registry trials of the search gold with the working search and reader v17 (run_*_n15x.json): neither rule was looked at there"
+  rule: >-
+    a rule enters the novelty stage when on pack 26 the weighted kappa rises by at least 0.1 and on pack 18 it does not fall
+    by more than 0.03; both together are scored too. The rule goes to the user with the numbers before the manual changes
