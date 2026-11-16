@@ -128,6 +128,7 @@
 |---|---|---|
 | [`calibration-current-2026-11-16`](whole-system/calibration-current-2026-11-16.yaml) | полный калибровочный прогон текущего метода на 74 испытаниях: новые опоры R2 и R3 | в работе (не запускалось) |
 | [`prospective-2026-11-06`](whole-system/prospective-2026-11-06.yaml) | оценки 60 идущих испытаний, замороженные до исходов | заморожено |
+| [`prospective-current-2026-11-16`](whole-system/prospective-current-2026-11-16.yaml) | оценки тех же 60 испытаний текущим методом (v3.10) по записям прогона 2026-11-06, замороженные до исходов | заморожено |
 | [`prospective-pilot-2026-11-06`](whole-system/prospective-pilot-2026-11-06.yaml) | пилот той же заморозки | заморожено |
 | [`prospective-llm-consensus-2026-11-07`](whole-system/prospective-llm-consensus-2026-11-07.yaml) | прямой ответ двух LLM на тех же 60 испытаниях, замороженный | заморожено |
 | [`llm-consensus-2026-11-07`](whole-system/llm-consensus-2026-11-07.yaml) | базовая линия: две LLM напрямую предсказывают исход испытания | история |
