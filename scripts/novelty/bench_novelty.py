@@ -58,15 +58,18 @@ def results() -> dict:
     return out
 
 
-def run(limit: int = 0, shard: str = "") -> dict:
+def run(limit: int = 0, shard: str = "", only: str = "") -> dict:
     if os.environ.get("ALLOW_PAID") != "1":
         raise SystemExit("paid: set ALLOW_PAID=1")
     from hyparena.pipeline import run as pipeline
     k, n = (int(x) for x in shard.split("/")) if shard else (0, 1)       # --shard 1/3: every third hypothesis, its own file
-    out_p = DIR / f"pack_26_run_{k}.json" if shard else RUN
+    out_p = DIR / f"pack_26_run_{k}.json" if shard else (DIR / f"pack_26_run_fix_{only.split(',')[0]}.json" if only else RUN)
+    keep = set(only.split(",")) if only else None
+    done_all = set(results())
     done = json.loads(out_p.read_text()) if out_p.exists() else {}
     cap, spent = float(os.environ.get("MAX_USD") or 0), sum((r.get("usage") or {}).get("total", {}).get("usd", 0) for r in done.values())
-    todo = [h for i, h in enumerate(inputs()) if h["id"] not in done and (not shard or i % n == k - 1)][: limit or None]
+    todo = [h for i, h in enumerate(inputs()) if h["id"] not in done and (not shard or i % n == k - 1)
+            and (keep is None or (h["id"] in keep and h["id"] not in done_all))][: limit or None]
     for h in todo:
         if cap and spent >= cap:
             print(json.dumps({"stopped": "MAX_USD", "spent": round(spent, 3)}), flush=True)
@@ -187,6 +190,7 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("cmd", choices=["dry", "run", "score"])
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--only", default="", help="run: these ids only (comma-separated), into pack_26_run_fix_<first id>.json")
     ap.add_argument("--shard", default="", help="run: k/n, the k-th of n parallel streams (each with its own MAX_USD)")
     a = ap.parse_args()
-    print(json.dumps(dry() if a.cmd == "dry" else score() if a.cmd == "score" else run(a.limit, a.shard), indent=1, ensure_ascii=False))
+    print(json.dumps(dry() if a.cmd == "dry" else score() if a.cmd == "score" else run(a.limit, a.shard, a.only), indent=1, ensure_ascii=False))
