@@ -86,10 +86,107 @@ def run(limit: int = 0, shard: str = "") -> dict:
     return {"done": len(done), "spent_usd": round(spent, 3)}
 
 
+LEVELS = ["new_context", "translation", "analog", "new_mechanism", "new_combination", "new_link"]
+LINK = ["new_context", "translation", "analog", "new_link"]
+
+
+def _wkappa(pairs: list[tuple[int, int]], k: int) -> float | None:
+    from collections import Counter
+    n = len(pairs)
+    if n < 2:
+        return None
+    a, b = Counter(x for x, _ in pairs), Counter(y for _, y in pairs)
+    obs = sum(abs(x - y) for x, y in pairs) / n
+    exp = sum(a[x] * b[y] * abs(x - y) for x in range(k) for y in range(k)) / n / n
+    return round(1 - obs / exp, 3) if exp else None
+
+
+def score() -> dict:
+    """Our novelty N and link levels against Argon's (pack 26), the PubMed absence counts, and how many of the papers Argon
+    names per link our search handed to the reader and the reader recorded, for steps and for outcomes."""
+    from collections import Counter
+    from hyparena.card.models import ClaimVerification, HypothesisCard
+    from hyparena.novelty import novelty_v34 as nv
+    from hyparena.scoring import rules_v3 as r3
+    from hyparena.scoring import rules_v32 as r32
+    from hyparena.tools import compounds as cp
+    r3.established_by_approval = lambda claim, card: False      # ChEMBL is not reachable here
+    cp._get = lambda url: None
+    gold = {h["id"]: h for h in json.loads((DIR / "pack_26_answer.json").read_text())["hypotheses"]}
+    task = {h["id"]: h for h in json.loads((DIR / "pack_26_task.json").read_text())["hypotheses"]}
+    key = json.loads((DIR / "pack_26_key.json").read_text())
+    rows, links, papers = [], [], []
+    cache_p = DIR / "pack_26_absence.json"
+    cache = json.loads(cache_p.read_text()) if cache_p.exists() else {}
+    for hid, res in sorted(results().items()):
+        it = res["items"][0]
+        g = gold[hid]
+        reader = sorted({str(c.get("template")) for c in res.get("calls", []) if str(c.get("template", "")).startswith("verify_claim")})
+        row = {"id": hid, "source": key[hid]["source"], "outcome": it["outcome"], "gold": g["novelty"], "reader": reader}
+        if it["outcome"] not in ("ranked", "filtered", "known_result") or not it.get("verification"):
+            rows.append(row)
+            continue
+        card = HypothesisCard.model_validate(it["card"])
+        cvs = [ClaimVerification.model_validate(c) for c in it["verification"]["claims"]]
+        with r32.method():
+            if hid not in cache:
+                cache[hid] = nv.mechanism_absence(card, cvs, task[hid]["T"])
+                cache_p.write_text(json.dumps(cache, indent=1) + "\n")
+            row["N"] = nv.novelty(card, cvs, absence=cache[hid]) or "unknown"
+            ours_links = nv.link_levels(card, cvs)
+        row["absence"] = cache[hid]
+        rows.append(row)
+        given = {}
+        for c in res.get("calls", []):
+            if c.get("kind") == "search":
+                given.setdefault(c.get("claim"), set()).update(c.get("pmids") or [])
+        for cid, x in (it.get("cross_link") or {}).items():
+            given.setdefault(cid, set()).update(x.get("read") or [])
+        anywhere = set().union(*given.values()) if given else set()
+        recorded = {cv.id: {r.record_id.replace("PMID:", "") for r in cv.evidence + cv.counterevidence} for cv in cvs}
+        kinds = {c["id"]: c["type"] for c in task[hid]["chain"]}
+        for gl in g["links"]:
+            lid = gl["id"]
+            if gl["level"] == "new_link" and lid not in cache[hid]:      # our count on a link Argon calls new (free, E-utilities)
+                from hyparena.evolution.evolution_rules import pubmed_pair_count
+                cl = next((c for c in card.claims if c.id == lid), None)
+                cache[hid][lid] = pubmed_pair_count(cl.subject.label, cl.object.label, task[hid]["T"]) if cl else None
+                cache_p.write_text(json.dumps(cache, indent=1) + "\n")
+            links.append({"id": hid, "link": lid, "type": kinds.get(lid), "gold": gl["level"], "ours": ours_links.get(lid),
+                          "gold_count": gl.get("pubmed_count"), "our_count": cache[hid].get(lid)})
+            for p in gl.get("pmids") or []:
+                papers.append({"type": kinds.get(lid), "given": str(p) in given.get(lid, set()), "anywhere": str(p) in anywhere,
+                               "recorded": str(p) in recorded.get(lid, set())})
+    scored = [r for r in rows if "N" in r]
+    both = [(LEVELS.index(r["N"]), LEVELS.index(r["gold"])) for r in scored if r["N"] in LEVELS and r["gold"] in LEVELS]
+    lk = [(LINK.index(x["ours"]), LINK.index(x["gold"])) for x in links if x["ours"] in LINK and x["gold"] in LINK]
+    new = [x for x in links if x["gold"] == "new_link" and x["gold_count"] is not None and x["our_count"] is not None]
+
+    def share(rs, k):
+        return [sum(r[k] for r in rs), len(rs)]
+    out = {"hypotheses": len(rows), "scored": len(scored), "outcomes": dict(Counter(r["outcome"] for r in rows)),
+           "readers": dict(Counter(", ".join(r["reader"]) for r in rows)),
+           "ours": dict(Counter(r["N"] for r in scored)), "gold_of_scored": dict(Counter(r["gold"] for r in scored)),
+           "N": {"pairs": len(both), "wkappa": _wkappa(both, len(LEVELS)), "exact": round(sum(a == b for a, b in both) / len(both), 3) if both else None,
+                 "ours_unknown": sum(r["N"] == "unknown" for r in scored),
+                 "ours_farther_from_known": sum(a > b for a, b in both), "ours_nearer_the_known": sum(a < b for a, b in both),
+                 "table": {f"{LEVELS[a]} / {LEVELS[b]}": c for (a, b), c in sorted(Counter(both).items())}},
+           "links": {"pairs": len(lk), "wkappa": _wkappa(lk, len(LINK)), "ours": dict(Counter(str(x["ours"]) for x in links)),
+                     "gold": dict(Counter(x["gold"] for x in links))},
+           "absence": {"links_gold_new_with_both_counts": len(new), "same_side_of_5": sum((x["gold_count"] < 5) == (x["our_count"] < 5) for x in new),
+                       "gold_new_links_we_have_no_count_for": sum(1 for x in links if x["gold"] == "new_link" and x["our_count"] is None)},
+           "papers": {t: {"named_by_argon": len(ps), "given_to_the_reader_on_the_link": share(ps, "given"),
+                          "given_anywhere_in_the_hypothesis": share(ps, "anywhere"), "recorded_on_the_link": share(ps, "recorded")}
+                      for t in ("step", "outcome") for ps in [[p for p in papers if p["type"] == t]]},
+           "rows": rows, "link_rows": links}
+    (DIR / "pack_26_score.json").write_text(json.dumps(out, indent=1, ensure_ascii=False) + "\n")
+    return {k: v for k, v in out.items() if k not in ("rows", "link_rows")}
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("cmd", choices=["dry", "run"])
+    ap.add_argument("cmd", choices=["dry", "run", "score"])
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--shard", default="", help="run: k/n, the k-th of n parallel streams (each with its own MAX_USD)")
     a = ap.parse_args()
-    print(json.dumps(dry() if a.cmd == "dry" else run(a.limit, a.shard), indent=1))
+    print(json.dumps(dry() if a.cmd == "dry" else score() if a.cmd == "score" else run(a.limit, a.shard), indent=1, ensure_ascii=False))
