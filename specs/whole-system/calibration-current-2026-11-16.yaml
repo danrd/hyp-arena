@@ -90,3 +90,12 @@ steps_inversion_2026_11_16:
     R2 itself is barely touched (within-link pairs are about 1% of its pairs). The step inversion is the within-link
     artifact plus 7 links: no evidence of an error in the step weights; a test of steps needs more step targets. A future R2
     may count between-link pairs only
+honest_measures_and_ceiling_2026_11_16:
+  R2_between: "0.552 [0.471, 0.624] (pairs of targets from different links; bootstrap over links): the within-link bias removed"
+  R2_meta: "0.658 [0.43, 0.83] on 36 meta-analysis targets of 25 links: a less noisy label, too few targets for a narrow interval"
+  ceiling_from_noise: >-
+    binormal disattenuation, AUC_true = Phi(Phi^-1(AUC_obs) / sqrt(rho)): with rho 0.67 (the earlier and the current search
+    and card on 29 trials) R3 0.578 would be 0.595 without that noise; with rho 0.94 (the reader alone) 0.580. The noise of
+    the pipeline costs R3 about 0.02: it is not why R3 is low. What limits it is how much the literature before T says about
+    a trial's outcome (and, for R2, how noisy one RCT is as a label)
+  small_positives: "specs/scoring/small-positives-2026-11-16.yaml: no variant passes; nothing changes"

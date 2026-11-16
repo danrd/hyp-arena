@@ -25,3 +25,14 @@ rule: >-
   better than current by more than the noise on R3 or R2_between (more than 0.03) is proposed to the user for the manual;
   otherwise nothing changes (the simpler method stays). Ties between admitted variants: the simpler or closer to the cited
   standard
+result_2026_11_16:
+  code: "scripts/scoring/small_positives.py -> calibration/small_positives.json"
+  table:   # R3, R2_pooled (calibration targets, one per key), R2_between, R2_meta, R3_saved; R2 targets touched
+    current:   [0.578, 0.548, 0.552, 0.658, 0.607, 0]
+    SP100:     [0.584, 0.546, 0.549, 0.627, 0.604, 93]
+    SP50:      [0.586, 0.546, 0.550, 0.658, 0.607, 50]
+    SP100_any: [0.595, 0.539, 0.543, 0.627, 0.603, 153]
+  by_the_rule: >-
+    SP100 and SP100_any are worse than current on R2_meta by 0.031 (not admitted); SP50 is admitted but better by more than
+    0.03 on nothing (R3 +0.008). Nothing changes: the precision factor of the record weight already discounts small studies
+    enough for these references
