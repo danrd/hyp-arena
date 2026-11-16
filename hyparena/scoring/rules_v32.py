@@ -74,6 +74,8 @@ def precision(n: Optional[int]) -> float:
 # standardised difference, a ratio, a raw difference with its interval). "means" and "change_sd" are kept on the record and
 # enter only through the manual (two means with their spread were scored as variant E2 and not adopted).
 EFFECT_D_KINDS = frozenset({"smd", "ratio", "interval"})
+EFFECT_MIN_N = 0         # variant (pack 27, T6): the effect factor is full only from this sample size; 0 = off
+EFFECT_SHRINK_K, EFFECT_SHRINK_TO = 0, 0.3   # variant (T6): d shrunk to (n d + k 0.3) / (n + k); 0 = off
 RISK_RATIO_LINE = 0.0    # variant (pack 27, T2): 1.33 = a risk, hazard or rate ratio of at least 1.33 (at most 0.75) counts fully; 0 = off
 
 
@@ -124,6 +126,8 @@ def effect_weight(rec: EvidenceRecord, against: bool) -> float:
                 if class_from_percent(p):                 # a record read before 2026-11-16: its stored class came from a percent
                     return lv.weight("effect", "unclear")
             return lv.weight("effect", rec.effect_class)
+    if EFFECT_SHRINK_K and rec.n_total:                   # variant (pack 27, T6): shrink towards the field's median effect
+        d = (rec.n_total * d + EFFECT_SHRINK_K * EFFECT_SHRINK_TO) / (rec.n_total + EFFECT_SHRINK_K)
     return 0.25 + 0.75 * min(1.0, d / 0.8)
 
 
@@ -211,7 +215,10 @@ def record_weight_v36(rec: EvidenceRecord, claim: Claim, against: bool) -> float
         if EFFECT_RULE == "stated":                     # variant (pack 24, F5): any stated effect 1, none stated 1/2
             w *= 1.0 if (rec.effect_reported or "").strip() else 0.5
         else:
-            w *= 1.0 if effect_weight(rec, False) >= EFFECT_FULL_FROM - 1e-9 else 0.5
+            full = effect_weight(rec, False) >= EFFECT_FULL_FROM - 1e-9
+            if EFFECT_MIN_N and (rec.n_total or 0) < EFFECT_MIN_N:
+                full = False                              # variant (pack 27, T6): no effect bonus under the sample size
+            w *= 1.0 if full else 0.5
     w *= 1.0 if rec.comparison == "between_groups" else 0.5
     w *= 0.5 if ctx == "adjacent" else (CLASS_WEIGHT if ctx == "class" else 1.0)
     return w

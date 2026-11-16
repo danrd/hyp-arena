@@ -106,3 +106,23 @@ argon_pack27_result_2026_11_16:
     noise. T3 removes a threshold the sources call groundless and passes: it may be removed. T1, T2 and T5 change values
     without a gain; T5 moves 2 records
   decision: "2026-11-16: T3 adopted (a percent change without its variability is unclear; effect_class.PERCENT = False); T1, T2, T5 not adopted; the manual's weight table corrected for ratios to what the code does"
+
+corrections_2026_11_16:
+  what: >-
+    the remaining suggestions of pack 27 as variants on the working code (scripts/scoring/effect_variants.py corrections):
+    T4, the interval conversion with Student's t and Hedges' J under 60 participants, and a before-after interval scaled
+    by sqrt(2 (1 - r)) with r 0.7; T6, the effect factor full only from 60 or 100 participants, and d shrunk towards the
+    field's median 0.3 with k 50 or 100
+  table:      # R2, R3, pack23, auc30 working reader on the saved runs, auc30 reader v16, records moved to the half factor
+    working:               [0.685, 0.604, 0.684, 0.696, 0.723, 0]
+    T4_small_samples:      [0.685, 0.604, 0.684, 0.696, 0.723, 0]
+    T4_paired_r_0.7:       [0.685, 0.604, 0.684, 0.696, 0.723, 1]
+    T6_bonus_from_n_60:    [0.684, 0.604, 0.684, 0.692, 0.719, "not counted: applied in the record weight"]
+    T6_bonus_from_n_100:   [0.684, 0.604, 0.684, 0.692, 0.710, "not counted: applied in the record weight"]
+    T6_shrink_k_50:        [0.687, 0.605, 0.671, 0.692, 0.719, 2]
+    T6_shrink_k_100:       [0.684, 0.605, 0.671, 0.692, 0.719, 3]
+  note: pack 23 is recomputed through the effect factor alone, so the sample-size condition of T6 does not show there
+  reading: >-
+    the corrections move 0 to 3 records of 297: an interval with a known n is rare (17 to 20 records), and the records
+    with a readable large effect mostly come from samples above 60. None changes a reference beyond 0.013
+  decision: "none adopted: no gain and more rule; the switches stay in the code, off (effect_class.SMALL_SAMPLE, PAIRED_R; rules_v32.EFFECT_MIN_N, EFFECT_SHRINK_K)"

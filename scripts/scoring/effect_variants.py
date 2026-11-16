@@ -103,17 +103,31 @@ THRESHOLDS = {      # Argon pack 27: each suggestion as a variant (specs/scoring
     "T5 MCID reached counts as medium": {"mcid": True},
     "T1 0.35 + T2 + T3 + T5": {"line": 0.35, "rr": 1.33, "percent": False, "mcid": True},
 }
+CORRECTIONS = {     # pack 27, T4 (the interval conversion) and T6 (large effects of small trials); the base is the working code
+    "working": {"percent": False},
+    "T4 small samples: Student's t and Hedges' J under 60": {"percent": False, "small": True},
+    "T4 before-after interval scaled, r 0.7": {"percent": False, "paired_r": 0.7},
+    "T4 both": {"percent": False, "small": True, "paired_r": 0.7},
+    "T6 effect bonus only from n 60": {"percent": False, "min_n": 60},
+    "T6 effect bonus only from n 100": {"percent": False, "min_n": 100},
+    "T6 d shrunk towards 0.3, k 50": {"percent": False, "shrink": 50},
+    "T6 d shrunk towards 0.3, k 100": {"percent": False, "shrink": 100},
+}
 
 
 @contextmanager
 def thresholds(v: dict):
-    saved = (r32.EFFECT_FULL_FROM, r32.RISK_RATIO_LINE, ec.PERCENT, ec.MCID)
+    saved = (r32.EFFECT_FULL_FROM, r32.RISK_RATIO_LINE, ec.PERCENT, ec.MCID, ec.SMALL_SAMPLE, ec.PAIRED_R, r32.EFFECT_MIN_N,
+             r32.EFFECT_SHRINK_K)
     try:
         r32.EFFECT_FULL_FROM = 0.25 + 0.75 * v.get("line", 0.5) / 0.8
         r32.RISK_RATIO_LINE, ec.PERCENT, ec.MCID = v.get("rr", 0.0), v.get("percent", True), v.get("mcid", False)
+        ec.SMALL_SAMPLE, ec.PAIRED_R = v.get("small", False), v.get("paired_r", 0.0)
+        r32.EFFECT_MIN_N, r32.EFFECT_SHRINK_K = v.get("min_n", 0), v.get("shrink", 0)
         yield
     finally:
-        r32.EFFECT_FULL_FROM, r32.RISK_RATIO_LINE, ec.PERCENT, ec.MCID = saved
+        (r32.EFFECT_FULL_FROM, r32.RISK_RATIO_LINE, ec.PERCENT, ec.MCID, ec.SMALL_SAMPLE, ec.PAIRED_R, r32.EFFECT_MIN_N,
+         r32.EFFECT_SHRINK_K) = saved
 
 
 def pack23_recomputed() -> float:
@@ -154,7 +168,7 @@ def pack23_recomputed() -> float:
     return round(sum(ok) / len(ok), 3)
 
 
-def main_thresholds() -> dict:
+def main_thresholds(variants: dict | None = None, out_name: str = "effect_threshold_variants.json") -> dict:
     from hyparena.scoring import rules_v3 as r3
     from hyparena.tools import compounds as cp
     from scripts.reading.reader_replay import balance_auc
@@ -162,21 +176,22 @@ def main_thresholds() -> dict:
     r3.established_by_approval = lambda claim, card: False
     cp._get = lambda url: None
     refs = wv.r2_refs()
-    with thresholds({}):                                   # "current": the thresholds before 2026-11-16 (percent 5 and 20 in use)
+    variants = variants or THRESHOLDS
+    with thresholds(next(iter(variants.values()))):        # the first variant is the base
         base_full = full_effect()
     out = {}
-    for name, v in THRESHOLDS.items():
+    for name, v in variants.items():
         with thresholds(v):
             now = full_effect()
             out[name] = {"R2": wv.r2_auc(refs), "R3": r3_auc(), "pack23": pack23_recomputed(),
                          "auc30_v17": balance_auc("n15x")["auc"], "auc30_v16": balance_auc("n14x")["auc"],
                          "to_full": len(now - base_full), "to_half": len(base_full - now)}
         print(name, out[name], flush=True)
-    base = out["current"]
+    base = next(iter(out.values()))
     for r in out.values():
         r["worse_by_more_than_0.03"] = [k for k in ("R2", "R3", "pack23", "auc30_v17", "auc30_v16")
                                         if r[k] is not None and base[k] - r[k] > 0.03]
-    (OUT / "effect_threshold_variants.json").write_text(json.dumps(out, indent=1) + "\n")
+    (OUT / out_name).write_text(json.dumps(out, indent=1) + "\n")
     return out
 
 
@@ -206,4 +221,7 @@ def main() -> dict:
 
 if __name__ == "__main__":
     import sys
-    main_thresholds() if sys.argv[1:] == ["thresholds"] else main()
+    if sys.argv[1:] == ["corrections"]:
+        main_thresholds(CORRECTIONS, "effect_correction_variants.json")
+    else:
+        main_thresholds() if sys.argv[1:] == ["thresholds"] else main()

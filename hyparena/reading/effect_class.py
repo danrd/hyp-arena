@@ -114,11 +114,7 @@ def d_from_ci(phrase: str, n: int | None, comparison: str) -> float | None:
     if not m:
         return None
     diff, lo, hi = (float(m.group(k)) for k in (1, 2, 3))
-    se = abs(hi - lo) / 3.92
-    if se <= 0:
-        return None
-    sd = se * (n ** 0.5) / (2 if comparison == "between_groups" else 1)
-    return abs(diff) / sd
+    return _d_interval(diff, lo, hi, n, comparison)
 
 
 # Parser extensions (specs/scoring/effect-phrase-2026-11-15.yaml). "interval" is part of the method since 2026-11-15 (more
@@ -137,9 +133,31 @@ _VERSUS = re.compile(r"(?<![/±\d.])" + _N + r"\s*(%?)\s*[a-zA-Zµ/]*\s*(?:vs\.?
 _P_VALUE = re.compile(r"\bp\s*(=|<|≤)\s*(0?\.\d+)", re.I)
 
 
+# Corrections of the interval conversion scored as variants (Argon pack 27, T4); the defaults are the method.
+SMALL_SAMPLE = False    # True: under 60 participants the interval is read with Student's t and d gets Hedges' correction
+PAIRED_R = 0.0          # e.g. 0.7: a before-after interval gives the spread of the change; d is scaled by sqrt(2 (1 - r))
+
+
+def _t975(df: int) -> float:
+    """The 0.975 quantile of Student's t (Cornish-Fisher expansion around the normal quantile; exact to 0.01 from df 3)."""
+    z = 1.959964
+    return z + (z ** 3 + z) / (4 * df) + (5 * z ** 5 + 16 * z ** 3 + 3 * z) / (96 * df ** 2) + \
+        (3 * z ** 7 + 19 * z ** 5 + 17 * z ** 3 - 15 * z) / (384 * df ** 3)
+
+
 def _d_interval(diff: float, lo: float, hi: float, n: int, comparison: str) -> float | None:
-    se = abs(hi - lo) / 3.92
-    return abs(diff) / (se * (n ** 0.5) / (2 if comparison == "between_groups" else 1)) if se > 0 else None
+    between = comparison == "between_groups"
+    df = max(n - (2 if between else 1), 1)
+    small = SMALL_SAMPLE and n < 60
+    se = abs(hi - lo) / (2 * _t975(df) if small else 3.92)
+    if se <= 0:
+        return None
+    d = abs(diff) / (se * (n ** 0.5) / (2 if between else 1))
+    if small and df > 1:
+        d *= 1 - 3 / (4 * df - 1)                         # Hedges' J
+    if PAIRED_R and not between:
+        d *= (2 * (1 - PAIRED_R)) ** 0.5
+    return d
 
 
 def d_extra(phrase: str, n: int | None, comparison: str) -> float | None:
