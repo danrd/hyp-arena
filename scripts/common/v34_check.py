@@ -7,6 +7,7 @@ the 74 calibration + 60 prospective units. PubMed counts (literature density) ar
 from __future__ import annotations
 
 import json
+import os
 from collections import Counter
 
 from hyparena.whole_system.backtest import tied_auc
@@ -20,6 +21,10 @@ CAL = KG / "hypothesis_sources" / "calibration"
 PROS = KG / "hypothesis_sources" / "prospective"
 W_ORDER = ("local", "organ", "hallmark")
 
+
+
+# the calibration runs read (2026-11-16: "_cur" for the run of specs/whole-system/calibration-current-2026-11-16.yaml)
+RUN_TAG = os.environ.get("CAL_RUN_TAG", "_v10")
 
 def parts(it: dict, unit_id: str = ""):
     """card, claim verifications, alternative verifications of a saved run item; with `unit_id` the alternatives carry
@@ -47,7 +52,7 @@ def units() -> list[dict]:
     out = []
     for s in (1, 2, 3, 4, 5):
         us = {u["id"]: u for u in json.loads((CAL / f"units_{s}.json").read_text())}
-        for h, r in json.loads((CAL / f"run_{s}_v10.json").read_text()).items():
+        for h, r in json.loads((CAL / f"run_{s}{RUN_TAG}.json").read_text()).items():
             it = r["items"][0]
             if not it.get("card") or not it.get("verification") or "v3" not in it:
                 continue

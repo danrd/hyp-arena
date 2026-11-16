@@ -11,6 +11,7 @@ Exploration only: the samples built the method; with 72 units an AUC moves by ab
 from __future__ import annotations
 
 import json
+import os
 from contextlib import contextmanager
 
 from hyparena.whole_system.backtest import tied_auc
@@ -27,6 +28,10 @@ from scripts.common.ceiling import CAL, endpoint
 FACTORS = ("design", "precision", "effect", "comparison", "context")
 _orig = r32.record_weight
 
+
+
+# the calibration runs read (2026-11-16: "_cur" for the run of specs/whole-system/calibration-current-2026-11-16.yaml)
+RUN_TAG = os.environ.get("CAL_RUN_TAG", "_v10")
 
 def _weight(drop: set[str]):
     def rw(rec, claim, against, v34=False):
@@ -64,7 +69,7 @@ def units() -> list[dict]:
     out = []
     for s in (1, 2, 3, 4, 5):
         us = {u["id"]: u for u in json.loads((CAL / f"units_{s}.json").read_text())}
-        for h, r in json.loads((CAL / f"run_{s}_v10.json").read_text()).items():
+        for h, r in json.loads((CAL / f"run_{s}{RUN_TAG}.json").read_text()).items():
             it = r["items"][0]
             if us.get(h, {}).get("label") not in (0, 1) or not it.get("card") or not it.get("verification") or "v3" not in it:
                 continue

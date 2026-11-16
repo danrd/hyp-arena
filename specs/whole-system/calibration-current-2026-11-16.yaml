@@ -1,6 +1,6 @@
 id: calibration-current-2026-11-16
 written_on: 2026-11-16
-status: written before the run; not run
+status: run 2026-11-16, measured (result below); by the rule UNCLEAR
 question: >-
   Does the evidence balance of the current method order the 74 calibration trials by their outcome, when every stage is
   the working one? The references R2 and R3 are still computed on runs of 2026-11-06 … 11-08 (the earlier search, reader
@@ -32,3 +32,22 @@ note_2026_11_16: >-
   before the run: method v3.11 (the threat checklist in I) is the working method; I is not in the evidence balance, so R2
   and R3 are not touched. Two frozen v17 cards (NCT04796701, NCT07864831) had allocation read as randomised from
   "non randomized" (a parser error, fixed): their registry allocation is non_randomized and their design other
+result_2026_11_16:
+  run: >-
+    73 of 74 trials (NCT01273116 not scored: a PubMed failure, then the call cap of 150 reached on the retry; the cap is the
+    spec's, not raised). Cost 5.73 USD recorded in the runs, about 0.3 more in the two failed attempts of that trial (not
+    recorded). Runs hypothesis_sources/calibration/run_{1..5}_cur.json; measures scripts/whole_system/calibration_current.py
+    -> calibration/calibration_current.json. The same code on the saved runs gives R3 0.607 and R2 0.678 (the references
+    0.604 and 0.675), so the measures are reproduced
+  R3: {all_73: [0.578, [0.445, 0.710]], clean_14: [0.633, [0.286, 0.933]], others_59: [0.579, [0.427, 0.721]], without_leak_70: [0.563, [0.424, 0.696]]}
+  R3_saved_runs: {all_73: [0.607, [0.477, 0.737]], clean_14: 0.480, others_59: 0.644, without_leak_70: 0.593}
+  R2: {all: {auc: 0.579, targets: 722, links: 161}, calibration_only: {auc: 0.566, targets: 603, links: 121}}
+  R2_saved_runs: {all: {auc: 0.678, targets: 195, links: 71}, calibration_only: {auc: 0.715, targets: 76, links: 31}}
+  coverage: {links: 177, links_with_record: 163, records_total: 1385, records_per_trial_median: 14, gated: 1, gated_outcome_positive: 1}
+  coverage_saved_runs: {links: 332, links_with_record: 121, records_total: 433, records_per_trial_median: 4, gated: 1}
+  moved: "38 of 72 common trials move their balance by more than 0.3"
+  by_the_rule: >-
+    R3 0.578 is neither a signal (at least 0.60 with the lower bound above 0.45: 0.578, 0.445) nor no signal (below 0.55):
+    unclear. R2 falls from 0.678 to 0.579 on four times as many targets: the target set is not the same (the filtered search
+    reads three times as many records), so the two R2 are not a paired comparison
+  not_done: "noise (the 30 trials of pack 18, Spearman of the two balances) is not computed yet"
