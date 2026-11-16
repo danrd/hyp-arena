@@ -1,0 +1,51 @@
+id: design-rule-2026-11-16
+written_on: 2026-11-16
+status: the kinds, the verdict rule and the pass rule fixed before the independent check (pack 6) was scored
+why: >-
+  On the alternatives benchmark (pack 22) the proposer covers 0.34 of the outside reader's methodological alternatives (a
+  plain LLM 0.63) and the design verdict agrees with the outside reader at a weighted kappa of about 0.1. A methodological
+  alternative (regression to the mean, practice on the test, expectation, the assessor's knowledge of the arm, unequal
+  contact, selection and attrition, co-interventions, multiplicity) is not weighed by a literature search in any
+  risk-of-bias tool (Cochrane RoB 2, ROBINS-I): it is judged from the design. The registry's structured design fields
+  (allocation, who is masked, the type of each arm) are already parsed by code.
+cost: free (saved cards and packs; ClinicalTrials.gov design fields of the 59 prospective trials fetched once)
+kinds:      # by words of the alternative's statement, the first that matches (scripts/alternatives/design_rule.py KINDS)
+  practice: practice, familiarisation, learning on the test, repeated testing
+  regression: regression to the mean, natural course, spontaneous change, time trend
+  assessor: the observer, assessor or rater knows the arm; measurement bias
+  expectation: expectation, placebo response, unblinded participants, self-report, effort
+  attention: contact, attention, supervision, Hawthorne
+  selection: selection, attrition, dropout, completers, baseline differences
+  cointervention: adherence, compliance, co-interventions, carry-over, the vehicle
+  multiplicity: multiple comparisons or endpoints, false-positive rate, non-independent observations
+verdict_rule:   # what the stated design does to the alternative if the expected result is seen; under a null result always "unchanged"
+  practice: "randomised with a concurrent control: eliminated; a concurrent control without randomisation: weakened; one group: unchanged"
+  regression: as practice
+  assessor: "the outcomes assessor is masked: eliminated; otherwise unchanged"
+  expectation: "the participant is masked and the control is a placebo or a sham: eliminated; the participant is masked or the control is a sham, not both: weakened; otherwise unchanged"
+  attention: "a placebo or sham control: eliminated (the arms get the same contact); an active comparator: weakened; usual care, no intervention, waiting list: unchanged"
+  selection: "randomised: weakened; otherwise unchanged"
+  cointervention: "randomised: weakened; otherwise unchanged"
+  multiplicity: unchanged
+derivation: >-
+  the rule follows the risk-of-bias logic and was written after reading the 38 methodological alternatives of pack 22 with
+  the outside reader's verdicts next to the design fields of their trials, the 10 holdout trials included. Its agreement on
+  pack 22 is therefore in-sample and is reported, not judged
+independent_check: >-
+  Argon pack 6 (2026-11-08): the outside reader's verdict (d under the expected result) for the 293 alternatives our
+  proposer wrote for the 59 prospective trials. Not read while the rule was written. Each alternative is classed by the
+  kind words above from its own text; the methodological ones get the code verdict from the trial's registry design fields
+measures:
+  agreement: linear-weighted Cohen kappa (eliminated > weakened > unchanged) and exact agreement, code verdict against the outside reader, on the alternatives a kind matches
+  against_the_judge: the same for the model's verdict saved in the key of pack 6 (on_positive), on the same alternatives
+  coverage_pack_22: share of the outside reader's methodological alternatives of rank 1 to 3 whose kind is one of the eight (a fixed checklist would list them all), against 0.34 for the proposer
+  by_kind: agreement per kind, with counts
+rule:
+  the_design_rule_replaces_the_model_verdict_for_methodological_alternatives_when: >-
+    on pack 6 at least 40 alternatives are classed, the weighted kappa of the code verdict is at least 0.4 and higher than
+    the model's on the same alternatives by at least 0.1
+  if_it_passes: >-
+    the change is a change of the method (how I is computed for methodological alternatives, and whether they keep their
+    literature search): it goes to the user with the numbers, then through the manual; nothing changes before that
+  if_not: the kinds and their numbers are reported; the rule is not adopted
+script: scripts/alternatives/design_rule.py -> longevity-kg reviews/argon-2026-11-14/design_rule.json
