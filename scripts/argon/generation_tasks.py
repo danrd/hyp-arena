@@ -19,6 +19,7 @@ there), `check_<kind>.json`.
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import json
 import os
 import re
@@ -444,21 +445,62 @@ def score_summary(done: dict) -> dict:
             "usd": round(usd, 3)}
 
 
+def analyze(files: dict[str, str]) -> dict:
+    """The participants' hypotheses scored by our pipeline (score_<kind>.json), all in one pool, through the builder of the
+    code report (hyparena/reports/report_html.build), so every axis is the report's own: per hypothesis N, W, the evidence
+    balance and coverage, I and its headroom, feasibility, the three ASPID scores and top-5 shares, the population taxon;
+    per participant the counts of levels and the means. Numbers and level codes only. `files`: {participant: file name}."""
+    from statistics import mean
+    from hyparena.reports import report_html as rh
+    run, arm = {}, {}
+    for p, f in files.items():
+        for h, r in json.loads((DIR / f).read_text()).items():
+            hid = f"{p}:{h}"
+            run[hid] = {**r, "items": [{**r["items"][0], "id": hid}]}
+            arm[hid] = p
+    scores = {h: {"endpoint_clinical": None, "trend_pubmed": None, "P": 0,
+                  "ai_role": (r["items"][0].get("card") or {}).get("ai_role", "none")} for h, r in run.items()}
+    meta = {k: "" for k in ("pool", "date", "sha", "method", "title_ru", "title_en", "about_ru", "about_en")}
+    rep = rh.build(run, scores, [{"id": h} for h in run], {h: "" for h in run}, meta)
+    per = {}
+    for h, x in rep["hyps"].items():
+        v = x.get("values") or {}
+        pop = (((run[h]["items"][0].get("card") or {}).get("pico") or {}).get("population") or {})
+        per[h] = {"outcome": x.get("outcome"), "N": v.get("N"), "W": v.get("W"), "chain_state": v.get("chain_state"),
+                  "coverage": v.get("coverage"), "I": v.get("I"), "I_headroom": v.get("I_headroom"),
+                  "feasibility": v.get("feasibility"), "taxon": pop.get("taxon"),
+                  "aspid": {k: (a or {}).get("score") if isinstance(a, dict) else a for k, a in (x.get("aspid") or {}).items()},
+                  "p_top5": x.get("p_top5")}
+    groups = {}
+    for p in files:
+        rows = [r for h, r in per.items() if arm[h] == p]
+        num = lambda k: [r[k] for r in rows if isinstance(r[k], (int, float))]
+        groups[p] = {"n": len(rows), "N": dict(Counter(r["N"] for r in rows)), "W": dict(Counter(r["W"] for r in rows)),
+                     "human": sum(r["taxon"] == HUMAN for r in rows),
+                     **{f"mean_{k}": round(mean(num(k)), 3) if num(k) else None for k in ("chain_state", "I", "feasibility")},
+                     "mean_aspid": {prof: round(mean([r["aspid"][prof] for r in rows if isinstance(r["aspid"].get(prof), (int, float))]), 3)
+                                    for prof in (rows[0]["aspid"] if rows else {})}}
+    return {"groups": groups, "hypotheses": per}
+
+
 HUMAN = "NCBITaxon:9606"   # the population of every hypothesis must be humans (base request since 2026-11-16)
 
 
 def main(argv=None) -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("cmd", choices=["build", "score", "build-a", "build-b", "build-b-generate", "build-reports", "build-evolve", "check", "collect"])
+    ap.add_argument("cmd", choices=["build", "score", "analyze", "build-a", "build-b", "build-b-generate", "build-reports", "build-evolve", "check", "collect"])
     ap.add_argument("--arm", choices=["C", "D"])
     ap.add_argument("--kind", choices=["a", "b", "s", "bs", "reports", "c", "d"])
     ap.add_argument("--participant", choices=list(PARTICIPANTS), help="build: a (base), b (+ card), s (+ steps), bs (+ card and steps)")
     ap.add_argument("--topic", default=TOPIC)
     ap.add_argument("--n", type=int, default=N)
+    ap.add_argument("--files", nargs="*", default=[], help="analyze: participant=score file, e.g. A=score_a_v2.json")
     ap.add_argument("--fake", action="store_true", help="score: the fake LLM (calls and prompt tokens, no paid call)")
     ap.add_argument("--as-of", default=date.today().isoformat())
     ap.add_argument("--writer-family", default="google", help="google if Argon wrote the answers, openai if ChatGPT")
     a = ap.parse_args(argv)
+    if a.cmd == "analyze":       # e.g. --files A=score_a_v2.json BS=score_bs_v2.json
+        print(json.dumps(analyze(dict(x.split("=", 1) for x in a.files)), indent=1)); return
     if a.cmd == "score":
         if not a.fake and os.environ.get("ALLOW_PAID") != "1":
             raise SystemExit("a paid run: set ALLOW_PAID=1 after the user's go")
