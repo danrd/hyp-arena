@@ -599,7 +599,7 @@ follows it, so that two reports of the same pool can be compared:
   novelty, the experiment with scope and feasibility, the profiles with the ranks of importance and ASPID, improvements and
   versions, provenance, a glossary of every parameter shown). A part may be short, but none is left out, and the numbers in
   it are this manual's (section 14). Short ids, triples and the separation of text and numbers follow section 10.
-- **Check**: an outside report is read against this table and list before its content is compared with the code report.
+- **Check**: an outside report is read against this table and list before its content is compared with the code report; code does it ([`scripts/argon/report_check.py`](../scripts/argon/report_check.py): tabs, the help sections as tables, the reading rules, the scheme's steps 0-11 with "Как реализовано" and no formulas, the card fields, the mechanism as triples, no bare codes), printing names and counts only. The code report passes every item.
 
 The table is the code's own ([`hyparena/reports/report_html.py`](../hyparena/reports/report_html.py) IND_NAMES, LINK_NAMES, NOVELTY_NAMES,
 DESIGN_NAMES, DISC; [`hyparena/reports/report_v2.py`](../hyparena/reports/report_v2.py) FLAG_NAMES, PROFILE_LABEL);

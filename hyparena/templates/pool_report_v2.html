@@ -390,7 +390,16 @@
       const iText = Math.abs(di) < 0.05 ? 'почти не изменилась' : di > 0 ? 'эксперимент версии отсекает больше подкреплённых альтернатив' : 'эксперимент версии отсекает меньше альтернатив';
       const w0 = SC.indexOf(parent.W), w1 = SC.indexOf(r.W);
       const wText = w1 > w0 ? 'подтверждённый механизм версии затрагивает более широкий уровень' : w1 < w0 ? 'подтверждённый механизм уже, чем у исходной' : 'не изменился';
-      const drift = d.drift_to_known ? `да: ${esc((d.reasons || []).join('; '))}` : 'нет';
+      // the reasons come from the novelty code with level codes ("N analog -> new_context"); shown by the level names (manual 10a)
+      const reasonText = x => {
+        let m = x.match(/^N (\w+) -> (\w+)$/);
+        if (m) return `новизна ${nm('novelty', m[1])} → ${nm('novelty', m[2])}`;
+        m = x.match(/^link «(.*)» (\w+) -> (\w+)$/);
+        if (m) return `звено «${m[1]}»: ${nm('novelty', m[2])} → ${nm('novelty', m[3])}`;
+        if (x.startsWith("the parent's new link is gone")) return 'новое звено исходной гипотезы пропало, а у версии нового звена нет';
+        return x;
+      };
+      const drift = d.drift_to_known ? `да: ${esc((d.reasons || []).map(reasonText).join('; '))}` : 'нет';
       return `<h4 class="font-bold text-[#1E4D40] mt-4 mb-1">Сравнение с исходной гипотезой</h4>
         <p class="text-sm mb-1">Эта гипотеза — версия ${esc(parent.sid)} «<a href="#" data-eval="${esc(parent.id)}" class="underline">${esc(parent.title)}</a>», режим — ${esc(MODE[d.mode] || MODE[r.evo_mode] || 'версия')}. Что изменено в тексте — в карточке.</p>
         <table class="tbl w-full text-sm"><thead><tr><th>Показатель</th><th>Исходная → версия</th><th>Что изменилось</th></tr></thead><tbody>
