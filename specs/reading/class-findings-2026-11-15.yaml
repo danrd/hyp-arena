@@ -184,3 +184,27 @@ readers_v20_v21:
       on the two packs together not fewer than with v20; otherwise the combined-intervention rule stays in the manual and
       out of the reader, and the manual says so
   reported_not_judged: records on another outcome against the gold, on organism-object claims and on the others; the 11 records of claim Q03
+
+result_readers_v20_v21_2026_11_16:
+  run: "8 runs off-peak (two templates, packs 16 and 25, two runs each): 0.53 USD"
+  measures:      # recall, precision (two runs); records
+    pack_16: {v19: [[0.585, 0.873], [0.574, 0.783]], v20: [[0.564, 0.869], [0.521, 0.925]], v21: [[0.596, 0.848], [0.585, 0.833]]}
+    pack_25: {v19: [[0.640, 0.763], [0.604, 0.744]], v20: [[0.568, 0.887], [0.577, 0.889]], v21: [[0.631, 0.897], [0.649, 0.900]]}
+  means:         # recall, precision
+    pack_16: {v19: [0.580, 0.828], v20: [0.543, 0.897], v21: [0.591, 0.841]}
+    pack_25: {v19: [0.622, 0.754], v20: [0.573, 0.888], v21: [0.640, 0.899]}
+  records_on_another_outcome: "pack 25: v19 15 and 15, v20 2 and 3, v21 2 and 2; pack 16: v19 1 and 4, v20 0 and 0, v21 0 and 0"
+  records_on_another_intervention: "pack 16: v19 3 and 6, v20 3 and 2, v21 5 and 7; pack 25: 0 or 1 for every reader"
+  same_class_primary_found: "pack 16 (of 37): v19 16 and 15, v20 16 and 14, v21 19 and 17; pack 25 (of 23): v19 15 and 15, v20 15 and 15, v21 16 and 15"
+  organism_claims_pack_25: "records 56 and 58 with 38 and 39 confirmed (v19); 35 and 36 with 32 and 33 (v20); 38 and 41 with 35 and 38 (v21)"
+  by_the_rule:
+    v20_replaces_v19: >-
+      not met: on pack 25 precision is higher by 0.13 (asked 0.05) but recall is 0.573, lower than 0.62 by 0.05 (allowed
+      0.03); on pack 16 recall is lower by 0.037
+    v21_replaces_v20: "not met as written: recall is not lower on either pack, but on pack 16 precision is 0.841 against v20's 0.897 (lower by 0.056)"
+  what_the_rule_did_not_foresee: >-
+    v21 against v19 directly, which the rule did not state: on both packs v21 is not lower on either measure (pack 16: 0.591
+    and 0.841 against 0.580 and 0.828; pack 25: 0.640 and 0.899 against 0.622 and 0.754). The outcome named by its
+    measure removes the records on another outcome (15 to 2 on pack 25) at the cost of some true findings; the
+    combined-intervention rule brings findings back and, on pack 16, some records on another intervention with them
+  decision: pending the user (v21 as the working reader; the rule as written is not met by either template)
