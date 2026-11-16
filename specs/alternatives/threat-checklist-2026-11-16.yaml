@@ -1,0 +1,62 @@
+id: threat-checklist-2026-11-16
+written_on: 2026-11-16
+status: written before the count; not counted
+question: >-
+  Does a fixed checklist of methodological threats per system, judged from the stated design, give an informativeness I
+  that separates hypotheses and is not a copy of another indicator, when it replaces the methodological alternatives the
+  proposer writes?
+why: >-
+  The proposer covers 0.34 of the outside reader's methodological alternatives and its verdict on them agrees at a weighted
+  kappa of 0.1-0.14 (specs/alternatives/benchmark-alternatives-2026-11-14.yaml). The threat lists per system are complete on
+  Argon pack 28 (no threat outside its system's list) and the design verdict by code agrees at 0.45-0.57 for experiments in
+  humans, 0.07 for cells (specs/alternatives/design-rule-2026-11-16.yaml). Risk-of-bias tools judge such threats from the
+  design, without a literature search: RoB 2 (Sterne 2019, PMID 31462531), ROBINS-I (Sterne 2016, PMID 27733354), SYRCLE
+  (Hooijmans 2014, PMID 24667063).
+cost: free (saved runs; ClinicalTrials.gov design fields fetched once where the saved texts lack the design lines)
+
+rule_under_test:
+  methodological_alternatives: >-
+    a proposed alternative whose statement or rationale matches a methodological kind (scripts/alternatives/design_rule.py
+    KINDS) is dropped: it is not searched, not read and not judged. Substantive alternatives are kept as now
+  checklist_by_system:            # the system of the card's stated experiment
+    human: [practice, regression, assessor, expectation, attention, selection, cointervention, multiplicity]
+    animal: [allocation, assessor, attrition, handling, housing, sex_strain_age, multiplicity]
+    cells: [batch, off_target, vehicle, culture_artefact, line_identity, multiplicity]
+    data_analysis: [confounding, reverse_causation, selection, measurement, multiplicity]
+    system_map: "mouse, rat, worm, fly -> animal; yeast, in_vitro -> cells; human -> human; an unknown system or no stated experiment: no checklist, I not computed from it"
+  verdict:
+    human: >-
+      the rule of design-rule-2026-11-16 (verdict): from the registry design fields of the card when it has them
+      (allocation, model, who is masked, arm types), else from the card's stated experiment (design rct = randomised; a
+      control other than unknown or none = concurrent control; comparator placebo or sham = a dummy control; masking
+      unknown = not masked). Selection and co-interventions: weakened by randomisation
+    other_systems: "does not tell apart (d = 0) for every threat; each threat gets an improvement item naming what would rule it out"
+  share: "mean over the system's threats of d (eliminated 1, weakened 1/2, unchanged 0)"
+  in_I: >-
+    I = min(1, (sum over the substantive alternatives of a*d + 0.5*share) / 1.5). The checklist counts as one alternative
+    of support 0.5 whose d is the share; I no longer needs a supported substantive alternative to be above 0. Headroom I
+    adds 0.5 (every threat ruled out)
+  improvement_item: "improve_experiment when a threat of the checklist is left unchanged; the item names the threat and the feature that would rule it out"
+
+sets:
+  calibration: 74 trials, saved runs run_{1..5}_v10.json with judge_alternatives/v2 d, recomputed by the current rules
+  prospective: 59 trials, run_60.json (the frozen scores are not touched; this is a recomputation beside them)
+code: scripts/alternatives/threat_checklist.py (to be written) -> longevity-kg reviews/argon-2026-11-14/threat_checklist.json
+
+measures:
+  distribution: values of I before and after on each set (zeros, quartiles, share of the commonest value at two decimals)
+  redundancy: Spearman of I after with chain_state, best_design_outcome, endpoint_clinical, feasibility, scope W, N (ordinal) on each set
+  share_of_I: mean share of I after that comes from the checklist
+  rankings: Spearman of the three ASPID profiles before and after; units moving more than 10 places
+  R3: AUC of the balance is unchanged by construction (I is not in the balance); reported only as a check of the code
+
+rule:
+  adopted_when: >-
+    on both sets I after has at least three distinct values and none above 0.7 of the units, and |Spearman| < 0.7 with
+    every indicator listed under redundancy (the admission rule of the indicators, manual section 8)
+  if_adopted: method v3.11 - the stage manual docs/system/alternatives.md, the summary manual (sections 3, 7, 9), the changelog, tests
+  if_not: the measures are reported with the indicator that I copies; nothing changes in the method
+  not_in_this_check: >-
+    a model verdict for cells and animals from a verbatim phrase (check on pack 28, about 0.05 USD, pass at weighted kappa
+    0.40); a 'specificity control' field in the card (card template v18); co-interventions and selection as ruled out when
+    an intention-to-treat analysis and complete data are stated
