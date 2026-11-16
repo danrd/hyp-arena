@@ -50,4 +50,28 @@ result_2026_11_16:
     R3 0.578 is neither a signal (at least 0.60 with the lower bound above 0.45: 0.578, 0.445) nor no signal (below 0.55):
     unclear. R2 falls from 0.678 to 0.579 on four times as many targets: the target set is not the same (the filtered search
     reads three times as many records), so the two R2 are not a paired comparison
-  not_done: "noise (the 30 trials of pack 18, Spearman of the two balances) is not computed yet"
+diagnosis_2026_11_16:
+  code: "scripts/whole_system/calibration_r2_diag.py -> calibration/calibration_r2_diag.json (free); a target keyed by (trial, target PMID, side)"
+  R2:
+    targets: "saved 71, current 459 (calibration records only, one per key), 18 in both"
+    paired_18_common_targets: "saved records 0.656, current records 0.719: on the same targets the current reading is not worse"
+    current_by_origin: "targets the saved run had read 0.601 (49); new targets 0.541 (410)"
+    by_link: "outcome links: saved 0.748 (65), current 0.558 (430); steps: saved 0.30 (6), current 0.324 (29, inverted, small)"
+    by_design_current: "RCT 0.541 (423), meta-analysis 0.658 (36)"
+    by_earlier_records_current: "2-4: 0.567, 5-9: 0.583, 10+: 0.515"
+    by_target_context_current: "exact 0.51 (82), same class 0.546 (484), adjacent 0.674 (37): adjacent targets do not explain the fall"
+    one_target_per_link: "saved 0.688 [0.542, 0.828] on 29 links; current 0.563 [0.471, 0.655] on 108 links: links with many targets do not explain it"
+    reading: >-
+      the fall of R2 is a change of the sample, not worse records: the saved run's narrow search reached 29 links (mostly
+      well-studied outcomes, where earlier evidence predicts a later trial well); the filtered search reaches 108, most of
+      them new, and on them the earlier records predict a later RCT barely above chance (0.54-0.56). On the targets both runs
+      share, the current records do better. R2 of the saved runs was therefore measured on an easier, selected subset
+  noise:
+    trials: "29 of pack 18 in the three runs (n14x reader v16, n15x reader v17, both the earlier search; _cur)"
+    reader_only: "n14x vs n15x: Spearman 0.944, 1 of 29 moves by more than 0.3"
+    search_and_card: "n15x vs _cur: Spearman 0.672, 10 of 29 move by more than 0.3"
+    auc_on_the_29: "n14x 0.710, n15x 0.681, _cur 0.681"
+    reading: >-
+      the reader adds little noise; the search and the card move the balance of a third of the trials, yet the AUC on these
+      29 is the same. The change of R3 (0.607 -> 0.578) is well inside its interval (about +-0.13): the two runs are not
+      distinguishable on R3
