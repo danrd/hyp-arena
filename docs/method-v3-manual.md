@@ -825,6 +825,10 @@ How the method is checked, by level (the system itself, against other approaches
 - The substantive part of I depends on alternatives already published: in a new field only the threat checklist counts (at
   most 1/3). In animals and cells the checklist has no verdict yet ("does not tell apart"), so a well-controlled cell
   experiment is not told from a poor one; masking is seen only in registry fields.
+- The search and the card move the evidence balance more than the reader: on 29 calibration trials, two readers with the
+  same search agree at Spearman 0.94, the earlier and the current search at 0.67 (a third of the trials move by more than
+  0.3), with the same AUC. Where the literature is thin, the earlier records predict a later RCT of the link barely above
+  chance (AUC 0.54 on the links only the wider search reaches): the balance is informative mostly on well-studied links.
 - Opposite effects in different regimes (timing, dose, polarity) are read as a conflict ("contested").
 - An unchecked link has no prior: it is left out of the balance.
 - The calibration texts are the current registry versions: 40 of the 74 calibration trials were first posted after their
@@ -844,9 +848,9 @@ known result (calibration pool); **R4** — the order of pairs of records given 
 | reading | an outside reader's findings on 400 link-abstract pairs and on a fresh pack of 382; the search gold of 30 trials | reader v21: recall 0.59, precision 0.84 on the 400 pairs, 0.64 and 0.90 on the fresh 382 (v19: 0.58 / 0.83 and 0.62 / 0.75; v17: 0.55 / 0.79 and 0.57 / 0.73; mean of two runs; v16 0.57 / 0.79, v13 0.29-0.34 / 0.64, a plain LLM 0.28 / 0.41); with the cross-link reading 0.39 of the gold papers of a careful search become records (0.26 with reader v9); the AUC of the evidence balance on the 30 trials 0.58 (v16 0.71, v9 0.55; wide intervals) ([`specs/reading/benchmark-reading-2026-11-12.yaml`](../specs/reading/benchmark-reading-2026-11-12.yaml)) |
 | reading: design, n, blinding | against an outside reader | 92-96% agreement |
 | intervention match: exact / class / category / other | an outside reader, 80 link-finding pairs blind | weighted κ 0.55, stance agreement 0.89 ([`specs/scoring/intervention-class-2026-11-11.yaml`](../specs/scoring/intervention-class-2026-11-11.yaml)) |
-| record weight | later RCTs and meta-analyses of the same link (R2) | AUC 0.70 ([`specs/scoring/record-weight-2026-11-08.yaml`](../specs/scoring/record-weight-2026-11-08.yaml)) |
+| record weight | later RCTs and meta-analyses of the same link (R2), the calibration pool run end to end with the current method | AUC 0.579, 722 targets on 161 links; on the 18 targets both this run and the earlier one have, 0.72 against 0.66; on targets new to the wider search 0.54. The earlier 0.68-0.70 was measured on the 29 links a narrow search reached, mostly well-studied outcomes, and overstated the method ([`specs/whole-system/calibration-current-2026-11-16.yaml`](../specs/whole-system/calibration-current-2026-11-16.yaml); before: [`specs/scoring/record-weight-2026-11-08.yaml`](../specs/scoring/record-weight-2026-11-08.yaml)) |
 | record weight | order of 80 pairs of records by an outside reader (R4) | Kendall's τ-b 0.10 |
-| evidence balance | trial outcomes on the calibration pool (R3) | AUC 0.586, in-sample, wide intervals ([`specs/scoring/empty-slots-2026-11-09.yaml`](../specs/scoring/empty-slots-2026-11-09.yaml)) |
+| evidence balance | trial outcomes on the calibration pool (R3), every stage the working one | AUC 0.578 [0.445, 0.710] on 73 trials, 0.63 on the 14 posted 2023-2026 (interval 0.29-0.93); unclear by the rule written before the run (a signal needed 0.60 with the lower bound above 0.45); the earlier runs' 0.607 is not distinguishable from it ([`specs/whole-system/calibration-current-2026-11-16.yaml`](../specs/whole-system/calibration-current-2026-11-16.yaml)) |
 | evidence balance per link | an outside reader's balance | Spearman 0.24 per link, 0.39 per trial; no refuted link called supported |
 | the same question asked to two models | trial outcomes, 63 trials the models do not remember | AUC 0.76 against 0.59 for our non-refutation P: the models' priors beat the literature count; leakage not excluded ([`specs/whole-system/llm-consensus-2026-11-07.yaml`](../specs/whole-system/llm-consensus-2026-11-07.yaml)) |
 | informativeness I (d of the alternatives) | an outside reader, holdout of 30 trials | κ 0.35 ([`specs/alternatives/informativeness-check-2026-11-08.yaml`](../specs/alternatives/informativeness-check-2026-11-08.yaml)) |
