@@ -39,7 +39,7 @@ from typing import Optional
 
 from hyparena.scoring import rules_v3 as r3
 from hyparena.scoring import v3_levels as lv
-from hyparena.reading.effect_class import _FOLD, _RATIO, _SMD
+from hyparena.reading.effect_class import _FOLD, _RATIO, _SMD, is_risk_ratio
 from hyparena.card.models import Claim, ClaimVerification, EvidenceRecord, HypothesisCard
 
 C_ANCHOR = 4 / 0.6
@@ -76,7 +76,7 @@ def precision(n: Optional[int]) -> float:
 EFFECT_D_KINDS = frozenset({"smd", "ratio", "interval"})
 EFFECT_MIN_N = 0         # variant (pack 27, T6): the effect factor is full only from this sample size; 0 = off
 EFFECT_SHRINK_K, EFFECT_SHRINK_TO = 0, 0.3   # variant (T6): d shrunk to (n d + k 0.3) / (n + k); 0 = off
-RISK_RATIO_LINE = 0.0    # variant (pack 27, T2): 1.33 = a risk, hazard or rate ratio of at least 1.33 (at most 0.75) counts fully; 0 = off
+RISK_RATIO_LINE = 1.33   # since 2026-11-16: a risk, hazard or rate ratio of at least 1.33 (at most 0.75) counts fully (GRADE); 0 = by the conversion, as an odds ratio
 
 
 def ec_percent() -> bool:
@@ -94,9 +94,8 @@ def effect_weight(rec: EvidenceRecord, against: bool) -> float:
         if m:
             x = float(next(g for g in m.groups() if g).replace(" ", ""))
             if kind == "ratio" and x > 0:
-                if RISK_RATIO_LINE and rx is _RATIO and re.match(r"(?i)(risk|relative|hazard|rate|a?RR|a?HR|IRR)", m.group(0)) \
-                        and max(x, 1 / x) >= RISK_RATIO_LINE:
-                    return 1.0                            # variant (pack 27, T2): a risk or hazard ratio by GRADE's appreciable effect
+                if RISK_RATIO_LINE and rx is _RATIO and is_risk_ratio(m.group(0)) and max(x, 1 / x) >= RISK_RATIO_LINE - 1e-9:
+                    return 1.0                            # a risk, hazard or rate ratio: GRADE's appreciable effect
                 d = abs(math.log(x)) * math.sqrt(3) / math.pi
             elif kind == "d":
                 d = abs(x)

@@ -45,8 +45,11 @@ def test_manual_constants_equal_the_code():
 
 def test_manual_rule_a_thresholds_equal_the_code():
     a = _constants()["effect_class_rule_a"]
-    assert from_phrase(f"OR {a['ratio']['large']}") == "large" and from_phrase(f"OR {a['ratio']['medium']}") == "medium"
-    assert from_phrase("OR 1.2") == "small"
+    assert from_phrase(f"OR {a['odds_ratio']['large']}") == "large" and from_phrase(f"OR {a['odds_ratio']['medium']}") == "medium"
+    assert from_phrase("OR 1.5") == "small" and from_phrase("3-fold") == "large"
+    assert from_phrase(f"RR {a['risk_ratio']['large']}") == "large" and from_phrase(f"HR {a['risk_ratio']['medium']}") == "medium"
+    assert from_phrase("RR 1.3") == "small" and from_phrase("IRR 0.67") == "medium"
+    assert r32.RISK_RATIO_LINE == a["risk_ratio"]["medium"]
     sd = a["standardised_difference"]
     assert from_phrase(f"d = {sd['large']}") == "large" and from_phrase(f"d = {sd['medium']}") == "medium"
     assert "percent" not in a and from_phrase("35% increase") == "unclear"     # a percent without its variability has no class

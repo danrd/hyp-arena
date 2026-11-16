@@ -3,7 +3,8 @@
 The extractor decides only whether the finding closest to the claim is a null result ("none") and copies the phrase with the
 effect size; the class is computed here, so that "small", "medium" and "large" mean the same thing in every record:
 
-- ratio (odds, risk, hazard ratio; OR, RR, HR, IRR; "8-fold"): >= 2 or <= 0.5 large; >= 1.25 or <= 0.8 medium; otherwise small;
+- a risk, hazard or rate ratio (RR, HR, IRR): >= 2 or <= 0.5 large; >= 1.33 or <= 0.75 medium; otherwise small. An odds ratio
+  (OR) or an n-fold change ("8-fold"): >= 3 large; >= 1.89 or <= 0.53 medium; otherwise small;
 - standardised difference (Cohen's d, Hedges' g, SMD, "effect size"): >= 0.7 large; >= 0.35 medium; otherwise small (absolute
   value). Since 2026-11-16 the line of "medium" is the median effect of trials in gerontology and rehabilitation (0.3-0.4), not
   Cohen's convention of 0.5 (specs/scoring/effect-phrase-2026-11-15.yaml, argon_pack27);
@@ -21,6 +22,15 @@ import re
 
 CLASSES = ("none", "small", "medium", "large", "unclear")
 SMD_MEDIUM, SMD_LARGE = 0.35, 0.70      # before 2026-11-16: 0.5 and 0.8
+# Since 2026-11-16 (before: 1.25 and 2 for every ratio). A risk, hazard or rate ratio: GRADE's appreciable effect (0.75 or
+# 1.33) and large effect (2). An odds ratio or an n-fold change: the ratio whose conversion ln(ratio) * sqrt(3) / pi gives the
+# medium standardised difference 0.35 (1.89), and 3.
+RISK_RATIO, ODDS_RATIO = (1.33, 2.0), (1.89, 3.0)
+
+
+def is_risk_ratio(matched: str) -> bool:
+    """The matched ratio phrase names a risk, hazard or rate ratio (not an odds ratio)."""
+    return bool(re.match(r"(?i)\s*(risk|relative|hazard|rate|a?RR|a?HR|IRR)", matched))
 _NUM = r"(-?(?:\d+(?:\.\d+)?|\.\d+))"            # 2026-11-07: also ".67" (no leading zero)
 _RATIO = re.compile(r"\b(?:odds ratio|risk ratio|relative risk|hazard ratio|rate ratio|OR|aOR|RR|aRR|HR|aHR|IRR)\b"
                     r"\s*(?:\[[^\]]*\]|\([^)]*\))?\s*,?\s*(?:=|:|of|was|is)?\s*" + _NUM, re.I)      # 2026-11-08: "hazard ratio [HR], 0.82"
@@ -111,11 +121,12 @@ def from_phrase(phrase: str) -> str:
         if x <= 0:
             return "unclear"
         x = max(x, 1 / x)
-        return "large" if x >= 2 else "medium" if x >= 1.25 else "small"
+        medium, large = RISK_RATIO if is_risk_ratio(m.group(0)) else ODDS_RATIO
+        return "large" if x >= large else "medium" if x >= medium else "small"
     m = _FOLD.search(p)
     if m:
         x = float(m.group(1))
-        return "unclear" if x <= 0 else ("large" if max(x, 1 / x) >= 2 else "medium" if max(x, 1 / x) >= 1.25 else "small")
+        return "unclear" if x <= 0 else ("large" if max(x, 1 / x) >= ODDS_RATIO[1] else "medium" if max(x, 1 / x) >= ODDS_RATIO[0] else "small")
     m = _SMD.search(p)
     if m:
         x = abs(float(next(g for g in m.groups() if g).replace(" ", "")))

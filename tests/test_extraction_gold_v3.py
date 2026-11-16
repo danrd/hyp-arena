@@ -41,9 +41,10 @@ def test_measure_counts_a_missing_record_as_wrong():
 
 def test_effect_class_rule_a():
     from hyparena.reading.effect_class import effect_class, from_phrase
-    assert from_phrase("odds ratio = 4.89, 95% CI 1.89-11.27") == "large"
+    assert from_phrase("odds ratio = 4.89, 95% CI 1.89-11.27") == "large" and from_phrase("OR 1.6 (1.1-2.3)") == "small"
     assert from_phrase("relative risk = 1.60, 95% CI: 1.03-2.49") == "medium"
-    assert from_phrase("HR 0.79 (0.65-0.96)") == "medium" and from_phrase("RR 1.10 (95% CI 0.58, 2.07)") == "small"
+    assert from_phrase("HR 0.79 (0.65-0.96)") == "small" and from_phrase("HR 0.72 (0.60-0.86)") == "medium"   # GRADE: 0.75
+    assert from_phrase("RR 1.10 (95% CI 0.58, 2.07)") == "small"
     assert from_phrase("d = 0.45") == "medium" and from_phrase("d = 0.30") == "small" and from_phrase("Hedges' g = 0.9") == "large"
     assert from_phrase("9.3% increase") == "unclear" and from_phrase("reduced by 35%") == "unclear"   # no variability, no class (2026-11-16)
     assert from_phrase("up to 8-fold") == "large" and from_phrase("a modest improvement") == "small"

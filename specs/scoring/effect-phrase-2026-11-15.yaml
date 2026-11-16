@@ -140,7 +140,7 @@ adopted_2026_11_16:
     before_pack_27: [0.695, 0.602, 0.669, 0.679, 0.696]
     working_2026_11_16: [0.675, 0.608, 0.684, 0.688, 0.723]
   ratios:
-    status: open (the user's decision)
+    status: "adopted 2026-11-16: a risk, hazard or rate ratio is medium from 1.33 (0.75) and large from 2; an odds ratio and an n-fold change stay on the conversion (medium from 1.89, large from 3); rules_v32.RISK_RATIO_LINE, effect_class.RISK_RATIO, ODDS_RATIO"
     data: >-
       45 records for with a ratio in the three pools (30 trials 24, 74 trials 8, 60 trials 13): 20 odds ratios, 25 risk,
       hazard or rate ratios; of the 25, 12 are under 1.33, 9 between 1.33 and 1.89, 4 above

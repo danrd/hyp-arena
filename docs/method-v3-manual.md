@@ -165,7 +165,7 @@ The detailed rules, every field with its origin and what reads it, and a worked 
 
 ## 4. Evidence records
 
-A reader model (template `verify_claim/v19`, in batches of 10 abstracts) reads each abstract found for a claim and returns
+A reader model (template `verify_claim/v21`, in batches of 10 abstracts) reads each abstract found for a claim and returns
 records; an outcome or a step also reads, by the cross-link reading, the papers the hypothesis's other searches found
 (mostly its alternatives'), those the cheap relevance model rates 3 for it, filled up to 10 with those rated 2. The search (`search: filtered`; stage manual [`docs/system/search.md`](system/search.md)): the queries a
 model writes and a query on the exact population, up to 200 PubMed papers each, date-cut at T; ordered by the match of the
@@ -193,7 +193,8 @@ list ordered again; a cheap model rates the first 100 from 0 to 3 for the claim;
 
 | Phrase | Small | Medium | Large |
 |---|---|---|---|
-| ratio (OR, RR, HR, n-fold) | 0.8-1.25 | 1.25-2 or 0.5-0.8 | ≥ 2 or ≤ 0.5 |
+| risk, hazard or rate ratio (RR, HR, IRR) | 0.75-1.33 | 1.33-2 or 0.5-0.75 | ≥ 2 or ≤ 0.5 |
+| odds ratio (OR), n-fold change | 0.53-1.89 | 1.89-3 or 0.33-0.53 | ≥ 3 or ≤ 0.33 |
 | standardised difference (d, g, SMD) | < 0.35 | 0.35-0.7 | ≥ 0.7 |
 | the authors' word | small, modest, slight | moderate | large, substantial, marked |
 
@@ -204,6 +205,9 @@ list ordered again; a cheap model rates the first 100 from 0 to 3 for the claim;
   abstracts use: with the unit words between the number and the interval ("0.86 points on the SPPB scale (95% CI 0.32,
   1.41)"), "CI = 62-123", "95% C.I. = 1.2-3.6", in braces ("46 m {20;72}"). Under 60 participants the interval is read with
   Student's t in place of 1.96 and d is multiplied by Hedges' correction 1 − 3 / (4·df − 1).
+- A risk, hazard or rate ratio is medium from 1.33 (0.75): GRADE's threshold of an appreciable benefit or harm; large
+  from 2 (0.5). The conversion to a standardised difference holds for odds ratios, so only they and n-fold changes go
+  through it: for a rare event a risk cut by a third is a small d and a real clinical effect.
 - The line of "medium" for a standardised difference is 0.35: the median effect of trials in gerontology, rehabilitation
   and physiotherapy is 0.3-0.4 (0.2 across Cochrane trials), so Cohen's 0.5 would call most real effects small.
 - A raw difference without its variability counts as medium when it reaches the published minimal clinically important
@@ -216,6 +220,9 @@ list ordered again; a cheap model rates the first 100 from 0 to 3 for the claim;
 
 **Reading rules** (the reader's prompt follows them; a report written by a model from this manual must too):
 
+0. **The outcome is the claim's own or a narrower measure of it.** A claim whose object is the organism ("improves
+   healthspan in — human") names its outcome in its measure ("quality of life"): the reader is given that measure as the
+   outcome, and a result on another health measure in the same people is not a record for the claim.
 1. **Same intervention or not** (intervention match). *Exact*: the intervention the claim names (the same programme, the
    same compound); a different dose or schedule of it is exact with dose or regimen "no", which makes the record adjacent.
    *Class*: another intervention of the same kind on the claim's outcome (another resistance programme for a squat
@@ -256,7 +263,7 @@ list ordered again; a cheap model rates the first 100 from 0 to 3 for the claim;
 | design (starting level), outcome link of a claim about humans | RCT 1; meta-analysis by its GRADE certainty: high or moderate 1, low 1/2, very low 1/4, not reported 1 (as a trial); non-randomised and observational 1/2; review (systematic or narrative), animal, cells, other 1/4 |
 | design, links before the outcome or a claim about animals | cells 1/3, review 1/3 (it adds no data of its own), primary study 1 |
 | precision (imprecision) | record for: min(1, ln n / ln 300), at least 1/4, n unknown 1/4; before the outcome 1/2. Record against (a null): the power of its study to detect d = 0.4 |
-| effect (rating up for a large effect) | record for: a stated effect of at least medium size (d ≥ 0.35; a ratio converted to d by ln(ratio)·√3/π, so a ratio of about 1.9 or 0.53; a raw difference that reaches the measure's minimal clinically important difference; the authors' "moderate") 1; small, none or not stated 1/2. Record against: 1 |
+| effect (rating up for a large effect) | record for: a stated effect of at least medium size (d ≥ 0.35; a risk, hazard or rate ratio ≥ 1.33 or ≤ 0.75; an odds ratio or n-fold change converted to d by ln(ratio)·√3/π, so about 1.9 or 0.53; a raw difference that reaches the measure's minimal clinically important difference; the authors' "moderate") 1; small, none or not stated 1/2. Record against: 1 |
 | comparison (part of risk of bias) | between groups 1; within group or none 1/2 |
 | context (indirectness) | adjacent 1/2 (another population, age, sex, dose, comparator or species, only on qualifiers the claim states; or an intervention of the same broad category only, reading rule 1); class (another intervention of the same class) 3/4; exact 1 |
 
@@ -765,8 +772,8 @@ How the method is checked, by level (the system itself, against other approaches
 - The search gives the reader about half of what a careful search must find before T (0.49 of the papers an outside reader
   lists for a trial; papers on the mechanism steps 0.27, none of them read)
   ([`specs/search/benchmark-search-2026-11-12.yaml`](../specs/search/benchmark-search-2026-11-12.yaml)).
-- The reader finds about 0.6 of the findings an outside reader sees in the same abstracts, and about a quarter of its
-  records are not confirmed by that reader, most of them results on another outcome than the claim's (reading benchmark).
+- The reader finds about 0.6 of the findings an outside reader sees in the same abstracts, and 0.1 to 0.15 of its records
+  are not confirmed by that reader (reading benchmark).
 - Abstracts by default; full texts only where a knowledge-graph row says so.
 - Alternatives come from a model, not yet from the knowledge graph.
 - Novelty depends on the search and the reader: a paper they missed makes a hypothesis look newer than it is. Novelty is
@@ -792,7 +799,7 @@ known result (calibration pool); **R4** — the order of pairs of records given 
 |---|---|---|
 | card | an outside reader's card gold (definitions of the card manual), 90 texts | outcome / step / premise κ 0.67 (0.72 on the 60 registry and written-mechanism texts); main outcome 0.79; main factor 0.97; claims recall 0.57, precision 0.56 ([`specs/card/benchmark-card-2026-11-12.yaml`](../specs/card/benchmark-card-2026-11-12.yaml)) |
 | search | an outside reader's search gold, 30 calibration trials | the reader gets 0.49 [0.38, 0.60] of the gold papers, 0.32 on their own link, at a median of 52 papers per hypothesis; the closest prior work in 0.73 of trials ([`specs/search/benchmark-search-2026-11-12.yaml`](../specs/search/benchmark-search-2026-11-12.yaml)) |
-| reading | an outside reader's findings on 400 link-abstract pairs and on a fresh pack of 382; the search gold of 30 trials | reader v19 (v17 with the effect numbers and the outcome mark): recall 0.58, precision 0.83 on the 400 pairs, 0.62 and 0.75 on the fresh 382 (v17: 0.55 / 0.79 and 0.57 / 0.73; mean of two runs; v16 0.57 / 0.79, v13 0.29-0.34 / 0.64, a plain LLM 0.28 / 0.41); with the cross-link reading 0.39 of the gold papers of a careful search become records (0.26 with reader v9); the AUC of the evidence balance on the 30 trials 0.58 (v16 0.71, v9 0.55; wide intervals) ([`specs/reading/benchmark-reading-2026-11-12.yaml`](../specs/reading/benchmark-reading-2026-11-12.yaml)) |
+| reading | an outside reader's findings on 400 link-abstract pairs and on a fresh pack of 382; the search gold of 30 trials | reader v21: recall 0.59, precision 0.84 on the 400 pairs, 0.64 and 0.90 on the fresh 382 (v19: 0.58 / 0.83 and 0.62 / 0.75; v17: 0.55 / 0.79 and 0.57 / 0.73; mean of two runs; v16 0.57 / 0.79, v13 0.29-0.34 / 0.64, a plain LLM 0.28 / 0.41); with the cross-link reading 0.39 of the gold papers of a careful search become records (0.26 with reader v9); the AUC of the evidence balance on the 30 trials 0.58 (v16 0.71, v9 0.55; wide intervals) ([`specs/reading/benchmark-reading-2026-11-12.yaml`](../specs/reading/benchmark-reading-2026-11-12.yaml)) |
 | reading: design, n, blinding | against an outside reader | 92-96% agreement |
 | intervention match: exact / class / category / other | an outside reader, 80 link-finding pairs blind | weighted κ 0.55, stance agreement 0.89 ([`specs/scoring/intervention-class-2026-11-11.yaml`](../specs/scoring/intervention-class-2026-11-11.yaml)) |
 | record weight | later RCTs and meta-analyses of the same link (R2) | AUC 0.70 ([`specs/scoring/record-weight-2026-11-08.yaml`](../specs/scoring/record-weight-2026-11-08.yaml)) |
@@ -875,7 +882,8 @@ scales:
   scope: [local, organ, hallmark]
   discrimination: [unchanged, weakened, eliminated]
 effect_class_rule_a:
-  ratio: {medium: 1.25, large: 2}
+  risk_ratio: {medium: 1.33, large: 2}
+  odds_ratio: {medium: 1.89, large: 3}
   standardised_difference: {medium: 0.35, large: 0.7}
 profiles:
   evidence: [[chain_state], [I], [W], [best_design_outcome, independent_outcome, endpoint_clinical]]

@@ -207,4 +207,4 @@ result_readers_v20_v21_2026_11_16:
     and 0.841 against 0.580 and 0.828; pack 25: 0.640 and 0.899 against 0.622 and 0.754). The outcome named by its
     measure removes the records on another outcome (15 to 2 on pack 25) at the cost of some true findings; the
     combined-intervention rule brings findings back and, on pack 16, some records on another intervention with them
-  decision: pending the user (v21 as the working reader; the rule as written is not met by either template)
+  decision: "2026-11-16: v21 is the working reader (configs/v3-flash-n10.yaml), by the direct comparison with v19; the rule as written was not met by either template"
