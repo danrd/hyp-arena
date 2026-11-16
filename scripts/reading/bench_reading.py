@@ -36,7 +36,7 @@ KG = Path(__file__).resolve().parents[3] / "longevity-kg"
 DIR = KG / "reviews" / "argon-2026-11-12"
 PRICE = {"deepseek": (0.15, 0.6), "google": (1.5, 9.0)}      # USD per M tokens off-peak (DeepSeek x2 on weekdays 01-04, 06-10 UTC)
 PACK = "pack_16"             # --pack 25: the fresh gold of specs/reading/class-findings-2026-11-15.yaml (outcome links only)
-SYSTEMS = ("v9", "v13", "base_a", "v13_trace", "v14", "v15", "v16", "v16_2", "v17", "v17_2", "v18", "v18_2", "v19", "v19_2", "v20", "v20_2", "v21", "v21_2")
+SYSTEMS = ("v9", "v13", "base_a", "v13_trace", "v14", "v15", "v16", "v16_2", "v17", "v17_2", "v18", "v18_2", "v19", "v19_2", "v20", "v20_2", "v21", "v21_2", "skel", "skel_2")
 TRACE = "v13_trace"          # v13 again with every step kept: the filter answers, the reader's answer per paper, the records code kept
 TRACED = ("v13_trace", "v14", "v15", "v16", "v16_2", "v17", "v17_2", "v18", "v18_2", "v19", "v19_2", "v20", "v20_2", "v21", "v21_2")   # runs that keep every step (v14: verify_claim/v14, the same filter and batches as v13)
 
