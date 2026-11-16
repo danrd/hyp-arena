@@ -10,6 +10,7 @@ scripts/evolution/generation_compare.py. Free (PubMed E-utilities only).
     python -m scripts.argon.generation_tasks build-reports              # the method by the manual on the hypotheses of A
     python -m scripts.argon.generation_tasks build-evolve --arm C       # free evolution of B (C) or of A (D)
     python -m scripts.argon.generation_tasks check --kind a|b|s|bs|reports|c|d
+    python -m scripts.argon.generation_tasks score --kind a|bs [--fake]  # our pipeline on claim + rationale + experiment
     python -m scripts.argon.generation_tasks collect                    # -> hypotheses.json for the comparison
 
 Files in longevity-kg reviews/generation-<date>/ (DIR, private): `task_<kind>.json` (sent), `answer_<kind>.json` (put
@@ -398,17 +399,64 @@ def collect(writer_family: str) -> dict:
     return {arm: len(v) for arm, v in arms.items()}
 
 
+# scoring by our pipeline
+
+SCORE_CONFIG = "configs/v3-flash-n10.yaml"   # as the calibration run of 2026-11-16 (card v17, filtered search, reader v21)
+
+
+def score(kind: str, fake: bool = False, max_calls: int = 150, config: str = SCORE_CONFIG) -> dict:
+    """Our pipeline on the hypotheses of one participant, each alone and as of the task's T. The input is the same for every
+    participant: claim, rationale and experiment only - a participant's card, check and references are not passed, so the
+    pipeline builds its own card and searches itself (pilot spec 2026-11-16). Results go to score_<kind>.json (private),
+    resumable; the return value holds numbers only. `fake`: the fake LLM, calls and prompt tokens without a paid call."""
+    from hyparena.pipeline import run as pipeline
+    ans = json.loads((DIR / f"answer_{kind}.json").read_text())["hypotheses"]
+    T = json.loads((DIR / f"task_{kind}.json").read_text())["T"]
+    out_p = DIR / f"score_{kind}{'_dry' if fake else ''}.json"
+    done = json.loads(out_p.read_text()) if out_p.exists() else {}
+    for h in ans:
+        if h["id"] in done:
+            continue
+        try:
+            res = pipeline([_text(h)], writer="google", config=config, fake=fake, as_of=T, max_calls=max_calls,
+                           verifiers=["deepseek"])
+        except Exception as e:                            # left for the next run
+            print(json.dumps({"id": h["id"], "error": f"{type(e).__name__}: {str(e)[:200]}"}), flush=True)
+            continue
+        done[h["id"]] = res
+        out_p.write_text(json.dumps(done, ensure_ascii=False, default=str))
+    return score_summary(done)
+
+
+def score_summary(done: dict) -> dict:
+    """Numbers only: per hypothesis the outcome, the gate, P, W, I, V, scope and the number of flags; calls and USD."""
+    per, usd, calls = {}, 0.0, 0
+    for hid, res in done.items():
+        x = res["items"][0]
+        v = x.get("v3") or {}
+        per[hid] = {"outcome": x["outcome"], **{k: v.get(k) for k in ("gate", "P", "W", "I", "V", "scope")},
+                    "links": len(v.get("links") or {}), "flags": len(v.get("flags") or [])}
+        usd += ((res.get("usage") or {}).get("total") or {}).get("usd", 0) or 0
+        calls += sum(c.get("kind") == "llm" for c in res.get("calls") or [])
+    return {"hypotheses": per, "llm_calls": calls, "usd": round(usd, 3)}
+
+
 def main(argv=None) -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("cmd", choices=["build", "build-a", "build-b", "build-b-generate", "build-reports", "build-evolve", "check", "collect"])
+    ap.add_argument("cmd", choices=["build", "score", "build-a", "build-b", "build-b-generate", "build-reports", "build-evolve", "check", "collect"])
     ap.add_argument("--arm", choices=["C", "D"])
     ap.add_argument("--kind", choices=["a", "b", "s", "bs", "reports", "c", "d"])
     ap.add_argument("--participant", choices=list(PARTICIPANTS), help="build: a (base), b (+ card), s (+ steps), bs (+ card and steps)")
     ap.add_argument("--topic", default=TOPIC)
     ap.add_argument("--n", type=int, default=N)
+    ap.add_argument("--fake", action="store_true", help="score: the fake LLM (calls and prompt tokens, no paid call)")
     ap.add_argument("--as-of", default=date.today().isoformat())
     ap.add_argument("--writer-family", default="google", help="google if Argon wrote the answers, openai if ChatGPT")
     a = ap.parse_args(argv)
+    if a.cmd == "score":
+        if not a.fake and os.environ.get("ALLOW_PAID") != "1":
+            raise SystemExit("a paid run: set ALLOW_PAID=1 after the user's go")
+        print(json.dumps(score(a.kind, fake=a.fake), indent=1)); return
     if a.cmd == "build":
         t = build(a.participant, a.as_of, a.topic, a.n)
     elif a.cmd == "build-a":

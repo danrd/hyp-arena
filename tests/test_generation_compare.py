@@ -133,3 +133,27 @@ def test_bs_joins_card_and_steps_once():
     card = {"links": [{"id": "c1"}, {"id": "c2"}]}
     chk = {"steps": [{"link": "c1"}, {"link": "c9"}], "alternatives": [{"text": "x"}], "tested_before_T": {"answer": "partly"}}
     assert gt.check_problems(chk, card) == ["check steps name links not in the card: ['c9']"]
+
+
+def test_score_passes_text_only_and_summarises_numbers(tmp_path, monkeypatch):
+    """The pipeline gets claim + rationale + experiment only; card, check and references are not passed."""
+    monkeypatch.setattr(gt, "DIR", tmp_path)
+    gt.build("bs", "2026-11-16")
+    h = {"id": "BS1", "claim": "C.", "rationale": "R.", "experiment": "E.", "relies_on": [{"pmid": "1", "title": "secret ref"}],
+         "card": {"outcome": "secret card"}, "check": {"alternatives": [{"text": "secret alt"}]}}
+    (tmp_path / "answer_bs.json").write_text(json.dumps({"hypotheses": [h]}))
+    seen = []
+
+    def fake_run(texts, **kw):
+        seen.append((texts, kw))
+        return {"items": [{"outcome": "ranked", "v3": {"gate": "pass", "P": 0.5, "W": 0.3, "I": 0.4, "V": 0.06, "scope": "organ",
+                                                        "links": {"c1": "moderate"}, "flags": ["x"]}}],
+                "usage": {"total": {"usd": 0.07}}, "calls": [{"kind": "llm"}, {"kind": "pubmed"}]}
+    import hyparena.pipeline
+    monkeypatch.setattr(hyparena.pipeline, "run", fake_run)
+    r = gt.score("bs", fake=True)
+    (texts, kw), = seen
+    assert texts == ["C.\nR.\nE."] and "secret" not in texts[0] and kw["as_of"] == "2026-11-16" and kw["fake"]
+    assert r == {"hypotheses": {"BS1": {"outcome": "ranked", "gate": "pass", "P": 0.5, "W": 0.3, "I": 0.4, "V": 0.06,
+                                        "scope": "organ", "links": 1, "flags": 1}}, "llm_calls": 1, "usd": 0.07}
+    assert gt.score("bs", fake=True) == r and len(seen) == 1                    # resumable: a done id is not run again
