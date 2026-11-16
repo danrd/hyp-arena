@@ -49,13 +49,24 @@ def dry() -> dict:
             "note": "an estimate: these chains have more steps than registry trials, and a step search can cost less or more than an outcome search"}
 
 
-def run(limit: int = 0) -> dict:
+def results() -> dict:
+    """Every hypothesis run so far, from the run file and its shards."""
+    out = {}
+    for f in sorted(DIR.glob("pack_26_run*.json")):
+        if "trial" not in f.name:
+            out.update(json.loads(f.read_text()))
+    return out
+
+
+def run(limit: int = 0, shard: str = "") -> dict:
     if os.environ.get("ALLOW_PAID") != "1":
         raise SystemExit("paid: set ALLOW_PAID=1")
     from hyparena.pipeline import run as pipeline
-    done = json.loads(RUN.read_text()) if RUN.exists() else {}
+    k, n = (int(x) for x in shard.split("/")) if shard else (0, 1)       # --shard 1/3: every third hypothesis, its own file
+    out_p = DIR / f"pack_26_run_{k}.json" if shard else RUN
+    done = json.loads(out_p.read_text()) if out_p.exists() else {}
     cap, spent = float(os.environ.get("MAX_USD") or 0), sum((r.get("usage") or {}).get("total", {}).get("usd", 0) for r in done.values())
-    todo = [h for h in inputs() if h["id"] not in done][: limit or None]
+    todo = [h for i, h in enumerate(inputs()) if h["id"] not in done and (not shard or i % n == k - 1)][: limit or None]
     for h in todo:
         if cap and spent >= cap:
             print(json.dumps({"stopped": "MAX_USD", "spent": round(spent, 3)}), flush=True)
@@ -67,7 +78,7 @@ def run(limit: int = 0) -> dict:
             print(json.dumps({"id": h["id"], "error": f"{type(e).__name__}: {str(e)[:200]}"}), flush=True)
             continue
         done[h["id"]] = res
-        RUN.write_text(json.dumps(done, ensure_ascii=False, default=str))
+        out_p.write_text(json.dumps(done, ensure_ascii=False, default=str))
         usd = (res.get("usage") or {}).get("total", {}).get("usd", 0)
         spent += usd
         print(json.dumps({"id": h["id"], "outcome": res["items"][0]["outcome"], "calls": res["meta"]["calls"], "usd": round(usd, 3),
@@ -79,5 +90,6 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("cmd", choices=["dry", "run"])
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--shard", default="", help="run: k/n, the k-th of n parallel streams (each with its own MAX_USD)")
     a = ap.parse_args()
-    print(json.dumps(dry() if a.cmd == "dry" else run(a.limit), indent=1))
+    print(json.dumps(dry() if a.cmd == "dry" else run(a.limit, a.shard), indent=1))
