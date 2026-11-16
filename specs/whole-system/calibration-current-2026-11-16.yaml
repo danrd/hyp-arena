@@ -75,3 +75,18 @@ diagnosis_2026_11_16:
       the reader adds little noise; the search and the card move the balance of a third of the trials, yet the AUC on these
       29 is the same. The change of R3 (0.607 -> 0.578) is well inside its interval (about +-0.13): the two runs are not
       distinguishable on R3
+steps_inversion_2026_11_16:
+  question: "the step targets of R2 scored the wrong way (AUC 0.32 on 29 targets): an error in the weight of step records?"
+  found: >-
+    the 29 step targets sit on 7 links of 5 trials. Within one link the comparison of targets is biased below 0.5 by the
+    construction of R2: a target is itself a record, so a published null RCT enters the earlier records of every later
+    target of its link and pulls their score down, a positive one pulls them up; a pair of targets of one link with
+    opposite labels therefore carries the earlier target's sign in the later one's score (the null target scored higher in
+    0.84 of such pairs when it is later and 0.68 when it is earlier; never in same-year pairs, which share their records).
+    It is not a decline effect (within a link the share of targets "for" does not fall with time, Spearman 0.00) nor the
+    exclusion of the target's own trial (no target has earlier records of its own trial)
+  numbers: "within-link pairs: outcomes 0.26 (555 pairs), steps 0.30 (28); between links only: all 0.552 (44077 pairs; with them 0.541), outcomes 0.563, steps 0.33 (140 pairs on 7 links)"
+  reading: >-
+    R2 itself is barely touched (within-link pairs are about 1% of its pairs). The step inversion is the within-link
+    artifact plus 7 links: no evidence of an error in the step weights; a test of steps needs more step targets. A future R2
+    may count between-link pairs only
