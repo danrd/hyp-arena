@@ -2,7 +2,7 @@
 
 This manual describes the current rules of the method (version **v3.10**) as one self-contained text: a reader, a model or
 an outside reviewer can score a hypothesis and read its report from it alone. Each stage has its own detailed manual in
-[`docs/system/`](system/) ([the card](system/card.md), [the search](system/search.md), [the reading](system/reading.md), [from a record to the evidence balance](system/evidence.md)); this manual is their compressed aggregate. How the rules
+[`docs/system/`](system/) ([the card](system/card.md), [the search](system/search.md), [the reading](system/reading.md), [from a record to the evidence balance](system/evidence.md), [novelty](system/novelty.md)); this manual is their compressed aggregate. How the rules
 came to be what they are, with the checks behind each change, is in the [change log](system/changelog.md), not here.
 
 Where the code is: rules [`hyparena/scoring/rules_v32.py`](../hyparena/scoring/rules_v32.py), novelty
