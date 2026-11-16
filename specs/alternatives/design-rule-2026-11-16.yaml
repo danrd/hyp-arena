@@ -119,3 +119,30 @@ universal_rule:
       the code verdict from the card's fields reaches a weighted kappa of 0.4 on the methodological alternatives of the
       pack; per system it is reported with its count and decides nothing under 30 alternatives
     then: the change goes to the user with the numbers and through the manual (how I is computed, whether a checklist item needs a literature search, what it weighs)
+  verdict_rule_by_system_written_2026_11_16: >-
+    the code verdict per threat (scripts/alternatives/pack28_score.py, verdict) was written after the answer arrived and
+    after its counts were seen (threats per system, verdicts per feature), before any agreement was computed: practice and
+    regression ruled out by a randomised concurrent control; assessor by blinding; expectation by blinding with a control;
+    selection, co-interventions and allocation weakened by randomisation; handling and vehicle ruled out by a concurrent
+    control; off-target by a specificity control; batch weakened by replication; the rest unchanged
+  result_2026_11_16:
+    answer: "30 hypotheses (cells 15, mixed 8, humans 5, animals 2; an experiment stated in 29), 62 methodological and 60 substantive alternatives; the 70 PMIDs of the literature exist and are before T"
+    lists: "no threat outside the list of its system and none named other: the lists are usable"
+    features_stated: "readout 30, a concurrent control 29, a specificity control 26, allocation 14, replication 11, blinding 9 of 30"
+    verdicts_rest_on: "cells: no feature 0.60, a specificity control 0.20, the control 0.10; mixed: the readout 0.31, the control 0.25, a specificity control 0.19; humans: none 0.50, the control 0.33, blinding 0.08"
+    card_against_argon: "the card's system agrees in 19 of 30 (mixed experiments are one system on the card); the card names a control in 20 of the 29 where the text states one"
+    verdict:      # weighted kappa, exact, on the 62 methodological alternatives
+      from_argon_features: [0.362, 0.581]
+      from_card: [0.307, 0.597]
+      always_unchanged: [0.0, 0.565]
+      by_system_from_card: {humans: [0.455, 0.667, 12], mixed: [0.424, 0.562, 16], cells: [0.07, 0.567, 30], animals: [0.0, 0.75, 4]}
+    by_the_rule:
+      lists_usable: "yes (no other in any system)"
+      fields_to_add: "a specificity control (a second tool, a rescue, a dose-response): 0.20 of the cell verdicts and 0.19 of the mixed rest on it; the readout and the control are on the card already"
+      verdict_rule_adopted: "no: 0.31 from the card's fields < 0.4 (0.36 even from the features the outside reader extracted)"
+    reading: >-
+      for humans the rule from the card works as on the registry trials (0.46 here, 0.57 on pack 6); for cells it does
+      not: there the verdict depends on what the stated control is (a matched vehicle or not, an independent donor or a
+      passage), which a yes/no feature does not carry. The threat lists are usable as a fixed checklist for every system;
+      the verdict by code only for experiments in humans, elsewhere "does not tell apart" by default with the improvement
+      item naming what would rule the threat out (the outside reader gave it for every alternative)
