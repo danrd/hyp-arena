@@ -100,3 +100,18 @@ result_step_1_2026_11_15:
     boundary is not in the wording of the rules but in two judgements the cheap reader makes loosely (is this the claim's
     kind of intervention; is this measure the claim's outcome). The fields (outcome match, measure, effect numbers) work
     technically and can be kept without the send-back
+
+reader_v19:
+  written_on: 2026-11-16
+  status: written before the run
+  template: hyparena/prompts/verify_claim/v19.j2
+  what: >-
+    reader v17 word for word, plus the three record fields of v18 (outcome_match, outcome_measure, effect_numbers). No rule
+    1d, no three answers per abstract, no send-back of a reply; the combined-intervention rule (1c) is not in it either, so
+    that the run measures the fields alone. Code keeps a record whose outcome is "broader" or "other" apart, uncounted
+  run: "bench_reading v19 and v19_2 on pack 16; dry count 0.058 USD a run off-peak (v17: 0.051 counted, 0.063 spent), about 0.15 for both; cap MAX_USD 0.3"
+  rule: >-
+    mean of two runs against v17 (recall 0.55, precision 0.79): neither lower by more than 0.03. Passing makes v19 the
+    candidate for pack 25 (the outcome field against Argon's, rule outcome_field_usable_when) and for the confirming run;
+    it is not expected to raise the same-class recall
+  reported_not_judged: records not counted for a broader or another outcome, against the gold; share of records with numbers and with a d, by kind

@@ -529,9 +529,11 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
                                 "review": pubmed.is_review(a)} for k, a in abstracts.items()]}
     version = template_version or TEMPLATE[1]
     keep_no_stance = int(version.lstrip("v") or 0) >= 6     # v3 templates
-    v18 = int(version.lstrip("v") or 0) >= 18               # the three answers per abstract, checked against the finding
+    v18 = int(version.lstrip("v") or 0) >= 18               # the record fields: outcome match, measure, effect numbers
     own_part = claim.role == "alternative" or claim.note == ALTERNATIVE_NOTE
-    check = lambda v, part: _validate(v, part, papers_check=v18, own_part_only=own_part)
+    # only v18 asks the three answers per abstract and sends a reply back when they disagree with the finding (it lost
+    # precision on pack 16); v19 is v17 with the record fields
+    check = lambda v, part: _validate(v, part, papers_check=version == "v18", own_part_only=own_part)
 
     def read(part: dict) -> tuple[Optional[dict], str]:
         vs = {**variables, "abstracts": [x for x in variables["abstracts"] if x["pmid"] in part]}

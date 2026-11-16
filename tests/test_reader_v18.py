@@ -89,3 +89,9 @@ def test_the_template_renders_with_the_three_answers():
     for needle in ("1c. ONE PART OF A COMBINED INTERVENTION", "1d. DECIDE THREE THINGS", '"own_result": "yes | no"',
                    '"effect_numbers": {}', "outcome_match"):
         assert needle in text
+
+
+def test_v19_keeps_the_fields_without_the_three_answers():
+    from pathlib import Path
+    text = (Path(vf.__file__).parents[1] / "prompts" / "verify_claim" / "v19.j2").read_text()
+    assert "effect_numbers" in text and "outcome_match" in text and "1d." not in text and "own_result" not in text
