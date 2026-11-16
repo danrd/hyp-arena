@@ -8,10 +8,14 @@ why: >-
   hypotheses per arm says only whether the approach is worth the full run.
 topic: "as in the parent: bioelectric signalling in ageing"
 as_of: 2026-11-16
-arms:
-  A: "plain request in a new chat (task_a.json)"
-  B: "structured generation by the manual v3.11 in a new chat, generation only (task_b.json); the steps of the method are not asked here"
+arms:   # B = A + our card specification: the prompts differ only by the structure, nothing about scoring or what the method values
+  A: "plain request in a new chat (task_a.json): claim, rationale, experiment, the papers it relies on"
+  B: "A's exact request plus a structured card (intervention, population, mechanism as links, outcome, decisive experiment); no manual, no scoring; task_b.json. Both A and B ask for references the same way, so fabricated-reference rate is comparable"
 writer: "Argon (Google family)"
+revision_2026_11_16: >-
+  the first B task (task_b with the full manual and a hint of what the method values) was replaced before scoring: the user
+  asked that B differ from A only by our specification. The first B answer is kept as answer_b_manual_v1.json (a separate
+  data point, B with the full manual); the scored B is the new task. A is unchanged, its answer kept
 steps:
   1: "Argon writes A and B (5 + 5); code checks the answers (PMIDs exist, before T, titles match; card fields filled)"
   2: "our pipeline scores the 10 texts (card, search before T, reading, alternatives, the v3.11 rules, ASPID): paid, priced by a dry run, user's go"

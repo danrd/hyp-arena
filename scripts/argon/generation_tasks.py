@@ -45,6 +45,25 @@ REPORT = {"records": [{"link": "c1", "pmid": "", "title": "", "year": "", "quote
           "profiles": {p: {"expected_score": ""} for p in PROFILES},
           "improvements": [{"item": "", "what": "", "expected": ""}]}
 
+A_BASE = (f"Write {N} research hypotheses on the topic below: original, testable, important for ageing and healthy "
+          "lifespan. Each has a claim, a rationale (why it should be true) and an experiment that would test it, and "
+          "lists the papers it relies on.")
+
+CARD_SPEC = [   # the only difference of B from A: our card specification, nothing about scoring or what the method values
+    "In addition, before you write each hypothesis's text, lay it out as a structured card (this is the only extra "
+    "requirement):",
+    "- intervention: a label and a type (drug, supplement, exercise, device, gene or cell perturbation, ...); population: "
+    "species, age and condition.",
+    "- the mechanism as an ordered chain of links from the intervention to the outcome: each link is a triple subject - "
+    "relation - object, with a short relation verb (activates, inhibits, hyperpolarizes, suppresses, promotes, restores, "
+    "improves, reduces, ...) and a role ('step' for a link before the outcome, 'outcome' for the one the hypothesis "
+    "promises to change); at least one step before the outcome, at most four.",
+    "- outcome: what the hypothesis promises to change, named by its measure.",
+    "- decisive experiment: system (human, mouse, rat, cells, ...), design, control or comparator, primary endpoint, duration.",
+    "Write the claim, rationale and experiment from the card. The five hypotheses must be different ideas: no two share "
+    "both the intervention and the outcome.",
+]
+
 COMMON = [
     "Work only from what was published up to the date T given below; a paper after T does not exist.",
     "Every paper you name must be a real PubMed paper: give its PMID and its exact title. A paper you are not sure of is left out.",
@@ -66,28 +85,18 @@ def _write(kind: str, task: dict) -> Path:
 
 def build_a(as_of: str) -> dict:
     task = {"task": "generation_A", "topic": TOPIC, "T": as_of, "n": N,
-            "instructions": [f"Write {N} research hypotheses on the topic below: original, testable, important for ageing and healthy "
-                             "lifespan. Each has a claim, a rationale (why it should be true) and an experiment that would test it, "
-                             "and lists the papers it relies on."] + COMMON,
+            "instructions": [A_BASE] + COMMON,
             "answer_format": {"hypotheses": [{**HYP, "id": "A1"}]}}
     _write("a", task)
     return task
 
 
 def build_b_generate(as_of: str) -> dict:
-    """B, structured generation only (pilot of 2026-11-16): the steps of the method follow as a separate task, for A and B
-    alike, after our own pipeline has scored the same texts."""
-    task = {"task": "generation_B", "topic": TOPIC, "T": as_of, "n": N, "manual": manual(),
-            "instructions": [
-                f"Work by the manual below (method v3). Write {N} hypotheses on the topic in the structured generation mode "
-                "(manual section 11a, 'structured'): fill the card template of section 3 for each (intervention, population, "
-                "the mechanism as links before the outcome, the outcome, the decisive experiment with system, design, control, "
-                "endpoint and duration), then write the text from it (claim, rationale, experiment). Aim at what the manual "
-                "values: a mechanism whose links can be checked against the literature, an outcome that matters for healthy "
-                "lifespan, and an experiment that rules out the competing explanations and the methodological threats of its "
-                "system (section 7). The five must be different ideas, not variants of one (no two share the intervention and "
-                "the outcome).",
-                "Do not score the hypotheses: the steps of the method (search, records, weights, axes, profiles) are a later task."] + COMMON,
+    """B = A + our card specification (pilot of 2026-11-16): the same request as A, plus the structured card. No manual and
+    no hint of what the method values, so B differs from A only by the structure. The steps of the method (scoring) and the
+    evolution are separate tasks, for A and B alike."""
+    task = {"task": "generation_B", "topic": TOPIC, "T": as_of, "n": N,
+            "instructions": [A_BASE] + CARD_SPEC + COMMON,
             "answer_format": {"hypotheses": [{**HYP, "id": "B1", "card": CARD}]}}
     _write("b", task)
     return task
