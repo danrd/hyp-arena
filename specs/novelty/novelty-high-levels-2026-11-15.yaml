@@ -97,3 +97,11 @@ rules_2026_11_16:
   rule: >-
     a rule enters the novelty stage when on pack 26 the weighted kappa rises by at least 0.1 and on pack 18 it does not fall
     by more than 0.03; both together are scored too. The rule goes to the user with the numbers before the manual changes
+  result:      # weighted kappa, exact, ours nearer the known / farther; pack 18: weighted kappa (29 pairs)
+    current:     {pack_26: [0.185, 0.333, 14, 4], pack_18: 0.445}
+    regime:      {pack_26: [0.283, 0.400, 10, 5], pack_18: 0.445}
+    main_factor: {pack_26: [0.273, 0.423, 9, 6], pack_18: 0.445}
+    both:        {pack_26: [0.365, 0.480, 6, 7], pack_18: 0.445}
+  pack_18_unchanged: "neither rule moves any of the 30 registry trials: their subjects name no regime and their outcome claims start from the main factor"
+  by_the_rule: "regime +0.098 and main factor +0.088 each just under the 0.1 asked; both together +0.18, pack 18 unchanged: the pair passes"
+  decision: pending the user
