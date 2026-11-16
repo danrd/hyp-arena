@@ -5,14 +5,13 @@ effect size; the class is computed here, so that "small", "medium" and "large" m
 
 - ratio (odds, risk, hazard ratio; OR, RR, HR, IRR; "8-fold"): >= 2 or <= 0.5 large; >= 1.25 or <= 0.8 medium; otherwise small;
 - standardised difference (Cohen's d, Hedges' g, SMD, "effect size"): >= 0.8 large; >= 0.5 medium; otherwise small (absolute value);
-- relative change in percent ("+9.3%", "9.3% increase", "reduced by 35%", "increased by 12 +/- 3 percent", "by about 40%"): > 20 large;
-  >= 5 medium; otherwise small. A bare percent without a sign or a change word ("(20%, p < 0.05)", "65.7% to 42.9%") is not read
-  as a change: "unclear";
+- a relative change in percent ("+9.3%", "reduced by 35%") without its variability: "unclear" since 2026-11-16 (the same
+  percent is a large or a negligible effect by the measure's variation; specs/scoring/effect-phrase-2026-11-15.yaml). Before
+  that: > 20 large, >= 5 medium, otherwise small (the switch PERCENT);
 - the authors' own word for the size ("small", "modest", "slight" / "moderate" / "large", "substantial", "marked"): that size;
 - anything else (raw units such as "+2.4 kg" or "58±11 m", test statistics, p values only): "unclear".
 
-The first kind that matches decides. Thresholds for ratios and d are the usual conventions; those for percent are the user's
-working values (2026-11-04) and may change only as a new dated rule.
+The first kind that matches decides. Thresholds for ratios and d are the usual conventions.
 """
 from __future__ import annotations
 
@@ -40,7 +39,7 @@ _WORDS = (("large", r"\b(?:large|substantial|marked|strong)\b"), ("medium", r"\b
 
 
 # Variant switches of specs/scoring/effect-phrase-2026-11-15.yaml (argon_pack27); the defaults are the method.
-PERCENT = True          # False: a percent change without its variability is "unclear" (pack 27, T3)
+PERCENT = False         # since 2026-11-16 a percent change without its variability is "unclear" (pack 27, T3); True: the thresholds 5 and 20 used before
 MCID = False            # True: a raw difference that reaches the measure's minimal clinically important difference counts as medium (T5)
 # measure -> (pattern in the quote or phrase, pattern of the number with its unit in the phrase, the MCID); pack 27, T5
 _MCIDS = (("SPPB", r"SPPB|short physical performance", r"([+-]?\d+(?:\.\d+)?)\s*(?:points?)?", 0.5),
@@ -65,6 +64,12 @@ def mcid_reached(phrase: str, quote: str = "") -> bool | None:
             m = re.search(number, p)
             return abs(float(m.group(1))) >= mcid if m else None
     return None
+
+
+def class_from_percent(phrase: str) -> bool:
+    """The phrase is one whose class the percent thresholds decided (no ratio, n-fold or standardised difference before it)."""
+    p = (phrase or "").replace("−", "-")
+    return bool(p) and not (_RATIO.search(p) or _FOLD.search(p) or _SMD.search(p)) and bool(_PCT.search(p))
 
 
 def from_phrase(phrase: str) -> str:

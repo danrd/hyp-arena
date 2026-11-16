@@ -93,7 +93,8 @@ def full_effect() -> set[tuple]:
     return out
 
 
-THRESHOLDS = {      # Argon pack 27: each suggestion as a variant (specs/scoring/effect-phrase-2026-11-15.yaml, argon_pack27)
+THRESHOLDS = {      # Argon pack 27: each suggestion as a variant (specs/scoring/effect-phrase-2026-11-15.yaml, argon_pack27);
+                    # "current" is the code before T3 was adopted on 2026-11-16, the working code is the row T3
     "current": {},
     "T1 medium from d 0.40": {"line": 0.40},
     "T1 medium from d 0.35": {"line": 0.35},
@@ -161,7 +162,8 @@ def main_thresholds() -> dict:
     r3.established_by_approval = lambda claim, card: False
     cp._get = lambda url: None
     refs = wv.r2_refs()
-    base_full = full_effect()
+    with thresholds({}):                                   # "current": the thresholds before 2026-11-16 (percent 5 and 20 in use)
+        base_full = full_effect()
     out = {}
     for name, v in THRESHOLDS.items():
         with thresholds(v):

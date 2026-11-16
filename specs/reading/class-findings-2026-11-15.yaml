@@ -159,4 +159,4 @@ result_pack_25_2026_11_16:
     inside the intervals); (2) the same-class loss measured on pack 16 (6 of 23) is 13 of 23 here with the same reader: it
     was partly that pack; (3) the outcome field as a self-report of the reader does not work; the outcome boundary needs
     another check than the reader's own label
-  decision: pending the user (v19 as the working reader for its effect numbers; the outcome boundary as the next problem of the reading)
+  decision: "2026-11-16: v19 is the working reader (configs/v3-flash-n10.yaml), accepted on packs 16 and 25 without the confirming run on the 30 trials; the outcome boundary is the next problem of the reading"

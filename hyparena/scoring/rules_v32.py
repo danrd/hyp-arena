@@ -120,8 +120,8 @@ def effect_weight(rec: EvidenceRecord, against: bool) -> float:
             d = ec.d_from_p(p, rec.n_total, rec.comparison)
         if d is None:
             if not ec_percent() and rec.effect_class in ("small", "medium", "large"):
-                from hyparena.reading.effect_class import from_phrase as _fp
-                if _fp(p) == "unclear":                   # variant (pack 27, T3): the stored class came from a percent
+                from hyparena.reading.effect_class import class_from_percent
+                if class_from_percent(p):                 # a record read before 2026-11-16: its stored class came from a percent
                     return lv.weight("effect", "unclear")
             return lv.weight("effect", rec.effect_class)
     return 0.25 + 0.75 * min(1.0, d / 0.8)

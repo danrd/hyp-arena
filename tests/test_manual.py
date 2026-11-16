@@ -49,9 +49,7 @@ def test_manual_rule_a_thresholds_equal_the_code():
     assert from_phrase("OR 1.2") == "small"
     sd = a["standardised_difference"]
     assert from_phrase(f"d = {sd['large']}") == "large" and from_phrase(f"d = {sd['medium']}") == "medium"
-    pc = a["percent"]
-    assert from_phrase(f"{pc['large'] + 1}% increase") == "large" and from_phrase(f"{pc['large']}% increase") == "medium"
-    assert from_phrase(f"{pc['medium']}% increase") == "medium" and from_phrase(f"{pc['medium'] - 1}% increase") == "small"
+    assert "percent" not in a and from_phrase("35% increase") == "unclear"     # a percent without its variability has no class
 
 
 def test_manual_v32_constants_and_profiles_equal_the_code():

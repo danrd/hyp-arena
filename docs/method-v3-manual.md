@@ -165,7 +165,7 @@ The detailed rules, every field with its origin and what reads it, and a worked 
 
 ## 4. Evidence records
 
-A reader model (template `verify_claim/v17`, in batches of 10 abstracts) reads each abstract found for a claim and returns
+A reader model (template `verify_claim/v19`, in batches of 10 abstracts) reads each abstract found for a claim and returns
 records; an outcome or a step also reads, by the cross-link reading, the papers the hypothesis's other searches found
 (mostly its alternatives'), those the cheap relevance model rates 3 for it, filled up to 10 with those rated 2. The search (`search: filtered`; stage manual [`docs/system/search.md`](system/search.md)): the queries a
 model writes and a query on the exact population, up to 200 PubMed papers each, date-cut at T; ordered by the match of the
@@ -181,16 +181,24 @@ list ordered again; a cheap model rates the first 100 from 0 to 3 for the claim;
   review is an RCT. A meta-analysis also gets its GRADE certainty from the abstract by code. Then `n_total` (only when
   stated as one number; group sizes are not summed; checked verbatim), `comparison` (between groups, within group, none),
   `effect_reported` (the verbatim phrase with the effect size);
+- the numbers of the effect as separate fields, each as the abstract writes it (the value in each group or before and
+  after, standard deviations, the difference, its 95% interval, p, a ratio, a standardised difference): a number that is
+  not in the abstract is dropped by code. From them code computes a standardised difference when they allow it (a stated
+  one; a ratio; a difference with its interval and n), and it counts where the effect phrase alone gave no size. A
+  difference computed from two means with their spread is kept on the record and not weighed;
+- where the result sits relative to the claim's outcome (the same, a narrower measure, a broader outcome, another) with
+  the abstract's own words for the measure; a record the reader itself marks as broader or another is not counted. The
+  reader's mark does not agree with an outside reader (κ about 0), so it is not a check of reading rule 0;
 - `effect_class`, computed by code from the effect phrase:
 
 | Phrase | Small | Medium | Large |
 |---|---|---|---|
 | ratio (OR, RR, HR, n-fold) | 0.8-1.25 | 1.25-2 or 0.5-0.8 | ≥ 2 or ≤ 0.5 |
 | standardised difference (d, g, SMD) | < 0.5 | 0.5-0.8 | ≥ 0.8 |
-| percent change ("+12%", "reduced by 35%") | < 5 | 5-20 | > 20 |
 | the authors' word | small, modest, slight | moderate | large, substantial, marked |
 
-  Raw units ("+2.4 kg"), test statistics and p values alone are "unclear". A null result for the outcome closest to the claim
+  Raw units ("+2.4 kg"), a percent change without its variability ("+12%", "reduced by 35%": the same percent is a large
+  or a negligible effect depending on how much the measure varies), test statistics and p values alone are "unclear". A null result for the outcome closest to the claim
   is "none". A raw difference with its 95% interval is converted when n is known: SE = (hi − lo) / 3.92, SD = SE·√n / 2
   between two groups (SE·√n before-after), standardised difference d = |difference| / SD. The interval is read in the forms
   abstracts use: with the unit words between the number and the interval ("0.86 points on the SPPB scale (95% CI 0.32,
@@ -242,7 +250,7 @@ list ordered again; a cheap model rates the first 100 from 0 to 3 for the claim;
 | design (starting level), outcome link of a claim about humans | RCT 1; meta-analysis by its GRADE certainty: high or moderate 1, low 1/2, very low 1/4, not reported 1 (as a trial); non-randomised and observational 1/2; review (systematic or narrative), animal, cells, other 1/4 |
 | design, links before the outcome or a claim about animals | cells 1/3, review 1/3 (it adds no data of its own), primary study 1 |
 | precision (imprecision) | record for: min(1, ln n / ln 300), at least 1/4, n unknown 1/4; before the outcome 1/2. Record against (a null): the power of its study to detect d = 0.4 |
-| effect (rating up for a large effect) | record for: a stated effect of at least medium size (d ≥ 0.5, ratio ≥ 1.25, ≥ 5%, the authors' "moderate") 1; small, none or not stated 1/2. Record against: 1 |
+| effect (rating up for a large effect) | record for: a stated effect of at least medium size (d ≥ 0.5; a ratio converted to d by ln(ratio)·√3/π, so an odds ratio of about 2.5; the authors' "moderate") 1; small, none or not stated 1/2. Record against: 1 |
 | comparison (part of risk of bias) | between groups 1; within group or none 1/2 |
 | context (indirectness) | adjacent 1/2 (another population, age, sex, dose, comparator or species, only on qualifiers the claim states; or an intervention of the same broad category only, reading rule 1); class (another intervention of the same class) 3/4; exact 1 |
 
@@ -779,7 +787,7 @@ known result (calibration pool); **R4** — the order of pairs of records given 
 |---|---|---|
 | card | an outside reader's card gold (definitions of the card manual), 90 texts | outcome / step / premise κ 0.67 (0.72 on the 60 registry and written-mechanism texts); main outcome 0.79; main factor 0.97; claims recall 0.57, precision 0.56 ([`specs/card/benchmark-card-2026-11-12.yaml`](../specs/card/benchmark-card-2026-11-12.yaml)) |
 | search | an outside reader's search gold, 30 calibration trials | the reader gets 0.49 [0.38, 0.60] of the gold papers, 0.32 on their own link, at a median of 52 papers per hypothesis; the closest prior work in 0.73 of trials ([`specs/search/benchmark-search-2026-11-12.yaml`](../specs/search/benchmark-search-2026-11-12.yaml)) |
-| reading | an outside reader's findings on 400 link-abstract pairs; the search gold of 30 trials | reader v17: recall 0.55, precision 0.79 (mean of two runs; v16 0.57 / 0.79, v13 0.29-0.34 / 0.64, a plain LLM 0.28 / 0.41); with the cross-link reading 0.39 of the gold papers of a careful search become records (0.26 with reader v9); the AUC of the evidence balance on the 30 trials 0.58 (v16 0.71, v9 0.55; wide intervals) ([`specs/reading/benchmark-reading-2026-11-12.yaml`](../specs/reading/benchmark-reading-2026-11-12.yaml)) |
+| reading | an outside reader's findings on 400 link-abstract pairs and on a fresh pack of 382; the search gold of 30 trials | reader v19 (v17 with the effect numbers and the outcome mark): recall 0.58, precision 0.83 on the 400 pairs, 0.62 and 0.75 on the fresh 382 (v17: 0.55 / 0.79 and 0.57 / 0.73; mean of two runs; v16 0.57 / 0.79, v13 0.29-0.34 / 0.64, a plain LLM 0.28 / 0.41); with the cross-link reading 0.39 of the gold papers of a careful search become records (0.26 with reader v9); the AUC of the evidence balance on the 30 trials 0.58 (v16 0.71, v9 0.55; wide intervals) ([`specs/reading/benchmark-reading-2026-11-12.yaml`](../specs/reading/benchmark-reading-2026-11-12.yaml)) |
 | reading: design, n, blinding | against an outside reader | 92-96% agreement |
 | intervention match: exact / class / category / other | an outside reader, 80 link-finding pairs blind | weighted κ 0.55, stance agreement 0.89 ([`specs/scoring/intervention-class-2026-11-11.yaml`](../specs/scoring/intervention-class-2026-11-11.yaml)) |
 | record weight | later RCTs and meta-analyses of the same link (R2) | AUC 0.70 ([`specs/scoring/record-weight-2026-11-08.yaml`](../specs/scoring/record-weight-2026-11-08.yaml)) |
@@ -864,7 +872,6 @@ scales:
 effect_class_rule_a:
   ratio: {medium: 1.25, large: 2}
   standardised_difference: {medium: 0.5, large: 0.8}
-  percent: {medium: 5, large: 20}
 profiles:
   evidence: [[chain_state], [I], [W], [best_design_outcome, independent_outcome, endpoint_clinical]]
   funding: [[chain_state], [feasibility], [trend_pubmed, ai_role, N], [I, W], [endpoint_clinical, best_design_outcome, independent_outcome]]

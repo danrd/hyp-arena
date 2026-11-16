@@ -105,4 +105,4 @@ argon_pack27_result_2026_11_16:
     no variant is worse than the current code by more than 0.03 on any reference, and none is better by more than the
     noise. T3 removes a threshold the sources call groundless and passes: it may be removed. T1, T2 and T5 change values
     without a gain; T5 moves 2 records
-  decision: pending the user
+  decision: "2026-11-16: T3 adopted (a percent change without its variability is unclear; effect_class.PERCENT = False); T1, T2, T5 not adopted; the manual's weight table corrected for ratios to what the code does"
