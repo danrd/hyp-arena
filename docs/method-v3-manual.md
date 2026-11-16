@@ -25,7 +25,7 @@ when the code changes, the test fails until this manual is updated.
 | evidence balance | how strongly the literature before T supports the chain, from −1 to +1 (section 7) |
 | coverage | how many places of the chain have any data (section 7) |
 | N | novelty: how far the hypothesis is from what was already asked before T (section 7) |
-| I | informativeness of the stated experiment: which supported competing explanations it cuts off, 0 to 1 (section 7) |
+| I | informativeness of the stated experiment: which supported competing explanations and which methodological threats of its system it cuts off, 0 to 1 (section 7) |
 | a | the support of a competing explanation (alternative), from its records (section 7) |
 | d | what the stated experiment does to an alternative: cuts it off 1, weakens it 0.5, does not tell apart 0 (section 7) |
 | W | scope of the mechanism: local, organ or system, hallmark of ageing (section 7) |
@@ -84,7 +84,7 @@ several **profiles** (whose order of importance says what matters to whoever ran
 | evidence balance | How strongly does the literature before T support the chain's links (for minus against), over the links that have data? | −1 … +1 |
 | coverage | How many links of the chain have any data at all? | k of n links |
 | novelty N | How far is the hypothesis from what was already asked before T? | new context < translation < analog < new mechanism of a known effect < new combination < new link |
-| informativeness I | Which supported competing explanations does the stated experiment cut off? | 0-1 |
+| informativeness I | Which supported competing explanations and which methodological threats does the stated experiment cut off? | 0-1 |
 | scope W | How far does the supported mechanism reach: one condition, an organ or system, a hallmark of ageing? | local, organ, hallmark |
 | feasibility | Can the stated experiment be run: system, duration, planned n, readiness of the intervention? | 0-1 |
 
@@ -400,7 +400,8 @@ text without one of them is returned as "needs refinement" with the missing part
   S = 5/6, times the mean support of the other places, so a chain of guesses or one link alone has none. **W potential**: the
   scope with the bottleneck confirmed.
 
-Protections against inflated hypotheses, by construction: the gate (section 6); alternatives without support weigh 0;
+Protections against inflated hypotheses, by construction: the gate (section 6); alternatives without support weigh 0; the threat
+checklist is judged by code from the stated design and adds at most 1/3 to I;
 scope only from supported links; records of one trial or paper count once; novelty is unknown, not high, without data.
 
 ## 8. ASPID: indicators and profiles
@@ -456,7 +457,8 @@ is an input of that computation, not an indicator of any profile.
 
 The evidence profile has no novelty on purpose: novelty and the evidence balance pull apart by design. The frontier
 profile puts novelty first; its protection against inflated hypotheses is that unknown novelty is drawn over the whole
-range (not set high), the balance falls with any data against, and I counts only supported alternatives.
+range (not set high), the balance falls with any data against, and I counts only supported alternatives and the threats the
+stated design rules out.
 
 **Admission rule.** A new indicator enters only when it passes four conditions, checked on saved data before it is used:
 reliable (computed by code, or extracted with a verbatim phrase and agreed by two model families, κ ≥ 0.6); separating (at
@@ -544,8 +546,10 @@ and is searchable. An outside report uses the same ids.
      strength S with its 90% interval (or "нет данных"); link novelty; the records as chips (for green, against red, with the
      weight; hover: the quote; a click opens the paper card with the quote, design, n, the side and the hypotheses that use
      it).
-   - **Альтернативные объяснения**: the alternative as a triple; its support in the literature with the papers it rests on
-     (chips as for the links); under one header "Что делает эксперимент" the two columns "при успехе" and "при неудаче".
+   - **Альтернативные объяснения**: the substantive alternative as a triple; its support in the literature with the papers it
+     rests on (chips as for the links); under one header "Что делает эксперимент" the two columns "при успехе" and "при
+     неудаче". The methodological threats are not listed here: those the design leaves standing are in the flag
+     "эксперимент оставляет методологические угрозы", each with what would rule it out.
    - **Флаги** with the concrete reason in this hypothesis, and **Что поднимет оценку**: the improvement list with the
      expected change of the indicators and of the score per profile, and the papers each item rests on.
    - On a phone every table of this tab scrolls inside its own frame.
@@ -663,7 +667,7 @@ score does not depend on the pool). Items fall into two classes:
 
 | Class | Item | When it appears | Expected effect computed as |
 |---|---|---|---|
-| fixable by rewriting | experiment_alternatives | supported alternatives the stated experiment leaves standing | I with those alternatives ruled out |
+| fixable by rewriting | experiment_alternatives | supported alternatives or checklist threats the stated experiment leaves standing | I with those alternatives and threats ruled out |
 | | rewrite_refuted_link | a link the data are against (S < 0.5) | the balance without the records against (an upper bound) |
 | | narrow_population | records for come from an adjacent population, age or sex | the balance with those records in the exact context |
 | | write_mechanism | the chain is the outcome only | not computable in advance (depends on what is found) |
@@ -818,7 +822,9 @@ How the method is checked, by level (the system itself, against other approaches
 - Reading the same papers again with the same prompt moves the evidence balance (Spearman 0.81 between two readings of the
   59 prospective trials): close places in a ranking are within that noise. Averaging two readings is the remedy where a
   ranking matters.
-- I depends on alternatives already published, so a new field gets I = 0 even for a well-built experiment.
+- The substantive part of I depends on alternatives already published: in a new field only the threat checklist counts (at
+  most 1/3). In animals and cells the checklist has no verdict yet ("does not tell apart"), so a well-controlled cell
+  experiment is not told from a poor one; masking is seen only in registry fields.
 - Opposite effects in different regimes (timing, dose, polarity) are read as a conflict ("contested").
 - An unchecked link has no prior: it is left out of the balance.
 - The calibration texts are the current registry versions: 40 of the 74 calibration trials were first posted after their
@@ -845,6 +851,8 @@ known result (calibration pool); **R4** — the order of pairs of records given 
 | the same question asked to two models | trial outcomes, 63 trials the models do not remember | AUC 0.76 against 0.59 for our non-refutation P: the models' priors beat the literature count; leakage not excluded ([`specs/whole-system/llm-consensus-2026-11-07.yaml`](../specs/whole-system/llm-consensus-2026-11-07.yaml)) |
 | informativeness I (d of the alternatives) | an outside reader, holdout of 30 trials | κ 0.35 ([`specs/alternatives/informativeness-check-2026-11-08.yaml`](../specs/alternatives/informativeness-check-2026-11-08.yaml)) |
 | support a of the alternatives | an outside reader | Spearman 0.28 (the reader counts what it knows, we count found papers) |
+| verdict on methodological threats in humans (code, from the design) | an outside reader: 124 alternatives of 59 trials (pack 6), 62 of 30 written hypotheses (pack 28) | weighted κ 0.45 from the registry fields, 0.57 from the card's (the model 0.14); written hypotheses: humans 0.46, cells 0.07 — no verdict outside humans ([`specs/alternatives/design-rule-2026-11-16.yaml`](../specs/alternatives/design-rule-2026-11-16.yaml)) |
+| I with the threat checklist | the admission rule of indicators, 73 + 59 saved runs | passed: most common value 7% and 12%, \|Spearman\| with the other indicators at most 0.21 ([`specs/alternatives/threat-checklist-2026-11-16.yaml`](../specs/alternatives/threat-checklist-2026-11-16.yaml)) |
 | missing competitors | an outside reader | in 78% of trials the reader adds a supported competitor |
 | novelty N | an outside reader (30 and 37 trials; 30 written hypotheses) | written hypotheses with mechanisms (pack 26): weighted κ 0.36, novelty by absence on the same side of the threshold in 0.85 of the new links; pack 18 (30 trials), N against the outside reader's level: weighted κ 0.45 with reader v17 and the cross-link reading (0.41 with v9, 0.20 with v16; ours farther from the known in 0.24 of the trials); pack 7: κ 0.14-0.26 (the numbers before 2026-11-15 compared the v2 indicator, not N) |
 | prospective pool, 60 ongoing trials | outcomes 2026-11 … 2028-12 | scores frozen with a SHA-256 ([`specs/whole-system/prospective-2026-11-06.yaml`](../specs/whole-system/prospective-2026-11-06.yaml)): the clean test |
@@ -872,7 +880,9 @@ a weak or refuted one lowers it. The coverage is 2 of 2 places in every row.
 
 The RCT of 120 with a medium effect weighs 0.839 (its effect counts in full), each link's strength S comes from F − A, and a
 mouse null of 40 weighs by its power (0.24; preclinical design 1, between groups 1) against 0.5 for the mouse study for.
-Novelty: new context (an RCT on the outcome exists).
+Novelty: new context (an RCT on the outcome exists). The example states no system for its experiment, so I (0.444) has no
+threat checklist; stated as a randomised placebo-controlled trial in humans with masked participants and outcome
+assessors, it would cut off 5 of the 8 threats and weaken 2 (share 0.75) and add 0.5 · 0.75 / 1.5 = 0.25 to I.
 
 ## 14. Constants (checked against the code)
 

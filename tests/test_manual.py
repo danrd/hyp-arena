@@ -217,3 +217,12 @@ def test_manual_threat_checklist_equals_the_code():
     c = _constants()["v311"]
     assert c["threat_checklist_support"] == threats.A_CHECKLIST
     assert {k: list(v) for k, v in c["threats"].items()} == {k: list(v) for k, v in threats.THREATS.items()}
+
+
+def test_manual_worked_example_threat_checklist_line():
+    """v3.11: the worked example's sentence on what the checklist would add."""
+    from tests.test_threats import BLIND_RCT, _card
+    from hyparena.alternatives import threats
+    k = threats.checklist(_card(registry=BLIND_RCT))["share"]
+    add = threats.A_CHECKLIST * k / 1.5
+    assert f"(share {k:.2f}) and add 0.5 · {k:.2f} / 1.5 = {add:.2f} to I." in MANUAL.read_text().replace("\n", " ")

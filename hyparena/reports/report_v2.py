@@ -245,7 +245,7 @@ def flag_details(x: dict) -> list[dict]:
         elif fl == "name_supported_alternatives":
             n = len(x.get("alternatives", []))
             detail = (f"Ни у одной из {n} предложенных альтернатив нет опоры в литературе до даты среза, поэтому эксперимент "
-                      "ничего не отсекает и I равна нижней границе.") if n else "Альтернативные объяснения не предложены."
+                      "ничего не отсекает: I держится только на методологических угрозах, которые отсекает дизайн.") if n else "Альтернативные объяснения не предложены."
         elif fl == "find_primary_report":
             recs = [r for c in chain.values() for r in c["records"] if r.get("trial") and not r.get("primary")]
             detail = "; ".join(f"обзор PMID {r['pmid']} пересказывает испытание «{r['trial']}», статья самого испытания не найдена" for r in recs) \
