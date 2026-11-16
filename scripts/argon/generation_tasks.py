@@ -451,17 +451,7 @@ def analyze(files: dict[str, str]) -> dict:
     balance and coverage, I and its headroom, feasibility, the three ASPID scores and top-5 shares, the population taxon;
     per participant the counts of levels and the means. Numbers and level codes only. `files`: {participant: file name}."""
     from statistics import mean
-    from hyparena.reports import report_html as rh
-    run, arm = {}, {}
-    for p, f in files.items():
-        for h, r in json.loads((DIR / f).read_text()).items():
-            hid = f"{p}:{h}"
-            run[hid] = {**r, "items": [{**r["items"][0], "id": hid}]}
-            arm[hid] = p
-    scores = {h: {"endpoint_clinical": None, "trend_pubmed": None, "P": 0,
-                  "ai_role": (r["items"][0].get("card") or {}).get("ai_role", "none")} for h, r in run.items()}
-    meta = {k: "" for k in ("pool", "date", "sha", "method", "title_ru", "title_en", "about_ru", "about_en")}
-    rep = rh.build(run, scores, [{"id": h} for h in run], {h: "" for h in run}, meta)
+    rep, run, arm = _pool_report(files)
     per = {}
     for h, x in rep["hyps"].items():
         v = x.get("values") or {}
@@ -471,6 +461,31 @@ def analyze(files: dict[str, str]) -> dict:
                   "feasibility": v.get("feasibility"), "taxon": pop.get("taxon"),
                   "aspid": {k: (a or {}).get("score") if isinstance(a, dict) else a for k, a in (x.get("aspid") or {}).items()},
                   "p_top5": x.get("p_top5")}
+    return _groups(files, per, arm, mean)
+
+
+def _pool_report(files: dict[str, str]) -> tuple[dict, dict, dict]:
+    """The code report's data for the participants' scored hypotheses in one pool: (rep, run, participant of each id)."""
+    from hyparena.reports import report_html as rh
+    run, arm, texts = {}, {}, {}
+    for p, f in files.items():
+        ans_f = DIR / f.replace("score_", "answer_")
+        ans = {h["id"]: h for h in json.loads(ans_f.read_text())["hypotheses"]} if ans_f.exists() else {}
+        for h, r in json.loads((DIR / f).read_text()).items():
+            hid = f"{p}:{h}"
+            run[hid] = {**r, "items": [{**r["items"][0], "id": hid}]}
+            arm[hid] = p
+            texts[hid] = _text(ans[h]) if h in ans else ""
+    scores = {h: {"endpoint_clinical": None, "trend_pubmed": None, "P": 0,
+                  "ai_role": (r["items"][0].get("card") or {}).get("ai_role", "none")} for h, r in run.items()}
+    meta = {"pool": "generation-pilot", "date": "2026-11-16", "sha": "", "method": "v3.11",
+            "title_ru": "Пилот генерации: " + ", ".join(files), "title_en": "Generation pilot: " + ", ".join(files),
+            "about_ru": "Гипотезы участников сравнения генерации, оценённые конвейером по утверждению, обоснованию и эксперименту.",
+            "about_en": "The hypotheses of the generation comparison, scored by the pipeline from claim, rationale and experiment."}
+    return rh.build(run, scores, [{"id": h} for h in run], texts, meta), run, arm
+
+
+def _groups(files: dict, per: dict, arm: dict, mean) -> dict:
     groups = {}
     for p in files:
         rows = [r for h, r in per.items() if arm[h] == p]
@@ -483,22 +498,86 @@ def analyze(files: dict[str, str]) -> dict:
     return {"groups": groups, "hypotheses": per}
 
 
+def report(files: dict[str, str], out: str) -> dict:
+    """The code report (the same page as the pools' reports) of the participants' scored hypotheses, written to the private
+    directory for a side-by-side reading with the outside model's report. Returns the file and its size only."""
+    from hyparena.reports import report_v2
+    rep, _, _ = _pool_report(files)
+    p = DIR / out
+    p.write_text(report_v2.render(rep), encoding="utf-8")
+    return {"file": str(p), "kb": round(p.stat().st_size / 1024)}
+
+
+ARGON_FIELDS = ("chain_state", "N", "W", "I", "I_headroom", "feasibility")
+
+
+def compare_argon(files: dict[str, str], argon: str) -> dict:
+    """The outside model's metrics of the parent hypotheses (its JSON with parent_id, parent_metrics, parent_scores) against
+    our pipeline's, hypothesis by hypothesis: N and W equal or not (with both codes), the differences of the evidence
+    balance, coverage, I, its headroom and feasibility, and per profile the rank correlation of the scores. Numbers and
+    codes only."""
+    from statistics import mean
+    from scipy.stats import spearmanr
+    rep, run, arm = _pool_report(files)
+    ours = {}
+    for h, x in rep["hyps"].items():
+        v = x.get("values") or {}
+        ours[h.split(":", 1)[1]] = {**{k: v.get(k) for k in ARGON_FIELDS}, "coverage": v.get("coverage"),
+                                    "aspid": {k: (a or {}).get("score") if isinstance(a, dict) else a
+                                              for k, a in (x.get("aspid") or {}).items()}}
+    per, seen = {}, set()
+    for row in json.loads((DIR / argon).read_text()):
+        pid = row.get("parent_id")
+        if pid in seen or pid not in ours:
+            continue
+        seen.add(pid)
+        a, o = row.get("parent_metrics") or {}, ours[pid]
+        cov_a = a["coverage_k"] / a["coverage_n"] if a.get("coverage_n") else None
+        d = {}
+        for k in ("N", "W"):
+            d[k] = {"argon": a.get(k), "ours": o.get(k), "same": a.get(k) == o.get(k)}
+        for k, av, ov in (("chain_state", a.get("chain_state"), o.get("chain_state")), ("coverage", cov_a, o.get("coverage")),
+                          ("I", a.get("I"), o.get("I")), ("I_headroom", a.get("I_headroom"), o.get("I_headroom")),
+                          ("feasibility", a.get("feasibility"), o.get("feasibility"))):
+            d[k] = {"argon": av, "ours": ov, "diff": round(av - ov, 3) if isinstance(av, (int, float)) and isinstance(ov, (int, float)) else None}
+        d["aspid"] = {prof: {"argon": ((row.get("parent_scores") or {}).get(prof) or {}).get("score"), "ours": o["aspid"].get(prof)}
+                      for prof in ("evidence", "funding", "frontier")}
+        per[pid] = d
+    summary = {"hypotheses": len(per), "N_same": sum(v["N"]["same"] for v in per.values()),
+               "W_same": sum(v["W"]["same"] for v in per.values())}
+    for k in ("chain_state", "coverage", "I", "I_headroom", "feasibility"):
+        ds = [v[k]["diff"] for v in per.values() if v[k]["diff"] is not None]
+        summary[f"{k}_mean_abs_diff"] = round(mean(abs(x) for x in ds), 3) if ds else None
+        summary[f"{k}_mean_argon_minus_ours"] = round(mean(ds), 3) if ds else None
+    for prof in ("evidence", "funding", "frontier"):
+        pairs = [(v["aspid"][prof]["argon"], v["aspid"][prof]["ours"]) for v in per.values()
+                 if isinstance(v["aspid"][prof]["argon"], (int, float)) and isinstance(v["aspid"][prof]["ours"], (int, float))]
+        summary[f"spearman_{prof}"] = round(spearmanr(*zip(*pairs))[0], 2) if len(pairs) >= 4 else None
+    return {"summary": summary, "hypotheses": per}
+
+
 HUMAN = "NCBITaxon:9606"   # the population of every hypothesis must be humans (base request since 2026-11-16)
 
 
 def main(argv=None) -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("cmd", choices=["build", "score", "analyze", "build-a", "build-b", "build-b-generate", "build-reports", "build-evolve", "check", "collect"])
+    ap.add_argument("cmd", choices=["build", "score", "analyze", "report", "compare-argon", "build-a", "build-b", "build-b-generate", "build-reports", "build-evolve", "check", "collect"])
     ap.add_argument("--arm", choices=["C", "D"])
     ap.add_argument("--kind", choices=["a", "b", "s", "bs", "reports", "c", "d"])
     ap.add_argument("--participant", choices=list(PARTICIPANTS), help="build: a (base), b (+ card), s (+ steps), bs (+ card and steps)")
     ap.add_argument("--topic", default=TOPIC)
     ap.add_argument("--n", type=int, default=N)
     ap.add_argument("--files", nargs="*", default=[], help="analyze: participant=score file, e.g. A=score_a_v2.json")
+    ap.add_argument("--out", default="report_code.html", help="report: file name in the pilot directory")
+    ap.add_argument("--argon", default="", help="compare-argon: the outside model's JSON in the pilot directory")
     ap.add_argument("--fake", action="store_true", help="score: the fake LLM (calls and prompt tokens, no paid call)")
     ap.add_argument("--as-of", default=date.today().isoformat())
     ap.add_argument("--writer-family", default="google", help="google if Argon wrote the answers, openai if ChatGPT")
     a = ap.parse_args(argv)
+    if a.cmd == "report":        # e.g. --files A=score_a_v2.json BS=score_bs_v2.json --out report_code_v2.html
+        print(json.dumps(report(dict(x.split("=", 1) for x in a.files), a.out), indent=1)); return
+    if a.cmd == "compare-argon":  # e.g. --files ... --argon evolved_hypotheses_frontier.json
+        print(json.dumps(compare_argon(dict(x.split("=", 1) for x in a.files), a.argon), indent=1)); return
     if a.cmd == "analyze":       # e.g. --files A=score_a_v2.json BS=score_bs_v2.json
         print(json.dumps(analyze(dict(x.split("=", 1) for x in a.files)), indent=1)); return
     if a.cmd == "score":
