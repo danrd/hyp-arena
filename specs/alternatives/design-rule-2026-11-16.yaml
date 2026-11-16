@@ -49,3 +49,31 @@ rule:
     literature search): it goes to the user with the numbers, then through the manual; nothing changes before that
   if_not: the kinds and their numbers are reported; the rule is not adopted
 script: scripts/alternatives/design_rule.py -> longevity-kg reviews/argon-2026-11-14/design_rule.json
+
+result_2026_11_16:
+  pack_22_in_sample:
+    kinds: "36 of the 38 methodological alternatives fall into one of the eight kinds; of those of rank 1 to 3, 0.97 (the proposer covered 0.34)"
+    code_verdict: "weighted kappa 0.50, exact 0.66 on 35 (holdout 12: 0.60 and 0.67); the proposer's verdict on this pack: about 0.1"
+  pack_6_independent:
+    classed: "124 of 293 alternatives (practice 25, regression 28, attention 36, expectation 13, co-intervention 13, selection 9); the other 169 are not methodological by the words"
+    code_verdict: "weighted kappa 0.447, exact 0.565"
+    model_verdict_on_the_same: "weighted kappa 0.143, exact 0.363 (the verdict saved with the run of 2026-11-06; it never says eliminated)"
+    by_kind:      # exact agreement, code / model
+      practice: [0.76, 0.16]
+      regression: [0.75, 0.32]
+      attention: [0.53, 0.58]
+      expectation: [0.38, 0.15]
+      selection: [0.33, 0.22]
+      cointervention: [0.23, 0.54]
+  by_the_rule: "passes: 124 classed, weighted kappa 0.447 (at least 0.4), higher than the model's 0.143 by 0.30"
+  reading: >-
+    the gain is practice and regression to the mean: a randomised concurrent control rules them out, the outside reader
+    agrees in three cases of four and the model said "weakened" or "unchanged". Attention is on par with the model;
+    co-interventions and selection are weak (the outside reader often calls them ruled out by randomisation, the rule says
+    weakened). The comparison is with the verdict of the run of 2026-11-06, not with the later judge
+    (judge_alternatives/v2, kappa 0.35 on another sample)
+  open_for_the_user: >-
+    (1) a fixed checklist of the eight kinds for every trial in place of proposing methodological alternatives; (2) their
+    verdict by this rule; (3) their support: now from a literature search, which a design judgement does not need: what
+    a checklist item weighs in I without records is a new rule; (4) the kinds co-intervention and selection as "ruled out
+    by randomisation" or as now
