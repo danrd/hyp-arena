@@ -1,0 +1,27 @@
+id: small-positives-2026-11-16
+written_on: 2026-11-16
+status: written before any variant was counted
+question: >-
+  Does a link whose support rests only on small human studies deserve less support than the record weights give it? Small
+  trials report larger effects than large ones on the same question, and an asymmetric funnel (only small positive studies)
+  is the usual sign of publication bias and small-study effects.
+sources:
+  - "PMID 23616031: Dechartres et al., Influence of trial sample size on treatment effect estimates: meta-epidemiological study (BMJ 2013) - smaller trials give larger effect estimates than the largest trials of the same meta-analysis"
+  - "PMID 21784880: Sterne et al., Recommendations for examining and interpreting funnel plot asymmetry in meta-analyses of randomised controlled trials (BMJ 2011) - small-study effects, of which publication bias is one cause"
+what_already_counts: "the precision factor of the record weight: min(1, ln n / ln 300), at least 1/4 (a trial of 50 has 0.69); it discounts each small record, not a link supported by small records only"
+variants:   # applied to the side "for" of a link (the sum F after the fold of one trial); nothing else changes
+  current: "no change"
+  SP100: "if the link has records for from at least 2 independent groups, every one a human primary study (rct, non_randomised, observational) with n under 100 or n unknown, and no record for with n at least 100 and no meta-analysis for, F is halved"
+  SP50: "as SP100 with the line at n 50"
+  SP100_any: "as SP100 but counting groups of any design except meta-analysis (animal and cell records included)"
+references:   # all free, computed by scripts/scoring/small_positives.py on the runs named
+  R3: "AUC of the evidence balance against the trial outcomes, 73 trials of the current calibration run (_cur)"
+  R2_pooled: "the R2 of the current run (later RCTs and meta-analyses of a link from its earlier records)"
+  R2_between: "the same, pairs of targets from different links only (the within-link comparison is biased by construction, specs/whole-system/calibration-current-2026-11-16.yaml steps_inversion)"
+  R2_meta: "the same, meta-analysis targets only"
+  R3_saved: "R3 on the saved runs (_v10), for stability"
+rule: >-
+  a variant is admitted only if it is not worse than current by more than 0.03 on any reference; among the admitted, one
+  better than current by more than the noise on R3 or R2_between (more than 0.03) is proposed to the user for the manual;
+  otherwise nothing changes (the simpler method stays). Ties between admitted variants: the simpler or closer to the cited
+  standard
