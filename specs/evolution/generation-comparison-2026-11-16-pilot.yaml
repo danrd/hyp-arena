@@ -29,6 +29,15 @@ revision_2026_11_16_regenerate: >-
   in a new chat with the same model and settings for each. B is dropped from the pilot (user's decision): the pilot compares
   A and BS. The first pair is kept as task/answer/check_a_v1 and _bs_v1 (a separate point: its reference counts are not
   compared with the new pair)
+revision_2026_11_16_humans: >-
+  before the third generation (user's decision): the base request now says that each hypothesis is about people (older
+  adults, or people at risk of an age-related loss of function), while the experiment that tests it may be in any system.
+  Reason: the species of the population moves the scores by itself (the novelty level, translation to another species; the
+  weight of animal records for a human outcome; feasibility), so a comparison of generation would partly measure the choice
+  of species; in the second pair, by the cards of our pipeline, A had 3 human and 2 mouse populations. Fair for scoring a
+  given hypothesis, unfair for comparing writers. Code reports the number of hypotheses whose population (our pipeline's
+  card) is not human; scoring separately by species groups is left for the full comparison and the hypothesis database.
+  The second pair is kept as *_a_v2 / *_bs_v2 with its scores (a point without the constraint)
 steps:
   1: "Argon writes A and BS (5 each, new chats, the same cover text); code checks the answers (PMIDs exist, before T, titles match; card fields filled; for BS also the check filled and every check step naming a link of the card)"
   2: "our pipeline scores the 10 texts (card, search before T, reading, alternatives, the v3.11 rules, ASPID): paid, priced by a dry run, user's go"

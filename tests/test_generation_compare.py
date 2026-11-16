@@ -108,7 +108,7 @@ def test_participants_are_the_base_plus_at_most_one_block(tmp_path, monkeypatch)
     t = gt.build("s", "2026-11-16", topic="senolytics", n=4, write=False)
     assert t["topic"] == "senolytics" and "Write 4 " in t["instructions"][0] and "four hypotheses" in t["instructions"][0]
     body = [" ".join(gt.build(p, "2026-11-16", write=False)["instructions"]) for p in gt.PARTICIPANTS]
-    assert all(b.count("must be different ideas") == 1 for b in body)          # in the base only, so every participant has it
+    assert all(b.count("must be different ideas") == 1 and b.count("Each hypothesis is about people") == 1 for b in body)          # in the base only, so every participant has it
     assert len({gt.build(p, "2026-11-16", write=False)["cover"] for p in gt.PARTICIPANTS}) == 1
 
 
@@ -155,5 +155,6 @@ def test_score_passes_text_only_and_summarises_numbers(tmp_path, monkeypatch):
     (texts, kw), = seen
     assert texts == ["C.\nR.\nE."] and "secret" not in texts[0] and kw["as_of"] == "2026-11-16" and kw["fake"]
     assert r == {"hypotheses": {"BS1": {"outcome": "ranked", "gate": "pass", "P": 0.5, "W": 0.3, "I": 0.4, "V": 0.06,
-                                        "scope": "organ", "links": 1, "flags": 1}}, "llm_calls": 1, "usd": 0.07}
+                                        "scope": "organ", "links": 1, "flags": 1, "taxon": None}},
+                 "not_human": 1, "llm_calls": 1, "usd": 0.07}
     assert gt.score("bs", fake=True) == r and len(seen) == 1                    # resumable: a done id is not run again

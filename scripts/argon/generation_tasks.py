@@ -58,7 +58,8 @@ def base(n: int = N) -> str:
     return (f"Write {n} research hypotheses on the topic below: original, testable, important for ageing and healthy "
             "lifespan. Each has a claim, a rationale (why it should be true) and an experiment that would test it, and "
             f"lists the papers it relies on. The {_words(n)} hypotheses must be different ideas: no two share both the "
-            "intervention and the outcome.")
+            "intervention and the outcome. Each hypothesis is about people: its population is humans (older adults, or "
+            "people at risk of an age-related loss of function). The experiment that would test it may be in any system.")
 
 
 A_BASE = base()
@@ -434,11 +435,16 @@ def score_summary(done: dict) -> dict:
     for hid, res in done.items():
         x = res["items"][0]
         v = x.get("v3") or {}
+        pop = (((x.get("card") or {}).get("pico") or {}).get("population") or {})
         per[hid] = {"outcome": x["outcome"], **{k: v.get(k) for k in ("gate", "P", "W", "I", "V", "scope")},
-                    "links": len(v.get("links") or {}), "flags": len(v.get("flags") or [])}
+                    "links": len(v.get("links") or {}), "flags": len(v.get("flags") or []), "taxon": pop.get("taxon")}
         usd += ((res.get("usage") or {}).get("total") or {}).get("usd", 0) or 0
         calls += sum(c.get("kind") == "llm" for c in res.get("calls") or [])
-    return {"hypotheses": per, "llm_calls": calls, "usd": round(usd, 3)}
+    return {"hypotheses": per, "not_human": sum(h["taxon"] != HUMAN for h in per.values()), "llm_calls": calls,
+            "usd": round(usd, 3)}
+
+
+HUMAN = "NCBITaxon:9606"   # the population of every hypothesis must be humans (base request since 2026-11-16)
 
 
 def main(argv=None) -> None:
