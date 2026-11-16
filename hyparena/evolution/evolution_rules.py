@@ -1,4 +1,4 @@
-"""Code checks of the rules every improved version keeps (method-v3-manual.md section 11, user decision 2026-11-09), and the
+"""Code checks of the rules every improved version keeps (docs/method/manual.md section 11, user decision 2026-11-09), and the
 decomposition of a version's score change into the hypothesis part and the experiment part (backlog 2026-11-09).
 
     check(parent, child, mode, ...) -> {"rules": [...], "violations": [...], "warnings": [...]}

@@ -1,4 +1,4 @@
-"""docs/method-v3-manual.md section 12 states the constants of the rules; they must equal the code."""
+"""docs/method/manual.md section 12 states the constants of the rules; they must equal the code."""
 import math
 import re
 from pathlib import Path
@@ -10,7 +10,7 @@ from hyparena.scoring import v3_levels as lv
 from hyparena.reading.effect_class import from_phrase
 from hyparena.scoring import aspid_v3, rules_v32 as r32
 
-MANUAL = Path(__file__).resolve().parents[1] / "docs" / "method-v3-manual.md"
+MANUAL = Path(__file__).resolve().parents[1] / "docs" / "method" / "manual.md"
 HISTORY = Path(__file__).resolve().parents[1] / "archive" / "docs" / "method-history.md"   # earlier versions
 
 
@@ -169,7 +169,7 @@ def test_manual_names_table_matches_code():
     """Section 10a lists every display name the code uses (user note 2026-11-09: outside reports must use the same names)."""
     from hyparena.reports import report_html as rh
     from hyparena.reports import report_v2 as r2
-    text = (Path(__file__).resolve().parents[1] / "docs" / "method-v3-manual.md").read_text(encoding="utf-8")
+    text = (Path(__file__).resolve().parents[1] / "docs" / "method" / "manual.md").read_text(encoding="utf-8")
     sec = text[text.index("## 10a."):text.index("## 11.")]
     pairs = [(k, v[0]) for d in (rh.IND_NAMES, rh.LINK_NAMES, rh.DESIGN_NAMES, rh.DISC, r2.FLAG_NAMES) for k, v in d.items()]
     pairs += [(k or "unknown", v[0]) for k, v in rh.NOVELTY_NAMES.items()] + list(r2.PROFILE_LABEL.items())

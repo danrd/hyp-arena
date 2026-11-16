@@ -79,7 +79,7 @@ class Claim(BaseModel):
             return v or None
         return "cell" if str(v).lower() in ("organelle", "subcellular") else None
 
-    # normalize_card/v15 (docs/system/card.md, "Звенья"): a claim is on the chain of the main factor or a premise about the problem
+    # normalize_card/v15 (docs/method/card.md, "Звенья"): a claim is on the chain of the main factor or a premise about the problem
     part: Optional[Literal["chain", "premise"]] = None
     premise_kind: Optional[Literal["population_state", "problem_mechanism"]] = None
 
@@ -237,7 +237,7 @@ class HypothesisCard(BaseModel):
     ai_role: Literal["none", "analysis", "in_the_loop", "intervention"] = "none"
     ai_role_span: str = ""
     # normalize_card/v12 (2026-11-12, user decision): core fields whose value has no verbatim span after the rounds; the value is
-    # kept and shown as "from the text, not anchored" (docs/system/card.md)
+    # kept and shown as "from the text, not anchored" (docs/method/card.md)
     unanchored: list[str] = Field(default_factory=list)
     expected_effect: Optional[dict] = None       # v13: {size, compared_to, time_point, span} when the text names a size
     author_refs: list[str] = Field(default_factory=list)          # v13: PMIDs / DOIs named in the text (code)

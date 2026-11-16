@@ -1,4 +1,4 @@
-"""Card benchmark against the gold under the link definitions of docs/system/card.md (card_gold_v2): Argon packs 19 (30 texts
+"""Card benchmark against the gold under the link definitions of docs/method/card.md (card_gold_v2): Argon packs 19 (30 texts
 not from a registry) and 20 (the 60 texts of pack 17 labelled again). specs/card/benchmark-card-2026-11-12.yaml.
 
     python -m scripts.card.bench_card_v2 dry                              # free: calls, tokens and the price

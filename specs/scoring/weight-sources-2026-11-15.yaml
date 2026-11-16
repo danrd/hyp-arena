@@ -44,4 +44,4 @@ adopted_2026_11_15:
   values: "preclinical narrative review 1/3 (hyparena/scoring/v3_levels.PRECLINICAL_REVIEW); same class 0.75 (rules_v32.CLASS_WEIGHT); further records of one group 0 (rules_v32.FOLD_REST); slope ln 5 (rules_v32.LOGLR_LAMBDA): F - A = 1 gives S 5/6, the source's 'F - A = 1 for S 5/6' (1.6 in the variant run; ln 5 gives the same numbers on every reference)"
   result: "R2 0.695, R3 0.602, pack 23 0.669, AUC 30 trials 0.598 (reader v17) / 0.714 (v16); before: 0.702, 0.595, 0.688, 0.580 / 0.705"
   not_adopted: "F1 (meta-analysis without stated certainty 0.75 or 0.5): fails on pack 23; F5 (any stated effect 1): AUC with reader v17 0.576, the weaker of the two readers"
-  manual: "docs/method-v3-manual.md sections 5, 6, 13 and 14; the worked example recomputed (balance 0.628 as given)"
+  manual: "docs/method/manual.md sections 5, 6, 13 and 14; the worked example recomputed (balance 0.628 as given)"

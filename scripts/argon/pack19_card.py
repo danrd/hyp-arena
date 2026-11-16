@@ -1,10 +1,10 @@
-"""Argon pack 19: the card gold on texts that are not registry trials (docs/benchmarks/README.md, stage 2). Free,
+"""Argon pack 19: the card gold on texts that are not registry trials (docs/validation/benchmarks/README.md, stage 2). Free,
 deterministic (hash order), no model call. Writes the task and the hidden key to the private repository.
 
     python -m scripts.argon.pack19_card build    # longevity-kg/reviews/argon-2026-11-13/pack_19_task.json, pack_19_key.json
 
 30 texts, none of them in pack 17: Bio Arena 12 (at most 3 per author), the ChatGPT set 10, our evolved versions 8. Every third text of a group (hash order) is holdout. The instructions carry the
-link-type definitions of docs/system/card.md ("Звенья: как определяется тип"): the outcome first, then the intervention's
+link-type definitions of docs/method/card.md ("Звенья: как определяется тип"): the outcome first, then the intervention's
 chain, and premises about the problem kept off the chain; one relation and one measure per claim; labels in English.
 """
 from __future__ import annotations

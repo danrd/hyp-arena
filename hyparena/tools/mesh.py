@@ -9,7 +9,7 @@ included; network errors are not cached.
     synonyms("resistance training") -> the descriptor's entry terms ("Strength Training", "Weight-Lifting Exercise Program", ...)
 
 Used for search synonyms (the queries missed half of the gold papers on wording), the topic of a hypothesis, and the
-graph. docs/system/card.md, section 3.3 (identifiers).
+graph. docs/method/card.md, section 3.3 (identifiers).
 """
 from __future__ import annotations
 

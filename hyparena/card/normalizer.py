@@ -392,7 +392,7 @@ def dedupe_claims(card: HypothesisCard) -> list[str]:
     return removed
 
 
-# ---- normalize_card/v15 (docs/system/card.md, "Звенья: как определяется тип"; 2026-11-13) ---------------------------------
+# ---- normalize_card/v15 (docs/method/card.md, "Звенья: как определяется тип"; 2026-11-13) ---------------------------------
 STEP_LEVELS = {"engagement": {"molecule"}, "pathway": {"molecule", "cell"}, "effect": {"tissue", "organ", "organism"}}
 _STOP = {"the", "and", "with", "for", "from", "into", "older", "adults", "adult", "elderly", "people", "patients", "human",
          "humans", "mice", "mouse", "level", "levels", "of", "in", "on", "by", "a", "an", "to"}
@@ -506,7 +506,7 @@ def _norm_text(s: str) -> str:
 
 def v15_problems(card: HypothesisCard) -> list[str]:
     """Checks of normalize_card/v15, sent back to the model like the span checks: English labels; part and link agree; a chain
-    claim starts from the main factor, the intervention or an earlier step; the link fits the level (docs/system/card.md)."""
+    claim starts from the main factor, the intervention or an earlier step; the link fits the level (docs/method/card.md)."""
     out = []
     if not card.main_factor or not str(card.main_factor.get("label") or "").strip():
         out.append("main_factor is missing: name the thing whose consequences the hypothesis states")

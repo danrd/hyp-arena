@@ -1,7 +1,7 @@
 id: generation-comparison-2026-11-14
 written_on: 2026-11-14
 status: "definitions and pass rules fixed before any hypothesis is generated or judged; the tasks, the answer checks and the comparison are built (2026-11-14), no judge called; on hold: no generation until the whole system is debugged"
-level: "4 of the system checks (docs/system/testing.md): generation of hypotheses; manual docs/system/generation-arena.md"
+level: "4 of the system checks (docs/validation/testing.md): generation of hypotheses; manual docs/validation/generation-arena.md"
 why: >-
   Does the system write better research hypotheses on a topic than an LLM asked in a chat, and does the system's evolution
   make them better still, its own and another writer's? The comparison runs every stage at once on texts the system has not
@@ -17,7 +17,7 @@ n_per_arm: 5
 execution: >-
   every arm is the same outside model (Argon, a Gemini model, or ChatGPT) working in a chat; the steps of the method
   (generation, card, search, reading, alternatives, scoring, evolution, report) are done by that model following
-  docs/method-v3-manual.md, not by our code with its own reader model. The arms then differ only by the method (without the
+  docs/method/manual.md, not by our code with its own reader model. The arms then differ only by the method (without the
   manual: A; with it: B, C, D), so the method cannot lose by a weaker reader or another model, and the chats cost nothing.
   Our code does only what does not depend on the model: checks the answers (references, verbatim quotes, format), puts the
   texts into one form, calls the judges and computes the result. Each arm is a new chat, without earlier answers in context.

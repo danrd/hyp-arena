@@ -1,4 +1,4 @@
-"""Argon pack 18: the search gold (docs/benchmarks/README.md, stages 3 and 6). Free, deterministic, no model call.
+"""Argon pack 18: the search gold (docs/validation/benchmarks/README.md, stages 3 and 6). Free, deterministic, no model call.
 
     python -m scripts.argon.pack18_search build    # longevity-kg/reviews/argon-2026-11-12/pack_18_task.json, pack_18_key.json
 

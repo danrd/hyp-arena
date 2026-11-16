@@ -30,7 +30,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 KG = Path(os.environ.get("KG_DIR", ROOT.parent / "longevity-kg"))
 DIR = Path(os.environ.get("GEN_DIR", KG / "reviews" / "generation-2026-11-14"))
-MANUAL = ROOT / "docs" / "method-v3-manual.md"
+MANUAL = ROOT / "docs" / "method" / "manual.md"
 TOPIC = ("bioelectric signalling in ageing: membrane potential, ion channels, gap junctions and endogenous electric fields "
          "as a lever on ageing and on age-related loss of function")
 N = 5

@@ -67,7 +67,7 @@ def model_queries(client, family: str, avoid, claim, card, as_of: Optional[str],
         variables.update({"claim_plain": f"a competing explanation of the hypothesis's result: {claim.subject.label} — "
                                          f"{claim.relation} — {claim.object.label}",
                           "intervention": claim.subject.label, "outcome": claim.object.label})
-    version = "v2" if variables["synonyms"] else "v1"        # v2: MeSH synonyms of the card's entities (code, docs/system/card.md)
+    version = "v2" if variables["synonyms"] else "v1"        # v2: MeSH synonyms of the card's entities (code, docs/method/card.md)
     value, _ = ask(client, role="search_queries", family=family, template="search_queries", version=version, variables=variables,
                    validate=lambda v: [] if isinstance(v.get("queries"), list) and v["queries"] else ['"queries" must be a non-empty list'],
                    rounds=2, avoid=avoid, log=log)

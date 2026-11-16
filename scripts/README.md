@@ -38,7 +38,7 @@ A script of a finished check stays: its spec names it as the calculation of its 
 | Script | What it does |
 |---|---|
 | [`bench_card`](card/bench_card.py) | Card benchmark (specs/card/benchmark-card-2026-11-12.yaml) on Argon pack 17: 60 texts, the card gold. |
-| [`bench_card_v2`](card/bench_card_v2.py) | Card benchmark against the gold under the link definitions of docs/system/card.md (card_gold_v2): Argon packs 19 (30 texts not from a registry) and 20 (the 60 texts of pack 17 labelled again). specs/card/benchmark-card-2026-11-12.yaml. |
+| [`bench_card_v2`](card/bench_card_v2.py) | Card benchmark against the gold under the link definitions of docs/method/card.md (card_gold_v2): Argon packs 19 (30 texts not from a registry) and 20 (the 60 texts of pack 17 labelled again). specs/card/benchmark-card-2026-11-12.yaml. |
 | [`link_ontology_check`](card/link_ontology_check.py) | Can an ontology set the link type better than the model? A free check on Argon pack 17 (PubMed E-utilities only). |
 | [`merge_steps`](card/merge_steps.py) | Free: the evidence balance with every step before the outcome as one place (by the weakest step with data, or by the mean), against the current places (specs/card/merge-steps-2026-11-14.yaml). Same references as ... |
 | [`normalizer_acceptance`](card/normalizer_acceptance.py) | L1.18: can a cheaper normalizer replace Gemini 3.5 Flash with hidden reasoning (specs/card/normalizer-acceptance-2026-10-30.yaml)? |
@@ -124,7 +124,7 @@ A script of a finished check stays: its spec names it as the calculation of its 
 | Script | What it does |
 |---|---|
 | [`evolution_check`](evolution/evolution_check.py) | Free: the evolution rules (manual section 11) and the hypothesis / experiment decomposition on saved evolution pairs. |
-| [`generation_compare`](evolution/generation_compare.py) | Level 4 of the checks: generation compared (specs/evolution/generation-comparison-2026-11-14.yaml, manual docs/system/generation-arena.md). The hypotheses of the arms (A: an outside model in a chat; B: the same model by the manual; C: B ... |
+| [`generation_compare`](evolution/generation_compare.py) | Level 4 of the checks: generation compared (specs/evolution/generation-comparison-2026-11-14.yaml, manual docs/validation/generation-arena.md). The hypotheses of the arms (A: an outside model in a chat; B: the same model by the manual; C: B ... |
 
 ## [`whole_system/`](whole_system/) — Checks of the whole system against outcomes: calibration, benchmark runs, frozen forecasts, ITP backtests, baselines
 
@@ -139,7 +139,7 @@ A script of a finished check stays: its spec names it as the calculation of its 
 | [`pairwise_calibration`](whole_system/pairwise_calibration.py) | L3.11: calibration of the pairwise probabilities P(A>B) of the profile evidence_first against the ITP 2010 labels. |
 | [`prospective`](whole_system/prospective.py) | The prospective pool: ongoing trials scored before their outcomes exist (the start of the living arena, method-v3.md section 10). |
 | [`trace_page`](whole_system/trace_page.py) | Build a step-by-step page (Russian) from a recorded run: every graph node in order, what it does, which code and prompt template run, every model and search call with its full prompt and reply, and what the node produced. |
-| [`validation_table`](whole_system/validation_table.py) | Render specs/whole-system/validation-criteria.yaml into docs/validation-criteria.md (summary, one table per level, the criteria below). |
+| [`validation_table`](whole_system/validation_table.py) | Render specs/whole-system/validation-criteria.yaml into docs/validation/validation-criteria.md (summary, one table per level, the criteria below). |
 
 ## [`argon/`](argon/) — Tasks for the outside reader (Argon): building packs 5-24 and analysing the answers
 
@@ -156,10 +156,10 @@ A script of a finished check stays: its spec names it as the calculation of its 
 | [`pack12_meta_nulls`](argon/pack12_meta_nulls.py) | Argon pack 12: meta-analyses read as for, RCTs read as against (specs/reading/meta-and-nulls-2026-11-09.yaml). Free. |
 | [`pack13_claim_results`](argon/pack13_claim_results.py) | Argon pack 13 (user choice 2026-11-09, variant V): every record the claim-vs-results check changed or proposed to change. Private output only (longevity-kg), it quotes papers. |
 | [`pack16_reading`](argon/pack16_reading.py) | Argon pack 16: one full reading gold per (link, paper) for the reading benchmark (specs/reading/benchmark-reading-2026-11-12.yaml). Free, deterministic (hash order, no model call). Writes the task in two parts and the hidden key to the ... |
-| [`pack17_card`](argon/pack17_card.py) | Argon pack 17: the card gold (docs/benchmarks/README.md, stage 2; specs/card/mechanism-chain-comparison-2026-11-11.yaml texts). Free, deterministic (hash order), no model call. Writes the task in two parts and the hidden key to the ... |
-| [`pack18_search`](argon/pack18_search.py) | Argon pack 18: the search gold (docs/benchmarks/README.md, stages 3 and 6). Free, deterministic, no model call. |
-| [`pack19_card`](argon/pack19_card.py) | Argon pack 19: the card gold on texts that are not registry trials (docs/benchmarks/README.md, stage 2). Free, deterministic (hash order), no model call. Writes the task and the hidden key to the private repository. |
-| [`pack20_relabel`](argon/pack20_relabel.py) | Argon pack 20: the 60 texts of pack 17 labelled again under the link-type definitions of docs/system/card.md (card_gold_v2, the same instructions as pack 19 plus the rules for registry texts). Free, deterministic, no model call. |
+| [`pack17_card`](argon/pack17_card.py) | Argon pack 17: the card gold (docs/validation/benchmarks/README.md, stage 2; specs/card/mechanism-chain-comparison-2026-11-11.yaml texts). Free, deterministic (hash order), no model call. Writes the task in two parts and the hidden key to the ... |
+| [`pack18_search`](argon/pack18_search.py) | Argon pack 18: the search gold (docs/validation/benchmarks/README.md, stages 3 and 6). Free, deterministic, no model call. |
+| [`pack19_card`](argon/pack19_card.py) | Argon pack 19: the card gold on texts that are not registry trials (docs/validation/benchmarks/README.md, stage 2). Free, deterministic (hash order), no model call. Writes the task and the hidden key to the private repository. |
+| [`pack20_relabel`](argon/pack20_relabel.py) | Argon pack 20: the 60 texts of pack 17 labelled again under the link-type definitions of docs/method/card.md (card_gold_v2, the same instructions as pack 19 plus the rules for registry texts). Free, deterministic, no model call. |
 | [`pack21_pmid_fix`](argon/pack21_pmid_fix.py) | Argon pack 21: the right PMIDs for the papers of the search gold (pack 18) whose number points to another paper. Free, deterministic, no model call. |
 | [`pack22_score`](argon/pack22_score.py) | Argon pack 22 scored: our proposed alternatives and a plain-LLM baseline against Argon's gold (coverage, precision, design verdict; specs/alternatives/benchmark-alternatives-2026-11-14.yaml). The judge and the baseline are paid. |
 | [`design_rule`](alternatives/design_rule.py) | Methodological alternatives judged by design: kinds by words, a code verdict from the registry design fields, against the outside reader on packs 22 and 6 (specs/alternatives/design-rule-2026-11-16.yaml). Free. |

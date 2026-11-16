@@ -4,7 +4,7 @@
 
 RUN.json is a saved v3 result (a pipeline run, or a calibration run file {unit: run}). The report is built by code from the
 card, the verification records and the v3 rules, with no model call, so it is free and reproducible; its sections follow the
-template of docs/method-v3-manual.md (section 9), so that a report a model writes from the manual can be compared with it.
+template of docs/method/manual.md (section 9), so that a report a model writes from the manual can be compared with it.
 Reports on private hypotheses belong in a private repository (default: $KG_DIR/hypothesis_sources/analysis), never in this one.
 """
 from __future__ import annotations

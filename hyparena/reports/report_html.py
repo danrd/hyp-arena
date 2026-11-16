@@ -1002,7 +1002,7 @@ def render(rep: dict) -> str:
         "опровержения</b> — единственный фильтр: звено опровергнуто, если против него есть РКИ или метаанализ в той же "
         "популяции и нет столь же сильных данных «за».</p><p><b>Альтернатива</b> — конкурирующее объяснение того же результата; "
         "учитывается, только если у неё есть поддержка в литературе.</p><p>Подробно: мануал метода "
-        "<code>docs/method-v3-manual.md</code>.</p>",
+        "<code>docs/method/manual.md</code>.</p>",
         "<p><b>Record</b>: a finding of one paper on one link: verbatim quote, design (from a cell study to an RCT), sample "
         "size, effect size, comparison (between groups, before/after), match of conditions. Its weight is the product of these "
         "factors; one large RCT with a large effect weighs 1.</p><p><b>Link strength S</b>: the mean of a Beta distribution "
@@ -1010,7 +1010,7 @@ def render(rep: dict) -> str:
         "balance (but with a narrow interval). Several records of one paper or one trial count as one source.</p><p><b>Gate</b>, "
         "the only filter: a link is refuted when an RCT or meta-analysis in the same population is against it and nothing as "
         "strong is for it.</p><p><b>Alternative</b>: a competing explanation of the same result; it counts only with support in "
-        "the literature.</p><p>In full: the method manual <code>docs/method-v3-manual.md</code>.</p>") + '</div></details>')
+        "the literature.</p><p>In full: the method manual <code>docs/method/manual.md</code>.</p>") + '</div></details>')
     out.append('<details><summary><b>' + t("В. Происхождение и ограничения","C. Provenance and limitations") + '</b></summary><div class="body prose"><ul>' +
                "".join(f'<li>{li}</li>' for li in [
                    t(f"Дата оценки {e(m['date'])}; литература — до этой даты.", f"Scored on {e(m['date'])}; literature up to that date."),

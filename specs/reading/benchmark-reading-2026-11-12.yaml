@@ -2,7 +2,7 @@ id: benchmark-reading-2026-11-12
 written_on: 2026-11-12
 status: definitions fixed before Argon labels pack 16 and before any model call
 why: >-
-  Leadership (2026-11-12): a full benchmark for every stage, gold by Argon. Reading is first (docs/benchmarks/README.md).
+  Leadership (2026-11-12): a full benchmark for every stage, gold by Argon. Reading is first (docs/validation/benchmarks/README.md).
   Pack 9 has only 21 own findings in 200 pairs, so recall 0.52 has a 95% interval of about +-0.2; the user chose one full
   Argon pack instead of pieces (2026-11-12).
 sets:

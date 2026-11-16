@@ -23,7 +23,7 @@ import yaml
 
 PRICES = Path(__file__).resolve().parents[2] / "configs" / "prices.yaml"
 
-# stage of the method (docs/system/flow_base.png) by the template, else by the role of the call
+# stage of the method (docs/method/schemes/flow_base.png) by the template, else by the role of the call
 STAGE_BY_TEMPLATE = {"normalize_card": "card", "normalize": "card", "card_baseline": "card (baseline)",
                      "search_queries": "search", "verify_claim": "reading", "relevance_check": "reading",
                      "reading_baseline": "reading (baseline)", "estimand": "endpoint", "judge_alternatives": "alternatives",

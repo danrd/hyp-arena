@@ -67,7 +67,7 @@ prompt_fix:
 part_2_non_registry:   # 2026-11-13
   why: "the hypothesis database is mostly not registry trials (Bio Arena 985, ChatGPT 27 - in Russian); pack 17 had 20 such texts, all scored with registry-style definitions"
   set: "Argon pack 19: 30 texts not in pack 17 - Bio Arena 12 (at most 3 per author), ChatGPT 10, our evolved versions 8; holdout 9 (scripts/argon/pack19_card.py; longevity-kg reviews/argon-2026-11-13/)"
-  gold: "card_gold_v2: hypothesis kind and main factor, topic, population with condition and age as stated, outcomes first (one measure each), intervention chain vs premises about the problem (population state, problem mechanism), link types as in docs/system/card.md, test manipulations in the experiment arms, labels in English"
+  gold: "card_gold_v2: hypothesis kind and main factor, topic, population with condition and age as stated, outcomes first (one measure each), intervention chain vs premises about the problem (population state, problem mechanism), link types as in docs/method/card.md, test manipulations in the experiment arms, labels in English"
   measures: "as part 1 (claims one-to-one and many-to-one, link kappa) plus: main factor right, chain / premise agreement, outcome agreement, population condition found"
   status: "gold received 2026-11-13 (30 texts, 134 claims, all phrases verbatim); scored after the next normaliser template"
 link_ontology_check_2026_11_13:   # scripts/card/link_ontology_check.py (free, PubMed term mapping and MeSH trees); longevity-kg reviews/argon-2026-11-12/link_ontology_check.json

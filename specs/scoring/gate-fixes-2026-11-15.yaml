@@ -37,4 +37,4 @@ adoption_2026_11_15:
   adopted: "G2a: the counterweight in the exact context or of the same class of intervention, not an adjacent population (rules_v3.GATE_SUPPORT_CONTEXTS)"
   why_not_any_context: "with any context, tests/test_rules_v3.py::test_levothyroxine_restated_trial_triggers_the_gate fails: an RCT of 71 in another population with a small effect would cancel the TRUST null (n 737) in the claim's own population, a refutation the method should keep"
   references: "G2a gives the same as G2 on every reference (R3 0.602, AUC 0.674 / 0.692; the same trials lifted): in all three the counterweight is of context class"
-  manual: "docs/method-v3-manual.md section 6"
+  manual: "docs/method/manual.md section 6"

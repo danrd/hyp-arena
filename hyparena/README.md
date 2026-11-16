@@ -37,7 +37,7 @@ templates in [`templates/`](templates/). Run modules from the repository root, e
 
 | Module | What it does |
 |---|---|
-| [`cross_link`](reading/cross_link.py) | Cross-link reading: every claim of the hypothesis (outcome or step) also reads the papers the other searches of the hypothesis found, those the cheap relevance model rates 3, filled to 10 with 2s (docs/system/reading.md, section 3). |
+| [`cross_link`](reading/cross_link.py) | Cross-link reading: every claim of the hypothesis (outcome or step) also reads the papers the other searches of the hypothesis found, those the cheap relevance model rates 3, filled to 10 with 2s (docs/method/reading.md, section 3). |
 | [`effect_class`](reading/effect_class.py) | Effect class by code from the verbatim effect phrase (user decision 2026-11-04, option A; archive/docs/spec/method-v3.md, section 2). |
 | [`review_kind`](reading/review_kind.py) | Review kind and meta-analysis certainty by code (user decision 2026-11-11, H49 walkthrough stage 5). |
 | [`sources`](reading/sources.py) | Curated evidence for lifespan claims from DrugAge (HAGR, CC BY 3.0): deterministic, no LLM. One record per publication and species for the claim's compound: supporting if any row of that paper ... |
@@ -79,7 +79,7 @@ templates in [`templates/`](templates/). Run modules from the repository root, e
 
 | Module | What it does |
 |---|---|
-| [`evolution_rules`](evolution/evolution_rules.py) | Code checks of the rules every improved version keeps (method-v3-manual.md section 11, user decision 2026-11-09), and the decomposition of a version's score change into the hypothesis part and the ... |
+| [`evolution_rules`](evolution/evolution_rules.py) | Code checks of the rules every improved version keeps (docs/method/manual.md section 11, user decision 2026-11-09), and the decomposition of a version's score change into the hypothesis part and the ... |
 | [`evolve`](evolution/evolve.py) | Evidence-guided evolution of hypotheses over method v2. Parents are the top-ranked hypotheses of a saved v2 result; a child is a refinement driven by what the verification found (narrow to a ... |
 | [`evolve_v3`](evolution/evolve_v3.py) | Evolution under method v3.3: apply the improvement list of chosen hypotheses (hyparena/evolution/improvements.py) and score the result the same way (user decision 2026-11-06: the analysis names ... |
 | [`improvements`](evolution/improvements.py) | The list of improvements of one hypothesis, computed by code from its v3.3 analysis (user decision 2026-11-06: the analysis names the places to improve explicitly; evolution applies them, nothing ... |

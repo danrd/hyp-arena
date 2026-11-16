@@ -1,4 +1,4 @@
-"""Render specs/whole-system/validation-criteria.yaml into docs/validation-criteria.md (summary, one table per level, the criteria below).
+"""Render specs/whole-system/validation-criteria.yaml into docs/validation/validation-criteria.md (summary, one table per level, the criteria below).
 
     python -m scripts.whole_system.validation_table            # write the file
     python -m scripts.whole_system.validation_table --check    # exit 1 if the file is out of date"""
@@ -11,7 +11,7 @@ from pathlib import Path
 
 import yaml
 
-SRC, OUT = Path("specs/whole-system/validation-criteria.yaml"), Path("docs/validation-criteria.md")
+SRC, OUT = Path("specs/whole-system/validation-criteria.yaml"), Path("docs/validation/validation-criteria.md")
 STATUS = ("pass", "formal", "fail", "inconclusive", "uninformative", "not_run", "blocked", "not_applied")
 STATUS_RU = {"pass": "пройдено", "formal": "выполнено формально", "fail": "не пройдено", "inconclusive": "не доказано",
              "uninformative": "неинформативно", "not_run": "не проводилось", "blocked": "заблокировано",
@@ -76,7 +76,7 @@ def render(spec: dict) -> str:
            "",
            "> **Статус на 2026-11-06.** Критерии ниже писались для v2. Проверки v3 (эталоны извлечения, калибровка, свежая выборка, "
            "проспективный пул) — каждая в своём файле `specs/` с критерием до прогона; сводка — в "
-           "[`method-v3-manual.md`](method-v3-manual.md), раздел 11.",
+           "[`docs/method/manual.md`](../method/manual.md), раздел 11.",
            "",
            f"Источник: `specs/whole-system/validation-criteria.yaml` (версия {spec['version']}, {spec['declared_on']}). Этот файл генерируется "
            "(`python -m scripts.whole_system.validation_table`), руками не правится.",

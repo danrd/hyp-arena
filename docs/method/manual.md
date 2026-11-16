@@ -2,13 +2,13 @@
 
 This manual describes the current rules of the method (version **v3.11**) as one self-contained text: a reader, a model or
 an outside reviewer can score a hypothesis and read its report from it alone. Each stage has its own detailed manual in
-[`docs/system/`](system/) ([the card](system/card.md), [the search](system/search.md), [the reading](system/reading.md), [from a record to the evidence balance](system/evidence.md), [novelty](system/novelty.md), [indicators and ranking](system/ranking.md), [experiment and alternatives](system/alternatives.md), [improvements and versions](system/versions.md)); this manual is their compressed aggregate. How the rules
-came to be what they are, with the checks behind each change, is in the [change log](system/changelog.md), not here.
+[`docs/method/`](./) ([the card](card.md), [the search](search.md), [the reading](reading.md), [from a record to the evidence balance](evidence.md), [novelty](novelty.md), [indicators and ranking](ranking.md), [experiment and alternatives](alternatives.md), [improvements and versions](versions.md)); this manual is their compressed aggregate. How the rules
+came to be what they are, with the checks behind each change, is in the [change log](changelog.md), not here.
 
-Where the code is: rules [`hyparena/scoring/rules_v32.py`](../hyparena/scoring/rules_v32.py), novelty
-[`hyparena/novelty/novelty_v34.py`](../hyparena/novelty/novelty_v34.py), ranking [`hyparena/scoring/aspid_v3.py`](../hyparena/scoring/aspid_v3.py)
-with the profiles in [`configs/profiles_v3.yaml`](../configs/profiles_v3.yaml). The constants (section 14), the worked example
-(section 13) and the names table (section 10a) are checked against the code by [`tests/test_manual.py`](../tests/test_manual.py):
+Where the code is: rules [`hyparena/scoring/rules_v32.py`](../../hyparena/scoring/rules_v32.py), novelty
+[`hyparena/novelty/novelty_v34.py`](../../hyparena/novelty/novelty_v34.py), ranking [`hyparena/scoring/aspid_v3.py`](../../hyparena/scoring/aspid_v3.py)
+with the profiles in [`configs/profiles_v3.yaml`](../../configs/profiles_v3.yaml). The constants (section 14), the worked example
+(section 13) and the names table (section 10a) are checked against the code by [`tests/test_manual.py`](../../tests/test_manual.py):
 when the code changes, the test fails until this manual is updated.
 
 **Letters and terms used throughout.**
@@ -16,7 +16,7 @@ when the code changes, the test fails until this manual is updated.
 | Letter or term | Meaning |
 |---|---|
 | T | the cut-off date: only papers public on or before T count |
-| card | the hypothesis split into checkable parts (section 3, [card manual](system/card.md)) |
+| card | the hypothesis split into checkable parts (section 3, [card manual](card.md)) |
 | link | the place of a claim on the way from the intervention to the outcome: delivery, engagement, pathway, effect, outcome |
 | record | one finding of one paper on one claim, with a verbatim quote (section 4) |
 | w | the weight of a record (section 5) |
@@ -104,15 +104,15 @@ asked. Validation status is in section 12.
   summary, description, design (allocation, model, masking and who is masked, purpose), arms with their type and
   description, the planned enrollment (only while the registry gives it as planned: an actual count is written after
   recruitment and would carry information from after T), primary outcomes. The text builder is
-  [`scripts/whole_system/benchmark_run.py`](../scripts/whole_system/benchmark_run.py) (`build_texts`); the lines and what each becomes in the card are
-  listed in the [card manual](system/card.md#4-как-поля-реестра-попадают-в-карточку).
+  [`../../scripts/whole_system/benchmark_run.py`](../../scripts/whole_system/benchmark_run.py) (`build_texts`); the lines and what each becomes in the card are
+  listed in the [card manual](card.md#4-как-поля-реестра-попадают-в-карточку).
 
 ## 3. The card
 
 A model (the normaliser) turns the text into a **card**: the hypothesis split into parts that can be checked one by one.
 The card holds only what the text says; everything found later (papers, weights, alternatives, scores) is kept apart.
 The detailed rules, every field with its origin and what reads it, and a worked example are in the
-[card manual](system/card.md). Template `normalize_card/v17` (config `normalize_version`). In short:
+[card manual](card.md). Template `normalize_card/v17` (config `normalize_version`). In short:
 
 - **Core (the hypothesis itself):** population; interventions; background (what every group receives alike, which is not
   the intervention); the hypothesis's outcome and direction; the expected effect when the text names one; and the
@@ -171,7 +171,7 @@ The detailed rules, every field with its origin and what reads it, and a worked 
 
 A reader model (template `verify_claim/v21`, in batches of 10 abstracts) reads each abstract found for a claim and returns
 records; an outcome or a step also reads, by the cross-link reading, the papers the hypothesis's other searches found
-(mostly its alternatives'), those the cheap relevance model rates 3 for it, filled up to 10 with those rated 2. The search (`search: filtered`; stage manual [`docs/system/search.md`](system/search.md)): the queries a
+(mostly its alternatives'), those the cheap relevance model rates 3 for it, filled up to 10 with those rated 2. The search (`search: filtered`; stage manual [`docs/method/search.md`](search.md)): the queries a
 model writes and a query on the exact population, up to 200 PubMed papers each, date-cut at T; ordered by the match of the
 query words with title and abstract (BM25); the references and citing papers of the first 5 added (also before T) and the
 list ordered again; a cheap model rates the first 100 from 0 to 3 for the claim; every paper rated 3 is read, filled up to
@@ -337,7 +337,7 @@ text without one of them is returned as "needs refinement" with the missing part
 - **Coverage**: the share of the chain's places with at least one counting record. It says how much is known; the balance
   says how strong it is. The report shows it under the balance ("покрыто 3 из 4") and the chain with its empty links.
 - **Non-refutation P** and the **support share** are still computed by the code for older reports but are in no profile;
-  definitions in [`archive/method-history.md`](../archive/docs/method-history.md).
+  definitions in [`archive/method-history.md`](../../archive/docs/method-history.md).
 - **Scope W**, from supported links only: a hallmark of ageing (needs a link at least moderate), an organ or system, else
   local. A scope that is claimed but not supported counts as local. A hallmark is the link's own object (a measured hallmark
   process: senescent cells, proteostasis markers, mitochondrial function), not something inferred from the kind of
@@ -373,13 +373,13 @@ text without one of them is returned as "needs refinement" with the missing part
   matched for attention rules out "any attention helps"); d = 0.5 when the experiment only measures the variable the
   alternative depends on, without an arm that separates them; d = 0 otherwise. A design label alone ("factorial 2×2",
   "double-blind") gives nothing until each alternative is named with the arm and the result that would rule it out. d is
-  judged by a model (prompt `judge_alternatives/v2`, [`hyparena/alternatives/alternatives_d.py`](../hyparena/alternatives/alternatives_d.py))
+  judged by a model (prompt `judge_alternatives/v2`, [`hyparena/alternatives/alternatives_d.py`](../../hyparena/alternatives/alternatives_d.py))
   from the registry text current at T (for a retrospective trial, the version registered before T), never from the trial's
   publications or other texts after T, writing what the hypothesis and the alternative predict for each named arm, with the
   separating phrase copied verbatim (a "cuts off" without one becomes "weakens").
 - **Headroom I** = I if the experiment cut off every supported alternative and every threat of the checklist (d = 1, k = 1): what improving the experiment could add;
   an input of the room to improve (section 11).
-- **Novelty N** ([`novelty_v34.novelty`](../hyparena/novelty/novelty_v34.py)): the distance of the hypothesis to what was already
+- **Novelty N** ([`novelty_v34.novelty`](../../hyparena/novelty/novelty_v34.py)): the distance of the hypothesis to what was already
   asked before T, from the usable records on either side (a question already asked is not new, whatever the answer). It is
   measured on the main factor's effect: when the subject of every outcome claim of the card is a later step of the chain
   (the object of an earlier step, sharing no word with the main factor: "SARM1 destroys axons" after "the loss of NMNAT2
@@ -415,7 +415,7 @@ not depend on the rest of the pool. An unknown value is drawn over its whole ran
 |---|---|---|
 | I | informativeness of the stated experiment (headroom I, of an improved one, feeds the room to improve, section 11) | linear, 0-1 |
 | W | scope of the mechanism | local < organ < hallmark |
-| feasibility | the mean of the known parts (an unknown part is left out): system (data analysis and cells 1, yeast 0.9, worm and fly 0.85, mouse and rat 0.5, human 0), duration (weeks 1, months 2/3, years 1/3, decades 0), planned n (under 50: 1, under 200: 2/3, under 1000: 1/3, more: 0), readiness of the intervention (approved or not a compound 1, in trials 0.5, neither 0); [`v3_extra.feasibility`](../hyparena/scoring/v3_extra.py) | 0-1; does not yet count arms or invasive measures (section 11, rule 7) |
+| feasibility | the mean of the known parts (an unknown part is left out): system (data analysis and cells 1, yeast 0.9, worm and fly 0.85, mouse and rat 0.5, human 0), duration (weeks 1, months 2/3, years 1/3, decades 0), planned n (under 50: 1, under 200: 2/3, under 1000: 1/3, more: 0), readiness of the intervention (approved or not a compound 1, in trials 0.5, neither 0); [`v3_extra.feasibility`](../../hyparena/scoring/v3_extra.py) | 0-1; does not yet count arms or invasive measures (section 11, rule 7) |
 | best_design_outcome | best design among the records of the outcome link | cells … RCT |
 | independent_outcome | independent sources for the outcome link | 0-5 |
 | against_share | share of the chain's weight against (in no profile) | 0-1, lower better |
@@ -426,7 +426,7 @@ not depend on the rest of the pool. An unknown value is drawn over its whole ran
 | N | novelty (section 7) | new context < translation < analog < new mechanism of a known effect < new combination < new link |
 | leverage, W_potential, literature_density | defined in code, not admitted (rule below) | |
 
-Profiles ([`configs/profiles_v3.yaml`](../configs/profiles_v3.yaml)). The number is the rank of importance (1 = most
+Profiles ([`configs/profiles_v3.yaml`](../../configs/profiles_v3.yaml)). The number is the rank of importance (1 = most
 important; a "tier" in the code); within a rank the indicators are equal and ASPID draws their weights under the order;
 "—" = not in the profile. The same table is in the report's help (built from the config).
 
@@ -490,7 +490,7 @@ codes, module names, prompt versions, method tags in titles) are never shown; na
 (non-refutation P, support share, share against), no notes of the writer's own on records or rules.
 
 **Pool report** (`python -m hyparena.reports.report_v2 prospective --n 60` → `report_<n>_v2.html`; data shaped by
-[`hyparena/reports/report_v2.py`](../hyparena/reports/report_v2.py), page [`hyparena/templates/pool_report_v2.html`](../hyparena/templates/pool_report_v2.html)).
+[`hyparena/reports/report_v2.py`](../../hyparena/reports/report_v2.py), page [`hyparena/templates/pool_report_v2.html`](../../hyparena/templates/pool_report_v2.html)).
 A header band (pool title, cut-off date, how many scored; fixed at the top on a wide screen only) and five tabs, in this
 order. **Width:** the page uses the width of the screen: the header band and the content sit in one container
 `max-w-[1600px] w-full mx-auto` (Tailwind; not `max-w-7xl` or narrower), wide tables scroll sideways inside their own block,
@@ -498,7 +498,7 @@ never the page; text blocks inside may stay narrower for reading. A report writt
 container.
 
 **Short ids.** Every hypothesis has a short id kept in the hypothesis database (`longevity-kg/hypothesis_db/short_ids.jsonl`,
-[`hyparena/short_ids.py`](../hyparena/short_ids.py)): one numbering for every pool and source, with a leading zero (H01 … H99,
+[`hyparena/short_ids.py`](../../hyparena/short_ids.py)): one numbering for every pool and source, with a leading zero (H01 … H99,
 H100 …), given once in the order hypotheses enter the database and never renumbered (the prospective 60 are H01-H60, the
 calibration 74 H61-H134). A version adds the letter of its mode to its parent's id (д tuned, п tuned for a profile, с free evolution, н directed
 evolution written before tuning by profile took its target: H49д), and a number from the second version of the same mode on (H49д2). The report reads the ids from the
@@ -569,7 +569,7 @@ and is searchable. An outside report uses the same ids.
      ASPID** (the table of ranks per profile, each profile's order, ASPID explained plainly and then formally: scales,
      weights, the draw, the score, place and top-5); **improvements and versions** (term, meaning); **provenance** (cut-off
      date, method version, scores hash); **a glossary** of every parameter shown. Limits and validation status are not in the
-     report's help; they are in this manual (section 12) and in [`docs/system/`](system/).
+     report's help; they are in this manual (section 12) and in [`docs/method/`](./).
 
 Every column header, chip and number has a hover note. Colours carry meaning only for direction (green for, red against),
 for warnings (amber) and for the two parts of a triple.
@@ -599,11 +599,11 @@ follows it, so that two reports of the same pool can be compared:
   novelty, the experiment with scope and feasibility, the profiles with the ranks of importance and ASPID, improvements and
   versions, provenance, a glossary of every parameter shown). A part may be short, but none is left out, and the numbers in
   it are this manual's (section 14). Short ids, triples and the separation of text and numbers follow section 10.
-- **Check**: an outside report is read against this table and list before its content is compared with the code report; code does it ([`scripts/argon/report_check.py`](../scripts/argon/report_check.py): tabs, the help sections as tables, the reading rules, the scheme's steps 0-11 with "Как реализовано" and no formulas, the card fields, the mechanism as triples, no bare codes), printing names and counts only. The code report passes every item.
+- **Check**: an outside report is read against this table and list before its content is compared with the code report; code does it ([`scripts/argon/report_check.py`](../../scripts/argon/report_check.py): tabs, the help sections as tables, the reading rules, the scheme's steps 0-11 with "Как реализовано" and no formulas, the card fields, the mechanism as triples, no bare codes), printing names and counts only. The code report passes every item.
 
-The table is the code's own ([`hyparena/reports/report_html.py`](../hyparena/reports/report_html.py) IND_NAMES, LINK_NAMES, NOVELTY_NAMES,
-DESIGN_NAMES, DISC; [`hyparena/reports/report_v2.py`](../hyparena/reports/report_v2.py) FLAG_NAMES, PROFILE_LABEL);
-[`tests/test_manual.py`](../tests/test_manual.py) checks that every entry is here.
+The table is the code's own ([`hyparena/reports/report_html.py`](../../hyparena/reports/report_html.py) IND_NAMES, LINK_NAMES, NOVELTY_NAMES,
+DESIGN_NAMES, DISC; [`hyparena/reports/report_v2.py`](../../hyparena/reports/report_v2.py) FLAG_NAMES, PROFILE_LABEL);
+[`tests/test_manual.py`](../../tests/test_manual.py) checks that every entry is here.
 
 | Kind | Code | Russian | English |
 |---|---|---|---|
@@ -659,7 +659,7 @@ DESIGN_NAMES, DISC; [`hyparena/reports/report_v2.py`](../hyparena/reports/report
 
 ## 11. Improvements and evolution
 
-**The improvement list** ([`hyparena/evolution/improvements.py`](../hyparena/evolution/improvements.py)) is computed by code from the
+**The improvement list** ([`hyparena/evolution/improvements.py`](../../hyparena/evolution/improvements.py)) is computed by code from the
 analysis of each hypothesis and shown in its report ("What would raise it"). Each item says what to do, which link or
 alternative it concerns, the facts it rests on (PMID and quote) and its expected effect: the indicators before and after and
 the score under each profile before and after, computed by the same rules with the item done (fixed scales, so the expected
@@ -688,7 +688,7 @@ alternatives.
 (`python -m hyparena.evolution.evolve_v3 --top 10 --profile frontier --dry` prints the choice free; without `--dry` and with
 `ALLOW_PAID=1` it runs the evolution). The room of every hypothesis of the prospective pool is in its report.
 
-**Evolution** ([`hyparena/evolution/evolve_v3.py`](../hyparena/evolution/evolve_v3.py), on request) improves chosen hypotheses and scores
+**Evolution** ([`hyparena/evolution/evolve_v3.py`](../../hyparena/evolution/evolve_v3.py), on request) improves chosen hypotheses and scores
 the improved versions the same way as every hypothesis. A tuned version is the same hypothesis with its fixable defects
 repaired; a free version may be another hypothesis.
 
@@ -697,7 +697,7 @@ repaired; a free version may be another hypothesis.
 | tune (доработка), `--mode tune` | repair the "fixable by rewriting" items | only what the items say, from their facts; the parent's new parts (links at "analog" or "new link") must stay | **constraint**: a version that moved towards the known (`novelty_v34.drift`) goes back to the writer with the reason, once; if it still drifts it is kept with the flag and "constraint not kept" | the whole pipeline again on the new text, parent's cut-off | "tuned version" | implemented (prompt `evolve_v3/v2`) |
 | tuning by profile (доработка по профилю), `--mode profile --profile P` | repair the fixable items that raise the score under P most | as tuning, but only the "fixable by rewriting" items whose expected score under P rises, the largest gain first, at most 3 (an item whose effect cannot be computed in advance is not chosen); under "frontier" the writer also adds exactly one new step between two supported neighbours (the target of directed evolution) and names it | **constraint**, as tuning | as tuning | "tuned for a profile" (letter п) | implemented (prompt `evolve_v3/v3`); the target checks of the frontier step (PubMed absence count) are those of directed evolution, not yet computed |
 | free (свободная эволюция), `--mode free [--profile P] --writer F` | get the best hypothesis for the profile P or, without a profile, a better hypothesis overall (better supported, an experiment that tells it from its alternatives, new, feasible, important) | everything (claim, mechanism, population, outcome, experiment); the writer is told the profile's order and whether novelty comes first (when a profile is named); it names the papers it relies on | **flag only**: a move towards the known is shown, not forbidden | the whole pipeline again; the papers it named count only if the reader finds them with a verbatim quote before the cut-off (named / found are reported); distance from the parent = 1 − Jaccard of content words; above 0.7 the version is marked "new hypothesis after" the parent | "free evolution" (+ "new hypothesis after") | implemented (prompt `evolve_free/v2`; v1 always needed a profile); for current pools only (the writer knows literature past the cut-off) |
-| directed (направленная эволюция) | reach the target of a profile; first frontier: one new link — now the frontier case of tuning by profile | keep the intervention and every supported link; add exactly one new link between supported neighbours, with an experiment that tests it | **target**: N not lower and, when the outcome has records, at least "new mechanism of a known effect", one link at "new link", no drift, and a PubMed count of the new link's subject and object before T under a threshold (guard against reader misses) | the whole pipeline again, parent's cut-off; failed checks go back to the writer once, then kept with "target not reached" | "directed evolution (frontier)" | specified ([`specs/evolution/directed-evolution-2026-11-09.yaml`](../specs/evolution/directed-evolution-2026-11-09.yaml)), not implemented |
+| directed (направленная эволюция) | reach the target of a profile; first frontier: one new link — now the frontier case of tuning by profile | keep the intervention and every supported link; add exactly one new link between supported neighbours, with an experiment that tests it | **target**: N not lower and, when the outcome has records, at least "new mechanism of a known effect", one link at "new link", no drift, and a PubMed count of the new link's subject and object before T under a threshold (guard against reader misses) | the whole pipeline again, parent's cut-off; failed checks go back to the writer once, then kept with "target not reached" | "directed evolution (frontier)" | specified ([`specs/evolution/directed-evolution-2026-11-09.yaml`](../../specs/evolution/directed-evolution-2026-11-09.yaml)), not implemented |
 | controlled | test whether the list predicts the gain | one item at a time | — | the parent's card, records and alternatives are kept; only what the item changes is re-checked | — | planned |
 
 Every mode reports, next to the drift flag, the **share of links with support before the cut-off**, parent → child: a version
@@ -706,7 +706,7 @@ Tuning costs about 21 calls per improved hypothesis, up to twice that with a ret
 writer named by `--writer`.
 
 **Rules every improved version keeps (all modes).** They are part of the method, not advice: the code checks them
-([`hyparena/evolution/evolution_rules.py`](../hyparena/evolution/evolution_rules.py)), and a model or outside reader that evolves a
+([`hyparena/evolution/evolution_rules.py`](../../hyparena/evolution/evolution_rules.py)), and a model or outside reader that evolves a
 hypothesis from this manual (section 0) applies them the same way. A version that breaks one is shown with the broken rule,
 not scored as improved.
 
@@ -742,7 +742,7 @@ trial exists"), or the parent's new link is gone and the child has no new link. 
 their PubMed counts of new links, so a child that loses the parent's "new mechanism of a known effect" is flagged like any
 other fall of N. The child is never excluded: it stays in the ranking, and its lower novelty lowers its score where N is an
 indicator (funding, frontier). The flag is checked by hand-made drifted pairs, which must all be flagged, and controls, which
-must not ([`tests/test_v34.py`](../tests/test_v34.py), [`tests/test_new_mechanism.py`](../tests/test_new_mechanism.py)). The
+must not ([`tests/test_v34.py`](../../tests/test_v34.py), [`tests/test_new_mechanism.py`](../../tests/test_new_mechanism.py)). The
 improvement item "narrow the population" shows its expected change of novelty next to its gain.
 
 **The report section "Evolution"**: a table parent → improved version (evidence balance, I, scope, novelty with the flag, and
@@ -763,7 +763,7 @@ modes.
 
 ## 11a. Generation and the hypothesis database (specified, not implemented)
 
-**Generation** ([`specs/evolution/generation-2026-11-09.yaml`](../specs/evolution/generation-2026-11-09.yaml)) is a separate command,
+**Generation** ([`specs/evolution/generation-2026-11-09.yaml`](../../specs/evolution/generation-2026-11-09.yaml)) is a separate command,
 `python -m hyparena.card.generate --mode free|structured|profile --topic ... [--profile P] [--n K] [--writer F] [--as-of T]
 [--fields FILE] [--from-texts FILE] [--dry]`. It is evolution without a parent: after the text the pipeline is the same
 (card, search before T, reading, alternatives, endpoint, record weights, ASPID under every profile on fixed scales). The
@@ -777,13 +777,13 @@ number of hypotheses and the writer model are parameters; texts written in a cha
 | profile | as structured, plus the profile's order and what raises its top tiers | as structured, plus the profile's target: frontier = the checks of directed evolution (one new link between supported neighbours, PubMed absence count); funding = feasibility and a functional or clinical endpoint; evidence = known records on every link and an experiment that separates the supported alternatives |
 
 **Diversity** is controlled within a run and against the database: typed proximity of the cards (duplicate, variant,
-analog, competitor; [`hyparena/novelty/proximity.py`](../hyparena/novelty/proximity.py)) and text distance; a duplicate is rejected
+analog, competitor; [`hyparena/novelty/proximity.py`](../../hyparena/novelty/proximity.py)) and text distance; a duplicate is rejected
 and rewritten once, a duplicate of a database row is linked to it, not added. Each run reports the share of variant and
 analog pairs and the number of distinct interventions and outcomes. With T = today there is no outcome to test against: an
 outside check (novel before T, plausible, testable, on topic, best profile; its grouping against ours) is part of the mode.
 
-**Generation and evolution in a chat** (level 4 of the checks, [`docs/system/generation-arena.md`](system/generation-arena.md)).
-An outside model can run this manual itself: the task (built by [`scripts/argon/generation_tasks.py`](../scripts/argon/generation_tasks.py))
+**Generation and evolution in a chat** (level 4 of the checks, [`docs/validation/generation-arena.md`](../validation/generation-arena.md)).
+An outside model can run this manual itself: the task (built by [`scripts/argon/generation_tasks.py`](../../scripts/argon/generation_tasks.py))
 gives the topic, the date T, this manual and a JSON answer format. **Structured generation:** the model fills the card
 template of section 3 for each hypothesis (intervention, population, the mechanism as links before the outcome, the outcome,
 the decisive experiment with system, design, control, endpoint and duration) and writes the text from it (claim, rationale,
@@ -795,7 +795,7 @@ profile is named; the version is scored again from its own reading. Code then ch
 public before T and has the title given; every quote is verbatim in the abstract named; the card has an intervention, an
 outcome, at least one step and an experiment with system, design and endpoint.
 
-**The hypothesis database** ([`specs/data/hypothesis-db-2026-11-09.yaml`](../specs/data/hypothesis-db-2026-11-09.yaml)) holds every
+**The hypothesis database** ([`specs/data/hypothesis-db-2026-11-09.yaml`](../../specs/data/hypothesis-db-2026-11-09.yaml)) holds every
 hypothesis version from every source (registry trials, Bio Arena, other arenas and public sets, our generated and evolved
 ones), privately in `longevity-kg/hypothesis_db/`: text, source and terms, author kind (no names), the date written (T of its
 scoring), parent, outcome if known, the source's own scores apart from ours, our card, scores with method version and date,
@@ -806,12 +806,12 @@ the triage is in the database spec.
 
 ## 12. What the method does not do, its known limits and its validation status
 
-How the method is checked, by level (the system itself, against other approaches, overall quality against outcomes, generation): [`docs/system/testing.md`](system/testing.md). The whole method against trial outcomes (pools, labels, R2 and R3, the rule, the current results): [`docs/system/whole-system.md`](system/whole-system.md). Generation is compared with an LLM in a chat under [`specs/evolution/generation-comparison-2026-11-14.yaml`](../specs/evolution/generation-comparison-2026-11-14.yaml) ([manual](system/generation-arena.md)).
+How the method is checked, by level (the system itself, against other approaches, overall quality against outcomes, generation): [`docs/validation/testing.md`](../validation/testing.md). The whole method against trial outcomes (pools, labels, R2 and R3, the rule, the current results): [`docs/validation/whole-system.md`](../validation/whole-system.md). Generation is compared with an LLM in a chat under [`specs/evolution/generation-comparison-2026-11-14.yaml`](../../specs/evolution/generation-comparison-2026-11-14.yaml) ([manual](../validation/generation-arena.md)).
 
 - It does not predict whether a trial will succeed; trials are run where support exists but the question is open.
 - The search gives the reader about half of what a careful search must find before T (0.49 of the papers an outside reader
   lists for a trial; papers on the mechanism steps 0.27, none of them read)
-  ([`specs/search/benchmark-search-2026-11-12.yaml`](../specs/search/benchmark-search-2026-11-12.yaml)).
+  ([`specs/search/benchmark-search-2026-11-12.yaml`](../../specs/search/benchmark-search-2026-11-12.yaml)).
 - The reader finds about 0.6 of the findings an outside reader sees in the same abstracts, and 0.1 to 0.15 of its records
   are not confirmed by that reader (reading benchmark).
 - Abstracts by default; full texts only where a knowledge-graph row says so.
@@ -834,32 +834,32 @@ How the method is checked, by level (the system itself, against other approaches
 - The calibration texts are the current registry versions: 40 of the 74 calibration trials were first posted after their
   primary completion (T is then the completion date), and 3 texts state the outcome in the title or a results part (H86,
   H113, H96). Numbers that rest on a model reading these texts carry that leak
-  ([`specs/data/calibration-leak-2026-11-12.yaml`](../specs/data/calibration-leak-2026-11-12.yaml)).
+  ([`specs/data/calibration-leak-2026-11-12.yaml`](../../specs/data/calibration-leak-2026-11-12.yaml)).
 
-**Validation status.** Each line is a file in [`specs/`](../specs/) with its definitions written before the computation; the
-stage benchmarks are listed in the [benchmark registry](benchmarks/README.md). The references: **R2** — later RCTs and
+**Validation status.** Each line is a file in [`specs/`](../../specs/) with its definitions written before the computation; the
+stage benchmarks are listed in the [benchmark registry](../validation/benchmarks/README.md). The references: **R2** — later RCTs and
 meta-analyses of the same link, predicted from the records published before them; **R3** — the outcomes of trials with a
 known result (calibration pool); **R4** — the order of pairs of records given by an outside reader.
 
 | Step | Check | Result |
 |---|---|---|
-| card | an outside reader's card gold (definitions of the card manual), 90 texts | outcome / step / premise κ 0.67 (0.72 on the 60 registry and written-mechanism texts); main outcome 0.79; main factor 0.97; claims recall 0.57, precision 0.56 ([`specs/card/benchmark-card-2026-11-12.yaml`](../specs/card/benchmark-card-2026-11-12.yaml)) |
-| search | an outside reader's search gold, 30 calibration trials | the reader gets 0.49 [0.38, 0.60] of the gold papers, 0.32 on their own link, at a median of 52 papers per hypothesis; the closest prior work in 0.73 of trials ([`specs/search/benchmark-search-2026-11-12.yaml`](../specs/search/benchmark-search-2026-11-12.yaml)) |
-| reading | an outside reader's findings on 400 link-abstract pairs and on a fresh pack of 382; the search gold of 30 trials | reader v21: recall 0.59, precision 0.84 on the 400 pairs, 0.64 and 0.90 on the fresh 382 (v19: 0.58 / 0.83 and 0.62 / 0.75; v17: 0.55 / 0.79 and 0.57 / 0.73; mean of two runs; v16 0.57 / 0.79, v13 0.29-0.34 / 0.64, a plain LLM 0.28 / 0.41); with the cross-link reading 0.39 of the gold papers of a careful search become records (0.26 with reader v9); the AUC of the evidence balance on the 30 trials 0.58 (v16 0.71, v9 0.55; wide intervals) ([`specs/reading/benchmark-reading-2026-11-12.yaml`](../specs/reading/benchmark-reading-2026-11-12.yaml)) |
+| card | an outside reader's card gold (definitions of the card manual), 90 texts | outcome / step / premise κ 0.67 (0.72 on the 60 registry and written-mechanism texts); main outcome 0.79; main factor 0.97; claims recall 0.57, precision 0.56 ([`specs/card/benchmark-card-2026-11-12.yaml`](../../specs/card/benchmark-card-2026-11-12.yaml)) |
+| search | an outside reader's search gold, 30 calibration trials | the reader gets 0.49 [0.38, 0.60] of the gold papers, 0.32 on their own link, at a median of 52 papers per hypothesis; the closest prior work in 0.73 of trials ([`specs/search/benchmark-search-2026-11-12.yaml`](../../specs/search/benchmark-search-2026-11-12.yaml)) |
+| reading | an outside reader's findings on 400 link-abstract pairs and on a fresh pack of 382; the search gold of 30 trials | reader v21: recall 0.59, precision 0.84 on the 400 pairs, 0.64 and 0.90 on the fresh 382 (v19: 0.58 / 0.83 and 0.62 / 0.75; v17: 0.55 / 0.79 and 0.57 / 0.73; mean of two runs; v16 0.57 / 0.79, v13 0.29-0.34 / 0.64, a plain LLM 0.28 / 0.41); with the cross-link reading 0.39 of the gold papers of a careful search become records (0.26 with reader v9); the AUC of the evidence balance on the 30 trials 0.58 (v16 0.71, v9 0.55; wide intervals) ([`specs/reading/benchmark-reading-2026-11-12.yaml`](../../specs/reading/benchmark-reading-2026-11-12.yaml)) |
 | reading: design, n, blinding | against an outside reader | 92-96% agreement |
-| intervention match: exact / class / category / other | an outside reader, 80 link-finding pairs blind | weighted κ 0.55, stance agreement 0.89 ([`specs/scoring/intervention-class-2026-11-11.yaml`](../specs/scoring/intervention-class-2026-11-11.yaml)) |
-| record weight | later RCTs and meta-analyses of the same link (R2), the calibration pool run end to end with the current method | AUC 0.579, 722 targets on 161 links; on the 18 targets both this run and the earlier one have, 0.72 against 0.66; on targets new to the wider search 0.54. The earlier 0.68-0.70 was measured on the 29 links a narrow search reached, mostly well-studied outcomes, and overstated the method ([`specs/whole-system/calibration-current-2026-11-16.yaml`](../specs/whole-system/calibration-current-2026-11-16.yaml); before: [`specs/scoring/record-weight-2026-11-08.yaml`](../specs/scoring/record-weight-2026-11-08.yaml)) |
+| intervention match: exact / class / category / other | an outside reader, 80 link-finding pairs blind | weighted κ 0.55, stance agreement 0.89 ([`specs/scoring/intervention-class-2026-11-11.yaml`](../../specs/scoring/intervention-class-2026-11-11.yaml)) |
+| record weight | later RCTs and meta-analyses of the same link (R2), the calibration pool run end to end with the current method | AUC 0.579, 722 targets on 161 links; on the 18 targets both this run and the earlier one have, 0.72 against 0.66; on targets new to the wider search 0.54. The earlier 0.68-0.70 was measured on the 29 links a narrow search reached, mostly well-studied outcomes, and overstated the method ([`../../specs/whole-system/calibration-current-2026-11-16.yaml`](../../specs/whole-system/calibration-current-2026-11-16.yaml); before: [`specs/scoring/record-weight-2026-11-08.yaml`](../../specs/scoring/record-weight-2026-11-08.yaml)) |
 | record weight | order of 80 pairs of records by an outside reader (R4) | Kendall's τ-b 0.10 |
-| evidence balance | trial outcomes on the calibration pool (R3), every stage the working one | AUC 0.578 [0.445, 0.710] on 73 trials, 0.63 on the 14 posted 2023-2026 (interval 0.29-0.93); unclear by the rule written before the run (a signal needed 0.60 with the lower bound above 0.45); the earlier runs' 0.607 is not distinguishable from it ([`specs/whole-system/calibration-current-2026-11-16.yaml`](../specs/whole-system/calibration-current-2026-11-16.yaml)) |
+| evidence balance | trial outcomes on the calibration pool (R3), every stage the working one | AUC 0.578 [0.445, 0.710] on 73 trials, 0.63 on the 14 posted 2023-2026 (interval 0.29-0.93); unclear by the rule written before the run (a signal needed 0.60 with the lower bound above 0.45); the earlier runs' 0.607 is not distinguishable from it ([`../../specs/whole-system/calibration-current-2026-11-16.yaml`](../../specs/whole-system/calibration-current-2026-11-16.yaml)) |
 | evidence balance per link | an outside reader's balance | Spearman 0.24 per link, 0.39 per trial; no refuted link called supported |
-| the same question asked to two models | trial outcomes, 63 trials the models do not remember | AUC 0.76 against 0.59 for our non-refutation P: the models' priors beat the literature count; leakage not excluded ([`specs/whole-system/llm-consensus-2026-11-07.yaml`](../specs/whole-system/llm-consensus-2026-11-07.yaml)) |
-| informativeness I (d of the alternatives) | an outside reader, holdout of 30 trials | κ 0.35 ([`specs/alternatives/informativeness-check-2026-11-08.yaml`](../specs/alternatives/informativeness-check-2026-11-08.yaml)) |
+| the same question asked to two models | trial outcomes, 63 trials the models do not remember | AUC 0.76 against 0.59 for our non-refutation P: the models' priors beat the literature count; leakage not excluded ([`../../specs/whole-system/llm-consensus-2026-11-07.yaml`](../../specs/whole-system/llm-consensus-2026-11-07.yaml)) |
+| informativeness I (d of the alternatives) | an outside reader, holdout of 30 trials | κ 0.35 ([`specs/alternatives/informativeness-check-2026-11-08.yaml`](../../specs/alternatives/informativeness-check-2026-11-08.yaml)) |
 | support a of the alternatives | an outside reader | Spearman 0.28 (the reader counts what it knows, we count found papers) |
-| verdict on methodological threats in humans (code, from the design) | an outside reader: 124 alternatives of 59 trials (pack 6), 62 of 30 written hypotheses (pack 28) | weighted κ 0.45 from the registry fields, 0.57 from the card's (the model 0.14); written hypotheses: humans 0.46, cells 0.07 — no verdict outside humans ([`specs/alternatives/design-rule-2026-11-16.yaml`](../specs/alternatives/design-rule-2026-11-16.yaml)) |
-| I with the threat checklist | the admission rule of indicators, 73 + 59 saved runs | passed: most common value 7% and 12%, \|Spearman\| with the other indicators at most 0.21 ([`specs/alternatives/threat-checklist-2026-11-16.yaml`](../specs/alternatives/threat-checklist-2026-11-16.yaml)) |
+| verdict on methodological threats in humans (code, from the design) | an outside reader: 124 alternatives of 59 trials (pack 6), 62 of 30 written hypotheses (pack 28) | weighted κ 0.45 from the registry fields, 0.57 from the card's (the model 0.14); written hypotheses: humans 0.46, cells 0.07 — no verdict outside humans ([`specs/alternatives/design-rule-2026-11-16.yaml`](../../specs/alternatives/design-rule-2026-11-16.yaml)) |
+| I with the threat checklist | the admission rule of indicators, 73 + 59 saved runs | passed: most common value 7% and 12%, \|Spearman\| with the other indicators at most 0.21 ([`specs/alternatives/threat-checklist-2026-11-16.yaml`](../../specs/alternatives/threat-checklist-2026-11-16.yaml)) |
 | missing competitors | an outside reader | in 78% of trials the reader adds a supported competitor |
 | novelty N | an outside reader (30 and 37 trials; 30 written hypotheses) | written hypotheses with mechanisms (pack 26): weighted κ 0.36, novelty by absence on the same side of the threshold in 0.85 of the new links; pack 18 (30 trials), N against the outside reader's level: weighted κ 0.45 with reader v17 and the cross-link reading (0.41 with v9, 0.20 with v16; ours farther from the known in 0.24 of the trials); pack 7: κ 0.14-0.26 (the numbers before 2026-11-15 compared the v2 indicator, not N) |
-| prospective pool, 60 ongoing trials | outcomes 2026-11 … 2028-12 | scores frozen with a SHA-256 ([`specs/whole-system/prospective-2026-11-06.yaml`](../specs/whole-system/prospective-2026-11-06.yaml)): the clean test |
+| prospective pool, 60 ongoing trials | outcomes 2026-11 … 2028-12 | scores frozen with a SHA-256 ([`../../specs/whole-system/prospective-2026-11-06.yaml`](../../specs/whole-system/prospective-2026-11-06.yaml)): the clean test |
 
 Against trial outcomes the record weights add nothing over counting records; they are kept for what they are for: ordering
 later trials of the same link (R2) and telling a large RCT from a cell study in the report.
@@ -951,9 +951,9 @@ profiles:
 ## 15. Resources of a run (calls, tokens, cost)
 
 Every model call the code makes is logged with the time (UTC), the stage, the template, the model and the tokens the API
-returned ([`hyparena/card/llm.py`](../hyparena/card/llm.py)). The cost is computed by code from those tokens and the price
-table [`configs/prices.yaml`](../configs/prices.yaml) (USD per million tokens in and out; a family's peak hours multiply
-its price), never taken from a model. [`hyparena/reports/usage.py`](../hyparena/reports/usage.py) sums a run by stage — card, search,
+returned ([`hyparena/card/llm.py`](../../hyparena/card/llm.py)). The cost is computed by code from those tokens and the price
+table [`configs/prices.yaml`](../../configs/prices.yaml) (USD per million tokens in and out; a family's peak hours multiply
+its price), never taken from a model. [`hyparena/reports/usage.py`](../../hyparena/reports/usage.py) sums a run by stage — card, search,
 reading, alternatives, endpoint, versions, generation — with calls, tokens, seconds and USD, and per hypothesis; a pipeline
 run keeps the summary as `usage`. A model without a price is counted with its tokens and listed as unpriced.
 

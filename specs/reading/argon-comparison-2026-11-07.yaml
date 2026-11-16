@@ -1,6 +1,6 @@
 id: argon-comparison-2026-11-07
 what: >-
-  Blind comparison with an outside reader (Argon) working from docs/method-v3-manual.md (v3.4). Files in longevity-kg
+  Blind comparison with an outside reader (Argon) working from docs/method/manual.md (v3.4). Files in longevity-kg
   reviews/argon-2026-11-07/ (private: they hold abstract quotes).
 task_a_same_records:
   setup: our chains and our 22 records of three prospective hypotheses; Argon only re-reads each record.

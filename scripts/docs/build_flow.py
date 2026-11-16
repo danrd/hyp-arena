@@ -5,9 +5,9 @@ the rest is optional by purpose: the implementation layer (LLM and code), the ch
 checks and against a plain-LLM baseline), the reasons layer. Stages are balanced by content; only the record weight and the
 link strength are one stage (both are the summary of the evidence); different things are not grouped.
 
-    python docs/system/build_flow.py      # writes flow_<variant>.drawio for every variant in VARIANTS
+    python scripts/docs/build_flow.py      # writes flow_<variant>.drawio for every variant in VARIANTS
 
-PNG: render each .drawio with mxgraph (see docs/system/README or the session notes)."""
+PNG: render each .drawio with mxgraph (see docs/method/README.md; the PNGs go to docs/method/schemes/)."""
 from pathlib import Path
 from xml.sax.saxutils import escape
 

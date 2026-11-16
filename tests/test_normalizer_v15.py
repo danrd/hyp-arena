@@ -1,4 +1,4 @@
-"""normalize_card/v15: code parts (docs/system/card.md, "Звенья: как определяется тип")."""
+"""normalize_card/v15: code parts (docs/method/card.md, "Звенья: как определяется тип")."""
 from hyparena.card.models import HypothesisCard
 from hyparena.card.normalizer import age_class, primary_from_registry, v15_prepare, v15_problems, derive_roles
 

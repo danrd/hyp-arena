@@ -1,4 +1,4 @@
-"""Argon pack 20: the 60 texts of pack 17 labelled again under the link-type definitions of docs/system/card.md (card_gold_v2,
+"""Argon pack 20: the 60 texts of pack 17 labelled again under the link-type definitions of docs/method/card.md (card_gold_v2,
 the same instructions as pack 19 plus the rules for registry texts). Free, deterministic, no model call.
 
     python -m scripts.argon.pack20_relabel build   # longevity-kg/reviews/argon-2026-11-13/pack_20{a,b}_task.json, pack_20_key.json

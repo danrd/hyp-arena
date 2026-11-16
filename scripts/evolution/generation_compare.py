@@ -1,5 +1,5 @@
 """Level 4 of the checks: generation compared (specs/evolution/generation-comparison-2026-11-14.yaml, manual
-docs/system/generation-arena.md). The hypotheses of the arms (A: an outside model in a chat; B: the same model by the
+docs/validation/generation-arena.md). The hypotheses of the arms (A: an outside model in a chat; B: the same model by the
 manual; C: B after free evolution; D: A after free evolution) are put into one form, judged blind by models of other
 families (pairwise in both orders, and by a rubric), and the win shares are computed with bootstrap intervals.
 

@@ -1,16 +1,16 @@
 # Сквозная проверка: метод целиком против исходов
 
 Мануал проверки всей системы против того, что случилось на самом деле, — уровня 3 из [сводного мануала проверки](testing.md).
-Мануалы этапов ([карточка](card.md), [поиск](search.md), [чтение](reading.md), [вес и баланс](evidence.md),
-[новизна](novelty.md), [альтернативы](alternatives.md), [ранжирование](ranking.md), [версии](versions.md)) проверяют каждый
+Мануалы этапов ([карточка](../method/card.md), [поиск](../method/search.md), [чтение](../method/reading.md), [вес и баланс](../method/evidence.md),
+[новизна](../method/novelty.md), [альтернативы](../method/alternatives.md), [ранжирование](../method/ranking.md), [версии](../method/versions.md)) проверяют каждый
 этап против эталона внешнего читателя. Здесь проверяется другое: упорядочивает ли метод, пройденный от начала до конца,
-гипотезы так же, как их потом рассудили испытания. Сводный мануал метода ([`docs/method-v3-manual.md`](../method-v3-manual.md))
-даёт итог этой проверки в разделе 12. Как менялись опорные числа — в [журнале изменений](changelog.md#этап-910-баланс-доказательств).
+гипотезы так же, как их потом рассудили испытания. Сводный мануал метода ([`docs/method/manual.md`](../method/manual.md))
+даёт итог этой проверки в разделе 12. Как менялись опорные числа — в [журнале изменений](../method/changelog.md#этап-910-баланс-доказательств).
 
-Код: [`scripts/whole_system/calibration.py`](../../scripts/whole_system/calibration.py) (отбор и прогон),
-[`scripts/whole_system/calibration_current.py`](../../scripts/whole_system/calibration_current.py) (меры R3 и R2, покрытие),
-[`scripts/whole_system/calibration_r2_diag.py`](../../scripts/whole_system/calibration_r2_diag.py) (разбор R2 и шум),
-[`scripts/whole_system/prospective.py`](../../scripts/whole_system/prospective.py) (проспективный пул). Метки исходов и
+Код: [`../../scripts/whole_system/calibration.py`](../../scripts/whole_system/calibration.py) (отбор и прогон),
+[`../../scripts/whole_system/calibration_current.py`](../../scripts/whole_system/calibration_current.py) (меры R3 и R2, покрытие),
+[`../../scripts/whole_system/calibration_r2_diag.py`](../../scripts/whole_system/calibration_r2_diag.py) (разбор R2 и шум),
+[`../../scripts/whole_system/prospective.py`](../../scripts/whole_system/prospective.py) (проспективный пул). Метки исходов и
 тексты реестра лежат только в приватном `longevity-kg`.
 
 ## Пример, на котором объясняется мануал
@@ -58,7 +58,7 @@
 
 ## 3. Как считается
 
-**R3.** Для каждого испытания — баланс доказательств по текущим правилам ([вес и баланс](evidence.md)); испытание,
+**R3.** Для каждого испытания — баланс доказательств по текущим правилам ([вес и баланс](../method/evidence.md)); испытание,
 отфильтрованное воротами, получает −1. AUC баланса против меток. Интервал — бутстреп по испытаниям (2000 повторов). Отдельно
 считаются чистая часть, остальные испытания и пул без трёх текстов с утечкой.
 

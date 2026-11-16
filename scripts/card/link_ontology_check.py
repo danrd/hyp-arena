@@ -5,7 +5,7 @@
 On the claim pairs where our card (normaliser v13, deduplicated) and the outside reader's gold match by phrase, the link type
 is set three ways and compared with the gold (Cohen's kappa, per gold class):
   llm       the normaliser's own link (none = off the chain);
-  premise   the rule of docs/system/card.md only: a claim whose subject is neither the intervention nor an object of an earlier
+  premise   the rule of docs/method/card.md only: a claim whose subject is neither the intervention nor an object of an earlier
             claim is a premise (off the chain); otherwise the normaliser's link;
   ontology  the rules plus the level from MeSH: outcome stays outcome (its role); premise as above; else the object (the
             measure where the object is the organism) is mapped to MeSH by PubMed's own term mapping, its head term (the last

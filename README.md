@@ -27,14 +27,14 @@ ClinicalTrials.gov and other trial registries. Code under the MIT licence ([`LIC
 
 ## Documentation
 
-- **Method manual** (the current rules, why each one, how to read a report, validation status): [`docs/method-v3-manual.md`](docs/method-v3-manual.md)
-- **How the system works, step by step, and how each step is checked** (in Russian): [`docs/system/steps.md`](docs/system/steps.md), diagram [`docs/system/scheme.drawio`](docs/system/scheme.drawio); stage manuals: the card — [`docs/system/card.md`](docs/system/card.md), the search — [`docs/system/search.md`](docs/system/search.md), the reading (draft) — [`docs/system/reading.md`](docs/system/reading.md)
-- **How the system is checked, four levels** (the system itself, against other approaches, overall quality against outcomes, generation; in Russian): [`docs/system/testing.md`](docs/system/testing.md); level 4, generation compared with an LLM in a chat: [`docs/system/generation-arena.md`](docs/system/generation-arena.md)
-- **Benchmarks by stage**: [`docs/benchmarks/README.md`](docs/benchmarks/README.md); checks and decisions, one file each, by stage: [`specs/`](specs/README.md); plans of work in progress: [`docs/plans/`](docs/plans/)
-- Benchmark of registry hypotheses: [`docs/benchmark.md`](docs/benchmark.md)
+- **The method, all in one folder** ([`docs/method/`](docs/method/README.md): the summary manual, the stage manuals, their foundations, the schemes, the changelog). Method manual (the current rules, why each one, how to read a report, validation status): [`docs/method/manual.md`](docs/method/manual.md)
+- **How the system works, step by step, and how each step is checked** (in Russian): [`docs/method/steps.md`](docs/method/steps.md), diagrams [`docs/method/schemes/`](docs/method/schemes/) (sources and build scripts in [`scripts/docs/`](scripts/docs/)); stage manuals: the card — [`docs/method/card.md`](docs/method/card.md), the search — [`docs/method/search.md`](docs/method/search.md), the reading (draft) — [`docs/method/reading.md`](docs/method/reading.md)
+- **How the method is checked** ([`docs/validation/`](docs/validation/)), four levels (the system itself, against other approaches, overall quality against outcomes, generation; in Russian): [`docs/validation/testing.md`](docs/validation/testing.md); level 4, generation compared with an LLM in a chat: [`docs/validation/generation-arena.md`](docs/validation/generation-arena.md)
+- **Benchmarks by stage**: [`docs/validation/benchmarks/README.md`](docs/validation/benchmarks/README.md); checks and decisions, one file each, by stage: [`specs/`](specs/README.md); plans of work in progress: [`docs/plans/`](docs/plans/)
+- Benchmark of registry hypotheses: [`docs/validation/benchmark.md`](docs/validation/benchmark.md)
 - Card format and relation vocabulary (shared with the knowledge graph): [`docs/spec/hypothesis-card-spec.md`](docs/spec/hypothesis-card-spec.md); the ranking method (ASPID / SMAA): [`docs/spec/aggregation-spec.md`](docs/spec/aggregation-spec.md); data sources: [`docs/spec/data-sources.md`](docs/spec/data-sources.md)
 - Commands (tests, runs, reports, tools): [`docs/commands.md`](docs/commands.md)
-- Deferred work: [`docs/backlog.md`](docs/backlog.md); changes by stage: [`docs/system/changelog.md`](docs/system/changelog.md)
+- Deferred work: [`docs/backlog.md`](docs/backlog.md); changes by stage: [`docs/method/changelog.md`](docs/method/changelog.md)
 - Code of the method, by stage: [`hyparena/`](hyparena/README.md); calculations of the checks, by stage: [`scripts/`](scripts/README.md)
 - Archive (method v2, earlier v3 rules, hand-offs, drafts, old code and agent tasks): [`archive/`](archive/README.md)
 

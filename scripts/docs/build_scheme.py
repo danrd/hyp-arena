@@ -1,8 +1,8 @@
-"""Builds docs/system/scheme.drawio: the whole system on one page (method v3.9). Each step: the step with what is done, what a
+"""Builds scripts/docs/scheme.drawio: the whole system on one page (method v3.9). Each step: the step with what is done, what a
 language model does (task, input -> output; for code-only steps one merged cell with the code), what code does, why it is so,
 how we check it ourselves, and how it can be checked against a plain-LLM baseline; at the bottom benchmarking in two parts
 (our own checks; the baseline). Column widths follow the amount of text, so rows are even (user note 2026-11-11).
-The text lives in STEPS, BASELINE and BENCH below; edit there and run:  python docs/system/build_scheme.py"""
+The text lives in STEPS, BASELINE and BENCH below; edit there and run:  python scripts/docs/build_scheme.py"""
 from math import ceil
 from pathlib import Path
 from xml.sax.saxutils import escape
@@ -268,7 +268,7 @@ def build() -> str:
         out.append(cell(f"bench{k}", html, X0 + k * (half + 20), y, half, bh,
                         f"rounded=1;whiteSpace=wrap;html=1;fillColor={fill};strokeColor={stroke};fontColor=#1A202C;fontSize=12;align=left;verticalAlign=top;spacingLeft=12;spacingTop=8;"))
     y += bh + 12
-    out.append(cell("legend", "Голубой фон — шаг использует языковую модель; одна общая ячейка на месте LLM и кода — шаг выполняет только код. Подробности и числа проверок: docs/system/steps.md и specs/.",
+    out.append(cell("legend", "Голубой фон — шаг использует языковую модель; одна общая ячейка на месте LLM и кода — шаг выполняет только код. Подробности и числа проверок: docs/method/steps.md и specs/.",
                     X0, y, total, 24, "text;html=1;fontSize=11;align=left;fontColor=#555555;fillColor=none;strokeColor=none;"))
     page_h = y + 40
     body = "".join(out)

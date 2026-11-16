@@ -54,7 +54,7 @@ rule:
   adopted_when: >-
     on both sets I after has at least three distinct values and none above 0.7 of the units, and |Spearman| < 0.7 with
     every indicator listed under redundancy (the admission rule of the indicators, manual section 8)
-  if_adopted: method v3.11 - the stage manual docs/system/alternatives.md, the summary manual (sections 3, 7, 9), the changelog, tests
+  if_adopted: method v3.11 - the stage manual docs/method/alternatives.md, the summary manual (sections 3, 7, 9), the changelog, tests
   if_not: the measures are reported with the indicator that I copies; nothing changes in the method
   not_in_this_check: >-
     a model verdict for cells and animals from a verbatim phrase (check on pack 28, about 0.05 USD, pass at weighted kappa
