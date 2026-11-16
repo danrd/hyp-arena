@@ -69,3 +69,34 @@ reader_v18:
       share of records for with numbers, and with a d, by kind (v17: the size was readable in 68 of 297)
   step_2_pack_25: the rule of this spec above (candidate_replaces_v17_when, outcome_field_usable_when), after Argon's answer
   step_3: "if both pass: the confirming run on the 30 trials of pack 18 with the cross-link reading (specs/reading/benchmark-reading-2026-11-12.yaml), priced by its own dry count"
+
+result_step_1_2026_11_15:
+  run: "bench_reading v18 and v18_2 on pack 16; 0.147 USD in all (a trial of 2 links 0.008, the runs 0.065 and 0.074)"
+  measures:      # recall, precision, records, hits of 94 gold findings
+    v17:   [0.564, 0.791, 67, 53]
+    v17_2: [0.543, 0.797, 64, 51]
+    v18:   [0.596, 0.615, 91, 56]
+    v18_2: [0.606, 0.679, 84, 57]
+  by_the_rule: "fails: recall 0.60 against 0.55 (higher), precision 0.65 against 0.79 (lower by 0.15, the limit is 0.03). v18 does not go to pack 25 and is not the working reader"
+  by_stratum: "precision on outcome links 0.39 and 0.43 (v17 0.57), on mechanism links 0.44 and 0.56 (v17 0.89), on alternatives 0.89 and 0.92 (v17 0.91)"
+  same_class_primary_found: "19 of 37 in both runs (v17 13 of 37; all strata, the alternatives without their own part included)"
+  where_the_extra_records_come_from: >-
+    of 26 records on outcome and mechanism links the gold calls "none" (run 1), all carry the reader's answer outcome
+    "narrower": 11 same_kind and 6 component where the gold says another intervention altogether (aerobic exercise for a
+    claim about glycation end-products; vibrating insoles for an electric signal; direct-current stimulation for pulsed
+    current), 9 same_kind where the gold says another outcome (cognitive test scores for "brain plasticity" and for "lost
+    function"). The reader stretches "same kind" and "a narrower measure" at once; nine of the 26 are one claim (R19)
+  code_filters_tried_free: >-
+    dropping the records with intervention same_kind or component AND outcome narrower gives recall 0.40 / 0.43 at precision
+    0.88 / 0.87; dropping only component AND narrower 0.56 / 0.57 at 0.65 / 0.69; keeping only outcome "same" 0.35 / 0.36 at
+    0.89 / 0.92: the true same-class findings sit in the same cell as the false ones, so no rule on the three answers
+    separates them
+  effect_numbers: >-
+    numbers on 45 of 91 and 48 of 84 records; a standardised difference computed for 26 and 25 (stated SMD 13, ratio 4,
+    interval 3-4, two means 3-5, one SD 1): about 0.30 of the records against 0.23 readable from the phrase (68 of 297 on
+    the 30 trials, another sample). The measure's words are verbatim on 61 and 64 records
+  reading: >-
+    the three separate answers with a send-back raise the same-class findings and lose precision exactly as v14 did; the
+    boundary is not in the wording of the rules but in two judgements the cheap reader makes loosely (is this the claim's
+    kind of intervention; is this measure the claim's outcome). The fields (outcome match, measure, effect numbers) work
+    technically and can be kept without the send-back

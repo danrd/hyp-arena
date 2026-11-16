@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 
 from scripts.common.v34_check import CAL
 
@@ -82,7 +83,8 @@ def check() -> dict:
     from scripts.search.bench_search import summaries
     ans = json.loads((DIR / "pack_27_answer.json").read_text())
     srcs = [(i["id"], s) for i in ans.get("items") or [] for s in i.get("sources") or [] if str(s.get("pmid", "")).strip().isdigit()]
-    mcid = sorted({str(r.get("pmid", "")).strip() for i in ans.get("items") or [] for r in i.get("mcid_table") or []} - {""})
+    mcid = sorted({x for i in ans.get("items") or [] for r in i.get("mcid_table") or []
+                   for x in re.findall(r"\d{6,9}", str(r.get("pmid", "")))})
     cache: dict = {}
     summaries(sorted({str(s["pmid"]).strip() for _, s in srcs} | {p for p in mcid if p.isdigit()}), cache)
     abstracts = pubmed.fetch([p for p, v in cache.items() if v.get("exists")])
