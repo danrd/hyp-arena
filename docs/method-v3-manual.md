@@ -759,9 +759,8 @@ How the method is checked, by level (the system itself, against other approaches
 - The search gives the reader about half of what a careful search must find before T (0.49 of the papers an outside reader
   lists for a trial; papers on the mechanism steps 0.27, none of them read)
   ([`specs/search/benchmark-search-2026-11-12.yaml`](../specs/search/benchmark-search-2026-11-12.yaml)).
-- The reader finds about 0.3 of the findings an outside reader sees in the same abstracts (reading benchmark); support from
-  interventions of the same kind is often missed, so the balance is biased down for programmes and behavioural
-  interventions.
+- The reader finds about 0.6 of the findings an outside reader sees in the same abstracts, and about a quarter of its
+  records are not confirmed by that reader, most of them results on another outcome than the claim's (reading benchmark).
 - Abstracts by default; full texts only where a knowledge-graph row says so.
 - Alternatives come from a model, not yet from the knowledge graph.
 - Novelty depends on the search and the reader: a paper they missed makes a hypothesis look newer than it is. Novelty is

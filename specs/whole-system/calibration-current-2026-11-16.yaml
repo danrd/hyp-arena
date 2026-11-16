@@ -19,7 +19,7 @@ measures:
   R2: the AUC of later RCTs and meta-analyses of a link from the earlier records, rebuilt from the new records, with the number of targets
   coverage: links with any record; records per trial; share of trials gated, with the outcomes of the gated
   against_the_saved_runs: the same measures on the saved v10 runs under the current rules (R3 0.604, R2 0.685), trial by trial where the balance moves by more than 0.3
-  noise: the 30 trials of pack 18 have a run of the same search with reader v17 (n15x): Spearman of the two balances
+  noise: "the 30 trials of pack 18 have a run of the same search with reader v17 (n15x): Spearman of the two balances"
 rule:
   reading: >-
     this run is a measurement, not a choice between variants: the method does not change by its result. It replaces the
