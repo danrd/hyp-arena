@@ -31,3 +31,18 @@ rule:
   N_passes_when: weighted kappa at least 0.4 and our level farther from the known in at most 0.25 of the hypotheses
   absence_passes_when: our count and Argon's fall on the same side of 5 in at least 0.8 of the links either reader calls new
   if_not: the misses are sorted by cause (search, reading, card chain, the level rule) before any rule is changed
+
+argon_answer_2026_11_16:
+  check: "86 PMIDs, all exist and were public on or before T; every one of the 35 links called new carries its query and count"
+  levels: {new_link: 10, new_combination: 10, new_mechanism: 2, new_context: 7, analog: 1}
+  pack_usable: "yes: 22 of 30 at new_mechanism or above, 8 at analog or below (the rule asked at least 8 and at least 5)"
+our_run:
+  written_on: 2026-11-16
+  status: written before the run (one hypothesis run as a trial of the script)
+  what: >-
+    the working pipeline (configs/v3-flash-n10.yaml: search filtered, reader v17, cross-link reading) on the 30 hypotheses
+    with their saved cards, T 2026-10-14; scripts/novelty/bench_novelty.py
+  cost: "dry count 2.19 USD off-peak (0.0076 a search from the confirming run of the search, 108 links, about 128 alternatives, the cross-link reading); the trial hypothesis cost 0.068; cap MAX_USD 3"
+  also_measured: >-
+    the search on stated steps: the share of the PMIDs Argon gives per link that our search handed to the reader and that
+    became a record, for step links against outcome links (the registry trials of pack 18 had 5 steps in all)

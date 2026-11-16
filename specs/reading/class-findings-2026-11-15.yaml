@@ -115,3 +115,19 @@ reader_v19:
     candidate for pack 25 (the outcome field against Argon's, rule outcome_field_usable_when) and for the confirming run;
     it is not expected to raise the same-class recall
   reported_not_judged: records not counted for a broader or another outcome, against the gold; share of records with numbers and with a d, by kind
+
+result_reader_v19_2026_11_16:
+  run: "bench_reading v19 and v19_2 on pack 16, off-peak; 0.131 USD (0.065 and 0.066)"
+  measures:      # recall, precision, records, hits of 94 gold findings
+    v19:   [0.585, 0.873, 63, 55]
+    v19_2: [0.574, 0.783, 69, 54]
+  by_the_rule: "passes: mean recall 0.58 against 0.55, mean precision 0.83 against 0.79 (v17 0.56 / 0.79 and 0.54 / 0.80)"
+  outcome_field: >-
+    run 1: 6 records kept apart as another outcome, 5 of them "none" in the gold and 1 a gold finding; run 2: none kept
+    apart. Of the counted records the reader calls 7 and 9 "same" and 55 and 59 "narrower" (pack 16 has no gold for the field:
+    its agreement is measured on pack 25)
+  effect_numbers: "numbers on 35 of 63 and 37 of 69 counted records; a standardised difference for 21 and 20 (stated SMD 9, ratio 4 and 3, interval 4, two means 4)"
+  reading: >-
+    the fields cost nothing in recall or precision; the difference between the two runs of v19 on precision (0.87 and 0.78)
+    is the reader's own noise. The same-class loss stays as with v17
+  next: v17 and v19 on pack 25 (the outcome field against Argon's, the rule outcome_field_usable_when), then the confirming run
