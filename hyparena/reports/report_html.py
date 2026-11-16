@@ -1055,11 +1055,11 @@ def prospective(n: int = 60) -> tuple[dict, str]:
     from scripts.data.ctgov_outcomes import KG
     d = KG / "hypothesis_sources" / "prospective"
     run = json.loads((d / f"run_{n}.json").read_text())
-    sf = d / f"scores_{n}_v34.json"
-    sb = (sf if sf.exists() else d / f"scores_{n}.json").read_bytes()
+    sf = next((f for f in (d / f"scores_{n}_current.json", d / f"scores_{n}_v34.json") if f.exists()), d / f"scores_{n}.json")
+    sb = sf.read_bytes()
     texts = {json.loads(l)["id"]: json.loads(l)["text"] for l in open(d / f"texts_{n}.jsonl")}
-    meta = {"pool": f"prospective-{n}", "date": "2026-11-06", "sha": hashlib.sha256(sb).hexdigest(),
-            "method": "v3.8: вес записи по доменам GRADE (вмешательство той же широкой категории — 1/2), сила звена как сумма логарифмов отношений правдоподобия, баланс доказательств по местам цепочки с данными, новизна v3.4; профили АСПИД «Доказательность», «Финансирование», «Фронтир»",
+    meta = {"pool": f"prospective-{n}", "date": "2026-11-06 (переоценено 2026-11-16)", "sha": hashlib.sha256(sb).hexdigest(),
+            "method": "v3.10 (2026-11-16): вес записи по доменам GRADE с опубликованными основаниями (тот же класс 3/4, обзор на доклинической шкале 1/3, одно испытание — одна запись), величина эффекта по опубликованным границам (средний от 0.35, отношения рисков от 1.33, клинически значимые разницы мер), сила звена как сумма логарифмов отношений правдоподобия (наклон ln 5), ворота с противовесом того же класса, новизна по действию главного фактора; записи — из прогона 2026-11-06 (чтение того дня), правила — текущие; профили АСПИД «Доказательность», «Финансирование», «Фронтир",
             "title_ru": f"Проспективный пул: {n} идущих испытаний", "title_en": f"Prospective pool: {n} ongoing trials",
             "about_ru": "Испытания на ClinicalTrials.gov, где среди состояний — само старение, с завершением в ноябре 2026 — декабре 2028; "
                         "по 15 на тип вмешательства. Оценены до появления результатов; оценки зафиксированы хешем.",

@@ -131,7 +131,10 @@ def endpoint_clinical(n: int, h: str):
     return v.pop() if len(v) == 1 and None not in v and "not_stated" not in v else None
 
 
-def score(n: int = 60) -> dict:
+METHOD = "v3.10 (2026-11-16)"
+
+
+def score(n: int = 60, tag: str = "v34") -> dict:
     """Method v3.4 (specs/scoring/v34-frontier-2026-11-07.yaml) -> scores_{n}_v34.json; scores_{n}.json (v3.2, frozen by its hash in
     specs/whole-system/prospective-2026-11-06.yaml) is never rewritten."""
     from hyparena.scoring import aspid_v3, rules_v32, v3_extra
@@ -161,16 +164,37 @@ def score(n: int = 60) -> dict:
         rows[h] = {"outcome": it["outcome"], "gate": e.gate, "P": e.P, "P_lo": e.P_lo, "P_hi": e.P_hi, "I": e.I, "V": e.V,
                    "scope": e.scope, "ai_role": card.ai_role, "endpoint_clinical": ext["endpoint_clinical"], "trend_pubmed": ext["trend_pubmed"], "links": len(e.links), "weakest": e.weakest,
                    "support_share": e.support_share, "chain_state": e.chain_state, "N": ext["N"], "leverage": ext["leverage"], "W_potential": ext["W_potential"],
-                   "method": "v3.6"}
+                   "method": METHOD if tag != "v34" else "v3.6"}
         ax[h] = ({"P": e.P, "scope": e.scope, "I": e.I, "headroom_I": e.headroom_I, "gate": e.gate}, ext)
     for prof in aspid_v3.load():
         agg = aspid_v3.rank(ax, prof, K=10000)
         for h in (agg.expected if agg else {}):
             rows[h][f"aspid_{prof}"] = round(agg.expected[h], 4)
-    (OUT / f"scores_{n}_v34.json").write_text(json.dumps(rows, indent=1, ensure_ascii=False) + "\n")
+    (OUT / f"scores_{n}_{tag}.json").write_text(json.dumps(rows, indent=1, ensure_ascii=False) + "\n")
     return {"units": len(rows), "scored": sum(1 for r in rows.values() if "P" in r),
             "outcomes": dict(Counter(r["outcome"] for r in rows.values())),
             "ai_role": dict(Counter(r.get("ai_role") for r in rows.values() if "P" in r))}
+
+
+def freeze_current(n: int = 60) -> str:
+    """The current method's scores of the same saved records, frozen next to the file of 2026-11-06 (that one never changes)."""
+    f = OUT / f"scores_{n}_current.json"
+    body = f.read_bytes()
+    today = dt.date.today().isoformat()
+    spec = SPECS / f"prospective-current-{today}.yaml"
+    spec.write_text(yaml.safe_dump({
+        "id": f"prospective-current-{today}", "frozen_on": today,
+        "what": f"the scores of the {n} ongoing trials of specs/whole-system/prospective-2026-11-06.yaml under method {METHOD}, before any outcome exists",
+        "method": (f"{METHOD}, computed by code from the records saved by the run of 2026-11-06 (normalize_card/v10, verify_claim/v9, the "
+                   "search of that day); the current weights, gate, effect rules and novelty are applied, the reading is not redone: "
+                   "a scoring of the current pipeline needs a new run (about 3 USD)"),
+        "scores_file": f"longevity-kg hypothesis_sources/prospective/scores_{n}_current.json",
+        "scores_sha256": hashlib.sha256(body).hexdigest(),
+        "test_when_outcomes_exist": ("outcome labels by the benchmark's rules; the evidence balance (a gated hypothesis -1) tied AUC "
+                                     "with 95% CI; signal: AUC >= 0.60 and lower bound > 0.45; no signal: AUC < 0.55; compared with the "
+                                     "file of 2026-11-06 on the same trials"),
+    }, allow_unicode=True, sort_keys=False))
+    return str(spec)
 
 
 def freeze(n: int = 60) -> str:
@@ -190,7 +214,7 @@ def freeze(n: int = 60) -> str:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("cmd", choices=["pool", "pick", "run", "estimand", "score", "freeze"])
+    ap.add_argument("cmd", choices=["pool", "pick", "run", "estimand", "score", "score-current", "freeze", "freeze-current"])
     ap.add_argument("--n", type=int, default=60)
     a = ap.parse_args()
     if a.cmd in ("run", "estimand"):
@@ -198,7 +222,9 @@ def main() -> None:
             raise SystemExit("paid: set ALLOW_PAID=1")
         (run if a.cmd == "run" else estimand)(a.n)
         return
-    out = pool() if a.cmd == "pool" else pick(a.n) if a.cmd == "pick" else score(a.n) if a.cmd == "score" else freeze(a.n)
+    out = (pool() if a.cmd == "pool" else pick(a.n) if a.cmd == "pick" else score(a.n) if a.cmd == "score"
+           else score(a.n, "current") if a.cmd == "score-current" else freeze_current(a.n) if a.cmd == "freeze-current"
+           else freeze(a.n))
     print(json.dumps(out, indent=1, ensure_ascii=False) if not isinstance(out, str) else out)
 
 

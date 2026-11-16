@@ -1,0 +1,14 @@
+id: prospective-current-2026-11-16
+frozen_on: '2026-11-16'
+what: the scores of the 60 ongoing trials of specs/whole-system/prospective-2026-11-06.yaml
+  under method v3.10 (2026-11-16), before any outcome exists
+method: 'v3.10 (2026-11-16), computed by code from the records saved by the run of
+  2026-11-06 (normalize_card/v10, verify_claim/v9, the search of that day); the current
+  weights, gate, effect rules and novelty are applied, the reading is not redone:
+  a scoring of the current pipeline needs a new run (about 3 USD)'
+scores_file: longevity-kg hypothesis_sources/prospective/scores_60_current.json
+scores_sha256: 9d265e603e9873829d63acfe6b56d146b47af5e5db9cd01b7dd04f18a7ebd3fe
+test_when_outcomes_exist: 'outcome labels by the benchmark''s rules; the evidence
+  balance (a gated hypothesis -1) tied AUC with 95% CI; signal: AUC >= 0.60 and lower
+  bound > 0.45; no signal: AUC < 0.55; compared with the file of 2026-11-06 on the
+  same trials'
