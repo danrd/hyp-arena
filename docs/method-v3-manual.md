@@ -1,6 +1,6 @@
 # Method v3 manual: how a hypothesis is scored and how to read the report
 
-This manual describes the current rules of the method (version **v3.10**) as one self-contained text: a reader, a model or
+This manual describes the current rules of the method (version **v3.11**) as one self-contained text: a reader, a model or
 an outside reviewer can score a hypothesis and read its report from it alone. Each stage has its own detailed manual in
 [`docs/system/`](system/) ([the card](system/card.md), [the search](system/search.md), [the reading](system/reading.md), [from a record to the evidence balance](system/evidence.md), [novelty](system/novelty.md), [indicators and ranking](system/ranking.md), [experiment and alternatives](system/alternatives.md), [improvements and versions](system/versions.md)); this manual is their compressed aggregate. How the rules
 came to be what they are, with the checks behind each change, is in the [change log](system/changelog.md), not here.
@@ -54,6 +54,7 @@ section 10. Rules for a model writing such a report:
 - When in doubt between two levels, take the lower one and say why. For novelty, take the level nearer the known: a paper you
   were not given may exist, and missing data are never novelty.
 - Use the names and the help section of section 10a: no code shown alone, no new names for existing terms.
+- **Methodological threats are not alternatives to propose or search**: list the threats of the experiment's system and judge them by the rules of section 7 (in humans from the stated design; elsewhere "does not tell apart" with what would rule each out).
 - **What the experiment does to an alternative (d) comes only from the registry text as it stood at T** (section 7): never
   from the trial's own publications or anything published after T, and never from a design label alone ("randomised",
   "placebo-controlled", "factorial"): name the arm and the result that would rule the alternative out, or give at most
@@ -153,11 +154,14 @@ The detailed rules, every field with its origin and what reads it, and a worked 
   two worked examples of other hypotheses and an empty JSON skeleton. Not the date T, not the literature, not other
   hypotheses. The code checks the schema and the verbatim phrases and sends problems back for up to three rounds (a claim
   without a verbatim phrase is dropped).
-- **Alternatives (added after the search, not part of the card):** competing explanations proposed by a second model call
-  from up to 25 abstracts found for the hypothesis (prompt `propose_alternatives`: up to 5, after going through seven kinds
-  of competitor — expectation and placebo; attention and supervision; co-interventions; selection and attrition; measurement
-  and learning; regression to the mean and natural course; another biological route). They are then searched and read like
-  claims: their support comes from the records found (the model's PMIDs only seed the search), and a finding counts for an
+- **Alternatives (added after the search, not part of the card)** are of two kinds. **Methodological threats** (artefacts of
+  how the experiment is run: practice on the test, regression to the mean, the assessor's or the participant's knowledge of
+  the arm, unequal attention, selection and attrition, co-interventions, multiplicity) are a fixed checklist per system of
+  the stated experiment, judged from the design without a literature search, as risk-of-bias tools do (section 7).
+  **Substantive alternatives** (another cause in the world: another part of the intervention, a shared route, natural
+  course, another biological route) are proposed by a second model call from up to 25 abstracts found for the hypothesis
+  (prompt `propose_alternatives`: up to 5); a proposed alternative whose words name a methodological threat is dropped by
+  code, since the checklist covers it. Substantive alternatives are then searched and read like claims: their support comes from the records found (the model's PMIDs only seed the search), and a finding counts for an
   alternative only when it shows the part that differs from the hypothesis (for "attention and supervision", an effect of
   attention itself, not that the exercise works). What the experiment does to each is judged from the registry text
   (section 7). The mechanism is taken strictly from the text, while competitors are looked for more widely than the author
@@ -339,9 +343,31 @@ text without one of them is returned as "needs refinement" with the missing part
   process: senescent cells, proteostasis markers, mitochondrial function), not something inferred from the kind of
   intervention: "protein after exercise → muscle protein synthesis" is an organ link, not the hallmark "loss of
   proteostasis".
-- **Informativeness I** = min(1, Σ a·d / 1.5) over the proposed alternatives, from 0 to 1. a = support of the alternative,
-  max(0, 2 (S − 0.5)) with S its strength; d = what the stated experiment does to it at either outcome (cuts it off 1,
-  weakens it 0.5, does not tell apart 0). Without supported alternatives I = 0: an invented alternative adds nothing.
+- **Informativeness I** = min(1, (Σ a·d + 0.5·k) / 1.5), from 0 to 1. The sum runs over the substantive alternatives:
+  a = support of the alternative, max(0, 2 (S − 0.5)) with S its strength; d = what the stated experiment does to it at
+  either outcome (cuts it off 1, weakens it 0.5, does not tell apart 0). An alternative without support adds nothing.
+  k is the share of the **methodological threats** of the experiment's system that the stated design rules out (cut off 1,
+  weakened 1/2); the checklist counts as one alternative of support 1/2, so a design that rules out every threat adds
+  1/3 to I and the rest comes from the substantive alternatives. Without a stated experiment (system unknown) there is no
+  checklist.
+  **The checklist per system** (RoB 2, [Sterne 2019, PMID 31462531](https://pubmed.ncbi.nlm.nih.gov/31462531/); ROBINS-I,
+  [Sterne 2016, PMID 27733354](https://pubmed.ncbi.nlm.nih.gov/27733354/); SYRCLE,
+  [Hooijmans 2014, PMID 24667063](https://pubmed.ncbi.nlm.nih.gov/24667063/)): humans — practice on the test, regression to
+  the mean and natural course, the assessor knows the arm, the participant's expectation, unequal attention, selection and
+  attrition, co-interventions, multiplicity; animals — allocation across cages and litters, the assessor, attrition,
+  handling and vehicle, housing, one sex, strain or age, multiplicity; cells — batch, passage or donor, off-target action of
+  the tool, vehicle, culture artefact, line identity, multiplicity; data analysis — confounding, reverse causation,
+  selection, measurement, multiplicity.
+  **The verdict on a threat in humans is set by code** from the registry design fields (allocation, who is masked, arm
+  types), else from the card's stated experiment (masking not stated = not masked): practice and regression — cut off by a
+  randomised concurrent control, weakened by a non-randomised one; the assessor — cut off when the outcome assessor is
+  masked; expectation — cut off when the participant is masked and the control is a placebo or sham, weakened when one of
+  the two; attention — cut off by a placebo or sham control, weakened by an active comparator; selection and
+  co-interventions — weakened by randomisation (randomisation balances the groups at entry, not what happens after it);
+  multiplicity — not told apart. **In animals, cells and data analysis** a threat is "does not tell apart" (d = 0): there the
+  verdict depends on what the control is (a matched vehicle, independent donors, a second tool), which the card does not
+  carry. Every threat not cut off is listed in the report with the design feature that would rule it out
+  (flag `threats_open`).
   **How d is set:** d = 1 only when the experiment has a named arm, control or measurement for which the hypothesis and the
   alternative predict different results, and one of the possible results contradicts the alternative (an active control
   matched for attention rules out "any attention helps"); d = 0.5 when the experiment only measures the variable the
@@ -351,7 +377,7 @@ text without one of them is returned as "needs refinement" with the missing part
   from the registry text current at T (for a retrospective trial, the version registered before T), never from the trial's
   publications or other texts after T, writing what the hypothesis and the alternative predict for each named arm, with the
   separating phrase copied verbatim (a "cuts off" without one becomes "weakens").
-- **Headroom I** = I if the experiment cut off every supported alternative (d = 1): what improving the experiment could add;
+- **Headroom I** = I if the experiment cut off every supported alternative and every threat of the checklist (d = 1, k = 1): what improving the experiment could add;
   an input of the room to improve (section 11).
 - **Novelty N** ([`novelty_v34.novelty`](../hyparena/novelty/novelty_v34.py)): the distance of the hypothesis to what was already
   asked before T, from the usable records on either side (a question already asked is not new, whatever the answer). It is
@@ -445,6 +471,7 @@ with written mechanisms before any use.
 | build_mechanism | no engagement, pathway or effect link: the mechanism is not written |
 | name_supported_alternatives | no proposed alternative has support |
 | improve_experiment | supported alternatives are left standing by the stated experiment (headroom above I) |
+| threats_open | methodological threats of the system the stated design does not cut off, each with what would rule it out |
 | find_primary_report | a review restates a trial whose own paper was not found |
 | contested_link | a link has records for and against of comparable weight |
 | <id>_established_by_approval | a link was taken as at least 5/6 by the approved-action rule |
@@ -617,6 +644,7 @@ DESIGN_NAMES, DISC; [`hyparena/reports/report_v2.py`](../hyparena/reports/report
 | flag | `build_mechanism` | механизм не выписан | mechanism not written |
 | flag | `name_supported_alternatives` | нет подкреплённых альтернатив | no supported alternatives |
 | flag | `improve_experiment` | эксперимент оставляет альтернативы | experiment leaves alternatives standing |
+| flag | `threats_open` | эксперимент оставляет методологические угрозы | experiment leaves methodological threats standing |
 | flag | `find_primary_report` | найти статью самого испытания | find the trial's own paper |
 | flag | `contested_link` | спорное звено | contested link |
 | flag | `retracted_source_dropped` | отозванная статья исключена | retracted paper dropped |
@@ -875,6 +903,13 @@ feasibility:
   n_bands: [[50, 1.0], [200, 0.666667], [1000, 0.333333]]   # n under the bound gets the score; more: 0
 link_thresholds: {moderate: 0.6, strong: 1.5, strong_min_independent: 2}
 informativeness_cap: 1.5
+v311:
+  threat_checklist_support: 0.5   # the checklist counts in I as one alternative of this support, d = share of threats cut off
+  threats:
+    human: [practice, regression, assessor, expectation, attention, selection, cointervention, multiplicity]
+    animal: [allocation, assessor, attrition, handling, housing, sex_strain_age, multiplicity]
+    cells: [batch, off_target, vehicle, culture_artefact, line_identity, multiplicity]
+    data_analysis: [confounding, reverse_causation, selection, measurement, multiplicity]
 effect_unclear_weight: 0.5
 precision_bands: [30, 100, 300]
 scales:

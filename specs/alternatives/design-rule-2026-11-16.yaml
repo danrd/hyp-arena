@@ -146,3 +146,8 @@ universal_rule:
       passage), which a yes/no feature does not carry. The threat lists are usable as a fixed checklist for every system;
       the verdict by code only for experiments in humans, elsewhere "does not tell apart" by default with the improvement
       item naming what would rule the threat out (the outside reader gave it for every alternative)
+
+correction_2026_11_16: >-
+  registry_design read "non randomized" (NON_RANDOMIZED as the text builder writes it) as randomised; 5 of the 60 prospective
+  trials changed allocation. Recounted on pack 6 with the fix: code verdict weighted kappa 0.451, exact 0.573 (was 0.447,
+  0.565); the model's verdict unchanged (0.143). The rule still passes

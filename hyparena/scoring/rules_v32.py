@@ -37,6 +37,7 @@ from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
 from typing import Optional
 
+from hyparena.alternatives import threats
 from hyparena.scoring import rules_v3 as r3
 from hyparena.scoring import v3_levels as lv
 from hyparena.reading.effect_class import _FOLD, _RATIO, _SMD, is_risk_ratio
@@ -341,6 +342,7 @@ class V32Result:
     chain_state: float = 0.0                                          # A: mean of 2S - 1 over the slots
     silent_share: float = 0.0                                         # G: slots read but with no stance and no record
     headroom_I: Optional[float] = None                                # v3.4: I if the experiment cut off every supported alternative
+    checklist: Optional[dict] = None                                  # v3.11: methodological threats of the system and their verdicts
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -350,6 +352,9 @@ class V32Result:
 # place by their best link); "min" or "mean": all steps one place, by the weakest step with data or by their mean (v3.10
 # candidate: an added well-supported step cannot raise the balance; specs/card/merge-steps-2026-11-14.yaml)
 STEPS_SLOT = os.environ.get("STEPS_SLOT", "min")             # v3.10 (2026-11-14)
+# v3.11 (user 2026-11-16, specs/alternatives/threat-checklist-2026-11-16.yaml): a fixed checklist of methodological threats
+# per system in I in place of the methodological alternatives the proposer writes; THREAT_CHECKLIST=0 gives v3.10
+THREAT_CHECKLIST = os.environ.get("THREAT_CHECKLIST", "1") != "0"
 EMPTY_SLOTS = os.environ.get("EMPTY_SLOTS", "skip")       # v3.7 (user 2026-11-09, specs/scoring/empty-slots-2026-11-09.yaml): "skip"; "count" = v3.6
 
 
@@ -466,7 +471,11 @@ def _evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
     total = 0.0
     total_all = 0.0
     supported = False
+    ck = threats.checklist(card) if v34 and THREAT_CHECKLIST else None
+    res.checklist = ck
     for alt in card.proposed_alternatives:
+        if ck is not None and threats.is_methodological(alt):
+            continue                                      # v3.11: methodological threats are judged by the checklist
         cv = (alt_verifications or {}).get(alt.id)
         a_claim = Claim(id=alt.id, subject=alt.subject, relation=alt.relation, object=alt.object, qualifiers=alt.qualifiers,
                         role="premise", source_span="")
@@ -478,6 +487,10 @@ def _evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
         total += a * d
         total_all += a
     if v34:                                               # 2026-11-08 (user): I on 0-1, no floor of 1/3
+        if ck is not None:                                # v3.11: the checklist counts as one alternative of support 1/2
+            total += threats.A_CHECKLIST * ck["share"]
+            total_all += threats.A_CHECKLIST
+            supported = True
         res.I = round(min(1.0, total / r3.I_CAP), 4) if supported else 0.0
         res.headroom_I = round(min(1.0, total_all / r3.I_CAP), 4) if supported else 0.0
     else:

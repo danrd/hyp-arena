@@ -60,3 +60,35 @@ rule:
     a model verdict for cells and animals from a verbatim phrase (check on pack 28, about 0.05 USD, pass at weighted kappa
     0.40); a 'specificity control' field in the card (card template v18); co-interventions and selection as ruled out when
     an intention-to-treat analysis and complete data are stated
+
+result_2026_11_16:
+  file: longevity-kg reviews/argon-2026-11-14/threat_checklist.json (python -m scripts.alternatives.threat_checklist)
+  parser_fix: >-
+    the first count read 10 non-randomised trials as randomised (5 of 74 calibration, 5 of 60 prospective): the text builder
+    writes NON_RANDOMIZED as "non randomized" and registry_design looked only for "non-randomized". Fixed in
+    hyparena/card/normalizer.py (registry_design; design_from_registry now also turns a model's rct into other when the
+    registry says non-randomised); the cached design fields of both pools and the registry fields of the 2 affected frozen
+    v17 calibration cards (NCT04796701, NCT07864831: design rct -> other) re-derived by code. The numbers below are after
+    the fix; the first count passed the rule as well (most common value 0.068 and 0.136, |Spearman| at most 0.19)
+  design_fields: "calibration 66 of 73 from the registry design fields (hypothesis_sources/calibration/design_fields.json), the rest from the card; prospective 59 of 59 from the registry"
+  dropped: "123 of 355 proposed alternatives (calibration), 124 of 293 (prospective)"
+  calibration_73:
+    I_before: {zeros: 17, median: 0.182, q75: 0.348, commonest_share: 0.247}
+    I_after: {zeros: 1, median: 0.271, q75: 0.442, distinct: 40, commonest_share: 0.068}
+    redundancy_spearman: {chain_state: -0.102, best_design_outcome: 0.145, endpoint_clinical: 0.121, feasibility: 0.029, W: 0.075, N: -0.112}
+    share_of_I_from_checklist: 0.47
+    spearman_before_after: 0.77
+  prospective_59:
+    I_before: {zeros: 18, median: 0.129, q75: 0.410, commonest_share: 0.305}
+    I_after: {zeros: 3, median: 0.25, q75: 0.380, distinct: 37, commonest_share: 0.119}
+    redundancy_spearman: {chain_state: 0.11, best_design_outcome: 0.21, endpoint_clinical: 0.09, feasibility: -0.058, W: 0.148, N: 0.043}
+    share_of_I_from_checklist: 0.514
+    spearman_before_after: 0.673
+    aspid_rankings_57: {evidence: {spearman: 0.953, moved_over_10: 2, max_move: 15}, funding: {spearman: 0.991, moved_over_10: 0, max_move: 9}, frontier: {spearman: 0.947, moved_over_10: 3, max_move: 23}}
+  by_the_rule: "adopted: on both sets at least three values, none above 0.7 (0.068, 0.119), |Spearman| < 0.7 with every indicator (at most 0.21)"
+  adopted: >-
+    method v3.11 (hyparena/alternatives/threats.py; rules_v32 THREAT_CHECKLIST, on by default; the proposer drops
+    methodological alternatives; report flag threats_open). Saved runs re-scored by the code use the card's registry
+    fields, and the cards of these saved runs have none (normaliser before v13): there the verdict comes from the card's
+    design and control, masking not stated, so the share is lower (median 0.375 against 0.44-0.5 from the registry).
+    Cards of normaliser v13 and later (the frozen v17 cards, the coming calibration run) carry the registry fields

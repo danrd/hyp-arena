@@ -189,12 +189,41 @@ def data(rep: dict) -> dict:
     }
 
 
+THREAT_SYSTEM = {"human": "люди", "animal": "животные", "cells": "клетки", "data_analysis": "анализ данных"}
+THREAT_NAMES = {"practice": "научение на повторном тесте", "regression": "регрессия к среднему и естественное течение",
+                "assessor": "оценщик знает группу", "expectation": "ожидание участника", "attention": "неравное внимание",
+                "selection": "отбор и выбывание", "cointervention": "сопутствующие вмешательства",
+                "multiplicity": "множественность сравнений", "allocation": "распределение по клеткам и помётам",
+                "attrition": "выбывание животных", "handling": "обращение и инъекции", "housing": "условия содержания",
+                "sex_strain_age": "один пол, линия или возраст", "batch": "партия, пассаж, донор",
+                "off_target": "нецелевое действие инструмента", "vehicle": "растворитель", "culture_artefact": "артефакт культуры",
+                "line_identity": "подлинность линии", "confounding": "смешение", "reverse_causation": "обратная причинность",
+                "measurement": "ошибка измерения"}
+
+THREAT_FIX = {"practice": "рандомизированная параллельная контрольная группа с тем же графиком тестов",
+              "regression": "рандомизированная параллельная контрольная группа",
+              "assessor": "оценщики исхода не знают группу", "expectation": "участники не знают группу, контроль — плацебо или имитация",
+              "attention": "плацебо или имитация с тем же временем контакта",
+              "selection": "рандомизация и анализ всех рандомизированных", "cointervention": "рандомизация и учёт сопутствующего лечения в обеих группах",
+              "multiplicity": "один заранее объявленный первичный исход и анализ",
+              "allocation": "рандомизация животных по клеткам и помётам", "attrition": "учёт каждого животного, исключения объявлены заранее",
+              "handling": "контроль с тем же обращением (растворитель, имитация процедуры)", "housing": "одинаковые условия, клетки сбалансированы по группам",
+              "sex_strain_age": "оба пола или вторая линия либо возраст", "batch": "независимые повторности (доноры, клоны, партии), а не пассажи одной культуры",
+              "off_target": "контроль специфичности: второй инструмент на ту же мишень, восстановление функции или зависимость от дозы",
+              "vehicle": "контроль с растворителем той же концентрации", "culture_artefact": "повтор на первичных клетках или in vivo",
+              "line_identity": "аутентификация линий (STR) и проверка на микоплазму",
+              "confounding": "поправка на названные смешивающие факторы или дизайн без них (сибсы, менделевская рандомизация)",
+              "reverse_causation": "воздействие измерено до исхода, с лагом", "measurement": "валидированная мера, одинаковая в сравниваемых группах"}
+
+
 def flag_details(x: dict) -> list[dict]:
     """Each flag of a hypothesis with the concrete reason in this hypothesis (user request 2026-11-08: not the general idea of
     the flag)."""
     chain = {c["id"]: c for c in x.get("chain", [])}
     out = []
-    for fl in x.get("flags", []):
+    ck = x.get("checklist") or {}
+    flags = list(x.get("flags", [])) + (["threats_open"] if ck.get("open") else [])
+    for fl in flags:
         code, detail = fl, ""
         if fl == "build_mechanism":
             detail = ("В цепочке только исход: мишень, путь и промежуточный эффект не выписаны, поэтому механизм не проверялся; "
@@ -209,6 +238,10 @@ def flag_details(x: dict) -> list[dict]:
                 f"«{a['text']}» (опора {a['support']:.2f}; при успехе — {rh.DISC.get(a['on_positive'], (a['on_positive'],))[0]}, "
                 f"при неудаче — {rh.DISC.get(a['on_negative'], (a['on_negative'],))[0]})" for a in open_) +
                 f". Если отсекать их все, I выросла бы с {x['I']:.2f} до {(x.get('values') or {}).get('I_headroom') or x['I']:.2f}.")
+        elif fl == "threats_open":
+            detail = (f"Методологические угрозы ({THREAT_SYSTEM.get(ck['system'], ck['system'])}), которые эксперимент не отсекает: " + "; ".join(
+                f"{THREAT_NAMES.get(o['threat'], o['threat'])} ({'ослабляет' if o['verdict'] == 'weakened' else 'не различает'}; "
+                f"отсечёт: {THREAT_FIX.get(o['threat'], o['fix'])})" for o in ck["open"]) + f". Доля отсечённых угроз {ck['share']:.2f}.")
         elif fl == "name_supported_alternatives":
             n = len(x.get("alternatives", []))
             detail = (f"Ни у одной из {n} предложенных альтернатив нет опоры в литературе до даты среза, поэтому эксперимент "
@@ -231,7 +264,7 @@ def flag_details(x: dict) -> list[dict]:
 
 FLAG_NAMES = {
     "build_mechanism": ("механизм не выписан", ""), "name_supported_alternatives": ("нет подкреплённых альтернатив", ""),
-    "improve_experiment": ("эксперимент оставляет альтернативы", ""), "find_primary_report": ("найти статью самого испытания", ""),
+    "improve_experiment": ("эксперимент оставляет альтернативы", ""), "threats_open": ("эксперимент оставляет методологические угрозы", ""), "find_primary_report": ("найти статью самого испытания", ""),
     "contested_link": ("спорное звено", ""), "retracted_source_dropped": ("отозванная статья исключена", ""),
     "established_by_approval": ("звено принято по одобрению", ""),
 }

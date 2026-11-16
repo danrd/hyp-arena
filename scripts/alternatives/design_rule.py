@@ -10,47 +10,15 @@ import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
+from hyparena.alternatives.threats import KINDS, human_verdict, kind_of  # noqa: F401
 from hyparena.card.normalizer import registry_design
 
 KG = Path(__file__).resolve().parents[2].parent / "longevity-kg"
 P22, P6 = KG / "reviews" / "argon-2026-11-14", KG / "reviews" / "argon-2026-11-08"
 HS = KG / "hypothesis_sources"
 ORDER = {"unchanged": 0, "weakened": 1, "eliminated": 2}
-KINDS = (     # the first that matches decides
-    ("multiplicity", r"multiple (comparisons|test|endpoint|primary)|multiplicity|family-wise|false-positive|statistical independence|independent observations"),
-    ("practice", r"practice|familiari[sz]|learning effect|motor learning|test-retest|repeated (test|assess|measure)|retest"),
-    ("regression", r"regression to the mean|natural (course|history|recovery)|spontaneous|secular|time trend|seasonal"),
-    ("assessor", r"observer|assessor|rater|measurement bias|detection bias|ascertainment|unblinded (outcome|trainer|staff|physio|senior)|charting"),
-    ("attention", r"\bcontact\b|attention|supervision|hawthorne|social interaction|staff time"),
-    ("expectation", r"expectation|expectanc|placebo|nocebo|unblind|lack of (participant )?blinding|self-report|social desirability|volitional|motivation"),
-    ("selection", r"selection|attrition|drop-?out|completers|baseline (imbalance|difference|between)|healthy[- ]user|survivor"),
-    ("cointervention", r"adherence|compliance|co-?intervention|concomitant|snacking|carry-?over|washout|vehicle|usual care (drift|change)"),
-)
-
-
-def kind_of(text: str) -> str | None:
-    return next((k for k, rx in KINDS if re.search(rx, text, re.I)), None)
-
-
-def verdict(kind: str, reg: dict) -> str:
-    """What the stated design does to a methodological alternative under the expected result, from the registry fields."""
-    rand = reg.get("allocation") == "randomized"
-    types = [a.get("type") for a in reg.get("arms") or []]
-    control = len(types) >= 2 or reg.get("model") in ("parallel", "crossover", "factorial")
-    masked = set(reg.get("masked") or [])
-    dummy = any(t in ("placebo comparator", "sham comparator") for t in types)
-    if kind in ("practice", "regression"):
-        return "eliminated" if rand and control else "weakened" if control else "unchanged"
-    if kind == "assessor":
-        return "eliminated" if "outcomes assessor" in masked else "unchanged"
-    if kind == "expectation":
-        p = "participant" in masked
-        return "eliminated" if p and dummy else "weakened" if p or dummy else "unchanged"
-    if kind == "attention":
-        return "eliminated" if dummy else "weakened" if "active comparator" in types else "unchanged"
-    if kind in ("selection", "cointervention"):
-        return "weakened" if rand else "unchanged"
-    return "unchanged"
+# the kinds and the verdict now live in hyparena.alternatives.threats (method v3.11); the names are kept for this check
+verdict = human_verdict
 
 
 def wkappa(pairs: list[tuple[str, str]]) -> float | None:

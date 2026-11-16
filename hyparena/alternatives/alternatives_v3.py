@@ -10,7 +10,9 @@ import typing
 from typing import Optional
 
 from hyparena.card.llm import ask
+from hyparena.alternatives.threats import is_methodological
 from hyparena.card.models import HypothesisCard, ProposedAlternative, Relation
+from hyparena.scoring.rules_v32 import THREAT_CHECKLIST
 
 MAX_ALTERNATIVES = 5
 MAX_ABSTRACTS = 25
@@ -49,7 +51,10 @@ def propose(client, family: str, card: HypothesisCard, abstracts: dict[str, dict
         if raw.get("relation") not in typing.get_args(Relation):
             raw["relation"] = "other"
         try:
-            out.append(ProposedAlternative.model_validate(raw))
+            alt = ProposedAlternative.model_validate(raw)
         except Exception:                                   # eliminated by both outcomes, or malformed: dropped
             continue
+        if THREAT_CHECKLIST and is_methodological(alt):    # v3.11: judged by the threat checklist from the design
+            continue
+        out.append(alt)
     return out

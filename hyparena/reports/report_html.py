@@ -19,6 +19,8 @@ from collections import Counter
 from pathlib import Path
 from typing import Optional
 
+from hyparena.alternatives import threats as _threats
+
 from hyparena.scoring import aspid_v3
 from hyparena.scoring import rules_v3 as r3
 from hyparena.scoring import rules_v32 as r32
@@ -237,6 +239,8 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
                           "label": labels.get(cl.id, "unverified"), "records": recs})
         alt_rows = []
         for alt in card.proposed_alternatives:
+            if res.checklist is not None and _threats.is_methodological(alt):
+                continue                                    # v3.11: shown in the threat checklist instead
             cv = alts.get(alt.id)
             ac = r32.Claim(id=alt.id, subject=alt.subject, relation=alt.relation, object=alt.object, qualifiers=alt.qualifiers,
                            role="premise", source_span="")
@@ -270,7 +274,7 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
         raise_to, raise_link = None, (bott.split(",")[0] if lev > 0 else None)        # v3.4: support, not P, rises with data
         de = card.decisive_experiment
         hyps[h] = {**base, "plain": card.claim_plain, "P": res.P, "P_lo": res.P_lo, "P_hi": res.P_hi, "I": res.I, "V": res.V,
-                   "scope": res.scope, "gate": res.gate, "chain": chain, "alternatives": alt_rows,
+                   "scope": res.scope, "gate": res.gate, "chain": chain, "alternatives": alt_rows, "checklist": res.checklist,
                    "weakest": weakest["id"] if weakest else None, "strongest": strongest["id"] if strongest else None,
                    "P_if_weakest_moderate": raise_to, "raise_link": raise_link, "support_share": res.support_share, "coverage": res.coverage,
                    "unchecked": [c["id"] for c in chain if not c["checked"]], "experiment": {"design": de.design, "endpoint": de.endpoint, "n": de.n_planned},

@@ -28,3 +28,7 @@ rule:
   no_signal: "R3 below 0.55: the changes since the saved runs did not carry to the whole pool; the causes are sorted by stage before anything else is changed"
   unclear: otherwise
   leak: the three texts that state the outcome (H86, H113, H96) are reported apart, as in specs/data/calibration-leak-2026-11-12.yaml
+note_2026_11_16: >-
+  before the run: method v3.11 (the threat checklist in I) is the working method; I is not in the evidence balance, so R2
+  and R3 are not touched. Two frozen v17 cards (NCT04796701, NCT07864831) had allocation read as randomised from
+  "non randomized" (a parser error, fixed): their registry allocation is non_randomized and their design other

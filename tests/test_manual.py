@@ -209,3 +209,11 @@ def test_manual_worked_example_current(monkeypatch):
     assert f"| with one mouse study of 40 for c2 | | S {e2.links['c2'][0]:.3f} | | evidence balance {e2.chain_state:.3f} |" in text
     e3 = r32.evaluate(c, cvs + [ClaimVerification(id="c2", counterevidence=[rec(5, "animal", n=40, effect="none")])], alts, v36=True)
     assert f"| with one mouse study of 40 against c2 | | S {e3.links['c2'][0]:.3f} | | evidence balance {e3.chain_state:.3f} |" in text
+
+
+def test_manual_threat_checklist_equals_the_code():
+    """v3.11: the checklist of methodological threats per system and its support in I."""
+    from hyparena.alternatives import threats
+    c = _constants()["v311"]
+    assert c["threat_checklist_support"] == threats.A_CHECKLIST
+    assert {k: list(v) for k, v in c["threats"].items()} == {k: list(v) for k, v in threats.THREATS.items()}

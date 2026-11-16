@@ -19,6 +19,7 @@ from hyparena.scoring import rules_v32, v3_extra
 from scripts.alternatives.design_rule import HS, KG, P22, designs60, kind_of, verdict as human_verdict
 
 OUT = P22 / "threat_checklist.json"
+rules_v32.THREAT_CHECKLIST = False      # "before" is v3.10; the checklist is added here from the registry fields
 CAL, PROS = HS / "calibration", HS / "prospective"
 A_CHECKLIST = 0.5
 VALUE = {"eliminated": 1.0, "weakened": 0.5, "unchanged": 0.0}

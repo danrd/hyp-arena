@@ -306,8 +306,8 @@ def registry_design(raw_text: str) -> dict:
     m = re.search(r"^Design:\s*(.+)$", raw_text, re.M)
     if m:
         d = m.group(1).lower()
-        out["allocation"] = "randomized" if "non-randomized" not in d and "randomized" in d else (
-            "non_randomized" if "non-randomized" in d else "unknown")
+        non = re.search(r"\bnon[- _]?randomi[sz]ed", d)     # the text builder writes NON_RANDOMIZED as "non randomized"
+        out["allocation"] = "non_randomized" if non else "randomized" if re.search(r"\brandomi[sz]ed", d) else "unknown"
         mm = re.search(r"masking (\w+)(?: \(([^)]*)\))?", d)
         out["masking"] = mm.group(1) if mm else "unknown"
         out["masked"] = [x.strip() for x in mm.group(2).split(",")] if mm and mm.group(2) else []
@@ -473,6 +473,8 @@ def design_from_registry(card: HypothesisCard, raw_text: str) -> None:
     e.registry = {**reg, **(e.registry or {})}
     if reg.get("allocation") == "randomized" and e.design in ("unknown", "other"):
         e.design = "rct"
+    elif reg.get("allocation") == "non_randomized" and e.design in ("rct", "cluster_rct"):
+        e.design = "other"                      # the registry decides randomization both ways
 
 
 def primary_from_registry(card: HypothesisCard, raw_text: str) -> list[str]:
