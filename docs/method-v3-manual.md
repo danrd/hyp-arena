@@ -790,7 +790,7 @@ the decisive experiment with system, design, control, endpoint and duration) and
 experiment); the hypotheses of one run are different ideas (no two share the intervention and the outcome). It then takes
 each hypothesis through every step of the method as written here (search before T, records, weights, links and the gate,
 axes, profiles, improvement list), with the levels and names of this manual; a value it cannot find by the rule is "not
-computed". **Generation tasks for a comparison** are the same plain request plus at most one block (the card, or a short description of the steps the method expects of a hypothesis, without how it is scored), so that each participant differs from the plain request by exactly one part of the method; evolution is a separate task. **Free evolution** in a chat follows the free mode of section 11 with "a better hypothesis" as the goal when no
+computed". **Generation tasks for a comparison** are the same plain request plus blocks: the card, or a short description of the steps the method expects of a hypothesis (without how it is scored), each alone, so that the participant differs from the plain request by exactly one part of the method, or both joined into one (the check written against the card's links); evolution is a separate task. **Free evolution** in a chat follows the free mode of section 11 with "a better hypothesis" as the goal when no
 profile is named; the version is scored again from its own reading. Code then checks the answer: every PMID exists, was
 public before T and has the title given; every quote is verbatim in the abstract named; the card has an intervention, an
 outcome, at least one step and an experiment with system, design and endpoint.

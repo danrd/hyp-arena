@@ -96,10 +96,8 @@ def test_participants_are_the_base_plus_at_most_one_block(tmp_path, monkeypatch)
     tasks = {p: gt.build(p, "2026-11-16") for p in gt.PARTICIPANTS}
     a = tasks["a"]["instructions"]
     assert a == [gt.base()] + gt.COMMON
-    for p, block in gt.PARTICIPANTS.items():
-        if block is None:
-            continue
-        spec, fields = gt.BLOCKS[block]
+    for p in ("b", "s"):
+        spec, fields = gt.PARTICIPANTS[p]
         assert tasks[p]["instructions"] == [gt.base()] + spec(gt.N) + gt.COMMON
         h = tasks[p]["answer_format"]["hypotheses"][0]
         assert set(h) == set(gt.HYP) | {"id"} | set(fields)
@@ -119,3 +117,16 @@ def test_check_block_problems_and_refs():
     where = {w for _, _, w in gt._pmids({"check": good})}
     assert where == {"check_for", "check_tested", "check_against_whole"}
     assert gt.format_problems("s", {"hypotheses": [{"id": "S1", "claim": "c", "rationale": "r", "experiment": "e"}] * gt.N}) == []
+
+
+def test_bs_joins_card_and_steps_once():
+    bs = gt.build("bs", "2026-11-16", write=False)
+    ins, h = bs["instructions"], bs["answer_format"]["hypotheses"][0]
+    assert ins[0] == gt.base() and ins[-len(gt.COMMON):] == gt.COMMON
+    body = " ".join(ins)
+    assert body.count("extra requirement") == 1 and body.count("Write the claim") == 1
+    assert all(item in ins for item in gt._CARD_ITEMS)                       # BS = B + the check
+    assert "card" in h and h["check"]["steps"][0]["link"] == "c1" and "step" not in h["check"]["steps"][0]
+    card = {"links": [{"id": "c1"}, {"id": "c2"}]}
+    chk = {"steps": [{"link": "c1"}, {"link": "c9"}], "alternatives": [{"text": "x"}], "tested_before_T": {"answer": "partly"}}
+    assert gt.check_problems(chk, card) == ["check steps name links not in the card: ['c9']"]

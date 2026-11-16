@@ -2,14 +2,14 @@
 writes every arm in a chat (Argon or ChatGPT), the checks of its answers by code, and the collection of the arms for
 scripts/evolution/generation_compare.py. Free (PubMed E-utilities only).
 
-    python -m scripts.argon.generation_tasks build --participant a|b|s [--topic ...] [--n 5]
-                                                                        # base request + at most one block: a = base,
-                                                                        # b = base + card, s = base + steps (independent)
+    python -m scripts.argon.generation_tasks build --participant a|b|s|bs [--topic ...] [--n 5]
+                                                                        # base request + blocks: a = base, b = + card,
+                                                                        # s = + steps (independent), bs = + card and steps
     python -m scripts.argon.generation_tasks build-a                    # A: the plain request
     python -m scripts.argon.generation_tasks build-b                    # B: structured generation and the method by the manual
     python -m scripts.argon.generation_tasks build-reports              # the method by the manual on the hypotheses of A
     python -m scripts.argon.generation_tasks build-evolve --arm C       # free evolution of B (C) or of A (D)
-    python -m scripts.argon.generation_tasks check --kind a|b|s|reports|c|d
+    python -m scripts.argon.generation_tasks check --kind a|b|s|bs|reports|c|d
     python -m scripts.argon.generation_tasks collect                    # -> hypotheses.json for the comparison
 
 Files in longevity-kg reviews/generation-<date>/ (DIR, private): `task_<kind>.json` (sent), `answer_<kind>.json` (put
@@ -58,42 +58,63 @@ def base(n: int = N) -> str:
 A_BASE = base()
 
 
+_ONE = "(this is the only extra requirement):"
+_CARD_INTRO = "In addition, before you write each hypothesis's text, lay it out as a structured card "
+_STEPS_INTRO = "In addition, before you write each hypothesis's text, check it the way a careful researcher would before proposing it "
+_CARD_ITEMS = [
+    "- intervention: a label and a type (drug, supplement, exercise, device, gene or cell perturbation, ...); population: "
+    "species, age and condition.",
+    "- the mechanism as an ordered chain of links from the intervention to the outcome: each link is a triple subject - "
+    "relation - object, with a short relation verb (activates, inhibits, hyperpolarizes, suppresses, promotes, restores, "
+    "improves, reduces, ...) and a role ('step' for a link before the outcome, 'outcome' for the one the hypothesis "
+    "promises to change); at least one step before the outcome, at most four.",
+    "- outcome: what the hypothesis promises to change, named by its measure.",
+    "- decisive experiment: system (human, mouse, rat, cells, ...), design, control or comparator, primary endpoint, duration.",
+]
+
+
+def _steps_items(on_card: bool) -> list[str]:
+    """The check of the block 'steps'; on_card: the same check written against the links and the experiment of the card
+    (participant BS), so that the two blocks name the steps once."""
+    first = ("- For each link of the card look for published evidence before T, both for and against; a link with no evidence "
+             "is said to be unsupported, not filled by assumption." if on_card else
+             "- Name the steps by which the intervention is expected to change the outcome. For each step look for published "
+             "evidence before T, both for and against; a step with no evidence is said to be unsupported, not filled by assumption.")
+    exp = ("- The decisive experiment is the nearest one that would convincingly confirm or refute the hypothesis, in a system "
+           "as close to people as the question allows." if on_card else
+           "- The experiment is the nearest one that would convincingly confirm or refute the hypothesis: a control, a "
+           "measurable endpoint, a duration, in a system as close to people as the question allows.")
+    return [first,
+            "- Look for evidence against the hypothesis as a whole, not only for what supports it, and keep what you find.",
+            "- Name the other explanations that would give the result the hypothesis predicts, and say how the "
+            + ("decisive " if on_card else "") + "experiment tells them apart.",
+            "- Check whether the idea was already tested before T; if it was, say what was found and propose only what goes "
+            "beyond it.",
+            exp]
+
+
+def _outro(source: str, n: int) -> str:
+    return (f"Write the claim, rationale and experiment from {source}. The {_words(n)} hypotheses must be different ideas: no "
+            "two share both the intervention and the outcome.")
+
+
 def card_spec(n: int = N) -> list[str]:
     """Block 'card': our card specification, nothing about scoring or what the method values."""
-    return [
-        "In addition, before you write each hypothesis's text, lay it out as a structured card (this is the only extra "
-        "requirement):",
-        "- intervention: a label and a type (drug, supplement, exercise, device, gene or cell perturbation, ...); population: "
-        "species, age and condition.",
-        "- the mechanism as an ordered chain of links from the intervention to the outcome: each link is a triple subject - "
-        "relation - object, with a short relation verb (activates, inhibits, hyperpolarizes, suppresses, promotes, restores, "
-        "improves, reduces, ...) and a role ('step' for a link before the outcome, 'outcome' for the one the hypothesis "
-        "promises to change); at least one step before the outcome, at most four.",
-        "- outcome: what the hypothesis promises to change, named by its measure.",
-        "- decisive experiment: system (human, mouse, rat, cells, ...), design, control or comparator, primary endpoint, duration.",
-        f"Write the claim, rationale and experiment from the card. The {_words(n)} hypotheses must be different ideas: no "
-        "two share both the intervention and the outcome.",
-    ]
+    return [_CARD_INTRO + _ONE] + _CARD_ITEMS + [_outro("the card", n)]
 
 
 def steps_spec(n: int = N) -> list[str]:
     """Block 'steps': the steps of the method as a short description of what we expect of a hypothesis, without how it is
     scored (no axes, weights, levels, thresholds or profiles) and without the card structure (that is the block 'card')."""
-    return [
-        "In addition, before you write each hypothesis's text, check it the way a careful researcher would before proposing "
-        "it (this is the only extra requirement):",
-        "- Name the steps by which the intervention is expected to change the outcome. For each step look for published "
-        "evidence before T, both for and against; a step with no evidence is said to be unsupported, not filled by assumption.",
-        "- Look for evidence against the hypothesis as a whole, not only for what supports it, and keep what you find.",
-        "- Name the other explanations that would give the result the hypothesis predicts, and say how the experiment tells "
-        "them apart.",
-        "- Check whether the idea was already tested before T; if it was, say what was found and propose only what goes "
-        "beyond it.",
-        "- The experiment is the nearest one that would convincingly confirm or refute the hypothesis: a control, a "
-        "measurable endpoint, a duration, in a system as close to people as the question allows.",
-        f"Write the claim, rationale and experiment from this check. The {_words(n)} hypotheses must be different ideas: no "
-        "two share both the intervention and the outcome.",
-    ]
+    return [_STEPS_INTRO + _ONE] + _steps_items(False) + [_outro("this check", n)]
+
+
+def card_steps_spec(n: int = N) -> list[str]:
+    """Blocks 'card' and 'steps' together (participant BS): one introduction, the card, the check written against the
+    card's links and experiment, one closing line. BS differs from B by the check and from S by the card."""
+    return ([_CARD_INTRO + "and check it the way a careful researcher would before proposing it (these are the only two "
+             "extra requirements). The card:"] + _CARD_ITEMS + ["The check:"] + _steps_items(True)
+            + [_outro("the card and the check", n)])
 
 
 def _words(n: int) -> str:
@@ -103,13 +124,16 @@ def _words(n: int) -> str:
 CARD_SPEC = card_spec()
 STEPS_SPEC = steps_spec()
 _REF = {"pmid": "", "title": ""}
-CHECK = {"steps": [{"step": "", "for": [_REF], "against": [_REF]}], "against_whole": [_REF],
-         "alternatives": [{"text": "", "told_apart_by": ""}],
-         "tested_before_T": {"answer": "yes | partly | no", "papers": [_REF], "beyond": ""}}
-# Independent blocks (user decision 2026-11-16): each participant is the base request plus at most one block, so every
-# difference from A is one part of the method. A block brings its instructions and its fields of the answer.
-BLOCKS = {"card": (card_spec, {"card": CARD}), "steps": (steps_spec, {"check": CHECK})}
-PARTICIPANTS = {"a": None, "b": "card", "s": "steps"}
+_CHECK_REST = {"against_whole": [_REF], "alternatives": [{"text": "", "told_apart_by": ""}],
+               "tested_before_T": {"answer": "yes | partly | no", "papers": [_REF], "beyond": ""}}
+CHECK = {"steps": [{"step": "", "for": [_REF], "against": [_REF]}], **_CHECK_REST}
+CHECK_ON_CARD = {"steps": [{"link": "c1", "for": [_REF], "against": [_REF]}], **_CHECK_REST}
+# Each participant is the base request plus its blocks (user decisions 2026-11-16): A none, B the card, S the steps -
+# independent, so each difference from A is one part of the method - and BS both, joined so that BS differs from B by the
+# check and from S by the card. A spec brings its instructions and its fields of the answer.
+PARTICIPANTS = {"a": (lambda n: [], {}), "b": (card_spec, {"card": CARD}), "s": (steps_spec, {"check": CHECK}),
+                "bs": (card_steps_spec, {"card": CARD, "check": CHECK_ON_CARD})}
+BLOCKS = {"card": PARTICIPANTS["b"], "steps": PARTICIPANTS["s"]}
 
 COMMON = [
     "Work only from what was published up to the date T given below; a paper after T does not exist.",
@@ -133,8 +157,7 @@ def _write(kind: str, task: dict) -> Path:
 def build(participant: str, as_of: str, topic: str = TOPIC, n: int = N, write: bool = True) -> dict:
     """The generation task of a participant: [base] + its block (if any) + COMMON; the answer format is the plain
     hypothesis plus the block's fields."""
-    block = PARTICIPANTS[participant]
-    spec, fields = BLOCKS[block] if block else (lambda n: [], {})
+    spec, fields = PARTICIPANTS[participant]
     task = {"task": f"generation_{participant.upper()}", "topic": topic, "T": as_of, "n": n,
             "instructions": [base(n)] + spec(n) + COMMON,
             "answer_format": {"hypotheses": [{**HYP, "id": f"{participant.upper()}1", **fields}]}}
@@ -263,11 +286,17 @@ def card_problems(c: dict) -> list[str]:
     return out
 
 
-def check_problems(c: dict) -> list[str]:
-    """The block 'steps' is filled: steps named, alternatives named, the already-tested question answered."""
+def check_problems(c: dict, card: dict | None = None) -> list[str]:
+    """The block 'steps' is filled: steps named, alternatives named, the already-tested question answered; with a card
+    (BS), every step of the check names a link of the card."""
     out = []
     if not c.get("steps"):
         out.append("no steps")
+    if card is not None:
+        ids = {l.get("id") for l in card.get("links") or []}
+        bad = [st.get("link") for st in c.get("steps") or [] if st.get("link") not in ids]
+        if bad:
+            out.append(f"check steps name links not in the card: {bad}")
     if not c.get("alternatives"):
         out.append("no alternatives")
     if (c.get("tested_before_T") or {}).get("answer") not in ("yes", "partly", "no"):
@@ -292,7 +321,7 @@ def format_problems(kind: str, ans: dict) -> list[str]:
     for h in items:
         if kind != "reports" and not all(h.get(k) for k in ("claim", "rationale", "experiment")):
             out.append(f"{h.get('id')}: claim, rationale and experiment must be filled")
-        if kind not in ("a", "s") and not (kind == "b" and _b_generate_only()) and not isinstance(h.get("report"), dict):
+        if kind not in ("a", "s", "bs") and not (kind == "b" and _b_generate_only()) and not isinstance(h.get("report"), dict):
             out.append(f"{h.get('id')}: no report")
         if kind in ("c", "d") and not h.get("parent"):
             out.append(f"{h.get('id')}: no parent")
@@ -330,7 +359,8 @@ def check(kind: str, as_of: str | None = None) -> dict:
                             "title_wrong": sum(r["title_matches"] is False for r in refs),
                             "quotes": {q: quotes.count(q) for q in set(quotes)},
                             "card_problems": card_problems(h.get("card") or {}) if kind not in ("a", "s") else [],
-                            "check_problems": check_problems(h.get("check") or {}) if kind == "s" else [], "refs": refs}
+                            "check_problems": check_problems(h.get("check") or {}, h.get("card") or {} if kind == "bs" else None)
+                            if kind in ("s", "bs") else [], "refs": refs}
     total = sum(v["papers"] for v in per.values())
     res = {"kind": kind, "T": T, "format_problems": format_problems(kind, ans), "hypotheses": per,
            "papers": total, "share_good": round(sum(v["good"] for v in per.values()) / total, 3) if total else None,
@@ -353,7 +383,7 @@ def collect(writer_family: str) -> dict:
     reps = {r["id"]: r for r in json.loads((DIR / "answer_reports.json").read_text())["reports"]} \
         if (DIR / "answer_reports.json").exists() else {}
     arms = {"A": [{"id": h["id"], "parent": None, "text": _text(h), "terms": _terms((reps.get(h["id"]) or {}).get("card") or {})} for h in a]}
-    for arm, f in (("B", "answer_b.json"), ("S", "answer_s.json"), ("C", "answer_c.json"), ("D", "answer_d.json")):
+    for arm, f in (("B", "answer_b.json"), ("S", "answer_s.json"), ("BS", "answer_bs.json"), ("C", "answer_c.json"), ("D", "answer_d.json")):
         if (DIR / f).exists():
             arms[arm] = [{"id": h["id"], "parent": h.get("parent"), "text": _text(h), "terms": _terms(h.get("card") or {})}
                          for h in json.loads((DIR / f).read_text())["hypotheses"]]
@@ -366,8 +396,8 @@ def main(argv=None) -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("cmd", choices=["build", "build-a", "build-b", "build-b-generate", "build-reports", "build-evolve", "check", "collect"])
     ap.add_argument("--arm", choices=["C", "D"])
-    ap.add_argument("--kind", choices=["a", "b", "s", "reports", "c", "d"])
-    ap.add_argument("--participant", choices=list(PARTICIPANTS), help="build: a (base), b (base + card), s (base + steps)")
+    ap.add_argument("--kind", choices=["a", "b", "s", "bs", "reports", "c", "d"])
+    ap.add_argument("--participant", choices=list(PARTICIPANTS), help="build: a (base), b (+ card), s (+ steps), bs (+ card and steps)")
     ap.add_argument("--topic", default=TOPIC)
     ap.add_argument("--n", type=int, default=N)
     ap.add_argument("--as-of", default=date.today().isoformat())
