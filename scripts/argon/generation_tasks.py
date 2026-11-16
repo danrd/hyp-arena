@@ -48,11 +48,16 @@ REPORT = {"records": [{"link": "c1", "pmid": "", "title": "", "year": "", "quote
           "profiles": {p: {"expected_score": ""} for p in PROFILES},
           "improvements": [{"item": "", "what": "", "expected": ""}]}
 
+def _words(n: int) -> str:
+    return {3: "three", 4: "four", 5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine", 10: "ten"}.get(n, str(n))
+
+
 def base(n: int = N) -> str:
     """The plain request, the same for every participant (participant A is this alone)."""
     return (f"Write {n} research hypotheses on the topic below: original, testable, important for ageing and healthy "
             "lifespan. Each has a claim, a rationale (why it should be true) and an experiment that would test it, and "
-            "lists the papers it relies on.")
+            f"lists the papers it relies on. The {_words(n)} hypotheses must be different ideas: no two share both the "
+            "intervention and the outcome.")
 
 
 A_BASE = base()
@@ -94,8 +99,7 @@ def _steps_items(on_card: bool) -> list[str]:
 
 
 def _outro(source: str, n: int) -> str:
-    return (f"Write the claim, rationale and experiment from {source}. The {_words(n)} hypotheses must be different ideas: no "
-            "two share both the intervention and the outcome.")
+    return f"Write the claim, rationale and experiment from {source}."
 
 
 def card_spec(n: int = N) -> list[str]:
@@ -117,10 +121,6 @@ def card_steps_spec(n: int = N) -> list[str]:
             + [_outro("the card and the check", n)])
 
 
-def _words(n: int) -> str:
-    return {3: "three", 4: "four", 5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine", 10: "ten"}.get(n, str(n))
-
-
 CARD_SPEC = card_spec()
 STEPS_SPEC = steps_spec()
 _REF = {"pmid": "", "title": ""}
@@ -134,6 +134,12 @@ CHECK_ON_CARD = {"steps": [{"link": "c1", "for": [_REF], "against": [_REF]}], **
 PARTICIPANTS = {"a": (lambda n: [], {}), "b": (card_spec, {"card": CARD}), "s": (steps_spec, {"check": CHECK}),
                 "bs": (card_steps_spec, {"card": CARD, "check": CHECK_ON_CARD})}
 BLOCKS = {"card": PARTICIPANTS["b"], "steps": PARTICIPANTS["s"]}
+
+# The cover text sent with every task in a new chat, the same for every participant (pilot revision 2026-11-16: the first A
+# and BS were sent with different cover texts).
+COVER = ("Please complete the task in the JSON below. Work on your own, in this chat only, and reply with one JSON object in "
+         "the format given under \"answer_format\", with nothing around it. T is the cutoff date: treat anything published "
+         "after it as nonexistent.")
 
 COMMON = [
     "Work only from what was published up to the date T given below; a paper after T does not exist.",
@@ -158,7 +164,7 @@ def build(participant: str, as_of: str, topic: str = TOPIC, n: int = N, write: b
     """The generation task of a participant: [base] + its block (if any) + COMMON; the answer format is the plain
     hypothesis plus the block's fields."""
     spec, fields = PARTICIPANTS[participant]
-    task = {"task": f"generation_{participant.upper()}", "topic": topic, "T": as_of, "n": n,
+    task = {"task": f"generation_{participant.upper()}", "cover": COVER, "topic": topic, "T": as_of, "n": n,
             "instructions": [base(n)] + spec(n) + COMMON,
             "answer_format": {"hypotheses": [{**HYP, "id": f"{participant.upper()}1", **fields}]}}
     if write:

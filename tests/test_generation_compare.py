@@ -106,7 +106,10 @@ def test_participants_are_the_base_plus_at_most_one_block(tmp_path, monkeypatch)
     steps = " ".join(gt.STEPS_SPEC).lower()
     assert not any(w in steps for w in ("score", "axis", "weight", "profile", "manual", "card"))   # no hint of scoring
     t = gt.build("s", "2026-11-16", topic="senolytics", n=4, write=False)
-    assert t["topic"] == "senolytics" and "Write 4 " in t["instructions"][0] and "four hypotheses" in t["instructions"][-len(gt.COMMON) - 1]
+    assert t["topic"] == "senolytics" and "Write 4 " in t["instructions"][0] and "four hypotheses" in t["instructions"][0]
+    body = [" ".join(gt.build(p, "2026-11-16", write=False)["instructions"]) for p in gt.PARTICIPANTS]
+    assert all(b.count("must be different ideas") == 1 for b in body)          # in the base only, so every participant has it
+    assert len({gt.build(p, "2026-11-16", write=False)["cover"] for p in gt.PARTICIPANTS}) == 1
 
 
 def test_check_block_problems_and_refs():
