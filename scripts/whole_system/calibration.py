@@ -129,6 +129,17 @@ def units(step: int) -> list[dict]:
     return out
 
 
+def _freeze_card(cards_p: Path, uid: str, card: dict) -> None:
+    """Add one card to the frozen file under a lock, merging with what other streams wrote meanwhile (several steps run in
+    parallel share the file; each used to rewrite it from its own copy)."""
+    import fcntl
+    with open(cards_p.with_suffix(".lock"), "w") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        cur = json.loads(cards_p.read_text()) if cards_p.exists() else {}
+        cur.setdefault(uid, card)
+        cards_p.write_text(json.dumps(cur, ensure_ascii=False, indent=1))
+
+
 def run(step: int, config: str = "configs/v2-flash.yaml", tag: str = "", only: str = "", max_calls: int = 60) -> None:
     """`only`: a file with one unit id per line (the others are skipped); `max_calls`: per unit (the filtered search needs more)."""
     from hyparena.pipeline import run as v2
@@ -153,7 +164,7 @@ def run(step: int, config: str = "configs/v2-flash.yaml", tag: str = "", only: s
             continue
         if not card and res["items"][0].get("card"):
             frozen[t["id"]] = res["items"][0]["card"]
-            cards_p.write_text(json.dumps(frozen, ensure_ascii=False, indent=1))
+            _freeze_card(cards_p, t["id"], frozen[t["id"]])
         done[t["id"]] = res
         out_p.write_text(json.dumps(done, ensure_ascii=False, default=str))
         x = res["items"][0]
