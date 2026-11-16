@@ -1,0 +1,27 @@
+id: generation-comparison-2026-11-16-pilot
+written_on: 2026-11-16
+status: tasks built and sent to the outside model; nothing judged, nothing run by our pipeline
+parent: specs/evolution/generation-comparison-2026-11-14.yaml (definitions kept unless changed here)
+why: >-
+  A rough first look at the whole approach before the full comparison: does structured generation by the manual (B) give
+  hypotheses that the method and a judge rate above those of a plain request (A)? Not a test with a pass rule: a pilot of 5
+  hypotheses per arm says only whether the approach is worth the full run.
+topic: "as in the parent: bioelectric signalling in ageing"
+as_of: 2026-11-16
+arms:
+  A: "plain request in a new chat (task_a.json)"
+  B: "structured generation by the manual v3.11 in a new chat, generation only (task_b.json); the steps of the method are not asked here"
+writer: "Argon (Google family)"
+steps:
+  1: "Argon writes A and B (5 + 5); code checks the answers (PMIDs exist, before T, titles match; card fields filled)"
+  2: "our pipeline scores the 10 texts (card, search before T, reading, alternatives, the v3.11 rules, ASPID): paid, priced by a dry run, user's go"
+  3: "Argon scores the same 10 by the manual (a reports task) and evolves them toward novelty (directed evolution, frontier target)"
+  4: "later: pairwise judges with one question, which hypothesis to investigate first, in the sense of the Bio Arena judge (mechanistic plausibility, evidence for and against, potential benefit to human healthy lifespan, the nearest convincing experiment); novelty is not asked of judges, it is measured by code (already tested before T by PubMed)"
+judging_change_from_parent: >-
+  the five-criterion rubric of the parent is replaced by the single Bio Arena question (one overall choice, both orders,
+  judge families other than the writer's); its wording is paraphrased here, the judge text used for calls is kept in the
+  private repository
+reported:
+  - "per arm: the scores of our pipeline (balance, coverage, N, I, W, feasibility, the three profiles), the share of hypotheses already tested before T, references that exist and match, duplicates"
+  - "per hypothesis: our scores against Argon's scores by the manual (the chat model running the manual against our code)"
+  - "per evolved version: the change of N and of the other axes, with the rules of section 11 checked"

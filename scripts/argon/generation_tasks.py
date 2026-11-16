@@ -74,6 +74,25 @@ def build_a(as_of: str) -> dict:
     return task
 
 
+def build_b_generate(as_of: str) -> dict:
+    """B, structured generation only (pilot of 2026-11-16): the steps of the method follow as a separate task, for A and B
+    alike, after our own pipeline has scored the same texts."""
+    task = {"task": "generation_B", "topic": TOPIC, "T": as_of, "n": N, "manual": manual(),
+            "instructions": [
+                f"Work by the manual below (method v3). Write {N} hypotheses on the topic in the structured generation mode "
+                "(manual section 11a, 'structured'): fill the card template of section 3 for each (intervention, population, "
+                "the mechanism as links before the outcome, the outcome, the decisive experiment with system, design, control, "
+                "endpoint and duration), then write the text from it (claim, rationale, experiment). Aim at what the manual "
+                "values: a mechanism whose links can be checked against the literature, an outcome that matters for healthy "
+                "lifespan, and an experiment that rules out the competing explanations and the methodological threats of its "
+                "system (section 7). The five must be different ideas, not variants of one (no two share the intervention and "
+                "the outcome).",
+                "Do not score the hypotheses: the steps of the method (search, records, weights, axes, profiles) are a later task."] + COMMON,
+            "answer_format": {"hypotheses": [{**HYP, "id": "B1", "card": CARD}]}}
+    _write("b", task)
+    return task
+
+
 def build_b(as_of: str) -> dict:
     task = {"task": "generation_B", "topic": TOPIC, "T": as_of, "n": N, "manual": manual(),
             "instructions": [
@@ -178,6 +197,11 @@ def card_problems(c: dict) -> list[str]:
     return out
 
 
+def _b_generate_only() -> bool:
+    f = DIR / "task_b.json"
+    return f.exists() and "report" not in json.loads(f.read_text())["answer_format"]["hypotheses"][0]
+
+
 def format_problems(kind: str, ans: dict) -> list[str]:
     key = "reports" if kind == "reports" else "hypotheses"
     items = ans.get(key)
@@ -189,7 +213,7 @@ def format_problems(kind: str, ans: dict) -> list[str]:
     for h in items:
         if kind != "reports" and not all(h.get(k) for k in ("claim", "rationale", "experiment")):
             out.append(f"{h.get('id')}: claim, rationale and experiment must be filled")
-        if kind != "a" and not isinstance(h.get("report"), dict):
+        if kind != "a" and not (kind == "b" and _b_generate_only()) and not isinstance(h.get("report"), dict):
             out.append(f"{h.get('id')}: no report")
         if kind in ("c", "d") and not h.get("parent"):
             out.append(f"{h.get('id')}: no parent")
@@ -260,7 +284,7 @@ def collect(writer_family: str) -> dict:
 
 def main(argv=None) -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("cmd", choices=["build-a", "build-b", "build-reports", "build-evolve", "check", "collect"])
+    ap.add_argument("cmd", choices=["build-a", "build-b", "build-b-generate", "build-reports", "build-evolve", "check", "collect"])
     ap.add_argument("--arm", choices=["C", "D"])
     ap.add_argument("--kind", choices=["a", "b", "reports", "c", "d"])
     ap.add_argument("--as-of", default=date.today().isoformat())
@@ -270,6 +294,8 @@ def main(argv=None) -> None:
         t = build_a(a.as_of)
     elif a.cmd == "build-b":
         t = build_b(a.as_of)
+    elif a.cmd == "build-b-generate":
+        t = build_b_generate(a.as_of)
     elif a.cmd == "build-reports":
         t = build_reports(a.as_of)
     elif a.cmd == "build-evolve":
