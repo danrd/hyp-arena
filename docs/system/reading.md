@@ -5,8 +5,8 @@
 Мануал этапа «Чтение» — четвёртого этапа схемы метода ([схема](flow_full.png)). Сводный мануал метода
 ([`docs/method-v3-manual.md`](../method-v3-manual.md)) — сжатая агрегация мануалов этапов; чтение в нём — раздел 4. Как этап
 пришёл к текущим правилам — в [журнале изменений](changelog.md#этап-4-чтение). На какие принятые схемы опирается чтение —
-[`foundations.md`](foundations.md#этапы-34-поиск-и-чтение). Предыдущий этап — [поиск](search.md), следующий — вес записи и сила
-звена (сводный мануал, разделы 5–6). План работы над этапом и опыты — [`docs/plans/reading-2026-11-14.md`](../plans/reading-2026-11-14.md).
+[`foundations.md`](foundations.md#этапы-34-поиск-и-чтение). Предыдущий этап — [поиск](search.md), следующий — [вес записи, сила
+звена и баланс доказательств](evidence.md). План работы над этапом и опыты — [`docs/plans/reading-2026-11-14.md`](../plans/reading-2026-11-14.md).
 
 Код: [`hyparena/reading/verifier.py`](../../hyparena/reading/verifier.py) (`verify_claim`: чтение одного утверждения),
 [`hyparena/reading/cross_link.py`](../../hyparena/reading/cross_link.py) (перекрёстное чтение),
