@@ -186,3 +186,19 @@ against_the_reader_2026_11_16:
     skeleton_replaces_the_reader_when: "on both packs, mean of the two runs of the judge, recall and precision not lower than reader v21's (pack 16: 0.59 / 0.84; pack 25: 0.64 / 0.90) by more than 0.03"
     if_not: the skeleton stays as the store of full-text numbers and the base of the knowledge graph; reading the links stays with the reader
     parse_ok: at most 0.02 of the papers fail validation after the repair
+  result_2026_11_16:
+    cost: "2.03 USD: parse 1.22 (709 papers), the judge 0.81 (two runs on each pack)"
+    parse: "709 papers parsed, none failed validation (11 of 188 on 2026-11-15); the repair was used in 45 replies; 9 papers without a text, 1 oversized abstract"
+    measures:      # recall, precision, records (two runs of the judge); reader v21 on the same packs for comparison
+      pack_16: {skeleton: [[0.277, 0.531, 49], [0.255, 0.471, 51]], reader_v21: [[0.596, 0.848, 66], [0.585, 0.833, 66]]}
+      pack_25: {skeleton: [[0.306, 0.829, 41], [0.270, 0.789, 38]], reader_v21: [[0.631, 0.897, 78], [0.649, 0.900, 80]]}
+    by_the_rule: "not passed: recall about half the reader's on both packs, precision lower; parse_ok passed (0 of 709 failed)"
+    losses_run_1:   # the gold findings not found
+      pack_16: "rejected by the judge 57, found on the other side 6, no own finding row in the parse 7, not parsed 1 (found 23)"
+      pack_25: "rejected by the judge 65, found on the other side 15, no own finding row 6, not parsed 1 (found 24)"
+    reading: >-
+      the parse keeps the findings (an own finding row exists for almost every gold finding), the judge loses them: it sees
+      one result row at a time (arms, outcome, direction, the quote) apart from the paper and answers "another intervention"
+      or "another outcome" for most rows, the right one included. Reading a row without the abstract is the cause the
+      skeleton was meant to remove from the reader, moved to the judge. As the rule says: the skeleton stays as the store of
+      full-text numbers and the base of the knowledge graph; reading the links stays with the reader
