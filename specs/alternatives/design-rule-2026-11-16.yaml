@@ -77,3 +77,45 @@ result_2026_11_16:
     verdict by this rule; (3) their support: now from a literature search, which a design judgement does not need: what
     a checklist item weighs in I without records is a new rule; (4) the kinds co-intervention and selection as "ruled out
     by randomisation" or as now
+
+universal_rule:
+  written_on: 2026-11-16
+  status: definitions fixed before Argon pack 28 was sent
+  why: >-
+    a hypothesis need not come from a registry and need not state a design. The verdict must rest on the hypothesis's own
+    text: the stated experiment of the card (design, control, system, n; filled by the normaliser from any text, with the
+    verbatim phrase). On the 124 alternatives of pack 6 the verdict from these card fields alone agrees with the outside
+    reader at a weighted kappa of 0.57 (exact 0.65), against 0.45 from the registry's structured fields: the registry is
+    one kind of text the block is filled from, not a requirement
+  principle:
+    source: the card's stated experiment; a feature the text does not state is unknown
+    unknown: "an unknown feature gives the verdict unchanged and an improvement item naming the feature that would rule the threat out"
+    no_experiment: "informativeness is not computed; the threats of the hypothesis's system are listed as what an experiment must contain"
+    by_system: >-
+      the threats depend on the system of the experiment. Humans: the eight kinds above (RoB 2, ROBINS-I). Animals:
+      allocation (cage, litter, batch), assessor, attrition, handling and vehicle, housing, one sex / strain / age,
+      multiplicity (SYRCLE). Cells: batch (passage, clone, donor), off-target of the tool, vehicle, culture artefact, line
+      identity, multiplicity. Data analysis: confounding, reverse causation, selection, measurement, multiplicity
+  not_yet: >-
+    the card has no fields for blinding, for how animals are allocated, for replication or for a specificity control; the
+    lists for animals and cells and their verdict rules have no gold. Pack 28 gives both: which features the outside
+    reader's verdicts rest on, and the threats it raises per system
+  pack: Argon pack 28 (longevity-kg reviews/argon-2026-11-16/pack_28_task.json; builder scripts/argon/pack28_alternatives.py)
+  sample: the 30 hypotheses of pack 26 (13 Bio Arena, 13 chat-written, 4 evolved versions of registry trials), T 2026-10-14
+  asked: >-
+    per hypothesis: whether an experiment is stated, its system, six design features with the phrase that states each; up
+    to 5 alternatives with kind, threat (from the list of its system), the verdict under the expected and the null result,
+    the feature and the phrase the verdict rests on, the one addition that would rule it out; up to 3 papers for the
+    substantive alternatives of rank 1-2
+  measures:
+    lists: share of the outside reader's methodological alternatives whose threat is one of the list of its system ("other" is a miss), per system
+    features: which design features the verdicts rest on, by system and threat; share of hypotheses that state each feature
+    card_fields: agreement of the card's experiment fields (design, control, system) with the features the outside reader extracts
+    verdict: weighted kappa of a code verdict from the features the outside reader extracted (the upper bound of a rule) and from the card's fields (what we have), per system
+  rule:
+    lists_usable_when: at most 0.2 of the methodological alternatives are "other", in every system with at least 10 of them
+    fields_to_add: a design feature becomes a field of the card's experiment when at least 0.2 of the verdicts of a system rest on it
+    verdict_rule_adopted_when: >-
+      the code verdict from the card's fields reaches a weighted kappa of 0.4 on the methodological alternatives of the
+      pack; per system it is reported with its count and decides nothing under 30 alternatives
+    then: the change goes to the user with the numbers and through the manual (how I is computed, whether a checklist item needs a literature search, what it weighs)
