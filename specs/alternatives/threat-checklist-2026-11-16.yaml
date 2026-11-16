@@ -88,7 +88,7 @@ result_2026_11_16:
   by_the_rule: "adopted: on both sets at least three values, none above 0.7 (0.068, 0.119), |Spearman| < 0.7 with every indicator (at most 0.21)"
   adopted: >-
     method v3.11 (hyparena/alternatives/threats.py; rules_v32 THREAT_CHECKLIST, on by default; the proposer drops
-    methodological alternatives; report flag threats_open). Saved runs re-scored by the code use the card's registry
-    fields, and the cards of these saved runs have none (normaliser before v13): there the verdict comes from the card's
-    design and control, masking not stated, so the share is lower (median 0.375 against 0.44-0.5 from the registry).
-    Cards of normaliser v13 and later (the frozen v17 cards, the coming calibration run) carry the registry fields
+    methodological alternatives; report flag threats_open). The cards of the saved runs (normaliser before v13) had no
+    registry fields, so the code read masking as not stated there; the fields were written into them from the cached parse
+    (scripts/data/registry_fields_backfill.py: 66 calibration and 60 prospective cards, 16 designs set by the registry),
+    and the code now gives on the saved runs the I counted here (H60 0.262, H02 0.893)
