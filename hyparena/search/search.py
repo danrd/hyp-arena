@@ -109,7 +109,8 @@ def population_query(claim, card) -> Optional[str]:
     is generic. Added 2026-11-07 after a blind comparison: the most informative record of a pre-sarcopenia trial (a null SPPB
     result of a resistance programme in pre-sarcopenia) was missed by the model-written queries."""
     import re
-    if not (claim.link == "outcome" or (not claim.link and claim.role == "outcome")):
+    link = getattr(claim, "link", None)                # a declared alternative of the text has no link
+    if not (link == "outcome" or (not link and claim.role == "outcome")):
         return None
     pop = re.sub(r"\s+", " ", (card.pico.population.who or "").strip().lower())
     pop = re.sub(r"^(older|elderly|aged|community-dwelling)\s+(adults|people|persons|women|men)\s+(with|at risk of)\s+", "", pop)

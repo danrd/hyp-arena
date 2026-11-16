@@ -74,10 +74,16 @@ def values_of(v3: dict, extra: Optional[dict] = None) -> dict:
             "trend_pubmed": None if e.get("trend_pubmed") is None else min(1.5, max(-0.5, e["trend_pubmed"]))}
 
 
+def _known_level(k: str, v):
+    """An ordinal value outside the indicator's levels (a model's "other") is unknown: drawn over the whole range."""
+    spec = SPECS.get(k)
+    return None if (spec is not None and spec.kind == "ordinal" and v is not None and v not in spec.levels) else v
+
+
 def rank(results: dict[str, tuple[dict, Optional[dict]]], profile: str, K: int = 10000, seed: int = 0) -> Optional[AggregationResult]:
     """`results` {unit: (v3 result dict, additional indicators or None)}; units filtered by the gate are left out."""
     prof, ids = load()[profile]
-    vals = {u: {k: values_of(v3, v2)[k] for k in ids} for u, (v3, v2) in results.items() if v3.get("gate") == "pass"}
+    vals = {u: {k: _known_level(k, values_of(v3, v2)[k]) for k in ids} for u, (v3, v2) in results.items() if v3.get("gate") == "pass"}
     if not vals:
         return None
     return aggregate(vals, [SPECS[k] for k in ids], prof, K=K, seed=seed)
