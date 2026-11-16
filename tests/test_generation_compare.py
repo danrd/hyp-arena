@@ -88,3 +88,34 @@ def test_tasks_carry_the_manual_only_where_the_method_runs(tmp_path, monkeypatch
     a, b = gt.build_a("2026-11-14"), gt.build_b("2026-11-14")
     assert "manual" not in a and len(b["manual"]) > 10000
     assert (tmp_path / "task_a.json").exists() and b["answer_format"]["hypotheses"][0]["card"]
+
+
+def test_participants_are_the_base_plus_at_most_one_block(tmp_path, monkeypatch):
+    """Independent blocks: every participant is [base] + its block + COMMON, so each difference from A is one block."""
+    monkeypatch.setattr(gt, "DIR", tmp_path)
+    tasks = {p: gt.build(p, "2026-11-16") for p in gt.PARTICIPANTS}
+    a = tasks["a"]["instructions"]
+    assert a == [gt.base()] + gt.COMMON
+    for p, block in gt.PARTICIPANTS.items():
+        if block is None:
+            continue
+        spec, fields = gt.BLOCKS[block]
+        assert tasks[p]["instructions"] == [gt.base()] + spec(gt.N) + gt.COMMON
+        h = tasks[p]["answer_format"]["hypotheses"][0]
+        assert set(h) == set(gt.HYP) | {"id"} | set(fields)
+    assert tasks["a"]["answer_format"]["hypotheses"][0].keys() == gt.HYP.keys()
+    assert gt.build_a("2026-11-16") == tasks["a"] and gt.build_b_generate("2026-11-16") == tasks["b"]
+    steps = " ".join(gt.STEPS_SPEC).lower()
+    assert not any(w in steps for w in ("score", "axis", "weight", "profile", "manual", "card"))   # no hint of scoring
+    t = gt.build("s", "2026-11-16", topic="senolytics", n=4, write=False)
+    assert t["topic"] == "senolytics" and "Write 4 " in t["instructions"][0] and "four hypotheses" in t["instructions"][-len(gt.COMMON) - 1]
+
+
+def test_check_block_problems_and_refs():
+    good = {"steps": [{"step": "x", "for": [{"pmid": "123", "title": "t"}], "against": []}], "alternatives": [{"text": "y"}],
+            "tested_before_T": {"answer": "no", "papers": [{"pmid": "456", "title": "u"}]}, "against_whole": [{"pmid": "789"}]}
+    assert gt.check_problems(good) == []
+    assert len(gt.check_problems({})) == 3
+    where = {w for _, _, w in gt._pmids({"check": good})}
+    assert where == {"check_for", "check_tested", "check_against_whole"}
+    assert gt.format_problems("s", {"hypotheses": [{"id": "S1", "claim": "c", "rationale": "r", "experiment": "e"}] * gt.N}) == []

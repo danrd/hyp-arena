@@ -2,11 +2,14 @@
 writes every arm in a chat (Argon or ChatGPT), the checks of its answers by code, and the collection of the arms for
 scripts/evolution/generation_compare.py. Free (PubMed E-utilities only).
 
+    python -m scripts.argon.generation_tasks build --participant a|b|s [--topic ...] [--n 5]
+                                                                        # base request + at most one block: a = base,
+                                                                        # b = base + card, s = base + steps (independent)
     python -m scripts.argon.generation_tasks build-a                    # A: the plain request
     python -m scripts.argon.generation_tasks build-b                    # B: structured generation and the method by the manual
     python -m scripts.argon.generation_tasks build-reports              # the method by the manual on the hypotheses of A
     python -m scripts.argon.generation_tasks build-evolve --arm C       # free evolution of B (C) or of A (D)
-    python -m scripts.argon.generation_tasks check --kind a|b|reports|c|d
+    python -m scripts.argon.generation_tasks check --kind a|b|s|reports|c|d
     python -m scripts.argon.generation_tasks collect                    # -> hypotheses.json for the comparison
 
 Files in longevity-kg reviews/generation-<date>/ (DIR, private): `task_<kind>.json` (sent), `answer_<kind>.json` (put
@@ -45,24 +48,68 @@ REPORT = {"records": [{"link": "c1", "pmid": "", "title": "", "year": "", "quote
           "profiles": {p: {"expected_score": ""} for p in PROFILES},
           "improvements": [{"item": "", "what": "", "expected": ""}]}
 
-A_BASE = (f"Write {N} research hypotheses on the topic below: original, testable, important for ageing and healthy "
-          "lifespan. Each has a claim, a rationale (why it should be true) and an experiment that would test it, and "
-          "lists the papers it relies on.")
+def base(n: int = N) -> str:
+    """The plain request, the same for every participant (participant A is this alone)."""
+    return (f"Write {n} research hypotheses on the topic below: original, testable, important for ageing and healthy "
+            "lifespan. Each has a claim, a rationale (why it should be true) and an experiment that would test it, and "
+            "lists the papers it relies on.")
 
-CARD_SPEC = [   # the only difference of B from A: our card specification, nothing about scoring or what the method values
-    "In addition, before you write each hypothesis's text, lay it out as a structured card (this is the only extra "
-    "requirement):",
-    "- intervention: a label and a type (drug, supplement, exercise, device, gene or cell perturbation, ...); population: "
-    "species, age and condition.",
-    "- the mechanism as an ordered chain of links from the intervention to the outcome: each link is a triple subject - "
-    "relation - object, with a short relation verb (activates, inhibits, hyperpolarizes, suppresses, promotes, restores, "
-    "improves, reduces, ...) and a role ('step' for a link before the outcome, 'outcome' for the one the hypothesis "
-    "promises to change); at least one step before the outcome, at most four.",
-    "- outcome: what the hypothesis promises to change, named by its measure.",
-    "- decisive experiment: system (human, mouse, rat, cells, ...), design, control or comparator, primary endpoint, duration.",
-    "Write the claim, rationale and experiment from the card. The five hypotheses must be different ideas: no two share "
-    "both the intervention and the outcome.",
-]
+
+A_BASE = base()
+
+
+def card_spec(n: int = N) -> list[str]:
+    """Block 'card': our card specification, nothing about scoring or what the method values."""
+    return [
+        "In addition, before you write each hypothesis's text, lay it out as a structured card (this is the only extra "
+        "requirement):",
+        "- intervention: a label and a type (drug, supplement, exercise, device, gene or cell perturbation, ...); population: "
+        "species, age and condition.",
+        "- the mechanism as an ordered chain of links from the intervention to the outcome: each link is a triple subject - "
+        "relation - object, with a short relation verb (activates, inhibits, hyperpolarizes, suppresses, promotes, restores, "
+        "improves, reduces, ...) and a role ('step' for a link before the outcome, 'outcome' for the one the hypothesis "
+        "promises to change); at least one step before the outcome, at most four.",
+        "- outcome: what the hypothesis promises to change, named by its measure.",
+        "- decisive experiment: system (human, mouse, rat, cells, ...), design, control or comparator, primary endpoint, duration.",
+        f"Write the claim, rationale and experiment from the card. The {_words(n)} hypotheses must be different ideas: no "
+        "two share both the intervention and the outcome.",
+    ]
+
+
+def steps_spec(n: int = N) -> list[str]:
+    """Block 'steps': the steps of the method as a short description of what we expect of a hypothesis, without how it is
+    scored (no axes, weights, levels, thresholds or profiles) and without the card structure (that is the block 'card')."""
+    return [
+        "In addition, before you write each hypothesis's text, check it the way a careful researcher would before proposing "
+        "it (this is the only extra requirement):",
+        "- Name the steps by which the intervention is expected to change the outcome. For each step look for published "
+        "evidence before T, both for and against; a step with no evidence is said to be unsupported, not filled by assumption.",
+        "- Look for evidence against the hypothesis as a whole, not only for what supports it, and keep what you find.",
+        "- Name the other explanations that would give the result the hypothesis predicts, and say how the experiment tells "
+        "them apart.",
+        "- Check whether the idea was already tested before T; if it was, say what was found and propose only what goes "
+        "beyond it.",
+        "- The experiment is the nearest one that would convincingly confirm or refute the hypothesis: a control, a "
+        "measurable endpoint, a duration, in a system as close to people as the question allows.",
+        f"Write the claim, rationale and experiment from this check. The {_words(n)} hypotheses must be different ideas: no "
+        "two share both the intervention and the outcome.",
+    ]
+
+
+def _words(n: int) -> str:
+    return {3: "three", 4: "four", 5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine", 10: "ten"}.get(n, str(n))
+
+
+CARD_SPEC = card_spec()
+STEPS_SPEC = steps_spec()
+_REF = {"pmid": "", "title": ""}
+CHECK = {"steps": [{"step": "", "for": [_REF], "against": [_REF]}], "against_whole": [_REF],
+         "alternatives": [{"text": "", "told_apart_by": ""}],
+         "tested_before_T": {"answer": "yes | partly | no", "papers": [_REF], "beyond": ""}}
+# Independent blocks (user decision 2026-11-16): each participant is the base request plus at most one block, so every
+# difference from A is one part of the method. A block brings its instructions and its fields of the answer.
+BLOCKS = {"card": (card_spec, {"card": CARD}), "steps": (steps_spec, {"check": CHECK})}
+PARTICIPANTS = {"a": None, "b": "card", "s": "steps"}
 
 COMMON = [
     "Work only from what was published up to the date T given below; a paper after T does not exist.",
@@ -83,23 +130,28 @@ def _write(kind: str, task: dict) -> Path:
     return p
 
 
-def build_a(as_of: str) -> dict:
-    task = {"task": "generation_A", "topic": TOPIC, "T": as_of, "n": N,
-            "instructions": [A_BASE] + COMMON,
-            "answer_format": {"hypotheses": [{**HYP, "id": "A1"}]}}
-    _write("a", task)
+def build(participant: str, as_of: str, topic: str = TOPIC, n: int = N, write: bool = True) -> dict:
+    """The generation task of a participant: [base] + its block (if any) + COMMON; the answer format is the plain
+    hypothesis plus the block's fields."""
+    block = PARTICIPANTS[participant]
+    spec, fields = BLOCKS[block] if block else (lambda n: [], {})
+    task = {"task": f"generation_{participant.upper()}", "topic": topic, "T": as_of, "n": n,
+            "instructions": [base(n)] + spec(n) + COMMON,
+            "answer_format": {"hypotheses": [{**HYP, "id": f"{participant.upper()}1", **fields}]}}
+    if write:
+        _write(participant, task)
     return task
+
+
+def build_a(as_of: str) -> dict:
+    return build("a", as_of)
 
 
 def build_b_generate(as_of: str) -> dict:
     """B = A + our card specification (pilot of 2026-11-16): the same request as A, plus the structured card. No manual and
     no hint of what the method values, so B differs from A only by the structure. The steps of the method (scoring) and the
     evolution are separate tasks, for A and B alike."""
-    task = {"task": "generation_B", "topic": TOPIC, "T": as_of, "n": N,
-            "instructions": [A_BASE] + CARD_SPEC + COMMON,
-            "answer_format": {"hypotheses": [{**HYP, "id": "B1", "card": CARD}]}}
-    _write("b", task)
-    return task
+    return build("b", as_of)
 
 
 def build_b(as_of: str) -> dict:
@@ -189,6 +241,11 @@ def _pmids(h: dict) -> list[tuple[str, str, str]]:
     out += [(r.get("pmid", ""), r.get("title", ""), "record") for r in rep.get("records") or []]
     out += [(p.get("pmid", ""), p.get("title", ""), "nearest_prior") for p in (rep.get("novelty") or {}).get("nearest_prior") or []]
     out += [(p, "", "alternative") for a in rep.get("alternatives") or [] for p in a.get("support_pmids") or []]
+    chk = h.get("check") or {}
+    out += [(p.get("pmid", ""), p.get("title", ""), f"check_{side}") for st in chk.get("steps") or []
+            for side in ("for", "against") for p in st.get(side) or []]
+    out += [(p.get("pmid", ""), p.get("title", ""), "check_against_whole") for p in chk.get("against_whole") or []]
+    out += [(p.get("pmid", ""), p.get("title", ""), "check_tested") for p in (chk.get("tested_before_T") or {}).get("papers") or []]
     return [(str(p).strip(), t, w) for p, t, w in out if str(p).strip().isdigit()]
 
 
@@ -206,6 +263,18 @@ def card_problems(c: dict) -> list[str]:
     return out
 
 
+def check_problems(c: dict) -> list[str]:
+    """The block 'steps' is filled: steps named, alternatives named, the already-tested question answered."""
+    out = []
+    if not c.get("steps"):
+        out.append("no steps")
+    if not c.get("alternatives"):
+        out.append("no alternatives")
+    if (c.get("tested_before_T") or {}).get("answer") not in ("yes", "partly", "no"):
+        out.append("tested_before_T not answered yes, partly or no")
+    return out
+
+
 def _b_generate_only() -> bool:
     f = DIR / "task_b.json"
     return f.exists() and "report" not in json.loads(f.read_text())["answer_format"]["hypotheses"][0]
@@ -217,12 +286,13 @@ def format_problems(kind: str, ans: dict) -> list[str]:
     if not isinstance(items, list) or not items:
         return [f'"{key}" must be a non-empty list']
     out = []
-    if kind in ("a", "b") and len(items) != N:
-        out.append(f"{len(items)} hypotheses, {N} asked")
+    n = json.loads((DIR / f"task_{kind}.json").read_text()).get("n", N) if (DIR / f"task_{kind}.json").exists() else N
+    if kind in PARTICIPANTS and len(items) != n:
+        out.append(f"{len(items)} hypotheses, {n} asked")
     for h in items:
         if kind != "reports" and not all(h.get(k) for k in ("claim", "rationale", "experiment")):
             out.append(f"{h.get('id')}: claim, rationale and experiment must be filled")
-        if kind != "a" and not (kind == "b" and _b_generate_only()) and not isinstance(h.get("report"), dict):
+        if kind not in ("a", "s") and not (kind == "b" and _b_generate_only()) and not isinstance(h.get("report"), dict):
             out.append(f"{h.get('id')}: no report")
         if kind in ("c", "d") and not h.get("parent"):
             out.append(f"{h.get('id')}: no parent")
@@ -259,7 +329,8 @@ def check(kind: str, as_of: str | None = None) -> dict:
                             "after_T": sum(r["exists"] and not r["before_T"] for r in refs),
                             "title_wrong": sum(r["title_matches"] is False for r in refs),
                             "quotes": {q: quotes.count(q) for q in set(quotes)},
-                            "card_problems": card_problems(h.get("card") or {}) if kind != "a" else [], "refs": refs}
+                            "card_problems": card_problems(h.get("card") or {}) if kind not in ("a", "s") else [],
+                            "check_problems": check_problems(h.get("check") or {}) if kind == "s" else [], "refs": refs}
     total = sum(v["papers"] for v in per.values())
     res = {"kind": kind, "T": T, "format_problems": format_problems(kind, ans), "hypotheses": per,
            "papers": total, "share_good": round(sum(v["good"] for v in per.values()) / total, 3) if total else None,
@@ -282,7 +353,7 @@ def collect(writer_family: str) -> dict:
     reps = {r["id"]: r for r in json.loads((DIR / "answer_reports.json").read_text())["reports"]} \
         if (DIR / "answer_reports.json").exists() else {}
     arms = {"A": [{"id": h["id"], "parent": None, "text": _text(h), "terms": _terms((reps.get(h["id"]) or {}).get("card") or {})} for h in a]}
-    for arm, f in (("B", "answer_b.json"), ("C", "answer_c.json"), ("D", "answer_d.json")):
+    for arm, f in (("B", "answer_b.json"), ("S", "answer_s.json"), ("C", "answer_c.json"), ("D", "answer_d.json")):
         if (DIR / f).exists():
             arms[arm] = [{"id": h["id"], "parent": h.get("parent"), "text": _text(h), "terms": _terms(h.get("card") or {})}
                          for h in json.loads((DIR / f).read_text())["hypotheses"]]
@@ -293,13 +364,18 @@ def collect(writer_family: str) -> dict:
 
 def main(argv=None) -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("cmd", choices=["build-a", "build-b", "build-b-generate", "build-reports", "build-evolve", "check", "collect"])
+    ap.add_argument("cmd", choices=["build", "build-a", "build-b", "build-b-generate", "build-reports", "build-evolve", "check", "collect"])
     ap.add_argument("--arm", choices=["C", "D"])
-    ap.add_argument("--kind", choices=["a", "b", "reports", "c", "d"])
+    ap.add_argument("--kind", choices=["a", "b", "s", "reports", "c", "d"])
+    ap.add_argument("--participant", choices=list(PARTICIPANTS), help="build: a (base), b (base + card), s (base + steps)")
+    ap.add_argument("--topic", default=TOPIC)
+    ap.add_argument("--n", type=int, default=N)
     ap.add_argument("--as-of", default=date.today().isoformat())
     ap.add_argument("--writer-family", default="google", help="google if Argon wrote the answers, openai if ChatGPT")
     a = ap.parse_args(argv)
-    if a.cmd == "build-a":
+    if a.cmd == "build":
+        t = build(a.participant, a.as_of, a.topic, a.n)
+    elif a.cmd == "build-a":
         t = build_a(a.as_of)
     elif a.cmd == "build-b":
         t = build_b(a.as_of)
