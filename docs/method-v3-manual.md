@@ -806,7 +806,7 @@ the triage is in the database spec.
 
 ## 12. What the method does not do, its known limits and its validation status
 
-How the method is checked, by level (the system itself, against other approaches, overall quality against outcomes, generation): [`docs/system/testing.md`](system/testing.md). Generation is compared with an LLM in a chat under [`specs/evolution/generation-comparison-2026-11-14.yaml`](../specs/evolution/generation-comparison-2026-11-14.yaml) ([manual](system/generation-arena.md)).
+How the method is checked, by level (the system itself, against other approaches, overall quality against outcomes, generation): [`docs/system/testing.md`](system/testing.md). The whole method against trial outcomes (pools, labels, R2 and R3, the rule, the current results): [`docs/system/whole-system.md`](system/whole-system.md). Generation is compared with an LLM in a chat under [`specs/evolution/generation-comparison-2026-11-14.yaml`](../specs/evolution/generation-comparison-2026-11-14.yaml) ([manual](system/generation-arena.md)).
 
 - It does not predict whether a trial will succeed; trials are run where support exists but the question is open.
 - The search gives the reader about half of what a careful search must find before T (0.49 of the papers an outside reader
