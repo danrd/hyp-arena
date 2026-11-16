@@ -32,6 +32,7 @@ from __future__ import annotations
 import os
 
 import math
+import re
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
 from typing import Optional
@@ -73,6 +74,12 @@ def precision(n: Optional[int]) -> float:
 # standardised difference, a ratio, a raw difference with its interval). "means" and "change_sd" are kept on the record and
 # enter only through the manual (two means with their spread were scored as variant E2 and not adopted).
 EFFECT_D_KINDS = frozenset({"smd", "ratio", "interval"})
+RISK_RATIO_LINE = 0.0    # variant (pack 27, T2): 1.33 = a risk, hazard or rate ratio of at least 1.33 (at most 0.75) counts fully; 0 = off
+
+
+def ec_percent() -> bool:
+    from hyparena.reading import effect_class
+    return effect_class.PERCENT
 
 
 def effect_weight(rec: EvidenceRecord, against: bool) -> float:
@@ -85,6 +92,9 @@ def effect_weight(rec: EvidenceRecord, against: bool) -> float:
         if m:
             x = float(next(g for g in m.groups() if g).replace(" ", ""))
             if kind == "ratio" and x > 0:
+                if RISK_RATIO_LINE and rx is _RATIO and re.match(r"(?i)(risk|relative|hazard|rate|a?RR|a?HR|IRR)", m.group(0)) \
+                        and max(x, 1 / x) >= RISK_RATIO_LINE:
+                    return 1.0                            # variant (pack 27, T2): a risk or hazard ratio by GRADE's appreciable effect
                 d = abs(math.log(x)) * math.sqrt(3) / math.pi
             elif kind == "d":
                 d = abs(x)
@@ -105,8 +115,14 @@ def effect_weight(rec: EvidenceRecord, against: bool) -> float:
                 c = ec.class_two_values(p)
             if c != "unclear":
                 return lv.weight("effect", c)
+            if ec.mcid_reached(p, rec.quote):             # variant (pack 27, T5), off by default
+                return 1.0
             d = ec.d_from_p(p, rec.n_total, rec.comparison)
         if d is None:
+            if not ec_percent() and rec.effect_class in ("small", "medium", "large"):
+                from hyparena.reading.effect_class import from_phrase as _fp
+                if _fp(p) == "unclear":                   # variant (pack 27, T3): the stored class came from a percent
+                    return lv.weight("effect", "unclear")
             return lv.weight("effect", rec.effect_class)
     return 0.25 + 0.75 * min(1.0, d / 0.8)
 

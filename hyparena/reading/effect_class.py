@@ -39,6 +39,34 @@ _WORDS = (("large", r"\b(?:large|substantial|marked|strong)\b"), ("medium", r"\b
           ("small", r"\b(?:small|modest|slight|minor)\b"))
 
 
+# Variant switches of specs/scoring/effect-phrase-2026-11-15.yaml (argon_pack27); the defaults are the method.
+PERCENT = True          # False: a percent change without its variability is "unclear" (pack 27, T3)
+MCID = False            # True: a raw difference that reaches the measure's minimal clinically important difference counts as medium (T5)
+# measure -> (pattern in the quote or phrase, pattern of the number with its unit in the phrase, the MCID); pack 27, T5
+_MCIDS = (("SPPB", r"SPPB|short physical performance", r"([+-]?\d+(?:\.\d+)?)\s*(?:points?)?", 0.5),
+          ("gait speed", r"gait speed|walking speed", r"([+-]?\d+(?:\.\d+)?)\s*m/s", 0.05),
+          ("6-minute walk", r"6[- ]?min|six[- ]minute|6MW", r"([+-]?\d+(?:\.\d+)?)\s*(?:m|meters|metres)\b", 20.0),
+          ("timed up and go", r"timed up|\bTUG\b", r"([+-]?\d+(?:\.\d+)?)\s*(?:s|sec|seconds)\b", 1.0),
+          ("grip", r"grip", r"([+-]?\d+(?:\.\d+)?)\s*kg", 5.0),
+          ("MMSE", r"MMSE|mini[- ]mental", r"([+-]?\d+(?:\.\d+)?)\s*(?:points?)?", 2.0),
+          ("MoCA", r"MoCA|montreal cognitive", r"([+-]?\d+(?:\.\d+)?)\s*(?:points?)?", 1.5))
+
+
+def mcid_reached(phrase: str, quote: str = "") -> bool | None:
+    """With MCID on: whether the one raw difference of the phrase reaches the MCID of the measure the quote names; None when
+    the measure is not one of the table's, or the phrase holds no single number with the measure's unit."""
+    if not MCID or not phrase:
+        return None
+    p = phrase.replace("−", "-")
+    if len(re.findall(r"\d+(?:\.\d+)?", p)) != 1:
+        return None
+    for _name, measure, number, mcid in _MCIDS:
+        if re.search(measure, quote + " " + p, re.I):
+            m = re.search(number, p)
+            return abs(float(m.group(1))) >= mcid if m else None
+    return None
+
+
 def from_phrase(phrase: str) -> str:
     """The class of a verbatim effect phrase, or "unclear" when its kind is not one of the rules."""
     p = (phrase or "").replace("−", "-")
@@ -57,7 +85,7 @@ def from_phrase(phrase: str) -> str:
     if m:
         x = abs(float(next(g for g in m.groups() if g).replace(" ", "")))
         return "large" if x >= 0.8 else "medium" if x >= 0.5 else "small"
-    m = _PCT.search(p)
+    m = _PCT.search(p) if PERCENT else None
     if m:
         x = abs(float(next(g for g in m.groups() if g)))
         return "large" if x > 20 else "medium" if x >= 5 else "small"

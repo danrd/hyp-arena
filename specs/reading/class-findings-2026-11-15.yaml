@@ -131,3 +131,32 @@ result_reader_v19_2026_11_16:
     the fields cost nothing in recall or precision; the difference between the two runs of v19 on precision (0.87 and 0.78)
     is the reader's own noise. The same-class loss stays as with v17
   next: v17 and v19 on pack 25 (the outcome field against Argon's, the rule outcome_field_usable_when), then the confirming run
+
+result_pack_25_2026_11_16:
+  gold: >-
+    Argon's answer: 382 pairs, 111 findings (79 for, 32 against), every quote verbatim. By intervention match of the
+    primary studies: exact 17, class 23 (10 on the 14 main links, 13 on the 6 reserve links), category 36; reviews and
+    meta-analyses 34. Outcome match of the findings: same 66, narrower 34, broader 6, other 5. The pack has fewer than 30
+    class findings from primary studies, so by the rule class_recall is reported and decides nothing
+  run: "bench_reading --pack 25: v17, v17_2, v19, v19_2, off-peak, 0.274 USD"
+  measures:      # recall, precision, records, hits of 111 gold findings
+    v17:   [0.586, 0.714, 91, 65]
+    v17_2: [0.550, 0.744, 82, 61]
+    v19:   [0.640, 0.763, 93, 71]
+    v19_2: [0.604, 0.744, 90, 67]
+  class_primary_found: "v17 13 and 13 of 23, v19 15 and 15 of 23 (on the main links 3 and 3 of 10, 3 and 4 of 10); exact primary 11 and 11 of 17, 14 and 11; category primary 18 and 15 of 36, 17 and 17"
+  outcome_field: >-
+    not usable: on the findings both readers have (78 and 76) the reader calls the outcome its own (same or narrower) in
+    all but one, where Argon calls 8 broader or another: kappa 0.0 and -0.02 (the rule asks 0.6). The measure's words are
+    given on 86 of 93 and 76 of 90 records. The reader does not use "broader" or "other": a record it writes is, to it, on
+    the claim's outcome
+  where_precision_is_lost: >-
+    of the records the gold does not confirm (26 and 21 for v17, 22 and 23 for v19), 12 to 17 are "none: another outcome"
+    in the gold and 6 are the other side; another intervention is not among them. On a fresh pack the loss is the outcome
+    boundary, not the intervention class
+  reading: >-
+    (1) v19 is not worse than v17 on a pack neither was tuned on (recall 0.62 against 0.57, precision 0.75 against 0.73,
+    inside the intervals); (2) the same-class loss measured on pack 16 (6 of 23) is 13 of 23 here with the same reader: it
+    was partly that pack; (3) the outcome field as a self-report of the reader does not work; the outcome boundary needs
+    another check than the reader's own label
+  decision: pending the user (v19 as the working reader for its effect numbers; the outcome boundary as the next problem of the reading)

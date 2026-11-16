@@ -80,3 +80,29 @@ argon_pack27:
     a suggested threshold or rule is not adopted from the answer: it is scored as a variant on the references of this spec
     (R2, R3, pack 23, the AUC on 30 trials) under the same rule (no reference worse by more than 0.03; simpler wins among
     equals). A threshold the sources call groundless (verdict drop) may be removed when its removal passes the same rule.
+
+argon_pack27_result_2026_11_16:
+  check: "36 sources, all exist, titles match, quotes verbatim; the 12 PMIDs of the MCID table exist"
+  verdicts:
+    T1_standardised_difference: "too_high: the median effect is 0.3-0.4 in gerontology and rehabilitation, 0.2 across Cochrane trials; suggested line 0.35 (or 0.40)"
+    T2_ratios: "too_low for odds ratios (OR 1.25 is d 0.12; d 0.35 is OR 1.89, d 0.5 is OR 2.47); risk and hazard ratios apart: 1.33 appreciable, 2 large (GRADE)"
+    T3_percent: "drop: a percent change without its variability has no ground (the same percent is a large or a negligible effect by the measure's variation)"
+    T4_interval: "supported (Cochrane Handbook 6.5.2.3); corrections for unequal groups, small samples and adjusted estimates"
+    T5_mcid: "too_high: a table of ten measures (SPPB 0.5 points, gait speed 0.05 m/s, 6-minute walk 20 m, grip 5 kg, MMSE 1-3, MoCA 1-2)"
+    T6_one_line: "supported: one line; large effects of small trials shrink on replication"
+  found_in_the_code: >-
+    for a ratio the weight already converts by ln(ratio) * sqrt(3) / pi and asks d 0.5 (an odds ratio of 2.47), not 1.25
+    as the manual's weight table says; 1.25 is only the class label. The manual and the code disagree on ratios
+  variants:      # scripts/scoring/effect_variants.py thresholds: R2, R3, pack23, auc30 working reader, auc30 reader v16, records to the full factor, to the half
+    current:                       [0.695, 0.602, 0.669, 0.679, 0.696, 0, 0]
+    T1_line_0.40:                  [0.691, 0.602, 0.667, 0.679, 0.688, 6, 0]
+    T1_line_0.35:                  [0.688, 0.606, 0.669, 0.683, 0.696, 9, 0]
+    T2_risk_ratios_from_1.33:      [0.699, 0.602, 0.665, 0.656, 0.688, 5, 0]
+    T3_percent_unknown:            [0.685, 0.604, 0.684, 0.696, 0.723, 0, 13]
+    T5_mcid:                       [0.693, 0.602, 0.669, 0.679, 0.701, 2, 0]
+    T1_0.35_T2_T3_T5:              [0.678, 0.607, 0.682, 0.670, 0.696, 16, 13]
+  by_the_rule: >-
+    no variant is worse than the current code by more than 0.03 on any reference, and none is better by more than the
+    noise. T3 removes a threshold the sources call groundless and passes: it may be removed. T1, T2 and T5 change values
+    without a gain; T5 moves 2 records
+  decision: pending the user

@@ -93,6 +93,91 @@ def full_effect() -> set[tuple]:
     return out
 
 
+THRESHOLDS = {      # Argon pack 27: each suggestion as a variant (specs/scoring/effect-phrase-2026-11-15.yaml, argon_pack27)
+    "current": {},
+    "T1 medium from d 0.40": {"line": 0.40},
+    "T1 medium from d 0.35": {"line": 0.35},
+    "T2 risk and hazard ratios from 1.33": {"rr": 1.33},
+    "T3 percent without variability unknown": {"percent": False},
+    "T5 MCID reached counts as medium": {"mcid": True},
+    "T1 0.35 + T2 + T3 + T5": {"line": 0.35, "rr": 1.33, "percent": False, "mcid": True},
+}
+
+
+@contextmanager
+def thresholds(v: dict):
+    saved = (r32.EFFECT_FULL_FROM, r32.RISK_RATIO_LINE, ec.PERCENT, ec.MCID)
+    try:
+        r32.EFFECT_FULL_FROM = 0.25 + 0.75 * v.get("line", 0.5) / 0.8
+        r32.RISK_RATIO_LINE, ec.PERCENT, ec.MCID = v.get("rr", 0.0), v.get("percent", True), v.get("mcid", False)
+        yield
+    finally:
+        r32.EFFECT_FULL_FROM, r32.RISK_RATIO_LINE, ec.PERCENT, ec.MCID = saved
+
+
+def pack23_recomputed() -> float:
+    """Concordance with Argon's order of pack 23 with the effect factor of every record for recomputed by the code as it
+    stands (the key keeps the phrase, n and the comparison, not the class: a null finding for is read as unclear)."""
+    from hyparena.card.models import EvidenceRecord
+    kd = json.loads((OUT / "pack_23_key.json").read_text())
+    recs, ans, task = kd["records"], {}, {}
+    for i in (1, 2, 3):
+        ans.update({p["id"]: p for p in json.loads((OUT / f"pack_23_{i}_answer.json").read_text())["pairs"]})
+        task.update({p["id"]: p for p in json.loads((OUT / f"pack_23_{i}_task.json").read_text())["pairs"]})
+
+    def w(rid, factors):
+        r, f = recs[rid], dict(factors)
+        if r["design"] == "meta_analysis" and not r.get("certainty"):
+            f["design"] = f["design"] / 0.75 * wv.rk.NOT_REPORTED
+        if abs(f["design"] - 2 / 3) < 1e-6 and r["design"] == "review":
+            f["design"] = wv.lv.PRECLINICAL_REVIEW
+        if r.get("context") == "class":
+            f["context"] = r32.CLASS_WEIGHT
+        if r["side"] == "for":
+            rec = EvidenceRecord(source="PubMed", record_id="PMID:0", quote=r.get("effect_reported") or "", n_total=r.get("n_total"),
+                                 comparison="between_groups" if f["comparison"] == 1.0 else "within_group",
+                                 effect_reported=r.get("effect_reported") or "", effect_class="unclear")
+            f["effect"] = 1.0 if r32.effect_weight(rec, False) >= r32.EFFECT_FULL_FROM - 1e-9 else 0.5
+        return math.prod(f.values())
+    ok = []
+    for p in kd["pairs"]:
+        if p["swapped"]:
+            continue
+        t = task[p["id"]]
+        wa, wb = w(t["A"], p["factors"][0]), w(t["B"], p["factors"][1])
+        d = math.log(wa / wb) if wa > 0 and wb > 0 else 0
+        o = 0 if abs(d) < 0.1 else (1 if d > 0 else -1)
+        a = {"A": 1, "B": -1, "equal": 0}[ans[p["id"]]["stronger"]]
+        if a and o:
+            ok.append(a == o)
+    return round(sum(ok) / len(ok), 3)
+
+
+def main_thresholds() -> dict:
+    from hyparena.scoring import rules_v3 as r3
+    from hyparena.tools import compounds as cp
+    from scripts.reading.reader_replay import balance_auc
+    from scripts.scoring.empty_slots import r3_auc
+    r3.established_by_approval = lambda claim, card: False
+    cp._get = lambda url: None
+    refs = wv.r2_refs()
+    base_full = full_effect()
+    out = {}
+    for name, v in THRESHOLDS.items():
+        with thresholds(v):
+            now = full_effect()
+            out[name] = {"R2": wv.r2_auc(refs), "R3": r3_auc(), "pack23": pack23_recomputed(),
+                         "auc30_v17": balance_auc("n15x")["auc"], "auc30_v16": balance_auc("n14x")["auc"],
+                         "to_full": len(now - base_full), "to_half": len(base_full - now)}
+        print(name, out[name], flush=True)
+    base = out["current"]
+    for r in out.values():
+        r["worse_by_more_than_0.03"] = [k for k in ("R2", "R3", "pack23", "auc30_v17", "auc30_v16")
+                                        if r[k] is not None and base[k] - r[k] > 0.03]
+    (OUT / "effect_threshold_variants.json").write_text(json.dumps(out, indent=1) + "\n")
+    return out
+
+
 def main() -> dict:
     from hyparena.scoring import rules_v3 as r3
     from hyparena.tools import compounds as cp
@@ -118,4 +203,5 @@ def main() -> dict:
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    main_thresholds() if sys.argv[1:] == ["thresholds"] else main()

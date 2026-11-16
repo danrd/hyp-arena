@@ -35,14 +35,15 @@ from scripts.common.reread_v11 import CONFIG, items
 KG = Path(__file__).resolve().parents[3] / "longevity-kg"
 DIR = KG / "reviews" / "argon-2026-11-12"
 PRICE = {"deepseek": (0.15, 0.6), "google": (1.5, 9.0)}      # USD per M tokens off-peak (DeepSeek x2 on weekdays 01-04, 06-10 UTC)
+PACK = "pack_16"             # --pack 25: the fresh gold of specs/reading/class-findings-2026-11-15.yaml (outcome links only)
 SYSTEMS = ("v9", "v13", "base_a", "v13_trace", "v14", "v15", "v16", "v16_2", "v17", "v17_2", "v18", "v18_2", "v19", "v19_2")
 TRACE = "v13_trace"          # v13 again with every step kept: the filter answers, the reader's answer per paper, the records code kept
 TRACED = ("v13_trace", "v14", "v15", "v16", "v16_2", "v17", "v17_2", "v18", "v18_2", "v19", "v19_2")   # runs that keep every step (v14: verify_claim/v14, the same filter and batches as v13)
 
 
 def targets() -> list[dict]:
-    key = json.loads((DIR / "pack_16_key.json").read_text())
-    task = {i["id"]: i for p in "ab" for i in json.loads((DIR / f"pack_16{p}_task.json").read_text())["items"]}
+    key = json.loads((DIR / f"{PACK}_key.json").read_text())
+    task = {i["id"]: i for p in "ab" for i in json.loads((DIR / f"{PACK}{p}_task.json").read_text())["items"]}
     want = defaultdict(dict)
     for rid, k in key.items():
         want[k["pool"]][(k["unit"], k["claim_id"])] = rid
@@ -264,9 +265,13 @@ def _measures(rows: list[dict]) -> dict:
 
 
 def score() -> dict:
-    gold = {i["id"]: {p["pmid"]: p for p in i["papers"]} for i in json.loads((DIR / "pack_16_answer.json").read_text())["items"]}
-    key = json.loads((DIR / "pack_16_key.json").read_text())
-    task = {i["id"]: {p["pmid"]: p for p in i["papers"]} for p_ in "ab" for i in json.loads((DIR / f"pack_16{p_}_task.json").read_text())["items"]}
+    answers = [DIR / f"{PACK}_answer.json"] if PACK == "pack_16" else [DIR / f"{PACK}{p_}_answer.json" for p_ in "ab"]
+    gold = {i["id"]: {str(p["pmid"]): p for p in i["papers"]} for f_ in answers for i in json.loads(f_.read_text())["items"]}
+    key = json.loads((DIR / f"{PACK}_key.json").read_text())
+    for k_ in key.values():                                   # pack 25: outcome links only, a reserve instead of a holdout
+        k_.setdefault("stratum", "outcome")
+        k_.setdefault("holdout", k_.get("reserve", False))
+    task = {i["id"]: {p["pmid"]: p for p in i["papers"]} for p_ in "ab" for i in json.loads((DIR / f"{PACK}{p_}_task.json").read_text())["items"]}
     out, rows_by = {}, {}
     for s in SYSTEMS:
         f = DIR / f"bench_reading_{s}.json"
@@ -307,7 +312,10 @@ if __name__ == "__main__":
     ap.add_argument("cmd", choices=["dry", "run", "score", "losses"])
     ap.add_argument("--system", choices=SYSTEMS)
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--pack", choices=["16", "25"], default="16")
     a = ap.parse_args()
+    if a.pack == "25":
+        PACK, DIR = "pack_25", KG / "reviews" / "argon-2026-11-15"
     if a.cmd == "losses":
         print(json.dumps(losses(a.system or TRACE), indent=1, default=str))
     else:
