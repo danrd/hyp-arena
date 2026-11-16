@@ -1,0 +1,30 @@
+id: calibration-current-2026-11-16
+written_on: 2026-11-16
+status: written before the run; not run
+question: >-
+  Does the evidence balance of the current method order the 74 calibration trials by their outcome, when every stage is
+  the working one? The references R2 and R3 are still computed on runs of 2026-11-06 … 11-08 (the earlier search, reader
+  v9); since then the search (filtered), the reader, the cross-link reading, the record weights, the gate and the effect
+  rules have changed, each checked on parts of the pool or on saved records.
+config: "configs/v3-flash-n10.yaml as it stands on the day of the run (normalize_card/v17, search filtered, the working reader, cross-link reading)"
+set: "the 74 calibration trials (hypothesis_sources/calibration/units_{1..5}.json), T as before; 30 have frozen v17 cards (cards_v3_v17.json), 44 are normalised in this run and frozen"
+code: "python -m scripts.whole_system.calibration run --step S --config configs/v3-flash-n10.yaml --tag _cur --max-calls 150, S = 1..5; score: scripts/scoring/empty_slots.r3_auc on the new runs; R2 rebuilt from their records (scripts/scoring/record_weight_check)"
+cost: >-
+  the confirming run of the search on 30 trials spent 2.94 USD: 0.044 a card, 0.054 a trial for search, reading and
+  alternatives; with the cross-link reading (0.013) and the longer reader template about 0.075 a trial without the card.
+  74 x 0.075 + 44 x 0.044 = about 7.5 USD off-peak; cap MAX_USD 9. About 5 minutes a trial, 6 hours in one stream: run in
+  two or three streams, outside 01-04 and 06-10 UTC on weekdays
+measures:
+  R3: AUC of the evidence balance (a gated hypothesis -1) against the trial outcomes, 74 trials, with a bootstrap interval; the same on the 14 clean trials (first posted 2023-2026) and on the 60 others
+  R2: the AUC of later RCTs and meta-analyses of a link from the earlier records, rebuilt from the new records, with the number of targets
+  coverage: links with any record; records per trial; share of trials gated, with the outcomes of the gated
+  against_the_saved_runs: the same measures on the saved v10 runs under the current rules (R3 0.604, R2 0.685), trial by trial where the balance moves by more than 0.3
+  noise: the 30 trials of pack 18 have a run of the same search with reader v17 (n15x): Spearman of the two balances
+rule:
+  reading: >-
+    this run is a measurement, not a choice between variants: the method does not change by its result. It replaces the
+    references: R2 and R3 are from then on computed on these runs, and the numbers in the manual (section 12) are these
+  signal: "R3 at least 0.60 with the lower bound of the interval above 0.45"
+  no_signal: "R3 below 0.55: the changes since the saved runs did not carry to the whole pool; the causes are sorted by stage before anything else is changed"
+  unclear: otherwise
+  leak: the three texts that state the outcome (H86, H113, H96) are reported apart, as in specs/data/calibration-leak-2026-11-12.yaml
