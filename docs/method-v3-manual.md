@@ -314,6 +314,10 @@ counterweight too (one null trial against several trials of the same kind of int
 A trial in an adjacent population is not: a small trial elsewhere does not cancel a large null in the claim's own population.
 Then the hypothesis is filtered (not ranked). Nothing else filters: an undeveloped but promising hypothesis keeps its score and gets flags.
 
+**Admission** is not a filter of ideas, only of texts that cannot be scored: a hypothesis about an intervention is scored
+when its card names the intervention, the population and an outcome (an outcome claim of the chain, or the measure); a
+text without one of them is returned as "needs refinement" with the missing part named.
+
 ## 7. Axes
 
 - **Evidence balance** (`chain_state` in the code), the main axis of every profile = the mean of 2S − 1 over the chain's

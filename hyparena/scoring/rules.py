@@ -218,7 +218,10 @@ def admit(card: HypothesisCard) -> Admission:
             missing.append("pico.intervention")
         if not has_population:
             missing.append("pico.population")
-        if not has_endpoint:
+        # 2026-11-16: an outcome is stated when the card has an outcome claim of the chain or names the measure; the endpoint
+        # class (lifespan, healthspan, biomarker, disease) is a closed list that a cell or tissue outcome does not fit, and a
+        # third of the written hypotheses were stopped here with their outcome written out (pack 26)
+        if not (has_endpoint or (outcome is not None and outcome.link == "outcome") or _known(p.outcome.metric)):
             missing.append("pico.outcome.endpoint")
     elif card.hypothesis_type == "mechanistic":
         if not (p.intervention or (outcome and _known(outcome.subject.label))):
