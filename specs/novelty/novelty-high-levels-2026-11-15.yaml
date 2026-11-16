@@ -105,3 +105,13 @@ rules_2026_11_16:
   pack_18_unchanged: "neither rule moves any of the 30 registry trials: their subjects name no regime and their outcome claims start from the main factor"
   by_the_rule: "regime +0.098 and main factor +0.088 each just under the 0.1 asked; both together +0.18, pack 18 unchanged: the pair passes"
   decision: pending the user
+  strict_main_factor_2026_11_16: >-
+    written after the scoring above (a second iteration on pack 26): an outcome claim is moved to the steps only when its
+    subject shares a word with the object of an earlier step and none with the main factor. Pack 26: kappa 0.357, exact
+    0.46 (the loose version 0.273: it also moved renamed main factors, making them look new); with the regime rule 0.452;
+    pack 18 unchanged
+  decided_2026_11_16: >-
+    the user's decision: the strict main-factor rule is the method (novelty_v34.MAIN_FACTOR, manual section 7); the regime
+    rule stays in the code switched off: it rests on words a writer can add, and a regime that changes the mechanism must
+    show as a step of the chain (then new link or new mechanism by the absence count apply). A fresh pack of written
+    hypotheses with mechanisms is the clean check

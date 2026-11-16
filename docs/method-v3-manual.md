@@ -354,7 +354,11 @@ text without one of them is returned as "needs refinement" with the missing part
 - **Headroom I** = I if the experiment cut off every supported alternative (d = 1): what improving the experiment could add;
   an input of the room to improve (section 11).
 - **Novelty N** ([`novelty_v34.novelty`](../hyparena/novelty/novelty_v34.py)): the distance of the hypothesis to what was already
-  asked before T, from the usable records on either side (a question already asked is not new, whatever the answer). On the
+  asked before T, from the usable records on either side (a question already asked is not new, whatever the answer). It is
+  measured on the main factor's effect: when the subject of every outcome claim of the card is a later step of the chain
+  (the object of an earlier step, sharing no word with the main factor: "SARM1 destroys axons" after "the loss of NMNAT2
+  activates SARM1"), those claims count as steps for N, since their records describe a known end of the chain, not the
+  hypothesis. On the
   outcome link, by the closest record: **new context** (the same intervention and outcome in the claim's species, another
   population, age, sex or dose), **translation** (the same intervention, only in another species), **analog** (only a related
   compound or class). Above them, **new mechanism of a known effect**: the outcome has records, but a link before the outcome
@@ -814,7 +818,7 @@ known result (calibration pool); **R4** — the order of pairs of records given 
 | informativeness I (d of the alternatives) | an outside reader, holdout of 30 trials | κ 0.35 ([`specs/alternatives/informativeness-check-2026-11-08.yaml`](../specs/alternatives/informativeness-check-2026-11-08.yaml)) |
 | support a of the alternatives | an outside reader | Spearman 0.28 (the reader counts what it knows, we count found papers) |
 | missing competitors | an outside reader | in 78% of trials the reader adds a supported competitor |
-| novelty N | an outside reader (30 and 37 trials) | pack 18 (30 trials), N against the outside reader's level: weighted κ 0.45 with reader v17 and the cross-link reading (0.41 with v9, 0.20 with v16; ours farther from the known in 0.24 of the trials); pack 7: κ 0.14-0.26 (the numbers before 2026-11-15 compared the v2 indicator, not N) |
+| novelty N | an outside reader (30 and 37 trials; 30 written hypotheses) | written hypotheses with mechanisms (pack 26): weighted κ 0.36, novelty by absence on the same side of the threshold in 0.85 of the new links; pack 18 (30 trials), N against the outside reader's level: weighted κ 0.45 with reader v17 and the cross-link reading (0.41 with v9, 0.20 with v16; ours farther from the known in 0.24 of the trials); pack 7: κ 0.14-0.26 (the numbers before 2026-11-15 compared the v2 indicator, not N) |
 | prospective pool, 60 ongoing trials | outcomes 2026-11 … 2028-12 | scores frozen with a SHA-256 ([`specs/whole-system/prospective-2026-11-06.yaml`](../specs/whole-system/prospective-2026-11-06.yaml)): the clean test |
 
 Against trial outcomes the record weights add nothing over counting records; they are kept for what they are for: ordering

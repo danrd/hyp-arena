@@ -28,9 +28,11 @@ A_TARGET = 2 * (S_TARGET - 0.5)
 # Candidate rules (specs/novelty/novelty-high-levels-2026-11-15.yaml, rules_2026_11_16), off by default:
 # REGIME: when the claim's subject names a regime (brief, pulsatile, timed ...), a record is the same question on the outcome
 #   only when its quote names a regime too;
-# MAIN_FACTOR: when the subject of the card's outcome claim is not the main factor (a later step: "SARM1 - destroys - axons"),
-#   that claim is a step of the chain for N, not its outcome.
-REGIME, MAIN_FACTOR = False, False
+# MAIN_FACTOR (the method since 2026-11-16): when the subject of every outcome claim of the card is a later step of the chain
+#   (the object of an earlier step, and no word of the main factor: "SARM1 - destroys - axons" after "NMNAT2 loss - activates
+#   - SARM1"), those claims are steps for N, not its outcome: N measures the main factor's effect, not a known end of the chain.
+# REGIME stays off: it follows words of the claim ("brief", "timed"), which a writer can add to look new.
+REGIME, MAIN_FACTOR = False, True
 _REGIME = (r"\b(brief|transient|transiently|short[- ]term|pulse[ds]?|pulsatile|intermittent(ly)?|cyclic(al)?|cycling|periodic|"
            r"timed|timing|reversibl[ey]|fractionated|alternating|interval|pre-?injury|post-?exercise|window|on[- ]off|"
            r"once[- ]weekly|weekly|every other|chrono\w*)\b")
@@ -47,10 +49,17 @@ def _main_factor_words(card: HypothesisCard) -> set[str]:
     return {w for x in labels for w in re.findall(r"[a-z0-9]{4,}", (x or "").lower())}
 
 
-def _is_main_factor(card: HypothesisCard, claim: Claim) -> bool:
+def _words(s: str) -> set[str]:
     import re
-    words = set(re.findall(r"[a-z0-9]{4,}", (claim.subject.label or "").lower()))
-    return not words or bool(words & _main_factor_words(card))
+    return set(re.findall(r"[a-z0-9]{4,}", (s or "").lower()))
+
+
+def _is_main_factor(card: HypothesisCard, claim: Claim) -> bool:
+    """False only when the claim's subject is demonstrably a later step: it shares a word with the object of an earlier step
+    of the chain and none with the main factor (a renamed main factor is never moved: that would make the hypothesis newer)."""
+    words = _words(claim.subject.label)
+    steps = set().union(*[_words(c.object.label) for c in r3.chain(card) if c.id != claim.id and c.link != "outcome"] or [set()])
+    return not (words and words & steps and not words & _main_factor_words(card))
 
 
 def evaluate(card: HypothesisCard, cvs: list[ClaimVerification], alts: Optional[dict] = None) -> r32.V32Result:
