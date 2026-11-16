@@ -196,6 +196,13 @@ def parse_records(text: str) -> Optional[dict]:
     return {"records": records, "truncated": True} if records else None
 
 
+def outcome_label(claim) -> str:
+    """The outcome a claim with an organism as its object names in its measure qualifier ("" for any other claim)."""
+    from hyparena.card.models import ORGANISM_RELATIONS
+    m = _text(claim.qualifiers.get("measure")) if claim.relation in ORGANISM_RELATIONS else ""
+    return "" if m.lower() in ("", "unknown", "healthspan", "lifespan", "health") else m
+
+
 INTERVENTIONS = ("same", "same_kind", "component", "other")
 OUTCOMES = ("same", "narrower", "broader", "other")
 
@@ -521,6 +528,9 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
                  "qualifiers": ", ".join(f"{k}: {v}" for k, v in claim.qualifiers.items()
                                          if v and v != "unknown" and k != "contrast"),
                  "endpoint": claim_endpoint(claim), "claim_plain": card.claim_plain,
+                 # verify_claim/v20: a claim whose object is the organism ("improves healthspan in - human") names its outcome
+                 # in the measure qualifier; the reader is told that outcome, not "human"
+                 "outcome_label": outcome_label(claim),
                  "population": ", ".join(f"{k} {v}" for k, v in p.population.model_dump().items() if v and v != "unknown") or "unknown",
                  "intervention": "; ".join(f"{i.label} ({', '.join(x for x in (i.regimen, i.route) if x and x != UNKNOWN) or 'regimen unknown'})"
                                            for i in p.intervention) or "unknown",

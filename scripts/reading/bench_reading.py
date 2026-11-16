@@ -36,9 +36,9 @@ KG = Path(__file__).resolve().parents[3] / "longevity-kg"
 DIR = KG / "reviews" / "argon-2026-11-12"
 PRICE = {"deepseek": (0.15, 0.6), "google": (1.5, 9.0)}      # USD per M tokens off-peak (DeepSeek x2 on weekdays 01-04, 06-10 UTC)
 PACK = "pack_16"             # --pack 25: the fresh gold of specs/reading/class-findings-2026-11-15.yaml (outcome links only)
-SYSTEMS = ("v9", "v13", "base_a", "v13_trace", "v14", "v15", "v16", "v16_2", "v17", "v17_2", "v18", "v18_2", "v19", "v19_2")
+SYSTEMS = ("v9", "v13", "base_a", "v13_trace", "v14", "v15", "v16", "v16_2", "v17", "v17_2", "v18", "v18_2", "v19", "v19_2", "v20", "v20_2", "v21", "v21_2")
 TRACE = "v13_trace"          # v13 again with every step kept: the filter answers, the reader's answer per paper, the records code kept
-TRACED = ("v13_trace", "v14", "v15", "v16", "v16_2", "v17", "v17_2", "v18", "v18_2", "v19", "v19_2")   # runs that keep every step (v14: verify_claim/v14, the same filter and batches as v13)
+TRACED = ("v13_trace", "v14", "v15", "v16", "v16_2", "v17", "v17_2", "v18", "v18_2", "v19", "v19_2", "v20", "v20_2", "v21", "v21_2")   # runs that keep every step (v14: verify_claim/v14, the same filter and batches as v13)
 
 
 def targets() -> list[dict]:
@@ -90,7 +90,7 @@ def dry() -> dict:
                 tin += (sum(len(p["title"]) + 600 for p in papers) + 2500) / 4   # filter: titles and abstract starts
                 tout += 25 * len(papers)
                 kept = 0.45 * text                                     # the filter kept 7.8 of 20 papers on pack-9 links
-                long, fields = s.startswith("v18"), s.startswith("v19")  # v18: three answers per abstract and a send-back; v19: the record fields only
+                long, fields = s.startswith("v18"), s.startswith(("v19", "v20", "v21"))  # v18: three answers per abstract and a send-back; v19: the record fields only
                 tin += (kept + (20000 if long else 13000 if fields else 10000) * max(1, round(0.45 * len(papers) / 10))) / 4 * (1.3 if long else 1)
                 tout += (260 if long else 150 if fields else 110) * 0.45 * len(papers) * (1.3 if long else 1)   # 1.3: replies sent back by the code checks
                 calls += 1 + max(1, round(0.45 * len(papers) / 10))
@@ -155,7 +155,7 @@ def run(system: str, limit: int = 0) -> dict:
             for i in range(0, len(kept), rv.BATCH):
                 cv = verify_claim(client, "deepseek", frozenset({"google"}), t["claim"], t["card"], t["as_of"], log=log,
                                   fallback="google", expert_pmids=[(p, "benchmark") for p in kept[i:i + rv.BATCH]],
-                                  search="fixed", template_version=system.split("_")[0] if system.startswith(("v14", "v15", "v16", "v17", "v18", "v19")) else "v13", check_subgroups=False)
+                                  search="fixed", template_version=system.split("_")[0] if system.startswith(("v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21")) else "v13", check_subgroups=False)
                 recs.update({k: v for k, v in _records(cv.model_dump()).items() if k not in recs})
                 for r in cv.evidence + cv.counterevidence + cv.no_stance:       # reader v18: outcome match and effect numbers
                     if r.outcome_match or r.effect_numbers:
@@ -183,7 +183,7 @@ def _reader_answers(log: list) -> dict:
     from hyparena.card.llm import parse_fullest
     out = {}
     for x in log:
-        if not str(x.get("template", "")).startswith(("verify_claim/v13", "verify_claim/v14", "verify_claim/v15", "verify_claim/v16", "verify_claim/v17", "verify_claim/v18", "verify_claim/v19")):
+        if not str(x.get("template", "")).startswith(("verify_claim/v13", "verify_claim/v14", "verify_claim/v15", "verify_claim/v16", "verify_claim/v17", "verify_claim/v18", "verify_claim/v19", "verify_claim/v20", "verify_claim/v21")):
             continue
         v = parse_fullest(x.get("reply") or "") or {}
         match = {str(r.get("pmid", "")).replace("PMID:", "").strip(): r.get("intervention_match") for r in v.get("records") or [] if isinstance(r, dict)}

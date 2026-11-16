@@ -160,3 +160,27 @@ result_pack_25_2026_11_16:
     was partly that pack; (3) the outcome field as a self-report of the reader does not work; the outcome boundary needs
     another check than the reader's own label
   decision: "2026-11-16: v19 is the working reader (configs/v3-flash-n10.yaml), accepted on packs 16 and 25 without the confirming run on the 30 trials; the outcome boundary is the next problem of the reading"
+
+readers_v20_v21:
+  written_on: 2026-11-16
+  status: written before any run
+  why: >-
+    on pack 25, 12 to 17 of the 21 to 26 records the gold does not confirm are results on another outcome, and 11 of the 15
+    of reader v19 (run 1) are one claim: "mixture - improves healthspan in - human" with the measure "quality of life" in
+    its qualifiers, where the reader recorded muscle hypertrophy and lean mass as "narrower". The template names the
+    claim's outcome by the claim's object, and for a claim whose object is the organism that is "human": every health
+    measure is then a narrower measure of it. 10 of the 20 claims of pack 25 and 6 of the 20 of pack 16 are of this form
+  v20: >-
+    v19 with the outcome named by the measure qualifier when the claim's object is an organism (code:
+    verifier.outcome_label), and one sentence in rule 0: a result on another health measure in the same people is "none"
+  v21: "v20 plus the combined-intervention rule (1c: one part of the claim's combined intervention on the claim's outcome is the same class)"
+  run: "bench_reading v20, v20_2, v21, v21_2 on packs 16 and 25: 8 runs, about 0.07 USD each off-peak (v19 spent 0.065 to 0.072), about 0.55 in all; cap MAX_USD 0.15 a run"
+  rule:
+    v20_replaces_v19_when: >-
+      on pack 25 (mean of two runs) precision higher than v19's 0.75 by at least 0.05 and recall not lower than 0.62 by more
+      than 0.03; on pack 16 recall and precision not lower than v19's (0.58, 0.83) by more than 0.03
+    v21_replaces_v20_when: >-
+      on both packs recall and precision not lower than v20's by more than 0.03, and the same-class primary findings found
+      on the two packs together not fewer than with v20; otherwise the combined-intervention rule stays in the manual and
+      out of the reader, and the manual says so
+  reported_not_judged: records on another outcome against the gold, on organism-object claims and on the others; the 11 records of claim Q03

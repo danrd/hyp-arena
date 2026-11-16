@@ -95,3 +95,22 @@ def test_v19_keeps_the_fields_without_the_three_answers():
     from pathlib import Path
     text = (Path(vf.__file__).parents[1] / "prompts" / "verify_claim" / "v19.j2").read_text()
     assert "effect_numbers" in text and "outcome_match" in text and "1d." not in text and "own_result" not in text
+
+
+def test_v20_names_the_outcome_of_an_organism_claim_by_its_measure():
+    from hyparena.card.llm import render
+    from hyparena.card.models import Claim, Entity
+    claim = Claim(id="c1", subject=Entity(label="protein mixture"), relation="improves_healthspan_in", object=Entity(label="human"),
+                  qualifiers={"measure": "quality of life"}, source_span="x", link="outcome")
+    assert vf.outcome_label(claim) == "quality of life"
+    named = Claim(id="c2", subject=Entity(label="squats"), relation="promotes", object=Entity(label="muscle strength"), source_span="x", link="outcome")
+    assert vf.outcome_label(named) == ""
+    kw = dict(claim_plain="h", population="older adults", intervention="mixture", comparator="placebo", qualifiers="measure: quality of life",
+              alternative=False, competitor=False, contrast="", negated=False, endpoint="", human_healthspan=False, history_text="",
+              abstracts=[{"pmid": "1", "year": "2020", "title": "t", "abstract": "a", "review": False}])
+    text = render("verify_claim", "v20", claim=claim, outcome_label="quality of life", **kw)
+    assert "THE OUTCOME OF THIS CLAIM IS: quality of life" in text and "the outcome the claim names (quality of life)" in text
+    assert "ONE PART OF A COMBINED INTERVENTION" not in text
+    assert "ONE PART OF A COMBINED INTERVENTION" in render("verify_claim", "v21", claim=claim, outcome_label="quality of life", **kw)
+    plain = render("verify_claim", "v20", claim=named, outcome_label="", **kw)
+    assert "THE OUTCOME OF THIS CLAIM IS" not in plain and "the outcome the claim names (muscle strength)" in plain
