@@ -47,3 +47,40 @@ our_run:
   also_measured: >-
     the search on stated steps: the share of the PMIDs Argon gives per link that our search handed to the reader and that
     became a record, for step links against outcome links (the registry trials of pack 18 had 5 steps in all)
+
+result_2026_11_16:
+  run: >-
+    the working pipeline on the 30 hypotheses with saved cards, off-peak, 2.36 USD for the kept runs and about 0.3 USD for
+    runs lost to three pipeline errors on written hypotheses, fixed during the run (admission asked an endpoint class that a
+    cell or tissue outcome does not fit; a declared alternative has no link; a model's "other" outside an ordinal scale).
+    Reader: 12 hypotheses read with v19, 18 with v21 (the working reader changed during the run)
+  N: >-
+    27 pairs, weighted kappa 0.185, exact 0.33; ours nearer the known in 14, farther in 4; ours unknown in 3. Ours: new
+    context 10, analog 12, new combination 2, new link 3; Argon: new combination 10, new link 10, new context 7, new mechanism
+    2, analog 1
+  links: "108 links, weighted kappa 0.315; ours analog 45 where Argon says analog 13 (new context 60)"
+  absence: "of 26 links Argon calls new with a count from both, 22 fall on the same side of 5 (0.85); 9 such links have no count of ours (a label too long for the count)"
+  search_on_stated_steps: >-
+    of 100 papers Argon names for steps, the search gave 46 to the reader on their own link (59 anywhere in the hypothesis)
+    and 32 became records on the link; for outcomes 14 of 30 given, 10 recorded. On written hypotheses the steps are found
+    and read about as well as the outcomes: the registry problem was steps missing from the cards, not the search
+  by_the_rule:
+    pack_usable: "yes (22 of 30 at new_mechanism or above, 8 at analog or below)"
+    N_passes: "no: kappa 0.185 < 0.4 (the direction asked was ours farther in at most 0.25; here ours is nearer in 0.52)"
+    absence_passes: "yes: 0.85 >= 0.8"
+  causes_sorted:   # the 14 hypotheses where ours is nearer the known (if_not of the rule)
+    regimen_is_the_idea: >-
+      V05, V09, V12, V22, V29 and others: the hypothesis is a regime of a known agent (brief, pulsatile, timed, intermittent);
+      the reader marks studies of the agent in its usual regime as the same intervention or its class, so the outcome link
+      has records and N stops at new context or analog. Argon counts the regime as the idea and calls it a new combination
+    outcome_is_a_known_end_of_the_chain: >-
+      V19 (SARM1 - axon destruction), V23 (DNA damage - senescence), V26, V30: the card's outcome claim is the last known
+      step of the chain, not the main factor's effect; it has many records, so N is new context or analog whatever the new
+      link in the middle. Argon judges the chain and says new mechanism or new link
+    class_records_on_mechanistic_outcomes: "V04, V18, V21, V27: records of related agents on a broad outcome (inflammation, lifespan in worms) set analog"
+  reading: >-
+    novelty by absence works; the outcome ladder does not fit hypotheses whose idea is a regime or a new middle link. Two
+    candidates, both rules of the novelty stage: (1) for the outcome ladder, a record counts as the same question only when
+    it matches the claim's stated regime when the claim states one (the regime is part of the intervention the claim names);
+    (2) the outcome link of N is the main factor on the outcome, not the last step: when the card's outcome claim's subject
+    is a step, its records set the level of that step, not of the hypothesis. Neither is written into the method yet
