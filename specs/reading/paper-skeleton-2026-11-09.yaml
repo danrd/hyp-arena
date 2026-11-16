@@ -161,3 +161,28 @@ adjudicate_v4_2026_11_15:
     against: "adjudicate_v3 on the same parses 0.667 / 0.609; adjudicate_v2 (parses of 2026-11-10) 0.52 / 0.85; reader v13 0.52 / 0.73"
     by_the_rule: "passed: the rule's recall is 11 of 21 + 2 = 13 of 21 (written as 0.62, which 13 of 21 rounds to) and precision 0.867 >= 0.70; adjudicate_v4 is the default of the skeleton (tools/skeleton/session.py)"
 
+
+against_the_reader_2026_11_16:
+  written_on: 2026-11-16
+  status: written before the run; not run
+  why: >-
+    stage 1 as written compares with the share of pack 8's key papers under the reading of 2026-11-09 (0.16 to 0.29), which
+    is no longer the reader in use; the working reader (verify_claim/v21) is measured on packs 16 and 25 with the same fields
+    the skeleton yields. The fair comparison is the skeleton on the same two packs
+  done_before_the_run:
+    repair: >-
+      a model's reply is repaired by code before validation (longevity-kg tools/skeleton/repair.py): unknown fields dropped,
+      closed-list values mapped by a fixed synonym table or left empty, counts written as text made numbers, stray study,
+      arm, outcome and conclusion references repaired when unambiguous or dropped, duplicate ids dropped; every repair noted
+      in the log. The 177 valid parses of 2026-11-15 are not touched by it. The 11 parses that failed then cannot be replayed
+      (their replies were in a local log that was not kept); the run measures how many fail now
+    outcome_of_organism_claims: "the judge gets the measure as the link's outcome when the claim's object is the organism, as reader v20 and v21 do"
+  run: >-
+    parse the 718 papers of packs 16 and 25 not yet parsed (760 in all; abstract plus the PMC results excerpt where open),
+    then the judge (adjudicate_v4) on every pair of the two packs, twice
+  cost: "dry count: parse about 1.53 USD (0.0021 a paper, as on 2026-11-15), the judge about 0.39 USD a run; about 2.3 USD with two runs of the judge; cap MAX_USD 3, off-peak"
+  measures: "recall, precision and stance against Argon's gold on each pack (bench_reading score), the same-class primary findings found, the parses that fail validation after the repair, the papers with a results excerpt"
+  rule:
+    skeleton_replaces_the_reader_when: "on both packs, mean of the two runs of the judge, recall and precision not lower than reader v21's (pack 16: 0.59 / 0.84; pack 25: 0.64 / 0.90) by more than 0.03"
+    if_not: the skeleton stays as the store of full-text numbers and the base of the knowledge graph; reading the links stays with the reader
+    parse_ok: at most 0.02 of the papers fail validation after the repair
