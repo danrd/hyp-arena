@@ -119,8 +119,12 @@ CORRECTIONS = {     # pack 27, T4 (the interval conversion) and T6 (large effect
 def thresholds(v: dict):
     saved = (r32.EFFECT_FULL_FROM, r32.RISK_RATIO_LINE, ec.PERCENT, ec.MCID, ec.SMALL_SAMPLE, ec.PAIRED_R, r32.EFFECT_MIN_N,
              r32.EFFECT_SHRINK_K)
+    smd = (ec.SMD_MEDIUM, ec.SMD_LARGE)
     try:
+        # a key the variant leaves out keeps the value before pack 27 was read (line 0.5, percent classes on, no MCID, no
+        # small-sample correction): the tables in the spec were computed against that base
         r32.EFFECT_FULL_FROM = 0.25 + 0.75 * v.get("line", 0.5) / 0.8
+        ec.SMD_MEDIUM, ec.SMD_LARGE = (0.35, 0.70) if v.get("line", 0.5) < 0.5 else (0.5, 0.8)
         r32.RISK_RATIO_LINE, ec.PERCENT, ec.MCID = v.get("rr", 0.0), v.get("percent", True), v.get("mcid", False)
         ec.SMALL_SAMPLE, ec.PAIRED_R = v.get("small", False), v.get("paired_r", 0.0)
         r32.EFFECT_MIN_N, r32.EFFECT_SHRINK_K = v.get("min_n", 0), v.get("shrink", 0)
@@ -128,6 +132,7 @@ def thresholds(v: dict):
     finally:
         (r32.EFFECT_FULL_FROM, r32.RISK_RATIO_LINE, ec.PERCENT, ec.MCID, ec.SMALL_SAMPLE, ec.PAIRED_R, r32.EFFECT_MIN_N,
          r32.EFFECT_SHRINK_K) = saved
+        ec.SMD_MEDIUM, ec.SMD_LARGE = smd
 
 
 def pack23_recomputed() -> float:

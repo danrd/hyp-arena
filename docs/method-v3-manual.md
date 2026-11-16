@@ -194,7 +194,7 @@ list ordered again; a cheap model rates the first 100 from 0 to 3 for the claim;
 | Phrase | Small | Medium | Large |
 |---|---|---|---|
 | ratio (OR, RR, HR, n-fold) | 0.8-1.25 | 1.25-2 or 0.5-0.8 | ≥ 2 or ≤ 0.5 |
-| standardised difference (d, g, SMD) | < 0.5 | 0.5-0.8 | ≥ 0.8 |
+| standardised difference (d, g, SMD) | < 0.35 | 0.35-0.7 | ≥ 0.7 |
 | the authors' word | small, modest, slight | moderate | large, substantial, marked |
 
   Raw units ("+2.4 kg"), a percent change without its variability ("+12%", "reduced by 35%": the same percent is a large
@@ -202,7 +202,13 @@ list ordered again; a cheap model rates the first 100 from 0 to 3 for the claim;
   is "none". A raw difference with its 95% interval is converted when n is known: SE = (hi − lo) / 3.92, SD = SE·√n / 2
   between two groups (SE·√n before-after), standardised difference d = |difference| / SD. The interval is read in the forms
   abstracts use: with the unit words between the number and the interval ("0.86 points on the SPPB scale (95% CI 0.32,
-  1.41)"), "CI = 62-123", "95% C.I. = 1.2-3.6", in braces ("46 m {20;72}").
+  1.41)"), "CI = 62-123", "95% C.I. = 1.2-3.6", in braces ("46 m {20;72}"). Under 60 participants the interval is read with
+  Student's t in place of 1.96 and d is multiplied by Hedges' correction 1 − 3 / (4·df − 1).
+- The line of "medium" for a standardised difference is 0.35: the median effect of trials in gerontology, rehabilitation
+  and physiotherapy is 0.3-0.4 (0.2 across Cochrane trials), so Cohen's 0.5 would call most real effects small.
+- A raw difference without its variability counts as medium when it reaches the published minimal clinically important
+  difference of its measure in older adults: SPPB 0.5 points, usual gait speed 0.05 m/s, 6-minute walk 20 m, 400-metre walk
+  20 s, timed up and go 1 s, chair rise 1.7 s, handgrip 5 kg, MMSE 2 points, MoCA 1.5 points. Other measures stay "unclear".
 - A review restating one trial counts as that trial (an RCT of unknown size until the trial's own paper is found).
 - **Independence group**: a paper whose abstract names exactly one trial id (NCT, ISRCTN) belongs to that trial; else the
   paper is its own group. Several records of one group count once (section 5).
@@ -250,7 +256,7 @@ list ordered again; a cheap model rates the first 100 from 0 to 3 for the claim;
 | design (starting level), outcome link of a claim about humans | RCT 1; meta-analysis by its GRADE certainty: high or moderate 1, low 1/2, very low 1/4, not reported 1 (as a trial); non-randomised and observational 1/2; review (systematic or narrative), animal, cells, other 1/4 |
 | design, links before the outcome or a claim about animals | cells 1/3, review 1/3 (it adds no data of its own), primary study 1 |
 | precision (imprecision) | record for: min(1, ln n / ln 300), at least 1/4, n unknown 1/4; before the outcome 1/2. Record against (a null): the power of its study to detect d = 0.4 |
-| effect (rating up for a large effect) | record for: a stated effect of at least medium size (d ≥ 0.5; a ratio converted to d by ln(ratio)·√3/π, so an odds ratio of about 2.5; the authors' "moderate") 1; small, none or not stated 1/2. Record against: 1 |
+| effect (rating up for a large effect) | record for: a stated effect of at least medium size (d ≥ 0.35; a ratio converted to d by ln(ratio)·√3/π, so a ratio of about 1.9 or 0.53; a raw difference that reaches the measure's minimal clinically important difference; the authors' "moderate") 1; small, none or not stated 1/2. Record against: 1 |
 | comparison (part of risk of bias) | between groups 1; within group or none 1/2 |
 | context (indirectness) | adjacent 1/2 (another population, age, sex, dose, comparator or species, only on qualifiers the claim states; or an intervention of the same broad category only, reading rule 1); class (another intervention of the same class) 3/4; exact 1 |
 
@@ -843,7 +849,7 @@ v36:
   class_weight: 0.75
   preclinical_review: 0.333333
   design_grade3: {rct: 1.0, meta_analysis: 1.0, non_randomised: 0.5, observational: 0.5, other: 0.25}
-  effect_full_from: 0.71875  # the continuous effect weight of d = 0.5
+  effect_full_from: 0.578125  # the continuous effect weight of d = 0.35
 meta_certainty: {high: 1.0, moderate: 1.0, low: 0.5, very_low: 0.25, not_reported: 1.0}
 v34:
   preclinical_precision: 0.5
@@ -870,7 +876,7 @@ scales:
   discrimination: [unchanged, weakened, eliminated]
 effect_class_rule_a:
   ratio: {medium: 1.25, large: 2}
-  standardised_difference: {medium: 0.5, large: 0.8}
+  standardised_difference: {medium: 0.35, large: 0.7}
 profiles:
   evidence: [[chain_state], [I], [W], [best_design_outcome, independent_outcome, endpoint_clinical]]
   funding: [[chain_state], [feasibility], [trend_pubmed, ai_role, N], [I, W], [endpoint_clinical, best_design_outcome, independent_outcome]]

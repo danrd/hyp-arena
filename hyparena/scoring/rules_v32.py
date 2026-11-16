@@ -117,8 +117,8 @@ def effect_weight(rec: EvidenceRecord, against: bool) -> float:
                 c = ec.class_two_values(p)
             if c != "unclear":
                 return lv.weight("effect", c)
-            if ec.mcid_reached(p, rec.quote):             # variant (pack 27, T5), off by default
-                return 1.0
+            if ec.mcid_from_numbers(rec.effect_numbers, rec.outcome_measure) or ec.mcid_reached(p, rec.quote + " " + rec.outcome_measure):
+                return 1.0                                # the measure's minimal clinically important difference is reached
             d = ec.d_from_p(p, rec.n_total, rec.comparison)
         if d is None:
             if not ec_percent() and rec.effect_class in ("small", "medium", "large"):
@@ -182,7 +182,8 @@ NULL_POWER = False          # set by evaluate(..., null_power=True); module swit
 
 V36 = False                 # set by evaluate(..., v36=True)
 DESIGN_GRADE3 = {"rct": 1.0, "meta_analysis": 1.0, "non_randomised": 0.5, "observational": 0.5}   # else 1/4
-EFFECT_FULL_FROM = 0.25 + 0.75 * 0.5 / 0.8      # the continuous effect weight of d = 0.5 (medium)
+EFFECT_MEDIUM_D = 0.35                          # since 2026-11-16 (before: 0.5): the median effect of trials in the field
+EFFECT_FULL_FROM = 0.25 + 0.75 * EFFECT_MEDIUM_D / 0.8      # the continuous effect weight of a medium d
 EFFECT_RULE = "medium"      # "medium": full weight from a stated effect of medium size; "stated": any stated effect (variant)
 CLASS_WEIGHT = 0.75         # (1 until 2026-11-15; weight-sources F7) the weight of a record about another intervention of the same class (context "class")
 LOGLR_LAMBDA = math.log(5)   # F - A = 1 (one record of full weight) gives S 5/6 (2 atanh(2/3) / 0.6 = 2.68 until 2026-11-15; weight-sources F9)

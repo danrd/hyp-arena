@@ -58,4 +58,12 @@ def test_the_interval_form_reaches_the_record_weight():
     assert r32.effect_weight(rec, False) >= r32.EFFECT_FULL_FROM          # d 1.24: at least medium
     rec.effect_reported = "0.86 points on the SPPB scale (95% CI 0.32, 1.41)"
     rec.n_total = 188
-    assert r32.effect_weight(rec, False) < r32.EFFECT_FULL_FROM           # d 0.45: below medium
+    assert r32.effect_weight(rec, False) >= r32.EFFECT_FULL_FROM          # d 0.45: medium since the line is 0.35
+    rec.effect_reported = "0.30 points on the SPPB scale (95% CI 0.02, 0.58)"
+    assert r32.effect_weight(rec, False) < r32.EFFECT_FULL_FROM           # d 0.29: with an interval the d decides
+    rec.effect_reported = "improved the SPPB by 0.6 points"
+    assert r32.effect_weight(rec, False) >= r32.EFFECT_FULL_FROM          # no variability: the SPPB's MCID (0.5 points) is reached
+    rec.effect_reported = "improved the SPPB by 0.3 points"
+    assert r32.effect_weight(rec, False) < r32.EFFECT_FULL_FROM
+    rec.effect_reported, rec.outcome_measure, rec.effect_numbers = "", "usual gait speed", {"difference": "0.08", "unit": "m/s"}
+    assert r32.effect_weight(rec, False) >= r32.EFFECT_FULL_FROM          # reader v19 fields: 0.08 m/s against 0.05

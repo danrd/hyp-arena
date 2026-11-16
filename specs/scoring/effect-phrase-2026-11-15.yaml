@@ -126,3 +126,26 @@ corrections_2026_11_16:
     the corrections move 0 to 3 records of 297: an interval with a known n is rare (17 to 20 records), and the records
     with a readable large effect mostly come from samples above 60. None changes a reference beyond 0.013
   decision: "none adopted: no gain and more rule; the switches stay in the code, off (effect_class.SMALL_SAMPLE, PAIRED_R; rules_v32.EFFECT_MIN_N, EFFECT_SHRINK_K)"
+
+adopted_2026_11_16:
+  rule_applied: >-
+    the rule of the record weight (specs/scoring/record-weight-2026-11-08.yaml): among variants not worse by more than
+    0.03, the simpler or the one nearer the published standard wins. "No gain" was the wrong reason to keep our own values
+  adopted:
+    T1: "the line of medium for a standardised difference 0.35 (large from 0.7): rules_v32.EFFECT_MEDIUM_D, effect_class.SMD_MEDIUM"
+    T4_small_samples: "Student's t and Hedges' correction under 60 participants: effect_class.SMALL_SAMPLE"
+    T5: "a raw difference without its variability that reaches the measure's MCID counts as medium: nine measures (effect_class._MCIDS); from the working reader's fields (measure, numbers, unit), from the phrase for earlier records"
+  not_adopted: "T6 (shrinkage, a sample-size condition) and the before-after scale of T4: their parameters (k, the target, r) are not given by the sources"
+  references_after:      # R2, R3, pack23, auc30 working reader on the saved runs, auc30 reader v16
+    before_pack_27: [0.695, 0.602, 0.669, 0.679, 0.696]
+    working_2026_11_16: [0.675, 0.608, 0.684, 0.688, 0.723]
+  ratios:
+    status: open (the user's decision)
+    data: >-
+      45 records for with a ratio in the three pools (30 trials 24, 74 trials 8, 60 trials 13): 20 odds ratios, 25 risk,
+      hazard or rate ratios; of the 25, 12 are under 1.33, 9 between 1.33 and 1.89, 4 above
+    variants: {from_1.25: [0.679, 0.607, 0.682, 0.652, 0.692], from_1.33: [0.678, 0.607, 0.682, 0.670, 0.696], from_1.5: [0.675, 0.608, 0.684, 0.683, 0.714]}
+    what_moves: >-
+      at 1.33 four of the 30 trials change their balance, two of them visibly, both with a null outcome: NCT04796701
+      (0.56 to 0.73: an RCT of 840 with IRR 0.67 for readmissions and an RCT of 222 with HR 0.28) and NTR3980 (0.84 to
+      0.90: an RCT of 201 with HR 1.84 for ADL improvement). The fall of the AUC is these two trials

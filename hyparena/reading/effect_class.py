@@ -4,7 +4,9 @@ The extractor decides only whether the finding closest to the claim is a null re
 effect size; the class is computed here, so that "small", "medium" and "large" mean the same thing in every record:
 
 - ratio (odds, risk, hazard ratio; OR, RR, HR, IRR; "8-fold"): >= 2 or <= 0.5 large; >= 1.25 or <= 0.8 medium; otherwise small;
-- standardised difference (Cohen's d, Hedges' g, SMD, "effect size"): >= 0.8 large; >= 0.5 medium; otherwise small (absolute value);
+- standardised difference (Cohen's d, Hedges' g, SMD, "effect size"): >= 0.7 large; >= 0.35 medium; otherwise small (absolute
+  value). Since 2026-11-16 the line of "medium" is the median effect of trials in gerontology and rehabilitation (0.3-0.4), not
+  Cohen's convention of 0.5 (specs/scoring/effect-phrase-2026-11-15.yaml, argon_pack27);
 - a relative change in percent ("+9.3%", "reduced by 35%") without its variability: "unclear" since 2026-11-16 (the same
   percent is a large or a negligible effect by the measure's variation; specs/scoring/effect-phrase-2026-11-15.yaml). Before
   that: > 20 large, >= 5 medium, otherwise small (the switch PERCENT);
@@ -18,6 +20,7 @@ from __future__ import annotations
 import re
 
 CLASSES = ("none", "small", "medium", "large", "unclear")
+SMD_MEDIUM, SMD_LARGE = 0.35, 0.70      # before 2026-11-16: 0.5 and 0.8
 _NUM = r"(-?(?:\d+(?:\.\d+)?|\.\d+))"            # 2026-11-07: also ".67" (no leading zero)
 _RATIO = re.compile(r"\b(?:odds ratio|risk ratio|relative risk|hazard ratio|rate ratio|OR|aOR|RR|aRR|HR|aHR|IRR)\b"
                     r"\s*(?:\[[^\]]*\]|\([^)]*\))?\s*,?\s*(?:=|:|of|was|is)?\s*" + _NUM, re.I)      # 2026-11-08: "hazard ratio [HR], 0.82"
@@ -40,15 +43,42 @@ _WORDS = (("large", r"\b(?:large|substantial|marked|strong)\b"), ("medium", r"\b
 
 # Variant switches of specs/scoring/effect-phrase-2026-11-15.yaml (argon_pack27); the defaults are the method.
 PERCENT = False         # since 2026-11-16 a percent change without its variability is "unclear" (pack 27, T3); True: the thresholds 5 and 20 used before
-MCID = False            # True: a raw difference that reaches the measure's minimal clinically important difference counts as medium (T5)
+MCID = True             # since 2026-11-16 a raw difference that reaches the measure's minimal clinically important difference counts as medium (T5)
 # measure -> (pattern in the quote or phrase, pattern of the number with its unit in the phrase, the MCID); pack 27, T5
-_MCIDS = (("SPPB", r"SPPB|short physical performance", r"([+-]?\d+(?:\.\d+)?)\s*(?:points?)?", 0.5),
+# measure -> (its words in the quote, the measure's name or the phrase; the number with its unit; the MCID). Published
+# anchor-based values in older adults (Argon pack 27, T5: Perera 2006, Kwon 2009 and later; where a range is given, its middle).
+_PTS = r"([+-]?\d+(?:\.\d+)?)\s*-?\s*points?\b"
+_SEC = r"([+-]?\d+(?:\.\d+)?)\s*(?:s|sec|secs|seconds)\b"
+_MCIDS = (("SPPB", r"SPPB|short physical performance", _PTS, 0.5),
           ("gait speed", r"gait speed|walking speed", r"([+-]?\d+(?:\.\d+)?)\s*m/s", 0.05),
           ("6-minute walk", r"6[- ]?min|six[- ]minute|6MW", r"([+-]?\d+(?:\.\d+)?)\s*(?:m|meters|metres)\b", 20.0),
-          ("timed up and go", r"timed up|\bTUG\b", r"([+-]?\d+(?:\.\d+)?)\s*(?:s|sec|seconds)\b", 1.0),
+          ("400-metre walk", r"400[- ]?m", _SEC, 20.0),
+          ("timed up and go", r"timed up|\bTUG\b", _SEC, 1.0),
+          ("chair rise", r"chair (rise|stand)|sit[- ]to[- ]stand|5STS", _SEC, 1.7),
           ("grip", r"grip", r"([+-]?\d+(?:\.\d+)?)\s*kg", 5.0),
-          ("MMSE", r"MMSE|mini[- ]mental", r"([+-]?\d+(?:\.\d+)?)\s*(?:points?)?", 2.0),
-          ("MoCA", r"MoCA|montreal cognitive", r"([+-]?\d+(?:\.\d+)?)\s*(?:points?)?", 1.5))
+          ("MMSE", r"MMSE|mini[- ]mental", _PTS, 2.0),
+          ("MoCA", r"MoCA|montreal cognitive", _PTS, 1.5))
+_MCID_UNITS = {"SPPB": "point", "MMSE": "point", "MoCA": "point", "gait speed": "m/s", "6-minute walk": "m", "400-metre walk": "s",
+               "timed up and go": "s", "chair rise": "s", "grip": "kg"}
+
+
+def mcid_from_numbers(numbers: dict, measure: str) -> bool | None:
+    """Reader v19 fields: whether the stated difference (or the two groups' values) reaches the MCID of the named measure;
+    None when the measure is not in the table, the unit is another one, or there is no difference."""
+    if not MCID or not measure or not numbers:
+        return None
+    g = {k: _f(v) for k, v in numbers.items() if k in NUMBER_KEYS}
+    diff = g.get("difference")
+    if diff is None:
+        pair = next(((a, b) for a, b in (("intervention", "control"), ("after", "before")) if g.get(a) is not None and g.get(b) is not None), None)
+        diff = g[pair[0]] - g[pair[1]] if pair else None
+    unit = str(numbers.get("unit") or "").lower().strip()
+    for name, rx, _number, mcid in _MCIDS:
+        if re.search(rx, measure, re.I):
+            want = _MCID_UNITS[name]
+            ok = unit.startswith(want) or (want == "s" and unit.startswith("sec")) or (want == "m" and unit in ("m", "meters", "metres"))
+            return abs(diff) >= mcid if diff is not None and ok else None
+    return None
 
 
 def mcid_reached(phrase: str, quote: str = "") -> bool | None:
@@ -89,7 +119,7 @@ def from_phrase(phrase: str) -> str:
     m = _SMD.search(p)
     if m:
         x = abs(float(next(g for g in m.groups() if g).replace(" ", "")))
-        return "large" if x >= 0.8 else "medium" if x >= 0.5 else "small"
+        return "large" if x >= SMD_LARGE else "medium" if x >= SMD_MEDIUM else "small"
     m = _PCT.search(p) if PERCENT else None
     if m:
         x = abs(float(next(g for g in m.groups() if g)))
@@ -134,7 +164,7 @@ _P_VALUE = re.compile(r"\bp\s*(=|<|≤)\s*(0?\.\d+)", re.I)
 
 
 # Corrections of the interval conversion scored as variants (Argon pack 27, T4); the defaults are the method.
-SMALL_SAMPLE = False    # True: under 60 participants the interval is read with Student's t and d gets Hedges' correction
+SMALL_SAMPLE = True     # since 2026-11-16: under 60 participants the interval is read with Student's t and d gets Hedges' correction
 PAIRED_R = 0.0          # e.g. 0.7: a before-after interval gives the spread of the change; d is scaled by sqrt(2 (1 - r))
 
 
