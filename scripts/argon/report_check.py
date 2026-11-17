@@ -21,7 +21,7 @@ HELP = {   # the second level of the help (manual, section 10, tab 5): name -> p
     "weight": r"вес\w* записи",
     "strength": r"сил\w* звена|баланс доказательств",
     "reading": r"правил\w* (чтения|прочтения)",
-    "novelty": r"^\s*новизн",
+    "novelty": r"новизн",
     "experiment": r"эксперимент.*(размах|реализуем)|реализуем",
     "profiles": r"профил|аспид|aspid",
     "versions": r"верси|улучшени|поднимет",
@@ -52,7 +52,7 @@ const { chromium } = require('playwright');
   await page.waitForTimeout(1500);
   const visible = {};
   for (const name of tabs) {
-    const loc = page.locator('button, a, [role=tab], li', { hasText: new RegExp('^\\s*' + name, 'i') });
+    const loc = page.locator('button, a, [role=tab], li', { hasText: new RegExp('^\\s*(\\d+[.)]\\s*)?' + name, 'i') });
     if (await loc.count()) {
       await loc.first().click({ timeout: 3000 }).catch(() => {}); await page.waitForTimeout(500);
       visible[name] = await page.evaluate(() => document.body.innerText);
@@ -90,7 +90,7 @@ def check_html(html: str, visible: dict | None = None) -> dict:
     # 1. tabs: a clickable element named by each tab, in the manual's order
     pos = {}
     for name in TABS:
-        el = next((x for x in soup.find_all(["button", "a", "li"]) if re.match(rf"\s*{re.escape(name)}", _txt(x), re.I)), None)
+        el = next((x for x in soup.find_all(["button", "a", "li"]) if re.match(rf"\s*(\d+[.)]\s*)?{re.escape(name)}", _txt(x), re.I)), None)
         pos[name] = None if el is None else html.find(str(el)[:80])
     found = [n for n in TABS if pos[n] is not None]
     out["tabs"] = {"found": {n: pos[n] is not None for n in TABS},
@@ -108,8 +108,8 @@ def check_html(html: str, visible: dict | None = None) -> dict:
                       "definition_list": bool(d and d.find("dl"))}
     out["help"] = helpd
     out["help"]["reading"]["seven_rules"] = helpd["reading"]["rows"] >= 7
-    hh = next((h for h in soup.find_all(["h1", "h2", "h3", "h4", "b", "strong"]) if re.search(r"(?i)как читать отч", _txt(h))
-               and len(_txt(h)) < 80), None)
+    hh = next((h for h in soup.find_all(["h1", "h2", "h3", "h4", "h5", "b", "strong", "div", "p", "span"])
+               if re.search(r"(?i)как читать отч", _txt(h)) and len(_txt(h)) < 80), None)
     box = hh.find_parent(["div", "section", "article"]) if hh else None
     if box is not None:
         from copy import copy
@@ -135,13 +135,28 @@ def check_html(html: str, visible: dict | None = None) -> dict:
     # 4. cards: "Как гипотеза понята" as separate fields; the mechanism as triples with a legend
     heads = [h for h in soup.find_all(["h2", "h3", "h4", "h5", "b", "strong", "div", "p"])
              if re.match(r"\s*как гипотеза понята", _txt(h), re.I) and len(_txt(h)) < 40]
+    out["cards_understood_heading"] = len(heads)
+    if not heads:      # a report without that heading: each card is found by its first heading, "Текст гипотезы"
+        heads = [h for h in soup.find_all(["h2", "h3", "h4", "h5", "b", "strong"])
+                 if re.match(r"\s*текст гипотезы", _txt(h), re.I) and len(_txt(h)) < 40]
     cards = []
     for h in heads:
         box = h.find_parent(["div", "section", "details", "article"]) or h.parent
+        for _ in range(4):            # widen to the whole card: the text and the reading may sit in two columns
+            if re.search(r"(?i)механизм", _txt(box)) or box.parent is None:
+                break
+            box = box.parent
         labels = [_txt(x) for x in box.find_all(["li", "dt", "th", "b", "strong", "span", "td"])]
         fields = {k: any(re.match(p, l, re.I) for l in labels) for k, p in CARD_FIELDS.items()}
         cards.append(fields)
-    boxes = [h.find_parent(["div", "section", "details", "article"]) or h.parent for h in heads]
+    boxes = []
+    for h in heads:
+        b = h.find_parent(["div", "section", "details", "article"]) or h.parent
+        for _ in range(4):
+            if re.search(r"(?i)механизм", _txt(b)) or b.parent is None:
+                break
+            b = b.parent
+        boxes.append(b)
     mech = [h for b in boxes for h in b.find_all(["h2", "h3", "h4", "h5", "b", "strong", "div", "p"])
             if re.match(r"\s*механизм", _txt(h), re.I) and len(_txt(h)) < 40]
     steps = []
