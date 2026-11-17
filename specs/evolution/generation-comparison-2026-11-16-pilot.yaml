@@ -152,3 +152,8 @@ judge_reasons_result_2026_11_17:
   cost: "0.006 USD (15 calls)"
   counts: "291 reasons; won by BS 206: other 110, experiment 40, mechanism 31, evidence 23, benefit 2; won by A 85: other 52, benefit 17, mechanism 10, evidence 4, experiment 2"
   reading: "where a single consideration decided, BS wins on the experiment (40 to 2), the mechanism (31 to 10) and the evidence (23 to 4), A on the benefit to people (17 to 2); more than half of the reasons weigh several considerations at once (other). The judge question v3 (one deciding consideration asked of the judge itself) is the cleaner measure for the next round"
+round_5_qwen_second_2026_11_17:   # written before the calls
+  why: "Qwen4 Max answered BS (5 hypotheses, 8 searches, 87 references all real and before T, about 0.50 USD) but A failed twice on the provider's 300 s stream idle limit (no event before the limit); A and BS must be written under the same settings"
+  change: "both A and BS generated again with reasoning effort low (else as round_5_writer_qwen); the first BS answer kept as a separate point (generation-2026-11-17-qwen/), not compared with the new A"
+  dir: "longevity-kg reviews/generation-2026-11-17-qwen2/"
+  cap: "2 USD for the two calls"

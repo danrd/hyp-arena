@@ -19,6 +19,7 @@ import httpx
 URL = "https://api.cometapi.com/v1/responses"
 PRICE = {"gpt-6.1-sol": {"in": 2.0, "out": 10.0, "cache_write": 2.5, "search_per_call": 0.01},
          "qwen4-max": {"in": 1.5, "out": 4.5, "cache_write": 1.875, "search_per_call": 0.0}}   # no search price in the catalog   # configs/prices.yaml
+EFFORT = ["medium"]          # set by --effort
 API_LINE = ("You may use web search to find and check papers. Cite only papers published on or before T, with their real "
             "PMIDs.")
 
@@ -39,7 +40,7 @@ def cost(model: str, usage: dict, searches: int) -> float:
 def call(model: str, text: str) -> tuple[dict, dict]:
     key = os.environ.get("COMET_API_KEY") or os.environ.get("COMETAPI_KEY")
     body = {"model": model, "input": text, "tools": [{"type": "web_search"}], "max_tool_calls": 25,
-            "max_output_tokens": 32000, "reasoning": {"effort": "medium"}}
+            "max_output_tokens": 32000, "reasoning": {"effort": EFFORT[0]}}
     t0 = time.time()
     # streamed (2026-11-17): a long call with searches kept the connection silent for minutes and the server closed it
     # without a response; with stream the events keep it open and the final event carries the whole response
@@ -88,7 +89,7 @@ def call_background(model: str, text: str, poll: int = 15, limit: int = 3600) ->
     key = os.environ.get("COMET_API_KEY") or os.environ.get("COMETAPI_KEY")
     h = {"Authorization": f"Bearer {key}"}
     body = {"model": model, "input": text, "tools": [{"type": "web_search"}], "max_tool_calls": 25,
-            "max_output_tokens": 32000, "reasoning": {"effort": "medium"}, "background": True}
+            "max_output_tokens": 32000, "reasoning": {"effort": EFFORT[0]}, "background": True}
     t0 = time.time()
     r = httpx.post(URL, json=body, headers=h, timeout=120)
     data = r.json() if r.headers.get("content-type", "").startswith("application/json") else {"error": r.text[:2000]}
@@ -115,11 +116,13 @@ def main() -> None:
     ap.add_argument("--kinds", nargs="+", default=["a", "bs"])
     ap.add_argument("--model", default="gpt-6.1-sol")
     ap.add_argument("--cap", type=float, default=2.0)
+    ap.add_argument("--effort", default="medium", choices=["low", "medium", "high"])
     ap.add_argument("--background", action="store_true", help="background mode with polling instead of a stream")
     ap.add_argument("--pause", type=int, default=0, help="seconds between the calls (the upstream's token rate limit)")
     a = ap.parse_args()
     if os.environ.get("ALLOW_PAID") != "1":
         raise SystemExit("paid call: set ALLOW_PAID=1")
+    EFFORT[0] = a.effort
     d = Path(os.environ["GEN_DIR"])
     spent, log = 0.0, []
     billing_before = billing()
