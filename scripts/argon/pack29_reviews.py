@@ -4,7 +4,8 @@ Code draws 60 Cochrane reviews on older adults (2021-2025) from a fixed PubMed q
 that the pooled estimate contains; code checks it and sets T from the study years.
 
     python -m scripts.argon.pack29_reviews build    # free: longevity-kg/reviews/argon-2026-11-17/pack_29_{1,2,3}_task.json
-    python -m scripts.argon.pack29_reviews check    # free, after the answers: PMIDs, titles, quotes, study years, T
+    python -m scripts.argon.pack29_reviews build-rest   # free: pack 30, the rest of the pool, parts of 20
+    python -m scripts.argon.pack29_reviews check [--pack 30]   # free, after the answers: PMIDs, quotes, study years, T
 """
 from __future__ import annotations
 
@@ -57,7 +58,7 @@ Rules: work from the review itself, not from memory; never guess a PMID; quotes 
 passage); a review that you cannot open is excluded, not labelled from its abstract alone.
 
 Answer with one JSON object, nothing else:
-{"task": "pack_29", "part": 0, "reviews": [{"pmid": "", "include": true, "exclude_reason": "", "exclude_note": "",
+{"task": "pack_NN", "part": 0, "reviews": [{"pmid": "", "include": true, "exclude_reason": "", "exclude_note": "",
   "main_comparison": "", "intervention": "", "comparator": "", "outcome": "", "population": "", "intervention_kind": "",
   "label": "benefit | no_effect | harm", "pooled_estimate": "", "result_quote": "", "certainty": "", "certainty_quote": "",
   "conclusion_quote": "", "contributes_known": true, "studies": [{"name": "", "year": 0, "pmid": ""}], "studies_per_year": {},
@@ -76,21 +77,37 @@ def _pool() -> list[str]:
     return sorted(r["idlist"], key=int)
 
 
-def build() -> dict:
+PART_SIZE = 20
+
+
+def _write(pack: int, pick: list[str], pool_size: int) -> dict:
     from hyparena.tools import pubmed
-    pool = _pool()
-    pick = random.Random(SEED).sample(pool, N)
     meta = pubmed.fetch(pick)
     DIR.mkdir(parents=True, exist_ok=True)
     items = [{"pmid": p, "title": meta[p]["title"], "year": meta[p]["year"]} for p in pick]
-    size = math.ceil(N / PARTS)
-    for i in range(PARTS):
-        part = items[i * size:(i + 1) * size]
-        task = {"task": "pack_29", "part": i + 1, "instructions": INSTRUCTIONS, "reviews": part}
-        (DIR / f"pack_29_{i + 1}_task.json").write_text(json.dumps(task, indent=1, ensure_ascii=False) + "\n")
-    (DIR / "pack_29_sample.json").write_text(json.dumps({"query": QUERY, "pool": len(pool), "seed": SEED, "pmids": pick},
-                                                        indent=1) + "\n")
-    return {"pool": len(pool), "sampled": len(pick), "parts": PARTS}
+    parts = math.ceil(len(items) / PART_SIZE)
+    for i in range(parts):
+        task = {"task": f"pack_{pack}", "part": i + 1, "parts": parts,
+                "instructions": INSTRUCTIONS.replace("pack_NN", f"pack_{pack}"),
+                "reviews": items[i * PART_SIZE:(i + 1) * PART_SIZE]}
+        (DIR / f"pack_{pack}_{i + 1}_task.json").write_text(json.dumps(task, indent=1, ensure_ascii=False) + "\n")
+    (DIR / f"pack_{pack}_sample.json").write_text(json.dumps({"query": QUERY, "pool": pool_size, "seed": SEED, "parts": parts,
+                                                              "pmids": pick}, indent=1) + "\n")
+    return {"pack": pack, "pool": pool_size, "sampled": len(pick), "parts": parts}
+
+
+def build() -> dict:
+    pool = _pool()
+    return _write(29, random.Random(SEED).sample(pool, N), len(pool))
+
+
+def build_rest() -> dict:
+    """Pack 30: every review of the pool that pack 29 did not draw, in a random order, parts of 20 (the same task)."""
+    pool = _pool()
+    drawn = set(json.loads((DIR / "pack_29_sample.json").read_text())["pmids"])
+    rest = [p for p in pool if p not in drawn]
+    random.Random(SEED + 1).shuffle(rest)
+    return _write(30, rest, len(pool))
 
 
 def t_of(years: list[int]) -> tuple[int | None, bool]:
@@ -103,13 +120,14 @@ def t_of(years: list[int]) -> tuple[int | None, bool]:
     return Y, any(v <= Y for v in ys) and any(v > Y for v in ys)
 
 
-def check() -> dict:
+def check(pack: int = 29) -> dict:
     from hyparena.tools import pubmed
     from scripts.argon.generation_tasks import quote_found
-    sample = json.loads((DIR / "pack_29_sample.json").read_text())["pmids"]
+    smp = json.loads((DIR / f"pack_{pack}_sample.json").read_text())
+    sample, parts = smp["pmids"], smp.get("parts", PARTS)
     ans = {}
-    for i in range(1, PARTS + 1):
-        f = DIR / f"pack_29_{i}_answer.json"
+    for i in range(1, parts + 1):
+        f = DIR / f"pack_{pack}_{i}_answer.json"
         if f.exists():
             ans.update({str(r.get("pmid", "")).strip(): r for r in json.loads(f.read_text()).get("reviews") or []})
     revs = pubmed.fetch([p for p in sample if p in ans])
@@ -159,14 +177,17 @@ def check() -> dict:
         rows.append(row)
     counts["pmids_not_in_the_sample"] = sorted(set(ans) - set(sample))
     out = counts | {"rows": rows}
-    (DIR / "pack_29_check.json").write_text(json.dumps(out, indent=1, ensure_ascii=False) + "\n")
+    (DIR / f"pack_{pack}_check.json").write_text(json.dumps(out, indent=1, ensure_ascii=False) + "\n")
     return {k: v for k, v in out.items() if k != "rows"}
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("cmd", choices=["build", "check"])
-    print(json.dumps(build() if ap.parse_args().cmd == "build" else check(), indent=1, ensure_ascii=False))
+    ap.add_argument("cmd", choices=["build", "build-rest", "check"])
+    ap.add_argument("--pack", type=int, default=29)
+    a = ap.parse_args()
+    out = build() if a.cmd == "build" else build_rest() if a.cmd == "build-rest" else check(a.pack)
+    print(json.dumps(out, indent=1, ensure_ascii=False))
 
 
 if __name__ == "__main__":

@@ -65,3 +65,8 @@ labels_result_2026_11_17:
   certainty: "high 4, moderate 10, low 13, very low 3, not stated 1"
   kinds: "drug 11, procedure 4, exercise 3, organisation of care 3, behavioural 3, supplement 2, device 2, nutrition 1, other 2"
   next: "the paid run of the method on the 30 links (later_run above): pass rule and price confirmed before it"
+sample_size_2026_11_17:
+  why: "30 links give a 95% interval of about +-0.20 on an AUC of 0.65 (Hanley-McNeil), so the rule's lower bound above 0.5 could not be met even by a real signal; about 60 links are needed for that, 100-150 for a firm conclusion"
+  pack_30: "the rest of the pool: 156 reviews (216 by the same query on 2026-11-17, minus the 60 of pack 29), random order, 8 parts of 20, the same instructions (scripts/argon/pack29_reviews.py build-rest); about 105 usable links expected with pack 29"
+  plan: "a mechanics run of the method on the 30 links of pack 29 first (no conclusion drawn from it), then the main run on every usable link of packs 29 and 30 with the rule written before it"
+
