@@ -194,3 +194,17 @@ def test_guard_lines_in_the_base_and_the_control(tmp_path, monkeypatch):
     ctrl = gt.build("a", "2026-11-17", guard=False)
     assert gt.GUARD not in ctrl["instructions"][0] and (tmp_path / "task_a_noguard.json").exists()
     assert ctrl["instructions"][0] + " " + gt.GUARD in gt.base()
+
+
+def test_judge_v3_needs_the_deciding_consideration():
+    from scripts.evolution import generation_compare as gc
+    gc.set_mode({"judge": {"pair_version": "v3", "rubric": False, "rewrite": False}})
+    try:
+        assert gc.pair_problems({"overall": "1", "decided_by": "evidence", "reason": "x"}) == []
+        assert gc.pair_problems({"overall": "1", "reason": "x"})
+        data = {"arms": {"A": [{"id": "A1"}], "BS": [{"id": "BS1"}]}}
+        done = {"pair|BS>A|BS1|A1|q|ab": {"overall": "1", "decided_by": "evidence"},
+                "pair|BS>A|BS1|A1|q|ba": {"overall": "1", "decided_by": "benefit"}}
+        assert gc.decided_by(data, done, ["q"]) == {"BS>A": {"x": {"evidence": 1}, "y": {"benefit": 1}}}
+    finally:
+        gc.set_mode({})

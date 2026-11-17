@@ -165,9 +165,30 @@ def do_format(d: Path, client, cfg: dict) -> dict:
 
 # judges
 
+DECIDED_BY = ("mechanism", "evidence", "benefit", "experiment", "none")
+
+
 def pair_problems(v: dict) -> list[str]:
     bad = [k for k in _criteria() + ("overall",) if v.get(k) not in ("1", "2", "tie")]
-    return [f'"{k}" must be "1", "2" or "tie"' for k in bad]
+    out = [f'"{k}" must be "1", "2" or "tie"' for k in bad]
+    if MODE["pair_version"] == "v3" and v.get("decided_by") not in DECIDED_BY:      # v3: the deciding consideration
+        out.append('"decided_by" must be one of ' + ", ".join(DECIDED_BY))
+    return out
+
+
+def decided_by(data: dict, done: dict, fams: list[str]) -> dict:
+    """v3: per comparison, how often each consideration decided a judgement, by the side it went to (X, Y or tie)."""
+    out = {}
+    for c, a, b, _ in pairs(data["arms"]):
+        for fam in fams:
+            for order in ("ab", "ba"):
+                v = done.get(f"pair|{c}|{a}|{b}|{fam}|{order}")
+                if not v or "decided_by" not in v:
+                    continue
+                side = "tie" if v["overall"] == "tie" else ("x" if (v["overall"] == "1") == (order == "ab") else "y")
+                cell = out.setdefault(c, {}).setdefault(side, {})
+                cell[v["decided_by"]] = cell.get(v["decided_by"], 0) + 1
+    return out
 
 
 def rubric_problems(v: dict) -> list[str]:
@@ -310,6 +331,8 @@ def do_score(d: Path, cfg: dict) -> dict:
             rho = spearmanr(diff, [r["score"] for r in rs]).statistic
             v["length"] = {"mean_x": round(sum(ln[r["x"]] for r in rs) / len(rs)), "mean_y": round(sum(ln[r["y"]] for r in rs) / len(rs)),
                            "spearman_outcome_vs_length_difference": None if rho != rho else round(float(rho), 3)}
+    if MODE["pair_version"] == "v3":
+        res["decided_by"] = decided_by(data, done, fams)
     res["rule"] = {c: v["wins"] for c, v in res["comparisons"].items() if v["tested"]}
     (d / "score.json").write_text(json.dumps(res, indent=1, ensure_ascii=False) + "\n")
     return res
