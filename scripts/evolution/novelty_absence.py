@@ -60,8 +60,8 @@ def count(kinds: list[str]) -> dict:
                 res["per_hypothesis"][hid] = {"card": False}
                 continue
             card = HypothesisCard.model_validate(v["card"])
-            iv = (card.main_factor.label if card.main_factor and card.main_factor.label else
-                  (card.pico.intervention[0].label if card.pico.intervention else ""))
+            mf = card.main_factor if isinstance(card.main_factor, dict) else (card.main_factor.model_dump() if card.main_factor else {})
+            iv = mf.get("label") or (card.pico.intervention[0].label if card.pico.intervention else "")
             n_out = pubmed_pair_count(iv, card.pico.outcome.metric if card.pico.outcome.metric != "unknown" else "", T)
             chain = r3.chain(card)
             outs = {c.id for c in r3.outcome_group(card, chain)[0]}

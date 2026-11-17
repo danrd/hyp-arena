@@ -138,3 +138,8 @@ novelty_by_absence_2026_11_17:   # written before the calls
   counts: "rule 6 of the manual (hyparena/evolution/evolution_rules.pubmed_pair_count): PubMed records published on or before T with both labels, no third term, labels of more than 4 content words not counted. Outcome pair: the card's main intervention with its outcome metric; mechanism pairs: subject and object of every chain link before the outcome"
   measures: "per arm: median count on the outcome pair; share of hypotheses whose outcome pair has fewer than 5 records (untested by this measure); share with at least one mechanism link under 5; labels not counted, reported"
   reading: "a coarse measure that depends on the wording of the labels; the novelty level N of the manual needs reading (the pipeline). No pass rule: a pilot"
+novelty_by_absence_result_2026_11_17:
+  cost: "0.56 USD by the call log (26 normaliser calls for 10 cards: the code checks sent parses back for repair), above the 0.3 named"
+  cards: "10 of 10"
+  result: "outcome pair counted for 1 of 5 A and 2 of 5 BS (the others: a label of more than 4 content words, not counted by rule 6); every counted pair 0 records before T; a mechanism link under 5 records in 2 of 5 for both arms"
+  reading: "uninformative: the card's outcome metrics are phrases (5-9 words), so rule 6 counts almost nothing, and the few zeros reflect wording as much as absence. Novelty here needs the pipeline's N (reading the closest prior work), or short canonical search terms per entity (MeSH or a two-word label) before counting"
