@@ -115,3 +115,8 @@ round_5_first_attempt_2026_11_17:
   what: "the first call (task_a) ended with the server closing the connection without a response (httpx RemoteProtocolError, after several minutes); no answer was written and the second call was not made"
   cost: "unknown: the reply carried no usage block; the provider's running total (dashboard/billing/usage) read after it, 24755.5086 at 11:58 UTC, is the reference for the next calls; whether the cut call was billed cannot be told from it"
   fix: "the call is streamed (the events keep the connection open; the final event carries the whole response) and the provider's running total is read before and after every run (scripts/evolution/generate_api.py)"
+round_5_second_attempt_2026_11_17:
+  a: "streamed; failed after 86 s and 5 searches: rate_limit_exceeded (the upstream's token rate limit for the model in its region); no answer"
+  bs: "streamed; failed after 451 s: upstream_stream_total_timeout (the provider stops a stream at 450 s); no answer"
+  cost: "no usage block in either reply; the provider's running total did not change (24755.5086 before, after and at 12:09 UTC): either failed calls are not billed or the total lags; the code's estimate is 0.05 USD (the 5 searches)"
+  next: "user's choice: background mode with polling (no stream limit), lower reasoning effort and fewer searches, or another writer"
