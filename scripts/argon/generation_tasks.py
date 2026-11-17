@@ -391,10 +391,12 @@ def collect(writer_family: str) -> dict:
     a = json.loads((DIR / "answer_a.json").read_text())["hypotheses"]
     reps = {r["id"]: r for r in json.loads((DIR / "answer_reports.json").read_text())["reports"]} \
         if (DIR / "answer_reports.json").exists() else {}
-    arms = {"A": [{"id": h["id"], "parent": None, "text": _text(h), "terms": _terms((reps.get(h["id"]) or {}).get("card") or {})} for h in a]}
+    arms = {"A": [{"id": h["id"], "parent": None, "text": _text(h), "terms": _terms((reps.get(h["id"]) or {}).get("card") or {}),
+                   **{k: h.get(k, "") for k in ("claim", "rationale", "experiment")}} for h in a]}
     for arm, f in (("B", "answer_b.json"), ("S", "answer_s.json"), ("BS", "answer_bs.json"), ("C", "answer_c.json"), ("D", "answer_d.json")):
         if (DIR / f).exists():
-            arms[arm] = [{"id": h["id"], "parent": h.get("parent"), "text": _text(h), "terms": _terms(h.get("card") or {})}
+            arms[arm] = [{"id": h["id"], "parent": h.get("parent"), "text": _text(h), "terms": _terms(h.get("card") or {}),
+                          **{k: h.get(k, "") for k in ("claim", "rationale", "experiment")}}
                          for h in json.loads((DIR / f).read_text())["hypotheses"]]
     data = {"topic": TOPIC, "as_of": json.loads((DIR / "task_a.json").read_text())["T"], "writer_family": writer_family, "arms": arms}
     (DIR / "hypotheses.json").write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n")

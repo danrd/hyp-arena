@@ -12,7 +12,7 @@ max_retries: 1
 deadline: 150
 rewriter: xiaomi
 # the judge's question (scripts/evolution/generation_compare.py MODE): the pilot of 2026-11-16 asks one question (v2), no rubric
-judge: {pair_version: v2, rubric: false}
+judge: {pair_version: v2, rubric: false, rewrite: false}   # 2026-11-17: no rewriting (the rewriter's noise); references cut by code
 models:
   - {family: openai,    provider: cometapi, model: "gpt-5-nano",                tier: paid, api_key_env: COMET_API_KEY}
   - {family: anthropic, provider: cometapi, model: "claude-haiku-4-5-20251001", tier: paid, api_key_env: COMET_API_KEY}
@@ -20,5 +20,5 @@ models:
   - {family: deepseek,  provider: cometapi, model: "deepseek-v4.1-flash-1017",  tier: paid, api_key_env: COMET_API_KEY,
      generation: {extra_body: {thinking: {type: disabled}}}}
   - {family: qwen,      provider: cometapi, model: "qwen3.8-flash",             tier: paid, api_key_env: COMET_API_KEY}
-  - {family: zhipu,     provider: cometapi, model: "glm-5.3-flash",             tier: paid, api_key_env: COMET_API_KEY}   # GLM
+  - {family: zhipu,     provider: cometapi, model: "glm-5.3-flash",             tier: paid, api_key_env: COMET_API_KEY, enabled: false}   # GLM; off 2026-11-17: no answer on the judge prompt (99 s, empty)
   - {family: xiaomi,    provider: cometapi, model: "mimo-v2.5",                 tier: paid, api_key_env: COMET_API_KEY}

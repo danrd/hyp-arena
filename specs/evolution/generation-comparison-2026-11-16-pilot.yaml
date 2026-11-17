@@ -62,3 +62,15 @@ judges_2026_11_17:   # written before the judges' run
   measures: "share of pairs BS wins (both orders agree; else half), with a bootstrap interval over pairs and judges; the share per judge family; the judges' order of the 10 hypotheses against our pipeline's ASPID scores and against Argon's"
   rule: "no pass rule (a pilot): the result says only whether the full comparison is worth running"
   price: "dry run 0.26 USD (300 judgements, 10 rewrites)"
+judges_revision_2026_11_17:   # before any judgement was made
+  rewriting: >-
+    dropped (user's decision): the texts are judged as written (claim, rationale, experiment), references cut by code
+    (scripts/evolution/generation_compare.py unreferenced: 49 cut; two narrative author mentions in BS4 kept, a drug code is
+    not a reference). Why: both arms are written by one model and judged by other families, so self-preference does not
+    separate them; lengths are close (A 3426-3915 characters, BS 3460-4451); a rewriter adds its own noise and would
+    smooth away what the method changes. Tried before the decision: the cheap rewriters did not keep the length limit or did
+    not answer (mimo, qwen) and the fallback cut texts mid-sentence; those rewrites are kept apart, never judged
+  length_check: "Spearman of the pair outcome and the length difference of the two texts, reported with the win share"
+  judges: "gpt-5-nano, claude-haiku-4-5, grok-4.3, deepseek-v4.1-flash, qwen3.8-flash, mimo-v2.6 (xiaomi judges, as nothing is rewritten); glm-5.3-flash off: no answer on the judge prompt"
+  price: "dry run 0.43 USD (300 judgements)"
+  for_later: "equal length is set at generation: a maximum length in the base request, the same for every participant (next generation round)"

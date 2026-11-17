@@ -172,3 +172,13 @@ def test_single_question_judge_mode():
         assert "novelty" not in gc.render("judge_pair", "v2", topic="t", first="a", second="b", history_text="").split("Do not judge")[0]
     finally:
         gc.set_mode({})
+
+
+def test_references_cut_without_rewriting():
+    from scripts.evolution import generation_compare as gc
+    h = {"claim": "X improves Y (PMID 12345678).", "rationale": "Shown before [3, 4] and by Smith et al., 2019 (Smith et al., 2019); "
+         "PMIDs 11111111, 22222222 agree.", "experiment": "A trial (Jones and Brown, 2021) over 12 weeks."}
+    f = gc.unreferenced(h)
+    text = gc.judged_text(f)
+    assert "PMID" not in text and "[3" not in text and "(Smith" not in text and "(Jones" not in text
+    assert "X improves Y." in text and "12 weeks" in text and f["references_cut"] == 5 and not f["rewritten"]
