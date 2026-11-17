@@ -40,13 +40,46 @@ def call(model: str, text: str) -> tuple[dict, dict]:
     body = {"model": model, "input": text, "tools": [{"type": "web_search"}], "max_tool_calls": 25,
             "max_output_tokens": 32000, "reasoning": {"effort": "medium"}}
     t0 = time.time()
-    r = httpx.post(URL, json=body, headers={"Authorization": f"Bearer {key}"}, timeout=900)
-    data = r.json() if r.headers.get("content-type", "").startswith("application/json") else {"raw": r.text[:2000]}
+    # streamed (2026-11-17): a long call with searches kept the connection silent for minutes and the server closed it
+    # without a response; with stream the events keep it open and the final event carries the whole response
+    body["stream"] = True
+    data, status, events = {}, None, 0
+    try:
+        with httpx.stream("POST", URL, json=body, headers={"Authorization": f"Bearer {key}"},
+                          timeout=httpx.Timeout(60, read=600)) as r:
+            status = r.status_code
+            if status != 200:
+                r.read()
+                data = {"error": r.text[:2000]}
+            else:
+                for line in r.iter_lines():
+                    if not line.startswith("data:"):
+                        continue
+                    payload = line[5:].strip()
+                    if not payload or payload == "[DONE]":
+                        continue
+                    events += 1
+                    ev = json.loads(payload)
+                    if ev.get("type") in ("response.completed", "response.incomplete", "response.failed"):
+                        data = ev.get("response") or {}
+    except httpx.HTTPError as e:
+        data = {"error": f"{type(e).__name__}: {e}"}
     items = data.get("output") or []
-    meta = {"http_status": r.status_code, "seconds": round(time.time() - t0, 1), "status": data.get("status"),
+    meta = {"http_status": status, "events": events, "seconds": round(time.time() - t0, 1), "status": data.get("status"),
             "searches": sum(i.get("type") == "web_search_call" for i in items), "usage": data.get("usage") or {},
             "error": data.get("error"), "incomplete": data.get("incomplete_details")}
     return data, meta
+
+
+def billing():
+    """The provider's running total of the account's usage (its own unit), read before and after: a cost check that does
+    not depend on the reply's usage block (a call cut off without a response may still be billed)."""
+    key = os.environ.get("COMET_API_KEY") or os.environ.get("COMETAPI_KEY")
+    try:
+        return httpx.get("https://api.cometapi.com/v1/dashboard/billing/usage", headers={"Authorization": f"Bearer {key}"},
+                         timeout=20).json().get("total_usage")
+    except (httpx.HTTPError, ValueError):
+        return None
 
 
 def main() -> None:
@@ -59,6 +92,7 @@ def main() -> None:
         raise SystemExit("paid call: set ALLOW_PAID=1")
     d = Path(os.environ["GEN_DIR"])
     spent, log = 0.0, []
+    billing_before = billing()
     for kind in a.kinds:
         if spent > a.cap / 2:
             log.append({"kind": kind, "skipped": f"spent {spent} USD, over half the cap"})
@@ -83,9 +117,10 @@ def main() -> None:
                              for h in ans["hypotheses"]]
         log.append({"kind": kind, **{k: v for k, v in meta.items() if k != "usage"},
                     "tokens_in": meta["usage"].get("input_tokens"), "tokens_out": meta["usage"].get("output_tokens")})
-    (d / "generation_log.json").write_text(json.dumps({"model": a.model, "spent_usd": round(spent, 4), "calls": log},
-                                                      indent=1) + "\n")
-    print(json.dumps({"model": a.model, "spent_usd": round(spent, 4), "calls": log}, indent=1))
+    res = {"model": a.model, "spent_usd": round(spent, 4), "billing_total_before": billing_before,
+           "billing_total_after": billing(), "calls": log}
+    (d / "generation_log.json").write_text(json.dumps(res, indent=1) + "\n")
+    print(json.dumps(res, indent=1))
 
 
 if __name__ == "__main__":

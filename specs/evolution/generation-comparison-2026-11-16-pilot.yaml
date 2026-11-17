@@ -111,3 +111,7 @@ round_5_api_2026_11_17:   # written before the calls
   privacy: "the answers are written to files by code and are not read into the assistant's context; only counts and code checks are reported"
   checks: "generation_tasks check --kind a and --kind bs (references exist, published before T, titles match; card and check filled for BS); length per hypothesis"
   judges: "next: pairwise judges with the reason field, families other than OpenAI (gpt-5-nano out, Gemini in); Argon judges in a separate chat; Argon scores by the manual with records extracted and numbers computed by our code (variant c)"
+round_5_first_attempt_2026_11_17:
+  what: "the first call (task_a) ended with the server closing the connection without a response (httpx RemoteProtocolError, after several minutes); no answer was written and the second call was not made"
+  cost: "unknown: the reply carried no usage block; the provider's running total (dashboard/billing/usage) read after it, 24755.5086 at 11:58 UTC, is the reference for the next calls; whether the cut call was billed cannot be told from it"
+  fix: "the call is streamed (the events keep the connection open; the final event carries the whole response) and the provider's running total is read before and after every run (scripts/evolution/generate_api.py)"
