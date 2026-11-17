@@ -126,3 +126,5 @@ background_probe_2026_11_17:
 claude_web_search_probe_2026_11_17:
   result: "Claude Opus 5.5 through the provider's Messages endpoint: the reply is a client tool_use (id toolu_bdrk_...: served through AWS Bedrock), not a server search; the web search tool is passed on as an ordinary tool for the caller to run. Two short calls, 0.013 USD each by their tokens; the provider's running total had not moved when read right after"
   option: "run the search ourselves: a PubMed search tool (E-utilities, papers up to T only, titles, years and PMIDs) executed by our code in a tool loop, the same for A and BS"
+qwen4_max_probe_2026_11_17:
+  result: "Qwen4 Max (1.5 / 4.5 USD per million tokens, no web search price listed): through the Responses endpoint with the web search tool it searched and gave the right PMID of the known trial (26 s, about 0.005 USD by the tokens); through the chat endpoint with enable_search it spent the whole 1500-token budget on reasoning (no answer, inconclusive); with an ordinary function tool it made no tool call"

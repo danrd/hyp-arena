@@ -56,3 +56,12 @@ later_run:   # recorded now; the pass rule and the price are confirmed before th
     Second cut: the same with certainty moderate or high only
   rule_proposed: "signal when AUC >= 0.65 and the lower end of its 95% interval above 0.5; no signal below 0.55; unclear between"
   price: "about 0.08 USD per link by the calibration run; about 2.5 USD for 30 links; a dry run before"
+labels_result_2026_11_17:
+  answers: "longevity-kg reviews/argon-2026-11-17/pack_29_{1,2,3}_answer.json; code check pack_29_check.json"
+  counts: "60 answered; 31 included, 29 excluded (no pooled estimate 12, population not ageing 12, included studies not accessible 2, not an intervention 2, other 1)"
+  usable: "30 links (benefit 17, no_effect 13, harm 0); one included link unusable: all its 3 studies published by its T"
+  checks: "the result, certainty and conclusion quotes verbatim in the abstract for every included review (one certainty not stated); 183 of 213 contributing studies with a PMID; 10 study years off by more than a year against PubMed (6 links), T computed with the PubMed year; contributing studies known from the analysis in 27 of 31"
+  T: "from 1989 to 2022 (median about 2009); studies per link 2 to 83 (median 5)"
+  certainty: "high 4, moderate 10, low 13, very low 3, not stated 1"
+  kinds: "drug 11, procedure 4, exercise 3, organisation of care 3, behavioural 3, supplement 2, device 2, nutrition 1, other 2"
+  next: "the paid run of the method on the 30 links (later_run above): pass rule and price confirmed before it"
