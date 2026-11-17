@@ -74,3 +74,14 @@ judges_revision_2026_11_17:   # before any judgement was made
   judges: "gpt-5-nano, claude-haiku-4-5, grok-4.3, deepseek-v4.1-flash, qwen3.8-flash, mimo-v2.6 (xiaomi judges, as nothing is rewritten); glm-5.3-flash off: no answer on the judge prompt"
   price: "dry run 0.43 USD (300 judgements)"
   for_later: "equal length is set at generation: a maximum length in the base request, the same for every participant (next generation round)"
+judges_result_2026_11_17:
+  run: "300 judgements, 9 failed (all qwen); 143 pair outcomes of 6 judges on 25 pairs; cost about 0.43 USD by the dry run"
+  BS_over_A: "win share 0.71 [0.457, 0.907] (both orders agree, else half; 39 of 143 outcomes undecided between the orders)"
+  per_judge: {gpt-5-nano: 0.70, claude-haiku-4-5: 0.58, grok-4.3: 0.68, deepseek-v4.1-flash: 0.70, qwen3.8-flash: 0.81, mimo: 0.82}
+  per_hypothesis_win_share: {BS4: 0.85, BS3: 0.84, BS2: 0.78, BS1: 0.78, A4: 0.50, A3: 0.45, A1: 0.28, BS5: 0.26, A5: 0.16, A2: 0.07}
+  length: "BS texts 3925 characters on average, A 3609; Spearman of the pair outcome and the length difference -0.08: the longer text is not preferred"
+  reading: >-
+    every judge family prefers BS, 4 of the 5 BS hypotheses rank above every A; the interval is wide (25 pairs) and
+    crosses 0.5 at its lower end. A pilot without a pass rule: the direction is consistent, a conclusion needs the full
+    comparison (several topics, about 20 hypotheses per participant). Novelty is not in this result (judges were not asked;
+    the pipeline scoring was not run, user's decision)
