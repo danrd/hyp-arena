@@ -143,3 +143,12 @@ novelty_by_absence_result_2026_11_17:
   cards: "10 of 10"
   result: "outcome pair counted for 1 of 5 A and 2 of 5 BS (the others: a label of more than 4 content words, not counted by rule 6); every counted pair 0 records before T; a mechanism link under 5 records in 2 of 5 for both arms"
   reading: "uninformative: the card's outcome metrics are phrases (5-9 words), so rule 6 counts almost nothing, and the few zeros reflect wording as much as absence. Novelty here needs the pipeline's N (reading the closest prior work), or short canonical search terms per entity (MeSH or a two-word label) before counting"
+judge_reasons_2026_11_17:   # written before the calls
+  what: "the free 'reason' of each judgement of the third pair (judge_pair/v2) put by a cheap model into one of the four considerations of the judge question, so that the judgements already made say what decided them (no new judging)"
+  labels: "mechanism (plausibility of the mechanism), evidence (evidence for and against), benefit (benefit to healthy lifespan in people), experiment (how near and convincing the testing experiment is), other (none of these, or several equally)"
+  classifier: "deepseek-v4.1-flash, prompt classify_reason/v1, 20 reasons per call, off-peak; under 0.02 USD; the reasons are not read into the assistant's context, only counts are reported"
+  measures: "per side the judgement went to (BS, A, tie): counts of each consideration; per judge family"
+judge_reasons_result_2026_11_17:
+  cost: "0.006 USD (15 calls)"
+  counts: "291 reasons; won by BS 206: other 110, experiment 40, mechanism 31, evidence 23, benefit 2; won by A 85: other 52, benefit 17, mechanism 10, evidence 4, experiment 2"
+  reading: "where a single consideration decided, BS wins on the experiment (40 to 2), the mechanism (31 to 10) and the evidence (23 to 4), A on the benefit to people (17 to 2); more than half of the reasons weigh several considerations at once (other). The judge question v3 (one deciding consideration asked of the judge itself) is the cleaner measure for the next round"

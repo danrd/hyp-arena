@@ -1,0 +1,13 @@
+Each numbered item below is the reason a judge gave for choosing one of two research hypotheses to investigate first. Put each reason into the ONE consideration that it says decided the choice:
+- mechanism: how plausible the mechanism is;
+- evidence: the evidence for and against the hypothesis;
+- benefit: how much a confirmation could benefit healthy lifespan in people;
+- experiment: how near and convincing the experiment that would test it is;
+- other: none of these, or several of them with equal weight.
+
+Reasons:
+{% for r in reasons %}
+[{{ r.n }}] {{ r.text }}
+{% endfor %}
+
+Reply with a single JSON object and nothing else: {"labels": {"1": "evidence", "2": "experiment", ...}}, one label per item number.
