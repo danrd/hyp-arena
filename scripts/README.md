@@ -141,7 +141,7 @@ A script of a finished check stays: its spec names it as the calculation of its 
 | [`trace_page`](whole_system/trace_page.py) | Build a step-by-step page (Russian) from a recorded run: every graph node in order, what it does, which code and prompt template run, every model and search call with its full prompt and reply, and what the node produced. |
 | [`validation_table`](whole_system/validation_table.py) | Render specs/whole-system/validation-criteria.yaml into docs/validation/validation-criteria.md (summary, one table per level, the criteria below). |
 
-## [`argon/`](argon/) — Tasks for the outside reader (Argon): building packs 5-24 and analysing the answers
+## [`argon/`](argon/) — Tasks for the outside reader (Argon): building packs 5-29 and analysing the answers
 
 | Script | What it does |
 |---|---|
@@ -171,6 +171,7 @@ A script of a finished check stays: its spec names it as the calculation of its 
 | [`bench_novelty`](novelty/bench_novelty.py) | The working pipeline on the 30 hypotheses of Argon pack 26 with saved cards: dry count and run (specs/novelty/novelty-high-levels-2026-11-15.yaml). Paid behind `ALLOW_PAID=1`. |
 | [`pack27_effect_thresholds`](argon/pack27_effect_thresholds.py) | Argon pack 27: the published grounds for the effect-class thresholds (standardised difference, ratios, percent, the interval conversion, clinically important differences); `check` verifies PMIDs, titles and quotes (specs/scoring/effect-phrase-2026-11-15.yaml). Free. |
 | [`pack28_alternatives`](argon/pack28_alternatives.py) | Argon pack 28: the alternatives gold on 30 hypotheses that are not registry trials: threats by system, the design features the text states, the verdict of the stated experiment (specs/alternatives/design-rule-2026-11-16.yaml). Free. |
+| [`pack29_reviews`](argon/pack29_reviews.py) | Argon pack 29: 60 Cochrane reviews on older adults drawn from a fixed PubMed query; the outside reader gives the link, the pooled result as a label, GRADE certainty and the years of the pooled studies; `check` verifies PMIDs, quotes and years and sets T (specs/whole-system/review-gold-2026-11-17.yaml). Free. |
 | [`pack22_alternatives`](argon/pack22_alternatives.py) | Argon pack 22: the gold for stage 7 (competing explanations): for the 30 calibration trials of the search gold (pack 18), the main alternative explanations of the result the trial would show, what the stated design does to each, and the ... |
 | [`pack5_analysis`](argon/pack5_analysis.py) | Analysis of Argon pack 5 (specs/scoring/record-weight-2026-11-08.yaml references.R4_pairs_argon). Free. |
 | [`pack6_analysis`](argon/pack6_analysis.py) | Analysis of Argon pack 6 (specs/alternatives/informativeness-check-2026-11-08.yaml, measures fixed before sending). Free. |

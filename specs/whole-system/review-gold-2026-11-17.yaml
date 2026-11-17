@@ -1,0 +1,58 @@
+id: review-gold-2026-11-17
+written_on: 2026-11-17
+status: "definitions fixed before the pack is sent; Argon pack 29 (labels), nothing run by the pipeline"
+why: >-
+  The end-to-end check against the outcomes of single trials is limited by how much the literature before T says about one
+  trial (R3 0.578 [0.445, 0.710] on 73 trials; the pipeline's own noise costs about 0.02; specs/whole-system/
+  calibration-current-2026-11-16.yaml), and one RCT is a noisy label (R2 between links 0.552, on meta-analysis targets
+  0.658 on 36 targets). The conclusion of a later systematic review is a stronger label and measures what the method
+  claims: the state of the evidence on a link. The question: does the strength of the outcome link at T, computed by the
+  method from what was published before T, predict the pooled result of a systematic review that also pools trials
+  published after T?
+candidates:
+  source: "PubMed (NCBI E-utilities), code: scripts/argon/pack29_reviews.py build; free"
+  query: >-
+    "Cochrane Database Syst Rev"[ta] AND 2021/01/01:2025/12/31[dp] AND hasabstract AND ("older adults"[tiab] OR
+    "older people"[tiab] OR "older persons"[tiab] OR elderly[tiab] OR frail*[tiab] OR "aged 65"[tiab] OR "aged 60"[tiab] OR
+    "Aged"[mh] OR older[ti] OR "later life"[ti]) NOT (withdrawn[ti] OR "diagnostic test accuracy"[tiab] OR
+    "diagnostic accuracy"[ti] OR prognos*[ti] OR qualitative[ti] OR overview[ti] OR "Cochrane reviews"[ti])
+  pool: "216 reviews on 2026-11-17"
+  sample: "60 drawn at random from the pool sorted by PMID (random.Random(20261117)); every one is labelled or excluded with a reason, none is replaced"
+  why_cochrane: "a fixed format: the main comparison and outcomes in the abstract, GRADE certainty stated, a table of included studies"
+labels_by: "Argon (outside reader), three parts of 20 in separate chats; code checks every PMID, title and quote"
+per_review:
+  include: >-
+    a review of an intervention (drug, supplement, exercise, nutrition, behavioural, device, procedure, organisation of
+    care) in older adults or in an age-related condition, with a pooled estimate for its main outcome
+  exclusion_reasons: [not_intervention, population_not_ageing, no_pooled_estimate, included_studies_not_accessible, other]
+  main_comparison: "the first comparison the abstract reports results for"
+  main_outcome: "the first primary outcome of that comparison with a pooled estimate in the abstract"
+  link: "intervention -> main outcome -> population, in the review's words, plus the comparator and the kind of intervention"
+  label: >-
+    benefit: the pooled estimate favours the intervention and its 95% interval excludes no effect (for an outcome where
+    less is better, such as falls, a reduction); no_effect: the interval includes no effect; harm: favours the comparator
+    with the interval excluding no effect. With the verbatim sentence of the abstract that gives the estimate
+  certainty: "GRADE certainty of that outcome as the abstract states it (high, moderate, low, very low, not stated), with its sentence"
+  included_studies: >-
+    the studies that contribute to the main outcome's pooled estimate (when the review does not say which, all included
+    studies of the main comparison, marked so): per study its name as the review gives it and the year of its first
+    publication, and its PMID when Argon finds it; for more than 40 studies, the number of studies per year only. Only
+    openly accessible versions of the review are used (the Cochrane Library or PMC); if none is open, the review is excluded
+    (included_studies_not_accessible)
+T_rule: >-
+  by code from the years of the contributing studies (y1 <= ... <= yn): Y is the earliest year by which at least half of
+  them had been published (count of yi <= Y at least n/2), and T = Y-12-31. A link is usable when at least one study was
+  published before or in Y and at least one after Y, so that the method sees part of the pooled evidence and the review
+  adds later trials. Every study year given with a PMID is checked against PubMed (the year of the PubMed record, plus or
+  minus 1); a study year that fails is reported, and T is computed with the PubMed year
+checks_by_code: "review PMID exists, title matches; the three quotes verbatim in the abstract; study PMIDs exist, before the review, years agree; T and usability per link (scripts/argon/pack29_reviews.py check)"
+later_run:   # recorded now; the pass rule and the price are confirmed before the paid run
+  what: >-
+    for each usable link: a card built by code from the link (no parse by a model), the working search before T and the
+    working reader (configs/v3-flash-n10.yaml), the strength S of the outcome link by the rules of the manual
+  measure: >-
+    AUC of S against the label (benefit 1; no_effect and harm 0), with a bootstrap interval over links; beside it the
+    plain count of records for minus against, and the share of links with no record before T (left out of the AUC, counted).
+    Second cut: the same with certainty moderate or high only
+  rule_proposed: "signal when AUC >= 0.65 and the lower end of its 95% interval above 0.5; no signal below 0.55; unclear between"
+  price: "about 0.08 USD per link by the calibration run; about 2.5 USD for 30 links; a dry run before"
