@@ -17,7 +17,8 @@ from pathlib import Path
 import httpx
 
 URL = "https://api.cometapi.com/v1/responses"
-PRICE = {"gpt-6.1-sol": {"in": 2.0, "out": 10.0, "cache_write": 2.5, "search_per_call": 0.01}}   # configs/prices.yaml
+PRICE = {"gpt-6.1-sol": {"in": 2.0, "out": 10.0, "cache_write": 2.5, "search_per_call": 0.01},
+         "qwen4-max": {"in": 1.5, "out": 4.5, "cache_write": 1.875, "search_per_call": 0.0}}   # no search price in the catalog   # configs/prices.yaml
 API_LINE = ("You may use web search to find and check papers. Cite only papers published on or before T, with their real "
             "PMIDs.")
 

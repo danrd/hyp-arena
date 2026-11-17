@@ -128,3 +128,7 @@ claude_web_search_probe_2026_11_17:
   option: "run the search ourselves: a PubMed search tool (E-utilities, papers up to T only, titles, years and PMIDs) executed by our code in a tool loop, the same for A and BS"
 qwen4_max_probe_2026_11_17:
   result: "Qwen4 Max (1.5 / 4.5 USD per million tokens, no web search price listed): through the Responses endpoint with the web search tool it searched and gave the right PMID of the known trial (26 s, about 0.005 USD by the tokens); through the chat endpoint with enable_search it spent the whole 1500-token budget on reasoning (no answer, inconclusive); with an ordinary function tool it made no tool call"
+round_5_writer_qwen_2026_11_17:   # written before the calls
+  writer: "Qwen4 Max (qwen family) through the Responses endpoint with web search, streamed (scripts/evolution/generate_api.py --model qwen4-max); the same tasks task_a and task_bs with the same API line, copied to longevity-kg reviews/generation-2026-11-17-qwen/"
+  calls: "one call per participant, at most 25 tool calls and 32000 output tokens, 60 s pause between the calls; cap 2 USD"
+  judges: "the qwen judge is dropped (writer's family); gpt-5-nano is back; Google in (configs/judges-generation-r5.yaml)"
