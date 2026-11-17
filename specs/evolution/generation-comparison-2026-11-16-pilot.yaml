@@ -104,3 +104,10 @@ round_4_topic_change_2026_11_17:   # before the new tasks were sent
   topic: "repurposing approved drugs to delay age-related multimorbidity, frailty and loss of function in older adults (user's choice among four)"
   tasks: "task_a, task_a_noguard, task_bs rebuilt on this topic, T 2026-11-17; the bioelectricity tasks kept as *_bioelectric.json"
   measures: "as round_4_2026_11_17 (refusals, diversity with and without the guard lines, references); then the judges"
+round_5_api_2026_11_17:   # written before the calls
+  writer: "GPT-6.1 Sol (OpenAI family) through the provider's Responses endpoint with its web search tool (scripts/evolution/generate_api.py); the probe gave the right PMID of a known trial for 0.027 USD (longevity-kg reviews/generation-2026-11-17/websearch_probe.json)"
+  tasks: "task_a and task_bs of round 4 unchanged (topic: repurposing approved drugs against multimorbidity, frailty and loss of function; T 2026-11-17; the guard lines; at most 4000 characters), copied to longevity-kg reviews/generation-2026-11-17-sol/; one line added to both for the API: web search may be used to find and check papers, and only papers published on or before T are cited"
+  calls: "one call per participant (5 hypotheses each), reasoning effort medium, at most 25 tool calls and 32000 output tokens per call; a cost cap of 2 USD for the two calls together (the second call is not made if the first passes 1 USD)"
+  privacy: "the answers are written to files by code and are not read into the assistant's context; only counts and code checks are reported"
+  checks: "generation_tasks check --kind a and --kind bs (references exist, published before T, titles match; card and check filled for BS); length per hypothesis"
+  judges: "next: pairwise judges with the reason field, families other than OpenAI (gpt-5-nano out, Gemini in); Argon judges in a separate chat; Argon scores by the manual with records extracted and numbers computed by our code (variant c)"
