@@ -33,15 +33,59 @@ MODULES = ["hyparena/__init__.py", "hyparena/alternatives/__init__.py", "hyparen
 TOL = 1e-3
 
 RUNNER = '''"""Run the method's scoring (hyparena/scoring/rules_v32.evaluate, the current rules) on the cases of cases.json and print
-the results as JSON. Needs Python 3.10+ with pydantic 2 and PyYAML. No network: the approved-drug lookup is switched off.
+the results as JSON. Needs Python 3.11; pydantic 2 and PyYAML come from wheels/ when missing. No network: the approved-drug lookup is switched off.
 
     python probe_run.py cases.json > result.json
 """
 import json
+import platform
 import sys
+import zipfile
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+HERE = Path(__file__).resolve().parent
+
+
+def _vendor() -> None:
+    """Without network: when pydantic 2 is missing, unpack the wheels shipped in wheels/<machine>/ into _vendor/ and use them."""
+    try:
+        import pydantic
+        if int(pydantic.VERSION.split(".")[0]) >= 2:
+            return
+    except ImportError:
+        pass
+    machine = {"amd64": "x86_64", "arm64": "aarch64"}.get(platform.machine().lower(), platform.machine().lower())
+    wheels = sorted((HERE / "wheels" / machine).glob("*.whl"))
+    if not wheels:
+        raise SystemExit(f"no wheels for {machine} in wheels/")
+    target = HERE / "_vendor"
+    for w in wheels:
+        zipfile.ZipFile(w).extractall(target)
+    sys.path.insert(0, str(target))
+    for m in [m for m in sys.modules if m == "pydantic" or m.startswith(("pydantic.", "pydantic_core", "typing_extensions"))]:
+        del sys.modules[m]
+
+
+def _scipy_stub() -> bool:
+    """scipy gives only the Beta interval shown next to a link's strength, which this probe does not print; when scipy is
+    missing a stub returns NaN for it, so that no printed number depends on scipy."""
+    try:
+        import scipy.stats  # noqa: F401
+        return False
+    except ImportError:
+        import types
+        nan = float("nan")
+        stats = types.ModuleType("scipy.stats")
+        stats.beta = types.SimpleNamespace(ppf=lambda *a, **k: nan, mean=lambda *a, **k: nan, interval=lambda *a, **k: (nan, nan))
+        scipy = types.ModuleType("scipy")
+        scipy.stats = stats
+        sys.modules["scipy"], sys.modules["scipy.stats"] = scipy, stats
+        return True
+
+
+_vendor()
+SCIPY_STUB = _scipy_stub()
+sys.path.insert(0, str(HERE))
 from hyparena.card.models import ClaimVerification, HypothesisCard   # noqa: E402
 from hyparena.scoring import rules_v3 as r3, rules_v32 as r32       # noqa: E402
 
@@ -75,8 +119,8 @@ if __name__ == "__main__":
 INSTRUCTIONS = [
     "The attached archive files.zip holds part of a Python code base (the package 'hyparena'), a runner probe_run.py and "
     "the input cases.json.",
-    "Unpack it and run, in the unpacked folder: python probe_run.py cases.json. It needs Python 3.10 or newer with pydantic 2 "
-    "and PyYAML; it uses no network.",
+    "Unpack it and run, in the unpacked folder: python probe_run.py cases.json. It needs Python 3.11; pydantic 2 and PyYAML "
+    "are shipped in wheels/ and the runner unpacks them itself when they are missing (no pip, no network needed).",
     "Return the runner's output exactly as printed (a JSON object, one entry per case) under 'output'.",
     "You must actually execute the code. If you cannot run Python, or the run fails, say so in 'status' and give the error "
     "message in 'error'; never compute the numbers by hand or estimate them.",
@@ -121,6 +165,9 @@ def _cases() -> list[dict]:
     return out
 
 
+WHEELS = Path(os.environ.get("WHEELS_DIR", ""))   # pip download dir: <manylinux2014_x86_64|..._aarch64>/*.whl
+
+
 def build(commit: str) -> dict:
     DIR.mkdir(parents=True, exist_ok=True)
     cases = json.dumps(_cases(), ensure_ascii=False)
@@ -129,6 +176,9 @@ def build(commit: str) -> dict:
         for p in MODULES:
             z.writestr(p, _file_at(commit, p))
         z.writestr("probe_run.py", RUNNER)
+        if WHEELS.is_dir():                                    # pydantic 2 and PyYAML for Python 3.11, per machine
+            for w in sorted(WHEELS.glob("*/*.whl")):
+                z.write(w, f"wheels/{w.parent.name.replace('manylinux2014_', '')}/{w.name}")
         z.writestr("cases.json", cases)
     (DIR / "files.zip").write_bytes(buf.getvalue())
     with tempfile.TemporaryDirectory() as tmp:                 # the expected output: the same archive, run alone
