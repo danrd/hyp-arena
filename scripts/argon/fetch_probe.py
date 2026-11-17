@@ -4,6 +4,7 @@ asks, for each file, its number of lines and a few lines verbatim by number (one
 The lines cannot be guessed from the file names, so a model that did not read the file fails; code checks the answer.
 
     python -m scripts.argon.fetch_probe build [--commit SHA] [--set core|prompts]   # task.json (to send), expected.json (kept back)
+    python -m scripts.argon.fetch_probe build-zip --set prompts    # the same with the files in files.zip (attached)
     python -m scripts.argon.fetch_probe check                  # answer.json against expected.json
 
 Files in longevity-kg reviews/fetch-probe-2026-11-16/ (PROBE_DIR).
@@ -85,6 +86,38 @@ def build(commit: str, names: list[str] = None) -> dict:
     return task
 
 
+def build_zip(commit: str, names: list[str]) -> dict:
+    """The same probe with the files attached as one zip archive (paths kept) instead of links."""
+    import zipfile
+    files, expected = [], {}
+    DIR.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(DIR / "files.zip", "w", zipfile.ZIP_DEFLATED) as z:
+        for p in names:
+            text = _file_at(commit, p)
+            z.writestr(p, text)
+            lines = text.split("\n")
+            if lines and lines[-1] == "":
+                lines = lines[:-1]
+            nums = _pick(lines)
+            files.append({"url": p, "lines": nums})
+            expected[p] = {"n_lines": len(lines), "lines": {str(n): lines[n - 1] for n in nums}}
+    task = {"task": "fetch_probe_zip", "commit": commit, "cover": COVER,
+            "instructions": [
+                "The attached archive files.zip holds text files of a repository, each under its path. Open the archive and "
+                "read each file named below.",
+                "For each file give the number of lines it has and copy the lines with the numbers asked, verbatim (line 1 "
+                "is the first line of the file). Put the file's path in 'url'.",
+                "If you cannot open the archive or a file, or can read only part of a file, say so in 'status' and leave the "
+                "lines empty; never reconstruct a line from memory or from the file name.",
+                "Reply with one JSON object in the format at the end, nothing around it."],
+            "files": files,
+            "answer_format": {"files": [{"url": "", "status": "read whole | read part | could not open", "n_lines": "",
+                                         "lines": {"<number>": ""}}]}}
+    (DIR / "task.json").write_text(json.dumps(task, indent=1) + "\n")
+    (DIR / "expected.json").write_text(json.dumps(expected, indent=1, ensure_ascii=False) + "\n")
+    return task
+
+
 def check() -> dict:
     exp = json.loads((DIR / "expected.json").read_text())
     ans = {f.get("url"): f for f in json.loads((DIR / "answer.json").read_text()).get("files", [])}
@@ -103,14 +136,14 @@ def check() -> dict:
 
 def main(argv=None) -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("cmd", choices=["build", "check"])
+    ap.add_argument("cmd", choices=["build", "build-zip", "check"])
     ap.add_argument("--commit", default=None)
     ap.add_argument("--set", default="core", choices=sorted(FILE_SETS))
     a = ap.parse_args(argv)
-    if a.cmd == "build":
+    if a.cmd in ("build", "build-zip"):
         commit = a.commit or subprocess.run(["git", "rev-parse", "origin/main"], cwd=ROOT, check=True, capture_output=True,
                                             text=True).stdout.strip()
-        t = build(commit, FILE_SETS[a.set])
+        t = build(commit, FILE_SETS[a.set]) if a.cmd == "build" else build_zip(commit, FILE_SETS[a.set])
         print(json.dumps({k: t[k] for k in ("task", "commit", "files")}, indent=1))
     else:
         print(json.dumps(check(), indent=1))
