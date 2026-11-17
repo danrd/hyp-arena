@@ -99,3 +99,8 @@ round_4_2026_11_17:   # written before the tasks were sent
     (code, from the texts), intervention kinds, references real and before T; the lines stay if the ideas are not fewer
     and not narrower (judged by these counts, no pass threshold: a first look)
   check_filter: "refusals or interrupted answers per task are recorded (a refusal is data); a refused task is repeated once in a new chat"
+round_4_topic_change_2026_11_17:   # before the new tasks were sent
+  why: "both A tasks on bioelectricity stopped in the chat (with and without the guard lines): the topic triggers the filter (refusals.md)"
+  topic: "repurposing approved drugs to delay age-related multimorbidity, frailty and loss of function in older adults (user's choice among four)"
+  tasks: "task_a, task_a_noguard, task_bs rebuilt on this topic, T 2026-11-17; the bioelectricity tasks kept as *_bioelectric.json"
+  measures: "as round_4_2026_11_17 (refusals, diversity with and without the guard lines, references); then the judges"
