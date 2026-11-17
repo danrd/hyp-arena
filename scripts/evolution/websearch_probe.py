@@ -29,19 +29,35 @@ EXPECTED_PMID = "28402245"
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--model", default="gpt-6.1-sol")
+    ap.add_argument("--background", action="store_true", help="background mode with polling (output websearch_probe_background.json)")
     a = ap.parse_args()
     if os.environ.get("ALLOW_PAID") != "1":
         raise SystemExit("paid call: set ALLOW_PAID=1")
     key = os.environ.get("COMET_API_KEY") or os.environ.get("COMETAPI_KEY")
     body = {"model": a.model, "input": QUESTION, "tools": [{"type": "web_search"}], "max_output_tokens": 2000,
             "reasoning": {"effort": "low"}}
+    if a.background:
+        body["background"] = True
+    h = {"Authorization": f"Bearer {key}"}
     t0 = time.time()
-    r = httpx.post(URL, json=body, headers={"Authorization": f"Bearer {key}"}, timeout=180)
-    out = {"model": a.model, "http_status": r.status_code, "seconds": round(time.time() - t0, 1)}
+    r = httpx.post(URL, json=body, headers=h, timeout=180)
+    out = {"model": a.model, "http_status": r.status_code, "background": a.background}
     try:
         data = r.json()
     except ValueError:
         data = {"raw": r.text[:2000]}
+    out["first_status"] = data.get("status")
+    polls = 0
+    while a.background and data.get("id") and data.get("status") in ("queued", "in_progress") and time.time() - t0 < 600:
+        time.sleep(5)
+        polls += 1
+        g = httpx.get(f"{URL}/{data['id']}", headers=h, timeout=60)
+        try:
+            data = g.json()
+        except ValueError:
+            data = {"raw": g.text[:2000]}
+            break
+    out.update({"polls": polls, "seconds": round(time.time() - t0, 1)})
     items = data.get("output") or []
     out["output_types"] = [i.get("type") for i in items]
     out["searches"] = sum(i.get("type") == "web_search_call" for i in items)
@@ -58,8 +74,9 @@ def main() -> None:
     if p and usage:
         out["usd"] = round(usage.get("input_tokens", 0) / 1e6 * p["in"] + usage.get("output_tokens", 0) / 1e6 * p["out"]
                            + out["searches"] * p["search_per_call"], 4)
+    out_f = OUT.with_name("websearch_probe_background.json") if a.background else OUT
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(out, indent=1, ensure_ascii=False) + "\n")
+    out_f.write_text(json.dumps(out, indent=1, ensure_ascii=False) + "\n")
     print(json.dumps({k: v for k, v in out.items() if k != "text"}, indent=1, ensure_ascii=False))
 
 

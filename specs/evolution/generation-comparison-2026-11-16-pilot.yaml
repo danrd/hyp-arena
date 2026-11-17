@@ -120,3 +120,6 @@ round_5_second_attempt_2026_11_17:
   bs: "streamed; failed after 451 s: upstream_stream_total_timeout (the provider stops a stream at 450 s); no answer"
   cost: "no usage block in either reply; the provider's running total did not change (24755.5086 before, after and at 12:09 UTC): either failed calls are not billed or the total lags; the code's estimate is 0.05 USD (the 5 searches)"
   next: "user's choice: background mode with polling (no stream limit), lower reasoning effort and fewer searches, or another writer"
+background_probe_2026_11_17:
+  result: "the provider accepts background: true but runs the request synchronously (status completed on the first reply after 20 s, no queued state): no way around its time limits; the answer was right (PMID of the known trial), 0.036 USD by the reply's tokens"
+  billing: "the provider's running total moved 24755.5086 -> 24758.1254 (+2.6168) for this call: the total counts in cents and failed calls (both of the second attempt) were not billed"

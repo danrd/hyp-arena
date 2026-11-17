@@ -82,11 +82,40 @@ def billing():
         return None
 
 
+def call_background(model: str, text: str, poll: int = 15, limit: int = 3600) -> tuple[dict, dict]:
+    """Background mode: the request is accepted at once and its result fetched by polling, so no stream limit applies."""
+    key = os.environ.get("COMET_API_KEY") or os.environ.get("COMETAPI_KEY")
+    h = {"Authorization": f"Bearer {key}"}
+    body = {"model": model, "input": text, "tools": [{"type": "web_search"}], "max_tool_calls": 25,
+            "max_output_tokens": 32000, "reasoning": {"effort": "medium"}, "background": True}
+    t0 = time.time()
+    r = httpx.post(URL, json=body, headers=h, timeout=120)
+    data = r.json() if r.headers.get("content-type", "").startswith("application/json") else {"error": r.text[:2000]}
+    rid, polls = data.get("id"), 0
+    while rid and data.get("status") in ("queued", "in_progress") and time.time() - t0 < limit:
+        time.sleep(poll)
+        polls += 1
+        try:
+            g = httpx.get(f"{URL}/{rid}", headers=h, timeout=60)
+            if g.headers.get("content-type", "").startswith("application/json"):
+                data = g.json()
+        except httpx.HTTPError:
+            continue
+    items = data.get("output") or []
+    meta = {"http_status": r.status_code, "mode": "background", "id": rid, "polls": polls,
+            "seconds": round(time.time() - t0, 1), "status": data.get("status"),
+            "searches": sum(i.get("type") == "web_search_call" for i in items), "usage": data.get("usage") or {},
+            "error": data.get("error"), "incomplete": data.get("incomplete_details")}
+    return data, meta
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--kinds", nargs="+", default=["a", "bs"])
     ap.add_argument("--model", default="gpt-6.1-sol")
     ap.add_argument("--cap", type=float, default=2.0)
+    ap.add_argument("--background", action="store_true", help="background mode with polling instead of a stream")
+    ap.add_argument("--pause", type=int, default=0, help="seconds between the calls (the upstream's token rate limit)")
     a = ap.parse_args()
     if os.environ.get("ALLOW_PAID") != "1":
         raise SystemExit("paid call: set ALLOW_PAID=1")
@@ -97,8 +126,10 @@ def main() -> None:
         if spent > a.cap / 2:
             log.append({"kind": kind, "skipped": f"spent {spent} USD, over half the cap"})
             break
+        if log and a.pause:
+            time.sleep(a.pause)
         task = json.loads((d / f"task_{kind}.json").read_text())
-        data, meta = call(a.model, prompt(task))
+        data, meta = (call_background if a.background else call)(a.model, prompt(task))
         (d / f"raw_{kind}.json").write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n")
         meta["usd"] = cost(a.model, meta["usage"], meta["searches"])
         spent += meta["usd"]
