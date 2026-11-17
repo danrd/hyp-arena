@@ -75,3 +75,8 @@ mechanics_run_2026_11_17:   # written before the run
   purpose: "mechanics, not a conclusion: does the search find records before T, how many links stay empty, cost per link; the AUC is computed and reported but no conclusion is drawn from 30 links"
   mechanics_ok: "at least 80% of links with one or more records before T, and no link failing on an error"
   cost: "about 0.08 USD per link by the calibration run, about 2.5 USD; cap 3.5 USD (MAX_USD)"
+mechanics_run_result_2026_11_17:
+  mechanics: "passed: 28 of 30 links with records before T (0.93 >= 0.80), no errors; records per link median 7 (0 to 19); 4 links filtered by the gate"
+  cost: "0.24 USD by the call log (about 0.008 per link: one claim, no card parse, no alternatives), far below the 0.08 per link estimated from the calibration run; the main run on about 105 links costs about 1 USD"
+  numbers_no_conclusion: "AUC of S against the label 0.656 [0.415, 0.867] on 28 links; plain count of records for minus against 0.69 [0.48, 0.88]; moderate or high certainty only 0.476 (13 links). 30 links cannot carry a conclusion (see sample_size_2026_11_17)"
+  fix: "the script summed the cost from the wrong field (0 shown); corrected"

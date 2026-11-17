@@ -94,7 +94,7 @@ def run(packs: list[int], fake: bool = False, limit: int | None = None, max_call
         done[l["review"]] = {"link": l, **res}
         out_f.write_text(json.dumps(done, indent=1, ensure_ascii=False) + "\n")
     return {"links": len(links(packs)), "done": len(done), "errors": sum("error" in v for v in done.values()),
-            "usd": round(sum((v.get("usage") or {}).get("usd") or 0 for v in done.values()), 3)}
+            "usd": round(sum(((v.get("usage") or {}).get("total") or {}).get("usd") or 0 for v in done.values()), 3)}
 
 
 def auc(vals: list[tuple[float, int]]) -> float | None:
@@ -129,7 +129,7 @@ def score(packs: list[int], fake: bool = False) -> dict:
            "auc_S": auc(S), "ci95_S": boot(S), "auc_count": auc(count), "ci95_count": boot(count),
            "auc_S_moderate_high": auc(firm), "n_moderate_high": len(firm),
            "records_per_link_median": sorted(v["records_for"] + v["records_against"] for v in rows)[len(rows) // 2] if rows else None,
-           "usd": round(sum((v.get("usage") or {}).get("usd") or 0 for v in done.values()), 3)}
+           "usd": round(sum(((v.get("usage") or {}).get("total") or {}).get("usd") or 0 for v in done.values()), 3)}
     (DIR / ("review_gold_score" + ("_fake" if fake else "") + ".json")).write_text(json.dumps(res, indent=1) + "\n")
     return res
 
