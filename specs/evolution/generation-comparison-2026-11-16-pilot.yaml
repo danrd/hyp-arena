@@ -132,3 +132,9 @@ round_5_writer_qwen_2026_11_17:   # written before the calls
   writer: "Qwen4 Max (qwen family) through the Responses endpoint with web search, streamed (scripts/evolution/generate_api.py --model qwen4-max); the same tasks task_a and task_bs with the same API line, copied to longevity-kg reviews/generation-2026-11-17-qwen/"
   calls: "one call per participant, at most 25 tool calls and 32000 output tokens, 60 s pause between the calls; cap 2 USD"
   judges: "the qwen judge is dropped (writer's family); gpt-5-nano is back; Google in (configs/judges-generation-r5.yaml)"
+novelty_by_absence_2026_11_17:   # written before the calls
+  what: "the third pair (Argon wrote A and BS, hypotheses about people): novelty by absence in PubMed, counted by code, for every hypothesis the same way"
+  cards: "one card per hypothesis from claim, rationale and experiment only (the participant's own card is not used), by the pipeline's normaliser (normalize_card/v17, one parse, configs/v3-flash-n10.yaml); the normaliser is of the Google family, as the writer (an extraction, not a judgement); about 0.3 USD; cards kept private, nothing of them read into the assistant's context"
+  counts: "rule 6 of the manual (hyparena/evolution/evolution_rules.pubmed_pair_count): PubMed records published on or before T with both labels, no third term, labels of more than 4 content words not counted. Outcome pair: the card's main intervention with its outcome metric; mechanism pairs: subject and object of every chain link before the outcome"
+  measures: "per arm: median count on the outcome pair; share of hypotheses whose outcome pair has fewer than 5 records (untested by this measure); share with at least one mechanism link under 5; labels not counted, reported"
+  reading: "a coarse measure that depends on the wording of the labels; the novelty level N of the manual needs reading (the pipeline). No pass rule: a pilot"
