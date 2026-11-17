@@ -3,7 +3,7 @@ given to it as links instead of an attachment. The task names raw files of this 
 asks, for each file, its number of lines and a few lines verbatim by number (one near the end, so that a cut-off read shows).
 The lines cannot be guessed from the file names, so a model that did not read the file fails; code checks the answer.
 
-    python -m scripts.argon.fetch_probe build [--commit SHA]   # task.json (to send) and expected.json (kept back)
+    python -m scripts.argon.fetch_probe build [--commit SHA] [--set core|prompts]   # task.json (to send), expected.json (kept back)
     python -m scripts.argon.fetch_probe check                  # answer.json against expected.json
 
 Files in longevity-kg reviews/fetch-probe-2026-11-16/ (PROBE_DIR).
@@ -20,9 +20,20 @@ ROOT = Path(__file__).resolve().parents[2]
 KG = Path(os.environ.get("KG_DIR", ROOT.parent / "longevity-kg"))
 DIR = Path(os.environ.get("PROBE_DIR", KG / "reviews" / "fetch-probe-2026-11-16"))
 REPO = "danrd/hyp-arena"
-FILES = ["hyparena/prompts/verify_claim/v21.j2",      # a prompt of the reader
-         "hyparena/scoring/rules_v3.py",              # the core of the rules
-         "hyparena/reports/report_html.py"]           # the longest file (about 110 KB): is a long read cut?
+FILE_SETS = {
+    "core": ["hyparena/prompts/verify_claim/v21.j2",      # a prompt of the reader
+             "hyparena/scoring/rules_v3.py",              # the core of the rules
+             "hyparena/reports/report_html.py"],          # the longest file (about 110 KB): is a long read cut?
+    # the prompts of the working pipeline's LLM steps (configs/v3-flash-n10.yaml), the ones an outside report would follow
+    "prompts": ["hyparena/prompts/normalize_card/v17.j2",
+                "hyparena/prompts/search_queries/v2.j2",
+                "hyparena/prompts/search_relevance/v1.j2",
+                "hyparena/prompts/verify_claim/v21.j2",
+                "hyparena/prompts/propose_alternatives/v2.j2",
+                "hyparena/prompts/judge_pair/v2.j2",
+                "hyparena/reports/report_html.py"],       # the long file: is a long read cut?
+}
+FILES = FILE_SETS["core"]
 COVER = ("Please complete the task in the JSON below. Work on your own, in this chat only, and reply with one JSON object in "
          "the format given under \"answer_format\", with nothing around it.")
 
@@ -47,9 +58,9 @@ def _file_at(commit: str, path: str) -> str:
     return subprocess.run(["git", "show", f"{commit}:{path}"], cwd=ROOT, check=True, capture_output=True, text=True).stdout
 
 
-def build(commit: str) -> dict:
+def build(commit: str, names: list[str] = None) -> dict:
     files, expected = [], {}
-    for p in FILES:
+    for p in names or FILES:
         lines = _file_at(commit, p).split("\n")
         if lines and lines[-1] == "":
             lines = lines[:-1]
@@ -94,11 +105,12 @@ def main(argv=None) -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("cmd", choices=["build", "check"])
     ap.add_argument("--commit", default=None)
+    ap.add_argument("--set", default="core", choices=sorted(FILE_SETS))
     a = ap.parse_args(argv)
     if a.cmd == "build":
         commit = a.commit or subprocess.run(["git", "rev-parse", "origin/main"], cwd=ROOT, check=True, capture_output=True,
                                             text=True).stdout.strip()
-        t = build(commit)
+        t = build(commit, FILE_SETS[a.set])
         print(json.dumps({k: t[k] for k in ("task", "commit", "files")}, indent=1))
     else:
         print(json.dumps(check(), indent=1))
