@@ -11,6 +11,8 @@ timeout: 120
 max_retries: 1
 deadline: 150
 rewriter: xiaomi
+# the judge's question (scripts/evolution/generation_compare.py MODE): the pilot of 2026-11-16 asks one question (v2), no rubric
+judge: {pair_version: v2, rubric: false}
 models:
   - {family: openai,    provider: cometapi, model: "gpt-5-nano",                tier: paid, api_key_env: COMET_API_KEY}
   - {family: anthropic, provider: cometapi, model: "claude-haiku-4-5-20251001", tier: paid, api_key_env: COMET_API_KEY}

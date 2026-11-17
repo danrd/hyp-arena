@@ -158,3 +158,17 @@ def test_score_passes_text_only_and_summarises_numbers(tmp_path, monkeypatch):
                                         "scope": "organ", "links": 1, "flags": 1, "taxon": None}},
                  "not_human": 1, "llm_calls": 1, "usd": 0.07}
     assert gt.score("bs", fake=True) == r and len(seen) == 1                    # resumable: a done id is not run again
+
+
+def test_single_question_judge_mode():
+    """Pilot of 2026-11-16: one question (v2), no rubric; BS is compared with A in every cross pair, both orders."""
+    from scripts.evolution import generation_compare as gc
+    try:
+        gc.set_mode({"judge": {"pair_version": "v2", "rubric": False}})
+        data = {"arms": {"A": [{"id": f"A{i}"} for i in range(5)], "BS": [{"id": f"BS{i}"} for i in range(5)]}}
+        js = gc.jobs(data, ["openai", "qwen"])
+        assert len(js) == 25 * 2 * 2 and all(j[0] == "pair" and j[1] == "BS>A" for j in js)
+        assert gc.pair_problems({"overall": "1"}) == [] and gc.pair_problems({"overall": "x"})
+        assert "novelty" not in gc.render("judge_pair", "v2", topic="t", first="a", second="b", history_text="").split("Do not judge")[0]
+    finally:
+        gc.set_mode({})

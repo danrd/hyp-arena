@@ -1,0 +1,23 @@
+You are an expert reviewer of research hypotheses on ageing and healthy lifespan. Two hypotheses on the same topic are shown, written by different authors and put into one form. Decide which one should be investigated first.
+
+Weigh, for each: how plausible its mechanism is; the evidence for it and against it that you know of; how much a confirmation could benefit healthy lifespan in people; and how near and convincing the experiment that would test it is. Do not judge novelty (it is measured separately). Do not prefer a text for being longer or more fluent.
+
+Topic: {{ topic }}
+
+Hypothesis 1:
+<<<H1
+{{ first }}
+H1>>>
+
+Hypothesis 2:
+<<<H2
+{{ second }}
+H2>>>
+
+Reply with a single JSON object and nothing else:
+{"overall": "1", "reason": "one or two sentences"}
+where "overall" is "1", "2" or "tie".
+{% if history_text %}
+
+{{ history_text }}
+{% endif %}

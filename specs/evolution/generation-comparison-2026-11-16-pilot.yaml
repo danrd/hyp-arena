@@ -51,3 +51,14 @@ reported:
   - "per arm: the scores of our pipeline (balance, coverage, N, I, W, feasibility, the three profiles), the share of hypotheses already tested before T, references that exist and match, duplicates"
   - "per hypothesis: our scores against Argon's scores by the manual (the chat model running the manual against our code)"
   - "per evolved version: the change of N and of the other axes, with the rules of section 11 checked"
+judges_2026_11_17:   # written before the judges' run
+  pair: "BS against A: the 25 cross pairs of the third pair (hypotheses about people), each in both orders"
+  question: >-
+    hyparena/prompts/judge_pair/v2: which hypothesis to investigate first, weighing the plausibility of the mechanism, the
+    evidence for and against it, the benefit a confirmation could bring to healthy lifespan in people, and how near and
+    convincing the testing experiment is; novelty is not asked (code measures it); no rubric. Our own wording of the
+    Bio Arena judge question
+  judges: "six families other than the writer's (google) and the rewriter's (xiaomi): gpt-5-nano, claude-haiku-4-5, grok-4.3, deepseek-v4.1-flash, qwen3.8-flash, glm-5.3-flash; the texts rewritten into one form by mimo-v2.5 (claim, rationale, experiment; references removed)"
+  measures: "share of pairs BS wins (both orders agree; else half), with a bootstrap interval over pairs and judges; the share per judge family; the judges' order of the 10 hypotheses against our pipeline's ASPID scores and against Argon's"
+  rule: "no pass rule (a pilot): the result says only whether the full comparison is worth running"
+  price: "dry run 0.26 USD (300 judgements, 10 rewrites)"

@@ -33,7 +33,19 @@ CONFIG = "configs/judges-generation.yaml"
 CRITERIA = ("novelty", "grounding", "testability", "specificity", "significance")
 LIMIT = 1200                       # characters of claim + rationale + experiment
 OUT_TOKENS = {"judge_pair": 300, "judge_rubric": 200, "format_hypothesis": 450}
-TESTED = (("B", "A", "cross"), ("C", "B", "matched"), ("D", "A", "matched"))
+TESTED = (("B", "A", "cross"), ("BS", "A", "cross"), ("C", "B", "matched"), ("D", "A", "matched"))
+# the judge's question: v1 five criteria and overall, plus a rubric per hypothesis; v2 (pilot of 2026-11-16) one question,
+# which hypothesis to investigate first (plausibility, evidence for and against, benefit to people, the nearest convincing
+# experiment), novelty not asked (code measures it), no rubric. Set by the config's "judge" block.
+MODE = {"pair_version": "v1", "rubric": True}
+
+
+def set_mode(cfg: dict) -> None:
+    MODE.update({"pair_version": "v1", "rubric": True, **(cfg.get("judge") or {})})
+
+
+def _criteria() -> tuple:
+    return CRITERIA if MODE["pair_version"] == "v1" else ()
 REPORTED = (("C", "A", "cross"),)
 STOP = set("a an the of in on to for and or with by from at as is are be was were that this these those it its into "
            "than then which who whom whose under over between within without via not no".split())
@@ -125,7 +137,7 @@ def do_format(d: Path, client, cfg: dict) -> dict:
 # judges
 
 def pair_problems(v: dict) -> list[str]:
-    bad = [k for k in CRITERIA + ("overall",) if v.get(k) not in ("1", "2", "tie")]
+    bad = [k for k in _criteria() + ("overall",) if v.get(k) not in ("1", "2", "tie")]
     return [f'"{k}" must be "1", "2" or "tie"' for k in bad]
 
 
@@ -145,9 +157,10 @@ def jobs(data: dict, fams: list[str]) -> list[tuple]:
     for c, a, b, _ in pairs(data["arms"]):
         for fam in fams:
             out += [("pair", c, a, b, fam, "ab"), ("pair", c, a, b, fam, "ba")]
-    for arm in data["arms"].values():
-        for h in arm:
-            out += [("rubric", "", h["id"], "", fam, "") for fam in fams]
+    if MODE["rubric"]:
+        for arm in data["arms"].values():
+            for h in arm:
+                out += [("rubric", "", h["id"], "", fam, "") for fam in fams]
     return out
 
 
@@ -175,7 +188,8 @@ def do_judge(d: Path, client, cfg: dict) -> dict:
         if k in done:
             return k, done[k]
         tpl, variables = prompt_of(j, data, formatted)
-        v, got = ask(client, role=tpl, family=j[4], template=tpl, version="v1", variables=variables,
+        v, got = ask(client, role=tpl, family=j[4], template=tpl,
+                     version=MODE["pair_version"] if tpl == "judge_pair" else "v1", variables=variables,
                      validate=pair_problems if tpl == "judge_pair" else rubric_problems, rounds=2, avoid=avoid)
         ok = v is not None and not (pair_problems(v) if tpl == "judge_pair" else rubric_problems(v))
         return k, ({**v, "family": got} if ok else None)
@@ -244,7 +258,7 @@ def do_score(d: Path, cfg: dict) -> dict:
         per_family = {f: win_share([r for r in rs if r["family"] == f]) for f in fams}
         share = win_share(rs)
         majority = sum(1 for v in per_family.values() if v is not None and v > 0.5) > len([v for v in per_family.values() if v is not None]) / 2
-        per_criterion = {k: win_share([r for r in pair_outcomes(data, done, fams, k) if r["comparison"] == c]) for k in CRITERIA}
+        per_criterion = {k: win_share([r for r in pair_outcomes(data, done, fams, k) if r["comparison"] == c]) for k in _criteria()}
         res["comparisons"][c] = {"kind": kind, "tested": (x, y, kind) in TESTED, "win_share": share, "ci95": bootstrap(rs),
                                  "per_family": per_family, "per_criterion": per_criterion, "pairs": len({(r["x"], r["y"]) for r in rs}),
                                  "outcomes": len(rs), "wins": bool(share is not None and share > 0.5 and majority)}
@@ -278,7 +292,8 @@ def do_dry(d: Path, cfg: dict) -> dict:
     for j in jobs(data, judges(cfg, data)):
         tpl, variables = prompt_of(j, data, formatted)
         f = by_family[j[4]]
-        f["calls"] += 1; f["tokens_in"] += estimate_tokens(render(tpl, "v1", **variables, history_text="")); f["tokens_out"] += OUT_TOKENS[tpl]
+        ver = MODE["pair_version"] if tpl == "judge_pair" else "v1"
+        f["calls"] += 1; f["tokens_in"] += estimate_tokens(render(tpl, ver, **variables, history_text="")); f["tokens_out"] += OUT_TOKENS[tpl]
     total = 0.0
     for fam, f in by_family.items():
         p = prices.get(model_of.get(fam, ""), {})
@@ -297,6 +312,7 @@ def main(argv=None) -> None:
     ap.add_argument("--fake", action="store_true")
     a = ap.parse_args(argv)
     d, cfg = Path(a.dir), yaml.safe_load(Path(a.config).read_text())
+    set_mode(cfg)
     if a.cmd == "dry":
         print(json.dumps(do_dry(d, cfg), indent=1)); return
     if a.cmd == "score":
