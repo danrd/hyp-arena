@@ -32,6 +32,7 @@ from hyparena.llm.prompts import render
 CONFIG = "configs/judges-generation.yaml"
 CRITERIA = ("novelty", "grounding", "testability", "specificity", "significance")
 LIMIT = 1200                       # characters of claim + rationale + experiment
+TARGET = 1000                      # what the rewriter is asked to aim at (models overshoot a stated limit)
 OUT_TOKENS = {"judge_pair": 300, "judge_rubric": 200, "format_hypothesis": 450}
 TESTED = (("B", "A", "cross"), ("BS", "A", "cross"), ("C", "B", "matched"), ("D", "A", "matched"))
 # the judge's question: v1 five criteria and overall, plus a rubric per hypothesis; v2 (pilot of 2026-11-16) one question,
@@ -105,7 +106,14 @@ def shortened(original: dict) -> dict:
     sents = re.split(r"(?<=[.!?])\s+", " ".join(original["text"].split()))
     third = max(1, len(sents) // 3)
     parts = [" ".join(sents[:third]), " ".join(sents[third:2 * third]), " ".join(sents[2 * third:])]
-    parts = [p[: LIMIT // 3] for p in parts]
+    def cut(p: str, n: int) -> str:                 # whole sentences up to n characters, at least the first one cut at a word
+        out = ""
+        for s_ in re.split(r"(?<=[.!?])\s+", p):
+            if len(out) + len(s_) + 1 > n:
+                break
+            out = (out + " " + s_).strip()
+        return out or p[:n].rsplit(" ", 1)[0]
+    parts = [cut(p, LIMIT // 3) for p in parts]
     return {"claim": parts[0], "rationale": parts[1], "experiment": parts[2], "shortened_by_rule": True}
 
 
@@ -122,8 +130,11 @@ def do_format(d: Path, client, cfg: dict) -> dict:
     def one(h):
         if h["id"] in done:
             return h["id"], done[h["id"]]
-        v, fam = ask(client, role="format_hypothesis", family=cfg["rewriter"], template="format_hypothesis", version="v1",
-                     variables={"text": h["text"], "limit": LIMIT}, validate=lambda v: meaning_kept(h, v), rounds=2)
+        # only the rewriter's family: a judge family never rewrites (2026-11-17); v2 aims below the limit
+        others = frozenset(m["family"] for m in cfg["models"] if m["family"] != cfg["rewriter"])
+        v, fam = ask(client, role="format_hypothesis", family=cfg["rewriter"], template="format_hypothesis", version="v2",
+                     variables={"text": h["text"], "limit": LIMIT, "target": TARGET}, validate=lambda v: meaning_kept(h, v),
+                     rounds=3, avoid=others)
         if v is None or meaning_kept(h, v):
             return h["id"], {**shortened(h), "problems": meaning_kept(h, v or {}), "family": fam}
         return h["id"], {k: v[k] for k in ("claim", "rationale", "experiment")} | {"family": fam}
@@ -287,7 +298,7 @@ def do_dry(d: Path, cfg: dict) -> dict:
     by_family = defaultdict(lambda: {"calls": 0, "tokens_in": 0, "tokens_out": 0})
     for h in (h for arm in data["arms"].values() for h in arm):
         f = by_family[cfg["rewriter"]]
-        f["calls"] += 1; f["tokens_in"] += estimate_tokens(render("format_hypothesis", "v1", text=h["text"], limit=LIMIT, history_text=""))
+        f["calls"] += 1; f["tokens_in"] += estimate_tokens(render("format_hypothesis", "v2", text=h["text"], limit=LIMIT, target=TARGET, history_text=""))
         f["tokens_out"] += OUT_TOKENS["format_hypothesis"]
     for j in jobs(data, judges(cfg, data)):
         tpl, variables = prompt_of(j, data, formatted)
