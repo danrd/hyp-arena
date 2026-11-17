@@ -85,3 +85,17 @@ judges_result_2026_11_17:
     crosses 0.5 at its lower end. A pilot without a pass rule: the direction is consistent, a conclusion needs the full
     comparison (several topics, about 20 hypotheses per participant). Novelty is not in this result (judges were not asked;
     the pipeline scoring was not run, user's decision)
+round_4_2026_11_17:   # written before the tasks were sent
+  why: >-
+    the generation is moving to free chats (user's decision: no API cost), where a safety filter interrupted generation on
+    this topic (bioelectricity draws on ion-channel toxins). The base request gets three lines, the same for every
+    participant: a frame (a research benchmark on ageing and healthy lifespan), one excluded kind of intervention (natural
+    toxins or venoms, pathogens, agents that harm people by design: user's choice A, the least narrowing; nothing about
+    experiments) and a length (claim, rationale and experiment together at most 4000 characters, the length of the third
+    pair). Constants GUARD and MAX_CHARS in scripts/argon/generation_tasks.py
+  tasks: "longevity-kg reviews/generation-2026-11-17/: task_a (with the lines), task_a_noguard (the earlier base, control), task_bs (with the lines); T 2026-11-17; same topic"
+  check_narrowing: >-
+    A with the lines against A without, each in a new chat: the number of refusals, distinct interventions and outcomes
+    (code, from the texts), intervention kinds, references real and before T; the lines stay if the ideas are not fewer
+    and not narrower (judged by these counts, no pass threshold: a first look)
+  check_filter: "refusals or interrupted answers per task are recorded (a refusal is data); a refused task is repeated once in a new chat"

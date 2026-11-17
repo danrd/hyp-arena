@@ -182,3 +182,15 @@ def test_references_cut_without_rewriting():
     text = gc.judged_text(f)
     assert "PMID" not in text and "[3" not in text and "(Smith" not in text and "(Jones" not in text
     assert "X improves Y." in text and "12 weeks" in text and f["references_cut"] == 5 and not f["rewritten"]
+
+
+def test_guard_lines_in_the_base_and_the_control(tmp_path, monkeypatch):
+    """2026-11-17: frame, one excluded kind of intervention and the length, in the base of every participant; the control
+    request is the earlier base."""
+    monkeypatch.setattr(gt, "DIR", tmp_path)
+    for p in gt.PARTICIPANTS:
+        b = gt.build(p, "2026-11-17", write=False)["instructions"][0]
+        assert gt.GUARD in b and f"at most {gt.MAX_CHARS} characters" in b
+    ctrl = gt.build("a", "2026-11-17", guard=False)
+    assert gt.GUARD not in ctrl["instructions"][0] and (tmp_path / "task_a_noguard.json").exists()
+    assert ctrl["instructions"][0] + " " + gt.GUARD in gt.base()

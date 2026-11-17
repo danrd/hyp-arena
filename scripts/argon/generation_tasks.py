@@ -54,13 +54,23 @@ def _words(n: int) -> str:
     return {3: "three", 4: "four", 5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine", 10: "ten"}.get(n, str(n))
 
 
-def base(n: int = N) -> str:
-    """The plain request, the same for every participant (participant A is this alone)."""
+MAX_CHARS = 4000   # claim + rationale + experiment of one hypothesis (2026-11-17: the length of the third pilot pair)
+# 2026-11-17: the frame, the one excluded kind of intervention and the length, the same for every participant. The
+# exclusion is the only limit on the ideas (user's choice A): it removes what a safety filter reads as harm, nothing else.
+GUARD = ("These hypotheses are for a research benchmark on ageing and healthy lifespan, to be compared and tested by "
+         "researchers. Interventions are not natural toxins or venoms, pathogens, or agents that harm people by design.")
+
+
+def base(n: int = N, guard: bool = True) -> str:
+    """The plain request, the same for every participant (participant A is this alone). guard=False: the request as it was
+    before 2026-11-17 (the control of the check that the guard does not narrow the ideas)."""
+    tail = (f" {GUARD} The claim, rationale and experiment of each hypothesis together are at most {MAX_CHARS} characters."
+            if guard else "")
     return (f"Write {n} research hypotheses on the topic below: original, testable, important for ageing and healthy "
             "lifespan. Each has a claim, a rationale (why it should be true) and an experiment that would test it, and "
             f"lists the papers it relies on. The {_words(n)} hypotheses must be different ideas: no two share both the "
             "intervention and the outcome. Each hypothesis is about people: its population is humans (older adults, or "
-            "people at risk of an age-related loss of function). The experiment that would test it may be in any system.")
+            "people at risk of an age-related loss of function). The experiment that would test it may be in any system." + tail)
 
 
 A_BASE = base()
@@ -163,15 +173,15 @@ def _write(kind: str, task: dict) -> Path:
     return p
 
 
-def build(participant: str, as_of: str, topic: str = TOPIC, n: int = N, write: bool = True) -> dict:
+def build(participant: str, as_of: str, topic: str = TOPIC, n: int = N, write: bool = True, guard: bool = True) -> dict:
     """The generation task of a participant: [base] + its block (if any) + COMMON; the answer format is the plain
-    hypothesis plus the block's fields."""
+    hypothesis plus the block's fields. guard=False writes task_<participant>_noguard.json (the control)."""
     spec, fields = PARTICIPANTS[participant]
-    task = {"task": f"generation_{participant.upper()}", "cover": COVER, "topic": topic, "T": as_of, "n": n,
-            "instructions": [base(n)] + spec(n) + COMMON,
+    task = {"task": f"generation_{participant.upper()}" + ("" if guard else "_noguard"), "cover": COVER, "topic": topic,
+            "T": as_of, "n": n, "instructions": [base(n, guard)] + spec(n) + COMMON,
             "answer_format": {"hypotheses": [{**HYP, "id": f"{participant.upper()}1", **fields}]}}
     if write:
-        _write(participant, task)
+        _write(participant if guard else f"{participant}_noguard", task)
     return task
 
 
@@ -319,12 +329,13 @@ def _b_generate_only() -> bool:
 
 
 def format_problems(kind: str, ans: dict) -> list[str]:
+    task_kind, kind = kind, kind.replace("_noguard", "")
     key = "reports" if kind == "reports" else "hypotheses"
     items = ans.get(key)
     if not isinstance(items, list) or not items:
         return [f'"{key}" must be a non-empty list']
     out = []
-    n = json.loads((DIR / f"task_{kind}.json").read_text()).get("n", N) if (DIR / f"task_{kind}.json").exists() else N
+    n = json.loads((DIR / f"task_{task_kind}.json").read_text()).get("n", N) if (DIR / f"task_{task_kind}.json").exists() else N
     if kind in PARTICIPANTS and len(items) != n:
         out.append(f"{len(items)} hypotheses, {n} asked")
     for h in items:
@@ -344,6 +355,7 @@ def check(kind: str, as_of: str | None = None) -> dict:
     task = json.loads((DIR / f"task_{kind}.json").read_text())
     T = as_of or task["T"]
     items = ans.get("reports" if kind == "reports" else "hypotheses") or []
+    file_kind, kind = kind, kind.replace("_noguard", "")
     cache_f = DIR / "pubmed_cache.json"
     cache = json.loads(cache_f.read_text()) if cache_f.exists() else {}
     named = sorted({p for h in items for p, _, _ in _pmids(h)})
@@ -371,10 +383,11 @@ def check(kind: str, as_of: str | None = None) -> dict:
                             "check_problems": check_problems(h.get("check") or {}, h.get("card") or {} if kind == "bs" else None)
                             if kind in ("s", "bs") else [], "refs": refs}
     total = sum(v["papers"] for v in per.values())
-    res = {"kind": kind, "T": T, "format_problems": format_problems(kind, ans), "hypotheses": per,
+    over = [h.get("id") for h in items if len(_text(h)) > MAX_CHARS * 1.1] if "claim" in (items[0] if items else {}) else []
+    res = {"kind": file_kind, "T": T, "format_problems": format_problems(file_kind, ans), "hypotheses": per, "over_length": over,
            "papers": total, "share_good": round(sum(v["good"] for v in per.values()) / total, 3) if total else None,
            "quotes": {q: sum(v["quotes"].get(q, 0) for v in per.values()) for q in ("whole", "joined", "no", "paper not found")}}
-    (DIR / f"check_{kind}.json").write_text(json.dumps(res, indent=1, ensure_ascii=False) + "\n")
+    (DIR / f"check_{file_kind}.json").write_text(json.dumps(res, indent=1, ensure_ascii=False) + "\n")
     return {k: v for k, v in res.items() if k != "hypotheses"}
 
 
@@ -565,13 +578,14 @@ def main(argv=None) -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("cmd", choices=["build", "score", "analyze", "report", "compare-argon", "build-a", "build-b", "build-b-generate", "build-reports", "build-evolve", "check", "collect"])
     ap.add_argument("--arm", choices=["C", "D"])
-    ap.add_argument("--kind", choices=["a", "b", "s", "bs", "reports", "c", "d"])
+    ap.add_argument("--kind", choices=["a", "b", "s", "bs", "a_noguard", "bs_noguard", "reports", "c", "d"])
     ap.add_argument("--participant", choices=list(PARTICIPANTS), help="build: a (base), b (+ card), s (+ steps), bs (+ card and steps)")
     ap.add_argument("--topic", default=TOPIC)
     ap.add_argument("--n", type=int, default=N)
     ap.add_argument("--files", nargs="*", default=[], help="analyze: participant=score file, e.g. A=score_a_v2.json")
     ap.add_argument("--out", default="report_code.html", help="report: file name in the pilot directory")
     ap.add_argument("--argon", default="", help="compare-argon: the outside model's JSON in the pilot directory")
+    ap.add_argument("--no-guard", action="store_true", help="build: the request without the 2026-11-17 frame, exclusion and length (control)")
     ap.add_argument("--fake", action="store_true", help="score: the fake LLM (calls and prompt tokens, no paid call)")
     ap.add_argument("--as-of", default=date.today().isoformat())
     ap.add_argument("--writer-family", default="google", help="google if Argon wrote the answers, openai if ChatGPT")
@@ -587,7 +601,7 @@ def main(argv=None) -> None:
             raise SystemExit("a paid run: set ALLOW_PAID=1 after the user's go")
         print(json.dumps(score(a.kind, fake=a.fake), indent=1)); return
     if a.cmd == "build":
-        t = build(a.participant, a.as_of, a.topic, a.n)
+        t = build(a.participant, a.as_of, a.topic, a.n, guard=not a.no_guard)
     elif a.cmd == "build-a":
         t = build_a(a.as_of)
     elif a.cmd == "build-b":
