@@ -70,3 +70,8 @@ sample_size_2026_11_17:
   pack_30: "the rest of the pool: 156 reviews (216 by the same query on 2026-11-17, minus the 60 of pack 29), random order, 8 parts of 20, the same instructions (scripts/argon/pack29_reviews.py build-rest); about 105 usable links expected with pack 29"
   plan: "a mechanics run of the method on the 30 links of pack 29 first (no conclusion drawn from it), then the main run on every usable link of packs 29 and 30 with the rule written before it"
 
+mechanics_run_2026_11_17:   # written before the run
+  what: "the 30 usable links of pack 29: per link a card built by code (one outcome claim: intervention -> main outcome -> population, the comparator and the review's outcome as the claim's measure), the working search (filtered) and reader (verify_claim/v21, batches of 10) of configs/v3-flash-n10.yaml as of T, the rules of the manual (rules_v32.evaluate v36): S, F, A of the outcome link and the gate; scripts/whole_system/review_gold.py run"
+  purpose: "mechanics, not a conclusion: does the search find records before T, how many links stay empty, cost per link; the AUC is computed and reported but no conclusion is drawn from 30 links"
+  mechanics_ok: "at least 80% of links with one or more records before T, and no link failing on an error"
+  cost: "about 0.08 USD per link by the calibration run, about 2.5 USD; cap 3.5 USD (MAX_USD)"
