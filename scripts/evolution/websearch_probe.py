@@ -19,21 +19,66 @@ import httpx
 KG = Path(__file__).resolve().parents[2].parent / "longevity-kg"
 OUT = KG / "reviews" / "generation-2026-11-17" / "websearch_probe.json"
 URL = "https://api.cometapi.com/v1/responses"
-PRICE = {"gpt-6.1-sol": {"in": 2.0, "out": 10.0, "search_per_call": 0.01}}      # configs/prices.yaml; search 10 USD / 1000
+PRICE = {"gpt-6.1-sol": {"in": 2.0, "out": 10.0, "search_per_call": 0.01},
+         "claude-opus-5-5": {"in": 4.0, "out": 20.0, "search_per_call": 0.01}}
+MESSAGES_URL = "https://api.cometapi.com/v1/messages"     # Anthropic's own format; its server web search tool      # configs/prices.yaml; search 10 USD / 1000
 QUESTION = ("Use web search. Find the randomized controlled trial of levothyroxine in older adults with subclinical "
             "hypothyroidism published in the New England Journal of Medicine in 2017 (the TRUST trial). Reply with one JSON "
             'object only: {"pmid": "", "title": "", "year": 0, "source_url": ""}.')
 EXPECTED_PMID = "28402245"
 
 
+def messages_probe(model: str, key: str) -> dict:
+    """The same question through the Anthropic Messages endpoint with the web search server tool."""
+    body = {"model": model, "max_tokens": 2000, "messages": [{"role": "user", "content": QUESTION}],
+            "tools": [{"type": "web_search_20250305", "name": "web_search", "max_uses": 3}]}
+    h = {"x-api-key": key, "Authorization": f"Bearer {key}", "anthropic-version": "2023-06-01"}
+    t0 = time.time()
+    r = httpx.post(MESSAGES_URL, json=body, headers=h, timeout=300)
+    out = {"model": model, "api": "messages", "http_status": r.status_code, "seconds": round(time.time() - t0, 1)}
+    try:
+        data = r.json()
+    except ValueError:
+        data = {"raw": r.text[:2000]}
+    blocks = data.get("content") or []
+    out["content_types"] = [b.get("type") for b in blocks]
+    usage = data.get("usage") or {}
+    out["usage"] = usage
+    out["searches"] = (usage.get("server_tool_use") or {}).get("web_search_requests",
+                                                                 sum(b.get("type") == "server_tool_use" for b in blocks))
+    out["stop_reason"] = data.get("stop_reason")
+    out["error"] = data.get("error") or (None if r.status_code == 200 else str(data)[:800])
+    text = "".join(b.get("text", "") for b in blocks if b.get("type") == "text")
+    out["text"] = text[:1500]
+    m = re.search(r"\{[^{}]*\}", text, re.S)
+    try:
+        ans = json.loads(m.group(0)) if m else {}
+    except json.JSONDecodeError:
+        ans = {}
+    out["pmid_given"] = str(ans.get("pmid", ""))
+    out["pmid_correct"] = out["pmid_given"] == EXPECTED_PMID
+    p = PRICE.get(model)
+    if p and usage:
+        out["usd"] = round((usage.get("input_tokens", 0) + usage.get("cache_creation_input_tokens", 0)) / 1e6 * p["in"]
+                           + usage.get("output_tokens", 0) / 1e6 * p["out"] + out["searches"] * p["search_per_call"], 4)
+    return out
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--model", default="gpt-6.1-sol")
+    ap.add_argument("--api", default="responses", choices=["responses", "messages"])
     ap.add_argument("--background", action="store_true", help="background mode with polling (output websearch_probe_background.json)")
     a = ap.parse_args()
     if os.environ.get("ALLOW_PAID") != "1":
         raise SystemExit("paid call: set ALLOW_PAID=1")
     key = os.environ.get("COMET_API_KEY") or os.environ.get("COMETAPI_KEY")
+    if a.api == "messages":
+        out = messages_probe(a.model, key)
+        f = OUT.with_name(f"websearch_probe_{a.model}.json")
+        f.write_text(json.dumps(out, indent=1, ensure_ascii=False) + "\n")
+        print(json.dumps({k: v for k, v in out.items() if k != "text"}, indent=1, ensure_ascii=False))
+        return
     body = {"model": a.model, "input": QUESTION, "tools": [{"type": "web_search"}], "max_output_tokens": 2000,
             "reasoning": {"effort": "low"}}
     if a.background:

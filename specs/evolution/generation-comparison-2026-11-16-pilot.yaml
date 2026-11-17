@@ -123,3 +123,6 @@ round_5_second_attempt_2026_11_17:
 background_probe_2026_11_17:
   result: "the provider accepts background: true but runs the request synchronously (status completed on the first reply after 20 s, no queued state): no way around its time limits; the answer was right (PMID of the known trial), 0.036 USD by the reply's tokens"
   billing: "the provider's running total moved 24755.5086 -> 24758.1254 (+2.6168) for this call: the total counts in cents and failed calls (both of the second attempt) were not billed"
+claude_web_search_probe_2026_11_17:
+  result: "Claude Opus 5.5 through the provider's Messages endpoint: the reply is a client tool_use (id toolu_bdrk_...: served through AWS Bedrock), not a server search; the web search tool is passed on as an ordinary tool for the caller to run. Two short calls, 0.013 USD each by their tokens; the provider's running total had not moved when read right after"
+  option: "run the search ourselves: a PubMed search tool (E-utilities, papers up to T only, titles, years and PMIDs) executed by our code in a tool loop, the same for A and BS"
