@@ -157,3 +157,83 @@ round_5_qwen_second_2026_11_17:   # written before the calls
   change: "both A and BS generated again with reasoning effort low (else as round_5_writer_qwen); the first BS answer kept as a separate point (generation-2026-11-17-qwen/), not compared with the new A"
   dir: "longevity-kg reviews/generation-2026-11-17-qwen2/"
   cap: "2 USD for the two calls"
+round_5_qwen_bioelectricity_2026_11_17:   # before the calls
+  topic: "bioelectric signalling in ageing, the original topic; the user chose it for both arms of the low-effort retry"
+  tasks: >-
+    task_a.json and task_bs.json in longevity-kg reviews/generation-2026-11-17-qwen2/. Only the topic field changes from
+    the first Qwen round. T stays 2026-11-17, with five hypotheses about people per arm, the shared exclusions and the
+    4000-character limit. The API adds the same web search instruction to both tasks.
+  calls: "as in round_5_qwen_second_2026_11_17 and round_5_writer_qwen: low reasoning effort, streamed web search, 60 s pause, budget 2 USD subject to approval"
+  checks: "validate the citations and answer format in both arms before judging; the earlier drug-repurposing answer is a separate pilot point"
+round_5_qwen_bioelectricity_result_2026_11_17:
+  a: "provider status completed after 96 s; a text message without the requested JSON, zero reported tokens and no hypotheses parsed"
+  bs: "provider status failed after 304.1 s (upstream_stream_idle_timeout); no hypotheses parsed and no token usage returned"
+  cost: "0 USD by the response token logs; the account usage counter increased by 0.0818 provider units"
+  outcome: "no answers to validate or compare; the two raw replies and generation_log.json are kept in the private run directory"
+hy4_search_probe_2026_11_18:
+  purpose: "one short integration probe before a generation pilot, requested by the user"
+  model: "hy4 through CometAPI Responses with web_search, at most one tool call and 2000 output tokens"
+  question: "the same TRUST trial PMID question as scripts/evolution/websearch_probe.py"
+  rule: "JSON parses, PMID is 28402245, title and year agree with PubMed; tool use is reported separately from correctness"
+  price: "about 0.005 USD for tokens (0.6672 / 2 USD per million input / output); allowance 0.05 USD including search, whose route price is unconfirmed"
+  storage: "longevity-kg reviews/generation-2026-11-18-hy4/probe.json"
+hy4_search_probe_result_2026_11_18:
+  result: "passed in 10.1 s: JSON, PMID, title and year correct against PubMed; one web search call reported"
+  usage: "7739 input tokens (2816 cached), 709 output tokens (597 reasoning); 0.006581 USD at uncached token rates, search charged separately if applicable"
+  billing: "account total unchanged on the immediate reading; delayed check kept in the private probe log"
+kimi_search_probe_2026_11_18:
+  purpose: "the same short search and JSON integration probe as Hy4, requested by the user"
+  model: "kimi-k3.1-pro through CometAPI Responses with web_search, at most one tool call and 2000 output tokens"
+  question: "the TRUST trial PMID question in scripts/evolution/websearch_probe.py"
+  rule: "JSON parses, PMID is 28402245, title and year agree with PubMed; tool use reported separately"
+  price: "allowance 0.05 USD; reference token rates 2 / 10 USD per million input / output, route and tool charges checked from account usage"
+  storage: "longevity-kg reviews/generation-2026-11-18-kimi/probe.json"
+kimi_search_probe_result_2026_11_18:
+  result: "JSON returned in 11.6 s; PMID correct: False; no web search call reported"
+  validation: "title matches expected trial: True; PMID exists: True; title matches supplied PMID: False"
+  cost: "0.004072 USD by the change in the account usage counter"
+  outcome: "probe failed the prewritten rule; raw response and checks saved privately"
+hy4_bioelectricity_pilot_2026_11_18:
+  tasks: "the two bioelectricity tasks from the previous A/BS pilot, byte-identical copies; five hypotheses per arm, T 2026-11-17"
+  calls: "Hy4 via CometAPI Responses with streamed web search, requested low effort, at most 25 tool calls and 32000 output tokens per arm, 60 s between requests"
+  budget: "estimated 0.25–0.65 USD for the pair, allowance 2 USD; apply the existing 1 USD stop before the second arm. Token prices 0.6672 / 2 USD per million, with 0.01 USD per search provisionally for the stop check and a separate account billing check"
+  rule: "generation passes when each arm returns five hypotheses in valid JSON and the structural and length checks pass; verify all reported references against PubMed and report counts and actual web search use separately; no comparison of hypothesis quality in this run"
+  storage: "longevity-kg reviews/generation-2026-11-18-hy4/"
+hy4_bioelectricity_pilot_result_2026_11_18:
+  a: "completed in 389.9 s, 25 web searches; 5 hypotheses passed structure and length checks, 22 of 22 references passed the PubMed check"
+  bs: "incomplete after 510.7 s with max_output_tokens, 25 web searches; partial JSON contained no complete hypothesis object"
+  usage: "provider reported 34860 and 41066 output tokens for A and BS against the requested limit of 32000"
+  cost: "0.53923 USD increase in the account usage counter after the delayed check; provisional token and search estimate 0.9072 USD"
+  outcome: "A generation passed, BS did not produce an answer, so the pair did not pass the generation rule"
+hy4_bs_retry_2026_11_18:
+  purpose: "complete the BS output after the original request hit its output limit"
+  setup: "byte-identical BS task, same streamed route, same requested low effort and 32000 output tokens; max_tool_calls reduced from 25 to 10"
+  rule: "five complete hypotheses in valid JSON with the original BS structure and length checks; PubMed citation checks reported separately"
+  budget: "0.15–0.50 USD estimated, within the remaining 1.46 USD of the original pilot allowance"
+  comparability: "record the reduced search allowance when interpreting results alongside the original A arm"
+  storage: "longevity-kg reviews/generation-2026-11-18-hy4/bs_retry/"
+hy4_bs_retry_result_2026_11_18:
+  result: "incomplete after 476 s; 10 searches, 32000 reasoning tokens and no final answer; provider reported 37601 output tokens overall"
+  cost: "0.1897 USD on the delayed account reading"
+hy4_bs_retry_64k_2026_11_18:
+  setup: "same BS task and requested low effort, 10 searches, requested output cap 64000 to leave room after reasoning"
+  rule: "as for hy4_bs_retry_2026_11_18"
+  budget: "up to 0.50 USD estimated, within about 1.27 USD remaining from the original allowance"
+  storage: "longevity-kg reviews/generation-2026-11-18-hy4/bs_retry_64k/"
+hy4_bs_retry_64k_result_2026_11_18:
+  result: "completed in 646.1 s with 10 web searches; all five hypotheses passed the JSON, card, check and length validations"
+  citations: "113 of 123 citations passed PubMed validation. All PMIDs exist and meet T; 10 supplied titles failed the title match"
+  cost: "0.19567 USD on the account counter, with 0.239 USD as the provisional estimate"
+  comparison: "A used a 25-search limit and a 32000-token request; the completed BS used a 10-search limit and a 64000-token request. Report settings alongside the outputs"
+hy4_a_matched_2026_11_18:
+  purpose: "user requested regeneration of A with the same generation settings as the completed BS"
+  setup: "byte-identical A task, T 2026-11-17, Hy4 streamed Responses with web search, low effort, max_tool_calls 10, max_output_tokens 64000; same as BS retry 64k"
+  rule: "five complete hypotheses in JSON, required fields, lengths at most 4000; report PubMed citation checks and web search usage"
+  price: "about 0.20–0.40 USD, authorized by user for one A regeneration"
+  storage: "longevity-kg reviews/generation-2026-11-18-hy4/a_retry_64k/"
+hy4_a_matched_result_2026_11_18:
+  generation: "completed in 354.7 s, 7 web searches, five hypotheses, format and length checks passed"
+  citations: "26 of 26 passed the existing PubMed check"
+  cost: "0.133776 USD by account counter at the delayed check; provisional 0.1725 USD"
+  comparison: "A and completed BS use the same 10-search and 64000-output limits, same model, effort, date, topic and shared prompt; BS used 10 searches, A used 7"
+  argon_reports: "a task containing the ten texts and the offline scoring archive are prepared privately; outputs are not read into assistant context"
