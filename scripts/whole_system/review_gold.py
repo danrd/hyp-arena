@@ -76,7 +76,9 @@ def run(packs: list[int], fake: bool = False, limit: int | None = None, max_call
     out_f = OUT.with_name(OUT.stem + ("_fake" if fake else "") + ".json")
     done = json.loads(out_f.read_text()) if out_f.exists() else {}
     client, fams = _client(CONFIG, fake, max_calls)
-    todo = [l for l in links(packs) if l["review"] not in done][:limit]
+    selected = links(packs)
+    todo = [l for l in selected if done.get(l["review"], {}).get("link") != l
+            or "error" in done[l["review"]]][:limit]
     for l in todo:
         card = card_of(l)
         log: list = []
@@ -92,7 +94,9 @@ def run(packs: list[int], fake: bool = False, limit: int | None = None, max_call
         except Exception as ex:                       # a failing link is recorded, not retried silently
             res = {"error": f"{type(ex).__name__}: {ex}"[:500]}
         done[l["review"]] = {"link": l, **res}
-        out_f.write_text(json.dumps(done, indent=1, ensure_ascii=False) + "\n")
+        temp = out_f.with_suffix(".tmp")
+        temp.write_text(json.dumps(done, indent=1, ensure_ascii=False) + "\n")
+        temp.replace(out_f)
     return {"links": len(links(packs)), "done": len(done), "errors": sum("error" in v for v in done.values()),
             "usd": round(sum(((v.get("usage") or {}).get("total") or {}).get("usd") or 0 for v in done.values()), 3)}
 
@@ -115,22 +119,42 @@ def boot(vals: list[tuple[float, int]], n: int = 2000) -> list[float] | None:
     return [out[int(0.025 * len(out))], out[int(0.975 * len(out)) - 1]] if out else None
 
 
-def score(packs: list[int], fake: bool = False) -> dict:
+def paired_auc_delta(rows: list[tuple[float, float, int]]) -> list[float] | None:
+    rng = random.Random(0)
+    deltas = []
+    for _ in range(2000):
+        sample = rng.choices(rows, k=len(rows))
+        left = auc([(s, label) for s, _, label in sample])
+        right = auc([(count, label) for _, count, label in sample])
+        if left is not None and right is not None:
+            deltas.append(round(left - right, 3))
+    deltas.sort()
+    return [deltas[int(.025 * len(deltas))], deltas[int(.975 * len(deltas)) - 1]] if deltas else None
+
+
+def score(packs: list[int], fake: bool = False, out: Path | None = None) -> dict:
     done = json.loads(OUT.with_name(OUT.stem + ("_fake" if fake else "") + ".json").read_text())
-    rows = [v for v in done.values() if "error" not in v and v["link"]["pack"] in packs]
+    expected = {link["review"]: link for link in links(packs)}
+    matched = [done[k] for k, link in expected.items() if k in done and done[k]["link"] == link]
+    rows = [v for v in matched if "error" not in v]
     lab = lambda v: int(v["link"]["label"] == "benefit")
     with_records = [v for v in rows if v["records_for"] + v["records_against"] > 0]
     S = [(v["S"], lab(v)) for v in with_records]
     count = [(v["records_for"] - v["records_against"], lab(v)) for v in with_records]
     firm = [(v["S"], lab(v)) for v in with_records if v["link"].get("certainty") in ("moderate", "high")]
-    res = {"links": len(rows), "errors": sum("error" in v for v in done.values()),
+    complete = [(v["S"] if v["records_for"] + v["records_against"] else .5, lab(v)) for v in rows]
+    res = {"eligible": len(expected), "links": len(rows), "missing_or_changed": len(expected) - len(matched),
+           "errors": sum("error" in v for v in matched),
            "with_records": len(with_records), "share_with_records": round(len(with_records) / len(rows), 3) if rows else None,
            "labels": {"benefit": sum(lab(v) for v in rows), "other": sum(1 - lab(v) for v in rows)},
            "auc_S": auc(S), "ci95_S": boot(S), "auc_count": auc(count), "ci95_count": boot(count),
-           "auc_S_moderate_high": auc(firm), "n_moderate_high": len(firm),
+           "ci95_S_minus_count": paired_auc_delta([(s, c, label) for (s, label), (c, _) in zip(S, count)]),
+           "auc_S_including_empty": auc(complete), "ci95_S_including_empty": boot(complete),
+           "auc_S_moderate_high": auc(firm), "ci95_S_moderate_high": boot(firm), "n_moderate_high": len(firm),
            "records_per_link_median": sorted(v["records_for"] + v["records_against"] for v in rows)[len(rows) // 2] if rows else None,
-           "usd": round(sum(((v.get("usage") or {}).get("total") or {}).get("usd") or 0 for v in done.values()), 3)}
-    (DIR / ("review_gold_score" + ("_fake" if fake else "") + ".json")).write_text(json.dumps(res, indent=1) + "\n")
+           "usd": round(sum(((v.get("usage") or {}).get("total") or {}).get("usd") or 0 for v in matched), 3)}
+    out = out or (DIR / ("review_gold_score" + ("_fake" if fake else "") + ".json"))
+    out.write_text(json.dumps(res, indent=1) + "\n")
     return res
 
 
@@ -140,8 +164,11 @@ def main() -> None:
     ap.add_argument("--packs", type=int, nargs="+", default=[29])
     ap.add_argument("--fake", action="store_true")
     ap.add_argument("--limit", type=int, default=None)
+    ap.add_argument("--out", type=Path, help="optional destination for the summary JSON")
     a = ap.parse_args()
-    out = run(a.packs, a.fake, a.limit) if a.cmd == "run" else score(a.packs, a.fake)
+    out = run(a.packs, a.fake, a.limit) if a.cmd == "run" else score(a.packs, a.fake, a.out)
+    if a.out and a.cmd == "run":
+        a.out.write_text(json.dumps(out, indent=1) + "\n")
     print(json.dumps(out, indent=1))
 
 

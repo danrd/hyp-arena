@@ -1,0 +1,82 @@
+id: outcome-aliases-2026-11-19
+status: "offline gate and real-source check completed; model classification not yet tested"
+question: "Can a model identify verified aliases of measured outcomes and local definitions without conflating distinct outcomes?"
+layers:
+  search: "The existing query generator already uses synonyms. Allow proposed aliases and adjacent measures as search leads. Retrieval does not establish equivalence."
+  quote: "Keep the exact measured phrase and verified result excerpt. The lexical repair in functional-outcome-retention-2026-11-19 remains a baseline."
+  match: >-
+    A model may propose one of exact_alias, defined_here, narrower, broader, related, different or unknown.
+    An exact alias needs a shared controlled identifier or a source-backed synonym. Defined_here needs the article's
+    explicit operational definition and a result on the same comparison. It is local to that study. Matching a measure
+    does not alter the direction, uncertainty, intervention, comparator, species, time point or extracted result.
+controls:
+  - "The same measurement named by a verified abbreviation or a synonym, presented in both orders."
+  - "A direct same-measure finding with benefit and its matched null or opposite-direction control. Label equivalence before seeing direction, restore direction from the source afterwards."
+  - "Adjacent measures, such as grip force and gait speed, or a marker of a function and the function itself."
+  - "The same measure in two different experimental contrasts. Do not transfer the result."
+  - "An outcome explicitly defined in terms of another measure in one article, with a nearby article that merely juxtaposes both labels."
+  - "Composite versus component, in both orders: narrower and broader reverse rather than becoming exact aliases."
+  - "Use of a related or open-ended label with no source definition. Abstention is counted."
+pilot_example: >-
+  PMID 25072595 names reepithelialization as the primary end point and reports a reduction in ulcer area. Its abstract
+  makes an association between the labels plausible, but does not explicitly define the two as equivalent. Keep the
+  recorded area reduction with its real comparator. Require the article's methods before accepting a study-specific
+  measurement mapping. Do not add a global alias.
+comparison: "Frozen source text and link cards; strict baseline versus model-proposed matching with the above gates. Separate retrieval recall, false equivalence, recovery of usable records, error by evidence side and abstention. Do not change N, weights, or production behavior during the test."
+acceptance_before_run: "Freeze a held-out labelled set and a budget. Require zero false exact matches on the explicit critical controls and no result transfers between contrasts. Compare recovery separately for supporting and opposing records. Any real-study gains remain subject to blinded review."
+offline_gate_check:
+  protocol: "Before a model run, compare literal matching and proposed equivalence gated by a curated dictionary and article-specific definitions. Inject both correct and deliberately incorrect proposals on synthetic controls. This tests admissibility, not model accuracy."
+  frozen_arms: "Both arms enforce a verified quote and the same comparison, population and time point. The expanded arm can additionally accept a verified exact alias or a local definition in the current source. Neither arm changes the source direction."
+  real_case: "Inspect the public full text of PMID 25072595 (PMC4269806). Use the Methods and Results to decide the relation between labels separately from relevance to the proposed trial's outcome."
+  result: >-
+    On 20 synthetic controls, literal matching admitted 3 of 9 eligible records, one per direction; checked expansion
+    admitted 9 of 9, three per direction. Both rejected all 11 invalid controls. The controls test the deterministic gate
+    on supplied correct and incorrect proposals. They are not an evaluation of a model or of large-scale synonym coverage.
+  h02: >-
+    PMID 25072595, PMC4269806, sections Outcomes and follow-up and Statistical analysis: the article specifies
+    percentage ulcer closure (reepithelialization) as its primary endpoint at week 12 and uses mean percentage reduction
+    in ulcer area as the dependent variable for that comparison. The original result excerpt matches the abstract.
+    Accept mean percentage reduction as the measurement of that paper's primary endpoint only. The paper treats
+    complete closure and time to closure separately, and the published contrast does not test the proposed combination.
+  replay: "python -m scripts.reading.outcome_alias_gate_check"
+  decision: "Verified local mappings can recover evidence records without changing the underlying measurement. Keep these mappings article-specific and experimental; do not activate automatic model acceptance or change novelty."
+larger_check:
+  status: "Frozen reference task prepared. New semantic labels, full-text follow-up and model comparison pending."
+  private_task: "longevity-kg/reviews/outcome-aliases-2026-11-19/manifest.json"
+  cohort: >-
+    Pack 25: all 111 prior findings with a recorded measure and all 80 pairs excluded for another outcome.
+    191 pairs, 188 PMIDs, 20 claims; split into 48, 48, 48, 47 with a repeated article kept in one part.
+    This is a diagnostic cohort enriched for outcome disagreements; its error rate does not estimate prevalence
+    over all search results. Of 66 prior findings marked same, 5 names were literal matches after case and
+    whitespace normalization, and 61 were not. The 61 are disagreements to review, not verified aliases.
+  reference: >-
+    Re-label the relation from source text without prior verdicts or model proposals. Keep prior strata in
+    a separate file. For the 80 initially unanchored pairs, identify a verbatim measured phrase first; freeze
+    that phrase for every arm. Independently check all accepted nonliteral matches and adjudicate disputed
+    or unclear items before scoring. Reserve unresolved labels for the abstention analysis. For items flagged
+    as needing Methods, run a separately reported follow-up on available open full texts; report unavailable
+    sources and keep them out of the confirmed full-text denominator.
+  paired_arms:
+    - "A: normalized literal equality on fixed target and observed measure, with the common excerpt and contrast checks."
+    - "B: A plus a frozen reference dictionary and independently verified local definitions, with no model proposal."
+    - "C: B plus model proposals, subject to the same source and contrast checks."
+  isolation: >-
+    Freeze B's resources before exposing target/reference labels. In C, hide previous judgments, scores and
+    evidence stance. Use measure descriptions and definition passages without reported effects for relation
+    proposals; report cases without a direction-free definition context separately. Replay verified original
+    result excerpts afterwards. Quote presence alone does not establish a synonym. Local mappings require an
+    explicit source definition and apply only in the stated article and context.
+  report: >-
+    Count confirmed equivalent measures recovered and false equivalences per arm; report exact aliases,
+    local definitions, close non-equivalences, and abstentions separately. Also report usable records recovered
+    and any direction or contrast changes, separating supporting, null and opposing results when known.
+    Compare C with both A and B. Report paired differences with uncertainty clustered by claim and check
+    sensitivity to repeated PMIDs. Keep constructed attacks and full-text follow-up separate from the real
+    abstract cohort. Reverse a fixed subset to check symmetry of aliases and reversal of narrower/broader.
+  acceptance: >-
+    Consider adoption only if C recovers additional confirmed nonliteral records over B with precision at
+    least 0.95 among newly accepted records, no false equivalences on critical controls and no result transfers
+    or changes of direction. Report denominators and intervals; if fewer than 60 confirmed non-equivalent pairs
+    from distinct articles are available, broaden that cohort before drawing a conclusion about false acceptance.
+    The observed precision threshold does not establish a population guarantee. Set and approve the paid budget
+    before sending any model calls.

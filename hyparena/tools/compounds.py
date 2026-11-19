@@ -229,8 +229,8 @@ def _save() -> None:
     CACHE.write_text(json.dumps(_cache, ensure_ascii=False, indent=0))
 
 
-def lookup(name: str) -> Optional[Compound]:
-    """The compound a name stands for, or None (not a single compound, or not found). Cached."""
+def lookup(name: str, *, raise_on_error: bool = False) -> Optional[Compound]:
+    """Find a cached compound. With raise_on_error, propagate lookup errors instead of returning a fallback."""
     name = resolve_alias(name)
     k = key(name)
     if not k:
@@ -241,6 +241,8 @@ def lookup(name: str) -> Optional[Compound]:
         try:
             hit = _upgrade(hit)
         except LookupError_:
+            if raise_on_error:
+                raise
             return Compound(**hit)
         with _lock:
             _load()[k] = hit
@@ -251,6 +253,8 @@ def lookup(name: str) -> Optional[Compound]:
         cid = parent_cid(name)
         comp = _details(cid) if cid else None
     except LookupError_:
+        if raise_on_error:
+            raise
         return None                            # try again next time
     with _lock:
         _load()[k] = asdict(comp) if comp else None

@@ -80,3 +80,53 @@ mechanics_run_result_2026_11_17:
   cost: "0.24 USD by the call log (about 0.008 per link: one claim, no card parse, no alternatives), far below the 0.08 per link estimated from the calibration run; the main run on about 105 links costs about 1 USD"
   numbers_no_conclusion: "AUC of S against the label 0.656 [0.415, 0.867] on 28 links; plain count of records for minus against 0.69 [0.48, 0.88]; moderate or high certainty only 0.476 (13 links). 30 links cannot carry a conclusion (see sample_size_2026_11_17)"
   fix: "the script summed the cost from the wrong field (0 shown); corrected"
+
+main_run_2026_11_18:
+  status: "protocol fixed before scoring any new pack 30 link"
+  cohort: "all usable links in packs 29 and 30 once all eight parts of pack 30 are answered and checked; no replacements"
+  development: "pack 29 served as a mechanics pilot; report it with the combined cohort and show pack 30 separately as the unseen cohort"
+  method: "freeze the existing one-outcome card builder, search and reader configuration, cutoff T and v3.11 scoring. Reuse a saved calculation only when its input matches the checked label and card inputs."
+  primary: "AUC of S among usable links with records. Benefit is positive. No effect or harm is negative. Bootstrap 95% interval over links (2,000 replicates, seed 0); the link is the unit of analysis."
+  comparison: "on the same links, report AUC of count for minus against and paired bootstrap interval for the difference (S minus count). No superiority claim if the interval includes zero."
+  additional: "report pack 30 separately, high/moderate certainty, full-cohort AUC with neutral S=0.5 for empty links, coverage, errors and costs. Keep gates separate from the endpoint score S."
+  interpretation: "signal when AUC >= 0.65 and lower 95% limit > 0.50; no signal if AUC < 0.55; otherwise unclear. Apply this only after every usable link is scored without error. Treat partial results as descriptive."
+  execution: "first verify local labels and cards offline. Run paid in one resumable stream only with approval for the specified cohort and cost."
+  budget_estimate: "43 usable links already labelled in pack 30: 0.35 USD from 0.241/30 pilot USD per link; proposed session cap 0.70 USD. The 76 unlabelled reviews have unknown eligible count. At the observed yield they would add about 41 links and about 0.33 USD, to be re-estimated after checking."
+  partial_run: "if approved, cache the 43 currently eligible pack 30 links with the frozen protocol. Report this checkpoint as descriptive and apply the interpretation rule only after the full cohort."
+  run_command_after_approval: "ALLOW_PAID=1 MAX_USD=0.70 python -m scripts.whole_system.review_gold run --packs 30"
+  score_commands: "python -m scripts.whole_system.review_gold score --packs 29 30 --out <combined.json>; repeat with --packs 30 for the unseen cohort"
+
+readiness_2026_11_18:
+  labels: "pack 30 attachment matches four saved answer files (80 reviews), 45 included, 43 eligible (20 benefit, 21 no_effect, 2 harm); 76 reviews in parts 5-8 are still unlabelled. Together with pack 29 there are currently 73 eligible links (37 benefit, 34 no_effect, 2 harm)."
+  offline_checks: "all 73 cards build, all eligible dates parse, all included reviews have a result quote previously checked against the abstract. Among the 43 new links, 3 use the comparison's studies as a proxy for outcome contributors; 27 study year discrepancies on these links were resolved using PubMed years and 1 study PMID was not found."
+  scored: "30/73, all from the pilot (28 with records). AUC S 0.656 [0.415, 0.867]; count 0.690 [0.479, 0.878]; paired difference -0.034, 95% interval [-0.193, 0.106]. With empty links neutral: 0.654 [0.422, 0.853]. Moderate/high certainty: 0.476 [0.125, 0.833], 13 links with records."
+  reading: "The pilot confirms mechanics and yields no evidence that the weighted score improves on the simple count. The new labels provide a larger comparison cohort, but do not provide the method's scores. Keep the pilot and trial calibration conclusions provisional."
+
+partial_result_2026_11_18:
+  coverage: "43 of 43 available pack 30 links scored without errors; 40 with records before T. Combined with pack 29: 73 scored, 68 with records. Only parts 1–4 of pack 30 are labelled."
+  pack_30: {auc_S: 0.843, ci95_S: [0.702, 0.952], auc_count: 0.887, ci95_count: [0.756, 0.984], delta_S_minus_count: -0.044, ci95_delta: [-0.150, 0.039]}
+  combined: {auc_S: 0.772, ci95_S: [0.651, 0.876], auc_count: 0.801, ci95_count: [0.687, 0.901], delta_S_minus_count: -0.029, ci95_delta: [-0.098, 0.036]}
+  sensitivity: "with empty links given S=0.5: pack 30 AUC 0.843 [0.710, 0.952], combined 0.770 [0.656, 0.871]. For moderate or high certainty among links with records: 0.950 [0.800, 1.000], n=17, and 0.764 [0.565, 0.928], n=30, respectively."
+  cost: "0.351 USD for the new links by recorded usage; 0.591 USD including the pilot."
+  interpretation: "The interim AUC of S clears the numerical thresholds on the new cohort and combined. The simple count has a higher point estimate in both, with paired intervals including zero. The review target pools some pre-T studies, so this measures agreement with later pooled results, not prediction using entirely unseen outcomes. The final rule remains pending parts 5–8."
+
+final_cohort_readiness_2026_11_19:
+  status: "all labels checked; final 32 calculations approved and queued outside peak hours"
+  received: "Parts 5–8 contain exactly the 76 unique assigned review PMIDs. Unmodified answers are in longevity-kg reviews/argon-2026-11-17/pack_30_{5..8}_answer.json."
+  new_inclusions: "33/76 included; all 33 result quotes matched in the PubMed check. One lacks contributing studies on both sides of T, leaving 32 eligible (18 benefit, 13 no_effect, 1 harm)."
+  new_exclusions: {population_not_ageing: 22, no_pooled_estimate: 14, not_intervention: 4, included_studies_not_accessible: 3}
+  checks: "27 reported study years differed by more than one year and were replaced by the PubMed year under the existing rule. One new eligible link uses studies of the comparison as a proxy. All 105 cards built offline. All 73 prior saved calculations still match the checked inputs and can be reused."
+  full_cohort: "Pack 30: 156 assigned and answered, 78 included, 75 usable (38 benefit, 34 no_effect, 3 harm). Packs 29–30 combined: 105 usable (55 benefit, 47 no_effect, 3 harm)."
+  execution: "Run only the 32 pending pack 30 links under the same protocol and working reader used in the previous checkpoint, after approval. Score pack 30 and combined separately. Apply the previously fixed rule after completeness and error checks."
+  final_budget: "USD 0.26 estimated (32 × 0.351/43), proposed session cap USD 0.55, off-peak."
+  command_after_approval: "ALLOW_PAID=1 MAX_USD=0.55 python -m scripts.whole_system.review_gold run --packs 30"
+  approval: "User approved the final 32 links at the stated estimate and cap. Queued 2026-11-19 for the end of the 06:00–10:00 UTC peak window. Post-run scoring writes pack 30 and combined metrics and applies the fixed interpretation only after completeness checks."
+
+final_result_2026_11_19:
+  completion: "All 105 eligible links scored, 98 with records, zero errors. Pack 30: 75 scored, 70 with records."
+  combined: {auc_S: 0.793, ci95_S: [0.700, 0.874], auc_count: 0.814, ci95_count: [0.727, 0.893], ci95_S_minus_count: [-0.081, 0.033]}
+  pack_30: {auc_S: 0.844, ci95_S: [0.745, 0.928], auc_count: 0.865, ci95_count: [0.778, 0.942], ci95_S_minus_count: [-0.099, 0.053]}
+  sensitivity: "Combined AUC 0.784 [0.691, 0.866] with empty links at S=0.5; 0.806 [0.653, 0.936] for 42 moderate/high-certainty links with records."
+  decision: "Signal by the fixed rule on all packs: AUC at least 0.65 and lower interval bound above 0.50. The weighted score does not show an advantage over the simple count. The later reviews pool some pre-T studies."
+  cost: "USD 0.242 for the last 32; USD 0.833 total recorded charges."
+  files: "Private review_gold_{pack30,combined}_final_score.json and review_gold_final_analysis.md."

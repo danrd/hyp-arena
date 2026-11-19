@@ -83,7 +83,7 @@ TIPS = {
     "W": ("Размах: как широко действует подтверждённая литературой часть механизма — локально, на орган или систему, на признак старения.",
           "Scope: how far the supported part of the mechanism reaches: local, an organ or system, a hallmark of ageing."),
     "feasibility": ("Реализуемость, от 0 до 1: среднее цены системы (клетки дешевле людей), длительности, плановой выборки и готовности вмешательства (одобрено или не вещество — 1, в испытаниях — 0.5).",
-                    "Feasibility, 0 to 1: mean of the cost of the system (cells cheaper than people), duration, planned sample and readiness of the intervention (approved or not a compound 1, in trials 0.5)."),
+                    "Feasibility, 0 to 1: mean of the cost of the system (cells cheaper than people), duration, planned sample and readiness of the intervention (confirmed phase 4 or a specified non-compound type 1, clinical phase 0.5, confirmed phase 0 or unknown 0). Unknown readiness stays in the denominator."),
     "best_design_outcome": ("Лучший дизайн среди исследований по исходу: от клеточного опыта до рандомизированного испытания (РКИ).",
                             "Best design among the studies of the outcome: from a cell study to a randomised trial (RCT)."),
     "independent_outcome": ("Число независимых источников по исходу: статьи одного испытания считаются одним источником.",

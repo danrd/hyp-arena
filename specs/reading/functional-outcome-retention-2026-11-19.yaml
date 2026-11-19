@@ -1,0 +1,42 @@
+id: functional-outcome-retention-2026-11-19
+status: "paired pilot complete; did not meet adoption rule"
+question: "Does requesting a paper's own functional outcome on the same reader call recover outcomes lost by link-specific extraction?"
+set: "Frozen bibliography of the ten pilot links with already identified predecessor PMIDs. The archived dossier supplies reference observations. Some cards share a PMID; report unique papers alongside card-paper pairs. This is a mechanics pilot."
+two_arms: >-
+  One v21 request per card-paper pair and one otherwise identical request with a paper_outcomes array added.
+  In both arms the model sees only the same single abstract and the same card and originating link; it does not see the dossier
+  or reference observations. The candidate may save up to two own measured functional outcomes even when the link result is
+  mechanistic. Coding and checking run apart from production. No changes to N or evidence weights.
+validation: "Use the supplied PMID and require the measure to appear in a contiguous verbatim excerpt from that paper's abstract. Accept no more than two unique measures. Verify meaning against the matched abstract separately, including controls for background, biological markers, and planned outcomes."
+pass_rule:
+  - "Offline: show the functional measure exists verbatim in source in the flagship case but is absent in the saved link record. Reject wrong PMID, altered quote, compound excerpts, missing measure and duplicate records."
+  - "Live pilot: recover the missing behavioral measure in the flagship case and at least one other dossier-backed functional measure missing from v21, with no extra accepted background-only, planned or biomarker outcome in manual review."
+  - "Do not advance if the original link reading has more failed calls or fewer usable reference records than v21 in the pilot. Record output tokens, distinct papers, and both coverage and errors."
+budget: "20 model calls, one per arm and card-paper pair, no retries or fallback. Estimate USD 0.03, cap USD 0.07, subject to user approval and off-peak execution. Source preparation and offline checks are free."
+interpretation: "This compares extraction, not closeness or novelty. A bigger held-out comparison is needed before adopting a change."
+offline_result:
+  coverage: "20 paired prompts prepared from 10 link-paper pairs and 9 unique PubMed abstracts. The dossier has verbatim abstract-backed functional observations for 5 pairs across 4 papers, including a review and a repeated PMID. Those references are candidate targets for manual verification, not an exhaustive gold set."
+  key_case: "The abstract contains the behavioral measure on which the dossier relies, but the archived link record contains only the mechanistic measure. The offline validator accepted the real excerpt for the functional-output slot."
+  parser: "7/7 contract controls pass, including rejection of altered or joined excerpts and safe recovery of the original link record from a truncated response. Use source_pmid and excerpt for the new field, so the old parser cannot mistake those objects for records."
+  size: "Approximately 344k input characters in total. The estimate allows approximately 86k input tokens and 20–28k output tokens at the configured rates."
+command: "ALLOW_PAID=1 MAX_USD=0.07 python -m scripts.reading.functional_outcome_retention run --work <private-paired-input> --out <private-replies>"
+approval: "User approved 20 calls, estimated USD 0.03, capped at USD 0.07, outside peak hours. Queued on 2026-11-19 for 10:00 UTC."
+live_result:
+  completion: "20/20 calls completed, no link-validation errors. Each arm returned 8 link records with the same support directions. Accepted 5 additional items and rejected 2 for absence of the given measure in the excerpt."
+  flagship: "H01's archival behavioral result under the stated intervention was proposed with the exact excerpt, but the measure string contained an extra descriptor absent from that excerpt and was rejected. The other accepted result in the same paper was from the knockout comparison. It cannot stand in for the drug result."
+  other: "Four accepted items are physiological measurements under the narrow criterion, including a repeated outcome on the same PMID, rather than an additional independently recovered direct functional finding. The candidate did not meet the prespecified rule."
+  cost: "USD 0.0162822. Output 2,573 tokens for v21 and 3,036 for the candidate (+18%)."
+  decision: "Keep production reader unchanged. Any follow-up should distinguish the verbatim measure from a standardised label and carry the contrast and measurement role, before using outcomes for novelty."
+
+offline_repair_2026_11_19:
+  status: "replay passed its narrow repair rule; no new model calls"
+  rule: >-
+    First validate the whole excerpt against the matching abstract. If the measure is absent from that excerpt, repair
+    only when the full name occurs elsewhere in the same abstract and removing one leading word leaves a contiguous
+    span of at least two substantive terms in the verified excerpt. Keep the source spelling and the original field for
+    audit. Never join disconnected words, edit the excerpt, or carry the removed qualifier into matching.
+  contrasts: "Keep different excerpts on the same measure as separate entries. Deduplicate exact repeats and keep the original two-entry cap."
+  acceptance: "Recover the flagship drug comparison; retain the separate genotype comparison. Reject the second archived mismatch if its terminal outcome is different. The replay alone does not meet the live pilot's semantic acceptance."
+  result: "Accepted items 5->6. The drug comparison is recovered with the shorter verbatim measure; the genotype comparison remains a separate entry. The other mismatch is still rejected because its named measure and the quoted measure differ. Two regression tests passed."
+  limitation: "A valid verbatim span proves provenance, not that the paper measured a direct function. The physiological results accepted in the original run still require semantic classification."
+  replay: "python -m scripts.reading.functional_outcome_retention replay --work <private-input> --replies <private-replies> --out <private-replay>"

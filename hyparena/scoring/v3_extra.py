@@ -5,7 +5,7 @@ Candidates (user, 2026-11-05: compute all of them on the calibration for a rough
 - best_design_outcome: the best design among the usable records for the outcome link (ordinal, as the v2 effect ladder);
 - independent_outcome: independent sources for the outcome link (count);
 - against_share: A / (F + A) over the chain (the share of the weight against; lower is better);
-- feasibility: section 9.4, the mean of known parts in [0, 1] (system, duration, planned n, readiness of the intervention);
+- feasibility: section 9.4, the mean of the applicable scores in [0, 1], with a reserved slot for intervention readiness;
 - weakest_level: the level of the weakest link (ordinal);
 - human_outcome: any usable record about humans for the outcome link;
 - best_effect_outcome: the largest effect class among the outcome link's records for (ordinal; unclear in the middle);
@@ -17,7 +17,7 @@ from __future__ import annotations
 from typing import Optional
 
 from hyparena.scoring import rules_v3 as r3
-from hyparena.card.models import ClaimVerification, HypothesisCard
+from hyparena.card.models import ClaimVerification, DecisiveExperiment, HypothesisCard
 
 DESIGN_LADDER = ("none", "cells", "animal", "observational", "review", "non_randomised", "meta_analysis", "rct")
 EFFECT_LADDER = ("none", "small", "unclear", "medium", "large")
@@ -33,28 +33,54 @@ def _n_score(n: Optional[int]) -> Optional[float]:
     return 1.0 if n < 50 else 2 / 3 if n < 200 else 1 / 3 if n < 1000 else 0.0
 
 
-def readiness(card: HypothesisCard) -> Optional[float]:
-    """1: approved drug (ChEMBL phase 4) or a non-compound intervention (programme, exercise, device); 0.5: a compound in
-    clinical trials (phase 1-3); 0: a compound without a phase. None when the lookup fails."""
-    labels = [i.label for i in card.pico.intervention]
-    if not labels:
-        return None
+def readiness_assessment(card: HypothesisCard) -> tuple[Optional[float], str]:
+    """Return the existing numeric ladder and the reason for a value or an unknown."""
+    from hyparena.tools import compounds
+
+    interventions = card.pico.intervention
+    if not interventions or any(i.type == "unspecified" or i.label.strip().casefold() in {"", "unknown"}
+                                for i in interventions):
+        return None, "unspecified"
+    drugs = [i for i in interventions if i.type == "compound"]
+    if any(i.type == "other" for i in interventions):
+        return None, "unclassified"
+    if not drugs:
+        return 1.0, "non_compound"
+    components = [compounds.split(drug.label) for drug in drugs]
+    if not all(components):
+        return None, "unresolved"
+    labels = dict.fromkeys(part for parts in components for part in parts)
     try:
-        from hyparena.card.entities import subject_compounds
-        comps = [c for lab in labels for c in (subject_compounds(lab, card) or [])]
-    except Exception:
-        return None
-    if not comps:
-        return 1.0
-    phase = max((c.max_phase or 0) for c in comps)
-    return 1.0 if phase >= 4 else 0.5 if phase >= 1 else 0.0
+        matches = [compounds.lookup(label, raise_on_error=True) for label in labels]
+    except compounds.LookupError_:
+        return None, "lookup_failed"
+    if any(c is None for c in matches):
+        return None, "unresolved"
+    phases = [c.max_phase for c in matches if c is not None and c.max_phase is not None]
+    if len(phases) != len(matches):
+        return None, "phase_unknown"
+    phase = max(phases)
+    return (1.0, "approved") if phase >= 4 else (0.5, "clinical") if phase >= 1 else (0.0, "preclinical")
 
 
-def feasibility(card: HypothesisCard) -> Optional[float]:
+def readiness(card: HypothesisCard) -> Optional[float]:
+    return readiness_assessment(card)[0]
+
+
+def sample_size_score(experiment: DecisiveExperiment) -> Optional[float]:
+    """Reserve the sample-size component for a stated empirical system."""
+    n = experiment.n_planned
+    if experiment.system in SYSTEM_COST and experiment.system != "data_analysis" and (n is None or n <= 0):
+        return 0.0
+    return _n_score(n)
+
+
+def feasibility(card: HypothesisCard) -> float:
     e = card.decisive_experiment
-    parts = [SYSTEM_COST.get(e.system), DURATION_COST.get(e.duration_class), _n_score(e.n_planned), readiness(card)]
+    parts = [SYSTEM_COST.get(e.system), DURATION_COST.get(e.duration_class), sample_size_score(e)]
     known = [p for p in parts if p is not None]
-    return round(sum(known) / len(known), 3) if known else None
+    # Missing readiness retains its place so withholding it cannot raise feasibility.
+    return round((sum(known) + (readiness(card) or 0.0)) / (len(known) + 1), 3)
 
 
 def extras(card: HypothesisCard, ver_claims: list[ClaimVerification], v3: dict, as_of: str = "",

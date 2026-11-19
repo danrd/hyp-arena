@@ -1,0 +1,53 @@
+id: sample-size-and-novelty-cap-2026-11-19
+status: "offline comparison completed; sample-size fix applied; novelty caps are experimental"
+input: "private evaluation bundle for the matched 10-card generation pilot from longevity-kg commit 0441e47"
+sample_size:
+  rule: "For a stated human, animal or cell experiment, the sample-size term always participates in feasibility. A missing or nonpositive n gets 0 on the score scale. Keep n unknown on the card. A data-analysis or unknown-system card retains the previous behavior until applicability can be established."
+  accept: "Known positive n retains its score. Removing it never raises feasibility in an applicable system, with all other terms fixed. Cases with inapplicable or unknown system and n absent retain their old behavior."
+novelty:
+  input: "One auditable classification of the closest supplied prior study per card, using existing dossier and published findings. Mark same active factor and functional question, related research programme, or different; separately mark whether the proposed comparison tests a distinct scientific question. The initial pilot annotation is retrospective, formed with access to judge reasoning and is not independent validation."
+  strict: "When the same active factor and functional question were already studied and the experiment tests no distinct question, cap N at translation for a different species and new_context for the same species."
+  broad: "Apply strict first. In addition, cap N at analog where the supplied paper addresses a related research programme and the comparison fails to isolate a distinct scientific question. Include this deliberately broader variant to show the cost of using similarity as a proxy."
+  protections: "Only lower a known ladder value. Preserve unknowns and existing lower levels. A distinct question or unresolved comparison leaves N unchanged. A finding is used for novelty only; do not add evidence to the outcome or change S, I, gates, or other axes."
+  accept: "Recover the known transfer examples; preserve controls with a genuinely distinct contrast. Compare both variants on the pilot. Treat the pilot labels as sensitivity inputs. Do not activate either novelty cap as a production rule on this evidence alone."
+ranking:
+  hold_fixed: "Use saved baseline evaluation and other report axes. Compare archive, readiness-only, readiness plus n, then both novelty variants with the same readiness and n. K=10000, seed=0. Check that the archived funding and frontier orders can be reproduced."
+  readiness: "Use the archived local compound cache plus recorded successful lookup statuses from the diagnostic pilot. A result absent or timed out is unknown, and a current confirmed phase would require an as-of-date check before use. The three identified pilot positions have no phase."
+  output: "Private per-card classification and all scenario scores; public aggregate report with deltas and next decision."
+  replay: "python -m scripts.scoring.pilot_novelty_rescore --bundle <evaluation-dir> --comparisons <classification-json> --cache <frozen-cache> --lookup-diagnostics <lookup-results> --out <private-output>"
+result:
+  version: "Historical replay before unknown readiness was reserved in the feasibility denominator. See readiness-recognition-2026-11-18.yaml for the subsequent change."
+  sample_size: "7/10 cards change feasibility relative to the readiness-only scenario. Previously archived orders reproduced in all three ASPID profiles. Combined production fixes leave Evidence order unchanged; maximum shifts from archive are 7 in Funding and 2 in Frontier."
+  novelty: "Strict caps two retrospective pilot cases from high novelty to translation; broad additionally caps one related case at analog. Frontier shifts for strict cases are 2->8 and 3->9 compared with the readiness-and-n scenario. This validates mechanics only."
+  verification: "64 focused tests passed, including empirical n deletion, N caps and protected novelty."
+strict_blind_check:
+  status: "All three reference parts received. Inconclusive for adoption under the prespecified coverage rule."
+  cohort: >-
+    Pack 26, separate from the ten development cards. 30 hypotheses, 84 candidate pairs, 75 distinct PMIDs.
+    The prior annotation supplies candidate PMIDs only. The private tasks omit earlier labels, scores,
+    current N, proposed corrections and the key. This tests comparison on supplied candidates, not search recall.
+  manifest: "longevity-kg/reviews/novelty-cap-2026-11-19/manifest.json"
+  reference: >-
+    Independently annotate the published intervention, functional question, species and actual contrast,
+    and whether the proposed contrast distinguishes a separate assertion. Require an admissible publication
+    before T and a source quote. Treat missing or ambiguous information as unknown. Keep a separate label for
+    adjacent outcomes, including surrogate versus function. Review proposed caps and disputed cases independently.
+  pass_rule: >-
+    Report true caps, false caps, missed caps and abstentions on paired inputs. Before drawing a conclusion about
+    the strict rule, require at least five independently confirmed close repeats without a distinct test and ten
+    challenging non-equivalent or distinct-test cases. The candidate must recover the confirmed repeats without
+    lowering any protected distinct question, unresolved comparison or previously lower N. If these strata are too
+    small, extend the held-out cohort. A successful replay on independent manual inputs does not validate an
+    automatic classifier; test its outputs separately against the same independent reference before adoption.
+  result_2026_11_19:
+    intake: "30 hypotheses, 84 assigned pairs and 75 distinct PMIDs confirmed. All quotes are attributed to abstracts."
+    quote_check: >-
+      All 75 PubMed records retrieved. 77 of 84 quotes match as contiguous text after case, whitespace and punctuation
+      normalization. Six more match after dropping an abstract section label or terminal period. One wording substitution
+      remains and is excluded as a verbatim quote.
+    labels: >-
+      The returned labels mark zero of 84 pairs as the same functional question, three as the same intervention
+      (all for one hypothesis), and all 84 as testing a distinct assertion. Zero pairs meet the strict cap conditions.
+    decision: >-
+      The minimum of five independently confirmed close repeats was not met. Do not infer sensitivity or adopt the automatic
+      cap from this cohort. Extend it with known near repeats and matching interventions that test a distinct question.

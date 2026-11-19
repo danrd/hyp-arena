@@ -1,0 +1,23 @@
+id: feasibility-and-predecessor-2026-11-19
+status: offline comparison completed; production rules unchanged
+feasibility:
+  cohorts: "10 matched pilot cards, prospective run_60 with scores_60_current, calibration run_1_cur through run_5_cur"
+  hold_fixed: "all non-feasibility axes per pool; pilot uses saved report values, prospective uses saved current scores plus extracted design and independence, calibration reconstructs current axes on frozen records with locally available drug information. Report differences in the reconstructed baselines. No calls to a model."
+  variants: "working mean known; recognition candidate with mean known; recognition candidate with four-component lower and upper bounds, ranking by lower bound"
+  applicability: "treat the four fields as applicable to stated empirical experiments; for data-analysis cards with no planned sample this test treats the field as unknown and flags the case for separate applicability review"
+  lookup: "frozen local cache, including cached misses; each absent key is reported, not counted as confirmed drug phase or a verified negative. Use the same frozen input for all variants."
+  pass_rule: "full cards with preserved readiness retain their score; deleting any scored component never raises the lower bound; confirmed drug phases and specified non-drug cases retain their readiness; partial recognition never gets an approval score."
+  rank: "ASPID Funding and Frontier, K=10000, seed=0; compare rank shifts and top-ten overlap within pool. Report null scores, unknowns and cache misses separately."
+predecessor:
+  cohorts: "matched pilot and the separate pack 26 set with archived run and an external reference PMID"
+  method: "Keep current outcome-based source as first candidate. Add up to three fallback candidates in editorial order from evidence and counterevidence on chain claims naming the outcome's main intervention by exact text or shared identifier. Require a numeric PMID, positive current record weight, and an explicit exact or adjacent intervention match. Rank by primary outcome first, then intervention match, weight and PMID. Keep claim ID, sign and reason; the extra candidates are labelled records for review."
+  pass_rule: "no loss of original sources; no addition of synthetic unrelated-subject, different-intervention or zero-weight records. Report reference recall at 1 and 3, coverage, and off-reference leads separately. The reference list is incomplete, so off-reference leads do not measure verified false positives."
+  novelty_level: "unchanged. A nearest-work candidate may still be an experiment on an intermediate mechanism or a different population."
+adoption: "Use the evidence to decide whether to keep a diagnostic, revise it or promote it with manual changes. No paid runs or prompt changes."
+replay: "python -m scripts.scoring.post_pilot_checks --kg <private-kg> --cache <frozen-compounds> --target-cache <frozen-targets> --out <private-result>"
+result:
+  feasibility: "143 cards, 4320 deletion checks passed; 37 card lookups had missing local cache keys. Recognition alone changes 37 scores, the lower-bound variant changes 119. Pilot baseline matches the archived two profile orders and all ten feasibility values."
+  live_lookup_diagnostic: "Separate from the frozen comparison: of six pilot positions, three positions resolved to two distinct compounds with no reported phase, two returned no match, one timed out. No historical phase inferred."
+  predecessor: "four synthetic controls pass; pilot reference recall at 3 goes from 1/10 to 3/10, pack 26 from 6/30 to 8/30. At rank 1 neither improves. The strict subject anchor misses a documented pilot precedent."
+  interpretation: "Recognition remains a candidate separate from aggregation. Lower-bound ranking is robust to field deletion but sensitive to incomplete reference data. Preserve predecessor output as diagnostic leads without changing novelty."
+  report: "docs/plans/next-fixes-report-2026-11-19.md"

@@ -237,3 +237,25 @@ hy4_a_matched_result_2026_11_18:
   cost: "0.133776 USD by account counter at the delayed check; provisional 0.1725 USD"
   comparison: "A and completed BS use the same 10-search and 64000-output limits, same model, effort, date, topic and shared prompt; BS used 10 searches, A used 7"
   argon_reports: "a task containing the ten texts and the offline scoring archive are prepared privately; outputs are not read into assistant context"
+external_judge_with_dossier_2026_11_18:
+  status: "v1 retained as the protocol used for the archived dossier-based pilot"
+  instructions: "docs/method/judge-instructions.md"
+  input: "in one fresh chat, attach the fixed pair list, anonymised texts and shared JSON dossier from the report workflow. Keep the method report, scores and arm key private."
+  pairs: "25 cross-arm pairs from the matched 5-by-5 set; order shuffled before judging (seed 20261118). Each hypothesis appears 2 or 3 times in either position. The comparison graph permits inference of two groups but does not disclose their conditions."
+  pair_list: "longevity-kg reviews/generation-2026-11-18-hy4/judge_pairs.json"
+  comparison: "pairwise investigation priority, with scientific grounding (mechanism plus evidence for and against), novelty, potential benefit and testability. For each hypothesis cite the closest prior work and its concrete difference, or mark that it cannot be established."
+  output: "one JSON with a verdict per pair_id and one closest-prior-work entry per hypothesis_id. Record a preference per criterion, an overall choice and reasons; allow ties and insufficient information. Earlier judge runs retain their original protocol."
+post_pilot_audit_2026_11_18:
+  status: "original judging output, dossier and baseline case files checked from the private evaluation bundle; alternative ASPID estimates in the feedback remain unreproduced"
+  follow_up: "docs/plans/generation-and-scoring-audit-2026-11-18.md"
+  decision: "prepare separate experiments for scoring invariants on frozen input and for a critical-evidence check in generation. No rule or weight adopted."
+prompt_revision_2026_11_19:
+  judge: "v2 wording approved by user; the repeat on the archived pilot is recorded below"
+  instructions: "docs/method/judge-instructions-v2.md"
+  design: "docs/plans/prompt-variants-2026-11-19.md"
+  generation: "User confirmed the scope of the prompt revision for this run. Keep the existing bioelectricity topic and base wording in all four conditions. Add the same brief explanation of the four broad requirements to A1 and BS1. Reuse the existing BS procedure verbatim in BS0 and BS1."
+judge_v2_repeat_2026_11_19:
+  scope: "Same archived 25 pairs and ten anonymised hypotheses. Single run per instruction version; pairs reuse hypotheses and are not independent replicates."
+  private_output: "longevity-kg/reviews/generation-2026-11-18-hy4/evaluation/judge_results_v2.json and judge_v1_v2_comparison.json"
+  result: "Overall BS wins 17 -> 13 and A wins 8 -> 12. Four pair verdicts switch from BS to A. BS testability preferences 19 -> 12; A 6 -> 10; ties 0 -> 3. First closest-work PMID agrees on all ten hypotheses."
+  notes: "All ten necessary assumptions are tagged indirect. Review whether factual support transfers to the proposed contrast and whether indirect and unknown are distinguished consistently before drawing conclusions from these labels."

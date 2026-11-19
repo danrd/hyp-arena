@@ -1,0 +1,32 @@
+id: functional-outcome-match-2026-11-19
+status: "offline diagnostic completed; strict match does not support automatic adoption"
+question: "Can an offline measure dictionary recover function-level comparability from the current reader's link records without confusing mechanisms or adjacent functions with the same outcome?"
+scope: "Comparability of outcomes only. Do not change retrieval, evidence weights, ranking or novelty. A same-function label is only one prerequisite for a future cap."
+inputs:
+  target: "the outcome measures of the claim, falling back to PICO metric when missing. Also report experiment-primary sensitivity separately when available."
+  reader: "saved outcome_measure for records on all links of a candidate article; use the matching excerpt only for its existing role check, never as a bag of outcome keywords. Preserve originating link and whether a measure was missing."
+  dossier: "as a separate upper-availability diagnostic, use the outcomes explicitly recorded in the archived dossier; distinguish observed functions and biomarkers."
+  pilot: "ten cases and the closest supplied PMIDs already recorded in the retrospective pilot comparison. Synthetic controls and pilot are development diagnostics, not a blinded estimate of accuracy."
+  separate_pool: "pack 26, saved shards and corrections plus Argon reference PMIDs. Measure availability and comparator outputs only. The pack labels novelty rather than gold functional equivalence, so lack of agreement with a reference is not a false positive."
+rule: >-
+  Map recognised measures to narrow function, broad domain and role. Direct functional measures and validated task-level
+  model proxies can match if narrow function and dimension are the same. Generic labels cannot force a match. A mixed
+  outcome with a partially matched component is related, not same. Correlated functional domains and physiological proxies
+  are related; markers of mechanism alone never match a functional outcome. If both contexts are explicit and incompatible,
+  do not call the outcomes equivalent. Abstain when there is insufficient identifying information.
+acceptance:
+  - "Every prespecified control passes, including synonym pairs, adjacent measures, contextual swaps, biomarker masquerading as a function, and partial composites."
+  - "Never promote a mechanism-only record to same function because it was marked same on its own link."
+  - "To proceed toward an automatic cap, recover a usable strict equivalence for the flagship pilot case without relaxing the boundary on the controls. Otherwise retain the result as diagnostic and identify missing information."
+stress_controls: >-
+  Additional adversarial checks after the first run: attention and executive-function measures are adjacent, and an
+  explicit compound endpoint with one recognised component and one unmapped component cannot force strict equivalence.
+  Freeze these checks before rerunning. A completely recognised composite can match the same components in another order.
+replay: "python -m scripts.novelty.functional_outcome_check --kg <private-kg> --out <private-output>"
+result:
+  controls: "19/19 authored controls passed; these measure code behavior only."
+  pilot_reader: "10 records for 10 supplied reference articles, all with a recorded measure and citation fragment. 0 same, 4 related, 5 mechanism_only, 1 unknown."
+  pilot_dossier: "13 observations for the same 10 references. 0 same, 5 related, 8 mechanism_only. H01 gains a relevant behavioral measure in the dossier, but it is adjacent to the proposed attention/executive outcome, not a strict match."
+  sensitivity: "Using the experiment primary outcome instead of the claim outcome changes the labels for two cards. Do not replace a declared claim outcome with the experiment measure silently."
+  separate_pool: "30 pack 26 cards with reference PMIDs. Reader saved a record for a reference on 21 cards, and a measure on 20. Of 65 records 47 are mechanism_only, 18 unknown, none strict. This is a data availability diagnostic, not an accuracy estimate."
+  decision: "No automatic novelty cap from the available outcome fields. Compare whether the reader can also preserve a concrete functional outcome of a candidate paper that it found while reading a mechanistic link. Use separate factual annotations and gold controls before measuring classification precision."
