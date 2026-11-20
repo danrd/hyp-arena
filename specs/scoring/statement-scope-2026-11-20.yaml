@@ -1,0 +1,33 @@
+id: statement-scope-2026-11-20
+status: draft for offline replay
+baseline: manual v3.11 and blind judge v2
+pool: Keep the original candidates and all their pairs. The evaluation stage attaches reasons and changes scoring inputs. There is no additional reviewer or admission step.
+assessment_in_regular_evaluation:
+  contribution: State what the available evidence already establishes and what the proposed test adds. Cite applicable records across the chain and the dossier, including intermediate links. A single closest publication is optional.
+  contrast: For a new causal link, identify the comparison and result that distinguish the link from a competing explanation. For a modified intervention, compare against the unmodified intervention or an equivalent active comparator that isolates the change.
+  scope: Record the claim level and the level directly tested. A patient claim can have a genuine new contribution tested only in an animal or tissue prerequisite.
+  implementation: Record the specific means required for the experiment and the evidence it is ready for that use. Record the least ready indispensable component.
+manual_candidate:
+  novelty:
+    known_context: Cap at new_context when the same scientific question was already tested in the same species and the stated design does not isolate an additional contribution.
+    known_transfer: Cap at translation for the corresponding transfer across species. A tested modifier or isolated intervention refinement can retain its supported novelty.
+    unresolved: A missing outcome record alone cannot earn a high level. Display the assessment as unknown and test use of the bottom of the existing novelty scale in Frontier until the contribution is supported.
+  feasibility:
+    demonstrated: Readiness 1 when the stated means is documented for the experiment's actual system and purpose.
+    preliminary: Readiness 0.5 for a concrete means with evidence in a relevant setting and an identifiable outstanding condition. The stated stage still needs an implementable test to receive feasibility credit.
+    missing: Readiness 0 if the indispensable means is a class or undocumented placeholder. If the stated experiment cannot begin without resolving it, use 0 for the feasibility of that experiment in the pilot profile calculation. Retain the nominal average in the audit.
+    direct_claim: Compute feasibility and informativeness for the stated experimental stage. When the stage tests only a prerequisite to a patient claim, retain those values for the prerequisite and use 0 for the feasibility of directly testing the patient claim in Funding.
+  unchanged_baseline_axes: Keep the saved evidence weights and their balance fixed in the replay. Keep informativeness of the stated stage as a diagnostic. The existing gate remains a separate baseline calculation.
+judge_candidate: docs/method/judge-instructions-v3-draft.md
+replay:
+  plan: Use the same cards, source records, three profiles and fixed draw seed. Record baseline, novelty-only, feasibility-only and combined results, including abstentions and rank movement. Retain all 190 pairs for the paired v2/v3 judge comparison.
+  protections: Preserve H05's phase-specific comparison, H02's contribution at the animal-test level and H19's explicit test of individual adaptation. A clinical ranking cannot credit H10's unnamed compound or claim that the animal H02 experiment directly tests the patient effect.
+  limits: The known pool is for development. A new holdout must support any decision to adopt weights, novelty caps or the feasibility override.
+diagnostic_replay_2026_11_20:
+  method: Frozen 20-card pool, 10000 draws, seed 0. Reproduced all baseline scores and ranks. Changed feasibility only for the listed cases, using retrospective case classifications within this diagnostic.
+  missing_implementation: [H02, H10, H20]
+  patient_claim_with_animal_prerequisite: [H01, H02, H07, H20]
+  evidence: All scores and ranks unchanged.
+  H02: Funding rank 4 to 16 and score 0.4979 to 0.3771. Frontier rank remains 1 with score 0.6307 to 0.5746.
+  H10: Funding score 0.3422 to 0.3100. Frontier score 0.2920 to 0.2770.
+  H19: All scores unchanged in this targeted check.
