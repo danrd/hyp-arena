@@ -7,6 +7,11 @@ assessment_in_regular_evaluation:
   contrast: For a new causal link, identify the comparison and result that distinguish the link from a competing explanation. For a modified intervention, compare against the unmodified intervention or an equivalent active comparator that isolates the change.
   scope: Record the claim level and the level directly tested. A patient claim can have a genuine new contribution tested only in an animal or tissue prerequisite.
   implementation: Record the specific means required for the experiment and the evidence it is ready for that use. Record the least ready indispensable component.
+  critical_link:
+    contribution: Isolate the proposition on which the claimed scientific contribution depends. Record it as an author-grounded link or an explicit comparison, with the proposed system, measure and outcome that would disconfirm it. For a modified intervention, distinguish the added effect against the original intervention or equivalent active control from the underlying effect.
+    prerequisite: Record a required measurement, delivery or selective target engagement when failure would prevent or invalidate the contrast. It affects readiness. It earns scientific novelty as a separate link when the proposed experiment explicitly tests the prerequisite as a new claim.
+    mechanism: For an asserted causal pathway, identify the target or mediating process and the link that connects it to the outcome. Record delivery and engagement separately when they can fail independently and matter for interpretation. An outcome-only claim can be evaluated on its stated outcome. A step that repeats the intervention and outcome leaves the mechanism unspecified.
+    stage: Evaluate evidence in the system of the stated experiment and identify the extra claims required for the proposed use in another species or in humans. A mouse proof-of-concept has its own testable contribution and readiness. Keep the patient delivery gap visible when scoring a patient-level application.
 manual_candidate:
   novelty:
     known_context: Cap at new_context when the same scientific question was already tested in the same species and the stated design does not isolate an additional contribution.
@@ -21,6 +26,16 @@ manual_candidate:
     aggregation: Use the lowest readiness among indispensable means. Record the source and gap for the limiting means. Evaluate distinct proposed stages at their own level when evidence supports only the preliminary stage. Apply within the regular evaluation, without an additional gate.
     direct_claim: Compute feasibility and informativeness for the stated experimental stage. For a patient claim supported by a proposed animal prerequisite alone, test Funding multipliers of 0.90 and 0.75 on that stage's feasibility. Preserve the stage's original value in Frontier and show the gap to testing the patient claim. These multipliers are sensitivity settings.
   unchanged_baseline_axes: Keep the saved evidence weights and their balance fixed in the replay. Keep informativeness of the stated stage as a diagnostic. The existing gate remains a separate baseline calculation.
+critical_link_replay:
+  status: draft sensitivity check separate from the readiness, scope and novelty replay
+  reporting: Show outcome support and mechanism support separately. For each, state what the evidence applies to and identify unsupported required links. Use the existing build_mechanism flag when an asserted mechanism lacks a distinct target or process, or its purported step only repeats the intervention and outcome.
+  scoring_candidate: When the hypothesis asserts a mechanism or claims an additional causal contribution, test retaining its unverified critical link as a neutral contribution to the signed balance. Reserve one contribution per required slot, even if the assertion has not been written as a usable link yet. Keep evidence against a required link negative. Check whether improving the outcome alone can conceal loss of support for the mechanism.
+  monotonicity_check: Holding all other slots fixed, dropping an unsupported or weakly supported critical step from the written chain must not increase the balance. Adding redundant restatements must not increase credit or create additional required slots.
+  calibration_cases:
+    adaptive_wound_stimulation: H13 and H19 require an independently checked relation between the instrument reading and the target field. The claimed added benefit is the effect of adaptation against the active comparison holding other stimulation features constant. Evidence for generic stimulation can support the background outcome.
+    cell_specific_delivery: H01 and H07/H10/H20 require evidence for the proposed engagement or selectivity in the system being scored. Credit an independently testable new method of obtaining selectivity when the author actually proposes and tests one.
+    positive_controls: Include outcome-only hypotheses with direct trials, a genuine intervention refinement, and a defined preliminary experiment on a nonhuman system. Check that no fabricated mechanism or human delivery claim is required to preserve their credit at the stated level.
+  observed_failure: In an offline diagnostic, excluding the two indirect records from the mechanism slot raised the current signed balance from 0.5393 to 0.8322 for H13 and from 0.5298 to 0.8132 for H19. Including a neutral mechanism slot would give 0.4161 and 0.4066 while preserving the same outcome data. These are diagnostic values, not adopted scores.
 judge_candidate: docs/method/judge-instructions-v3-draft.md
 implementation_examples:
   - evidence: A published validation reports that the stated instrument measures the required signal in the proposed system and operating conditions.
