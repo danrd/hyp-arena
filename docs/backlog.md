@@ -2,6 +2,17 @@
 
 Items the user decided to defer; each points to its spec. Kept until done or dropped by the user.
 
+## Draft: novelty against the current state of knowledge (2026-11-20)
+
+Proposal for a generation and judging pilot. Status is draft.
+
+- **Generator.** Summarise what is established, disputed or unknown about the mechanism and intervention. State the proposed contribution as a new causal link or a change to the intervention with a predicted consequence. Name the comparison that isolates this contribution and the result that would refute it. For an intervention change, compare it with the original intervention under otherwise comparable conditions.
+- **Judge.** Reconstruct the state of knowledge from the evidence available by the cutoff. Distinguish established findings, conflicting evidence and the author's assumptions. Check whether the experiment as stated isolates the claimed contribution. Record uncertainty when the available evidence cannot establish novelty. A single closest paper is optional.
+- **Transfer.** A test of whether a known effect generalises to another species or population has limited novelty in the Frontier profile and can have substantial value for Funding. A transfer that tests a distinct prediction about an effect modifier may earn novelty for that prediction if the proposed comparison can distinguish it. State which part an animal or ex vivo experiment tests and which part of a claim about people remains open.
+- **Pilot.** Include known transfers, distinct causal links and changes to interventions with and without a direct comparison. Judge the scientific questions in the full pool and count distinct questions with a discriminating test. Specify the cases and decision rule before the pilot. Related experimental rules are described in the [novelty-cap spec](../specs/scoring/sample-size-and-novelty-cap-2026-11-19.yaml).
+
+## Deferred work
+
 | Added | Item | Spec / where | Next step when resumed |
 |---|---|---|---|
 | 2026-11-09 | Hypothesis database: check and export the public sets Argon found (pack 14) | `specs/data/hypothesis-db-2026-11-09.yaml` (`argon_pack14_triage`) | open each source (URL, count, terms); first WHO ICTRP ageing export, ITP / CITP rationale texts, VitaDAO; nothing exported or published without the user's go |
