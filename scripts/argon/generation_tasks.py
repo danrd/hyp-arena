@@ -481,6 +481,7 @@ def analyze(files: dict[str, str]) -> dict:
 
 def _pool_report(files: dict[str, str]) -> tuple[dict, dict, dict]:
     """The code report's data for the participants' scored hypotheses in one pool: (rep, run, participant of each id)."""
+    from hyparena import METHOD_VERSION
     from hyparena.reports import report_html as rh
     run, arm, texts = {}, {}, {}
     for p, f in files.items():
@@ -493,7 +494,7 @@ def _pool_report(files: dict[str, str]) -> tuple[dict, dict, dict]:
             texts[hid] = _text(ans[h]) if h in ans else ""
     scores = {h: {"endpoint_clinical": None, "trend_pubmed": None, "P": 0,
                   "ai_role": (r["items"][0].get("card") or {}).get("ai_role", "none")} for h, r in run.items()}
-    meta = {"pool": "generation-pilot", "date": "2026-11-16", "sha": "", "method": "v3.11",
+    meta = {"pool": "generation-pilot", "date": "2026-11-16", "sha": "", "method": METHOD_VERSION,
             "title_ru": "Пилот генерации: " + ", ".join(files), "title_en": "Generation pilot: " + ", ".join(files),
             "about_ru": "Гипотезы участников сравнения генерации, оценённые конвейером по утверждению, обоснованию и эксперименту.",
             "about_en": "The hypotheses of the generation comparison, scored by the pipeline from claim, rationale and experiment."}

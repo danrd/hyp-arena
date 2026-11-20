@@ -1,9 +1,10 @@
-# Method v3 manual: how a hypothesis is scored and how to read the report
+# Method v3.12 manual
 
-This manual describes the current rules of the method (version **v3.11**) as one self-contained text: a reader, a model or
+This manual describes the current rules of the method (version **v3.12**) as one self-contained text: a reader, a model or
 an outside reviewer can score a hypothesis and read its report from it alone. Each stage has its own detailed manual in
 [`docs/method/`](./) ([the card](card.md), [the search](search.md), [the reading](reading.md), [from a record to the evidence balance](evidence.md), [novelty](novelty.md), [indicators and ranking](ranking.md), [experiment and alternatives](alternatives.md), [improvements and versions](versions.md)); this manual is their compressed aggregate. How the rules
-came to be what they are, with the checks behind each change, is in the [change log](changelog.md), not here.
+came to be what they are is in the [change log](changelog.md). The changes in this release are in the
+[v3.12 change log](changelog-v3.12.md).
 
 Where the code is: rules [`hyparena/scoring/rules_v32.py`](../../hyparena/scoring/rules_v32.py), novelty
 [`hyparena/novelty/novelty_v34.py`](../../hyparena/novelty/novelty_v34.py), ranking [`hyparena/scoring/aspid_v3.py`](../../hyparena/scoring/aspid_v3.py)
@@ -163,8 +164,11 @@ The detailed rules, every field with its origin and what reads it, and a worked 
   (prompt `propose_alternatives/v3` in the working configuration: up to 5); a proposed alternative whose words name a methodological threat is dropped by
   code, since the checklist covers it. Substantive alternatives are then searched and read like claims: their support comes from the records found (the model's PMIDs only seed the search), and a finding counts for an
   alternative only when it shows the part that differs from the hypothesis (for "attention and supervision", an effect of
-  attention itself, not that the exercise works). What the experiment does to each is judged from the registry text
-  (section 7). The mechanism is taken strictly from the text, while competitors are looked for more widely than the author
+  attention itself, not that the exercise works). The proposal call judges what the experiment does to each alternative
+  from the author's text. The code checks that a verdict of "cuts off" quotes an actual control or measurement.
+  A remaining explanation caps the positive verdict at "weakens". A null result leaves an explanation of a positive
+  effect unchanged unless that explanation requires a positive result for the verified comparison.
+  The mechanism is taken strictly from the text, while competitors are looked for more widely than the author
   named them; their weight still comes only from literature found before T.
 
 ## 4. Evidence records
@@ -344,6 +348,13 @@ text without one of them is returned as "needs refinement" with the missing part
   `required_for_balance: true` in scored data and search for evidence specifically relevant to it. Count the designated
   link separately and count a shared outcome once. A mouse experiment supports its mouse-stage premise and outcome.
   Assess the relevance of records to the human bridge separately.
+  For a claimed new contribution, state what prior work establishes and identify the additional claim. It can be the
+  new outcome itself, an incremental outcome against an active baseline, or a causal step explaining an established
+  effect. For an intervention refinement, identify the comparison with the original intervention or an equivalent
+  active control that isolates the change. Evidence for the established effect supports that part of the chain.
+  The incremental effect or causal step needs its own evidence. Record a context or protocol change if the comparison
+  does not isolate an incremental effect. This annotation affects the evidence balance. The automated novelty ladder
+  continues to use its existing rules.
   Sum the positive and negative values of `2S − 1` separately. Divide the positive sum by the number of places with
   data plus the number of empty required places. Divide the negative sum by the number of places with data.
   Add the results for the single signed balance. With no data anywhere the balance is zero. Keep feasibility tied

@@ -16,6 +16,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Optional
 
+from hyparena import METHOD_VERSION
 from hyparena.scoring.aspid import InfeasiblePreferences, load_profiles
 from hyparena.reports import diagnostics, diversity
 from hyparena.alternatives import alternatives
@@ -289,7 +290,7 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
                      "calls": client.calls, "failures": client.failures, "families": families, "writer": writer,
                      "verifiers": verifiers or families, "config": config, "cards_reused": cards is not None, "search": search_mode,
                      "admission": "graded" if _rules.GRADED_CONTEXT else "strict", "method": method,
-                     **({"propose_alternatives_version": proposal_version} if method == "v3" else {}),
+                     **({"method_version": METHOD_VERSION, "propose_alternatives_version": proposal_version} if method == "v3" else {}),
                      "as_of": as_of, "fake": fake, "k_top": k_top, **({"spec": spec_entry} if spec_entry else {}),
                      "indicator_set": {"sha256": iset, "ids": [s.id for s in ind.INDICATORS]},
                      "profiles": {n: {"tiers": p.tiers, "version": p.version, "description": p.description}
