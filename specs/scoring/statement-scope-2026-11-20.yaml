@@ -13,12 +13,24 @@ manual_candidate:
     known_transfer: Cap at translation for the corresponding transfer across species. A tested modifier or isolated intervention refinement can retain its supported novelty.
     unresolved: A missing outcome record alone cannot earn a high level. Display the assessment as unknown and test use of the bottom of the existing novelty scale in Frontier until the contribution is supported.
   feasibility:
-    demonstrated: Readiness 1 when the stated means is documented for the experiment's actual system and purpose.
-    preliminary: Readiness 0.5 for a concrete means with evidence in a relevant setting and an identifiable outstanding condition. Record the condition and lower this component accordingly.
-    missing: Readiness contributes 0 if the indispensable means is a class or undocumented placeholder. Keep its slot in the existing feasibility average. Preserve the system, duration and planned sample contributions. Show the missing means as a specific implementation gap.
+    assessment_unit: Assess each indispensable means of the stated experiment against the operation it must perform. Match the implementation or a demonstrated equivalent, the study system, the target if relevant, and the operation-critical conditions. Split a device into components only when a component has an independent failure mode that could invalidate the proposed contrast.
+    sources: Use observed performance in primary methods and results, validation or calibration studies, or accessible regulatory performance documents. Product and trial registry entries and technical protocols can establish identity or specified operating conditions. An entry or specification alone does not demonstrate observed performance.
+    demonstrated: Readiness 1 when observed performance supports the required operation in the stated experimental system and relevant operating conditions. This can come from a validation experiment and does not require that the hypothesis outcome has already been shown.
+    preliminary: Readiness 0.5 for an identified implementation with observed performance of the required operation in a relevant but different setting, or with demonstrated critical functions whose integration remains to be validated. Record the exact gap. Evidence for the class or for a different operation alone is insufficient.
+    missing: Readiness contributes 0 for an unnamed means or an indispensable operation with no applicable performance evidence. Document an observed failure separately from missing evidence. Keep the readiness slot in the existing feasibility average and include the system, duration and planned sample contributions.
+    aggregation: Use the lowest readiness among indispensable means. Record the source and gap for the limiting means. Evaluate distinct proposed stages at their own level when evidence supports only the preliminary stage. Apply within the regular evaluation, without an additional gate.
     direct_claim: Compute feasibility and informativeness for the stated experimental stage. For a patient claim supported by a proposed animal prerequisite alone, test Funding multipliers of 0.90 and 0.75 on that stage's feasibility. Preserve the stage's original value in Frontier and show the gap to testing the patient claim. These multipliers are sensitivity settings.
   unchanged_baseline_axes: Keep the saved evidence weights and their balance fixed in the replay. Keep informativeness of the stated stage as a diagnostic. The existing gate remains a separate baseline calculation.
 judge_candidate: docs/method/judge-instructions-v3-draft.md
+implementation_examples:
+  - evidence: A published validation reports that the stated instrument measures the required signal in the proposed system and operating conditions.
+    readiness: 1
+  - evidence: An identified instrument measures the required signal in a closely related system; calibration in the proposed system remains to be demonstrated.
+    readiness: 0.5
+  - evidence: A registry lists an instrument; the required operation has no reported performance data.
+    readiness: 0
+  - evidence: A fixed-output device has demonstrated performance, but the proposed comparison needs feedback from a sensor for which no relevant signal measurement has been shown.
+    readiness: 0
 replay:
   plan: Use the same cards, source records, three profiles and fixed draw seed. Record baseline, novelty-only, feasibility-only and combined results, including abstentions and rank movement. Retain all 190 pairs for the paired v2/v3 judge comparison.
   protections: Preserve H05's phase-specific comparison, H02's contribution at the animal-test level and H19's explicit test of individual adaptation. A clinical ranking cannot credit H10's unnamed compound or claim that the animal H02 experiment directly tests the patient effect.
