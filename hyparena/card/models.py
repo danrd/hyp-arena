@@ -206,6 +206,10 @@ class ProposedAlternative(BaseModel):
     qualifiers: dict[str, str] = Field(default_factory=dict)
     rationale: str = ""
     support_pmids: list[str] = Field(default_factory=list)
+    alt_kind: Literal["positive_confounder", "negative_barrier"] | None = None
+    control_span: str = ""
+    loophole: str = ""
+    required_positive_result: str = ""
     on_positive: AlternativeFate = "unchanged"
     on_negative: AlternativeFate = "unchanged"
     role: Literal["alternative"] = "alternative"

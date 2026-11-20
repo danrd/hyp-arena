@@ -215,10 +215,14 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
         ver.alternatives += alternatives.competitor_rows(
             [by_card[h] for h in rivals.get(card.id, []) if h not in dup_of])
         if method == "v3":                                  # alternatives proposed over the abstracts read for this card
-            from hyparena.alternatives.alternatives_v3 import propose
+            from hyparena.alternatives.alternatives_v3 import GROUNDED_VERSION, propose
             from hyparena.tools import pubmed as _pm
             read = list(dict.fromkeys(ver.searched_pmids))
-            card.proposed_alternatives = propose(client, checker, card, _pm.fetch(read), as_of, avoid=frozenset({writer}), log=log)
+            proposal_version = cfg_extra.get("propose_alternatives_version", "v1")
+            card.proposed_alternatives = propose(
+                client, checker, card, _pm.fetch(read), as_of, avoid=frozenset({writer}), log=log,
+                version=proposal_version, registry_text=x["text"] if proposal_version == GROUNDED_VERSION else "",
+            )
         x["verification"] = finalize(card, ver)
         if method == "v3":                                  # v3 rules: alternatives with support are checked like claims
             from hyparena.scoring import rules_v3

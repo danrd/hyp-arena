@@ -1,0 +1,32 @@
+List up to five substantive alternatives that matter for interpreting the stated experiment on ageing. Do not judge whether the hypothesis is true.
+Literature date: use only findings on or before {{ as_of }}.
+Hypothesis: {{ claim_plain }}
+Claimed chain:
+{% for c in chain %}- {{ c.subject.label }} — {{ c.relation }} — {{ c.object.label }}
+{% endfor %}
+Experiment summary for orientation: {{ experiment }}
+Author's original text:
+"""
+{{ registry_text or "unavailable" }}
+"""
+Abstracts available for supporting the alternative:
+{% for a in abstracts %}
+[PMID {{ a.pmid }}] {{ a.year }}. {{ a.title }}
+{{ a.abstract }}
+{% endfor %}
+Use the following closed list of relations: {{ relations }}. Cite support_pmids only from the supplied abstracts. Use [] when there is no supporting result. Leave routine methodological threats to the separate design checklist.
+
+For each alternative fill in these fields before assigning either verdict:
+- alt_kind: positive_confounder if it offers a different explanation for an observed success; negative_barrier if it explains why the hypothesised benefit could fail.
+- control_span: copy a contiguous phrase from the experimental part of the author's original text that names the relevant comparison, arm, manipulation or measure. Leave it empty when the text does not state one. Do not quote the experiment summary, proposed controls from the literature, or a general design label.
+- loophole: state how this alternative could still explain a positive result under the actual comparison. Use an empty string only if there is no plausible way it could do so. If both arms receive stimulation, ask whether the arms are matched on the particular causal factor the alternative invokes.
+- required_positive_result: for a positive_confounder only, state the concrete result that must occur under that explanation and name the arm or comparison in which it must occur. Leave it empty if the explanation is merely compatible with a benefit when one occurs.
+
+Then set on_positive and on_negative to eliminated, weakened, or unchanged. Eliminated requires a quoted feature that makes the two explanations predict observably different results and a result the alternative cannot explain. A named control is insufficient if the alternative remains possible under it. If there is a loophole, a positive result can at most weaken the alternative. Use weakened only when the actual comparison or measurement supplies some evidence against the alternative. Otherwise use unchanged.
+A null result leaves a positive_confounder unchanged unless it contradicts the required positive result in that same arm or comparison. A null alone can be compatible with a negative_barrier. Keep an alternative from being eliminated by both outcomes.
+
+Reply with one JSON object in this field order:
+{"alternatives": [{"id": "p1", "subject": {"label": ""}, "relation": "other", "object": {"label": ""}, "qualifiers": {}, "rationale": "", "support_pmids": [], "alt_kind": "positive_confounder", "control_span": "", "loophole": "", "required_positive_result": "", "on_positive": "unchanged", "on_negative": "unchanged"}]}
+{% if history_text %}
+{{ history_text }}
+{% endif %}

@@ -10,12 +10,14 @@ import typing
 from typing import Optional
 
 from hyparena.card.llm import ask
+from hyparena.alternatives.informativeness import _norm
 from hyparena.alternatives.threats import is_methodological
 from hyparena.card.models import HypothesisCard, ProposedAlternative, Relation
 from hyparena.scoring.rules_v32 import THREAT_CHECKLIST
 
 MAX_ALTERNATIVES = 5
 MAX_ABSTRACTS = 25
+GROUNDED_VERSION = "v3"
 
 
 def _experiment(card: HypothesisCard) -> str:
@@ -26,6 +28,35 @@ def _experiment(card: HypothesisCard) -> str:
     return ", ".join(p for p in parts if p and not p.endswith("unknown") and not p.endswith("None"))
 
 
+def ground_discrimination(raw: dict, experiment_text: str) -> dict:
+    """Constrain model verdicts using the recorded design; never ask the model to repair them."""
+    span = raw.get("control_span")
+    span = span.strip() if isinstance(span, str) else ""
+    grounded = bool(span) and _norm(span) in _norm(experiment_text)
+    loophole = raw.get("loophole")
+    if not isinstance(loophole, str):
+        loophole = "The effect of the stated comparison on this explanation was not assessed."
+    kind = raw.get("alt_kind")
+    if kind not in ("positive_confounder", "negative_barrier"):
+        kind = None
+    required = raw.get("required_positive_result")
+    required = required.strip() if isinstance(required, str) else ""
+    positive, negative = raw.get("on_positive", "unchanged"), raw.get("on_negative", "unchanged")
+    if not grounded:
+        if positive == "eliminated":
+            positive = "unchanged"
+        if negative == "eliminated":
+            negative = "unchanged"
+    elif positive == "eliminated" and (loophole.strip() or kind is None):
+        positive = "weakened"
+    if kind != "negative_barrier" and not (kind == "positive_confounder" and grounded and required):
+        negative = "unchanged"
+    if positive == negative == "eliminated":
+        negative = "unchanged"
+    return {**raw, "control_span": span if grounded else "", "loophole": loophole.strip(), "alt_kind": kind,
+            "required_positive_result": required, "on_positive": positive, "on_negative": negative}
+
+
 def propose(client, family: str, card: HypothesisCard, abstracts: dict[str, dict], as_of: Optional[str],
             avoid=frozenset(), log: Optional[list] = None, version: str = "v1",
             registry_text: str = "") -> list[ProposedAlternative]:
@@ -34,8 +65,10 @@ def propose(client, family: str, card: HypothesisCard, abstracts: dict[str, dict
     items = [{"pmid": p, "year": a.get("year", ""), "title": a.get("title", ""), "abstract": a.get("abstract", "")[:1500]}
              for p, a in list(abstracts.items())[:MAX_ABSTRACTS]]
     chain = [c for c in card.claims if c.link or c.role in ("outcome", "mechanism", "premise")]
+    experiment_text = registry_text or card.decisive_experiment.span
     variables = {"as_of": as_of or "today", "claim_plain": card.claim_plain, "chain": chain, "experiment": _experiment(card) or "not stated",
-                 "abstracts": items, "relations": ", ".join(typing.get_args(Relation)), "registry_text": registry_text}
+                 "abstracts": items, "relations": ", ".join(typing.get_args(Relation)),
+                 "registry_text": experiment_text if version == GROUNDED_VERSION else registry_text}
 
     def validate(v):
         alts = v.get("alternatives")
@@ -50,6 +83,8 @@ def propose(client, family: str, card: HypothesisCard, abstracts: dict[str, dict
                                                      if str(p).replace("PMID:", "").strip() in allowed]}
         if raw.get("relation") not in typing.get_args(Relation):
             raw["relation"] = "other"
+        if version == GROUNDED_VERSION:
+            raw = ground_discrimination(raw, experiment_text)
         try:
             alt = ProposedAlternative.model_validate(raw)
         except Exception:                                   # eliminated by both outcomes, or malformed: dropped

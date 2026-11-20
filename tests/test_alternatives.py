@@ -1,5 +1,6 @@
 """Alternatives (card spec 8c): declared rows, checklist inclusion rules, the one-call check."""
 from hyparena.alternatives import alternatives as al
+from hyparena.alternatives import alternatives_v3 as av
 from hyparena.card.models import EvidenceRecord, HypothesisCard, Verification
 from hyparena.scoring.rules import finalize
 from hyparena.tools import pubmed
@@ -54,6 +55,34 @@ def test_type_rules():
 def test_declared_row_carries_the_claim_status():
     _, ver = _case("ex3_rapamycin_mechanism")
     assert [(a.id, a.source, a.status) for a in ver.alternatives] == [("a1", "declared", "contested")]
+
+
+def test_grounded_proposal_checks_cited_controls_and_surviving_alternatives(monkeypatch):
+    card, _ = _case("ex3_rapamycin_mechanism")
+    text = "Compare an adaptive programme with dose-matched replay. Measure the primary outcome and perfusion."
+    base = {"subject": {"label": "perfusion"}, "object": {"label": "recovery"}, "relation": "promotes",
+            "alt_kind": "positive_confounder", "on_positive": "eliminated", "on_negative": "weakened",
+            "control_span": "dose-matched replay", "loophole": ""}
+    calls = []
+
+    def ask(*args, **kwargs):
+        calls.append(kwargs)
+        return {"alternatives": [
+            {**base, "control_span": "ATP-matched control"},
+            {**base, "loophole": "Perfusion can differ at equal dose."},
+            base,
+            {**base, "on_positive": "unchanged", "required_positive_result": "Replay must improve the primary outcome."},
+            {k: v for k, v in base.items() if k != "loophole"},
+        ]}, "fake"
+
+    monkeypatch.setattr(av, "ask", ask)
+    result = av.propose(None, "fake", card, {}, None, version=av.GROUNDED_VERSION, registry_text=text)
+    assert len(calls) == 1 and calls[0]["variables"]["registry_text"] == text
+    assert [(a.on_positive, a.on_negative) for a in result] == [
+        ("unchanged", "unchanged"), ("weakened", "unchanged"), ("eliminated", "unchanged"),
+        ("unchanged", "weakened"), ("weakened", "unchanged"),
+    ]
+    assert result[0].control_span == "" and result[1].control_span == "dose-matched replay"
 
 
 ABSTRACT = {"pmid": "9", "year": "2015", "title": "Resveratrol and food intake.",
