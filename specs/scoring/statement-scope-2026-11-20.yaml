@@ -14,20 +14,22 @@ manual_candidate:
     unresolved: A missing outcome record alone cannot earn a high level. Display the assessment as unknown and test use of the bottom of the existing novelty scale in Frontier until the contribution is supported.
   feasibility:
     demonstrated: Readiness 1 when the stated means is documented for the experiment's actual system and purpose.
-    preliminary: Readiness 0.5 for a concrete means with evidence in a relevant setting and an identifiable outstanding condition. The stated stage still needs an implementable test to receive feasibility credit.
-    missing: Readiness 0 if the indispensable means is a class or undocumented placeholder. If the stated experiment cannot begin without resolving it, use 0 for the feasibility of that experiment in the pilot profile calculation. Retain the nominal average in the audit.
-    direct_claim: Compute feasibility and informativeness for the stated experimental stage. When the stage tests only a prerequisite to a patient claim, retain those values for the prerequisite and use 0 for the feasibility of directly testing the patient claim in Funding.
+    preliminary: Readiness 0.5 for a concrete means with evidence in a relevant setting and an identifiable outstanding condition. Record the condition and lower this component accordingly.
+    missing: Readiness contributes 0 if the indispensable means is a class or undocumented placeholder. Keep its slot in the existing feasibility average. Preserve the system, duration and planned sample contributions. Show the missing means as a specific implementation gap.
+    direct_claim: Compute feasibility and informativeness for the stated experimental stage. For a patient claim supported by a proposed animal prerequisite alone, test Funding multipliers of 0.90 and 0.75 on that stage's feasibility. Preserve the stage's original value in Frontier and show the gap to testing the patient claim. These multipliers are sensitivity settings.
   unchanged_baseline_axes: Keep the saved evidence weights and their balance fixed in the replay. Keep informativeness of the stated stage as a diagnostic. The existing gate remains a separate baseline calculation.
 judge_candidate: docs/method/judge-instructions-v3-draft.md
 replay:
   plan: Use the same cards, source records, three profiles and fixed draw seed. Record baseline, novelty-only, feasibility-only and combined results, including abstentions and rank movement. Retain all 190 pairs for the paired v2/v3 judge comparison.
   protections: Preserve H05's phase-specific comparison, H02's contribution at the animal-test level and H19's explicit test of individual adaptation. A clinical ranking cannot credit H10's unnamed compound or claim that the animal H02 experiment directly tests the patient effect.
-  limits: The known pool is for development. A new holdout must support any decision to adopt weights, novelty caps or the feasibility override.
+  limits: The known pool is for development. A new holdout must support any decision to adopt weights, novelty caps or a scope penalty.
 diagnostic_replay_2026_11_20:
-  method: Frozen 20-card pool, 10000 draws, seed 0. Reproduced all baseline scores and ranks. Changed feasibility only for the listed cases, using retrospective case classifications within this diagnostic.
+  method: Frozen 20-card pool, 10000 draws, seed 0. Reproduced all baseline scores and ranks. Compared readiness only, a scope multiplier alone and combined values. Changed feasibility for the listed cases using retrospective case classifications.
   missing_implementation: [H02, H10, H20]
   patient_claim_with_animal_prerequisite: [H01, H02, H07, H20]
   evidence: All scores and ranks unchanged.
-  H02: Funding rank 4 to 16 and score 0.4979 to 0.3771. Frontier rank remains 1 with score 0.6307 to 0.5746.
-  H10: Funding score 0.3422 to 0.3100. Frontier score 0.2920 to 0.2770.
-  H19: All scores unchanged in this targeted check.
+  H02_readiness_only: Feasibility 0.625 to 0.375. Funding rank 4 to 8 and score 0.4979 to 0.4496. Frontier rank remains 1 with score 0.6307 to 0.6082.
+  H02_scope_only_25_percent: Funding rank 4 to 6 and score 0.4979 to 0.4677.
+  H02_combined: Funding remains rank 8 at both scope penalties. Feasibility is 0.3375 at 10 percent and 0.28125 at 25 percent. Scores are 0.4423 and 0.4315, respectively.
+  already_penalized: Recomputing missing readiness leaves H10 at feasibility 0.167 and H20 at feasibility 0.292. Both had already received zero for the compound component. H20 alone receives the additional scope adjustment.
+  profile_sensitivity: H07 stays at Funding rank 13 with the 10 percent scope penalty and drops to rank 17 with 25 percent.
