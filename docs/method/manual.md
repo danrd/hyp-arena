@@ -160,7 +160,7 @@ The detailed rules, every field with its origin and what reads it, and a worked 
   the stated experiment, judged from the design without a literature search, as risk-of-bias tools do (section 7).
   **Substantive alternatives** (another cause in the world: another part of the intervention, a shared route, natural
   course, another biological route) are proposed by a second model call from up to 25 abstracts found for the hypothesis
-  (prompt `propose_alternatives`: up to 5); a proposed alternative whose words name a methodological threat is dropped by
+  (prompt `propose_alternatives/v3` in the working configuration: up to 5); a proposed alternative whose words name a methodological threat is dropped by
   code, since the checklist covers it. Substantive alternatives are then searched and read like claims: their support comes from the records found (the model's PMIDs only seed the search), and a finding counts for an
   alternative only when it shows the part that differs from the hypothesis (for "attention and supervision", an effect of
   attention itself, not that the exercise works). What the experiment does to each is judged from the registry text
@@ -378,10 +378,14 @@ text without one of them is returned as "needs refinement" with the missing part
   matched for attention rules out "any attention helps"); d = 0.5 when the experiment only measures the variable the
   alternative depends on, without an arm that separates them; d = 0 otherwise. A design label alone ("factorial 2×2",
   "double-blind") gives nothing until each alternative is named with the arm and the result that would rule it out. d is
-  judged by a model (prompt `judge_alternatives/v2`, [`hyparena/alternatives/alternatives_d.py`](../../hyparena/alternatives/alternatives_d.py))
-  from the registry text current at T (for a retrospective trial, the version registered before T), never from the trial's
-  publications or other texts after T, writing what the hypothesis and the alternative predict for each named arm, with the
-  separating phrase copied verbatim (a "cuts off" without one becomes "weakens").
+  judged in the existing `propose_alternatives/v3` call from the author's experiment or the registry text current at T
+  (for a retrospective trial, the version registered before T). A verdict of "cuts off" requires a traceable quote
+  naming the relevant comparison or measurement. If code cannot find the quote in the supplied text, the verdict becomes
+  "does not tell apart". Before judging a positive result, describe how the alternative could still explain it.
+  If it can, or if the assessment is missing, cap the positive verdict at "weakens".
+  A null leaves an alternative that explains success unchanged unless it contradicts a specific positive outcome
+  that this alternative requires in the quoted comparison. The model judges that logical distinction and the code
+  checks the quote. Older saved assessments may use `judge_alternatives/v2` from the calibration runs.
 - **Headroom I** = I if the experiment cut off every supported alternative and every threat of the checklist (d = 1, k = 1): what improving the experiment could add;
   an input of the room to improve (section 11).
 - **Novelty N** ([`novelty_v34.novelty`](../../hyparena/novelty/novelty_v34.py)): the distance of the hypothesis to what was already

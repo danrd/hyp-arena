@@ -210,6 +210,7 @@ class ProposedAlternative(BaseModel):
     control_span: str = ""
     loophole: str = ""
     required_positive_result: str = ""
+    discrimination_version: Literal["v3"] | None = None
     on_positive: AlternativeFate = "unchanged"
     on_negative: AlternativeFate = "unchanged"
     role: Literal["alternative"] = "alternative"

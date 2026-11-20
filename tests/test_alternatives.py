@@ -1,5 +1,10 @@
 """Alternatives (card spec 8c): declared rows, checklist inclusion rules, the one-call check."""
+from pathlib import Path
+
+import yaml
+
 from hyparena.alternatives import alternatives as al
+from hyparena.alternatives import alternatives_d as ad
 from hyparena.alternatives import alternatives_v3 as av
 from hyparena.card.models import EvidenceRecord, HypothesisCard, Verification
 from hyparena.scoring.rules import finalize
@@ -76,13 +81,27 @@ def test_grounded_proposal_checks_cited_controls_and_surviving_alternatives(monk
         ]}, "fake"
 
     monkeypatch.setattr(av, "ask", ask)
-    result = av.propose(None, "fake", card, {}, None, version=av.GROUNDED_VERSION, registry_text=text)
+    config = yaml.safe_load((Path(__file__).resolve().parents[1] / "configs/v3-flash-n10.yaml").read_text())
+    result = av.propose(None, "fake", card, {}, None, version=config["propose_alternatives_version"], registry_text=text)
     assert len(calls) == 1 and calls[0]["variables"]["registry_text"] == text
     assert [(a.on_positive, a.on_negative) for a in result] == [
         ("unchanged", "unchanged"), ("weakened", "unchanged"), ("eliminated", "unchanged"),
         ("unchanged", "weakened"), ("weakened", "unchanged"),
     ]
     assert result[0].control_span == "" and result[1].control_span == "dose-matched replay"
+    assert all(a.discrimination_version == av.GROUNDED_VERSION for a in result)
+
+    guarded, legacy = result[:2]
+    card.proposed_alternatives = [guarded, legacy.model_copy(update={"discrimination_version": None})]
+    monkeypatch.setattr(ad, "judged", lambda: {card.id: {
+        a.id: {"d_positive": "eliminated", "d_negative": "weakened"} for a in card.proposed_alternatives
+    }})
+    monkeypatch.setattr(ad, "judged_alternatives", lambda: {card.id: {
+        a.id: ad._key(a) for a in card.proposed_alternatives
+    }})
+    historical = ad.apply(card.id, card).proposed_alternatives
+    assert historical[0].on_positive == "unchanged"
+    assert historical[1].on_positive == "eliminated"
 
 
 ABSTRACT = {"pmid": "9", "year": "2015", "title": "Resveratrol and food intake.",

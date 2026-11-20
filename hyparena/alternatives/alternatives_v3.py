@@ -54,7 +54,8 @@ def ground_discrimination(raw: dict, experiment_text: str) -> dict:
     if positive == negative == "eliminated":
         negative = "unchanged"
     return {**raw, "control_span": span if grounded else "", "loophole": loophole.strip(), "alt_kind": kind,
-            "required_positive_result": required, "on_positive": positive, "on_negative": negative}
+            "required_positive_result": required, "discrimination_version": GROUNDED_VERSION,
+            "on_positive": positive, "on_negative": negative}
 
 
 def propose(client, family: str, card: HypothesisCard, abstracts: dict[str, dict], as_of: Optional[str],

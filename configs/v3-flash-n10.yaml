@@ -36,6 +36,7 @@ admission: graded
 # (specs/reading/extraction-gold-v9-2026-11-05.yaml; relevance recall about 0.6, precision 1.0; the second relevance question is not used).
 method: v3
 verify_version: v22   # v21 plus optional verbatim evidence for each weight factor
+propose_alternatives_version: v3   # check the cited contrast and remaining explanations in the existing proposal call
 read_batch: 10
 cross_link: true
 normalize_version: v17   # normalize_card/v17 (2026-11-14): v16 + the experiment's prediction as a field, the control from the arms, one form for outcome claims (code checks); passed the rule on the 40 registry texts (specs/card/benchmark-card-2026-11-12.yaml, v17_all90_2026_11_14); v16: outcome / mechanism step / premise, main factor, population condition, topic and identifiers
