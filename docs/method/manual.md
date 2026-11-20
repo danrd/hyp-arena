@@ -311,7 +311,7 @@ distribution with F and A as counts: it shows how much data there are, not where
 Reference points (the worked example of section 13): one RCT of 120 with a medium effect, between groups, in the exact
 population weighs 0.839 on the outcome link (S 0.794 alone); one mouse study of 40 with a large effect, between groups, on a
 link before the outcome weighs 0.5 (S 0.691); a mouse null of 40 weighs 0.24 by its power. A link without records has
-S 0.5 and is left out of the evidence balance (section 7).
+S 0.5. Its effect on the evidence balance depends on whether it is required for the stated conclusion (section 7).
 
 **Approved action.** A step (or an engagement link of an older card) whose subject is one approved drug (ChEMBL phase 4) with one of its ChEMBL targets
 named in the link is taken as at least 5/6 without search.
@@ -336,9 +336,18 @@ text without one of them is returned as "needs refinement" with the missing part
   refuted one lowers it) and **the outcome**. Parallel outcomes are one place: the primary one when there is a single primary outcome, else the mean over the outcomes that have
   a counting record. The primary is the outcome matching the registry's primary outcome by its words; when the registry
   lists several primary outcomes they are equal and there is no single primary; with one primary outcome and no word match,
-  the card's main outcome claim is primary. A place with no record is not averaged in. Gaps are shown by the coverage and
-  the improvement item "check the link", not by the balance. Consequence: the balance is the state of what is known, so a
-  first modest record on a link that had none can lower it (worked example, section 13).
+  the card's main outcome claim is primary. An ordinary place without records is left out. A first modest record
+  on a link that had none can lower the balance (worked example, section 13).
+- **Required links in the pilot.** During card assessment, mark a necessary transfer between the actual experimental
+  system and the system of the claimed conclusion, or a distinct claim necessary to the stated new effect or causal
+  explanation. Write out a necessary bridge even if the author left it implicit. Record it as a chain claim with
+  `required_for_balance: true` in scored data and search for evidence specifically relevant to it. Count the designated
+  link separately and count a shared outcome once. A mouse experiment supports its mouse-stage premise and outcome.
+  Assess the relevance of records to the human bridge separately.
+  Sum the positive and negative values of `2S − 1` separately. Divide the positive sum by the number of places with
+  data plus the number of empty required places. Divide the negative sum by the number of places with data.
+  Add the results for the single signed balance. With no data anywhere the balance is zero. Keep feasibility tied
+  to the proposed experiment. The calculator uses explicitly marked links.
 - **Coverage**: the share of the chain's places with at least one counting record. It says how much is known; the balance
   says how strong it is. The report shows it under the balance ("покрыто 3 из 4") and the chain with its empty links.
 - **Non-refutation P** and the **support share** are still computed by the code for older reports but are in no profile;

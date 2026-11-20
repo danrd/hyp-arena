@@ -63,6 +63,7 @@ class Claim(BaseModel):
     inherited_from_pico: list[str] = Field(default_factory=list)   # species / strain copied from PICO (spec 9)
     role: Role = "premise"                       # v13: derived by code from primary and stated_as (normalizer.derive_roles)
     link: Optional[Link] = None                  # v3: delivery (done and reached), engagement (target), pathway, effect, outcome
+    required_for_balance: bool = False           # pilot: explicitly annotated link needed for the stated conclusion
     source_span: str = ""                        # verbatim fragment of the hypothesis text (empty only for verifier-added claims)
     note: str = ""                               # e.g. why `other` was used
     # normalize_card/v13 (2026-11-12): the place in the chain (`link`) and the status in the author's reasoning are separate;

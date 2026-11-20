@@ -153,7 +153,7 @@ def data(rep: dict) -> dict:
             "drift": drift_of.get(h),
             "text": x.get("text", ""), "card_view": x.get("card_view"),
         })
-        base["cover"] = slot_coverage(base["links"])
+        base["cover"] = x.get("coverage_counts") or slot_coverage(base["links"])
         results.append(base)
         for c in x["chain"] + [{"records": a.get("records", [])} for a in x.get("alternatives", [])]:
             for r in c["records"]:

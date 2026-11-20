@@ -331,6 +331,7 @@ class V32Result:
     links: dict[str, list[float]] = field(default_factory=dict)      # id -> [S, lo, hi, F, A]
     weakest: str = ""
     coverage: float = 0.0                                             # share of slots with data (reported)
+    coverage_counts: Optional[tuple[int, int]] = None               # exact covered/total when required links are annotated
     support_share: float = 0.0                                        # mean support of the slots (v3.3 indicator)
     chain_state: float = 0.0                                          # A: mean of 2S - 1 over the slots
     silent_share: float = 0.0                                         # G: slots read but with no stance and no record
@@ -422,14 +423,18 @@ def _evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
     res.P, res.P_lo, res.P_hi = (round(x, 5) for x in tri)
     res.weakest = min(links, key=lambda x: res.links[x.id][0]).id
     slots, run_ = [], []
+    required_ids = {cl.id for cl in links if cl.required_for_balance}
+    # Required links get their own slot. A required primary outcome already has one.
+    separate = [cl for cl in links if cl.id in required_ids and (primary is None or cl.id != primary.id)]
+    remaining = [cl for cl in links if cl not in separate]
     if STEPS_SLOT == "none":                        # a check only: the outcome alone (specs/mechanism-chain-comparison)
         pass
     elif STEPS_SLOT != "separate":                  # every step before the outcome is one place (method v3.10, see below)
-        steps = [cl.id for cl in links if cl not in outs]
+        steps = [cl.id for cl in remaining if cl not in outs]
         if steps:
             slots.append(steps)
     else:
-        for cl in links + [None]:
+        for cl in remaining + [None]:
             if cl is not None and cl.link == "pathway" and cl not in outs:
                 run_.append(cl.id)
                 continue
@@ -438,9 +443,13 @@ def _evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
                 run_ = []
             if cl is not None and cl not in outs:
                 slots.append([cl.id])
-    if outs:
-        slots.append([primary.id] if primary is not None else [o.id for o in outs])
-    res.coverage = round(sum(1 for sl in slots if any(i in checked for i in sl)) / len(slots), 4) if slots else 0.0
+    slots.extend([cl.id] for cl in separate)
+    if outcome_slot := ([primary.id] if primary is not None else [o.id for o in outs if o in remaining]):
+        slots.append(outcome_slot)
+    covered = sum(any(i in checked for i in sl) for sl in slots)
+    res.coverage = round(covered / len(slots), 4) if slots else 0.0
+    if required_ids:
+        res.coverage_counts = (covered, len(slots))
 
     def slot_S(sl):
         if len(sl) > 1 and outs and sl[0] in {o.id for o in outs}:
@@ -458,6 +467,13 @@ def _evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
     sl_used = [sl for sl in slots if any(res.links[i][3] + res.links[i][4] > 0 for i in sl)] if EMPTY_SLOTS == "skip" else slots
     res.support_share = round(sum(max(0.0, 2 * (slot_S(sl) - 0.5)) for sl in sl_used) / len(sl_used), 4) if sl_used else 0.0
     res.chain_state = round(sum(2 * slot_S(sl) - 1 for sl in sl_used) / len(sl_used), 4) if sl_used else 0.0
+    if required_ids:
+        observed = [2 * slot_S(sl) - 1 for sl in slots if any(i in checked for i in sl)]
+        missing = sum(not any(i in checked for i in sl) and any(i in required_ids for i in sl) for sl in slots)
+        positive = sum(max(0.0, state) for state in observed)
+        negative = sum(min(0.0, state) for state in observed)
+        if observed:
+            res.chain_state = round(positive / (len(observed) + missing) + negative / len(observed), 4)
     silent = [sl for sl in slots if all(res.links[i][3] + res.links[i][4] == 0 for i in sl)
               and any(by_id.get(i) is not None and by_id[i].no_stance for i in sl)]
     res.silent_share = round(len(silent) / len(slots), 4) if slots else 0.0

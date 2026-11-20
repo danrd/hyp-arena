@@ -60,3 +60,43 @@ def test_v33_links_without_records_do_not_count_and_coverage_says_so(monkeypatch
     assert r32.evaluate(long_, cv, fold=True).P < a.P                       # v3.2: the long chain is multiplied down
     against = [ClaimVerification(id="c1", counterevidence=[rec(3, "animal", n=40)])] + cv
     assert r32.evaluate(long_, against, fold=True, neutral_unverified=True).P < a.P   # data against still count
+
+
+def test_missing_required_link_changes_support_and_coverage_only():
+    step = claim("c1", "x", "activates", "y", "step")
+    outcome = claim("c2", "x", "improves_healthspan_in", "human", "outcome", "outcome")
+    bridge = {**claim("c3", "x", "activates", "human target", "step"), "required_for_balance": True}
+    baseline = card([step, outcome])
+    with_bridge = card([step, outcome, bridge])
+    verifications = [
+        ClaimVerification(id="c1", evidence=[rec(1, "animal", n=40)]),
+        ClaimVerification(id="c2", counterevidence=[rec(2, "observational", n=200)]),
+    ]
+    old = r32.evaluate(baseline, verifications, v36=True)
+    new = r32.evaluate(with_bridge, verifications, v36=True)
+    positive = 2 * old.links["c1"][0] - 1
+    negative = 2 * old.links["c2"][0] - 1
+    assert positive > 0 > negative
+    assert new.chain_state == pytest.approx(positive / 3 + negative / 2, abs=0.00005)
+    assert new.coverage_counts == (2, 3)
+    assert new.coverage == 0.6667
+    assert (new.I, new.gate) == (old.I, old.gate)
+    old_against = r32.evaluate(baseline, verifications[1:], v36=True)
+    new_against = r32.evaluate(with_bridge, verifications[1:], v36=True)
+    assert old_against.chain_state == new_against.chain_state < 0
+
+    bridge_record = ClaimVerification(id="c3", counterevidence=[rec(3, "animal", n=40)])
+    covered = r32.evaluate(with_bridge, [*verifications, bridge_record], v36=True)
+    assert covered.coverage_counts == (3, 3)
+    assert covered.links["c3"][0] < 0.5
+    assert covered.chain_state == pytest.approx(
+        (positive + negative + 2 * covered.links["c3"][0] - 1) / 3, abs=0.00005
+    )
+
+
+def test_required_primary_outcome_is_counted_once():
+    outcome = claim("c1", "x", "improves_healthspan_in", "human", "outcome", "outcome")
+    c = card([{**outcome, "required_for_balance": True}])
+    result = r32.evaluate(c, [ClaimVerification(id="c1", evidence=[rec(1, "rct", n=200)])], v36=True)
+    assert result.coverage_counts == (1, 1)
+    assert result.chain_state > 0
