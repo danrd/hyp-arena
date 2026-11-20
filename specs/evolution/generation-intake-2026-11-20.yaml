@@ -1,0 +1,46 @@
+id: generation-intake-2026-11-20
+status: proposed pilot protocol
+scope: pre-judging intake for written hypotheses from all generator arms
+principle: Review the author’s stated experiment against the evidence available by T. Preserve each submitted candidate and its first-pass disposition by arm. Apply the same review to every arm before revealing the key.
+generator:
+  - State what is already known and what remains open. Describe a new causal link, a change to the intervention, or a transfer.
+  - Name the one experimental comparison and the result that would refute the claimed contribution. For a change to an intervention, compare the modified intervention with its original form or an equivalent active comparator. Match the non-target components that could explain the result.
+  - State the experimental system and the claim that the experiment directly tests. For a human claim tested off-patient, state the narrower prerequisite and what remains open in humans.
+  - Name the actual compound, construct, device or procedure used for each active arm. Give the key exposure or operating parameter and a source or documented implementation if available.
+review:
+  timing: After normalisation and dossier collection, before a ranking report or pair list is built. The reviewer is blind to generator arm and previous scores.
+  novelty:
+    evidence: Summarise relevant findings and disagreements from the dossier by PMID and distinguish the known effect from what the author proposes. A single closest work is optional.
+    confirmed: A new link or intervention change is isolated by the stated test. A modifier of a transferred effect qualifies only when the proposed comparison directly tests the modifier.
+    limited: A known question in a new context or species has a Frontier ceiling of new_context or translation, respectively. A modification without a comparison that isolates its effect is limited to the corresponding known question when that comparison with prior evidence is supported.
+    unresolved: Withhold a Frontier result if the evidence or stated comparison cannot resolve the claimed novelty.
+  scope:
+    target: The stated experiment can test the submitted claim at its asserted level.
+    prerequisite: An animal, tissue or cell experiment for a patient-level claim needs a narrower testable prerequisite and a named remaining uncertainty in humans. Exclude it from the clinical-priority ranking for the full claim.
+    mismatch: Return a candidate without an identifiable narrower claim to the author.
+  readiness:
+    verified: 1. The proposed implementation is documented for the stated system, tissue or procedure with the comparator and essential parameters. For clinical treatment include an applicable safety or feasibility basis.
+    conditional: 0.5. A concrete implementation and an evidence-based prerequisite are identified. Credit applies to the prerequisite only. The later study stays out of clinical priority until the prerequisite is met.
+    unknown: 0. The active means is unnamed, exists only as a class, has no documented implementation for the stated test, or depends on a key parameter that is missing. Hold the candidate out of the ranked pool until resolved. Keep this zero in the feasibility denominator.
+    applies_to: All indispensable active arms and modalities. Use the lowest supported readiness across them. A type label is not evidence of readiness.
+review_file:
+  root: Object with cutoff_date and reviews. Supply one review per hypothesis.
+  required: [hypothesis_id, novelty, known_result, source_pmids, claim_level, claim_span, scope, readiness, reason]
+  novelty_values: [new_link, intervention_change, tested_modifier, known_context, known_species, unresolved]
+  claim_level_values: [patient, human_tissue, nonhuman, analysis]
+  scope_values: [target, prerequisite, mismatch]
+  readiness_values: [verified, conditional, unknown]
+  contribution: For new_link, intervention_change or tested_modifier include increment, contrast_span and refuting_result. Copy contrast_span verbatim from the author’s experiment.
+  implementation: For verified or conditional include implementation_span copied from the author’s experiment, implementation_basis and implementation_pmids from the dossier. These sources must document the means or the proposed first stage.
+  gaps: For prerequisite give tested_prerequisite and remaining_gap. For conditional give remaining_gap for implementation.
+  citations: source_pmids lists evidence from the verified dossier for novelty. Cite at least one except when novelty is unresolved.
+  independence: The reader checks source applicability and the causal contrasts. Code verifies IDs, available sources, quoted passages and the resulting admission rules.
+intake:
+  runner: python -m scripts.argon.generation_preflight --hypotheses INPUT.json --cases cases.json --dossier dossier.json --review review.json --out intake.json
+  pool_rule: Append --pool frontier or --pool clinical_priority and --pairs-out judge_pairs.json to generate the complete set of pairs from the respective allowlist. The exploratory Frontier pairs require a distinct tested contribution. Known transfers are recorded with their novelty ceiling and remain eligible for clinical priority when a verified patient-level test is stated. Candidates with conditional or unknown readiness stay outside both ranked sets until the eligible experiment is stated and verified. The untouched generator output and all exclusions remain in the evaluation archive. The pool must not silently be replenished.
+  revision: Archive first-pass results by arm. Any repair is a separate version under the same previously agreed budget and attempt limit for all arms. A repaired result never replaces the first-pass count.
+  scoring: Apply the intake novelty ceiling and readiness to exploratory rescoring only. The existing manual and its gate remain the baseline comparator. Report initial eligible yield and reasons for return by arm as well as ratings of the eligible pool.
+validation:
+  positives: H05 preserves a new causal comparison, H19 preserves an intervention comparison, H02 preserves the new question only at the level of its proposed animal test if the implementation is resolved.
+  negatives: H10 cannot enter clinical priority with an unnamed active compound. H02 cannot receive readiness from the device class alone. H03 and H17 can share a scientific question even with scored differences in experimental detail.
+  pass_rule: On a separately reviewed sample, reject missing essential implementation and isolate an unsupported human inference while retaining genuine new comparisons and showing transfers with a low novelty ceiling. Report review disagreement and abstention separately.
