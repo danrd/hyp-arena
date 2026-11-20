@@ -120,14 +120,15 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
         normalizer_family: str = "google", on_stage=lambda msg: None, expert=None,
         verifiers: Optional[list[str]] = None, cards: Optional[list[Optional[dict]]] = None,
         check_alternatives: bool = True, dedup: bool = True, informativeness: bool = False,
-        spec: Optional[str] = None) -> dict:
+        spec: Optional[str] = None, llm_client: Optional[GuardedClient] = None) -> dict:
     """`spec`: a committed file in specs/ fixed before the run (hyparena/prespec.py); its hash goes into the meta, and a
     parameter that differs from the spec stops the run. `expert`: path to an expert file (hyparena/scoring/expert.py) or an ExpertLayer. `verifiers`: the families
     that verify (default: every family of the config). `cards`: declared cards from an earlier run, one per
     text (None where normalization failed); the normalizer is then skipped, so a change of the verifier is
     compared on the same cards. `check_alternatives`: one call per gate-passing hypothesis over the abstracts
     already read, and a dedicated search per open alternative for P(top-k) >= 0.5 (spec 8c). `dedup`: a card
-    that duplicates an earlier one (spec 8b) is not verified and gets the outcome `duplicate`."""
+    that duplicates an earlier one (spec 8b) is not verified and gets the outcome `duplicate`.
+    `llm_client`: optional preconfigured client with the same `max_calls` and explicitly selected verifier families."""
     from hyparena import prespec
     iset = ind.set_hash(ind.INDICATORS, load_profiles())
     spec_entry = prespec.begin(spec, {"as_of": as_of, "K": K, "k_top": k_top, "max_calls": max_calls,
@@ -136,7 +137,12 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
     layer = expert if isinstance(expert, ex.ExpertLayer) else ex.load(expert)
     origins = ["external"] * len(texts) + ["expert"] * len(layer.hypotheses)
     texts = list(texts) + list(layer.hypotheses)
-    client, families = _client(config, fake, max_calls)
+    if llm_client is None:
+        client, families = _client(config, fake, max_calls)
+    else:
+        if fake or not verifiers or llm_client.max_calls != max_calls:
+            raise ValueError("custom client requires explicit verifiers, the run's call cap, and fake=False")
+        client, families = llm_client, list(dict.fromkeys([normalizer_family, *verifiers]))
     cfg_extra = yaml.safe_load(Path(config).read_text()) or {}
     search_mode = cfg_extra.get("search", "keywords")                  # `search: model` in the config
     if cfg_extra.get("full_text") == "pmc":                            # sources experiment arm B: read PMC full texts where allowed
