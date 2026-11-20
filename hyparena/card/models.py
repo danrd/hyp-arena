@@ -321,6 +321,11 @@ class ProgramInfo(BaseModel):
     sites_with_effect: Optional[int] = None
 
 
+class WeightQuote(BaseModel):
+    text: str
+    location: str
+
+
 class EvidenceRecord(BaseModel):
     source: str                                  # PubMed | DrugAge | OpenGenes | ClinicalTrials.gov | GEO | ...
     record_id: str
@@ -361,6 +366,7 @@ class EvidenceRecord(BaseModel):
     n_quote: str = ""                            # the verbatim phrase that gives n_total
     comparison: Literal["between_groups", "within_group", "none", "unknown"] = "unknown"
     effect_reported: str = ""                    # the verbatim effect size ("+2.4 kg", "RR 0.79 (0.65-0.96)")
+    weight_quotes: dict[Literal["design", "precision", "effect", "comparison", "context"], WeightQuote] = Field(default_factory=dict)
     effect_class: Literal["none", "small", "medium", "large", "unclear"] = "unclear"
     # verify_claim/v18 (2026-11-15): where the quoted result sits relative to the claim's outcome, and the numbers of the effect
     outcome_match: Literal["same", "narrower", "broader", "other", ""] = ""

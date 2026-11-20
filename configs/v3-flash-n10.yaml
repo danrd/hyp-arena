@@ -35,7 +35,7 @@ admission: graded
 # v3 rules (rules_v3: P, W, I, V, gate). verify_claim/v9 since 2026-11-05: extraction accepted on design, comparison and n
 # (specs/reading/extraction-gold-v9-2026-11-05.yaml; relevance recall about 0.6, precision 1.0; the second relevance question is not used).
 method: v3
-verify_version: v21   # 2026-11-16: verify_claim/v21 = v19 with the outcome of a claim whose object is the organism named by its measure, and the rule that one part of a combined intervention is the same class; not lower than v19 on packs 16 and 25 on recall or precision (specs/reading/class-findings-2026-11-15.yaml). Before: v19 (v17 with the record fields), v17, v16, v9
+verify_version: v22   # v21 plus optional verbatim evidence for each weight factor
 read_batch: 10
 cross_link: true
 normalize_version: v17   # normalize_card/v17 (2026-11-14): v16 + the experiment's prediction as a field, the control from the arms, one form for outcome claims (code checks); passed the rule on the 40 registry texts (specs/card/benchmark-card-2026-11-12.yaml, v17_all90_2026_11_14); v16: outcome / mechanism step / premise, main factor, population condition, topic and identifiers

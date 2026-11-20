@@ -1,0 +1,11 @@
+{% extends "verify_claim/v21.j2" %}
+{% block weight_quote_schema %}, "weight_quotes": {}{% endblock %}
+{% block weight_quote_instructions %}
+For each record, add short verbatim fragments from the supplied abstract under "weight_quotes". Use these keys when the text supports them:
+- design: the actual study type, allocation, or experimental system;
+- precision: the sample for this result (reuse n_quote when present);
+- effect: the size or direction of the same result, including a null result when reported;
+- comparison: the actual comparison (for example the intervention and control groups);
+- context: the intervention, population, species, or other condition that explains the relevant match or mismatch.
+When the main quote contains the evidence, copy only the relevant wording from it. Otherwise copy a contiguous fragment from elsewhere in the same abstract. Omit a key when the supplied abstract does not substantiate it. Keep the original fields and their extraction rules. Do not infer missing data or assign weights.
+{% endblock %}

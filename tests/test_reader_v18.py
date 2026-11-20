@@ -20,6 +20,20 @@ def _rec(**k):
     return {"pmid": "1", "quote": "SPPB improved by 0.86 points (95% CI 0.32 to 1.41) over control.", "stance": "supports", **k}
 
 
+def test_weight_quotes_keep_only_verbatim_fragments_from_the_abstract():
+    abstract = ABS["1"]["abstract"]
+    rec = EvidenceRecord(source="PubMed", record_id="PMID:1", quote=_rec()["quote"])
+    vf.v3_fields(
+        rec, {"weight_quotes": {"design": "Sixty participants were randomised", "comparison": "over control",
+                                "effect": "1.86 points", "context": ABS["1"]["title"], "extra": "over control"}},
+        ABS["1"]["title"] + " " + abstract, abstract=abstract,
+    )
+    assert {key: item.model_dump() for key, item in rec.weight_quotes.items()} == {
+        "design": {"text": "Sixty participants were randomised", "location": "abstract"},
+        "comparison": {"text": "over control", "location": "abstract"},
+    }
+
+
 def test_a_fitting_abstract_called_none_goes_back_to_the_reader():
     v = _reply({"intervention": "same_kind", "outcome": "narrower", "own_result": "yes", "finding": "none"})
     assert any("rule 1d" in p for p in vf.paper_problems(v, ABS))
@@ -111,6 +125,9 @@ def test_v20_names_the_outcome_of_an_organism_claim_by_its_measure():
     text = render("verify_claim", "v20", claim=claim, outcome_label="quality of life", **kw)
     assert "THE OUTCOME OF THIS CLAIM IS: quality of life" in text and "the outcome the claim names (quality of life)" in text
     assert "ONE PART OF A COMBINED INTERVENTION" not in text
-    assert "ONE PART OF A COMBINED INTERVENTION" in render("verify_claim", "v21", claim=claim, outcome_label="quality of life", **kw)
+    v21 = render("verify_claim", "v21", claim=claim, outcome_label="quality of life", **kw)
+    v22 = render("verify_claim", "v22", claim=claim, outcome_label="quality of life", **kw)
+    assert "ONE PART OF A COMBINED INTERVENTION" in v21 and '"weight_quotes"' not in v21
+    assert "ONE PART OF A COMBINED INTERVENTION" in v22 and '"weight_quotes": {}' in v22
     plain = render("verify_claim", "v20", claim=named, outcome_label="", **kw)
     assert "THE OUTCOME OF THIS CLAIM IS" not in plain and "the outcome the claim names (muscle strength)" in plain

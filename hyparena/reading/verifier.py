@@ -8,7 +8,7 @@ from typing import Optional
 
 from hyparena.card.llm import ask, parse_objects
 from hyparena.card.models import (UNKNOWN, Claim, ClaimVerification, Entity, EvidenceRecord,
-                                  HypothesisCard, ProgramInfo, Refusal, Verification)
+                                  HypothesisCard, ProgramInfo, Refusal, Verification, WeightQuote)
 from hyparena.scoring.rules import (HUMAN_RUNGS, ORGANISM_PATTERNS, add_disease_analogs, add_strain_analogs, admissible, claim_organism,
                                  claim_endpoint, mark_strata, pico_value, prespecified_sex, quote_organisms, species_key,
                                  subgroup_only)
@@ -366,7 +366,7 @@ def words_to_numbers(text: str) -> set[int]:
     return out
 
 
-def v3_fields(rec: EvidenceRecord, r: dict, source: str, review: bool = False) -> None:
+def v3_fields(rec: EvidenceRecord, r: dict, source: str, review: bool = False, *, abstract: str = "") -> None:
     """Method v3 extraction fields (verify_claim/v6). A number phrase that is not verbatim in the abstract is dropped, and the
     number with it; values outside the closed lists are dropped. Replies of earlier templates carry none of these keys.
     A paper PubMed types as a review keeps design "review" (or "meta_analysis") even when the sentence restates one trial:
@@ -386,6 +386,13 @@ def v3_fields(rec: EvidenceRecord, r: dict, source: str, review: bool = False) -
         rec.n_quote = nq                                  # the phrase is real but the number is not in it: keep the phrase only
     er = _text(r.get("effect_reported"))
     rec.effect_reported = er if er and _norm(er) in norm else ""
+    weight_quotes = r.get("weight_quotes")
+    if isinstance(weight_quotes, dict):
+        for key in ("design", "precision", "effect", "comparison", "context"):
+            value = weight_quotes.get(key)
+            fragment = value.strip() if isinstance(value, str) else ""
+            if fragment and fragment in abstract:
+                rec.weight_quotes[key] = WeightQuote(text=fragment, location="abstract")
     rec.comparison = r.get("comparison") if r.get("comparison") in ("between_groups", "within_group", "none") else "unknown"
     rec.effect_class = effect_class(rec.effect_reported, r.get("effect_class") or "")
     rec.reports_trial = _text(r.get("reports_trial"))
@@ -607,7 +614,7 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
                 rec.lab_or_cohort = trials.pop()
         if pubmed.is_retracted(a):
             rec.flags.append("retracted_pubmed")          # read by the v3.1 rules (section 12, point 7); v2 and v3 unchanged
-        v3_fields(rec, r, a["title"] + " " + a["abstract"], review)
+        v3_fields(rec, r, a["title"] + " " + a["abstract"], review, abstract=a["abstract"])
         # 2026-11-11: PubMed's own publication types decide the review kind and a meta-analysis; its GRADE certainty by code
         from hyparena.reading.review_kind import certainty_from_abstract, design_from_pubtypes
         rec.design, rec.review_kind = design_from_pubtypes(rec.design, a.get("pubtypes", []))

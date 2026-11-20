@@ -169,7 +169,7 @@ The detailed rules, every field with its origin and what reads it, and a worked 
 
 ## 4. Evidence records
 
-A reader model (template `verify_claim/v21`, in batches of 10 abstracts) reads each abstract found for a claim and returns
+A reader model (template `verify_claim/v22`, in batches of 10 abstracts) reads each abstract found for a claim and returns
 records; an outcome or a step also reads, by the cross-link reading, the papers the hypothesis's other searches found
 (mostly its alternatives'), those the cheap relevance model rates 3 for it, filled up to 10 with those rated 2. The search (`search: filtered`; stage manual [`docs/method/search.md`](search.md)): the queries a
 model writes and a query on the exact population, up to 200 PubMed papers each, date-cut at T; ordered by the match of the
@@ -178,6 +178,11 @@ list ordered again; a cheap model rates the first 100 from 0 to 3 for the claim;
 10 with papers rated 2, at most 20 per search. The records:
 
 - a verbatim quote (checked by code; a quote not in the abstract is dropped);
+- optional `weight_quotes` for design, precision, effect, comparison and context. For each factor supported by the
+  accessible source, retain a short verbatim fragment and its location, reusing a part of the main quote where possible.
+  The automated reader checks the fragments against the supplied abstract. For prepared records, store each fragment as
+  `{"text": "...", "location": "..."}` under its factor key. Omit a factor when there is no supporting fragment in the
+  accessible text. The report shows these fragments with the factor values from the calculation in section 5;
 - stance: supports / refutes / neither (only supports and refutes are scored);
 - from the whole abstract: `design` (rct, non_randomised, observational, animal, cells, review, meta_analysis, other).
   PubMed's own publication types decide where they are decisive: "Meta-Analysis" is a meta-analysis, "Systematic Review"

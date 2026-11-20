@@ -104,8 +104,7 @@ def _link(c: dict, levels: dict) -> dict:
             "S": c["S"], "ci": [c["lo"], c["hi"]], "R": round(R, 4), "checked": c.get("checked", True),
             "in_P": c.get("in_P", True), "primary": c.get("primary", False), "parallel": c.get("parallel_outcome", False),
             "novelty": levels.get(c["id"]),
-            "records": [{"pmid": r["pmid"], "side": r["side"], "design": r["design"], "n": r["n"], "effect": r["effect"],
-                         "w": r["w"], "f": r.get("f"), "quote": r["quote"]} for r in c["records"]]}
+            "records": c["records"]}
 
 
 def data(rep: dict) -> dict:

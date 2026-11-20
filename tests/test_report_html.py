@@ -1,3 +1,5 @@
+import math
+
 import pytest
 
 from hyparena.reports import report_html as rh
@@ -18,6 +20,22 @@ def test_contributions_use_rank_order_centroid_weights():
     w = rh.roc_weights([["P"], ["I"], ["W", "x"]])
     assert w["P"] > w["I"] > w["W"] == w["x"] and sum(w.values()) == pytest.approx(1.0)
     assert rh.percentiles({"a": 1.0, "b": 2.0, "c": None}) == {"a": 0.25, "b": 0.75, "c": None}
+
+
+def test_weight_display_reproduces_the_score_and_marks_repeated_sources():
+    card, verifications, _ = _case()
+    claim = next(c for c in r3.chain(card) if c.id == "c3")
+    verification = next(c for c in verifications if c.id == claim.id)
+    record = verification.evidence[0].model_copy(update={
+        "n_quote": "sixty participants", "qualifiers_match": {"intervention_match": "class"},
+    })
+    verification.evidence = [record, record.model_copy()]
+    rows = rh._weighted_records(verification, claim)
+    assert rows[0]["f"]["context"][1] == r32.CLASS_WEIGHT
+    assert rows[0]["raw_weight"] == math.prod(value for _, value in rows[0]["f"].values())
+    assert rows[0]["raw_weight"] == r32.current_weight(record, claim, False)
+    assert rows[0]["weight_quotes"]["precision"]["text"] == "sixty participants"
+    assert [r["fold"] for r in rows] == [1, r32.FOLD_REST]
 
 
 def test_report_v2_renders_an_empty_pool_and_keeps_the_template_hooks():

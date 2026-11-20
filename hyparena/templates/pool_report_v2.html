@@ -200,12 +200,14 @@
   </main>
 
   <div id="pmid-modal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
-    <div class="bg-white rounded-xl max-w-2xl w-full p-5 shadow-2xl space-y-3">
+    <div class="bg-white rounded-xl max-w-2xl max-h-full overflow-y-auto w-full p-5 shadow-2xl space-y-3" role="dialog" aria-modal="true" aria-labelledby="modal-pmid">
       <div class="flex items-start justify-between gap-3 border-b border-stone-200 pb-3">
         <div><span id="modal-pmid" class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-900"></span><p id="modal-meta" class="text-xs text-stone-600 mt-1"></p></div>
         <button id="modal-close" class="px-2.5 py-1 rounded bg-stone-200 text-xs font-bold">Закрыть ✕</button>
       </div>
       <div id="modal-quote" class="p-3.5 rounded-lg bg-stone-50 border-l-4 border-[#1E4D40] text-sm italic text-stone-800 leading-relaxed"></div>
+      <section id="modal-weight" class="text-sm"></section>
+      <div id="modal-fragment" class="rounded-lg bg-amber-50 px-3 py-2 text-sm" aria-live="polite" hidden></div>
       <div class="flex flex-wrap items-center justify-between gap-2"><span id="modal-used" class="text-xs text-stone-600"></span>
         <a id="modal-link" href="#" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-lg bg-[#1E4D40] text-white text-xs font-semibold">Открыть на PubMed ↗</a></div>
     </div>
@@ -217,6 +219,9 @@
     let curProfile = PROFS.find(p => p.key === 'frontier') ? 'frontier' : PROFS[0].key, rankPage = 0;
     const PAGE = 15;
     const byId = Object.fromEntries(DATA.results.map(r => [r.id, r]));
+    const records = DATA.results.flatMap(h => [...(h.links || []), ...(h.alternatives || [])].flatMap(link =>
+      (link.records || []).map(record => ({record, hypothesis: h, claim: link.claim || link.text}))));
+    records.forEach(({record}, index) => { record.modalIndex = index; });
     // short ids come from the hypothesis database (hyparena/short_ids.py); a row without one shows its registry id
     DATA.results.forEach(r => { r.sid = r.sid || r.id; });
     const sidChip = r => `<span class="font-mono text-[11px] px-1.5 py-0.5 rounded bg-stone-100 text-stone-700">${esc(r.sid)}</span>`;
@@ -275,18 +280,100 @@
       if (el) { if (el.tagName === 'DETAILS') el.open = true; setTimeout(() => el.scrollIntoView({block: 'start'}), 20); }
     }
     document.addEventListener('click', e => {
-      const p = e.target.closest('[data-pmid]'); if (p) { e.preventDefault(); openPmid(p.dataset.pmid); return; }
+      const p = e.target.closest('[data-pmid]'); if (p) { e.preventDefault(); openPmid(p.dataset.pmid, p.dataset.record); return; }
       const c = e.target.closest('[data-card]'); if (c) { e.preventDefault(); goTo('cards', c.dataset.card); return; }
       const v = e.target.closest('[data-eval]'); if (v) { e.preventDefault(); goTo('eval', v.dataset.eval); }
       const hl = e.target.closest('[data-help]'); if (hl) { e.preventDefault(); switchView('help'); const d = document.getElementById(hl.dataset.help); if (d) { d.open = true; setTimeout(() => d.scrollIntoView({block: 'start'}), 20); } }
     });
-    function openPmid(pmid) {
-      const p = DATA.pubmed.find(x => x.pmid === String(pmid)); if (!p) return;
-      document.getElementById('modal-pmid').textContent = 'PMID ' + p.pmid;
-      document.getElementById('modal-meta').textContent = `Дизайн: ${nm('design', p.design)} · n: ${p.n ?? 'не указано'} · ${p.sides.map(s => s === 'for' ? 'за' : 'против').join(' и ')}`;
-      document.getElementById('modal-quote').textContent = '«' + (p.quote || '') + '»';
-      document.getElementById('modal-used').textContent = 'Используется в: ' + p.used_in.map(id => (byId[id] || {}).sid || id).join(', ');
-      document.getElementById('modal-link').href = 'https://pubmed.ncbi.nlm.nih.gov/' + p.pmid + '/';
+    const factorNumber = x => Number(x).toLocaleString('ru-RU', {maximumFractionDigits: 8});
+    function weightDetails({record: r, hypothesis, claim}) {
+      const fs = r.f || {};
+      const [precision, effect, comparison, context] = ['precision', 'effect', 'comparison', 'context'].map(k => fs[k]?.[0]);
+      const certainty = {high: 'высокая', moderate: 'умеренная', low: 'низкая', very_low: 'очень низкая'};
+      const qualifiers = {species: 'вид', population: 'популяция', sex: 'пол', age_at_start: 'возраст', dose: 'доза',
+                          regimen: 'режим', comparator: 'контроль', strain: 'линия', route: 'способ применения'};
+      const contextText = {exact: 'Совпадает по правилам оценки', class: 'Другое вмешательство того же класса',
+                           adjacent: 'Смежные условия'};
+      const differences = (r.context_differences || []).map(k => qualifiers[k]).filter(Boolean);
+      if (r.intervention_match === 'category') differences.push('та же широкая категория вмешательства');
+      if (r.intervention_match === 'dose_differs') differences.push('другая доза');
+      if (r.intervention_match === 'regimen_differs') differences.push('другой режим');
+      const labels = [
+        ['design', 'Дизайн', nm('design', r.design) + (r.design === 'meta_analysis' ?
+          ' · уверенность GRADE: ' + (certainty[r.certainty] || 'не указана') : '')],
+        ['precision', 'Точность', precision === 'power' ? 'Мощность для обнаружения эффекта d = 0,4' +
+          (!r.n || r.n < 2 ? ' · размер выборки неизвестен, расчёт при n = 40' : ` · n = ${r.n}`) :
+          r.preclinical_precision ? 'Фиксированный множитель для звена механизма' : (r.n > 1 ? `n = ${r.n}` : 'Выборка не указана или меньше двух')],
+        ['effect', 'Эффект', ({against: 'Учтён через мощность', medium: 'Средний', large: 'Крупный',
+          'medium or large (from the phrase)': 'Средний или крупный по данным записи', 'stated effect': 'Величина указана',
+          'small or not stated': 'Малый или недостаточно данных о величине'})[effect] || '—'],
+        ['comparison', 'Сравнение', ({between_groups: 'Между группами', within_group: 'Внутри группы',
+          before_after: 'До и после', none: 'Не указано или отсутствует'})[comparison] || 'Не между группами'],
+        ['context', 'Контекст', (contextText[context] || '—') +
+          (context === 'adjacent' && differences.length ? ' · ' + [...new Set(differences)].join(', ') : '')]
+      ].filter(([key]) => fs[key]);
+      const product = labels.map(([key]) => factorNumber(fs[key][1])).join(' × ');
+      return `<h3 class="font-semibold text-[#1E4D40]">Из чего складывается вес записи</h3>
+        <p class="text-xs text-stone-600 my-1">${esc(hypothesis.sid)} · ${esc(ruRecordClaim(claim))}</p>
+        <p class="font-semibold tabular-nums mb-2">${esc(product)} ${Number(r.w) === r.raw_weight ? '=' : '≈'} ${f(r.w, 3).replace('.', ',')}</p>
+        <table class="tbl text-sm w-full"><thead><tr><th scope="col">Множитель</th><th scope="col">Что учтено</th><th scope="col">Значение</th></tr></thead><tbody>
+          ${labels.map(([key, title, detail]) => {
+            const source = r.weight_quotes?.[key];
+            const citation = source?.text
+              ? `<button type="button" data-weight-quote="${key}" aria-label="Показать цитату для множителя «${esc(title)}»" aria-pressed="false" class="block mt-1 text-xs text-emerald-800 underline">${(r.quote || '').includes(source.text) ? 'Показать в цитате' : 'Показать фрагмент источника'}</button>`
+              : '<span class="block mt-1 text-xs text-stone-500">Фрагмент не сохранён</span>';
+            return `<tr><th scope="row">${esc(title)}</th><td>${esc(detail)}${citation}</td><td class="font-semibold tabular-nums">${esc(factorNumber(fs[key][1]))}</td></tr>`;
+          }).join('')}
+        </tbody></table>
+        ${r.fold != null && r.fold !== 1 ? `<p class="mt-2 text-stone-700">Вклад в сумму весов — ${esc(factorNumber(r.raw_weight * r.fold))}. В этой группе источников уже учтена запись с наибольшим весом.</p>` : ''}`;
+    }
+    function ruRecordClaim(claim) {
+      for (const [relation, label] of Object.entries(NM.relation)) {
+        claim = String(claim || '').replace(` — ${relation.replaceAll('_', ' ')} — `, ` ${label} `);
+      }
+      return claim;
+    }
+    function openPmid(pmid, index) {
+      const p = DATA.pubmed.find(x => x.pmid === String(pmid));
+      const entry = records[index];
+      const r = entry?.record.pmid === pmid ? entry.record : null;
+      document.getElementById('modal-pmid').textContent = 'PMID ' + pmid;
+      document.getElementById('modal-meta').textContent = r ?
+        `Дизайн: ${nm('design', r.design)} · выборка: ${r.n ?? 'не указана'} · ${r.side === 'for' ? 'за' : 'против'} · вес записи: ${f(r.w, 3).replace('.', ',')}` :
+        p ? `Дизайн: ${nm('design', p.design)} · выборка: ${p.n ?? 'не указана'}` : '';
+      const quote = document.getElementById('modal-quote');
+      const quotedText = r?.quote ?? p?.quote;
+      quote.textContent = quotedText ? '«' + quotedText + '»' : '';
+      quote.hidden = !quotedText;
+      const weight = document.getElementById('modal-weight');
+      weight.innerHTML = r?.f ? weightDetails(entry) : '';
+      weight.hidden = !r?.f;
+      const fragment = document.getElementById('modal-fragment');
+      fragment.hidden = true;
+      fragment.textContent = '';
+      weight.onclick = event => {
+        const button = event.target.closest('[data-weight-quote]');
+        if (!button) return;
+        const active = button.getAttribute('aria-pressed') !== 'true';
+        weight.querySelectorAll('[data-weight-quote]').forEach(el => el.setAttribute('aria-pressed', String(active && el === button)));
+        quote.textContent = '«' + (r.quote || '') + '»';
+        const source = r.weight_quotes[button.dataset.weightQuote];
+        const position = (r.quote || '').indexOf(source.text);
+        fragment.hidden = !active || position >= 0;
+        fragment.textContent = '';
+        if (!active) return;
+        if (position >= 0) {
+          quote.innerHTML = '«' + esc(r.quote.slice(0, position)) + '<mark>' + esc(source.text) + '</mark>' +
+            esc(r.quote.slice(position + source.text.length)) + '»';
+          quote.scrollIntoView({block: 'nearest'});
+        } else {
+          const location = source.location === 'abstract' ? 'Аннотация' : source.location || 'Сохранённый фрагмент';
+          fragment.textContent = location + ' · «' + source.text + '»';
+          fragment.scrollIntoView({block: 'nearest'});
+        }
+      };
+      document.getElementById('modal-used').textContent = p ? 'Используется в: ' + p.used_in.map(id => (byId[id] || {}).sid || id).join(', ') : '';
+      document.getElementById('modal-link').href = 'https://pubmed.ncbi.nlm.nih.gov/' + encodeURIComponent(pmid) + '/';
       const m = document.getElementById('pmid-modal'); m.classList.remove('hidden'); m.classList.add('flex');
     }
 
@@ -366,7 +453,7 @@
     }
 
     // ---------- 3. evaluation (numbers)
-    const recBtn = r => `<button data-pmid="${r.pmid}" data-tip="${esc((r.side === 'for' ? 'ЗА' : 'ПРОТИВ') + ' · вес ' + f(r.w, 3) + ' · «' + (r.quote || '') + '»')}" class="inline-block mr-1 mb-1 px-2 py-0.5 rounded border text-xs ${r.side === 'for' ? 'bg-emerald-50 text-emerald-900 border-emerald-300' : 'bg-red-50 text-red-900 border-red-300'}">${r.side === 'for' ? 'за' : 'против'} ${r.pmid} · ${f(r.w)}</button>`;
+    const recBtn = r => `<button data-pmid="${esc(r.pmid)}" data-record="${r.modalIndex}" data-tip="${esc((r.side === 'for' ? 'ЗА' : 'ПРОТИВ') + ' · вес ' + f(r.w, 3) + ' · «' + (r.quote || '') + '»')}" class="inline-block mr-1 mb-1 px-2 py-0.5 rounded border text-xs ${r.side === 'for' ? 'bg-emerald-50 text-emerald-900 border-emerald-300' : 'bg-red-50 text-red-900 border-red-300'}">${r.side === 'for' ? 'за' : 'против'} ${esc(r.pmid)} · ${f(r.w, 3).replace('.', ',')}</button>`;
     function versionBlock(r, parent) {
       const d = r.drift || {};
       const NOV = ['new_context', 'translation', 'analog', 'new_mechanism', 'new_combination', 'new_link'], SC = ['local', 'organ', 'hallmark'];

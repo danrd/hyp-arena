@@ -15,6 +15,7 @@ import datetime as dt
 import hashlib
 import html
 import json
+import math
 from collections import Counter
 from pathlib import Path
 from typing import Optional
@@ -195,6 +196,41 @@ def p_product(card: HypothesisCard, S: dict[str, float]) -> float:
     return P
 
 
+def _weighted_records(cv, claim) -> list[dict]:
+    if cv is None:
+        return []
+    records = []
+    for side, source_records in (("for", cv.evidence), ("against", cv.counterevidence)):
+        side_records = []
+        for rec in source_records:
+            factors = r32.current_factors(rec, claim, side == "against")
+            if factors is None:
+                continue
+            weight = math.prod(value for _, value in factors.values())
+            if weight <= 0:
+                continue
+            quotes = {key: value.model_dump() for key, value in rec.weight_quotes.items() if value.text.strip()}
+            for key, phrase in (("precision", rec.n_quote), ("effect", rec.effect_reported)):
+                if phrase:
+                    quotes.setdefault(key, {"text": phrase, "location": ""})
+            side_records.append({
+                "side": side, "pmid": rec.record_id.replace("PMID:", ""), "w": round(weight, 3), "raw_weight": weight,
+                "f": factors, "match": rec.qualifiers_match, "trial": rec.reports_trial, "primary": rec.primary_record,
+                "design": r3.record_design(rec), "n": rec.n_total, "effect": rec.effect_reported or rec.effect_class,
+                "quote": rec.quote, "weight_quotes": quotes, "group": r32.group_key(rec),
+                "context_differences": [key for key, value in r32.only_claim_qualifiers(rec, claim).qualifiers_match.items()
+                                        if key != "intervention_match" and value == "no"],
+                "intervention_match": rec.qualifiers_match.get("intervention_match"),
+                "certainty": rec.certainty, "preclinical_precision": claim.link in r3.PRECLINICAL_LINKS,
+            })
+        groups = set()
+        for record in sorted(side_records, key=lambda x: -x["raw_weight"]):
+            record["fold"] = r32.FOLD_REST if record["group"] in groups else 1.0
+            groups.add(record["group"])
+        records.extend(side_records)
+    return sorted(records, key=lambda x: -x["w"])
+
+
 def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], meta: dict) -> dict:
     profiles = aspid_v3.load()
     unit = {u["id"]: u for u in units}
@@ -220,19 +256,7 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
         by = {c.id: c for c in cvs}
         chain = []
         for cl in r3.chain(card):
-            cv = by.get(cl.id)
-            recs = []
-            for side, lst in (("for", cv.evidence if cv else []), ("against", cv.counterevidence if cv else [])):
-                for rec in lst:
-                    w = r32.current_weight(rec, cl, side == "against")
-                    if w <= 0:
-                        continue
-                    recs.append({"side": side, "pmid": rec.record_id.replace("PMID:", ""), "w": round(w, 3),
-                                 "f": r32.current_factors(rec, cl, side == "against"), "match": rec.qualifiers_match,
-                                 "trial": rec.reports_trial, "primary": rec.primary_record,
-                                 "design": r3.record_design(rec), "n": rec.n_total, "effect": rec.effect_reported or rec.effect_class,
-                                 "quote": rec.quote, "group": r32.group_key(rec)})
-            recs.sort(key=lambda x: -x["w"])
+            recs = _weighted_records(by.get(cl.id), cl)
             S, lo, hi, F, A = res.links[cl.id]
             chain.append({"id": cl.id, "link": cl.link, "text": f"{cl.subject.label} — {cl.relation.replace('_', ' ')} — {cl.object.label}",
                           "hallmark": cl.object.hallmark, "S": S, "lo": lo, "hi": hi, "F": F, "A": A,
@@ -245,15 +269,7 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
             ac = r32.Claim(id=alt.id, subject=alt.subject, relation=alt.relation, object=alt.object, qualifiers=alt.qualifiers,
                            role="premise", source_span="")
             support = r32.current_support(cv.evidence if cv else [], cv.counterevidence if cv else [], ac)
-            arecs = []                               # 2026-11-11: the papers the support rests on, as for the links
-            for side, lst in (("for", cv.evidence if cv else []), ("against", cv.counterevidence if cv else [])):
-                for rec in lst:
-                    w = r32.current_weight(rec, ac, side == "against")
-                    if w > 0:
-                        arecs.append({"side": side, "pmid": rec.record_id.replace("PMID:", ""), "w": round(w, 3),
-                                      "f": r32.current_factors(rec, ac, side == "against"), "design": r3.record_design(rec),
-                                      "n": rec.n_total, "effect": rec.effect_reported or rec.effect_class, "quote": rec.quote})
-            arecs.sort(key=lambda x: -x["w"])
+            arecs = _weighted_records(cv, ac)
             alt_rows.append({"id": alt.id, "text": f"{alt.subject.label} — {alt.relation.replace('_', ' ')} — {alt.object.label}",
                              "why": alt.rationale, "support": round(support, 3), "records": arecs,
                              "on_positive": alt.on_positive, "on_negative": alt.on_negative})

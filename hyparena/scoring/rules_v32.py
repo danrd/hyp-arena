@@ -199,30 +199,39 @@ def record_weight_v36(rec: EvidenceRecord, claim: Claim, against: bool) -> float
     (before the outcome the preclinical scale as before); precision: a null by its power (v3.5), a record for min(1, ln n /
     ln 300) (1/2 before the outcome); effect: a record for with a stated effect of at least medium size 1, else (small, none,
     not stated) 1/2; comparison: between groups 1, else 1/2; context: adjacent 1/2, exact and class 1."""
+    factors = _factors_v36(rec, claim, against)
+    return math.prod(value for _, value in factors.values()) if factors is not None else 0.0
+
+
+def _factors_v36(rec: EvidenceRecord, claim: Claim, against: bool) -> Optional[dict]:
     if not r3.usable(rec, VARIANT_BASE):
-        return 0.0
+        return None
     ctx = context_v34(rec, claim)
     if ctx is None:
-        return 0.0
+        return None
     pre = claim.link in r3.PRECLINICAL_LINKS
     design = r3.record_design(rec)
-    w = DESIGN_GRADE3.get(design, 0.25) if (r3.human_claim(claim) and not pre) else lv.design_weight(design, False)
+    dw = DESIGN_GRADE3.get(design, 0.25) if (r3.human_claim(claim) and not pre) else lv.design_weight(design, False)
     if design == "meta_analysis" and META_CERTAINTY:      # 2026-11-11: a meta-analysis weighs by its GRADE certainty
-        w *= certainty_factor(rec.certainty)
+        dw *= certainty_factor(rec.certainty)
+        design = f"meta_analysis ({rec.certainty or 'certainty not reported'})"
     if against:
-        w *= null_power(rec.n_total, rec.comparison)
+        prec, eff = ["power", null_power(rec.n_total, rec.comparison)], ["against", 1.0]
     else:
-        w *= PRECLINICAL_PRECISION if pre else precision(rec.n_total)
+        prec = [rec.n_total, PRECLINICAL_PRECISION if pre else precision(rec.n_total)]
         if EFFECT_RULE == "stated":                     # variant (pack 24, F5): any stated effect 1, none stated 1/2
-            w *= 1.0 if (rec.effect_reported or "").strip() else 0.5
+            full = bool((rec.effect_reported or "").strip())
+            label = "stated effect"
         else:
             full = effect_weight(rec, False) >= EFFECT_FULL_FROM - 1e-9
             if EFFECT_MIN_N and (rec.n_total or 0) < EFFECT_MIN_N:
                 full = False                              # variant (pack 27, T6): no effect bonus under the sample size
-            w *= 1.0 if full else 0.5
-    w *= 1.0 if rec.comparison == "between_groups" else 0.5
-    w *= 0.5 if ctx == "adjacent" else (CLASS_WEIGHT if ctx == "class" else 1.0)
-    return w
+            label = rec.effect_class if rec.effect_class in ("medium", "large") else "medium or large (from the phrase)"
+        eff = [label if full else "small or not stated", 1.0 if full else 0.5]
+    return {"design": [design, dw], "precision": prec, "effect": eff,
+            "comparison": [rec.comparison if rec.comparison != "unknown" else "none",
+                           1.0 if rec.comparison == "between_groups" else 0.5],
+            "context": [ctx, 0.5 if ctx == "adjacent" else (CLASS_WEIGHT if ctx == "class" else 1.0)]}
 
 
 @contextmanager
@@ -283,6 +292,8 @@ def record_weight(rec: EvidenceRecord, claim: Claim, against: bool, v34: bool = 
 def weight_factors(rec: EvidenceRecord, claim: Claim, against: bool, v34: bool = True) -> Optional[dict]:
     """The factors of record_weight, for display: {design, precision, effect, comparison, context: [label, value]}; None when the
     record does not count."""
+    if V36:
+        return _factors_v36(rec, claim, against)
     if not r3.usable(rec, VARIANT_BASE):
         return None
     ctx = context_v34(rec, claim) if v34 else r3.context_level(rec)
@@ -290,24 +301,6 @@ def weight_factors(rec: EvidenceRecord, claim: Claim, against: bool, v34: bool =
         return None
     pre = claim.link in r3.PRECLINICAL_LINKS
     comp = rec.comparison if rec.comparison != "unknown" else "none"
-    if V36:
-        design = r3.record_design(rec)
-        dw = DESIGN_GRADE3.get(design, 0.25) if (r3.human_claim(claim) and not pre) else lv.design_weight(design, False)
-        if design == "meta_analysis" and META_CERTAINTY:
-            dw *= certainty_factor(rec.certainty)
-            design = f"meta_analysis ({rec.certainty or 'certainty not reported'})"
-        if against:
-            prec, eff = ["power", null_power(rec.n_total, rec.comparison)], ["against", 1.0]
-        else:
-            prec = [rec.n_total, PRECLINICAL_PRECISION if pre else precision(rec.n_total)]
-            full = effect_weight(rec, False) >= EFFECT_FULL_FROM - 1e-9
-            # the label is the level that was used: an effect read from the phrase (SMD, ratio, CI) can be at least medium
-            # while the reader's class says "unclear" (H49 walkthrough 2026-11-11)
-            label = rec.effect_class if rec.effect_class in ("medium", "large") else "medium or large (from the phrase)"
-            eff = [label if full else "small or not stated", 1.0 if full else 0.5]
-        return {"design": [design, dw], "precision": prec, "effect": eff,
-                "comparison": [comp, 1.0 if rec.comparison == "between_groups" else 0.5],
-                "context": [ctx, 0.5 if ctx == "adjacent" else 1.0]}
     return {"design": [r3.record_design(rec), lv.design_weight(r3.record_design(rec), r3.human_claim(claim) and not pre)],
             "precision": [rec.n_total, PRECLINICAL_PRECISION if (v34 and pre) else precision(rec.n_total)],
             "effect": ["against" if against else rec.effect_class, effect_weight(rec, against)],
