@@ -103,7 +103,7 @@ def _link(c: dict, levels: dict) -> dict:
     return {"id": c["id"], "type": c["link"], "claim": c["text"], "hallmark": c.get("hallmark"), "F": c["F"], "A": c["A"],
             "S": c["S"], "ci": [c["lo"], c["hi"]], "R": round(R, 4), "checked": c.get("checked", True),
             "in_P": c.get("in_P", True), "primary": c.get("primary", False), "parallel": c.get("parallel_outcome", False),
-            "novelty": levels.get(c["id"]),
+            "novelty": levels.get(c["id"]), "novelty_basis": c.get("novelty_basis"),
             "records": c["records"]}
 
 

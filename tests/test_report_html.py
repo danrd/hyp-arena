@@ -3,6 +3,7 @@ import math
 import pytest
 
 from hyparena.reports import report_html as rh
+from hyparena.novelty import novelty_v34 as nv
 from hyparena.scoring import rules_v3 as r3, rules_v32 as r32
 from tests.test_analyze import _case
 
@@ -36,6 +37,26 @@ def test_weight_display_reproduces_the_score_and_marks_repeated_sources():
     assert rows[0]["raw_weight"] == r32.current_weight(record, claim, False)
     assert rows[0]["weight_quotes"]["precision"]["text"] == "sixty participants"
     assert [r["fold"] for r in rows] == [1, r32.FOLD_REST]
+
+
+def test_link_novelty_uses_the_record_that_sets_the_level():
+    card, cvs, _ = _case()
+    claim = next(c for c in r3.chain(card) if c.id == "c3")
+    cv = next(v for v in cvs if v.id == claim.id)
+    analog = cv.evidence[0].model_copy(update={"qualifiers_match": {"intervention_match": "class"}})
+    transfer = analog.model_copy(update={"record_id": "PMID:4", "species": "mouse", "design": "animal",
+                                         "qualifiers_match": {"species": "no", "intervention_match": "exact"}})
+    cv.evidence = [analog]
+    level, basis = nv.link_basis(claim, cv)
+    assert level == "analog"
+    assert rh._link_novelty_basis(basis, claim)["intervention_match"] == "class"
+
+    cv.counterevidence = [transfer]
+    level, basis = nv.link_basis(claim, cv)
+    assert level == nv.link_level(claim, cv) == "translation"
+    assert basis is transfer
+    details = rh._link_novelty_basis(basis, claim)
+    assert (details["pmid"], details["from_species"], details["to_species"]) == ("4", "mouse", "human")
 
 
 def test_report_v2_renders_an_empty_pool_and_keeps_the_template_hooks():

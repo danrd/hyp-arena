@@ -231,6 +231,19 @@ def _weighted_records(cv, claim) -> list[dict]:
     return sorted(records, key=lambda x: -x["w"])
 
 
+def _link_novelty_basis(record, claim) -> dict:
+    species = r3.species_key(record.species)
+    design = r3.record_design(record)
+    context_quote = record.weight_quotes.get("context")
+    return {"pmid": record.record_id.removeprefix("PMID:") if record.record_id.startswith("PMID:") else None,
+            "from_species": species, "to_species": "human" if r3.human_claim(claim)
+            else r3.species_key(claim.qualifiers.get("species", "")),
+            "cell_data": design == "cells" or record.system in ("ex_vivo", "in_vitro"),
+            "animal_data": design == "animal", "species_mismatch": record.qualifiers_match.get("species") == "no",
+            "intervention_match": record.qualifiers_match.get("intervention_match"),
+            "context_quote": context_quote.text if context_quote else "", "quote": record.quote}
+
+
 def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], meta: dict) -> dict:
     profiles = aspid_v3.load()
     unit = {u["id"]: u for u in units}
@@ -256,11 +269,16 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
         by = {c.id: c for c in cvs}
         chain = []
         for cl in r3.chain(card):
-            recs = _weighted_records(by.get(cl.id), cl)
+            cv = by.get(cl.id)
+            recs = _weighted_records(cv, cl)
+            novelty_level, novelty_record = nv.link_basis(cl, cv)
             S, lo, hi, F, A = res.links[cl.id]
             chain.append({"id": cl.id, "link": cl.link, "text": f"{cl.subject.label} — {cl.relation.replace('_', ' ')} — {cl.object.label}",
                           "hallmark": cl.object.hallmark, "S": S, "lo": lo, "hi": hi, "F": F, "A": A,
-                          "label": labels.get(cl.id, "unverified"), "records": recs})
+                          "label": labels.get(cl.id, "unverified"), "records": recs,
+                          "novelty_level": novelty_level,
+                          "novelty_basis": _link_novelty_basis(novelty_record, cl)
+                          if novelty_record and novelty_level in ("translation", "analog") else None})
         alt_rows = []
         for alt in card.proposed_alternatives:
             if res.checklist is not None and _threats.is_methodological(alt):
@@ -297,7 +315,7 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
                    "endpoint_clinical": sc.get("endpoint_clinical"), "trend_pubmed": sc.get("trend_pubmed"), "ai_role": sc.get("ai_role"),
                    "ai_span": card.ai_role_span, "aspid": {p: sc.get(f"aspid_{p}") for p in profiles}, "N": N,
                    "N_pmid": nv.novelty_source(card, cvs),
-                   "link_levels": nv.link_levels(card, cvs),
+                   "link_levels": {c["id"]: c["novelty_level"] for c in chain},
                    "flags": res_flags(it),
                    # text and the normalised card as words (report v2: the cards tab shows text only, user 2026-11-11)
                    "text": texts.get(h, ""),

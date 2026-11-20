@@ -454,6 +454,47 @@
 
     // ---------- 3. evaluation (numbers)
     const recBtn = r => `<button data-pmid="${esc(r.pmid)}" data-record="${r.modalIndex}" data-tip="${esc((r.side === 'for' ? 'ЗА' : 'ПРОТИВ') + ' · вес ' + f(r.w, 3) + ' · «' + (r.quote || '') + '»')}" class="inline-block mr-1 mb-1 px-2 py-0.5 rounded border text-xs ${r.side === 'for' ? 'bg-emerald-50 text-emerald-900 border-emerald-300' : 'bg-red-50 text-red-900 border-red-300'}">${r.side === 'for' ? 'за' : 'против'} ${esc(r.pmid)} · ${f(r.w, 3).replace('.', ',')}</button>`;
+    function linkNovelty(l) {
+      const label = esc(nm('novelty', l.novelty || ''));
+      const b = l.novelty_basis;
+      if (!b || !['translation', 'analog'].includes(l.novelty)) return label;
+      const organisms = {human: 'люди', mouse: 'мыши', rat: 'крысы', rabbit: 'кролики', dog: 'собаки',
+                         worm: 'нематоды', fly: 'дрозофилы', yeast: 'дрожжи', pig: 'свиньи', macaque: 'макаки'};
+      const from = organisms[b.from_species] || b.from_species;
+      const to = organisms[b.to_species] || b.to_species;
+      const crossSpecies = from && to && from !== to;
+      const intervention = {class: 'В источнике другое вмешательство того же класса.',
+                            related_compound: 'В источнике родственное вещество.',
+                            category: 'Вмешательства совпали только по широкой категории.',
+                            other: 'В источнике отмечено другое вмешательство.',
+                            dose_differs: 'В источнике другая доза.',
+                            regimen_differs: 'В источнике другой режим.'}[b.intervention_match];
+      let heading = label;
+      const notes = [];
+      if (l.novelty === 'translation') {
+        if (crossSpecies) {
+          notes.push(`Вид в источнике → вид в звене: ${from} → ${to}.`);
+          if (b.cell_data) notes.push('Источник описывает клеточную или тканевую модель.');
+        } else if (b.cell_data && !b.species_mismatch) {
+          heading = 'Перенос из клеточной или тканевой модели';
+          notes.push(from && from === to ? `Источник и звено относятся к одному виду (${from}). Метка следует из дизайна исследования.`
+                                         : 'Метка следует из клеточного дизайна исследования.');
+        } else if (b.species_mismatch || b.animal_data) {
+          notes.push(`В источнике ${from || 'данные на животных или другом виде'}.${to ? ' Вид в звене — ' + to + '.' : ' Вид в звене не указан.'}`);
+        }
+      } else if (crossSpecies) {
+        notes.push(`Вид в источнике → вид в звене: ${from} → ${to}.`);
+      }
+      if (intervention) notes.push(intervention);
+      const record = l.records.find(r => r.pmid === b.pmid && r.quote === b.quote);
+      const source = !b.pmid ? '' : record
+        ? `<button type="button" data-pmid="${esc(b.pmid)}" data-record="${record.modalIndex}" class="underline text-emerald-800">PMID ${esc(b.pmid)}</button>`
+        : `<a href="https://pubmed.ncbi.nlm.nih.gov/${encodeURIComponent(b.pmid)}/" target="_blank" rel="noopener noreferrer" class="underline text-emerald-800">PMID ${esc(b.pmid)}</a>`;
+      return `<span class="font-medium">${heading}</span><div class="mt-1 text-xs text-stone-600 space-y-1">
+        ${notes.map(note => `<p>${esc(note)}</p>`).join('')}${source}
+        ${b.context_quote ? `<details><summary class="cursor-pointer">Фрагмент о контексте</summary><p class="mt-1">«${esc(b.context_quote)}»</p></details>` : ''}
+      </div>`;
+    }
     function versionBlock(r, parent) {
       const d = r.drift || {};
       const NOV = ['new_context', 'translation', 'analog', 'new_mechanism', 'new_combination', 'new_link'], SC = ['local', 'organ', 'hallmark'];
@@ -517,7 +558,7 @@
             return `<tr><td class="whitespace-nowrap">${esc(nm('link', l.type))}</td>
             <td>${c ? triplet(c) : esc(l.claim)}</td>
             <td class="whitespace-nowrap">${f(l.F)} / ${f(l.A)}</td>
-            <td class="whitespace-nowrap">${l.checked ? f(l.S) + ` [${f(l.ci[0])}; ${f(l.ci[1])}]` : 'нет данных'}</td><td>${esc(nm('novelty', l.novelty || ''))}</td>
+            <td class="whitespace-nowrap">${l.checked ? f(l.S) + ` [${f(l.ci[0])}; ${f(l.ci[1])}]` : 'нет данных'}</td><td>${linkNovelty(l)}</td>
             <td>${l.records.length ? l.records.map(recBtn).join('') : '<span class="text-stone-400">нет</span>'}</td></tr>`; }).join('')}</tbody></table>`;
         const ca = (r.card_view || {}).alternatives || [];
         const alts = (r.alternatives || []).length ? `<table class="tbl w-full text-sm"><thead>

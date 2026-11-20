@@ -84,10 +84,15 @@ def record_level(rec: EvidenceRecord, claim: Claim) -> Optional[str]:
     return "new_context" if _same_species(rec, claim) else "translation"
 
 
-def link_level(claim: Claim, cv: Optional[ClaimVerification]) -> str:
+def link_basis(claim: Claim, cv: Optional[ClaimVerification]) -> tuple[str, Optional[EvidenceRecord]]:
+    """The existing ladder level and one record that determines it."""
     recs = (cv.evidence + cv.counterevidence) if cv else []
-    lv = [x for x in (record_level(r, claim) for r in recs) if x]
-    return min(lv, key=LINK_LEVELS.index) if lv else "new_link"
+    candidates = [(level, rec) for rec in recs if (level := record_level(rec, claim))]
+    return min(candidates, key=lambda entry: LINK_LEVELS.index(entry[0]), default=("new_link", None))
+
+
+def link_level(claim: Claim, cv: Optional[ClaimVerification]) -> str:
+    return link_basis(claim, cv)[0]
 
 
 def slots(card: HypothesisCard) -> tuple[list[list[str]], list[str]]:
