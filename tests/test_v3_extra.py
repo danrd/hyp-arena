@@ -41,15 +41,24 @@ def test_feasibility_parts():
 @pytest.mark.parametrize(("interventions", "expected"), [
     ([], (None, "unspecified")),
     ([("other", "agent")], (None, "unclassified")),
-    ([("exercise", "specified exercise")], (1.0, "non_compound")),
+    ([("exercise", "specified exercise")], (None, "implementation_unverified")),
+    ([("device", "unspecified actuator")], (None, "implementation_unverified")),
+    ([("gene", "targeted construct")], (None, "implementation_unverified")),
     ([("compound", "approved")], (1.0, "approved")),
     ([("compound", "clinical")], (0.5, "clinical")),
     ([("compound", "preclinical")], (0.0, "preclinical")),
     ([("compound", "phase missing")], (None, "phase_unknown")),
     ([("compound", "not found")], (None, "unresolved")),
+    ([("compound", "wrong identity")], (None, "identity_unverified")),
+    ([("compound", "phase without registry")], (None, "phase_unknown")),
     ([("compound", "unavailable")], (None, "lookup_failed")),
     ([("compound", "approved + not found")], (None, "unresolved")),
     ([("compound", "approved"), ("compound", "phase missing")], (None, "phase_unknown")),
+    ([("compound", "approved"), ("device", "unspecified actuator")], (None, "implementation_unverified")),
+    ([("compound", "approved + clinical")], (0.5, "clinical")),
+    ([("compound", "approved + preclinical")], (0.0, "preclinical")),
+    ([("compound", "approved + second approved")], (0.5, "combination_unverified")),
+    ([("compound", "approved alternate name")], (1.0, "approved")),
 ])
 def test_readiness_requires_compound_match_and_phase(monkeypatch, interventions, expected):
     phases = {"approved": 4, "clinical": 2, "preclinical": 0, "phase missing": None}
@@ -58,8 +67,16 @@ def test_readiness_requires_compound_match_and_phase(monkeypatch, interventions,
         assert raise_on_error
         if label == "unavailable":
             raise compounds.LookupError_("simulated API failure")
+        if label == "wrong identity":
+            return compounds.Compound(cid=1, name="another substance", chembl="CHEMBL1", max_phase=4)
+        if label == "phase without registry":
+            return compounds.Compound(cid=1, name=label, max_phase=4)
+        if label == "second approved":
+            return compounds.Compound(cid=2, name=label, chembl="CHEMBL2", max_phase=4)
+        if label == "approved alternate name":
+            return compounds.Compound(cid=1, name="approved", chembl="CHEMBL1", max_phase=4, synonyms=[label])
         if label in phases:
-            return compounds.Compound(cid=1, name=label, max_phase=phases[label])
+            return compounds.Compound(cid=1, name=label, chembl="CHEMBL1", max_phase=phases[label])
         return None
 
     monkeypatch.setattr(compounds, "lookup", lookup)

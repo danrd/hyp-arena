@@ -34,7 +34,7 @@ def _n_score(n: Optional[int]) -> Optional[float]:
 
 
 def readiness_assessment(card: HypothesisCard) -> tuple[Optional[float], str]:
-    """Return the existing numeric ladder and the reason for a value or an unknown."""
+    """Use documented regulatory status. Intervention type alone earns no readiness."""
     from hyparena.tools import compounds
 
     interventions = card.pico.intervention
@@ -44,22 +44,27 @@ def readiness_assessment(card: HypothesisCard) -> tuple[Optional[float], str]:
     drugs = [i for i in interventions if i.type == "compound"]
     if any(i.type == "other" for i in interventions):
         return None, "unclassified"
-    if not drugs:
-        return 1.0, "non_compound"
+    if len(drugs) != len(interventions):
+        return None, "implementation_unverified"
     components = [compounds.split(drug.label) for drug in drugs]
     if not all(components):
         return None, "unresolved"
-    labels = dict.fromkeys(part for parts in components for part in parts)
+    labels = list(dict.fromkeys(part for parts in components for part in parts))
     try:
         matches = [compounds.lookup(label, raise_on_error=True) for label in labels]
     except compounds.LookupError_:
         return None, "lookup_failed"
-    if any(c is None for c in matches):
-        return None, "unresolved"
-    phases = [c.max_phase for c in matches if c is not None and c.max_phase is not None]
-    if len(phases) != len(matches):
+    for label, match in zip(labels, matches):
+        if match is None:
+            return None, "unresolved"
+        given = compounds.key(compounds.resolve_alias(label))
+        if given not in {compounds.key(name) for name in [match.name, *match.synonyms]}:
+            return None, "identity_unverified"
+    if any(not match.chembl or match.max_phase is None for match in matches):
         return None, "phase_unknown"
-    phase = max(phases)
+    phase = min(match.max_phase for match in matches)
+    if phase >= 4 and len({match.chembl for match in matches}) > 1:
+        return 0.5, "combination_unverified"
     return (1.0, "approved") if phase >= 4 else (0.5, "clinical") if phase >= 1 else (0.0, "preclinical")
 
 
