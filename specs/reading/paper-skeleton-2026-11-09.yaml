@@ -202,3 +202,23 @@ against_the_reader_2026_11_16:
       or "another outcome" for most rows, the right one included. Reading a row without the abstract is the cause the
       skeleton was meant to remove from the reader, moved to the judge. As the rule says: the skeleton stays as the store of
       full-text numbers and the base of the knowledge graph; reading the links stays with the reader
+
+frozen_replay_2026_11_21:
+  reproduce: "python -m scripts.reading.skeleton_context"
+  inputs: "Both archived runs of adjudicate_v4 and verify_claim/v21 on packs 16 and 25; fixed paper skeletons and text snapshots."
+  attachment: "Same PMID, own finding, original row quote in snapshot, reader quote in task abstract/title, one normalized quote contained in the other, at least six words in the shorter quote. Keep every candidate row. Respect the trial cutoff for dated papers."
+  rescue: "Keep the skeleton decision if present. Only fill a missing decision from a frozen v21 record when at least one row matches its quote."
+  score: "Usual side-sensitive recall and precision at claim-PMID level, in run order; intervals resample claim IDs, 2000 draws."
+  pack16:
+    rescue_rp: [[0.532, 0.667], [0.479, 0.592]]
+    delta_recall_ci95: [[0.093, 0.406], [0.086, 0.346]]
+    quote_attached: [41, 39]
+    exactly_one_candidate: [14, 13]
+  pack25:
+    rescue_rp: [[0.568, 0.863], [0.568, 0.851]]
+    delta_recall_ci95: [[0.141, 0.376], [0.172, 0.405]]
+    quote_attached: [58, 59]
+    exactly_one_candidate: [19, 19]
+  interpretation: "Recoverable evidence on both packs. More than half the quote attachments identify multiple rows. Claim-PMID gold establishes stance accuracy at paper level only. Store ambiguous candidates for review. Neither pack meets the reader replacement rule."
+  controlled_pilot: "PYTHONUTF8=1 python -B -m scripts.reading.skeleton_judge_ab prepares 2 links per pack, chosen by hash of link ID. Same rows, batch order, original judge and acceptance code. Context arm adds saved title/abstract, time point and location. Arms and measured outcome already present in both arms. Table headers have no dedicated field in these parses. 646 rows, 36 initial batches total; live requires the configured CometAPI credential. No live A/B results yet."
+  pilot_artifacts: "The offline plan records archive and prompt hashes for each arm. Every invocation builds a fresh database from the frozen archives. The live report keeps the accepted row IDs and their sides per claim-PMID pair. Paper-level scores use the same first-record rule as the historical benchmark. Check quotes against the exact source snapshot of each row, including available Results and tables. The reference labels establish paper-level stance; choosing the right row still needs manual review."

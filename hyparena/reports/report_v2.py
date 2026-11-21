@@ -136,6 +136,7 @@ def data(rep: dict) -> dict:
         base.update({
             "plain": x.get("plain"), "P": x["P"], "support_share": x.get("support_share"), "chain_state": v.get("chain_state"), "N": x.get("N"), "N_pmid": x.get("N_pmid"),
             "I": x["I"], "I_headroom": v.get("I_headroom"), "W": x["scope"], "feasibility": v.get("feasibility"),
+            "feasibility_breakdown": x.get("feasibility_breakdown"),
             "endpoint": x.get("endpoint_clinical"), "ai_role": x.get("ai_role") or "none", "trend": x.get("trend_pubmed"),
             "best_design": v.get("best_design_outcome"), "independent": v.get("independent_outcome"), "flags": flag_details(x),
             "experiment": x.get("experiment"), "completion": x.get("completion"),

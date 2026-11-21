@@ -71,7 +71,7 @@ def test_resume_does_not_replay_the_completed_arm(monkeypatch, tmp_path):
     assert report["all"]["n_paired"] == 1
 
 
-def test_system_uses_injected_client_and_date(monkeypatch):
+def test_system_uses_injected_client_and_date(monkeypatch, tmp_path):
     from hyparena import pipeline
 
     def run(texts, **options):
@@ -83,5 +83,31 @@ def test_system_uses_injected_client_and_date(monkeypatch):
 
     monkeypatch.setattr(pipeline, "run", run)
     client = bench.Codex("codex", "model-for-test", "medium", 3)
-    result = bench.predict_system(client, "Example trial", "2020-01-01", bench.ROOT / "configs/v3-flash-n10.yaml", 3)
+    archive = tmp_path / "system/trial.json"
+    args = (client, "Example trial", "2020-01-01", bench.ROOT / "configs/v3-flash-n10.yaml", 3, archive)
+    result = bench.predict_system(*args)
     assert result["score"] is None
+    assert json.loads(archive.read_text())["pipeline"]["items"][0]["outcome"] == "normalization_failed"
+    monkeypatch.setattr(pipeline, "run", lambda *args, **kwargs: pytest.fail("replayed an archived run"))
+    assert bench.predict_system(*args) == result
+
+
+def test_skeleton_export_preserves_trial_and_alternative_provenance(tmp_path):
+    from scripts.whole_system.skeleton_export import export
+
+    archive = tmp_path / "system/trial.json"
+    archive.parent.mkdir()
+    alternative = {"id": "alt1", "subject": {"label": "exercise"}}
+    item = {"card": {"proposed_alternatives": [alternative]}, "verification": {"claims": []},
+            "v3_alternatives": {"alt1": {"id": "alt1", "counterevidence": [{"record_id": "PMID:123"}]}}}
+    bench.write_json(archive, {"schema_version": 1, "pipeline": {"meta": {}, "items": [item], "calls": []}})
+    bench.write_json(tmp_path / "predictions.json", {"manifest": {"ids": ["trial", "legacy", "pending"]},
+                     "predictions": {"system": {"trial": {"archive": "system/trial.json"}, "legacy": {}}}})
+    output = tmp_path / "kg-export"
+    manifest = export(tmp_path, output)
+    assert manifest["without_archive"] == ["legacy"]
+    assert manifest["pending_system"] == ["pending"]
+    assert manifest["files"][0]["archive_sha256"] == bench.digest(archive.read_bytes())
+    exported = json.loads((output / "trial.json").read_text())["trial"]["items"][0]
+    assert exported["verification"]["claims"] == [{**item["v3_alternatives"]["alt1"], "claim": alternative}]
+    assert json.loads(archive.read_text())["pipeline"]["items"][0] == item

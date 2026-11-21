@@ -342,6 +342,7 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
         cvs = [ClaimVerification.model_validate(c) for c in it["verification"]["claims"]]
         ext = v3_extra.extras(card, cvs, it["v3"], run[h]["meta"].get("as_of") or "")
         values[h].update({k: ext.get(k) for k in ("feasibility", "best_design_outcome", "independent_outcome", "against_share")})
+        hyps[h]["feasibility_breakdown"] = v3_extra.feasibility_breakdown(card)
     inds = sorted({i for p, _ in profiles.values() for tier in p.tiers for i in tier})
     pct = {ind: percentiles({h: _num(ind, values[h].get(ind)) for h in values}) for ind in inds}
     for h in values:

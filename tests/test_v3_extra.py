@@ -131,3 +131,36 @@ def test_sample_size_applicability(system, n, expected):
     from hyparena.card.models import DecisiveExperiment
 
     assert x.sample_size_score(DecisiveExperiment(system=system, n_planned=n)) == expected
+
+
+def test_feasibility_breakdown_matches_feasibility_and_tracks_denominator(monkeypatch):
+    monkeypatch.setattr(x, "readiness_assessment", lambda _: (0.5, "clinical"))
+    c = card([claim("c2", "x", "improves_healthspan_in", "human", "outcome", "outcome")])
+    c.decisive_experiment.system, c.decisive_experiment.duration_class, c.decisive_experiment.n_planned = "human", "months", 80
+    fb = x.feasibility_breakdown(c)
+    assert fb["score"] == x.feasibility(c) == round((0 + 2 / 3 + 2 / 3 + 0.5) / 4, 3)
+    assert fb["denominator"] == 4
+    by_key = {p["key"]: p for p in fb["parts"]}
+    assert by_key["system"] == {"key": "system", "value": "human", "score": 0.0, "in_denominator": True}
+    assert by_key["duration"] == {"key": "duration", "value": "months", "score": 0.667, "in_denominator": True}
+    assert by_key["sample_size"] == {"key": "sample_size", "value": 80, "score": 0.667, "in_denominator": True, "reason": "stated"}
+    assert by_key["readiness"] == {"key": "readiness", "value": "clinical", "score": 0.5, "known": True, "in_denominator": True, "reason": "clinical"}
+
+    # Missing empirical n stays in the denominator with 0; unknown readiness stays in the denominator with 0
+    monkeypatch.setattr(x, "readiness_assessment", lambda _: (None, "phase_unknown"))
+    c.decisive_experiment.n_planned = None
+    fb2 = x.feasibility_breakdown(c)
+    assert fb2["score"] == x.feasibility(c) == round((0 + 2 / 3 + 0 + 0) / 4, 3)
+    assert fb2["denominator"] == 4
+    by_key2 = {p["key"]: p for p in fb2["parts"]}
+    assert by_key2["sample_size"]["reason"] == "missing_reserved" and by_key2["sample_size"]["score"] == 0.0
+    assert by_key2["readiness"]["known"] is False and by_key2["readiness"]["score"] == 0.0
+
+    # data_analysis with missing n excludes sample_size from the denominator
+    c.decisive_experiment.system, c.decisive_experiment.duration_class, c.decisive_experiment.n_planned = "data_analysis", None, None
+    fb3 = x.feasibility_breakdown(c)
+    assert fb3["score"] == x.feasibility(c) == round((1.0 + 0.0) / 2, 3)
+    assert fb3["denominator"] == 2
+    by_key3 = {p["key"]: p for p in fb3["parts"]}
+    assert by_key3["duration"]["in_denominator"] is False and by_key3["duration"]["score"] is None
+    assert by_key3["sample_size"]["in_denominator"] is False and by_key3["sample_size"]["reason"] == "not_applicable"

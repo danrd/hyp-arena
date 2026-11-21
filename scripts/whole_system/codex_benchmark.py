@@ -112,20 +112,28 @@ class Codex:
                      tokens_out=usage["output_tokens"], seconds=time.monotonic() - start)
 
 
-def predict_system(codex: Codex, text: str, as_of: str, config: Path, max_calls: int) -> dict:
+def predict_system(codex: Codex, text: str, as_of: str, config: Path, max_calls: int, archive: Path) -> dict:
     from hyparena.card.models import ClaimVerification, HypothesisCard
     from hyparena.llm.providers import GuardedClient, load_config
     from hyparena.pipeline import run
     from hyparena.scoring import rules_v32
 
-    settings = load_config(str(config))
-    client = GuardedClient(replace(codex, as_of=as_of), rpm=settings.rpm, max_calls=max_calls,
-                           retries=0, concurrency=settings.concurrency)
-    result = run([text], writer="human_registry", config=str(config), as_of=as_of, max_calls=max_calls,
-                 normalizer_family="codex", verifiers=["codex"], llm_client=client)
-    if client.failures:
-        errors = [call["error"] for call in result["calls"] if call.get("error")]
-        raise RuntimeError(f"{client.failures} failed system LLM call(s); incomplete result not scored: {errors[:1]}")
+    if archive.exists():
+        saved = json.loads(archive.read_text(encoding="utf-8"))
+        result, usage = saved["pipeline"], saved["usage"]
+    else:
+        settings = load_config(str(config))
+        client = GuardedClient(replace(codex, as_of=as_of), rpm=settings.rpm, max_calls=max_calls,
+                               retries=0, concurrency=settings.concurrency)
+        result = run([text], writer="human_registry", config=str(config), as_of=as_of, max_calls=max_calls,
+                     normalizer_family="codex", verifiers=["codex"], llm_client=client)
+        usage = {"calls": client.calls, "input_tokens": client.tokens_in, "output_tokens": client.tokens_out}
+        archive.parent.mkdir(parents=True, exist_ok=True)
+        destination = archive.with_suffix(f".failed-{time.time_ns()}.json") if client.failures else archive
+        write_json(destination, {"schema_version": 1, "model": codex.model, "effort": codex.effort,
+                                 "as_of": as_of, "usage": usage, "pipeline": result})
+        if client.failures:
+            raise RuntimeError(f"{client.failures} failed system LLM call(s); see {destination}")
     item = result["items"][0]
     score, gate = None, None
     if item.get("v3") and item.get("verification") and item.get("card"):
@@ -135,8 +143,8 @@ def predict_system(codex: Codex, text: str, as_of: str, config: Path, max_calls:
         evaluation = rules_v32.evaluate(card, claims, alts, v36=True)
         gate = evaluation.gate
         score = evaluation.chain_state if gate == "pass" else -1.0
-    return {"score": score, "outcome": item["outcome"], "gate": gate, "calls": client.calls,
-            "input_tokens": client.tokens_in, "output_tokens": client.tokens_out}
+    return {"score": score, "outcome": item["outcome"], "gate": gate, **usage,
+            "archive": f"{archive.parent.name}/{archive.name}"}
 
 
 def predict_direct(codex: Codex, text: str, as_of: str) -> dict:
@@ -265,7 +273,8 @@ def main() -> None:
                     continue
                 print(f"{trial} {arm}", flush=True)
                 if arm == "system":
-                    result = predict_system(codex, case["text"], case["as_of"], args.config, args.max_calls)
+                    result = predict_system(codex, case["text"], case["as_of"], args.config, args.max_calls,
+                                            args.out / "system" / f"{trial}.json")
                 else:
                     result = predict_direct(codex, case["text"], case["as_of"])
                 predictions[arm][trial] = result

@@ -564,8 +564,10 @@ and is searchable. An outside report uses the same ids.
    profile, with a link "← Карточка" back:
    - **Оценка в профилях**: per profile the score (two decimals), the place, the top-5 probability, the room to improve.
    - **Показатели**: evidence balance, coverage, novelty with the paper that sets it (opens the paper card), informativeness I,
-     headroom I, scope W, feasibility, how clinical the endpoint is, role of AI, rising attention, best design for the
-     outcome, independent sources for the outcome.
+     headroom I, scope W, feasibility (with its breakdown into system, duration, planned sample size and intervention
+     readiness: each component's value or reason when unknown/missing, its contribution, whether it enters the denominator,
+     and hover notes explaining each component's scale), how clinical the endpoint is, role of AI, rising attention, best
+     design for the outcome, independent sources for the outcome.
    - For a version, **Сравнение с исходной гипотезой**: a three-column table (indicator; parent → version; what changed),
      the third column written from the values of this pair, never a generic reading — the scores as one line (where they
      rose or fell, and by how much), evidence balance, coverage (how many places the chain gained and how many have data),

@@ -88,6 +88,52 @@ def feasibility(card: HypothesisCard) -> float:
     return round((sum(known) + (readiness(card) or 0.0)) / (len(known) + 1), 3)
 
 
+def feasibility_breakdown(card: HypothesisCard) -> dict:
+    """Component-level breakdown of feasibility(card) for display in the evaluation tab."""
+    e = card.decisive_experiment
+    sys_score = SYSTEM_COST.get(e.system)
+    dur_score = DURATION_COST.get(e.duration_class)
+    n_score = sample_size_score(e)
+    n_missing_reserved = (
+        e.system in SYSTEM_COST and e.system != "data_analysis"
+        and (e.n_planned is None or e.n_planned <= 0)
+    )
+    readiness_score, readiness_reason = readiness_assessment(card)
+    known = [p for p in (sys_score, dur_score, n_score) if p is not None]
+    denom = len(known) + 1
+    total = round((sum(known) + (readiness_score or 0.0)) / denom, 3)
+    parts = [
+        {
+            "key": "system",
+            "value": e.system,
+            "score": round(sys_score, 3) if sys_score is not None else None,
+            "in_denominator": sys_score is not None,
+        },
+        {
+            "key": "duration",
+            "value": e.duration_class,
+            "score": round(dur_score, 3) if dur_score is not None else None,
+            "in_denominator": dur_score is not None,
+        },
+        {
+            "key": "sample_size",
+            "value": e.n_planned,
+            "score": round(n_score, 3) if n_score is not None else None,
+            "in_denominator": n_score is not None,
+            "reason": "missing_reserved" if n_missing_reserved else ("not_applicable" if n_score is None else "stated"),
+        },
+        {
+            "key": "readiness",
+            "value": readiness_reason,
+            "score": round(readiness_score, 3) if readiness_score is not None else 0.0,
+            "known": readiness_score is not None,
+            "in_denominator": True,
+            "reason": readiness_reason,
+        },
+    ]
+    return {"score": total, "denominator": denom, "parts": parts}
+
+
 def extras(card: HypothesisCard, ver_claims: list[ClaimVerification], v3: dict, as_of: str = "",
            variant: str = "v3") -> dict:
     """All candidate indicators of one hypothesis; `v3` is its V3Result.as_dict()."""

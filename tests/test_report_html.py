@@ -80,3 +80,39 @@ def test_report_v2_renders_an_empty_pool_and_keeps_the_template_hooks():
     assert all("tier_keys" in p for p in d["profiles"]) and "relation" in d["names"]
     assert r2.slot_coverage([{"type": "engagement", "checked": True}, {"type": "pathway", "checked": False},
                              {"type": "pathway", "checked": True}, {"type": "outcome", "checked": False, "primary": True}]) == [2, 3]
+
+
+def test_report_v2_passes_feasibility_breakdown_and_renders_tooltips():
+    from hyparena.reports import report_v2 as r2
+    from hyparena.scoring import aspid_v3
+    tpl = r2.TEMPLATE.read_text(encoding="utf-8")
+    assert "feasibilityBlock" in tpl and "Из чего складывается реализуемость" in tpl and "FEAS_TIPS" in tpl
+    fb = {
+        "score": 0.458,
+        "denominator": 4,
+        "parts": [
+            {"key": "system", "value": "human", "score": 0.0, "in_denominator": True},
+            {"key": "duration", "value": "months", "score": 0.667, "in_denominator": True},
+            {"key": "sample_size", "value": 80, "score": 0.667, "in_denominator": True, "reason": "stated"},
+            {"key": "readiness", "value": "clinical", "score": 0.5, "known": True, "in_denominator": True, "reason": "clinical"},
+        ],
+    }
+    profs = list(aspid_v3.load())
+    rep = {
+        "meta": {"title_ru": "Пул", "title_en": "Pool", "about_ru": "", "about_en": "", "date": "2026-11-21",
+                 "method": "v3.12", "sha": "0" * 64, "n": 1, "n_scored": 1, "outcomes": {}},
+        "ranks": {p: ["h1"] for p in profs},
+        "hyps": {
+            "h1": {
+                "title": "H1", "type": "compound", "P": 0.7, "gate": "pass", "I": 0.5, "scope": "organ",
+                "N": "new_context", "chain": [], "alternatives": [], "values": {"feasibility": 0.458, "chain_state": 0.2},
+                "feasibility_breakdown": fb,
+                "contrib": {p: {"up": [], "down": []} for p in profs},
+                "pct": {}, "aspid": {p: 0.5 for p in profs}, "rank": {p: 1 for p in profs}, "p_top5": {p: 1.0 for p in profs},
+            }
+        },
+    }
+    d = r2.data(rep)
+    assert d["results"][0]["feasibility_breakdown"] == fb
+    html = r2.render(rep)
+    assert '"feasibility_breakdown"' in html

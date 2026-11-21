@@ -1,0 +1,76 @@
+id: skeleton-row-audit-2026-11-21
+scope: "Development review by Codex using frozen paper snapshots. Unit of sampling is a positive claim–PMID pair, not a prediction or an individual row. Not blinded or independently adjudicated."
+selection: "Packs 16 and 25, one pair per pack and quote-match count (0, 1, 2+), using the frozen replay's attach rule with the gold quote. First archived run. Prefer reader-only, skeleton-only, reader-only winners for pack 16 and the inverse for pack 25. Within each stratum select lowest SHA256 of UTF-8 pack/rid/pmid."
+interpretation: "Rows below are source-backed observations after the specified field corrections or additions. Link scope is reviewed separately. Where a paper reports only a p value, effect magnitude stays unknown. Multiple outcomes of one paper share provenance."
+cases:
+  - pack: 16
+    rid: R17
+    pmid: '12588571'
+    extraction_id: c955b89d8527dc991c5c69bfa3e98b8b2085e0e55a62759a53186449feccbc98
+    matched: []
+    first_run: {gold: against, reader: against, skeleton: none}
+    population: frail older adults after hospital discharge
+    contrast: "Factorial trial. Vitamin D vs placebo and quadriceps exercise vs matched visits. Resolve each factor separately. Four arm IDs do not describe a single combined treatment contrast."
+    observations:
+      r1: {outcome: physical health score, time: 3 months, result: no detected benefit, magnitude: null}
+      r2: {outcome: falls, time: 6 months, result: no detected benefit, magnitude: null}
+    link_scope: "Supports a scoped negative result for these interventions and endpoints. Gold quotes the conclusion while the rows quote Results. RR 3.6 in r3 belongs to injury and must not populate either primary outcome."
+  - pack: 16
+    rid: R01
+    pmid: '23287836'
+    extraction_id: dbd03b6a4c3291daf4563a4f4fc3a7b81385854613fda8f67388079e194feb16
+    matched: [r5]
+    first_run: {gold: against, reader: for, skeleton: against}
+    population: postmenopausal women with low bone mass
+    contrast: "Squat maximal strength training and exercise-guideline control. The abstract reports a post-training trend without identifying the statistical contrast for the ratio. Clear the asserted between_groups comparison."
+    observations:
+      r5: {outcome: serum P1NP/CTX ratio, time: 12 weeks, result: upward trend, p: '0.09', magnitude: null}
+    link_scope: "Both methods cite the same sentence. No age, obesity or metabolic-risk interaction estimate is provided. Retain the descriptive trend; withhold a direct modifier edge regardless of the benchmark stance."
+  - pack: 16
+    rid: R08
+    pmid: '25264670'
+    extraction_id: 64d6eed82cc8dcfe95442862af0a9f713935eb22937433afc72e8ac43241c38b
+    matched: [r1, r2, r3, r4, r5]
+    first_run: {gold: for, reader: for, skeleton: none}
+    population: older adults in the low-load blood-flow-restriction arm
+    contrast: within-arm change from baseline after 12 weeks
+    observations:
+      r2: {outcome: leg press 1RM, time: 12 weeks, change_percent_approx: 17, p: '0.067', significant_at_stated_threshold: false}
+      r4: {outcome: quadriceps cross-sectional area, time: 12 weeks, change_percent: 6.6, p: '<0.001'}
+    link_scope: "These rows are relevant to the low-load alternative. High-intensity arm estimates and the comparison of arms are separate. Neither row establishes a benefit of moderate-intensity exercise across healthspan."
+  - pack: 25
+    rid: Q17
+    pmid: '41073834'
+    extraction_id: 3704ab482a07520ad003368c680420a875aa71c1f8e61d13a25eb64b054689c3
+    matched: []
+    first_run: {gold: for, reader: none, skeleton: for}
+    population: women in the crossover trial of physically active older adults
+    contrast: within the creatine plus HMB plus conditioning period, pre to post
+    observations:
+      r39: {outcome: leg and back strength, time: 6 weeks, before_kg: 63.24, after_kg: 77.03, before_dispersion_kg: 11.29, after_dispersion_kg: 12.34}
+    link_scope: "The Results paragraph supplies the missing female subgroup. The stored judge quote is an overall time-by-group interaction. Use r39 only as a numerical subgroup observation for the combination. An effect of isolated calcium HMB is not identified."
+  - pack: 25
+    rid: Q19
+    pmid: '32785021'
+    extraction_id: ceff6ca0528dafeaa810cfc4cc4a0c1c1f1cbe74f341583c0dfbd6a0a9de1059
+    matched: [r12]
+    first_run: {gold: for, reader: for, skeleton: none}
+    population: sedentary older men in the Muscle5 group
+    contrast: within-arm pre to post, resistance band training plus multi-ingredient supplement
+    observations:
+      r9: {outcome: leg press strength, time: 12 weeks, change_percent: 16.6, dispersion_percentage_points: 4.6}
+      r10: {outcome: hand grip strength, time: 12 weeks, change_percent: 8.4, dispersion_percentage_points: 2.7}
+    link_scope: "The single matching row r12 measures sit-to-stand time. Results r9 and r10 give the relevant strength estimates. Both arms exercised. No direct usual-care comparison or frailty-specific strength estimate in these rows."
+  - pack: 25
+    rid: Q14
+    pmid: '15166299'
+    extraction_id: 78dc6bb59e5bec52073c9f57a8b10ae972c7724e58f2133823c89c20cdbdd997
+    matched: [r4, r5, r6]
+    first_run: {gold: for, reader: none, skeleton: for}
+    population: premenopausal women with abdominal obesity
+    contrast: exercise-induced weight loss vs each of the other three groups over 14 weeks
+    observations:
+      r4: {outcome: total fat, time: 14 weeks, result: greater reduction, p: '<0.001', magnitude: null}
+      r5: {outcome: abdominal fat, time: 14 weeks, result: greater reduction, p: '<0.001', magnitude: null}
+      r6: {outcome: abdominal subcutaneous fat, time: 14 weeks, result: greater reduction, p: '<0.001', magnitude: null}
+    link_scope: "All three rows are legitimate distinct outcomes sharing one source sentence. Preserve the observed population; transfer to elderly frail adults is indirect."
