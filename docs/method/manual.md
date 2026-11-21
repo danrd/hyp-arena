@@ -72,6 +72,20 @@ section 10. Rules for a model writing such a report:
 - A report written this way is an approximation. The authoritative report is the one the code builds
   (`python -m hyparena.reports.analyze RUN.json`), from the same rules and the records the reader extracted.
 
+### Collecting full-paper observations during a run
+
+Use this workflow when this manual is attached in chat. A graph-enabled run needs access to the private longevity-kg tools. Attaching the manual supplies the procedure; the chat host supplies the connection.
+
+1. After selecting papers, collect their unique PMIDs across links and alternatives. Call `lookup_papers` once for the batch. Record the publication cutoff T and which source snapshot the reader actually saw. Continue the evaluation when the graph is unavailable; keep the unmatched PMIDs for replay.
+2. Open an existing full-paper reading with `get_skeleton(extraction_id)`. Reuse its groups, outcomes and source passages to locate observations. Check the population, contrast, timing and original passage against the current link. Select and log the version when several exist. For historical runs also verify that this edition was available by T. In a standard v3.12 run the working reader v21 assesses claims from its supplied abstracts. Only findings supported by that input enter that score. Keep full-text-only findings in the graph; label a score that uses them as a separate full-text analysis.
+3. If the full-paper reading is missing, call `full_text_task(pmid)`. For an available full body, an independent chat or parser can complete that one task for all future hypotheses. If the registry returns `needs_full_text`, queue the PMID once for source acquisition. An abstract or an excerpt is already useful reader input and does not trigger another annotation assignment. Graph enrichment need not hold up scoring.
+4. When reading for a specific link reveals a missing observation or wrong field, send the observed outcome, a verbatim quote, PMID and source hash with `propose_observation`. Include the base extraction ID and row ID for a correction. Save the returned proposal ID. Proposals are partial observations awaiting review; keep their stance on the hypothesis separate. Use `submit_full_reading` only after independently covering the entire staged paper. A successful receipt identifies the new immutable extraction; repeated submissions of the same answer are idempotent.
+5. In the run record, list each used PMID once with the reader scope, graph version(s) consulted, outstanding full-text PMIDs and proposal/import receipts. Link the same PMID to every relevant claim; do not count rereadings as independent publications. Without a connector, attach this list to the report and use the [local queue and import procedure](../spec/paper-exchange.md) later. Do not report a graph write without a receipt.
+
+For an annotation delivered as a file, save UTF-8 JSON in the private longevity-kg checkout under
+`reviews/paper-annotations/<PMID>/<task_id>.<model_slug>.<run_number>.reply.json`. Use the next unused
+number (01, 02, …). A chat without filesystem access returns the file to the operator. With MCP, record the submission receipt.
+
 ## 1. What is evaluated
 
 A hypothesis is valued for its **mechanism**: a chain of links from the intervention to the outcome. A hypothesis is
