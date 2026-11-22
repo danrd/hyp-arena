@@ -47,7 +47,7 @@ def test_v3_pipeline_runs_with_the_fake_llm(monkeypatch):
     res = run([text], writer="human_registry", config="configs/v3-flash.yaml", fake=True, as_of="2020-01-01", max_calls=60,
               verifiers=["deepseek"])
     assert res["meta"]["method"] == "v3"
-    assert res["meta"]["method_version"] == "v3.12"
+    assert res["meta"]["method_version"] == "v3.13"
     roles = {c.get("role") for c in res["calls"] if c.get("kind") == "llm"}
     assert any(c.get("template") == "normalize_card/v7" for c in res["calls"] if c.get("kind") == "llm")
     assert "propose_alternatives" in roles or res["items"][0]["outcome"] != "ranked"

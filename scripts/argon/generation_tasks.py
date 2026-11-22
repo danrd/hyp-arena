@@ -189,6 +189,85 @@ def build_a(as_of: str) -> dict:
     return build("a", as_of)
 
 
+# Generation prompt v3 (2026-11-22, post-Sol-20 calibration):
+# - Shared block (identical in A3 and BS3): drops the "testable change to the intervention itself" loophole that drove
+#   cosmetic protocol tweaks in A2/BS2, and requires actionable pre-T means and attention to critical objections.
+# - BS3 method block: adds n_planned to decisive_experiment, structured implementation_check (named means + pre-T PMID),
+#   critical_premise with an explicit keep/narrow/pivot/drop_and_replace decision, and disconfirming_result.
+V3_SHARED_BLOCK = [
+    "When developing each hypothesis, focus on genuine scientific novelty: a previously untested causal link, a decisive fork "
+    "between competing ageing mechanisms, or a testable effect modifier. If the idea transfers a known effect to another "
+    "species or population, state the specific open scientific question the transfer resolves. Do not rely on minor protocol "
+    "or timing tweaks to an already-tested intervention unless they test a distinct causal prediction.",
+    "Ensure each proposed experiment relies on concrete, actionable means (named compound, construct, device, or assay) "
+    "usable in the stated experimental system before T, specify a planned sample size, and check whether any critical "
+    "premise (including the state of the target population) is already contradicted before T.",
+]
+
+CARD_V3 = {
+    **CARD,
+    "decisive_experiment": {**CARD["decisive_experiment"], "n_planned": ""},
+}
+
+_CARD_V3_ITEMS = [
+    *_CARD_ITEMS[:-1],
+    "- decisive experiment: system (human, mouse, rat, cells, ...), design, control or comparator, primary endpoint, "
+    "duration, planned sample size (n_planned).",
+]
+
+CHECK_V3 = {
+    "steps": [{"link": "c1", "for": [_REF], "against": [_REF]}],
+    "against_whole": [_REF],
+    "critical_premise": {
+        "premise": "",
+        "strongest_objection_pmid": "",
+        "status": "direct | indirect | unknown | contradicted",
+        "decision": "keep | narrow | pivot_experiment | drop_and_replace",
+    },
+    "implementation_check": [
+        {"arm_or_measure": "", "means": "", "demonstrated_in_system_pmid": "", "gap": ""}
+    ],
+    "alternatives": [{"text": "", "told_apart_by": ""}],
+    "tested_before_T": {"answer": "yes | partly | no", "papers": [_REF], "beyond": "", "disconfirming_result": ""},
+}
+
+
+def _bs3_spec(n: int = N) -> list[str]:
+    steps = [
+        *_steps_items(True),
+        "- Identify the single most critical premise (including any assumption about the target population), find the "
+        "strongest published objection before T, and record a decision: keep, narrow, pivot_experiment, or drop_and_replace "
+        "(if contradicted or technically unviable, revise or replace the candidate before writing the final text).",
+        "- For each active arm, control, and key measurement, verify implementation_check: name the concrete agent, device, "
+        "or construct and cite a pre-T PMID demonstrating that operation in the stated or closest system, or state the gap.",
+        "- In tested_before_T, state the concrete disconfirming_result that would refute the proposed new contribution.",
+    ]
+    return ([_CARD_INTRO + "and check it the way a careful researcher would before proposing it (these are the only two "
+             "extra requirements). The card:"] + _CARD_V3_ITEMS + ["The check:"] + steps
+            + [_outro("the card and the check", n)])
+
+
+def build_v3(participant: str, as_of: str, topic: str = TOPIC, n: int = N, write: bool = True, guard: bool = True) -> dict:
+    """Build generation prompt v3 ('a3' or 'bs3'): identical shared novelty/feasibility guidance, with BS3 adding the
+    structured card (including n_planned) and pre-finalization implementation/critical-premise checks."""
+    if participant not in ("a3", "bs3"):
+        raise ValueError(f"participant must be 'a3' or 'bs3', got {participant!r}")
+    extra_instr = _bs3_spec(n) if participant == "bs3" else []
+    fields = {"card": CARD_V3, "check": CHECK_V3} if participant == "bs3" else {}
+    task = {
+        "task": f"generation_{participant.upper()}",
+        "cover": COVER,
+        "topic": topic,
+        "T": as_of,
+        "n": n,
+        "instructions": [base(n, guard)] + V3_SHARED_BLOCK + extra_instr + COMMON,
+        "answer_format": {"hypotheses": [{**HYP, "id": f"{participant.upper()}1", **fields}]},
+    }
+    if write:
+        _write(participant, task)
+    return task
+
+
 def build_b_generate(as_of: str) -> dict:
     """B = A + our card specification (pilot of 2026-11-16): the same request as A, plus the structured card. No manual and
     no hint of what the method values, so B differs from A only by the structure. The steps of the method (scoring) and the
@@ -580,7 +659,7 @@ def main(argv=None) -> None:
     ap.add_argument("cmd", choices=["build", "score", "analyze", "report", "compare-argon", "build-a", "build-b", "build-b-generate", "build-reports", "build-evolve", "check", "collect"])
     ap.add_argument("--arm", choices=["C", "D"])
     ap.add_argument("--kind", choices=["a", "b", "s", "bs", "a_noguard", "bs_noguard", "reports", "c", "d"])
-    ap.add_argument("--participant", choices=list(PARTICIPANTS), help="build: a (base), b (+ card), s (+ steps), bs (+ card and steps)")
+    ap.add_argument("--participant", choices=[*PARTICIPANTS, "a3", "bs3"], help="build: a (base), b (+ card), s (+ steps), bs (+ card and steps), a3/bs3 (v3 prompts)")
     ap.add_argument("--topic", default=TOPIC)
     ap.add_argument("--n", type=int, default=N)
     ap.add_argument("--files", nargs="*", default=[], help="analyze: participant=score file, e.g. A=score_a_v2.json")
@@ -602,7 +681,10 @@ def main(argv=None) -> None:
             raise SystemExit("a paid run: set ALLOW_PAID=1 after the user's go")
         print(json.dumps(score(a.kind, fake=a.fake), indent=1)); return
     if a.cmd == "build":
-        t = build(a.participant, a.as_of, a.topic, a.n, guard=not a.no_guard)
+        if a.participant in ("a3", "bs3"):
+            t = build_v3(a.participant, a.as_of, a.topic, a.n, guard=not a.no_guard)
+        else:
+            t = build(a.participant, a.as_of, a.topic, a.n, guard=not a.no_guard)
     elif a.cmd == "build-a":
         t = build_a(a.as_of)
     elif a.cmd == "build-b":

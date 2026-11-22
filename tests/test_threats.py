@@ -40,9 +40,10 @@ def test_a_single_group_rules_out_nothing_and_masking_not_stated_is_not_masked()
 
 
 def test_cells_and_animals_do_not_tell_apart_and_name_the_fix():
-    ck = threats.checklist(_card(system="in_vitro"))
-    assert ck["system"] == "cells" and ck["share"] == 0.0 and len(ck["open"]) == 6
-    assert "second tool" in next(o["fix"] for o in ck["open"] if o["threat"] == "off_target")
+    for sys_name in ("cells", "in_vitro"):
+        ck = threats.checklist(_card(system=sys_name))
+        assert ck["system"] == "cells" and ck["share"] == 0.0 and len(ck["open"]) == 6
+        assert "second tool" in next(o["fix"] for o in ck["open"] if o["threat"] == "off_target")
     assert threats.checklist(_card(system="mouse"))["system"] == "animal"
     assert threats.checklist(_card(system="unknown")) is None
 

@@ -1,0 +1,43 @@
+id: v313-calibration-and-pilots-2026-11-22
+status: adopted (v3.13)
+date: 2026-11-22
+baseline: method v3.12
+pools:
+  dev: longevity-kg/reviews/generation-2026-11-20-v312-sol (20 hypotheses, blind judge v3, 190 pairs)
+  holdout_generation: longevity-kg/reviews/generation-2026-11-19-ab-10x10/evaluation (20 hypotheses, blind judge v2, 190 pairs)
+  holdout_novelty: longevity-kg/reviews/argon-2026-11-15/pack_26 (30 written hypotheses, Argon novelty gold)
+  regression_registry: prospective-60 + calibration-73 (133 registry trials)
+adopted_changes:
+  - id: threats_cells_key
+    description: Add "cells": "cells" to threats.SYSTEM (restores 6-threat checklist, threats_open flag, and headroom_I for 11/20 Sol-20 and 9/20 10x10 hypotheses).
+    regression_top10: "10/10 on prospective-60 and calibration-73 (max_shift 0)"
+  - id: unknown_novelty_bottom
+    description: Map unknown novelty N (None) to bottom of ordinal scale (new_context) in aspid_v3 instead of uniform [0, 1] draw.
+    sol20_delta: "Frontier rho -0.190 -> +0.034 (+0.224), Funding rho +0.191 -> +0.224"
+    regression_top10: "Frontier 10/10 on both registry pools; Funding 10/10 prospective, 9/10 calibration"
+  - id: ctgov_compound_readiness_fallback
+    description: When ChEMBL lacks a verified phase for a compound, query ClinicalTrials.gov v2 up to as_of (StudyFirstSubmitDate <= as_of) with strict name/synonym match.
+    sol20_delta: "Caught NMD670 (H02) and bimokalner (H05), 0 false positives; Funding rho +0.191 -> +0.285 (+0.094)"
+    holdout_10x10_delta: "Caught NMD670 (H03) and rotigaptide (H11), 0 false positives; Funding rho +0.180 -> +0.272 (+0.092)"
+  - id: endpoint_clinical_by_experiment
+    description: Cap endpoint_clinical at biomarker when decisive_experiment.system != "human".
+    sol20_delta: "Evidence rho +0.448 -> +0.452 (Top-10 5/10 -> 6/10)"
+    regression_top10: "0 changes on registry pools and 10x10"
+  - id: paper_outcomes_v2
+    description: Extract up to 2 verified functional outcomes (with intervention_tested, same_intervention_family, endpoint_role, same_outcome_domain, verbatim excerpt) from earlier-link abstracts when outcome slot is empty.
+    dev_sol20: "Demoted H09 (new_link -> analog) and H16, preserved H07 and H15; Funding rho +0.257 -> +0.395, Frontier rho +0.034 -> +0.080; USD 0.0073"
+    holdout_pack26: "Preserved 8/9 true new_link/new_combination (wkappa 0.371 -> 0.327, false_high 0, 27/27 clean quote checks); preserved 10x10 H02"
+  - id: channel_b_nondrug_readiness
+    description: One implementation_readiness/v1 reader call over already-retrieved pre-T abstracts for non-compound interventions, requiring a code-verified verbatim quote (demonstrated 1.0, conditional 0.5, missing 0.0). Compounds remain on ChEMBL + CT.gov.
+    dev_sol20: "Non-drug 12: acc 84.6% (11/12), kappa +0.683, missing recall 7/7 (100%), verbatim quotes 6/6; Feas vs J-Test -0.097 -> +0.058; USD 0.0114"
+    holdout_10x10: "0/4 false positives on gene hypotheses, verbatim quotes 6/6; Funding rho +0.272 -> +0.372 (Top-10 6/10 -> 7/10), Feas vs J-Test -0.133 -> -0.067"
+combined_sol20:
+  v312_to_v313: "Evidence +0.448 -> +0.452; Funding +0.191 -> +0.390; Frontier -0.190 -> +0.126; Feas vs J-Test -0.176 -> +0.058"
+combined_10x10_holdout:
+  v312_to_v313: "Evidence +0.666 (5/5 T5); Funding +0.180 -> +0.372 (7/10 T10); Feas vs J-Test -0.102 -> -0.067"
+rejected_candidates:
+  - naive_pubmed_nondrug_readiness: "False positives on gene/protein tokens (Cx40, connexin-36) in 10x10 H16 (#20) and H18; lowered Funding rho."
+  - mesh_ctgov_nondrug_readiness: "0/4 recall on Sol-20 conditional non-drug hypotheses; overly broad MeSH Electric Stimulation gave false credit to adaptive dressing in 10x10 H19."
+  - naive_broad_pubmed_novelty_guard: "Dropped pack_26 wkappa 0.371 -> 0.291 (killed true new_link V11, V13, V30) while missing Sol-20 H09 and H15."
+  - broad_mesh_top10_retrieval_backfill: "Only 1/13 defining_pmids recall on pack_26 and 0 hits on Sol-20 H09/H15 vs 6/6 in-card earlier-link overlap on Sol-20."
+total_pilot_and_holdout_cost_usd: 0.03937

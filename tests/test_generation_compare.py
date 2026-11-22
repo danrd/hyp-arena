@@ -208,3 +208,16 @@ def test_judge_v3_needs_the_deciding_consideration():
         assert gc.decided_by(data, done, ["q"]) == {"BS>A": {"x": {"evidence": 1}, "y": {"benefit": 1}}}
     finally:
         gc.set_mode({})
+
+
+def test_v3_prompts_share_novelty_block_and_bs3_adds_structured_checks():
+    a3 = gt.build_v3("a3", "2026-11-22", write=False)
+    bs3 = gt.build_v3("bs3", "2026-11-22", write=False)
+    assert a3["instructions"][:3] == bs3["instructions"][:3]
+    joined_a3 = " ".join(a3["instructions"])
+    assert "testable change to the intervention itself" not in joined_a3
+    assert "planned sample size" in joined_a3
+    h_bs3 = bs3["answer_format"]["hypotheses"][0]
+    assert "n_planned" in h_bs3["card"]["decisive_experiment"]
+    assert {"critical_premise", "implementation_check"} <= set(h_bs3["check"])
+    assert "disconfirming_result" in h_bs3["check"]["tested_before_T"]

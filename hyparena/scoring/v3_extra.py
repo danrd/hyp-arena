@@ -33,9 +33,40 @@ def _n_score(n: Optional[int]) -> Optional[float]:
     return 1.0 if n < 50 else 2 / 3 if n < 200 else 1 / 3 if n < 1000 else 0.0
 
 
-def readiness_assessment(card: HypothesisCard) -> tuple[Optional[float], str]:
-    """Use documented regulatory status. Intervention type alone earns no readiness."""
-    from hyparena.tools import compounds
+def endpoint_for_experiment(endpoint: Optional[str], system: Optional[str]) -> Optional[str]:
+    """Clinical endpoint levels apply only when the stated experiment is in humans (v3.13)."""
+    if system and system != "human" and endpoint in ("patient_reported", "function", "clinical_event"):
+        return "biomarker"
+    return endpoint
+
+
+def _chembl_component(label: str, compounds_mod) -> tuple[Optional[float], Optional[str], str]:
+    """(phase_score, entity_id, reason) from ChEMBL/PubChem alone."""
+    try:
+        match = compounds_mod.lookup(label, raise_on_error=True)
+    except compounds_mod.LookupError_:
+        return None, None, "lookup_failed"
+    if match is None:
+        return None, None, "unresolved"
+    given = compounds_mod.key(compounds_mod.resolve_alias(label))
+    if given not in {compounds_mod.key(name) for name in [match.name, *match.synonyms]}:
+        return None, None, "identity_unverified"
+    if not match.chembl or match.max_phase is None:
+        return None, None, "phase_unknown"
+    ph = match.max_phase
+    score = 1.0 if ph >= 4 else 0.5 if ph >= 1 else 0.0
+    return score, match.chembl, ("approved" if ph >= 4 else "clinical" if ph >= 1 else "preclinical")
+
+
+def readiness_assessment(card: HypothesisCard, as_of: str = "",
+                         implementation: Optional[dict] = None) -> tuple[Optional[float], str]:
+    """Use documented regulatory status. Intervention type alone earns no readiness.
+    When `as_of` is given and ChEMBL has no verified phase for a compound, fall back to
+    ClinicalTrials.gov trials submitted on or before `as_of` (v3.13).
+    For non-compound interventions, when a code-verified Channel B `implementation` assessment
+    (`verified_status` in demonstrated/conditional/missing) is supplied, map it to 1.0 / 0.5 / 0.0 (v3.13)."""
+    from hyparena.reading import implementation as impl_mod
+    from hyparena.tools import clinicaltrials, compounds
 
     interventions = card.pico.intervention
     if not interventions or any(i.type == "unspecified" or i.label.strip().casefold() in {"", "unknown"}
@@ -45,31 +76,69 @@ def readiness_assessment(card: HypothesisCard) -> tuple[Optional[float], str]:
     if any(i.type == "other" for i in interventions):
         return None, "unclassified"
     if len(drugs) != len(interventions):
+        if isinstance(implementation, dict):
+            st = str(implementation.get("verified_status") or "").strip().lower()
+            if st in impl_mod.STATUS_SCORE:
+                return impl_mod.STATUS_SCORE[st], impl_mod.STATUS_REASON[st]
         return None, "implementation_unverified"
     components = [compounds.split(drug.label) for drug in drugs]
     if not all(components):
         return None, "unresolved"
     labels = list(dict.fromkeys(part for parts in components for part in parts))
+
+    scores: list[float] = []
+    entity_ids: set[str] = set()
+    used_ct = False
+    for label in labels:
+        score, ent_id, reason = _chembl_component(label, compounds)
+        if score is not None and ent_id is not None:
+            scores.append(score)
+            entity_ids.add(ent_id)
+            continue
+        if as_of:
+            ct = clinicaltrials.compound_phase(label, as_of)
+            if ct and ct.get("matched"):
+                ph = ct.get("max_phase")
+                ct_score = (1.0 if ph >= 4 else 0.5 if ph >= 1 else 0.0) if ph is not None else 0.5
+                scores.append(ct_score)
+                entity_ids.add(f"CT:{clinicaltrials._norm_key(label)}")
+                used_ct = True
+                continue
+        return None, reason
+
+    min_score = min(scores)
+    if min_score >= 1.0 and len(entity_ids) > 1:
+        return 0.5, ("ct_combination_unverified" if used_ct else "combination_unverified")
+    prefix = "ct_" if used_ct else ""
+    if min_score >= 1.0:
+        return 1.0, f"{prefix}approved"
+    if min_score >= 0.5:
+        return 0.5, f"{prefix}clinical"
+    return 0.0, f"{prefix}preclinical"
+
+
+def readiness(card: HypothesisCard, as_of: str = "", implementation: Optional[dict] = None) -> Optional[float]:
+    if not as_of and implementation is None:
+        return readiness_assessment(card)[0]
     try:
-        matches = [compounds.lookup(label, raise_on_error=True) for label in labels]
-    except compounds.LookupError_:
-        return None, "lookup_failed"
-    for label, match in zip(labels, matches):
-        if match is None:
-            return None, "unresolved"
-        given = compounds.key(compounds.resolve_alias(label))
-        if given not in {compounds.key(name) for name in [match.name, *match.synonyms]}:
-            return None, "identity_unverified"
-    if any(not match.chembl or match.max_phase is None for match in matches):
-        return None, "phase_unknown"
-    phase = min(match.max_phase for match in matches)
-    if phase >= 4 and len({match.chembl for match in matches}) > 1:
-        return 0.5, "combination_unverified"
-    return (1.0, "approved") if phase >= 4 else (0.5, "clinical") if phase >= 1 else (0.0, "preclinical")
+        return readiness_assessment(card, as_of, implementation)[0]
+    except TypeError:
+        try:
+            return readiness_assessment(card, as_of)[0]
+        except TypeError:
+            return readiness_assessment(card)[0]
 
 
-def readiness(card: HypothesisCard) -> Optional[float]:
-    return readiness_assessment(card)[0]
+def _call_readiness(card: HypothesisCard, as_of: str = "", implementation: Optional[dict] = None) -> Optional[float]:
+    if not as_of and implementation is None:
+        return readiness(card)
+    try:
+        return readiness(card, as_of, implementation)
+    except TypeError:
+        try:
+            return readiness(card, as_of)
+        except TypeError:
+            return readiness(card)
 
 
 def sample_size_score(experiment: DecisiveExperiment) -> Optional[float]:
@@ -80,15 +149,15 @@ def sample_size_score(experiment: DecisiveExperiment) -> Optional[float]:
     return _n_score(n)
 
 
-def feasibility(card: HypothesisCard) -> float:
+def feasibility(card: HypothesisCard, as_of: str = "", implementation: Optional[dict] = None) -> float:
     e = card.decisive_experiment
     parts = [SYSTEM_COST.get(e.system), DURATION_COST.get(e.duration_class), sample_size_score(e)]
     known = [p for p in parts if p is not None]
     # Missing readiness retains its place so withholding it cannot raise feasibility.
-    return round((sum(known) + (readiness(card) or 0.0)) / (len(known) + 1), 3)
+    return round((sum(known) + (_call_readiness(card, as_of, implementation) or 0.0)) / (len(known) + 1), 3)
 
 
-def feasibility_breakdown(card: HypothesisCard) -> dict:
+def feasibility_breakdown(card: HypothesisCard, as_of: str = "", implementation: Optional[dict] = None) -> dict:
     """Component-level breakdown of feasibility(card) for display in the evaluation tab."""
     e = card.decisive_experiment
     sys_score = SYSTEM_COST.get(e.system)
@@ -98,10 +167,29 @@ def feasibility_breakdown(card: HypothesisCard) -> dict:
         e.system in SYSTEM_COST and e.system != "data_analysis"
         and (e.n_planned is None or e.n_planned <= 0)
     )
-    readiness_score, readiness_reason = readiness_assessment(card)
+    try:
+        if as_of or implementation is not None:
+            readiness_score, readiness_reason = readiness_assessment(card, as_of, implementation)
+        else:
+            readiness_score, readiness_reason = readiness_assessment(card)
+    except TypeError:
+        readiness_score, readiness_reason = readiness_assessment(card)
     known = [p for p in (sys_score, dur_score, n_score) if p is not None]
     denom = len(known) + 1
     total = round((sum(known) + (readiness_score or 0.0)) / denom, 3)
+    readiness_part = {
+        "key": "readiness",
+        "value": readiness_reason,
+        "score": round(readiness_score, 3) if readiness_score is not None else 0.0,
+        "known": readiness_score is not None,
+        "in_denominator": True,
+        "reason": readiness_reason,
+    }
+    if isinstance(implementation, dict) and readiness_reason.startswith("impl_"):
+        if implementation.get("evidence_pmid"):
+            readiness_part["evidence_pmid"] = implementation["evidence_pmid"]
+        if implementation.get("gap"):
+            readiness_part["gap"] = implementation["gap"]
     parts = [
         {
             "key": "system",
@@ -122,20 +210,13 @@ def feasibility_breakdown(card: HypothesisCard) -> dict:
             "in_denominator": n_score is not None,
             "reason": "missing_reserved" if n_missing_reserved else ("not_applicable" if n_score is None else "stated"),
         },
-        {
-            "key": "readiness",
-            "value": readiness_reason,
-            "score": round(readiness_score, 3) if readiness_score is not None else 0.0,
-            "known": readiness_score is not None,
-            "in_denominator": True,
-            "reason": readiness_reason,
-        },
+        readiness_part,
     ]
     return {"score": total, "denominator": denom, "parts": parts}
 
 
 def extras(card: HypothesisCard, ver_claims: list[ClaimVerification], v3: dict, as_of: str = "",
-           variant: str = "v3") -> dict:
+           variant: str = "v3", implementation: Optional[dict] = None) -> dict:
     """All candidate indicators of one hypothesis; `v3` is its V3Result.as_dict()."""
     by_id = {cv.id: cv for cv in ver_claims}
     links = r3.chain(card)
@@ -160,7 +241,7 @@ def extras(card: HypothesisCard, ver_claims: list[ClaimVerification], v3: dict, 
         "best_design_outcome": best_design,
         "independent_outcome": r3._independent([r for r, _ in out_recs]),
         "against_share": round(A / (F + A), 3) if F + A > 0 else 0.0,
-        "feasibility": feasibility(card),
+        "feasibility": feasibility(card, as_of, implementation),
         "weakest_level": min(levels, key=lw) if levels else "unverified",
         "human_outcome": any(r3.species_key(r.species) == "human" or r3.human_claim(c) and r3.context_level(r) == "exact"
                              for r, c in out_recs),

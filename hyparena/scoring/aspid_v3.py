@@ -75,9 +75,14 @@ def values_of(v3: dict, extra: Optional[dict] = None) -> dict:
 
 
 def _known_level(k: str, v):
-    """An ordinal value outside the indicator's levels (a model's "other") is unknown: drawn over the whole range."""
+    """An ordinal value outside the indicator's levels (a model's "other") is unknown: drawn over the whole range,
+    except novelty N, where unknown novelty sits at the bottom of the scale so missing novelty cannot beat translation."""
     spec = SPECS.get(k)
-    return None if (spec is not None and spec.kind == "ordinal" and v is not None and v not in spec.levels) else v
+    if spec is not None and spec.kind == "ordinal" and v is not None and v not in spec.levels:
+        v = None
+    if k == "N" and v is None:
+        return SPECS["N"].levels[0]
+    return v
 
 
 def rank(results: dict[str, tuple[dict, Optional[dict]]], profile: str, K: int = 10000, seed: int = 0) -> Optional[AggregationResult]:

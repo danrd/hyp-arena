@@ -164,3 +164,36 @@ def test_feasibility_breakdown_matches_feasibility_and_tracks_denominator(monkey
     by_key3 = {p["key"]: p for p in fb3["parts"]}
     assert by_key3["duration"]["in_denominator"] is False and by_key3["duration"]["score"] is None
     assert by_key3["sample_size"]["in_denominator"] is False and by_key3["sample_size"]["reason"] == "not_applicable"
+
+
+def test_readiness_falls_back_to_clinicaltrials_with_as_of(monkeypatch):
+    from hyparena.tools import clinicaltrials
+
+    monkeypatch.setattr(compounds, "lookup", lambda label, raise_on_error=False: None)
+    monkeypatch.setattr(
+        clinicaltrials,
+        "compound_phase",
+        lambda label, as_of="": {"matched": True, "max_phase": 2, "ncts": ["NCT06414954"]}
+        if label == "NMD670" else {"matched": False, "max_phase": None, "ncts": []},
+    )
+    c = card([claim("c2", "x", "improves_healthspan_in", "human", "outcome", "outcome")])
+    c.pico.intervention = [Intervention(type="compound", label="NMD670")]
+    c.decisive_experiment.system, c.decisive_experiment.duration_class, c.decisive_experiment.n_planned = "human", "months", 80
+    # Without as_of, stays offline / ChEMBL-only
+    assert x.readiness_assessment(c) == (None, "unresolved")
+    # With as_of, falls back to ClinicalTrials.gov up to as_of
+    assert x.readiness_assessment(c, as_of="2026-11-19") == (0.5, "ct_clinical")
+    assert x.feasibility(c, as_of="2026-11-19") == round((0 + 2 / 3 + 2 / 3 + 0.5) / 4, 3)
+    fb = x.feasibility_breakdown(c, as_of="2026-11-19")
+    assert fb["score"] == x.feasibility(c, as_of="2026-11-19")
+    assert next(p for p in fb["parts"] if p["key"] == "readiness")["reason"] == "ct_clinical"
+
+
+def test_endpoint_for_experiment_caps_nonhuman_systems():
+    assert x.endpoint_for_experiment("clinical_event", "human") == "clinical_event"
+    assert x.endpoint_for_experiment("function", "human") == "function"
+    assert x.endpoint_for_experiment("clinical_event", "mouse") == "biomarker"
+    assert x.endpoint_for_experiment("function", "cells") == "biomarker"
+    assert x.endpoint_for_experiment("patient_reported", "rat") == "biomarker"
+    assert x.endpoint_for_experiment("biomarker", "cells") == "biomarker"
+    assert x.endpoint_for_experiment(None, "cells") is None

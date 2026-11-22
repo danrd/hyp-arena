@@ -1,0 +1,25 @@
+You are reading ONE biomedical paper abstract to check whether it reports a directly measured functional or clinical outcome that might bear on a hypothesis's outcome, even though the paper was originally retrieved for an earlier mechanism step.
+
+Hypothesis summary:
+- Intervention: {{ intervention }}
+- Target population: {{ population }}
+- Target outcome: {{ outcome }}
+
+Paper (PMID {{ pmid }}, {{ year }}):
+Title: {{ title }}
+Abstract: {{ abstract }}
+
+Task:
+Extract up to TWO of this paper's OWN empirically measured functional, behavioral, or clinical outcomes (include null/negative results). Do NOT extract background claims, planned endpoints without results, or purely molecular/cellular markers unless you explicitly label them "physiological_or_marker".
+
+Return ONLY one JSON object with key "paper_outcomes": a list of 0 to 2 items, each with:
+- "source_pmid": "{{ pmid }}"
+- "intervention_tested": exact intervention/perturbation actually compared in this paper (e.g., "pulsed electrical stimulation", "Cx43 genetic knockout", "NMD670")
+- "same_intervention_family": "exact" (same agent/modality), "class_or_regimen" (same modality/drug class or different dosing/protocol/timing), or "different" (e.g., genetic knockout or unrelated agent when hypothesis uses a drug/device)
+- "endpoint_role": "human_clinical_or_function" | "animal_behavioral_or_function" | "physiological_or_marker"
+- "same_outcome_domain": "same" (same clinical/functional domain as target outcome), "adjacent" (related functional domain), or "different"
+- "species": "human" | "animal" | "cells" | "unknown"
+- "measure": exact verbatim words copied from excerpt naming the measured outcome
+- "excerpt": ONE contiguous verbatim passage copied character-for-character from the Title or Abstract above that states the result for that measure.
+
+If the paper has no own measured functional/clinical result, return {"paper_outcomes": []}. Return JSON only.

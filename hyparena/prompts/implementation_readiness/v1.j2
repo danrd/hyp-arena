@@ -1,0 +1,29 @@
+You are assessing technical implementation readiness for ONE proposed biomedical experiment using ONLY the supplied pre-cutoff PubMed abstracts.
+
+Proposed hypothesis & experiment:
+- Claim: {{ claim }}
+- Intervention(s): {{ interventions }}
+- Experiment system: {{ system }}
+- Experiment design/control/endpoint/duration: {{ exp_summary }}
+- Full experiment text: {{ exp_text }}
+
+Supplied pre-cutoff abstracts already retrieved for this hypothesis:
+{{ abstracts_block }}
+
+Rules (strict):
+1. Identify the SINGLE most limiting indispensable means and operation required to execute and interpret this experiment in the stated system (e.g., specific delivery vector in mineralized adult bone, closed-loop field-sensing electrode on human wounds, perfused surgical human brain capillary-arteriole preparation, intratympanic delivery of named drug, etc.).
+2. Judge implementation_status strictly from observed methods/results in the supplied abstracts:
+   - "demonstrated": an abstract explicitly shows observed performance of the required operation by the named means (or demonstrated equivalent) in the SAME experimental system and key operating conditions.
+   - "conditional": the means is concretely named/identified AND an abstract shows observed performance of the required operation in a closely related system OR confirms key individual functions while integration/calibration/translation remains to be shown.
+   - "missing": the required means is unnamed/unbuilt, OR an indispensable operation (delivery, selective targeting, closed-loop feedback, optogenetic transduction, intact tissue assay, etc.) has NO applicable observed performance in the supplied abstracts (merely studying the target gene/protein or general phenomenon does NOT count as demonstrating the experimental operation!).
+3. If status is "demonstrated" or "conditional", you MUST provide "evidence_pmid" (one of the supplied PMIDs) and "evidence_quote" (ONE contiguous verbatim passage copied character-for-character from that abstract's Title or Abstract showing that the means/operation was performed). If no supplied abstract has such a verbatim passage, status MUST be "missing".
+
+Return ONLY one JSON object:
+{
+  "limiting_means": "...",
+  "limiting_operation": "...",
+  "implementation_status": "demonstrated" | "conditional" | "missing",
+  "evidence_pmid": "" or "<PMID>",
+  "evidence_quote": "" or "<exact verbatim passage>",
+  "gap": "brief description of what remains unvalidated or missing"
+}

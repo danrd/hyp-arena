@@ -304,7 +304,7 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
         relevant = [c for c in chain if c["in_P"] and c["checked"]]
         weakest = min(relevant, key=lambda c: c["S"]) if relevant else None
         strongest = max(relevant, key=lambda c: c["S"]) if relevant else None
-        N = nv.novelty(card, cvs, res)
+        N = nv.novelty(card, cvs, res, absence=it.get("absence"), paper_outcomes=it.get("paper_outcomes"))
         lev, _, bott = nv.leverage(card, cvs, res)
         raise_to, raise_link = None, (bott.split(",")[0] if lev > 0 else None)        # v3.4: support, not P, rises with data
         de = card.decisive_experiment
@@ -316,7 +316,7 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
                    "unchecked": [c["id"] for c in chain if not c["checked"]], "experiment": {"design": de.design, "endpoint": de.endpoint, "n": de.n_planned},
                    "endpoint_clinical": sc.get("endpoint_clinical"), "trend_pubmed": sc.get("trend_pubmed"), "ai_role": sc.get("ai_role"),
                    "ai_span": card.ai_role_span, "aspid": {p: sc.get(f"aspid_{p}") for p in profiles}, "N": N,
-                   "N_pmid": nv.novelty_source(card, cvs),
+                   "N_pmid": nv.novelty_source(card, cvs, paper_outcomes=it.get("paper_outcomes")),
                    "link_levels": {c["id"]: c["novelty_level"] for c in chain},
                    "flags": res_flags(it),
                    # text and the normalised card as words (report v2: the cards tab shows text only, user 2026-11-11)
@@ -340,9 +340,13 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
         it = run[h]["items"][0]
         card = HypothesisCard.model_validate(it["card"])
         cvs = [ClaimVerification.model_validate(c) for c in it["verification"]["claims"]]
-        ext = v3_extra.extras(card, cvs, it["v3"], run[h]["meta"].get("as_of") or "")
+        impl = it.get("implementation_readiness")
+        as_of_h = run[h]["meta"].get("as_of") or ""
+        ext = v3_extra.extras(card, cvs, it["v3"], as_of_h, implementation=impl)
         values[h].update({k: ext.get(k) for k in ("feasibility", "best_design_outcome", "independent_outcome", "against_share")})
-        hyps[h]["feasibility_breakdown"] = v3_extra.feasibility_breakdown(card)
+        ep = v3_extra.endpoint_for_experiment(values[h].get("endpoint_clinical"), card.decisive_experiment.system)
+        values[h]["endpoint_clinical"] = hyps[h]["endpoint_clinical"] = ep
+        hyps[h]["feasibility_breakdown"] = v3_extra.feasibility_breakdown(card, as_of_h, implementation=impl)
     inds = sorted({i for p, _ in profiles.values() for tier in p.tiers for i in tier})
     pct = {ind: percentiles({h: _num(ind, values[h].get(ind)) for h in values}) for ind in inds}
     for h in values:

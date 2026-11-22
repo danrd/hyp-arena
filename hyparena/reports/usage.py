@@ -26,6 +26,7 @@ PRICES = Path(__file__).resolve().parents[2] / "configs" / "prices.yaml"
 # stage of the method (docs/method/schemes/flow_base.png) by the template, else by the role of the call
 STAGE_BY_TEMPLATE = {"normalize_card": "card", "normalize": "card", "card_baseline": "card (baseline)",
                      "search_queries": "search", "verify_claim": "reading", "relevance_check": "reading",
+                     "paper_outcomes": "reading", "implementation_readiness": "reading",
                      "reading_baseline": "reading (baseline)", "estimand": "endpoint", "judge_alternatives": "alternatives",
                      "propose_alternatives": "alternatives", "check_alternatives": "alternatives",
                      "evolve_v3": "versions", "evolve_free": "versions", "generate": "generation"}

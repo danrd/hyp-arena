@@ -159,9 +159,10 @@ def new_mechanism_links(card: HypothesisCard, cvs: list[ClaimVerification], abse
 
 
 def novelty(card: HypothesisCard, cvs: list[ClaimVerification], e: Optional[r32.V32Result] = None,
-            absence: Optional[dict] = None) -> Optional[str]:
+            absence: Optional[dict] = None, paper_outcomes: Optional[list[dict]] = None) -> Optional[str]:
     """N. `absence` = {link id: PubMed count on its subject and object before T} (mechanism_absence); without it the level
-    new_mechanism is never given (novelty by absence is counted by code or not at all)."""
+    new_mechanism is never given (novelty by absence is counted by code or not at all).
+    `paper_outcomes` (v3.13): verified functional outcomes retained from earlier-link abstracts when the outcome slot is empty."""
     e = e or evaluate(card, cvs)
     by = {c.id: c for c in cvs}
     claims = {c.id: c for c in r3.chain(card)}
@@ -182,15 +183,22 @@ def novelty(card: HypothesisCard, cvs: list[ClaimVerification], e: Optional[r32.
         return None
     supported = [any(e.links[i][3] > 0 for i in sl) and _slot_S(e, sl, False) > 0.5 for sl in pre]
     empty = [all(e.links[i][3] + e.links[i][4] == 0 for i in sl) for sl in pre]
+    base_level: Optional[str] = None
     if all(supported):
-        return "new_combination"
-    if any(supported) and any(empty):
-        return "new_link"
-    return None
+        base_level = "new_combination"
+    elif any(supported) and any(empty):
+        base_level = "new_link"
+    if base_level and paper_outcomes:
+        from hyparena.reading.paper_outcomes import novelty_from_outcomes
+        level, _ = novelty_from_outcomes(base_level, paper_outcomes)
+        return level
+    return base_level
 
 
-def novelty_source(card: HypothesisCard, cvs: list[ClaimVerification]) -> Optional[str]:
-    """The record (PMID) that sets N on the outcome link: the closest record by the ladder, else None."""
+def novelty_source(card: HypothesisCard, cvs: list[ClaimVerification],
+                   paper_outcomes: Optional[list[dict]] = None) -> Optional[str]:
+    """The record (PMID) that sets N on the outcome link: the closest record by the ladder, else None
+    (or the verified earlier-link paper_outcomes PMID when paper_outcomes demoted an empty outcome slot)."""
     by = {c.id: c for c in cvs}
     claims = {c.id: c for c in r3.chain(card)}
     pre, out = slots(card)
@@ -200,7 +208,13 @@ def novelty_source(card: HypothesisCard, cvs: list[ClaimVerification]) -> Option
             lv = record_level(r, claims[i])
             if lv and (best is None or LINK_LEVELS.index(lv) < LINK_LEVELS.index(best[0])):
                 best = (lv, r.record_id.replace("PMID:", ""))
-    return best[1] if best else None
+    if best:
+        return best[1]
+    if paper_outcomes:
+        from hyparena.reading.paper_outcomes import novelty_from_outcomes
+        _, pmid = novelty_from_outcomes("new_link", paper_outcomes)
+        return pmid
+    return None
 
 
 def link_levels(card: HypothesisCard, cvs: list[ClaimVerification]) -> dict[str, str]:

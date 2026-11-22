@@ -255,6 +255,31 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
                 x["verification"] = xl.refinalize(card, x["verification"], cvs)
             x["v3"] = rules_v3.evaluate(card, x["verification"].claims, alt_ver).as_dict()
             x["v3_alternatives"] = {k: v.model_dump(by_alias=True) for k, v in alt_ver.items()}
+            if not fake:                                    # v3.13: earlier-link paper_outcomes + non-drug Channel B readiness
+                from hyparena.novelty import novelty_v34 as _nv
+                from hyparena.reading import implementation as _impl, paper_outcomes as _po
+                from hyparena.tools import pubmed as _pm
+                need_po = _nv.novelty(card, x["verification"].claims) in ("new_link", "new_combination")
+                need_impl = _impl.is_non_drug(card)
+                if need_po or need_impl:
+                    pmids = list(dict.fromkeys(
+                        rec.record_id.removeprefix("PMID:")
+                        for cv in x["verification"].claims
+                        for rec in cv.evidence + cv.counterevidence
+                        if rec.record_id.removeprefix("PMID:").isdigit()
+                    ))
+                    fetched = _pm.fetch(pmids[:12]) if pmids else {}
+                    vfam = (verifiers or families)[0] if (verifiers or families) else None
+                    if need_po and fetched:
+                        x["paper_outcomes"] = _po.extract(
+                            client, card, x["verification"].claims, fetched,
+                            avoid=frozenset({writer}), family=vfam, log=log,
+                        )
+                    if need_impl:
+                        x["implementation_readiness"] = _impl.assess(
+                            client, card, x["verification"].claims, fetched, x["text"],
+                            avoid=frozenset({writer}), family=vfam, log=log,
+                        )
         if check_alternatives and legacy and x["verification"].evidence_profile.gate == "pass":
             alternatives.check(client, checker, card, x["verification"], avoid=frozenset({writer}), log=log)
         x["extra"] = _extra(card, as_of)
@@ -312,6 +337,8 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
                        "indicators": x.get("indicators"), "extra": x.get("extra"),
                        "unresolved_compounds": x.get("unresolved_compounds", []),
                        **({"v3": x["v3"], "v3_alternatives": x.get("v3_alternatives", {})} if "v3" in x else {}),
+                       **({"paper_outcomes": x["paper_outcomes"]} if "paper_outcomes" in x else {}),
+                       **({"implementation_readiness": x["implementation_readiness"]} if "implementation_readiness" in x else {}),
                        **({"cross_link": x["cross_link"]} if "cross_link" in x else {})} for x in items],
             "ranking": profiles, "robust": ranking.robust if ranking else [],
             **unranked_lists(items),

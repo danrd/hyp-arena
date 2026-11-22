@@ -1,10 +1,10 @@
-# Method v3.12 manual
+# Method v3.13 manual
 
-This manual describes the current rules of the method (version **v3.12**) as one self-contained text: a reader, a model or
+This manual describes the current rules of the method (version **v3.13**) as one self-contained text: a reader, a model or
 an outside reviewer can score a hypothesis and read its report from it alone. Each stage has its own detailed manual in
 [`docs/method/`](./) ([the card](card.md), [the search](search.md), [the reading](reading.md), [from a record to the evidence balance](evidence.md), [novelty](novelty.md), [indicators and ranking](ranking.md), [experiment and alternatives](alternatives.md), [improvements and versions](versions.md)); this manual is their compressed aggregate. How the rules
 came to be what they are is in the [change log](changelog.md). The changes in this release are in the
-[v3.12 change log](changelog-v3.12.md).
+[v3.13 change log](changelog-v3.13.md).
 
 Where the code is: rules [`hyparena/scoring/rules_v32.py`](../../hyparena/scoring/rules_v32.py), novelty
 [`hyparena/novelty/novelty_v34.py`](../../hyparena/novelty/novelty_v34.py), ranking [`hyparena/scoring/aspid_v3.py`](../../hyparena/scoring/aspid_v3.py)
@@ -436,7 +436,12 @@ text without one of them is returned as "needs refinement" with the missing part
   records before T on the link's own subject AND object (counted by code, the same count as rule 6 of section 11; no count,
   no level). It sits below new combination because there the outcome itself is untested. Without any outcome record:
   **new combination** (every link before the outcome is supported: the pieces are known, the chain as a whole was not
-  tested), **new link** (at least one link before the outcome has no record and at least one is supported). **Unknown** when
+  tested), **new link** (at least one link before the outcome has no record and at least one is supported). Before granting
+  **new combination** or **new link**, the pipeline checks already-retrieved earlier-link abstracts with
+  `paper_outcomes/v2` ([`paper_outcomes.py`](../../hyparena/reading/paper_outcomes.py)): if an earlier-link abstract
+  contains a code-verified verbatim functional or clinical outcome under the same or closely related intervention family
+  and outcome domain, N is demoted to **new context** (exact, human), **translation** (exact, non-human) or **analog**
+  (same class or regimen) without altering the evidence balance. **Unknown** when
   there is no data anywhere or the chain is the outcome alone: absence of evidence is not novelty. The exact known result
   (same intervention, species, sex, age and dose, supported) is the separate "known result" outcome and is not ranked. The
   same ladder per link feeds the evolution flag (section 11).
@@ -459,11 +464,11 @@ not depend on the rest of the pool. An unknown value is drawn over its whole ran
 |---|---|---|
 | I | informativeness of the stated experiment (headroom I, of an improved one, feeds the room to improve, section 11) | linear, 0-1 |
 | W | scope of the mechanism | local < organ < hallmark |
-| feasibility | the mean of the included scores: system (data analysis and cells 1, yeast 0.9, worm and fly 0.85, mouse and rat 0.5, human 0), duration (weeks 1, months 2/3, years 1/3, decades 0), planned n (under 50: 1, under 200: 2/3, under 1000: 1/3, at least 1000: 0; in a stated human, animal or cell experiment, missing or nonpositive n contributes 0 and stays in the denominator), intervention readiness (one compound with a verified identity and ChEMBL phase 4: 1, phase 1–3: 0.5, confirmed phase 0: 0. Multiple compounds take the lowest confirmed phase score, capped at 0.5 for a combination whose approval is unverified. An unspecified agent, unclassified type, non-compound intervention, unconfirmed identity or phase, or lookup failure leaves automated readiness unknown. Unknown readiness contributes 0 and stays in the denominator. The phase measures regulatory status of the compound. Readiness for the proposed tissue, route or use requires separate evidence); [`v3_extra.feasibility`](../../hyparena/scoring/v3_extra.py) | 0-1; does not yet count arms or invasive measures (section 11, rule 7) |
+| feasibility | the mean of the included scores: system (data analysis and cells 1, yeast 0.9, worm and fly 0.85, mouse and rat 0.5, human 0), duration (weeks 1, months 2/3, years 1/3, decades 0), planned n (under 50: 1, under 200: 2/3, under 1000: 1/3, at least 1000: 0; in a stated human, animal or cell experiment, missing or nonpositive n contributes 0 and stays in the denominator), intervention readiness (for compounds: one compound with a verified identity and ChEMBL phase 4 — or, when ChEMBL has no verified phase, a ClinicalTrials.gov trial submitted on or before T in phase 4: 1, phase 1–3: 0.5, confirmed phase 0: 0; multiple compounds take the lowest confirmed phase score, capped at 0.5 for a combination whose approval is unverified. For non-compound interventions — devices, procedures, exercise, diet, gene or cell perturbations: one `implementation_readiness/v1` check over already-retrieved pre-T abstracts with a code-verified verbatim quote demonstrating the limiting operation — demonstrated in the stated system: 1, conditional in a closely related system or unintegrated: 0.5, missing or unverified quote: 0. An unspecified agent, unclassified type, unconfirmed identity or phase, or lookup failure leaves readiness at 0 and keeps its place in the denominator); [`v3_extra.feasibility`](../../hyparena/scoring/v3_extra.py) | 0-1; does not yet count arms or invasive measures (section 11, rule 7) |
 | best_design_outcome | best design among the records of the outcome link | cells … RCT |
 | independent_outcome | independent sources for the outcome link | 0-5 |
 | against_share | share of the chain's weight against (in no profile) | 0-1, lower better |
-| endpoint_clinical | how close the trial's primary endpoint is to a clinical outcome, on the BEST glossary of the FDA-NIH Biomarker Working Group (two model families agree, else unknown); with several primary outcomes the least clinical of them; when in doubt, the lower level | biomarker < patient-reported < function < clinical event |
+| endpoint_clinical | how close the stated experiment's primary endpoint is to a clinical outcome, on the BEST glossary of the FDA-NIH Biomarker Working Group (two model families agree, else unknown); clinical levels (`patient_reported`, `function`, `clinical_event`) apply only to human experiments (`system = "human"`), else capped at `biomarker`; with several primary outcomes the least clinical of them; when in doubt, the lower level | biomarker < patient-reported < function < clinical event |
 | support_share | how much of the mechanism chain is supported: mean of max(0, 2 (S − 0.5)) over its places | 0-1 |
 | trend_pubmed | rising attention: PubMed records on the intervention in the last 3 years vs the 3 before, net of PubMed's growth | -0.5 … 1.5 |
 | ai_role | role of AI in the hypothesis | none < analysis < in the loop < AI is the intervention |
@@ -500,9 +505,9 @@ What improving a hypothesis would give is computed under every profile as the **
 is an input of that computation, not an indicator of any profile.
 
 The evidence profile has no novelty on purpose: novelty and the evidence balance pull apart by design. The frontier
-profile puts novelty first; its protection against inflated hypotheses is that unknown novelty is drawn over the whole
-range (not set high), the balance falls with any data against, and I counts only supported alternatives and the threats the
-stated design rules out.
+profile puts novelty first; its protection against inflated hypotheses is that unknown novelty sits at the bottom of its
+scale (`new_context`, never drawn above `translation`), the balance falls with any data against, and I counts only supported
+alternatives and the threats the stated design rules out.
 
 **Admission rule.** A new indicator enters only when it passes four conditions, checked on saved data before it is used:
 reliable (computed by code, or extracted with a verbatim phrase and agreed by two model families, κ ≥ 0.6); separating (at

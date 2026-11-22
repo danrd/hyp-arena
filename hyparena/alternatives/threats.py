@@ -35,7 +35,7 @@ THREATS = {
     "data_analysis": ("confounding", "reverse_causation", "selection", "measurement", "multiplicity"),
 }
 SYSTEM = {"human": "human", "mouse": "animal", "rat": "animal", "worm": "animal", "fly": "animal", "yeast": "cells",
-          "in_vitro": "cells", "data_analysis": "data_analysis"}
+          "cells": "cells", "in_vitro": "cells", "data_analysis": "data_analysis"}
 VALUE = {"eliminated": 1.0, "weakened": 0.5, "unchanged": 0.0}
 A_CHECKLIST = 0.5                     # the support the checklist counts with in I (one alternative of support 1/2)
 

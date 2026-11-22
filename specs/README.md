@@ -62,6 +62,7 @@
 
 | Файл | Что проверяет | Статус |
 |---|---|---|
+| [`v313-calibration-and-pilots-2026-11-22`](scoring/v313-calibration-and-pilots-2026-11-22.yaml) | калибровка и holdout-проверка правок v3.13 (чек-лист клеток, CT.gov fallback, `N = None`, `endpoint_clinical`, `paper_outcomes/v2`, Канал Б для нелекарственных средств) | принято (v3.13) |
 | [`record-weight-2026-11-08`](scoring/record-weight-2026-11-08.yaml) | вес записи по образцу GRADE (дизайн, размер, эффект, близость к утверждению) | принято (v3.6) |
 | [`link-scoring-2026-11-08`](scoring/link-scoring-2026-11-08.yaml) | одна знаковая ось звена, вес нулевого результата по мощности | принято (v3.5) |
 | [`empty-slots-2026-11-09`](scoring/empty-slots-2026-11-09.yaml) | звено без записей не входит в баланс | принято (v3.7) |
