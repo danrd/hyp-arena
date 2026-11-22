@@ -1,0 +1,16 @@
+id: benchmark-v2.1
+supersedes: specs/data/benchmark-v2.yaml
+frozen_on: 2026-11-22
+protocol: specs/data/benchmark-v2.yaml
+change: "Add the overall randomized intensity comparison for NCT04299308 after full-text review. Historical v2 runs used 237 trials."
+units:
+  file: data/benchmark/v2.1_units.json
+  builder: scripts/whole_system/benchmark_v1.py
+  sha256: 1c64e50e5ce5c4e8204af43b2b8fbf53c415c8eb67f4fc9016056454b421c4c7
+  counts: {all: 238, positive: 82, null_or_negative: 156, b2_clean: 99, b2_positive: 26}
+addition:
+  id: NCT04299308
+  outcome: 'null'
+  first_outcome_document: '2024-09-11'
+  source: https://doi.org/10.1113/JP286923
+  evidence: "Change in whole grey matter FDG-PET SUVR from rest to exercise, higher versus moderate randomized intensity, pooled across diagnoses. Condition by intensity F(1,54) = 3.484, p = 0.067."

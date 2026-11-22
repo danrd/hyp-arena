@@ -50,7 +50,7 @@ def test_resume_does_not_replay_the_completed_arm(monkeypatch, tmp_path):
     cases = [{"id": "trial", "text": "Example trial", "as_of": "2020-01-01", "label": 1,
               "flagged": False, "b2_clean": False}]
     result = {"score": 0.7, "calls": 1, "input_tokens": 20, "output_tokens": 5}
-    monkeypatch.setattr(bench, "load_cases", lambda path: (cases, "texts-hash"))
+    monkeypatch.setattr(bench, "load_cases", lambda path, version: (cases, "texts-hash", "units-hash"))
     monkeypatch.setenv("ALLOW_PAID", "1")
     monkeypatch.setattr(sys, "argv", ["bench", "run", "--model", "model-for-test", "--out", str(tmp_path)])
     monkeypatch.setattr(bench, "predict_system", lambda *args: result)

@@ -10,11 +10,11 @@ ROOT = Path(__file__).resolve().parents[1]
 import pytest
 
 
-@pytest.mark.parametrize("v", ["benchmark-v1", "benchmark-v2"])
+@pytest.mark.parametrize("v", ["benchmark-v1", "benchmark-v2", "benchmark-v2.1"])
 def test_frozen_units_match_spec(v):
     spec = yaml.safe_load((ROOT / f"specs/data/{v}.yaml").read_text())
     data = (ROOT / spec["units"]["file"]).read_bytes()
-    assert hashlib.sha256(data).hexdigest() == spec["units"]["sha256"]
+    assert hashlib.sha256(data.replace(b"\r\n", b"\n")).hexdigest() == spec["units"]["sha256"]
     u = json.loads(data)["units"]
     c = spec["units"]["counts"]
     assert len(u) == c["all"] and sum(x["label"] for x in u) == c["positive"]

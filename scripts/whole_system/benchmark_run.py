@@ -1,7 +1,7 @@
-"""Benchmark v2 (specs/data/benchmark-v2.yaml), the free part: hypothesis texts, the formal baseline and a dry run with the cost.
+"""Current registry benchmark: hypothesis texts, the formal baseline and a dry run with the cost.
 
-    python -m scripts.whole_system.benchmark_run texts       # $KG_DIR/hypothesis_sources/benchmark_v2_texts.jsonl (private: registry texts)
-    python -m scripts.whole_system.benchmark_run features    # data/benchmark/v2_features.json (registry header fields; no texts)
+    python -m scripts.whole_system.benchmark_run texts       # private registry texts for the current revision
+    python -m scripts.whole_system.benchmark_run features    # registry header fields for the current revision
     python -m scripts.whole_system.benchmark_run baseline    # formal baseline: 5-fold cross-validated logistic regression, AUC with CI
     python -m scripts.whole_system.benchmark_run dry         # the pipeline with the fake LLM on every unit: calls per role, cost estimate
 
@@ -26,12 +26,13 @@ import numpy as np
 import yaml
 
 from scripts.data.ctgov_outcomes import KG
+from scripts.whole_system.benchmark_v1 import VERSION
 
 HS = KG / "hypothesis_sources"
 ROOT = Path(__file__).resolve().parents[2]
-UNITS = ROOT / "data" / "benchmark" / "v2_units.json"
-TEXTS = HS / "benchmark_v2_texts.jsonl"
-FEATURES = ROOT / "data" / "benchmark" / "v2_features.json"
+UNITS = ROOT / "data" / "benchmark" / f"{VERSION}_units.json"
+TEXTS = HS / f"benchmark_{VERSION}_texts.jsonl"
+FEATURES = ROOT / "data" / "benchmark" / f"{VERSION}_features.json"
 CTGOV = "https://clinicaltrials.gov/api/v2/studies/{}?fields=protocolSection"
 CAND = {"ctgov": "ctgov_candidates.yaml", "ctgov_2023": "ctgov_candidates_2023.yaml", "isrctn": "isrctn_candidates.yaml",
         "drks": "drks_candidates.yaml", "ntr": "ntr_candidates.yaml", "anzctr": "anzctr_candidates.yaml",
@@ -186,7 +187,7 @@ def build_features() -> list[dict]:
                      n_primary_text=len(_list(c.get("primary_outcomes"))) if u["source"] == "isrctn" else None)
         out.append(r)
     cache_p.write_text(json.dumps(cache))
-    FEATURES.write_text(json.dumps({"benchmark": "v2", "units": out}, indent=1) + "\n")
+    FEATURES.write_text(json.dumps({"benchmark": VERSION, "units": out}, indent=1) + "\n")
     return out
 
 

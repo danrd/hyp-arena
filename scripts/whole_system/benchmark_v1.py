@@ -1,6 +1,6 @@
-"""Frozen unit list of the benchmark (specs/data/benchmark-v2.yaml; v1 kept in data/benchmark/v1_units.json): human registry hypotheses with decisive outcomes.
+"""Build the current benchmark unit list from dated registry hypotheses with decisive outcomes.
 
-    python -m scripts.whole_system.benchmark_v1        # writes data/benchmark/v1_units.json (ids, labels, dates, flags; no texts) and prints its sha256
+    python -m scripts.whole_system.benchmark_v1        # writes the current units JSON and prints its SHA-256
 
 Reads the label files in $KG_DIR/hypothesis_sources (private: inputs carry publishers' abstracts); writes no text.
 """
@@ -16,7 +16,7 @@ from hyparena.whole_system.outcomes import cutoffs
 from scripts.data.ctgov_outcomes import KG
 
 HS = KG / "hypothesis_sources"
-VERSION = "v2"           # v1 (2026-11-01): CT.gov, ISRCTN, DRKS, NTR; v2 (2026-11-01): + ANZCTR
+VERSION = "v2.1"
 OUT = Path(__file__).resolve().parents[2] / "data" / "benchmark" / f"{VERSION}_units.json"
 SOURCES = [("ctgov", "", "ctgov"), ("ctgov_2023", "_2023", "ctgov"), ("isrctn", "", "isrctn"), ("drks", "", "drks"), ("ntr", "", "ntr"), ("anzctr", "", "anzctr")]
 DECISIVE = {"positive": 1, "null": 0, "negative": 0}
@@ -56,7 +56,8 @@ def units() -> list[dict]:
 def main() -> None:
     u = units()
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps({"benchmark": VERSION, "b2_model": B2_MODEL, "units": u}, indent=1, ensure_ascii=False) + "\n")
+    OUT.write_text(json.dumps({"benchmark": VERSION, "b2_model": B2_MODEL, "units": u}, indent=1, ensure_ascii=False) + "\n",
+                   encoding="utf-8", newline="\n")
     h = hashlib.sha256(OUT.read_bytes()).hexdigest()
     pos = sum(x["label"] for x in u)
     b2 = [x for x in u if x["b2_clean"]]

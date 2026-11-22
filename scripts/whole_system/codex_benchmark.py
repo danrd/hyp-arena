@@ -13,9 +13,9 @@ from collections import defaultdict
 from dataclasses import dataclass, replace
 from pathlib import Path
 
+from scripts.whole_system.benchmark_v1 import VERSION
+
 ROOT = Path(__file__).resolve().parents[2]
-UNITS = ROOT / "data/benchmark/v2_units.json"
-UNITS_SHA = "6bd4732ce94824535730f14754d3423a20ab85f7c87deda1539d26401bc60ac9"
 ARMS = ("system", "direct")
 PROBABILITY_SCHEMA = {
     "type": "object", "properties": {"p_positive": {"type": "number"}},
@@ -27,9 +27,12 @@ def digest(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def load_cases(path: Path) -> tuple[list[dict], str]:
-    unit_bytes = UNITS.read_bytes().replace(b"\r\n", b"\n")
-    if digest(unit_bytes) != UNITS_SHA:
+def load_cases(path: Path, version: str = VERSION) -> tuple[list[dict], str, str]:
+    import yaml
+    spec = yaml.safe_load((ROOT / f"specs/data/benchmark-{version}.yaml").read_text(encoding="utf-8"))
+    unit_bytes = (ROOT / spec["units"]["file"]).read_bytes().replace(b"\r\n", b"\n")
+    units_sha = digest(unit_bytes)
+    if units_sha != spec["units"]["sha256"]:
         raise ValueError("frozen benchmark unit hash mismatch")
     units = json.loads(unit_bytes)["units"]
     text_bytes = path.read_bytes()
@@ -49,7 +52,7 @@ def load_cases(path: Path) -> tuple[list[dict], str]:
         cases.append({**unit, "text": row["text"], "as_of": row["as_of"], "flagged": bool(
             unit["edited_after_result"] or row.get("result_words")
             or (row.get("registry_flags") or {}).get("written_after_completion"))})
-    return cases, digest(text_bytes)
+    return cases, digest(text_bytes), units_sha
 
 
 def direct_prompt(text: str, as_of: str) -> str:
@@ -224,9 +227,9 @@ def main() -> None:
     parser.add_argument("--effort", default="medium")
     parser.add_argument("--codex", default="codex")
     parser.add_argument("--config", type=Path, default=ROOT / "configs/v3-flash-n10.yaml")
-    parser.add_argument("--texts", type=Path, default=Path(os.environ.get("KG_DIR", ROOT.parent / "longevity-kg"))
-                        / "hypothesis_sources/benchmark_v2_texts.jsonl")
-    parser.add_argument("--out", type=Path, default=ROOT / "runs/codex-benchmark-v2")
+    parser.add_argument("--benchmark", choices=("v2", VERSION), default=VERSION)
+    parser.add_argument("--texts", type=Path)
+    parser.add_argument("--out", type=Path)
     parser.add_argument("--limit", type=int, help="Deterministic shuffled pilot; use a separate output folder")
     parser.add_argument("--max-calls", type=int, default=150, help="System call cap per trial")
     parser.add_argument("--timeout", type=int, default=300, help="Seconds per Codex invocation")
@@ -234,12 +237,15 @@ def main() -> None:
     if min(args.max_calls, args.timeout, args.limit if args.limit is not None else 1) <= 0:
         parser.error("limits must be positive")
     args.config = args.config.resolve()
-    cases, texts_sha = load_cases(args.texts)
+    args.out = args.out or ROOT / f"runs/codex-benchmark-{args.benchmark}"
+    texts = args.texts or (Path(os.environ.get("KG_DIR", ROOT.parent / "longevity-kg"))
+                           / f"hypothesis_sources/benchmark_{args.benchmark}_texts.jsonl")
+    cases, texts_sha, units_sha = load_cases(texts, args.benchmark)
     if args.limit is not None:
         random.Random(0).shuffle(cases)
         cases = cases[:args.limit]
     manifest = {"protocol": 1, "model": args.model, "effort": args.effort, "max_calls": args.max_calls,
-                "timeout": args.timeout, "units_sha256": UNITS_SHA, "texts_sha256": texts_sha,
+                "timeout": args.timeout, "units_sha256": units_sha, "texts_sha256": texts_sha,
                 "config_sha256": digest(args.config.read_bytes()), "ids": [case["id"] for case in cases]}
     if args.mode == "plan":
         print(json.dumps({"trials": len(cases), "flagged": sum(case["flagged"] for case in cases),

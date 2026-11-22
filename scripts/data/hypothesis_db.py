@@ -12,6 +12,7 @@ ongoing trials, Bio Arena, the ChatGPT set) have no short id until they are scor
 from __future__ import annotations
 
 import collections
+from datetime import date
 import glob
 import gzip
 import json
@@ -68,12 +69,16 @@ def rows() -> list[dict]:
                 author_kind="human", written_on=u.get("written_on"), T=t.get("as_of"), sets=["calibration-74"],
                 outcome={"label": u.get("label"), "source": "units (registry results / publication)"}, parent=None, mode=None,
                 text=t.get("text"), text_clean=t.get("b2_clean"))
-    # 3. benchmark v2 (237, outcomes known)
-    b2t = _texts(HS / "benchmark_v2_texts.jsonl")
-    for u in json.loads((HA / "data" / "benchmark" / "v2_units.json").read_text())["units"]:
+    # Keep the original source-set attribution when a new revision adds a trial.
+    from scripts.whole_system.benchmark_v1 import VERSION
+    bench = HA / "data" / "benchmark"
+    v2_ids = {u["id"] for u in json.loads((bench / "v2_units.json").read_bytes())["units"]}
+    b2t = _texts(HS / f"benchmark_{VERSION}_texts.jsonl")
+    for u in json.loads((bench / f"{VERSION}_units.json").read_bytes())["units"]:
         t = b2t.get(u["id"], {})
         add(id=f"{_prefix(u['source'])}:{u['id']}", source=u["source"], source_id=u["id"], kind="registry trial",
-            author_kind="human", written_on=u.get("written_on"), T=t.get("as_of"), sets=["benchmark-v2"],
+            author_kind="human", written_on=u.get("written_on"), T=t.get("as_of"),
+            sets=["benchmark-v2" if u["id"] in v2_ids else f"benchmark-{VERSION}"],
             outcome={"label": u.get("label"), "outcome": u.get("outcome"), "document_date": u.get("first_outcome_document"),
                      "human_checked": u.get("human_checked")}, parent=None, mode=None, text=t.get("text"),
             text_clean=u.get("b2_clean"), edited_after_result=u.get("edited_after_result"))
@@ -144,7 +149,7 @@ def assign_short(rs: list[dict]) -> int:
     for r in rs:
         if r["id"] in known:
             r["short"] = known[r["id"]]["short"]
-    scored_sets = {"benchmark-v2", "argon-test-2026-11-11"}
+    scored_sets = {"benchmark-v2", "benchmark-v2.1", "argon-test-2026-11-11"}
     for r in rs:
         if r["short"] or not scored_sets & set(r["sets"]):
             continue
@@ -162,7 +167,7 @@ def assign_short(rs: list[dict]) -> int:
             nxt += 1
         r["short"] = s
         used.add(s)
-        old.append({"id": r["id"], "short": s, "pool": next(iter(scored_sets & set(r["sets"]))), "added": "2026-11-12"})
+        old.append({"id": r["id"], "short": s, "pool": next(iter(scored_sets & set(r["sets"]))), "added": date.today().isoformat()})
         added += 1
     (DB / "short_ids.jsonl").write_text("".join(json.dumps(o, ensure_ascii=False) + "\n" for o in old))
     return added

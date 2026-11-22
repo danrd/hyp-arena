@@ -4,12 +4,13 @@ The command-level reference moved out of the README. Tests: `pip install -e . py
 call models need `ALLOW_PAID=1` and an API key (see [`configs/`](../configs/); [`configs/v2-direct.yaml`](../configs/v2-direct.yaml)
 skips families whose key is not set; the aggregators CometAPI and OpenRouter are supported).
 
-## Benchmark v2 (registry hypotheses)
+## Registry benchmark
 
-Protocol: [`benchmark.md`](validation/benchmark.md), [`specs/data/benchmark-v2.yaml`](../specs/data/benchmark-v2.yaml). Texts are private
+Current revision: [`benchmark-v2.1.yaml`](../specs/data/benchmark-v2.1.yaml). The [benchmark protocol](validation/benchmark.md) also describes the original v2 dataset. Texts are private
 (`$KG_DIR/hypothesis_sources`); the public repository holds ids, labels, dates and flags only.
 
-- Unit list: `python -m scripts.whole_system.benchmark_v1` (writes `data/benchmark/v2_units.json` and prints its sha256)
+- Unit list: `python -m scripts.whole_system.benchmark_v1` (writes `data/benchmark/v2.1_units.json` and prints its sha256)
+- Codex run planning: `python -m scripts.whole_system.codex_benchmark plan --model MODEL`. Use `--benchmark v2` for the original 237-trial run.
 - Hypothesis texts from registry fields: `python -m scripts.whole_system.benchmark_run texts`
 - Registry header fields and the formal baseline: `python -m scripts.whole_system.benchmark_run features`, then `... baseline`
 - Dry run with the fake LLM (calls and input tokens per role): `python -m scripts.whole_system.benchmark_run dry`
