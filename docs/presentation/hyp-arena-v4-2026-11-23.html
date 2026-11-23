@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Open Longevity · Проблематика, генерация и оценка научных гипотез (v4 · метод v3.13)</title>
+<style>
+  :root {
+    --navy: #13233A;
+    --bg: #F4F3EE;
+    --card: #FFFFFF;
+    --border: #E2E0D6;
+    --green: #1D6A52;
+    --green-dark: #154E3C;
+    --green-soft: #E6F0EC;
+    --terra: #B84A1A;
+    --terra-soft: #FBF0EA;
+    --amber-soft: #FEF6E4;
+    --amber: #9A5B08;
+    --ink: #1C2733;
+    --muted: #5C6773;
+    --serif: Georgia, "Noto Serif", "Times New Roman", serif;
+    --sans: "Segoe UI", "Inter", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #1B222C;
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Screen viewer toolbar */
+  .toolbar {
+    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    z-index: 100; display: flex; align-items: center; gap: 10px;
+    background: rgba(19, 35, 58, 0.92); color: #fff;
+    padding: 8px 16px; border-radius: 999px; font-size: 13px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.35); backdrop-filter: blur(8px);
+  }
+  .toolbar button {
+    background: rgba(255,255,255,.14); color: #fff; border: 0;
+    padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 13px;
+  }
+  .toolbar button:hover { background: rgba(255,255,255,.26); }
+  .toolbar .hint { color: #9FB3C8; font-size: 12px; margin-left: 6px; }
+
+  .deck {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 28px; padding: 28px 0 84px;
+  }
+
+  .slide {
+    position: relative;
+    width: 1280px; height: 720px;
+    background: var(--bg);
+    padding: 50px 64px 56px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    box-shadow: 0 18px 48px rgba(0,0,0,.35);
+    page-break-after: always;
+    break-after: page;
+  }
+  .slide:last-child { page-break-after: auto; break-after: auto; }
+
+  /* Cover slide */
+  .slide.cover {
+    background: var(--navy); color: #FFFFFF;
+    justify-content: center; align-items: center; text-align: center;
+    padding: 72px 110px;
+  }
+  .cover-bar { width: 88px; height: 5px; background: #2D8A6B; border-radius: 3px; margin-bottom: 24px; }
+  .cover-kicker {
+    letter-spacing: 0.16em; text-transform: uppercase;
+    font-size: 15px; font-weight: 600; color: #7CC5AE; margin-bottom: 22px;
+  }
+  .cover h1 {
+    font-family: var(--serif); font-size: 60px; line-height: 1.12;
+    font-weight: 700; color: #FFFFFF; margin-bottom: 26px; max-width: 1020px;
+  }
+  .cover-sub {
+    font-size: 22px; line-height: 1.45; color: #C5D1DF; max-width: 880px; margin-bottom: 56px;
+  }
+  .cover-meta { font-size: 16px; color: #8A9BB0; }
+
+  /* Slide header */
+  .eyebrow {
+    font-size: 13px; font-weight: 700; letter-spacing: 0.11em;
+    text-transform: uppercase; color: var(--green); margin-bottom: 8px;
+  }
+  h2 {
+    font-family: var(--serif); font-size: 38px; line-height: 1.14;
+    font-weight: 700; color: var(--navy); margin-bottom: 20px;
+  }
+  .lead {
+    font-size: 17px; line-height: 1.45; color: var(--ink); margin-bottom: 18px; max-width: 1120px;
+  }
+
+  /* Layout primitives */
+  .content { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; min-height: 0; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+  .grid-60-40 { display: grid; grid-template-columns: 1.35fr 1fr; gap: 22px; }
+  .grid-40-60 { display: grid; grid-template-columns: 1fr 1.45fr; gap: 22px; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px 22px;
+  }
+  .card.soft-green { background: var(--green-soft); border-color: #C7DDD5; }
+  .card.soft-terra { background: var(--terra-soft); border-color: #EBC8B8; }
+  .card.soft-amber { background: var(--amber-soft); border-color: #EAD8AC; }
+  .card.navy { background: var(--navy); border-color: var(--navy); color: #fff; }
+  .card.accent-left { border-left: 4px solid var(--green); }
+  .card.accent-terra { border-left: 4px solid var(--terra); }
+
+  .card h3 {
+    font-size: 18px; font-weight: 700; color: var(--navy); margin-bottom: 10px;
+  }
+  .card.navy h3 { color: #fff; }
+  .card-kicker {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.09em;
+    text-transform: uppercase; color: var(--green); margin-bottom: 8px;
+  }
+  .card-kicker.terra { color: var(--terra); }
+
+  ul.clean { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  ul.clean li {
+    position: relative; padding-left: 16px; font-size: 15.5px; line-height: 1.4; color: var(--ink);
+  }
+  ul.clean li::before {
+    content: "•"; position: absolute; left: 0; top: 0; color: var(--green); font-weight: 700;
+  }
+  ul.clean.terra li::before { color: var(--terra); }
+  ul.clean.compact { gap: 6px; }
+  ul.clean.compact li { font-size: 14.5px; line-height: 1.35; }
+
+  p.body { font-size: 15.5px; line-height: 1.44; color: var(--ink); }
+  p.small { font-size: 14px; line-height: 1.4; color: var(--muted); }
+
+  /* Tables */
+  table.tbl {
+    width: 100%; border-collapse: collapse; background: var(--card);
+    border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+    font-size: 14.5px;
+  }
+  table.tbl th {
+    background: var(--green-soft); color: var(--navy); font-weight: 700;
+    text-align: left; padding: 10px 13px; border-bottom: 1px solid #CFDCD6;
+  }
+  table.tbl td {
+    padding: 9px 13px; border-bottom: 1px solid #ECEAE3; vertical-align: top; line-height: 1.36;
+  }
+  table.tbl tr:last-child td { border-bottom: 0; }
+  table.tbl .num { text-align: center; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  table.tbl .pos { color: var(--green-dark); font-weight: 700; }
+  table.tbl .neg { color: var(--terra); font-weight: 700; }
+  table.tbl.compact th { padding: 8px 11px; font-size: 13.5px; }
+  table.tbl.compact td { padding: 7px 11px; font-size: 13.5px; }
+
+  /* Badges & Pills */
+  .pill {
+    display: inline-block; padding: 2px 9px; border-radius: 999px;
+    font-size: 12px; font-weight: 700; vertical-align: middle;
+  }
+  .pill.green { background: var(--green-soft); color: var(--green-dark); }
+  .pill.terra { background: var(--terra-soft); color: var(--terra); }
+  .pill.navy { background: var(--navy); color: #fff; }
+  .pill.amber { background: var(--amber-soft); color: var(--amber); }
+
+  /* Big KPI numbers */
+  .kpi { font-family: var(--serif); font-size: 42px; font-weight: 700; line-height: 1.05; color: var(--navy); }
+  .kpi.green { color: var(--green); }
+  .kpi.terra { color: var(--terra); }
+  .kpi-label { font-size: 13.5px; color: var(--muted); margin-top: 6px; line-height: 1.35; }
+
+  /* Flow diagrams */
+  .flow-row { display: flex; align-items: stretch; gap: 10px; }
+  .flow-node {
+    flex: 1; background: var(--green-soft); border: 1px solid #C8DDD5;
+    border-radius: 10px; padding: 12px 12px; display: flex; flex-direction: column; justify-content: center;
+  }
+  .flow-node.white { background: #fff; border-color: var(--border); }
+  .flow-node.highlight { background: var(--navy); border-color: var(--navy); color: #fff; }
+  .flow-node .fn-title { font-size: 14px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+  .flow-node.highlight .fn-title { color: #fff; }
+  .flow-node .fn-sub { font-size: 12.5px; line-height: 1.32; color: var(--muted); }
+  .flow-node.highlight .fn-sub { color: #C5D1DF; }
+  .flow-arrow {
+    display: flex; align-items: center; justify-content: center;
+    color: var(--terra); font-size: 20px; font-weight: 700; flex: 0 0 18px;
+  }
+
+  /* Bar chart rows */
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; font-size: 14px; }
+  .bar-label { width: 150px; font-weight: 600; color: var(--navy); }
+  .bar-track { flex: 1; height: 18px; background: #EAE8E0; border-radius: 999px; overflow: hidden; }
+  .bar-fill { height: 100%; background: var(--green); border-radius: 999px; }
+  .bar-fill.terra { background: var(--terra); }
+  .bar-fill.navy { background: var(--navy); }
+  .bar-fill.muted { background: #8B97A4; }
+  .bar-val { width: 64px; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--navy); }
+
+  /* Numbered callout */
+  .step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--green); color: #fff; font-size: 13px; font-weight: 700;
+    margin-right: 8px; flex-shrink: 0;
+  }
+  .step-num.terra { background: var(--terra); }
+
+  /* Banner strip */
+  .banner {
+    background: var(--green-soft); border: 1px solid #C7DDD5; border-radius: 10px;
+    padding: 12px 18px; font-size: 15px; font-weight: 600; color: var(--navy);
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .banner.terra { background: var(--terra-soft); border-color: #EBC8B8; color: #6E290B; }
+
+  /* inline-code */
+  code {
+    font-family: "Consolas", "Cascadia Code", ui-monospace, monospace;
+    font-size: 0.88em; background: rgba(29,106,82,0.09); color: #144B3A;
+    padding: 1px 5px; border-radius: 4px;
+  }
+  .card.soft-terra code { background: rgba(184,74,26,0.11); color: #8A330F; }
+  .card.navy code { background: rgba(255,255,255,0.14); color: #CFEAE0; }
+
+  /* Footer */
+  .footer {
+    position: absolute; bottom: 18px; left: 64px; right: 64px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 13px; color: var(--muted);
+  }
+  .footer-center { position: absolute; left: 50%; transform: translateX(-50%); font-weight: 600; color: #3D4A57; }
+  .footer-page { font-weight: 700; color: var(--navy); margin-left: auto; }
+
+  .mt-12 { margin-top: 12px; }
+  .mt-16 { margin-top: 16px; }
+  .mt-20 { margin-top: 20px; }
+  .gap-14 { gap: 14px; }
+  .gap-16 { gap: 16px; }
+
+  /* Print / PDF export: exact 16:9 pages */
+  @page { size: 1280px 720px; margin: 0; }
+  @media print {
+    body { background: none; }
+    .toolbar { display: none !important; }
+    .deck { padding: 0; gap: 0; display: block; }
+    .slide {
+      margin: 0; box-shadow: none; width: 1280px; height: 720px;
+      page-break-inside: avoid; break-inside: avoid;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar" id="toolbar">
+  <button id="prev-btn">←</button>
+  <span id="counter">1 / 20</span>
+  <button id="next-btn">→</button>
+  <button id="print-btn">Печать / PDF</button>
+  <span class="hint">Стрелки ← → для навигации</span>
+</div>
+
+<main class="deck" id="deck">
+
+<!-- ==================== SLIDE 1: COVER ==================== -->
+<section class="slide cover">
+  <div class="cover-bar"></div>
+  <div class="cover-kicker">Open Longevity · HypArena</div>
+  <h1>Проблематика, генерация и оценка научных гипотез</h1>
+  <div class="cover-sub">
+    Почему ИИ-гипотезы ломаются на практике, как устроен метод v3.13, итоги калибровки и план следующих прогонов
+  </div>
+  <div class="cover-meta">Версия 4 · 23 ноября 2026 · Метод v3.13</div>
+</section>
+
+<!-- ==================== SLIDE 2: PROBLEM & SHIFT ==================== -->
+<section class="slide">
+  <div class="eyebrow">Задача и сдвиг фокуса</div>
+  <h2>Узкое место — не число гипотез, а их качество и честный отбор</h2>
+  <p class="lead">
+    В версии 3 (3 ноября) мы считали генерацию отдельной задачей. Пилоты ноября показали: <b>генерация и оценка неразделимы</b> — слабые места промпта немедленно эксплуатируют слепые зоны оценщика.
+  </p>
+  <div class="content">
+    <div class="grid-2" style="margin-bottom: 18px;">
+      <div class="card accent-terra">
+        <div class="card-kicker terra">Что выяснилось на практике</div>
+        <h3>ИИ легко плодит правдоподобный шум</h3>
+        <ul class="clean terra">
+          <li>Модель уверенно связывает известные факты в красивую историю, но <b>подменяет клинический тезис доклиническим опытом</b>.</li>
+          <li>При требовании «будь новее» генератор уходит в <b>невыполнимые протоколы</b> или косметические правки режима.</li>
+          <li>Обычный LLM-судья оценивает стиль и убедительность текста, слабо различая реальную новизну и повтор.</li>
+        </ul>
+      </div>
+      <div class="card accent-left">
+        <div class="card-kicker">Ответ системы HypArena v3.13</div>
+        <h3>Единый контур: структура → проверка → отбор</h3>
+        <ul class="clean">
+          <li><b>Оценка по фактам до даты T:</b> декомпозиция в карточку, дословные цитаты из PubMed, GRADE-веса, без произвольных числовых весов (АСПИД).</li>
+          <li><b>Анти-хак правила v3.13:</b> закрывают перенос, ложный «новый шаг», пустую выборку и неподтверждённые средства.</li>
+          <li><b>Структурная генерация (A3 / BS3):</b> переносит проверку предпосылок и осуществимости внутрь этапа создания идеи.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-kicker">Вход</div>
+        <p class="body">Гипотезы из реестров испытаний, внешние наборы (Bio Arena, ITP) и собственные генерации ИИ.</p>
+      </div>
+      <div class="card">
+        <div class="card-kicker">Область</div>
+        <p class="body">Вмешательства в старение и здоровую продолжительность жизни: от молекулярных звеньев до клинических РКИ.</p>
+      </div>
+      <div class="card">
+        <div class="card-kicker">Принцип проверки</div>
+        <p class="body">Каждый этап и каждая правка проходят офлайн-калибровку и holdout до включения в рабочий метод.</p>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span class="footer-center">Open Longevity · Проблематика, генерация и оценка гипотез</span><span class="footer-page">2</span></div>
+</section>
+
+<!-- ==================== SLIDE 3: ANATOMY OF A HYPOTHESIS ==================== -->
+<section class="slide">
+  <div class="eyebrow">Проблематика гипотез</div>
+  <h2>Почему «хорошую гипотезу» нельзя свести к одному баллу</h2>
+  <p class="lead">
+    Научная ценность складывается из конфликтующих осей. Усиливая одну, легко разрушить другую — поэтому единый рейтинг без явного профиля цели всегда скрывает смещение.
+  </p>
+  <div class="content">
+    <div class="grid-2" style="margin-bottom: 18px;">
+      <div class="card">
+        <div class="card-kicker">Четыре фундаментальных конфликта</div>
+        <ul class="clean">
+          <li><b>Обоснованность ↔ Новизна:</b> чем больше прямых РКИ по вопросу, тем выше опора — и тем ниже научная новизна.</li>
+          <li><b>Значимость ↔ Реализуемость:</b> клинический исход у людей ценнее всего, но клеточный или мышиный тест в разы дешевле и быстрее.</li>
+          <li><b>Убедительность ↔ Опровержимость:</b> правдоподобная идея с размытым контролем ничего не доказывает при любом исходе опыта.</li>
+          <li><b>Идея ↔ Протокол:</b> сильный дизайн эксперимента может поднять оценку слабой идеи, если не разделять их вклад.</li>
+        </ul>
+      </div>
+      <div class="card soft-amber">
+        <div class="card-kicker terra">Что показал слепой LLM-судья v3 (Sol-20, 190 пар)</div>
+        <p class="small" style="margin-bottom: 12px; color: var(--ink);">Даже при подробной научной инструкции один общий вердикт судьи почти не учитывает новизну:</p>
+        <div class="bar-row"><span class="bar-label">Проверяемость</span><div class="bar-track"><div class="bar-fill navy" style="width:100%"></div></div><span class="bar-val">50,0%</span></div>
+        <div class="bar-row"><span class="bar-label">Обоснованность</span><div class="bar-track"><div class="bar-fill" style="width:68.4%"></div></div><span class="bar-val">34,2%</span></div>
+        <div class="bar-row"><span class="bar-label">Польза (benefit)</span><div class="bar-track"><div class="bar-fill muted" style="width:24.2%"></div></div><span class="bar-val">12,1%</span></div>
+        <div class="bar-row"><span class="bar-label">Новизна</span><div class="bar-track"><div class="bar-fill terra" style="width:6.4%"></div></div><span class="bar-val">3,2%</span></div>
+        <p class="small mt-12" style="color: #5A4624;">
+          Корреляция общего ранга судьи с его же оценкой новизны: <b>ρ = −0,050</b>. У экспертов-людей согласие по идеям тоже низкое (α Криппендорфа <b>0,24</b> в Lit2Test).
+        </p>
+      </div>
+    </div>
+    <div class="banner">
+      <span>Вывод: нужен не один «верховный судья», а раздельные проверяемые оси и несколько явных профилей цели (Доказательность, Финансирование, Фронтир).</span>
+    </div>
+  </div>
+  <div class="footer"><span class="footer-center">Open Longevity · Проблематика, генерация и оценка гипотез</span><span class="footer-page">3</span></div>
+</section>
+
+<!-- ==================== SLIDE 4: 6 FAILURE MODES ==================== -->
+<section class="slide">
+  <div class="eyebrow">Проблематика генерации · Аудит пилотов</div>
+  <h2>Шесть системных сбоев ИИ-гипотез и «хаков» оценки</h2>
+  <p class="lead">
+    Разбор 40 сгенерированных гипотез (10x10-20 и Sol-20) вскрыл повторяющиеся дефекты, которые регулярно обманывают и автоматические метрики, и поверхностное рецензирование.
+  </p>
+  <div class="content">
+    <div class="grid-3 gap-16">
+      <div class="card accent-terra">
+        <div class="card-kicker terra">1 · Подмена масштаба</div>
+        <h3>Клинический тезис → ex vivo / мышь</h3>
+        <p class="small" style="color:var(--ink);">11 из 20 гипотез в Sol-20 обещают пользу людям, но проверяют её на биопсиях и эксплантах, получая завышенную реализуемость «клеток» (0,50) выше РКИ (0,08–0,25).</p>
+      </div>
+      <div class="card accent-terra">
+        <div class="card-kicker terra">2 · Фантомные средства</div>
+        <h3>Неосуществимая операция (missing)</h3>
+        <p class="small" style="color:var(--ink);">Модель предлагает перфузию фрагментов человеческого мозга, трансдукцию остеоцитов в кости или оптогенетику в 3D-хряще без доказательства работоспособности метода.</p>
+      </div>
+      <div class="card accent-terra">
+        <div class="card-kicker terra">3 · Пропуск параметров</div>
+        <h3>0 из 20 указали размер выборки</h3>
+        <p class="small" style="color:var(--ink);">В пилоте Sol-20 ни одна из 20 гипотез не задала плановое n. При наивном усреднении пропуск поля даже поднимал балл реализуемости.</p>
+      </div>
+      <div class="card accent-terra">
+        <div class="card-kicker terra">4 · Косметическая новизна</div>
+        <h3>Вариация протокола вместо механизма</h3>
+        <p class="small" style="color:var(--ink);">Узкая формулировка исхода («покрытие эпителия» вместо «заживления ран») скрывает предшественников в поиске и искусственно выдаёт высший уровень новизны <b>new_link</b>.</p>
+      </div>
+      <div class="card accent-terra">
+        <div class="card-kicker terra">5 · Ложная посылка</div>
+        <h3>Механизм поверх опровергнутой базы</h3>
+        <p class="small" style="color:var(--ink);">Идея строится на предпосылке о возрастном дефиците мишени, которая уже опровергнута (например, артефакт нормировки у людей), но в цепочке посылки не проверяются.</p>
+      </div>
+      <div class="card accent-terra">
+        <div class="card-kicker terra">6 · Скученность идей</div>
+        <h3>Кластеры вокруг 4–5 узких мишеней</h3>
+        <p class="small" style="color:var(--ink);">Даже в разных ветках промптов генератор повторяет одни и те же связки (3 вариации PIP2→Kir2.1, по 2 на электростимуляцию ран, роговицы и ClC-1).</p>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span class="footer-center">Open Longevity · Проблематика, генерация и оценка гипотез</span><span class="footer-page">4</span></div>
+</section>
+
+<!-- ==================== SLIDE 5: NOVELTY TAX PILOT ==================== -->
+<section class="slide" style="padding-top:42px;">
+  <div class="eyebrow">Эксперимент по генерации · Пилот Sol-20</div>
+  <h2 style="font-size:34px; margin-bottom:12px;">«Налог на новизну»: почему прямой акцент на новизне ухудшил гипотезы</h2>
+  <p class="lead" style="font-size:15.5px; margin-bottom:14px;">
+    В пилоте Sol-20 (20 ноября, 4 условия по 5 гипотез, 190 слепых пар у судьи v3) мы добавили в A2 и BS2 общий абзац о новизне — включая фразу <i>«or a testable change to the intervention itself»</i>. Результат оказался обратным.
+  </p>
+  <div class="content">
+    <div class="grid-60-40" style="margin-bottom: 12px;">
+      <table class="tbl compact">
+        <thead>
+          <tr><th>Условие</th><th class="num">Побед у судьи (ср.)</th><th class="num">Ср. ранг судьи</th><th class="num">impl = missing</th><th class="num">H2H vs BS1</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><b>BS1</b> (карточка + проверка)</td><td class="num pos">11,5</td><td class="num pos">8,6</td><td class="num">1 / 5</td><td class="num">—</td></tr>
+          <tr><td><b>A1</b> (чистый промпт)</td><td class="num">10,3</td><td class="num">9,6</td><td class="num">1 / 5</td><td class="num">12–1–12</td></tr>
+          <tr><td><b>A2</b> (A1 + абзац о новизне)</td><td class="num">9,2</td><td class="num">10,6</td><td class="num neg">3 / 5</td><td class="num neg">10–15</td></tr>
+          <tr><td><b>BS2</b> (BS1 + абзац о новизне)</td><td class="num neg">7,0</td><td class="num neg">13,2</td><td class="num neg">2 / 5</td><td class="num neg">5–20</td></tr>
+        </tbody>
+      </table>
+      <div class="card soft-terra" style="padding:14px 18px;">
+        <div class="card-kicker terra">Сдвиг состава гипотез (Gen 1 → Gen 2)</div>
+        <table class="tbl compact" style="margin-top:6px;">
+          <thead><tr><th>Признак (по судье v3)</th><th class="num">A1+BS1</th><th class="num">A2+BS2</th></tr></thead>
+          <tbody>
+            <tr><td>Новое причинное звено</td><td class="num pos">8 / 10</td><td class="num neg">5 / 10</td></tr>
+            <tr><td>Доработка вмешательства</td><td class="num">0 / 10</td><td class="num neg">4 / 10</td></tr>
+            <tr><td>Неосуществимое средство</td><td class="num">2 / 10</td><td class="num neg">5 / 10</td></tr>
+            <tr><td>Средние победы судьи</td><td class="num pos">10,9</td><td class="num neg">8,1</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="grid-3">
+      <div class="card" style="padding:14px 18px;">
+        <h3 style="font-size:16.5px; margin-bottom:6px;">Причина 1 · Лазейка в тексте</h3>
+        <p class="small" style="color:var(--ink);">Фраза про «изменение вмешательства» дала самый дешёвый путь: вместо новой биологии модель пошла в тайминг и обратную связь.</p>
+      </div>
+      <div class="card" style="padding:14px 18px;">
+        <h3 style="font-size:16.5px; margin-bottom:6px;">Причина 2 · Нет фильтра в check</h3>
+        <p class="small" style="color:var(--ink);">В BS не было проверки осуществимости средств по PMID до T и права <b>отбросить</b> сломанного кандидата до выдачи финала.</p>
+      </div>
+      <div class="card" style="padding:14px 18px;">
+        <h3 style="font-size:16.5px; margin-bottom:6px;">Причина 3 · Асимметрия судьи</h3>
+        <p class="small" style="color:var(--ink);">Промпт v2 оптимизировал 3%-ю ось новизны ценой 50%-й оси проверяемости — и проиграл в парном судействе.</p>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span class="footer-center">Open Longevity · Проблематика, генерация и оценка гипотез</span><span class="footer-page">5</span></div>
+</section>
+
+<!-- ==================== SLIDE 6: PROMPT ARCHITECTURE A3 vs BS3 ==================== -->
+<section class="slide">
+  <div class="eyebrow">Новые промпты генерации · v3 (A3 и BS3)</div>
+  <h2>Как перестроена генерация: честный контроль и структурный фильтр</h2>
+  <p class="lead">
+    Чтобы сравнивать именно ценность метода, общие содержательные требования вынесены в <b>обе ветки одинаково</b> (A3 и BS3), а BS3 добавляет структурированную карточку и обязательную самопроверку до фиксации текста.
+  </p>
+  <div class="content">
+    <div class="grid-2" style="margin-bottom: 16px;">
+      <div class="card">
+        <div class="card-kicker">Общая часть · Одинакова в A3 и BS3</div>
+        <h3>Чистая постановка научной задачи</h3>
+        <ul class="clean">
+          <li><b>Убрана лазейка косметических правок:</b> запрещены мелкие вариации протокола/тайминга без отдельного причинного предсказания.</li>
+          <li><b>Фокус новизны:</b> новое причинное звено, развилка между конкурирующими механизмами старения или проверяемый модификатор эффекта.</li>
+          <li><b>Гигиена эксперимента:</b> конкретные выполнимые до T средства (названный агент, конструкция, прибор), плановая выборка <code>n_planned</code> и проверка предпосылок о популяции.</li>
+          <li><b>Защита честности:</b> A3 — сильный честный бейзлайн без «соломенного чучела».</li>
+        </ul>
+      </div>
+      <div class="card soft-green">
+        <div class="card-kicker">Только в ветке метода · BS3 (<code>card</code> + <code>check</code>)</div>
+        <h3>Принудительная верификация до финала</h3>
+        <ul class="clean">
+          <li><b><code>card.decisive_experiment.n_planned</code>:</b> обязательное поле плановой выборки (закрывает пропуск 0/20).</li>
+          <li><b><code>check.implementation_check</code>:</b> для каждого плеча и измерения — конкретное средство + PMID до T, где операция уже выполнена в этой/близкой системе.</li>
+          <li><b><code>check.critical_premise</code> + решение:</b> выделить главную предпосылку, найти сильнейшее возражение до T и выбрать <b><code>keep / narrow / pivot_experiment / drop_and_replace</code></b>.</li>
+          <li><b><code>check.tested_before_T.disconfirming_result</code>:</b> явно указать результат эксперимента, опровергающий заявленный новый вклад.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="banner">
+      <span>Готово к следующему прогону: пакет <code style="font-family:monospace">hyp-arena-generation-A3-BS3-2026-11-22.zip</code> (срез 22 ноября 2026) собран в репозитории.</span>
+      <span class="pill navy">A3 vs BS3</span>
+    </div>
+  </div>
+  <div class="footer"><span class="footer-center">Open Longevity · Проблематика, генерация и оценка гипотез</span><span class="footer-page">6</span></div>
+</section>
+
+<!-- ==================== SLIDE 7: LANDSCAPE & CO-SCIENTIST ==================== -->
+<section class="slide" style="padding-top:42px;">
+  <div class="eyebrow">Отправная точка и аналоги</div>
+  <h2 style="font-size:34px; margin-bottom:12px;">От генералистского Co-Scientist к проверяемой модульной системе</h2>
+  <p class="lead" style="font-size:15.5px; margin-bottom:12px;">
+    Co-Scientist показал жизнеспособность полного цикла, но его рейтинг (Elo от LLM-судьи) зависит от стиля текста, памяти модели и растёт квадратично с пулом. HypArena заменяет субъективный турнир на проверяемые правила по датированным фактам.
+  </p>
+  <div class="content">
+    <table class="tbl compact" style="margin-bottom: 12px;">
+      <thead>
+        <tr><th style="width:23%">Направление</th><th style="width:21%">Аналоги</th><th>Что берём и как развиваем в HypArena v3.13</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><b>Полный пайплайн</b></td><td>Google Co-Scientist</td><td>Цикл «генерация → проверка → отбор → эволюция», но оценка вынесена из LLM-турнира в код и правила.</td></tr>
+        <tr><td><b>Декомпозиция</b></td><td>Popper, Lit2Test</td><td>Формальная карточка (PICO + цепочка триплетов + решающий эксперимент с заранее заданным опровержением).</td></tr>
+        <tr><td><b>Защита и новизна</b></td><td>AIRA², All That Glitters</td><td>Срез знаний T, дословные цитаты, удержание функциональных исходов (<code>paper_outcomes/v2</code>) против повторов.</td></tr>
+        <tr><td><b>Доказательная база</b></td><td>GRADE, RoB 2, SYRCLE</td><td>Веса записей по доменам GRADE, свёртка одного испытания и фиксированный чек-лист угроз по системе.</td></tr>
+        <tr><td><b>Отбор по профилям</b></td><td>АСПИД / SMAA</td><td>Ранжирование без произвольных весов по трём профилям цели (Доказательность, Финансирование, Фронтир).</td></tr>
+        <tr><td><b>Структура знаний</b></td><td>HALD, DrugAge, Open Genes</td><td>Корпус 2313 статей (6263 наблюдения) и база 1723 гипотез с живой переоценкой при выходе статей.</td></tr>
+      </tbody>
+    </table>
+    <div class="grid-2">
+      <div class="card" style="padding:14px 18px;">
+        <h3 style="font-size:16.5px; margin-bottom:6px;">Почему не турнир Elo</h3>
+        <p class="small" style="color:var(--ink);">Новая статья не обновляет Elo без новых поединков; не видно, почему вырос ранг; на ретроспективе LLM-судья помнит исход.</p>
+      </div>
+      <div class="card soft-green" style="padding:14px 18px;">
+        <h3 style="font-size:16.5px; margin-bottom:6px;">Преимущество HypArena</h3>
+        <p class="small" style="color:var(--ink);">Каждая гипотеза оценивается один раз по литературе до T; пересчёт при смене профиля или выходе статьи — мгновенный и бесплатный.</p>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span class="footer-center">Open Longevity · Проблематика, генерация и оценка гипотез</span><span class="footer-page">7</span></div>
+</section>
+
+<!-- ==================== SLIDE 8: METHOD v3.13 PIPELINE ==================== -->
+<section class="slide">
+  <div class="eyebrow">Как устроен метод · HypArena v3.13</div>
+  <h2>Сквозной конвейер: чёткое разделение ролей LLM и кода</h2>
+  <p class="lead">
+    Модель читает тексты и извлекает факты <b>только с дословными цитатами</b>; все веса, ворота, чек-листы угроз, готовность препаратов, агрегацию АСПИД и аудит дат считает воспроизводимый код.
+  </p>
+  <div class="content" style="justify-content: center; gap: 18px;">
+    <div class="flow-row">
+      <div class="flow-node white">
+        <div class="fn-title">1 · Карточка (v17)</div>
+        <div class="fn-sub"><b>LLM + код:</b> PICO, цепочка до 4 шагов + исход, дизайн и n эксперимента, <code>required_for_balance</code>.</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node white">
+        <div class="fn-title">2 · Поиск до T</div>
+        <div class="fn-sub"><b>filtered:</b> запросы по звеньям, BM25, расширение цитирований, фильтр релевантности до даты среза T.</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node white">
+        <div class="fn-title">3 · Чтение (v22)</div>
+        <div class="fn-sub"><b>LLM + проверка кода:</b> находки за/против с цитатами факторов веса + <code>paper_outcomes/v2</code> при пустом исходе.</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">
+        <div class="fn-title">4 · Вес и баланс</div>
+        <div class="fn-sub"><b>Код:</b> GRADE-вес записи, свёртка испытания, сила звена S, ворота и знаковый баланс (−1…+1).</div>
+      </div>
+    </div>
+    <div style="display:flex; justify-content:flex-end; padding-right:120px; color:var(--terra); font-size:22px; font-weight:700; line-height:0.8;">↓</div>
+    <div class="flow-row">
+      <div class="flow-node highlight">
+        <div class="fn-title">8 · Отчёт и эволюция</div>
+        <div class="fn-sub">5 вкладок HTML, разложение реализуемости, флаги, запас роста и правила доработки версий.</div>
+      </div>
+      <div class="flow-arrow">←</div>
+      <div class="flow-node">
+        <div class="fn-title">7 · Ранжирование АСПИД</div>
+        <div class="fn-sub"><b>Код:</b> 10 000 розыгрышей весов по 3 профилям (Доказательность, Финансирование, Фронтир).</div>
+      </div>
+      <div class="flow-arrow">←</div>
+      <div class="flow-node white">
+        <div class="fn-title">6 · Реализуемость</div>
+        <div class="fn-sub"><b>Код + Канал Б:</b> система, срок, выборка n, ChEMBL + CT.gov до T (вещества) и <code>impl_readiness/v1</code> (нелек.).</div>
+      </div>
+      <div class="flow-arrow">←</div>
+      <div class="flow-node white">
+        <div class="fn-title">5 · Новизна и I</div>
+        <div class="fn-sub"><b>LLM + код:</b> лестница N (<code>None</code> внизу шкалы), альтернативы v3 с <code>control_span</code> и чек-лист угроз.</div>
+      </div>
+    </div>
+    <div class="grid-2 mt-12">
+      <div class="card" style="padding:14px 18px;">
+        <p class="small" style="color:var(--ink);"><b>Стоимость и учёт:</b> ~$0,08 на полную оценку гипотезы (DeepSeek Flash вне пика); новые шаги v3.13 (<code>paper_outcomes/v2</code> и Канал Б) добавляют менее <b>$0,0015</b> на гипотезу.</p>
+      </div>
+      <div class="card" style="padding:14px 18px;">
+        <p class="small" style="color:var(--ink);"><b>Приёмка цитат:</b> любая запись, <code>control_span</code> альтернативы, функциональный исход и вердикт Канала Б без точного совпадения цитаты в источнике автоматически отбрасываются кодом.</p>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span class="footer-center">Open Longevity · Проблематика, генерация и оценка гипотез</span><span class="footer-page">8</span></div>
+</section>
+
+<!-- ==================== SLIDE 9: CARD & REQUIRED LINKS ==================== -->
+<section class="slide">
+  <div class="eyebrow">Этапы 2–6 · Карточка и баланс доказательств</div>
+  <h2>От произведения правдоподобий к балансу с обязательными звеньями</h2>
+  <p class="lead">
+    В v3.10–v3.13 цепочка механизма упрощена до устойчивых классов (все шаги механизма — одно место баланса по слабейшему с данными), а в v3.12 добавлена защита от «подмены масштаба» через обязательные звенья.
+  </p>
+  <div class="content">
+    <div class="grid-60-40" style="margin-bottom: 16px;">
+      <div class="card">
+        <div class="card-kicker">Как считается баланс доказательств (<code>chain_state</code>)</div>
+        <ul class="clean">
+          <li><b>Вес записи по GRADE:</b> дизайн (РКИ/метаанализ &gt; нерандомиз. &gt; наблюдательное &gt; животные &gt; клетки; обзор на доклинической шкале ×⅓), точность по n, величина эффекта, сравнение и близость контекста (тот же класс ×¾).</li>
+          <li><b>Свёртка независимости:</b> несколько статей одного испытания считаются как один источник (повторные записи с затуханием).</li>
+          <li><b>Сила звена S ∈ [0, 1]:</b> сумма логарифмов отношения правдоподобия (<code>ln 5</code>); нулевые результаты весят по статистической мощности.</li>
+          <li><b>Обязательное звено (<code>required_for_balance</code>):</b> пустой перенос «мышь → человек» или ключевой новый вклад входит в знаменатель положительной части и покрытия — ранние доклинические звенья больше не маскируют отсутствие данных по главному выводу.</li>
+        </ul>
+      </div>
+      <div class="card soft-green">
+        <div class="card-kicker">Точность карточки (эталоны Argon 17, 19, 20)</div>
+        <table class="tbl compact" style="margin-top:6px;">
+          <thead><tr><th>Тип текста (шаблон v17)</th><th class="num">κ звеньев</th><th class="num">Главный исход</th></tr></thead>
+          <tbody>
+            <tr><td>Реестры испытаний (40)</td><td class="num pos">0,81</td><td class="num pos">0,93</td></tr>
+            <tr><td>Свободные гипотезы (50)</td><td class="num neg">0,53</td><td class="num neg">0,60</td></tr>
+          </tbody>
+        </table>
+        <p class="small mt-12" style="color:var(--ink);">
+          <b>Честное ограничение:</b> реестровые записи разбираются надёжно (дизайн, контроль и n читаются кодом), но свободные тексты гипотез всё ещё требуют усиления нормализатора (v18: тип вмешательства «способ не назван»).
+        </p>
+        <p class="small mt-12" style="color:var(--ink);">
+          <b>Открытый вопрос H08:</b> с v3.10 посылки (<code>premise</code>) не ищутся, чтобы не раздувать баланс; но опровергнутая посылка о состоянии популяции (<code>population_state</code>) должна бить по воротам.
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span class="footer-center">Open Longevity · Проблематика, генерация и оценка гипотез</span><span class="footer-page">9</span></div>
+</section>
+
+<!-- ==================== SLIDE 10: AXES & ANTI-HACK v3.13 ==================== -->
+<section class="slide">
+  <div class="eyebrow">Оси оценки · Анти-хак правила v3.13</div>
+  <h2>Каждая ось защищена от типовых обходов генератора</h2>
+  <div class="content">
+    <table class="tbl" style="margin-bottom: 16px;">
+      <thead>
+        <tr><th style="width:19%">Ось / показатель</th><th style="width:27%">Что измеряет</th><th>Анти-хак механизм в v3.13</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>Баланс (<code>chain_state</code>)</b></td>
+          <td>Поддержка цепочки литературой до T (−1…+1) и покрытие звеньев.</td>
+          <td>Пустое обязательное звено (<code>required_for_balance</code>) снижает положительную часть и покрытие; «ворота» отсекают опровергнутый исход.</td>
+        </tr>
+        <tr>
+          <td><b>Новизна (N)</b></td>
+          <td>6 уровней: новый контекст &lt; перенос &lt; аналог &lt; новый механизм &lt; новое сочетание &lt; новое звено.</td>
+          <td><b>v3.13:</b> перед <code>new_link</code> / <code>new_combination</code> запускается <b><code>paper_outcomes/v2</code></b> по ранним аннотациям; неизвестная новизна <code>N = None</code> стоит <b>внизу шкалы</b> (не разыгрывается со средним 0,50).</td>
+        </tr>
+        <tr>
+          <td><b>Информативность (I)</b></td>
+          <td>Какие обоснованные альтернативы и методологические угрозы отсекает опыт (0–1).</td>
+          <td><b>v3.12–v3.13:</b> вердикт «отсекает» требует дословный <code>control_span</code> и проверку оговорок (<code>propose_alternatives/v3</code>); исправлен баг чек-листа угроз для <code>system = "cells"</code> (6 угроз + флаг).</td>
+        </tr>
+        <tr>
+          <td><b>Размах (W)</b></td>
+          <td>Общность механизма: локальный &lt; орган/система &lt; признак старения.</td>
+          <td>Считается строго по подтверждённым звеньям — придуманная «глобальная» цепочка без опоры остаётся локальной.</td>
+        </tr>
+        <tr>
+          <td><b>Клиничность точки</b></td>
+          <td>Близость первичной точки к клинике (шкала FDA-NIH BEST).</td>
+          <td><b>v3.13:</b> клинические уровни (<code>function</code>, <code>clinical_event</code>) применяются только при <code>system = "human"</code>; опыты на животных и клетках ограничены <code>biomarker</code>.</td>
+        </tr>
+        <tr>
+          <td><b>Реализуемость</b></td>
+          <td>Система, длительность, выборка n и готовность вмешательства (0–1).</td>
+          <td><b>v3.13:</b> пропуск n и неизвестная готовность дают 0 в знаменателе; вещества — <code>ChEMBL + CT.gov <= T</code>, нелекарственные — Канал Б с дословной цитатой.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="footer"><span class="footer-center">Open Longevity · Проблематика, генерация и оценка гипотез</span><span class="footer-page">10</span></div>
+</section>
+
+<!-- ==================== SLIDE 11: FEASIBILITY & REPORT BREAKDOWN ==================== -->
+<section class="slide" style="padding-top:42px;">
+  <div class="eyebrow">Реализуемость v3.13 · Прозрачность оценки</div>
+  <h2 style="font-size:34px; margin-bottom:12px;">Две ветки проверки готовности и разложение балла в отчёте</h2>
+  <p class="lead" style="font-size:15.5px; margin-bottom:14px;">
+    В v3.12 реализуемость имела отрицательную корреляцию с проверяемостью судьи (−0,176): свежие препараты без записи в ChEMBL и реальные клинические устройства получали 0 наравне с фантомными конструкциями. В v3.13 это исправлено без подгоночных коэффициентов.
+  </p>
+  <div class="content">
+    <div class="grid-2" style="margin-bottom: 14px;">
+      <div class="card" style="padding:16px 20px;">
+        <div class="card-kicker">Ветка 1 · Вещества (<code>compound</code>)</div>
+        <h3 style="margin-bottom:8px;">ChEMBL → ClinicalTrials.gov до T</h3>
+        <ul class="clean compact">
+          <li>Точное совпадение имени/синонима и фазы в <b>ChEMBL</b> (фаза 4 → 1,0; фазы 1–3 → 0,5; фаза 0 → 0,0; неподтверждённая комбинация ≤ 0,5).</li>
+          <li><b>Новое в v3.13:</b> если ChEMBL не вернул фазу, код проверяет <b>ClinicalTrials.gov v2</b> (<code>StudyFirstSubmitDate &lt;= T</code>) по точному совпадению названия/кода.</li>
+          <li><b>Результат на 40 гипотезах:</b> 4 из 4 точных клинических попаданий (<code>NMD670</code>, <code>bimokalner</code>, <code>rotigaptide</code>), <b>0 ложных срабатываний</b>.</li>
+        </ul>
+      </div>
+      <div class="card soft-green" style="padding:16px 20px;">
+        <div class="card-kicker">Ветка 2 · Нелекарственные средства (Канал Б)</div>
+        <h3 style="margin-bottom:8px;"><code>implementation_readiness/v1</code> по досье</h3>
+        <ul class="clean compact">
+          <li>Для устройств, процедур, упражнений, генных и клеточных вмешательств — <b>1 вызов ридера</b> по уже найденным аннотациям до T (~$0,0005/гипотеза).</li>
+          <li>Оценивается <b>лимитирующая операция</b>: <code>demonstrated</code> (1,0), <code>conditional</code> (0,5), <code>missing</code> (0,0).</li>
+          <li><b>Строгая защита:</b> статус выше <code>missing</code> обязан иметь дословную цитату, проверенную кодом (12/12 = 100% верифицировано на dev + holdout).</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card" style="padding:14px 20px;">
+      <div class="card-kicker" style="margin-bottom:6px;">Новое в HTML-отчёте · Вкладка «Оценка гипотез»</div>
+      <div class="grid-4">
+        <div style="border-right:1px solid var(--border); padding-right:12px;">
+          <b style="font-size:14px;">1. Система</b>
+          <p class="small" style="margin-top:3px; font-size:13px;">Клетки/данные 1,0 … мышь 0,5 … люди 0,0. Подсказка по шкале при наведении.</p>
+        </div>
+        <div style="border-right:1px solid var(--border); padding-right:12px;">
+          <b style="font-size:14px;">2. Длительность</b>
+          <p class="small" style="margin-top:3px; font-size:13px;">Недели 1,0, месяцы 0,67, годы 0,33, десятилетия 0,0.</p>
+        </div>
+        <div style="border-right:1px solid var(--border); padding-right:12px;">
+          <b style="font-size:14px;">3. Плановая выборка n</b>
+          <p class="small" style="margin-top:3px; font-size:13px;">&lt;50 → 1,0 … ≥1000 → 0,0. Пропуск в опыте даёт 0,0 в знаменателе.</p>
+        </div>
+        <div>
+          <b style="font-size:14px;">4. Готовность + PMID</b>
+          <p class="small" style="margin-top:3px; font-size:13px;">Русская причина статуса (ChEMBL / CT.gov / Канал Б с PMID) и среднее по N частям.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span class="footer-center">Open Longevity · Проблематика, генерация и оценка гипотез</span><span class="footer-page">11</span></div>
+</section>
+
+<!-- ==================== SLIDE 12: ASPID & THREE PROFILES ==================== -->
+<section class="slide">
+  <div class="eyebrow">Сводная оценка · АСПИД / SMAA</div>
+  <h2>Три профиля цели вместо одного произвольного рейтинга</h2>
+  <p class="lead">
+    Веса показателей не назначаются «на глаз» — задаётся лишь порядок важности (ранги 1–5). 10 000 розыгрышей допустимых весов дают ожидаемый балл, вероятность попадания в топ-5 и устойчивость ранга.
+  </p>
+  <div class="content">
+    <div class="grid-60-40">
+      <table class="tbl compact">
+        <thead>
+          <tr><th>Показатель</th><th class="num">Доказательность</th><th class="num">Финансирование</th><th class="num">Фронтир</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><b>Баланс доказательств</b></td><td class="num pos">1</td><td class="num pos">1</td><td class="num">2</td></tr>
+          <tr><td><b>Новизна (N)</b></td><td class="num">—</td><td class="num">3</td><td class="num pos">1</td></tr>
+          <tr><td><b>Реализуемость</b></td><td class="num">—</td><td class="num pos">2</td><td class="num">4</td></tr>
+          <tr><td><b>Информативность (I)</b></td><td class="num">2</td><td class="num">4</td><td class="num">3</td></tr>
+          <tr><td><b>Размах механизма (W)</b></td><td class="num">3</td><td class="num">4</td><td class="num">5</td></tr>
+          <tr><td>Рост внимания (<code>trend_pubmed</code>)</td><td class="num">—</td><td class="num">3</td><td class="num">—</td></tr>
+          <tr><td>Роль ИИ (<code>ai_role</code>)</td><td class="num">—</td><td class="num">3</td><td class="num">—</td></tr>
+          <tr><td>Дизайн / Источники / Клиничность</td><td class="num">4</td><td class="num">5</td><td class="num">—</td></tr>
+        </tbody>
+      </table>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div class="card">
+          <h3>Доказательность</h3>
+          <p class="small" style="color:var(--ink);">Новизна намеренно исключена: показывает, насколько механизм уже обоснован до T и насколько информативен эксперимент.</p>
+        </div>
+        <div class="card">
+          <h3>Финансирование</h3>
+          <p class="small" style="color:var(--ink);">Баланс и реализуемость на первых двух рангах: отбирает проекты, готовые к запуску с подтверждённым средством.</p>
+        </div>
+        <div class="card soft-green">
+          <h3>Фронтир</h3>
+          <p class="small" style="color:var(--ink);">Новизна на 1-м ранге, но защищена от пустых фантазий: <code>N = None</code> стоит внизу шкалы, <code>paper_outcomes/v2</code> отсекает ложный <code>new_link</code>, баланс падает от данных против.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span class="footer-center">Open Longevity · Проблематика, генерация и оценка гипотез</span><span class="footer-page">12</span></div>
+</section>
+
+<!-- ==================== SLIDE 13: 4 LEVELS OF VALIDATION ==================== -->
+<section class="slide">
+  <div class="eyebrow">Как мы доказываем качество</div>
+  <h2>Четыре уровня проверки: от инвариантов кода до арены генерации</h2>
+  <p class="lead">
+    Каждое изменение правила сначала оформляется спецификацией с порогом прохождения, проверяется на замороженных данных (dev + holdout), и только при выполнении правила попадает в рабочий метод.
+  </p>
+  <div class="content">
+    <div class="grid-4 gap-14">
+      <div class="card">
+        <div class="card-kicker">Уровень 1</div>
+        <h3>Система и этапы</h3>
+        <p class="small" style="color:var(--ink); margin-bottom:10px;">Инварианты АСПИД и поэтапные бенчмарки против внешнего читателя Argon (<b>28 эталонных пакетов</b>).</p>
+        <span class="pill green">Пройдено / в работе</span>
+        <p class="small mt-12">570+ тестов кода; эталоны чтения (16, 25), карточки (17, 19, 20), поиска (18, 21), альтернатив (22, 28), новизны (26), весов (23, 24, 27).</p>
+      </div>
+      <div class="card">
+        <div class="card-kicker">Уровень 2</div>
+        <h3>Против других подходов</h3>
+        <p class="small" style="color:var(--ink); margin-bottom:10px;">Сравнение с прямым LLM-вопросом и турниром Co-Scientist при равной модели и дате T.</p>
+        <span class="pill amber">Готов раннер</span>
+        <p class="small mt-12">Собран парный раннер <code>codex_benchmark.py</code> на 237 испытаниях <code>benchmark-v2</code> (пайплайн vs Direct LLM одной модели).</p>
+      </div>
+      <div class="card">
+        <div class="card-kicker">Уровень 3</div>
+        <h3>Против реальных исходов</h3>
+        <p class="small" style="color:var(--ink); margin-bottom:10px;">Упорядочивает ли баланс до T клинические испытания так же, как их рассудили результаты (R2, R3).</p>
+        <span class="pill green">Калибровка + Заморозка</span>
+        <p class="small mt-12">73 калибровочных испытания оценены; 60 идущих испытаний заморожены SHA-256 до 2026–2028 (чистый проспективный тест).</p>
+      </div>
+      <div class="card soft-green">
+        <div class="card-kicker">Уровень 4 · Новый фокус</div>
+        <h3>Генерация и эволюция</h3>
+        <p class="small" style="color:var(--ink); margin-bottom:10px;">Слепое парное сравнение гипотез по методу (BS) против чистого чата (A) и сверка оценщика с судьёй.</p>
+        <span class="pill green">Активные пилоты</span>
+        <p class="small mt-12">Проведены 10x10-20 (190 пар, судья v2) и Sol-20 (190 пар, судья v3); подготовлены промпты A3/BS3.</p>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span class="footer-center">Open Longevity · Проблематика, генерация и оценка гипотез</span><span class="footer-page">13</span></div>
+</section>
+
+<!-- ==================== SLIDE 14: v3.13 CALIBRATION & HOLDOUT ==================== -->
+<section class="slide">
+  <div class="eyebrow">Результаты калибровки и holdout · v3.12 → v3.13</div>
+  <h2>Измеримый рост согласия с судьёй на dev и независимом holdout</h2>
+  <p class="lead">
+    Все правки v3.13 проверены абляцией на Sol-20 (dev), подтверждены на независимых holdout-наборах (10x10-20 и pack_26) и прошли регрессию на 133 реестровых испытаниях. Полная стоимость пилотов + holdout — <b>$0,039</b>.
+  </p>
+  <div class="content">
+    <div class="grid-2" style="margin-bottom: 14px;">
+      <div class="card">
+        <div class="card-kicker">Dev-пул Sol-20 (vs слепой судья v3, 190 пар)</div>
+        <table class="tbl compact" style="margin-top:6px;">
+          <thead><tr><th>Версия</th><th class="num">Ev ρ</th><th class="num">Fu ρ</th><th class="num">Fr ρ</th><th class="num">Feas vs J-T</th></tr></thead>
+          <tbody>
+            <tr><td>v3.12 (база)</td><td class="num">+0,448</td><td class="num">+0,191</td><td class="num neg">−0,190</td><td class="num neg">−0,176</td></tr>
+            <tr><td>+ CT.gov + <code>N=None</code> + ep</td><td class="num">+0,452</td><td class="num">+0,257</td><td class="num">+0,034</td><td class="num">−0,097</td></tr>
+            <tr><td><b>v3.13 (+ p1 + Канал Б)</b></td><td class="num pos">+0,452</td><td class="num pos">+0,390</td><td class="num pos">+0,126</td><td class="num pos">+0,058</td></tr>
+          </tbody>
+        </table>
+        <p class="small mt-12" style="color:var(--ink);">Канал Б на 12 нелекарственных: <b>84,6%</b> (11/12), <b>κ = +0,683</b>, recall по <code>missing</code> <b>7/7 (100%)</b>, цитаты <b>6/6</b>.</p>
+      </div>
+      <div class="card soft-green">
+        <div class="card-kicker">Независимый Holdout (10x10-20 и pack_26)</div>
+        <table class="tbl compact" style="margin-top:6px;">
+          <thead><tr><th>Проверка (out-of-sample)</th><th class="num">v3.12</th><th class="num">v3.13</th></tr></thead>
+          <tbody>
+            <tr><td>10x10-20: Funding ρ (vs судья v2)</td><td class="num">+0,180</td><td class="num pos">+0,372</td></tr>
+            <tr><td>10x10-20: Top-10 Funding / Feas vs J-T</td><td class="num">6/10 · −0,102</td><td class="num pos">7/10 · −0,067</td></tr>
+            <tr><td>10x10-20: ложные на генах / цитаты</td><td class="num">—</td><td class="num pos">0/4 · 6/6</td></tr>
+            <tr><td>pack_26: сохранено настоящих <code>new_link</code></td><td class="num">9 / 9</td><td class="num pos">8 / 9 (27/27)</td></tr>
+          </tbody>
+        </table>
+        <p class="small mt-12" style="color:var(--ink);">Регрессия на реестрах (<code>prospective-60</code>, <code>calibration-73</code>): Evidence и Frontier Top-10 <b>10/10</b> на обоих пулах.</p>
+      </div>
+    </div>
+    <div class="card soft-terra" style="padding: 13px 18px;">
+      <p class="small" style="color:#6E290B;">
+        <b>Что честно отбраковала калибровка (не вошло в v3.13):</b> (1) наивный PubMed для нелекарственной готовности (ложные совпадения по белкам <code>Cx40</code>, <code>connexin-36</code>); (2) MeSH + CT.gov для нелекарственных (<code>0/4</code> на Sol-20 и ложный кредит на адаптивную повязку); (3) наивный PubMed-гвард на <code>new_link</code> (уронил pack_26 κ <code>0,371 → 0,291</code> и не поймал H09/H15).
+      </p>
+    </div>
+  </div>
+  <div class="footer"><span class="footer-center">Open Longevity · Проблематика, генерация и оценка гипотез</span><span class="footer-page">14</span></div>
+</section>
+
+<!-- ==================== SLIDE 15: WHOLE-SYSTEM & PROSPECTIVE ==================== -->
+<section class="slide">
+  <div class="eyebrow">Уровень 3 · Сквозная проверка против исходов</div>
+  <h2>Баланс до T, пределы предсказуемости и проспективный пул</h2>
+  <p class="lead">
+    Сквозной прогон текущего пайплайна (поиск <code>filtered</code>, ридер v21, карточка v17, 73 из 74 калибровочных испытаний) показал реальный потолок литературы до T и подтвердил, почему главный тест — проспективный.
+  </p>
+  <div class="content">
+    <div class="grid-60-40" style="margin-bottom: 16px;">
+      <table class="tbl">
+        <thead><tr><th>Мера (калибровка 73 испытания)</th><th class="num">Прежний прогон</th><th class="num">Текущий пайплайн</th></tr></thead>
+        <tbody>
+          <tr><td><b>R3</b> (AUC баланса к исходу испытания)</td><td class="num">0,607 [0,48; 0,74]</td><td class="num"><b>0,578</b> [0,45; 0,71]</td></tr>
+          <tr><td><b>R3</b>, чистые 14 испытаний (2023–2026)</td><td class="num">0,48</td><td class="num pos">0,63 [0,29; 0,93]</td></tr>
+          <tr><td><b>R2</b> (ранние записи → позднее РКИ/МА)</td><td class="num">0,678 (71 цель)</td><td class="num">0,579 (722 цели)</td></tr>
+          <tr><td><b>R2</b> по 36 метаанализам (менее шумная метка)</td><td class="num">—</td><td class="num pos">0,658 [0,43; 0,83]</td></tr>
+          <tr><td><b>Покрытие звеньев</b> / медиана записей</td><td class="num">36% / 4</td><td class="num pos">92% / 14</td></tr>
+        </tbody>
+      </table>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div class="card">
+          <h3>Что показала диагностика шума</h3>
+          <ul class="clean compact">
+            <li>Ридер почти не шумит (Спирмен <b>0,94</b>); главный источник разброса — карточка и поиск (0,67).</li>
+            <li>Поправка на надёжность даёт потолок R3 ≈ 0,595: литература до T сама по себе слабо предсказывает исход одного РКИ.</li>
+            <li>Сравнение с Direct LLM готово на 237 испытаниях (<code>codex_benchmark.py</code>).</li>
+          </ul>
+        </div>
+        <div class="card navy">
+          <div style="display:flex; align-items:baseline; gap:14px;">
+            <span class="kpi" style="color:#7CC5AE;">60</span>
+            <div>
+              <h3 style="margin-bottom:4px;">Проспективный пул заморожен</h3>
+              <p class="small" style="color:#C5D1DF;">Идущие испытания по старению (ноябрь 2026 — декабрь 2028) из 371 кандидата. Оценки зафиксированы SHA-256 до результатов.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span class="footer-center">Open Longevity · Проблематика, генерация и оценка гипотез</span><span class="footer-page">15</span></div>
+</section>
+
+<!-- ==================== SLIDE 16: EVOLUTION & IMPROVEMENT ==================== -->
+<section class="slide">
+  <div class="eyebrow">Улучшение и эволюция гипотез</div>
+  <h2>Эволюция без самообмана: разделяем рост идеи и рост дизайна</h2>
+  <p class="lead">
+    Вместо слепого переписывания текста система выдаёт конкретный список улучшений с оценкой запаса роста по каждому профилю и проверяет каждую новую версию 8 кодовыми правилами.
+  </p>
+  <div class="content">
+    <div class="grid-2" style="margin-bottom: 16px;">
+      <div class="card">
+        <div class="card-kicker">Два типа действий из отчёта</div>
+        <h3>Что поднимет оценку гипотезы</h3>
+        <ul class="clean">
+          <li><b>Исправить формулировкой / протоколом:</b> закрыть открытую угрозу чек-листа (<code>threats_open</code>), добавить активный контроль против поддержанной альтернативы, указать <code>n_planned</code> и конкретное средство.</li>
+          <li><b>Нужны новые данные:</b> проверить пустое обязательное звено, подтвердить перенос на человека или провести промежуточный тест предпосылки.</li>
+          <li><b>Запас улучшения (<code>room to improve</code>):</b> для каждого профиля считается ожидаемый прирост балла при реализации списка.</li>
+        </ul>
+      </div>
+      <div class="card soft-green">
+        <div class="card-kicker">Защиты от фиктивного улучшения</div>
+        <h3>Декомпозиция и инварианты версий</h3>
+        <ul class="clean">
+          <li><b>Декомпозиция прироста:</b> изменение балла раскладывается на <i>часть гипотезы</i> (баланс, N, W) и <i>часть эксперимента</i> (I, <code>feasibility</code>), чтобы правки дизайна не выдавались за усиление идеи.</li>
+          <li><b>Флаг «сдвиг к известному» (<code>drift</code>):</b> фиксирует, не добилась ли версия роста баланса за счёт отказа от новизны.</li>
+          <li><b>8 правил-инвариантов (<code>evolution_rules.py</code>):</b> запрещают подменять исход, выдумывать ненайденные PMID или получать <code>new_link</code> без проверки PubMed.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="banner">
+      <span>Режимы эволюции: точечная доработка (д), доработка под профиль (п), свободная эволюция (с) и направленная эволюция во Фронтир (н).</span>
+    </div>
+  </div>
+  <div class="footer"><span class="footer-center">Open Longevity · Проблематика, генерация и оценка гипотез</span><span class="footer-page">16</span></div>
+</section>
+
+<!-- ==================== SLIDE 17: KNOWLEDGE GRAPH & LIVE ARENA ==================== -->
+<section class="slide">
+  <div class="eyebrow">Данные и инфраструктура · <code>longevity-kg</code> + <code>hyp-arena</code></div>
+  <h2>Граф знаний, база гипотез и архитектура «живой арены»</h2>
+  <p class="lead">
+    Проект разделён на публичный код, спеки и мануалы (<code>hyp-arena</code>, MIT) и приватное хранилище текстов, эталонов и прогонов (<code>longevity-kg</code>), что позволяет воспроизводить правила без нарушения лицензий издателей.
+  </p>
+  <div class="content">
+    <div class="grid-4" style="margin-bottom: 18px;">
+      <div class="card">
+        <div class="kpi green">2 313</div>
+        <div class="kpi-label">статей в корпусе PubMed / DrugAge — извлечение полностью завершено</div>
+      </div>
+      <div class="card">
+        <div class="kpi">6 263</div>
+        <div class="kpi-label">структурированных наблюдений с дословными цитатами (6 пакетов аудита)</div>
+      </div>
+      <div class="card">
+        <div class="kpi">1 723</div>
+        <div class="kpi-label">гипотез в единой базе с постоянными короткими ID (H01 … H1723)</div>
+      </div>
+      <div class="card">
+        <div class="kpi green">28</div>
+        <div class="kpi-label">эталонных пакетов внешнего читателя Argon по всем этапам конвейера</div>
+      </div>
+    </div>
+    <table class="tbl compact">
+      <thead><tr><th>Свойство живой арены</th><th>Турнир с рейтингом Эло</th><th>Подход HypArena v3.13</th></tr></thead>
+      <tbody>
+        <tr><td>Вышла новая статья</td><td>Рейтинг не меняется без новых LLM-поединков</td><td>Обновляются только затронутые звенья; пересчёт АСПИД бесплатный</td></tr>
+        <tr><td>Причина сдвига ранга</td><td>Непрозрачна (скрыта в текстах судьи)</td><td>Полный след: звено, статья с цитатой, фактор веса, компонент реализуемости</td></tr>
+        <tr><td>Масштабирование пула</td><td>Число пар растёт квадратично O(N²)</td><td>Линейно O(N): каждая гипотеза оценивается независимо от пула</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="footer"><span class="footer-center">Open Longevity · Проблематика, генерация и оценка гипотез</span><span class="footer-page">17</span></div>
+</section>
+
+<!-- ==================== SLIDE 18: ROADMAP & CURRENT STATUS ==================== -->
+<section class="slide">
+  <div class="eyebrow">Дорожная карта · Статус на 23 ноября 2026</div>
+  <h2>Что уже сделано и куда движемся дальше</h2>
+  <div class="content">
+    <div class="grid-3 gap-16" style="margin-bottom: 16px;">
+      <div class="card soft-green">
+        <div class="card-kicker">✓ Сделано (ноябрь 2026)</div>
+        <h3>Метод v3.13 и инфраструктура</h3>
+        <ul class="clean compact">
+          <li>Полный метод <b>v3.13</b>, 5-вкладочный отчёт с разложением реализуемости, 570+ тестов.</li>
+          <li>Завершено извлечение графа (2313 статей, 6263 наблюдения) и база 1723 гипотез.</li>
+          <li>Собрано 28 эталонных пакетов Argon; откалиброваны и проверены на holdout <code>paper_outcomes/v2</code> и Канал Б.</li>
+          <li>Заморожен проспективный пул (60 испытаний); подготовлены промпты A3/BS3 и пакет оценки v3.13.</li>
+        </ul>
+      </div>
+      <div class="card" style="border: 2px solid var(--green);">
+        <div class="card-kicker">Сейчас · Ближайший цикл</div>
+        <h3>Проверка генерации и ретро-бенчмарк</h3>
+        <ul class="clean compact">
+          <li><b>Прогон A3 vs BS3</b> и оценка обновлённым пакетом v3.13 + перебалансированным судьёй v4 (гигиена отдельно от новизны).</li>
+          <li><b>Парный ретро-бенчмарк</b> <code>codex_benchmark</code> (система vs Direct LLM на 237 испытаниях <code>benchmark-v2</code>).</li>
+          <li><b>Карточка v18</b> (тип <code>unspecified</code> для свободных текстов) и проверка посылки о популяции (<code>population_state</code>).</li>
+          <li>Улучшение recall поиска (сейчас 0,36 на пакете 18) и тест чтения на известных фактах (Open Genes / GenAge).</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-kicker">Следующий горизонт</div>
+        <h3>Эволюция, граф и живая арена</h3>
+        <ul class="clean compact">
+          <li>Направленная эволюция во Фронтир и автоматический цикл «генерация → проверка → доработка».</li>
+          <li>Вычислительный пилот на открытых данных (LINCS L1000 × Tabula Muris Senis / GTEx) — чистая метка за дни.</li>
+          <li>Пересборка SQLite-графа <code>longevity-kg</code>, связывание утверждений между гипотезами и символьная валидация.</li>
+          <li>Квартальное пополнение проспективного пула + внешний timestamping хэшей (OSF / Zenodo / OpenTimestamps).</li>
+        </ul>
+      </div>
+    </div>
+    <div class="banner">
+      <span>Ключевой принцип темпа: каждое усложнение допускается только после бесплатной офлайн-калибровки и out-of-sample holdout.</span>
+    </div>
+  </div>
+  <div class="footer"><span class="footer-center">Open Longevity · Проблематика, генерация и оценка гипотез</span><span class="footer-page">18</span></div>
+</section>
+
+<!-- ==================== SLIDE 19: PUBLICATIONS ==================== -->
+<section class="slide">
+  <div class="eyebrow">Публикации · Обновлено на ноябрь 2026</div>
+  <h2>Где и когда публиковать результаты</h2>
+  <div class="content">
+    <table class="tbl compact" style="margin-bottom: 16px;">
+      <thead>
+        <tr><th style="width:22%">Площадка</th><th style="width:48%">Фокус и какой наш результат подходит</th><th style="width:30%">Ориентир дедлайна</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><b>arXiv / bioRxiv</b></td><td>Препринт метода HypArena v3.13 + разбор сбоев ИИ-генерации гипотез и анти-хак механизмов</td><td>В любой момент (подаче не мешает)</td></tr>
+        <tr><td><b>ICML / ISMB</b></td><td>Метод оценки и калибровка по этапам; вычислительная биология и биомедицинский конвейер</td><td>Январь 2027 (через ≈ 2 мес.)</td></tr>
+        <tr><td><b>Воркшопы AI4Science</b></td><td>Короткая работа по пилоту «налог на новизну» (A1/BS1/A2/BS2 → A3/BS3) и декомпозиции оценок</td><td>Февраль / август (ICLR, NeurIPS)</td></tr>
+        <tr><td><b>NeurIPS (D&amp;B track)</b></td><td>Бенчмарк 237 реестровых гипотез + 28 поэтапных эталонов + замороженный проспективный пул</td><td>Май 2027 (через ≈ 5–6 мес.)</td></tr>
+        <tr><td><b>ISWC</b></td><td>Ресурсный трек: граф знаний старения (2313+ статей, дословные цитаты, нулевые результаты)</td><td>Начало мая 2027 (через ≈ 5 мес.)</td></tr>
+        <tr><td><b>ICLR / AAAI</b></td><td>Полный цикл с направленной эволюцией, проспективными итогами и сравнением с Co-Scientist</td><td>Июль — сентябрь 2027</td></tr>
+        <tr><td><b>Журналы</b></td><td><i>Scientific Data</i> (датасет и граф), <i>NAR Database</i> (раз в год), <i>Aging Cell</i> (доменные гипотезы)</td><td>По готовности (без жёсткого окна)</td></tr>
+      </tbody>
+    </table>
+    <div class="banner">
+      <span>Ближайший сильный публикационный артефакт: препринт по проблематике генерации и методу v3.13 после завершения прогона A3/BS3 и парного <code>benchmark-v2</code>.</span>
+    </div>
+  </div>
+  <div class="footer"><span class="footer-center">Open Longevity · Проблематика, генерация и оценка гипотез</span><span class="footer-page">19</span></div>
+</section>
+
+<!-- ==================== SLIDE 20: LIMITS & DECISIONS ==================== -->
+<section class="slide">
+  <div class="eyebrow">Рамки работы и решения</div>
+  <h2>Честные ограничения и вопросы к обсуждению</h2>
+  <div class="content">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-kicker terra">Принципиальные и текущие ограничения</div>
+        <ul class="clean terra">
+          <li><b>Свободные тексты сложнее реестров:</b> разбор карточки на написанных гипотезах (<code>κ = 0,53</code>) и recall поиска (0,36) — главные источники шума.</li>
+          <li><b>Опровергнутые посылки о популяции:</b> пока <code>premise</code> не ищутся, гипотезы вроде H08 могут проходить ворота несмотря на ложную предпосылку.</li>
+          <li><b>Литература до T — не оракул:</b> даже без шума конвейера R3 на одиночных РКИ ограничен (~0,60); чистый тест — только проспективный пул.</li>
+          <li><b>Регрессия памяти моделей:</b> на исторических испытаниях LLM могут помнить исход — отсюда необходимость проспективной заморозки.</li>
+          <li><b>Автоматика <code>required_for_balance</code>:</b> в v3.13 обязательные звенья размечаются явно; автоматическое распознавание переноса ждёт отдельного holdout.</li>
+        </ul>
+      </div>
+      <div class="card soft-green">
+        <div class="card-kicker">Решения для следующего шага</div>
+        <ul class="clean">
+          <li><b>Судья v4:</b> разделяем ли судейство на два шага — сначала гигиена (<code>grounding</code> + <code>testability</code>), затем сравнение новизны и пользы среди прошедших?</li>
+          <li><b>Запуск A3 vs BS3:</b> выбор моделей-генераторов, числа тем (помимо биоэлектричества) и бюджета на прогон.</li>
+          <li><b>Ретро-бенчмарк 237 (<code>codex_benchmark</code>):</b> запуск пилота (<code>--limit 4</code>) и затем полного парного сравнения с Direct LLM.</li>
+          <li><b>Посылка <code>population_state</code>:</b> добавляем ли отдельный проверяемый тип предпосылки о целевой популяции в ворота?</li>
+          <li><b>Внешний timestamping и эксперты:</b> выбор площадки фиксации хэшей (OSF / Zenodo) и формат вовлечения биологов-геронтологов.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span class="footer-center">Open Longevity · Проблематика, генерация и оценка гипотез</span><span class="footer-page">20</span></div>
+</section>
+
+</main>
+
+<script>
+  const slides = [...document.querySelectorAll('.slide')];
+  const counter = document.getElementById('counter');
+  let idx = 0;
+  function show(i) {
+    idx = Math.max(0, Math.min(slides.length - 1, i));
+    slides[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    counter.textContent = `${idx + 1} / ${slides.length}`;
+  }
+  document.getElementById('prev-btn').onclick = () => show(idx - 1);
+  document.getElementById('next-btn').onclick = () => show(idx + 1);
+  document.getElementById('print-btn').onclick = () => window.print();
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); show(idx + 1); }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); show(idx - 1); }
+    if (e.key === 'Home') show(0);
+    if (e.key === 'End') show(slides.length - 1);
+  });
+  const io = new IntersectionObserver(entries => {
+    for (const en of entries) {
+      if (en.isIntersecting) {
+        idx = slides.indexOf(en.target);
+        counter.textContent = `${idx + 1} / ${slides.length}`;
+      }
+    }
+  }, { threshold: 0.6 });
+  slides.forEach(s => io.observe(s));
+</script>
+</body>
+</html>
