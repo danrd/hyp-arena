@@ -78,6 +78,8 @@ def readiness_assessment(card: HypothesisCard, as_of: str = "",
     if len(drugs) != len(interventions):
         if isinstance(implementation, dict):
             st = str(implementation.get("verified_status") or "").strip().lower()
+            if st in ("demonstrated", "conditional") and not impl_mod.has_checked_quote(implementation):
+                st = "missing"
             if st in impl_mod.STATUS_SCORE:
                 return impl_mod.STATUS_SCORE[st], impl_mod.STATUS_REASON[st]
         return None, "implementation_unverified"
@@ -186,8 +188,10 @@ def feasibility_breakdown(card: HypothesisCard, as_of: str = "", implementation:
         "reason": readiness_reason,
     }
     if isinstance(implementation, dict) and readiness_reason.startswith("impl_"):
-        if implementation.get("evidence_pmid"):
+        if readiness_reason in ("impl_demonstrated", "impl_conditional"):
             readiness_part["evidence_pmid"] = implementation["evidence_pmid"]
+        if implementation.get("issue"):
+            readiness_part["issue"] = implementation["issue"]
         if implementation.get("gap"):
             readiness_part["gap"] = implementation["gap"]
     parts = [

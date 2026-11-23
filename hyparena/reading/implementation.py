@@ -11,9 +11,14 @@ Any supported status whose quote fails verbatim verification is automatically do
 """
 from __future__ import annotations
 
+from datetime import date
+from functools import lru_cache
 import json
 import re
 from typing import Optional
+from xml.etree.ElementTree import ParseError
+
+import httpx
 
 from hyparena.card.models import ClaimVerification, HypothesisCard
 from hyparena.llm.prompts import render
@@ -67,8 +72,8 @@ def validate(value: Optional[dict], supplied: dict[str, dict]) -> dict:
     issue = ""
     if raw_st in ("demonstrated", "conditional"):
         if pm in supplied:
-            full = f"{supplied[pm].get('title') or ''}\n{supplied[pm].get('abstract') or ''}"
-            if qt and _norm(qt) in _norm(full):
+            quote = _norm(qt)
+            if quote and any(quote in _norm(supplied[pm].get(field) or "") for field in ("title", "abstract")):
                 quote_ok = True
             else:
                 issue = "unverified_quote"
@@ -88,6 +93,54 @@ def validate(value: Optional[dict], supplied: dict[str, dict]) -> dict:
         "issue": issue,
         "gap": str(value.get("gap") or ""),
     }
+
+
+def has_checked_quote(implementation: dict) -> bool:
+    """A persisted positive assessment must include its checked PMID and quote."""
+    pmid = str(implementation.get("evidence_pmid") or "").strip().removeprefix("PMID:")
+    quote = implementation.get("evidence_quote")
+    return (
+        implementation.get("quote_ok") is True
+        and pmid.isascii()
+        and pmid.isdecimal()
+        and isinstance(quote, str)
+        and bool(_norm(quote))
+    )
+
+
+@lru_cache(maxsize=256)
+def _pre_cutoff_source(pmid: str, as_of: str) -> dict[str, dict]:
+    from hyparena.tools import pubmed
+
+    if pmid not in pubmed.search(f"{pmid}[UID]", retmax=1, as_of=as_of):
+        return {}
+    return pubmed.fetch([pmid])
+
+
+def revalidate_saved(implementation: Optional[dict], as_of: str) -> Optional[dict]:
+    """Validate hand-prepared readiness against the source rather than its saved flag alone."""
+    if not isinstance(implementation, dict):
+        return None
+    status = str(implementation.get("verified_status") or "missing").strip().lower()
+    if status not in ("demonstrated", "conditional"):
+        return implementation
+
+    assessment = {**implementation, "implementation_status": status}
+    if not has_checked_quote(implementation):
+        return {**validate(assessment, {}), "issue": "missing_checked_quote"}
+    try:
+        cutoff = date.fromisoformat(as_of)
+    except (ValueError, TypeError):
+        return {**validate(assessment, {}), "issue": "missing_or_invalid_cutoff"}
+    pmid = str(implementation["evidence_pmid"]).strip().removeprefix("PMID:")
+    try:
+        sources = _pre_cutoff_source(pmid, cutoff.isoformat())
+    except (httpx.HTTPError, RuntimeError, ValueError, OSError, ParseError):
+        return {**validate(assessment, {}), "issue": "pubmed_unavailable"}
+    result = validate(assessment, sources)
+    if not sources:
+        result["issue"] = "source_missing_or_after_cutoff"
+    return result
 
 
 def assess(

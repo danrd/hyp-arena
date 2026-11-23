@@ -103,3 +103,39 @@ def test_channel_b_implementation_validation_and_v3_extra_integration():
     assert fb["score"] == vx.feasibility(c, implementation=good) == round((0 + 2 / 3 + 2 / 3 + 0.5) / 4, 3)
     rp = next(p for p in fb["parts"] if p["key"] == "readiness")
     assert rp["reason"] == "impl_conditional" and rp["evidence_pmid"] == "37578890"
+
+
+def test_saved_readiness_requires_reproducible_evidence(monkeypatch):
+    from hyparena.tools import pubmed
+
+    c = card([claim("c1", "x", "improves_healthspan_in", "human", "outcome", "outcome")])
+    c.pico.intervention = [Intervention(type="device", label="Test device")]
+    c.decisive_experiment.system = "cells"
+    assessment = {
+        "verified_status": "demonstrated",
+        "quote_ok": True,
+        "evidence_pmid": "123",
+        "evidence_quote": "The device measured the intended signal.",
+    }
+    for invalid in ({"quote_ok": False}, {"quote_ok": "true"}, {"evidence_pmid": ""}, {"evidence_quote": " "}):
+        assert vx.readiness_assessment(c, implementation={**assessment, **invalid}) == (0.0, "impl_missing")
+
+    impl._pre_cutoff_source.cache_clear()
+    monkeypatch.setattr(pubmed, "search", lambda query, retmax, as_of: ["123"] if as_of == "2026-11-22" else [])
+    monkeypatch.setattr(pubmed, "fetch", lambda ids: {"123": {"abstract": assessment["evidence_quote"]}})
+    try:
+        checked = impl.revalidate_saved(assessment, "2026-11-22")
+        assert vx.readiness_assessment(c, implementation=checked) == (1.0, "impl_demonstrated")
+        for record, cutoff, issue in (
+            ({**assessment, "evidence_quote": "Invented quote."}, "2026-11-22", "unverified_quote"),
+            (assessment, "2026-11-21", "source_missing_or_after_cutoff"),
+            (assessment, "", "missing_or_invalid_cutoff"),
+        ):
+            verified = impl.revalidate_saved(record, cutoff)
+            assert verified["issue"] == issue
+            breakdown = vx.feasibility_breakdown(c, as_of=cutoff, implementation=verified)
+            assert breakdown["score"] > 0
+            readiness = next(part for part in breakdown["parts"] if part["key"] == "readiness")
+            assert readiness["score"] == 0 and "evidence_pmid" not in readiness
+    finally:
+        impl._pre_cutoff_source.cache_clear()
