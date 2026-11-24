@@ -324,7 +324,8 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
                    "card_view": {"population": card.pico.population.model_dump(include={"label", "sex", "age_at_start", "strain"}),
                                  "interventions": [i.model_dump(include={"label", "regimen", "route"}) for i in card.pico.intervention],
                                  "comparator": card.pico.comparator.label, "outcome": card.pico.outcome.metric,
-                                 "experiment": de.model_dump(include={"design", "control", "n_planned", "primary_outcome", "endpoint", "system"}),
+                                 "experiment": de.model_dump(include={"system", "design", "control", "n_planned", "duration",
+                                                                       "duration_class", "primary_outcome", "primary_outcomes", "endpoint"}),
                                  "links": [{"id": cl.id, "type": cl.link, "subject": cl.subject.label, "relation": cl.relation,
                                             "object": cl.object.label, "measure": cl.qualifiers.get("measure"), "hallmark": cl.object.hallmark}
                                            for cl in r3.chain(card)],

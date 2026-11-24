@@ -24,6 +24,9 @@
     .prose-r p, .prose-r li { font-size: .9rem; line-height: 1.6; color: #2d3748; }
     .prose-r h3 { font-weight: 700; color: #1E4D40; margin: 1rem 0 .3rem; font-size: .95rem; }
     .prose-r ul, .prose-r ol { padding-left: 1.2rem; } .prose-r ul { list-style: disc; } .prose-r ol { list-style: decimal; }
+    .card-fields > li + li { margin-block-start: .25rem; }
+    .card-field-label { color: #57534e; font-weight: 600; }
+    .mechanism-links > li + li { margin-block-start: .85rem; }
     .help details { border-top: 1px solid #e7e5e4; padding: .55rem 0; }
     .help summary { cursor: pointer; font-weight: 600; color: #1E4D40; }
     .help p, .help li { font-size: .85rem; line-height: 1.55; color: #374151; }
@@ -432,7 +435,18 @@
         .sort((a, b) => (a.aspid[curProfile].place ?? 999) - (b.aspid[curProfile].place ?? 999));
       document.getElementById('cards').innerHTML = items.map(r => {
         const c = r.card_view || {}, pop = c.population || {}, ex = c.experiment || {};
-        const kv = (k, v) => v && v !== 'unknown' ? `<li><span class="text-stone-500">${k}:</span> ${esc(v)}</li>` : '';
+        const stated = v => v != null && v !== '' && v !== 'unknown';
+        const kv = (k, v) => stated(v) ? `<li><span class="card-field-label">${k}:</span> ${esc(v)}</li>` : '';
+        const outcomes = (ex.primary_outcomes || []).filter(stated);
+        if (!outcomes.length) outcomes.push(stated(ex.primary_outcome) ? ex.primary_outcome : ex.endpoint);
+        const experiment = [
+          kv('Система', FEAS_SYSTEM[ex.system]),
+          kv('Дизайн', stated(ex.design) ? nm('exp_design', ex.design) : ''),
+          kv('Контроль', stated(ex.control) ? nm('control', ex.control) : ''),
+          kv('Плановая выборка', ex.n_planned > 0 ? ex.n_planned : null),
+          kv('Длительность', stated(ex.duration) ? ex.duration : FEAS_DURATION[ex.duration_class]),
+          ...outcomes.map(outcome => kv('Основной исход', outcome)),
+        ].join('');
         const parent = r.is_evolved ? byId[r.parent_id] : null;
         const changes = r.drift && r.drift.changes ? r.drift.changes.map(x => x.what_changed).filter(Boolean) : [];
         return `<details id="card-${esc(r.id)}" class="bg-white rounded-xl border border-stone-200 shadow-sm">
@@ -440,12 +454,12 @@
           <div class="px-4 pb-4 grid grid-cols-1 lg:grid-cols-2 gap-5 prose-r">
             <div><h3>Текст гипотезы</h3>${textBlock(r.text) || `<p>${esc(r.plain || '')}</p>`}
               ${parent ? `<h3>Чем отличается от исходной</h3><p>Это версия гипотезы ${esc(parent.sid)} «<a href="#" data-card="${esc(parent.id)}" class="underline">${esc(parent.title)}</a>», режим — ${esc(MODE[r.evo_mode] || 'версия')}.</p>${changes.map(x => `<p>${esc(x)}</p>`).join('')}` : ''}</div>
-            <div><h3>Как гипотеза понята</h3><ul>
+            <div><h3>Как гипотеза понята</h3><ul class="card-fields">
                 ${kv('Вмешательство', (c.interventions || []).map(i => i.label + (i.regimen && i.regimen !== 'unknown' ? ', ' + i.regimen : '')).join('; '))}
                 ${kv('Популяция', [pop.label, pop.sex && pop.sex !== 'unknown' ? pop.sex : '', pop.age_at_start && pop.age_at_start !== 'unknown' ? pop.age_at_start : ''].filter(Boolean).join(', '))}
                 ${kv('Сравнение', c.comparator)}${kv('Исход', c.outcome)}</ul>
-              <h3>Механизм по шагам</h3><p class="text-xs text-stone-500 mb-1"><span class="subj">что действует</span> <span class="rel">как →</span> <span class="obj">на что</span></p><ol>${(c.links || []).map(l => `<li><span class="text-stone-500">${esc(nm('link', l.type))}:</span> ${triplet(l)}${l.hallmark ? ` <span class="text-stone-500">(признак старения: ${esc(l.hallmark)})</span>` : ''}</li>`).join('')}</ol>
-              <h3>Заявленный эксперимент</h3><p>${esc(cap1(nm('exp_design', ex.design)))}${ex.control && ex.control !== 'unknown' ? ', контроль: ' + esc(nm('control', ex.control)) : ''}${ex.n_planned ? ', плановая выборка ' + esc(ex.n_planned) : ''}${ex.primary_outcome && ex.primary_outcome !== 'unknown' ? '. Главный исход: ' + esc(ex.primary_outcome) : ''}.</p>
+              <h3>Механизм по шагам</h3><p class="text-xs text-stone-500 mb-1"><span class="subj">что действует</span> <span class="rel">как →</span> <span class="obj">на что</span></p><ol class="mechanism-links">${(c.links || []).map(l => `<li><span class="text-stone-500">${esc(nm('link', l.type))}:</span> ${triplet(l)}${l.hallmark ? ` <span class="text-stone-500">(признак старения: ${esc(l.hallmark)})</span>` : ''}</li>`).join('')}</ol>
+              <h3>Заявленный эксперимент</h3>${experiment ? `<ul class="card-fields">${experiment}</ul>` : '<p>Не описан.</p>'}
               ${(c.alternatives || []).length ? `<h3>Альтернативные объяснения</h3><ul>${c.alternatives.map(a => `<li>${triplet(a)}</li>`).join('')}</ul>` : ''}
               <p class="mt-3"><a href="#" data-eval="${esc(r.id)}" class="px-3 py-1.5 rounded-lg bg-[#1E4D40] text-white text-xs font-semibold no-underline">Оценка →</a></p></div>
           </div></details>`;

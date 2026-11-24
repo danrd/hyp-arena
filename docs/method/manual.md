@@ -577,8 +577,12 @@ and is searchable. An outside report uses the same ids.
      its link type and written as a triple — the subject on a blue plate, the relation in italics with an arrow, the object
      on a sand plate (for a relation whose object is the organism — improves healthspan, extends lifespan, slows ageing — the
      object plate shows what changes, from the claim's measure, with the organism in brackets: "улучшает → физическая
-     работоспособность (человек)") (a legend line "что действует / как → / на что" above the list); **the stated
-     experiment** (design, control, planned size, primary outcome); **the alternative explanations** as triples.
+     работоспособность (человек)"). Show the legend "что действует / как → / на что" above the list and leave a clear
+     vertical gap between consecutive assertions (about 0.85 rem).
+   - **Заявленный эксперимент** uses the same labelled list as **Как гипотеза понята**. Give the system, design, control,
+     planned sample size, duration, and each primary outcome on separate lines when available. Make each field label
+     visually distinct from its value. If no details are available, show "Не описан.".
+   - **Альтернативные объяснения** as triples.
    - A button "Оценка →" to the same hypothesis in the evaluation tab. No plain-language analysis.
 3. **Оценка гипотез (Evaluation of hypotheses)**, numbers, one collapsible block per hypothesis in the order of the current
    profile, with a link "← Карточка" back:
