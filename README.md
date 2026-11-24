@@ -27,7 +27,7 @@ ClinicalTrials.gov and other trial registries. Code under the MIT licence ([`LIC
 
 ## Documentation
 
-- **Presentation (current overview, v4 · method v3.13, in Russian):** [`docs/presentation/hyp-arena-v4-2026-11-23.pdf`](docs/presentation/hyp-arena-v4-2026-11-23.pdf) ([interactive HTML & build script](docs/presentation/README.md))
+- **Presentation (current overview, v4 · 24 Nov 2026, in Russian):** [`docs/presentation/hyp-arena-v4-2026-11-24.pdf`](docs/presentation/hyp-arena-v4-2026-11-24.pdf) ([PPTX source & details](docs/presentation/README.md))
 - **The method, all in one folder** ([`docs/method/`](docs/method/README.md): the summary manual, the stage manuals, their foundations, the schemes, the changelog). Method manual (the current rules, why each one, how to read a report, validation status): [`docs/method/manual.md`](docs/method/manual.md)
 - **How the system works, step by step, and how each step is checked** (in Russian): [`docs/method/steps.md`](docs/method/steps.md), diagrams [`docs/method/schemes/`](docs/method/schemes/) (sources and build scripts in [`scripts/docs/`](scripts/docs/)); stage manuals: the card — [`docs/method/card.md`](docs/method/card.md), the search — [`docs/method/search.md`](docs/method/search.md), the reading (draft) — [`docs/method/reading.md`](docs/method/reading.md)
 - **How the method is checked** ([`docs/validation/`](docs/validation/)), four levels (the system itself, against other approaches, overall quality against outcomes, generation; in Russian): [`docs/validation/testing.md`](docs/validation/testing.md); level 4, generation compared with an LLM in a chat: [`docs/validation/generation-arena.md`](docs/validation/generation-arena.md)
