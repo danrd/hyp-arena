@@ -1,0 +1,408 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/danrd/hyp-arena/specs/evaluation/annotation_v1.schema.json",
+  "title": "Hyp-Arena Calibration Annotation Schema (v1 / v1.1 compatible)",
+  "description": "Formal JSON Schema for independent A/B/C annotation records of biomedical hypotheses. Fully backward-compatible with the 2026-11-25 10-card pilot template and forward-compatible with optional v1.1 diagnostic fields.",
+  "oneOf": [
+    { "$ref": "#/$defs/annotation_record" },
+    {
+      "type": "array",
+      "items": { "$ref": "#/$defs/annotation_record" },
+      "minItems": 1
+    }
+  ],
+  "$defs": {
+    "nullable_string": {
+      "type": ["string", "null"]
+    },
+    "quote_ref": {
+      "type": "object",
+      "required": ["text", "location"],
+      "additionalProperties": false,
+      "properties": {
+        "text": { "$ref": "#/$defs/nullable_string" },
+        "location": { "$ref": "#/$defs/nullable_string" }
+      }
+    },
+    "human_genetic_anchor": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "type": ["string", "null"],
+          "enum": [
+            "strong_human_genetics",
+            "suggestive_human_genetics",
+            "conflicting_human_genetics",
+            "no_human_genetics",
+            "not_applicable",
+            "unknown",
+            null
+          ]
+        },
+        "pleiotropy_risk": {
+          "type": ["string", "null"],
+          "enum": ["none", "low", "moderate", "high", "unknown", "not_applicable", null]
+        },
+        "source": { "$ref": "#/$defs/nullable_string" },
+        "notes": { "$ref": "#/$defs/nullable_string" }
+      }
+    },
+    "link_item": {
+      "type": "object",
+      "required": [
+        "id",
+        "roles",
+        "statement",
+        "system_or_population",
+        "direction",
+        "conditions",
+        "status",
+        "card_quote",
+        "notes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^L[0-9]+$"
+        },
+        "roles": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": ["mechanism", "outcome", "novel_claim"]
+          }
+        },
+        "statement": { "$ref": "#/$defs/nullable_string" },
+        "system_or_population": { "$ref": "#/$defs/nullable_string" },
+        "direction": { "$ref": "#/$defs/nullable_string" },
+        "conditions": { "$ref": "#/$defs/nullable_string" },
+        "status": {
+          "type": ["string", "null"],
+          "enum": ["explicit", "implicit", "insufficient", null]
+        },
+        "card_quote": { "$ref": "#/$defs/quote_ref" },
+        "notes": { "$ref": "#/$defs/nullable_string" },
+        "human_genetic_anchor": { "$ref": "#/$defs/human_genetic_anchor" }
+      }
+    },
+    "observation_item": {
+      "type": "object",
+      "required": [
+        "pmid",
+        "origin",
+        "link_id",
+        "contrast",
+        "system_or_population",
+        "outcome",
+        "direction",
+        "relation",
+        "why",
+        "comparison_quote",
+        "result_quote",
+        "risk_notes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "pmid": { "$ref": "#/$defs/nullable_string" },
+        "origin": {
+          "type": ["string", "null"],
+          "enum": ["fixed_candidates", "additional_search", null]
+        },
+        "link_id": { "$ref": "#/$defs/nullable_string" },
+        "contrast": { "$ref": "#/$defs/nullable_string" },
+        "system_or_population": { "$ref": "#/$defs/nullable_string" },
+        "outcome": { "$ref": "#/$defs/nullable_string" },
+        "direction": { "$ref": "#/$defs/nullable_string" },
+        "relation": {
+          "type": ["string", "null"],
+          "enum": [
+            "direct_support",
+            "direct_contradiction",
+            "related",
+            "irrelevant",
+            "insufficient",
+            null
+          ]
+        },
+        "why": { "$ref": "#/$defs/nullable_string" },
+        "comparison_quote": { "$ref": "#/$defs/quote_ref" },
+        "result_quote": { "$ref": "#/$defs/quote_ref" },
+        "risk_notes": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "study_mode": {
+          "type": ["string", "null"],
+          "enum": ["confirmatory", "exploratory", "unknown", null]
+        },
+        "worst_domain_risk": {
+          "type": ["string", "null"],
+          "enum": ["low", "some_concerns", "high", "unknown", "not_applicable", null]
+        }
+      }
+    },
+    "null_outcome_item": {
+      "type": "object",
+      "required": ["contrast_id", "null_definition", "on_null", "why"],
+      "additionalProperties": false,
+      "properties": {
+        "contrast_id": { "type": "string", "minLength": 1 },
+        "null_definition": { "type": "string", "minLength": 1 },
+        "prediction_alternative": { "$ref": "#/$defs/nullable_string" },
+        "precision_basis": { "$ref": "#/$defs/nullable_string" },
+        "on_null": {
+          "type": ["string", "null"],
+          "enum": ["eliminated", "weakened", "unchanged", null]
+        },
+        "why": { "$ref": "#/$defs/nullable_string" }
+      }
+    },
+    "readiness_component": {
+      "type": "object",
+      "required": ["component", "target_system", "evidence_status"],
+      "additionalProperties": false,
+      "properties": {
+        "component": { "type": "string", "minLength": 1 },
+        "target_system": { "$ref": "#/$defs/nullable_string" },
+        "evidence_status": {
+          "type": "string",
+          "enum": ["confirmed_in_context", "adjacent_only", "insufficient", "not_applicable"]
+        },
+        "evidence_quote": { "$ref": "#/$defs/quote_ref" },
+        "notes": { "$ref": "#/$defs/nullable_string" }
+      }
+    },
+    "annotation_record": {
+      "type": "object",
+      "required": ["case_id", "A", "B", "C"],
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "string",
+          "enum": ["1.0", "1.1"]
+        },
+        "case_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "A": {
+          "type": "object",
+          "required": ["links", "measured_outcome", "unresolved_transition"],
+          "additionalProperties": false,
+          "properties": {
+            "links": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "$ref": "#/$defs/link_item" }
+            },
+            "measured_outcome": { "$ref": "#/$defs/nullable_string" },
+            "unresolved_transition": { "$ref": "#/$defs/nullable_string" }
+          }
+        },
+        "B": {
+          "type": "object",
+          "required": [
+            "observations",
+            "additional_search_status",
+            "queries",
+            "already_tested_and_remaining",
+            "limits"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "observations": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/observation_item" }
+            },
+            "additional_search_status": {
+              "type": ["string", "null"],
+              "enum": ["done", "unavailable", "not_needed", null]
+            },
+            "queries": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "already_tested_and_remaining": { "$ref": "#/$defs/nullable_string" },
+            "limits": { "$ref": "#/$defs/nullable_string" }
+          }
+        },
+        "C": {
+          "type": "object",
+          "required": ["alternative", "adequacy", "feasibility"],
+          "additionalProperties": false,
+          "properties": {
+            "alternative": {
+              "type": "object",
+              "required": [
+                "explanation",
+                "origin",
+                "basis",
+                "basis_quote",
+                "control_quote",
+                "prediction_hypothesis",
+                "prediction_alternative",
+                "remaining_loophole",
+                "on_positive",
+                "on_null",
+                "why"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "explanation": { "$ref": "#/$defs/nullable_string" },
+                "origin": {
+                  "type": ["string", "null"],
+                  "enum": ["stated_by_author", "annotator", "not_applicable", null]
+                },
+                "basis": { "$ref": "#/$defs/nullable_string" },
+                "basis_quote": { "$ref": "#/$defs/quote_ref" },
+                "control_quote": { "$ref": "#/$defs/quote_ref" },
+                "prediction_hypothesis": { "$ref": "#/$defs/nullable_string" },
+                "prediction_alternative": { "$ref": "#/$defs/nullable_string" },
+                "remaining_loophole": { "$ref": "#/$defs/nullable_string" },
+                "on_positive": {
+                  "type": ["string", "null"],
+                  "enum": ["eliminated", "weakened", "unchanged", null]
+                },
+                "on_null": {
+                  "type": ["string", "null"],
+                  "enum": ["eliminated", "weakened", "unchanged", null]
+                },
+                "why": { "$ref": "#/$defs/nullable_string" },
+                "contrast_id": { "$ref": "#/$defs/nullable_string" },
+                "null_outcomes": {
+                  "type": "array",
+                  "items": { "$ref": "#/$defs/null_outcome_item" }
+                }
+              }
+            },
+            "adequacy": {
+              "type": "object",
+              "required": [
+                "decisive_contrast",
+                "control_or_outcome_quote",
+                "measured_outcome",
+                "independent_unit",
+                "n_units_per_contrast",
+                "precision_basis",
+                "engagement_check",
+                "engagement_quote",
+                "positive_interpretation",
+                "null_interpretation",
+                "missing"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "decisive_contrast": { "$ref": "#/$defs/nullable_string" },
+                "control_or_outcome_quote": { "$ref": "#/$defs/quote_ref" },
+                "measured_outcome": { "$ref": "#/$defs/nullable_string" },
+                "independent_unit": { "$ref": "#/$defs/nullable_string" },
+                "n_units_per_contrast": {
+                  "type": ["string", "number", "null"]
+                },
+                "precision_basis": { "$ref": "#/$defs/nullable_string" },
+                "engagement_check": { "$ref": "#/$defs/nullable_string" },
+                "engagement_quote": { "$ref": "#/$defs/quote_ref" },
+                "positive_interpretation": { "$ref": "#/$defs/nullable_string" },
+                "null_interpretation": { "$ref": "#/$defs/nullable_string" },
+                "missing": { "$ref": "#/$defs/nullable_string" },
+                "endpoint_best_class": {
+                  "type": ["string", "null"],
+                  "enum": [
+                    "target_engagement",
+                    "exploratory_biomarker",
+                    "validated_surrogate",
+                    "direct_clinical",
+                    "unknown",
+                    null
+                  ]
+                },
+                "tested_scope": {
+                  "type": ["string", "null"],
+                  "enum": ["direct", "prerequisite", "unclear", null]
+                },
+                "external_validity_flags": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "single_sex",
+                      "young_healthy_for_ageing",
+                      "nam_systemic_extrapolation",
+                      "unvalidated_surrogate",
+                      "prognostic_vs_predictive_conflation",
+                      "other"
+                    ]
+                  }
+                }
+              }
+            },
+            "feasibility": {
+              "type": "object",
+              "required": [
+                "tool_or_class",
+                "target_system",
+                "evidence_status",
+                "evidence_quote",
+                "key_resource_or_dependency",
+                "tradeoff",
+                "notes"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "tool_or_class": { "$ref": "#/$defs/nullable_string" },
+                "target_system": { "$ref": "#/$defs/nullable_string" },
+                "evidence_status": {
+                  "type": ["string", "null"],
+                  "enum": [
+                    "confirmed_in_context",
+                    "adjacent_only",
+                    "insufficient",
+                    "not_applicable",
+                    null
+                  ]
+                },
+                "evidence_quote": { "$ref": "#/$defs/quote_ref" },
+                "key_resource_or_dependency": { "$ref": "#/$defs/nullable_string" },
+                "tradeoff": { "$ref": "#/$defs/nullable_string" },
+                "notes": { "$ref": "#/$defs/nullable_string" },
+                "resource_tier": {
+                  "type": ["string", "null"],
+                  "enum": [
+                    "1_in_vitro",
+                    "2_animal",
+                    "3_human_ex_vivo_or_pilot",
+                    "4_clinical_in_vivo",
+                    null
+                  ]
+                },
+                "component_checks": {
+                  "type": "array",
+                  "items": { "$ref": "#/$defs/readiness_component" }
+                },
+                "safety_flags": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "on_target_pleiotropy",
+                      "irreversible_no_ltfu",
+                      "unjustified_risk_in_healthy_older",
+                      "missing_diseased_organ_model",
+                      "other"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
