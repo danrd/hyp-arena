@@ -407,3 +407,148 @@ def test_pilot_six_mutations_on_synthetic_v313_case():
     assert m["M6_direct_vs_adjacent_contradiction"]["passed"] is True
     md = mut_mod.format_markdown(suite)
     assert "SYN_V313" in md
+
+
+def test_diagnostic_search_verifier_alternatives_threats_and_scoring():
+    from hyparena.alternatives import alternatives_v3, threats
+    from hyparena.card.models import Claim, ClaimVerification, EvidenceRecord, HypothesisCard
+    from hyparena.reading import verifier
+    from hyparena.scoring import rules_v32, v3_extra
+    from hyparena.search import search
+
+    case = _synthetic_v313_case()
+    case["card"]["claims"][0]["chain_roles"] = ["mechanism", "novel_contribution"]
+    case["card"]["claims"][0]["mechanism_facets"] = {"class": "ClC-1 chloride channel inhibitor", "target": "ClC-1"}
+    case["card"]["claims"].append(
+        {
+            "id": "c_bg",
+            "subject": "established background factor",
+            "relation": "activates",
+            "object": "baseline excitability",
+            "role": "premise",
+            "link": "step",
+            "chain_role": "background",
+        }
+    )
+    case["card"]["claims"].append(
+        {
+            "id": "c_imp",
+            "subject": "acute torque gain",
+            "relation": "translates_to",
+            "object": "reduced fall risk",
+            "role": "translation",
+            "link": "step",
+            "chain_role": "outcome",
+            "is_implicit": True,
+        }
+    )
+    case["card"]["decisive_experiment"]["experimental_unit"] = "participant"
+    case["card"]["decisive_experiment"]["n_per_contrast"] = "64 crossover pairs"
+    case["card"]["decisive_experiment"]["precision_basis"] = "80% power for 15% torque retention"
+    case["card"]["decisive_experiment"]["target_engagement_span"] = "direct muscle stimulation"
+    case["card"]["decisive_experiment"]["tested_scope"] = "direct"
+    case["card"]["decisive_experiment"]["endpoint_best_class"] = "direct_clinical"
+    case["card"]["decisive_experiment"]["safety_flags"] = ["on_target_pleiotropy"]
+
+    card = HypothesisCard.model_validate(case["card"])
+
+    # 1. Two-stage search keeps CAP budget and logs stage provenance
+    log: list[dict] = []
+    fake_hits = {0: ["101", "102"], 1: ["102", "103"], 2: ["201", "202"], 3: ["203"]}
+    call_idx = {"i": 0}
+
+    def _fake_search(q, retmax, as_of):
+        idx = call_idx["i"]
+        call_idx["i"] += 1
+        return fake_hits.get(idx, [])[:retmax]
+
+    pmids, prov = search.retrieve_two_stage(card.claims[0], card, as_of="2026-11-22", retmax=4, log=log, search_fn=_fake_search)
+    assert len(pmids) == 4
+    assert set(prov.values()) <= {"stage_1_mechanism", "stage_2_contribution"}
+    assert log[-1]["kind"] == "search_two_stage"
+    assert "ClC-1 chloride channel inhibitor" in " ".join(log[-1]["stage_1_queries"])
+
+    # 2. Verifier guardrail downgrades mismatched direct_contradiction -> related
+    mismatch_rec = EvidenceRecord(
+        source="PubMed",
+        record_id="PMID:55555555",
+        species="mouse",
+        qualifiers_match={"species_match": "no"},
+        actual_contrast="knockout vs wild-type mouse",
+        relation_to_claim="direct_contradiction",
+    )
+    guarded = verifier.enforce_relation_to_claim(mismatch_rec, card.claims[1])
+    assert guarded.relation_to_claim == "related"
+    assert "species_mismatch" in guarded.notes
+
+    matched_rec = EvidenceRecord(
+        source="PubMed",
+        record_id="PMID:66666666",
+        species="human",
+        qualifiers_match={"species_match": "yes", "intervention_match": "exact"},
+        outcome_match="same",
+        actual_contrast="drug vs placebo in older adults with blocking",
+        relation_to_claim="direct_contradiction",
+    )
+    assert verifier.enforce_relation_to_claim(matched_rec, card.claims[1]).relation_to_claim == "direct_contradiction"
+
+    # 3. Alternatives: screen contradicting PMIDs & require target_engagement_span for on_negative
+    ver_c1 = ClaimVerification(id="c1", evidence=[], counterevidence=[matched_rec])
+    screen = alternatives_v3.screen_contradicting_pmids({"support_pmids": ["66666666"]}, [ver_c1])
+    assert screen["should_route_to_counterevidence"] is True
+    assert screen["contradicting_pmids"] == ["66666666"]
+
+    raw_alt = {
+        "alt_kind": "negative_barrier",
+        "control_span": "Include direct muscle stimulation as an active control to isolate neuromuscular transmission.",
+        "loophole": "",
+        "on_positive": "unchanged",
+        "on_negative": "weakened",
+    }
+    no_eng = alternatives_v3.ground_discrimination(
+        raw_alt, card.decisive_experiment.span, target_engagement_span="", require_engagement_for_negative=True
+    )
+    assert no_eng["on_negative"] == "unchanged"
+    with_eng = alternatives_v3.ground_discrimination(
+        raw_alt,
+        card.decisive_experiment.span,
+        target_engagement_span="direct muscle stimulation",
+        require_engagement_for_negative=True,
+    )
+    assert with_eng["on_negative"] == "weakened"
+
+    # 4. Threats: RoB-2 worst_domain_risk and preclinical diagnostic parser
+    assert threats.worst_domain_risk({"a": "eliminated", "b": "eliminated"}) == "low"
+    assert threats.worst_domain_risk({"a": "eliminated", "b": "weakened"}) == "some_concerns"
+    assert threats.worst_domain_risk({"a": "weakened", "b": "weakened"}) == "high"
+    assert threats.worst_domain_risk({"a": "eliminated", "b": "unchanged"}) == "high"
+
+    mouse_card = copy.deepcopy(card)
+    mouse_card.decisive_experiment.system = "mouse"
+    mouse_card.decisive_experiment.span = "Randomize aged mice balanced by sex to AAV or matched reporter vector; blinded histology."
+    base_chk = threats.checklist(mouse_card)
+    diag_chk = threats.checklist_diagnostic(mouse_card, parse_preclinical=True)
+    assert base_chk["share"] == 0.0  # legacy v3.13 untouched
+    assert diag_chk["experimental_preclinical_parser"] is True
+    assert diag_chk["share"] > 0.0
+    assert diag_chk["worst_domain_risk"] == "high"
+
+    # 5. Scoring diagnostics: background gate, empty novel slot = searched_empty/unchecked, resource_tier split
+    ver_empty_novel = ClaimVerification(id="c1", evidence=[], counterevidence=[], search_state="searched_empty")
+    ver_out = ClaimVerification.model_validate(case["verifications"]["c2"])
+    diag = rules_v32.diagnostic_chain_summary(card, [ver_empty_novel, ver_out])
+    assert diag["novel_contribution"]["status"] == "searched_empty"
+    assert diag["novel_contribution"]["min_S"] is None
+    assert diag["background_gate"]["gate_ok"] is True
+    assert "c_imp" in diag["implicit_transitions"]
+
+    fdiag = v3_extra.feasibility_diagnostic(card, offline_readiness=(0.5, "clinical"))
+    assert fdiag["resource_tier"] == "4_clinical_in_vivo"
+    assert fdiag["execution_readiness"]["readiness_score"] == 0.5
+    assert fdiag["execution_readiness"]["precision_basis_present"] is True
+    assert fdiag["safety_flags"] == ["on_target_pleiotropy"]
+
+    explant_card = copy.deepcopy(card)
+    explant_card.decisive_experiment.span = "Randomize discarded older-donor skin explants ex vivo."
+    assert v3_extra.resource_tier(explant_card) == "3_human_ex_vivo_or_pilot"
+

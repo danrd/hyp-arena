@@ -808,3 +808,46 @@ def verify(client, families: list[str], writer: str, card: HypothesisCard, as_of
     searched = [p for e in (log or []) if e.get("kind") == "search" for p in e.get("pmids", [])]
     ver = Verification(card_id=card.id, claims=cvs, searched_pmids=list(dict.fromkeys(searched)))
     return add_strain_analogs(card, add_disease_analogs(card, ver, disease_restore))
+
+
+def enforce_relation_to_claim(record: EvidenceRecord, claim: Claim) -> EvidenceRecord:
+    """Calibration guardrail (verify_claim/v23 diagnostic rule):
+    Forbid `direct_contradiction` when the extracted factual study question mismatches the claim
+    (different species, different intervention, different outcome, or missing extracted factual contrast).
+    Returns a copy (never mutates caller's record in place).
+    """
+    out = record.model_copy(deep=True)
+    if out.relation_to_claim != "direct_contradiction":
+        return out
+
+    reasons: list[str] = []
+    qm = out.qualifiers_match or {}
+    if qm.get("species") == "no" or qm.get("species_match") == "no":
+        reasons.append("species_mismatch")
+    if qm.get("intervention_match") == "no":
+        reasons.append("intervention_mismatch")
+    if out.outcome_match == "other":
+        reasons.append("outcome_mismatch")
+    if not (out.actual_contrast or "").strip():
+        reasons.append("missing_actual_contrast")
+    if claim.role == "outcome" and out.endpoint not in ("unknown", "lifespan", "healthspan", "disease") and out.outcome_match not in ("same", ""):
+        reasons.append("non_matching_endpoint")
+
+    if reasons:
+        out.relation_to_claim = "related"
+        tag = "downgraded direct_contradiction -> related (" + ", ".join(reasons) + ")"
+        out.notes = f"{out.notes}; {tag}" if out.notes else tag
+    return out
+
+
+def classify_search_state(ver: Optional[ClaimVerification], searched_pmids: Optional[list[str]] = None) -> str:
+    """Distinguish 'unchecked' vs 'searched_empty' vs 'searched_with_records' for diagnostic reporting."""
+    if ver is None:
+        return "unchecked"
+    if ver.search_state in ("unchecked", "searched_empty", "searched_with_records"):
+        return ver.search_state
+    if ver.evidence or ver.counterevidence or ver.no_stance:
+        return "searched_with_records"
+    if searched_pmids or ver.refusals or (ver.notes and "searched" in ver.notes.lower()):
+        return "searched_empty"
+    return "unchecked"

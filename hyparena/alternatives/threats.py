@@ -118,3 +118,83 @@ def checklist(card: HypothesisCard) -> Optional[dict]:
     v = {t: human_verdict(t, f) if system == "human" else "unchanged" for t in THREATS[system]}
     return {"system": system, "share": round(sum(VALUE[x] for x in v.values()) / len(v), 4), "threats": v,
             "open": [{"threat": t, "verdict": x, "fix": FIX[t]} for t, x in v.items() if x != "eliminated"]}
+
+
+def worst_domain_risk(threats_map: dict[str, str]) -> str:
+    """RoB 2 / ROBINS-I style worst-domain summary alongside the arithmetic checklist share.
+
+    - Any 'unchanged' (unaddressed) threat -> 'high'
+    - Two or more 'weakened' threats (multiple domains with some concerns) -> 'high'
+    - Exactly one 'weakened' threat -> 'some_concerns'
+    - All 'eliminated' -> 'low'
+    """
+    if not threats_map:
+        return "not_applicable"
+    vals = list(threats_map.values())
+    if any(x == "unchanged" for x in vals):
+        return "high"
+    n_weak = sum(1 for x in vals if x == "weakened")
+    if n_weak >= 2:
+        return "high"
+    if n_weak == 1:
+        return "some_concerns"
+    return "low"
+
+
+_PRECLINICAL_PATTERNS: dict[str, tuple[str, str]] = {
+    # (threat_kind -> (eliminated_regex, weakened_regex))
+    "allocation": (r"\brandomi[sz](?:e|ed|ation)\b.*\b(?:litter|cage|block|stratifi)", r"\brandomi[sz](?:e|ed|ation)\b"),
+    "assessor": (r"\b(?:blinded|masked)\b.*\b(?:assess|histolog|record|scor|evaluat|adjudicat|quantif)", r"\b(?:blinded|masked)\b"),
+    "attrition": (r"\bpre-?specifi\w*\s+exclus|intent-?to-?treat|account\w*\s+for\s+all\s+animals", r"\battrition|dropout|exclusion"),
+    "handling": (r"\b(?:sham|vehicle|isotype|matched\s+reporter|inactive\s+control)\b", r"\bcontrol\b"),
+    "housing": (r"\b(?:co-?hous|cage\w*\s+balanc|same\s+housing|littermate)", r"\bhousing|cage"),
+    "sex_strain_age": (r"\b(?:both\s+sexes|balanced\s+by\s+sex|male\s+and\s+female)\b", r"\b(?:aged|old|older)\b"),
+    "batch": (r"\b(?:independent\s+(?:donor|isogenic|clone|batch)|paired\s+(?:donor|explant)|across\s+\w+\s+independent)\b", r"\breplicate|donor"),
+    "off_target": (r"\b(?:add-?back|rescue|dose[-–]response|second\s+tool|reverse\s+polarity|isotype|inactive\s+control\s+peptide)\b", r"\btarget\s+engagement|verify\b"),
+    "vehicle": (r"\b(?:vehicle|isotype|inactive\s+control|sham|reporter\s+vector)\b", r"\bcontrol\b"),
+    "culture_artefact": (r"\b(?:explant|primary\s+cell|in\s+vivo|surgical\s+donor|human\s+cortical)\b", r"\bco-?culture|organoid"),
+    "line_identity": (r"\b(?:STR\s+profil|mycoplasma|authenticated|isogenic)\b", r"\bpassage|low-passage"),
+    "multiplicity": (r"\b(?:primary\s+endpoint|prespecif\w*\s+primary)\b", r"\bprimary\s+outcome"),
+}
+
+
+def preclinical_verdict(kind: str, text: str) -> str:
+    """Experimental protocol-grounded verdict parser for animal and cell/explant designs."""
+    if not (text or "").strip():
+        return "unchanged"
+    pats = _PRECLINICAL_PATTERNS.get(kind)
+    if not pats:
+        return "unchanged"
+    strong_rx, weak_rx = pats
+    if re.search(strong_rx, text, re.I):
+        return "weakened"
+    if re.search(weak_rx, text, re.I):
+        return "weakened"
+    return "unchanged"
+
+
+def checklist_diagnostic(card: HypothesisCard, *, parse_preclinical: bool = True) -> Optional[dict]:
+    """Diagnostic wrapper over checklist(card) adding RoB-2 worst_domain_risk and optional
+    experimental parsing of explicit controls in animal/cell protocol spans.
+    Does not alter v3.13 checklist(card) or I.
+    """
+    base = checklist(card)
+    if base is None:
+        return None
+    system = base["system"]
+    threats_map = dict(base["threats"])
+    exp_text = card.decisive_experiment.span or ""
+    used_preclinical = False
+    if parse_preclinical and system in ("animal", "cells") and exp_text.strip():
+        used_preclinical = True
+        threats_map = {t: preclinical_verdict(t, exp_text) for t in THREATS[system]}
+    share = round(sum(VALUE[x] for x in threats_map.values()) / len(threats_map), 4)
+    worst = worst_domain_risk(threats_map)
+    return {
+        "system": system,
+        "share": share,
+        "worst_domain_risk": worst,
+        "experimental_preclinical_parser": used_preclinical,
+        "threats": threats_map,
+        "open": [{"threat": t, "verdict": x, "fix": FIX[t]} for t, x in threats_map.items() if x != "eliminated"],
+    }

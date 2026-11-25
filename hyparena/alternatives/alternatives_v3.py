@@ -28,8 +28,18 @@ def _experiment(card: HypothesisCard) -> str:
     return ", ".join(p for p in parts if p and not p.endswith("unknown") and not p.endswith("None"))
 
 
-def ground_discrimination(raw: dict, experiment_text: str) -> dict:
-    """Constrain model verdicts using the recorded design; never ask the model to repair them."""
+def ground_discrimination(
+    raw: dict,
+    experiment_text: str,
+    *,
+    target_engagement_span: str = "",
+    require_engagement_for_negative: bool = False,
+) -> dict:
+    """Constrain model verdicts using the recorded design; never ask the model to repair them.
+
+    When `require_engagement_for_negative=True` (diagnostic calibration mode), credit on `on_negative`
+    also requires a verbatim `target_engagement_span` grounded in `experiment_text`.
+    """
     span = raw.get("control_span")
     span = span.strip() if isinstance(span, str) else ""
     grounded = bool(span) and _norm(span) in _norm(experiment_text)
@@ -51,11 +61,40 @@ def ground_discrimination(raw: dict, experiment_text: str) -> dict:
         positive = "weakened"
     if kind != "negative_barrier" and not (kind == "positive_confounder" and grounded and required):
         negative = "unchanged"
+    if require_engagement_for_negative and negative in ("eliminated", "weakened"):
+        eng = (target_engagement_span or "").strip()
+        if not (eng and _norm(eng) in _norm(experiment_text)):
+            negative = "unchanged"
     if positive == negative == "eliminated":
         negative = "unchanged"
     return {**raw, "control_span": span if grounded else "", "loophole": loophole.strip(), "alt_kind": kind,
             "required_positive_result": required, "discrimination_version": GROUNDED_VERSION,
             "on_positive": positive, "on_negative": negative}
+
+
+def screen_contradicting_pmids(raw: dict, ver_claims: list) -> dict:
+    """Diagnostic check (evaluation-calibration-2026-11-25.md section 3):
+    Identify whether any support_pmid of a proposed alternative already acts as direct counterevidence
+    on a core claim of the card, so skeptical evidence is routed to claim counterarguments rather
+    than inflating informativeness I.
+    """
+    raw_pmids = {str(p).replace("PMID:", "").strip() for p in (raw.get("support_pmids") or []) if str(p).strip()}
+    direct_contra: dict[str, list[str]] = {}
+    any_contra: dict[str, list[str]] = {}
+    for cv in ver_claims or []:
+        for rec in getattr(cv, "counterevidence", None) or []:
+            pid = str(getattr(rec, "record_id", "") or "").replace("PMID:", "").strip()
+            if pid and pid in raw_pmids:
+                any_contra.setdefault(pid, []).append(cv.id)
+                if getattr(rec, "relation_to_claim", None) in ("direct_contradiction", None):
+                    direct_contra.setdefault(pid, []).append(cv.id)
+    return {
+        "support_pmids": sorted(raw_pmids),
+        "contradicting_pmids": sorted(direct_contra),
+        "contradicting_claims": direct_contra,
+        "any_counterevidence_pmids": sorted(any_contra),
+        "should_route_to_counterevidence": bool(direct_contra),
+    }
 
 
 def propose(client, family: str, card: HypothesisCard, abstracts: dict[str, dict], as_of: Optional[str],

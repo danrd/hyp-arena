@@ -38,6 +38,15 @@ ORGANISM_RELATIONS = ("extends_lifespan_in", "shortens_lifespan_in", "no_lifespa
 HUMAN_RUNGS = ("human_markers", "human_clinical")
 RefusalType = Literal["type_mismatch", "direction_mismatch", "species_mismatch", "endpoint_mismatch", "inherited_mismatch",
                       "population_mismatch"]
+# Calibration diagnostic vocabularies (docs/plans/evaluation-calibration-2026-11-25.md; diagnostic only, not scored yet)
+ChainRole = Literal["background", "mechanism", "novel_contribution", "outcome"]
+RelationToClaim = Literal["direct_support", "direct_contradiction", "related", "irrelevant", "insufficient"]
+StudyMode = Literal["confirmatory", "exploratory", "unknown"]
+BestEndpointClass = Literal["target_engagement", "exploratory_biomarker", "validated_surrogate", "direct_clinical", "unknown"]
+TestedScope = Literal["direct", "prerequisite", "unclear"]
+ResourceTier = Literal["1_in_vitro", "2_animal", "3_human_ex_vivo_or_pilot", "4_clinical_in_vivo"]
+WorstDomainRisk = Literal["low", "some_concerns", "high", "unknown", "not_applicable"]
+SearchState = Literal["unchecked", "searched_empty", "searched_with_records"]
 
 
 # ---- declared layer ----
@@ -83,6 +92,11 @@ class Claim(BaseModel):
     # normalize_card/v15 (docs/method/card.md, "Звенья"): a claim is on the chain of the main factor or a premise about the problem
     part: Optional[Literal["chain", "premise"]] = None
     premise_kind: Optional[Literal["population_state", "problem_mechanism"]] = None
+    # Calibration diagnostic fields (evaluation-calibration-2026-11-25.md): roles, implicit transitions, mechanism facets
+    chain_role: Optional[ChainRole] = None
+    chain_roles: list[ChainRole] = Field(default_factory=list)
+    is_implicit: bool = False
+    mechanism_facets: dict[str, str] = Field(default_factory=dict)
 
 
 class DeclaredAlternative(BaseModel):
@@ -191,6 +205,15 @@ class DecisiveExperiment(BaseModel):
     # asserted consequence; reference for the report and the alternatives step
     prediction: dict = Field(default_factory=dict)
     span: str = ""                               # normalize_card/v12: the exact phrase of the text that states this field ("" before v12)
+    # Calibration diagnostic fields (evaluation-calibration-2026-11-25.md)
+    experimental_unit: str = ""
+    n_per_contrast: Optional[str] = None
+    precision_basis: str = ""
+    target_engagement_span: str = ""
+    tested_scope: Optional[TestedScope] = None
+    endpoint_best_class: Optional[BestEndpointClass] = None
+    external_validity_flags: list[str] = Field(default_factory=list)
+    safety_flags: list[str] = Field(default_factory=list)
 
 
 AlternativeFate = Literal["eliminated", "weakened", "unchanged"]
@@ -212,6 +235,8 @@ class ProposedAlternative(BaseModel):
     loophole: str = ""
     required_positive_result: str = ""
     discrimination_version: Literal["v3"] | None = None
+    contrast_id: str = ""                        # diagnostic: which contrast on_positive / on_negative applies to
+    target_engagement_required: bool = False     # diagnostic: whether null inference requires verified target engagement
     on_positive: AlternativeFate = "unchanged"
     on_negative: AlternativeFate = "unchanged"
     role: Literal["alternative"] = "alternative"
@@ -387,6 +412,13 @@ class EvidenceRecord(BaseModel):
     primary_record: str = ""                     # the record id of that trial's own paper, when found
     retrieved_at: str = ""
     notes: str = ""
+    # Calibration diagnostic fields (verify_claim/v23): factual study comparison extracted prior to relation_to_claim
+    actual_contrast: str = ""
+    actual_system: str = ""
+    actual_outcome: str = ""
+    relation_to_claim: Optional[RelationToClaim] = None
+    study_mode: Optional[StudyMode] = None
+    worst_domain_risk: Optional[WorstDomainRisk] = None
 
     @model_validator(mode="before")
     @classmethod
@@ -424,6 +456,7 @@ class ClaimVerification(BaseModel):
     contrast: dict[str, str] = Field(default_factory=dict)   # outcome of a contrast: alternative, x_status, y_status
     flags: list[str] = Field(default_factory=list)            # e.g. contrast_unchecked
     rung_status: dict[str, str] = Field(default_factory=dict)  # human claims: status per human rung (spec 8)
+    search_state: Optional[SearchState] = None   # diagnostic: distinguishes unchecked vs searched_empty vs searched_with_records
     notes: str = ""
     claim: Optional[Claim] = Field(default=None, validation_alias=AliasChoices("claim", "added_claim"))
     # claims added by the verifier (analogs an<N>, verified layer only); `added_claim` is the older name

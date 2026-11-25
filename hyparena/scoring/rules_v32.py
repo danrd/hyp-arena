@@ -506,3 +506,102 @@ def _evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
         res.I = round(1 / 3 + 2 / 3 * min(1.0, total / r3.I_CAP), 4) if supported else round(1 / 3, 4)
     res.V = round(res.P * res.I, 6) if res.gate == "pass" else 0.0
     return res
+
+
+def _claim_roles(cl: Claim) -> set[str]:
+    """Resolve diagnostic roles (background / mechanism / novel_contribution / outcome) for one claim."""
+    roles = set(getattr(cl, "chain_roles", None) or [])
+    if getattr(cl, "chain_role", None):
+        roles.add(cl.chain_role)
+    if roles:
+        return roles
+    if cl.link == "outcome" or cl.role == "outcome":
+        roles.add("outcome")
+    elif cl.part == "premise" or (cl.role == "premise" and not cl.required_for_balance):
+        roles.add("background")
+    else:
+        roles.add("mechanism")
+    if cl.required_for_balance:
+        roles.add("novel_contribution")
+    return roles
+
+
+def diagnostic_chain_summary(
+    card: HypothesisCard,
+    ver_claims: list[ClaimVerification],
+    res: Optional[V32Result] = None,
+) -> dict:
+    """Diagnostic slot breakdown (evaluation-calibration-2026-11-25.md section 1 & Implementation item 3):
+    - Folds all background links into one gate block (cannot inflate score when background links are added).
+    - Reports separate status & strength for mechanism, novel_contribution, and outcome.
+    - Explicitly distinguishes 'unchecked' vs 'searched_empty' on empty slots (never a free 1.0).
+    Does not change v3.13 evaluate() or ASPID profiles.
+    """
+    from hyparena.reading.verifier import classify_search_state
+
+    if res is None:
+        res = evaluate(card, ver_claims, fold=False, neutral_unverified=True, v34=True, null_power=True, v35=True, v36=True)
+    by_id = {cv.id: cv for cv in ver_claims}
+
+    buckets: dict[str, list[Claim]] = {
+        "background": [],
+        "mechanism": [],
+        "novel_contribution": [],
+        "outcome": [],
+    }
+    implicit_ids: list[str] = []
+    for cl in card.claims:
+        if getattr(cl, "is_implicit", False):
+            implicit_ids.append(cl.id)
+        for r in _claim_roles(cl):
+            if r in buckets:
+                buckets[r].append(cl)
+
+    def _summarize_bucket(claims_in_bucket: list[Claim]) -> dict:
+        if not claims_in_bucket:
+            return {"claim_ids": [], "status": "not_annotated", "min_S": None, "has_contradiction": False}
+        ids = [c.id for c in claims_in_bucket]
+        s_vals: list[float] = []
+        has_contra = False
+        states: list[str] = []
+        for c in claims_in_bucket:
+            cv = by_id.get(c.id)
+            st = classify_search_state(cv)
+            states.append(st)
+            link_vec = res.links.get(c.id)
+            if link_vec and (link_vec[3] + link_vec[4] > 0):
+                s_vals.append(link_vec[0])
+                if link_vec[4] > link_vec[3]:
+                    has_contra = True
+            elif cv and cv.counterevidence:
+                has_contra = True
+        if not s_vals:
+            if any(st == "searched_empty" for st in states):
+                status = "searched_empty"
+            else:
+                status = "unchecked"
+            return {"claim_ids": ids, "status": status, "min_S": None, "has_contradiction": has_contra}
+        min_s = round(min(s_vals), 4)
+        status = "contradicted" if has_contra and min_s < 0.5 else ("mixed" if has_contra else "supported")
+        return {"claim_ids": ids, "status": status, "min_S": min_s, "has_contradiction": has_contra}
+
+    bg = _summarize_bucket(buckets["background"])
+    mech = _summarize_bucket(buckets["mechanism"])
+    novel = _summarize_bucket(buckets["novel_contribution"])
+    out = _summarize_bucket(buckets["outcome"])
+
+    # Gate rule: background can flag a refuted foundation, never boost positive score.
+    bg_gate_ok = not bg["has_contradiction"]
+    critical_mins = [b["min_S"] for b in (novel, out) if b["min_S"] is not None]
+    bottleneck_min_s = round(min(critical_mins), 4) if critical_mins else None
+    contradicted_flag = bool(bg["has_contradiction"] or novel["has_contradiction"] or out["has_contradiction"])
+
+    return {
+        "background_gate": {**bg, "gate_ok": bg_gate_ok},
+        "mechanism": mech,
+        "novel_contribution": novel,
+        "outcome": out,
+        "implicit_transitions": implicit_ids,
+        "bottleneck_min_S": bottleneck_min_s,
+        "contradicted_flag": contradicted_flag,
+    }

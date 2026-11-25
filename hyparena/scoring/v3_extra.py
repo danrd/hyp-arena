@@ -253,3 +253,60 @@ def extras(card: HypothesisCard, ver_claims: list[ClaimVerification], v3: dict, 
         "unverified_links": sum(1 for x in levels if x == "unverified"),
         "momentum": round(sum(1 for y in years if t_year and y >= t_year - 4) / len(years), 3) if years and t_year else None,
     }
+
+
+def resource_tier(card: HypothesisCard) -> Optional[str]:
+    """Separate resource class (Tier 1..4) from within-tier execution readiness
+    (evaluation-calibration-2026-11-25.md section 3).
+    """
+    e = card.decisive_experiment
+    sys_name = str(e.system or "unknown").lower()
+    span = (e.span or "").lower()
+    if sys_name in ("cells", "yeast", "data_analysis"):
+        return "1_in_vitro"
+    if sys_name in ("mouse", "rat", "worm", "fly"):
+        return "2_animal"
+    if sys_name == "human":
+        if e.design == "pilot" or any(tok in span for tok in ("explant", "ex vivo", "discarded", "surgical donor", "biopsy culture")):
+            return "3_human_ex_vivo_or_pilot"
+        return "4_clinical_in_vivo"
+    return None
+
+
+def feasibility_diagnostic(
+    card: HypothesisCard,
+    as_of: str = "",
+    implementation: Optional[dict] = None,
+    *,
+    offline_readiness: Optional[tuple[Optional[float], str]] = None,
+) -> dict:
+    """Diagnostic split of feasibility into `resource_tier` (cost class) and `execution_readiness`
+    (within-class readiness, duration, precision/unit adequacy cues, and safety/external-validity flags).
+    Does not alter feasibility() or feasibility_breakdown().
+    """
+    e = card.decisive_experiment
+    tier = resource_tier(card)
+    if offline_readiness is not None:
+        r_score, r_reason = offline_readiness
+    else:
+        r_score, r_reason = readiness_assessment(card, as_of, implementation)
+    dur_score = DURATION_COST.get(e.duration_class)
+    n_score = sample_size_score(e)
+    return {
+        "resource_tier": tier,
+        "execution_readiness": {
+            "readiness_score": round(r_score, 3) if r_score is not None else None,
+            "readiness_reason": r_reason,
+            "duration_class": e.duration_class,
+            "duration_score": round(dur_score, 3) if dur_score is not None else None,
+            "n_planned": e.n_planned,
+            "n_per_contrast": getattr(e, "n_per_contrast", None),
+            "n_score": round(n_score, 3) if n_score is not None else None,
+            "experimental_unit": getattr(e, "experimental_unit", ""),
+            "precision_basis_present": bool((getattr(e, "precision_basis", "") or "").strip()),
+            "tested_scope": getattr(e, "tested_scope", None),
+            "endpoint_best_class": getattr(e, "endpoint_best_class", None),
+        },
+        "external_validity_flags": list(getattr(e, "external_validity_flags", None) or []),
+        "safety_flags": list(getattr(e, "safety_flags", None) or []),
+    }

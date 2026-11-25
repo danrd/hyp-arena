@@ -258,3 +258,105 @@ def _links(pmid: str, name: str) -> list[str]:
         return [str(x) for ls in r.get("linksets", []) for db in ls.get("linksetdbs", []) for x in db.get("links", [])]
     except Exception:                                     # noqa: BLE001 - a failed link is no candidates, not an error
         return []
+
+
+def two_stage_queries(claim, card) -> dict[str, list[str]]:
+    """Build 2+2 diagnostic queries (evaluation-calibration-2026-11-25.md section 2):
+    - stage_1_mechanism (up to 2 queries): canonical mechanism/class + phenotype, stripping brand-only names when a
+      class/target facet or MeSH heading is present.
+    - stage_2_contribution (up to 2 queries): exact claimed contribution + decisive contrast / population.
+    """
+    import re
+
+    def _clean(s: str) -> str:
+        return re.sub(r"[\"'()\[\]/]+", " ", (s or "")).strip()
+
+    facets = getattr(claim, "mechanism_facets", None) or {}
+    agent_or_class = _clean(facets.get("class") or facets.get("target") or facets.get("physical_action") or "")
+    interventions = [_clean(i.label) for i in card.pico.intervention if i.label and i.label.lower() != "unknown"]
+    subject = _clean(claim.subject.label)
+    outcome = _clean(link_outcome(claim))
+    pop = _clean(card.pico.population.who)
+    if pop.lower() in GENERIC_POPULATIONS:
+        pop = ""
+    comparator = _clean(claim.qualifiers.get("comparator") or card.pico.comparator.label or "")
+    if comparator.lower() in {"", "unknown", "none", "placebo", "sham", "untreated", "usual care", "standard care"}:
+        comparator = ""
+
+    # Stage 1: canonical mechanism / intervention class + phenotype (no narrow design words)
+    mech_core = agent_or_class or (interventions[0] if interventions else subject)
+    stage_1: list[str] = []
+    if mech_core and outcome:
+        stage_1.append(f"{mech_core} {outcome}".strip())
+    if subject and outcome and subject.lower() != mech_core.lower():
+        stage_1.append(f"{subject} {outcome}".strip())
+    elif mech_core and pop:
+        stage_1.append(f"{mech_core} {pop}".strip())
+    stage_1 = list(dict.fromkeys(q for q in stage_1 if q))[:2]
+
+    # Stage 2: exact contribution + population / decisive contrast / primary outcome
+    stage_2: list[str] = []
+    pq = population_query(claim, card)
+    if pq:
+        stage_2.append(pq)
+    exact_parts = [p for p in (subject or mech_core, outcome, pop, comparator) if p]
+    if exact_parts:
+        stage_2.append(" ".join(dict.fromkeys(exact_parts)))
+    exp_outcome = _clean(getattr(card.decisive_experiment, "primary_outcome", "") or card.pico.outcome.label or "")
+    if exp_outcome and exp_outcome.lower() != "unknown" and exp_outcome.lower() != outcome.lower():
+        stage_2.append(" ".join(dict.fromkeys(p for p in (subject or mech_core, exp_outcome, pop) if p)))
+    stage_2 = list(dict.fromkeys(q for q in stage_2 if q and q not in stage_1))[:2]
+
+    return {"stage_1_mechanism": stage_1, "stage_2_contribution": stage_2}
+
+
+def retrieve_two_stage(
+    claim,
+    card,
+    as_of: Optional[str] = None,
+    retmax: int = CAP,
+    log: Optional[list] = None,
+    search_fn=None,
+) -> tuple[list[str], dict[str, str]]:
+    """Run the 2+2 two-stage retrieval within the same CAP budget and return (pmids, provenance_by_pmid).
+
+    `search_fn`: optional injectable callable `(query, retmax, as_of) -> list[str]` for deterministic offline tests.
+    """
+    if search_fn is None:
+        from hyparena.tools import pubmed
+        search_fn = lambda q, r, d: pubmed.search(q, retmax=r, as_of=d)
+
+    plan = two_stage_queries(claim, card)
+    per_stage_lists: list[tuple[str, list[str]]] = []
+    for stage in ("stage_1_mechanism", "stage_2_contribution"):
+        for q in plan[stage]:
+            hits = [str(p) for p in (search_fn(q, retmax, as_of) or [])]
+            per_stage_lists.append((stage, hits))
+
+    merged: list[str] = []
+    provenance: dict[str, str] = {}
+    for idx in range(retmax):
+        for stage, lst in per_stage_lists:
+            if idx < len(lst):
+                p = lst[idx]
+                if p not in provenance:
+                    provenance[p] = stage
+                    merged.append(p)
+                    if len(merged) >= retmax:
+                        break
+        if len(merged) >= retmax:
+            break
+
+    if log is not None:
+        log.append(
+            {
+                "kind": "search_two_stage",
+                "claim": claim.id,
+                "budget_cap": retmax,
+                "stage_1_queries": plan["stage_1_mechanism"],
+                "stage_2_queries": plan["stage_2_contribution"],
+                "selected": merged,
+                "pmid_provenance": provenance,
+            }
+        )
+    return merged, provenance
