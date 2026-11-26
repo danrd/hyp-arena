@@ -218,6 +218,13 @@ class DecisiveExperiment(BaseModel):
     external_validity_flags: list[str] = Field(default_factory=list)
     safety_flags: list[str] = Field(default_factory=list)
 
+    @field_validator("n_per_contrast", mode="before")
+    @classmethod
+    def _coerce_n_per_contrast(cls, v):
+        if v is None:
+            return None
+        return str(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else v
+
 
 AlternativeFate = Literal["eliminated", "weakened", "unchanged"]
 

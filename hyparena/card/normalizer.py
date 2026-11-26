@@ -760,6 +760,16 @@ def derive_chain_roles_v19(card: HypothesisCard) -> None:
                 roles = ["mechanism"]
         if is_bg and "background" in roles and len(roles) == 1:
             c.required_for_balance = False
+        # In mechanistic/explanatory hypotheses or sub-organismal (molecule/cell/tissue) chain claims,
+        # the primary claimed effect is simultaneously a mechanistic link and the tested outcome.
+        if (
+            c.part == "chain"
+            and c.stated_as not in ("known", "analogy")
+            and "outcome" in roles
+            and "mechanism" not in roles
+            and (card.hypothesis_type in ("mechanistic", "explanatory") or c.level in ("molecule", "cell", "tissue"))
+        ):
+            roles.append("mechanism")
         c.chain_roles = roles
         c.chain_role = (
             "novel_contribution" if "novel_contribution" in roles
@@ -789,10 +799,12 @@ def v19_code_fields(card: HypothesisCard, raw_text: str) -> None:
     if e.precision_status is None:
         if not pb:
             e.precision_status = "missing"
-        elif re.search(r"\b(?:\d+\s*%|power|alpha|sd\b|mcid|effect\s+size|minimal\s+detectable)\b", pb, re.I):
+        elif re.search(r"(?:\d+\s*%|\bpower\b|\balpha\b|\bsd\b|\bmcid\b|effect\s+size|minimal\s+detectable)", pb, re.I):
             e.precision_status = "stated_for_contrast"
         else:
             e.precision_status = "general_principle_only"
+    elif e.precision_status == "general_principle_only" and pb and re.search(r"(?:>=|≤|\d+\s*%)", pb):
+        e.precision_status = "stated_for_contrast"
 
 
 def v19_problems(card: HypothesisCard, raw_text: str) -> list[str]:

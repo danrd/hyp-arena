@@ -68,8 +68,9 @@ ELLIPSIS_RE = re.compile(r"\.\.\.|…")
 LINK_ID_RE = re.compile(r"^L[0-9]+$")
 PMID_IN_LOC_RE = re.compile(r"\bPMID[:\s]*(\d{6,9})\b", re.IGNORECASE)
 NEGATIVE_PRECISION_RE = re.compile(
-    r"(?:^\s*(?:не\s+указан|не\s+привед|отсутству|нет\s+(?:расч|планов|обоснован)|расч[её]т\s+мощности\s+не|указан\s+только\s+общий\s+принцип|"
-    r"not\s+(?:stated|reported|specified|provided)|no\s+(?:power|sample[- ]size|precision)|only\s+general\s+principle))",
+    r"(?:не\s+указан\w*|не\s+привед\w*|отсутству\w*|нет\s+(?:расч|планов|обоснован|числа)|расч[её]т\s+мощности\s+не|"
+    r"указано\s+только\s+общее\s+число|указан\s+только\s+(?:общий\s+)?принцип|"
+    r"not\s+(?:stated|reported|specified|provided)|no\s+(?:power|sample[- ]size|precision)|only\s+general\s+principle)",
     re.IGNORECASE,
 )
 
