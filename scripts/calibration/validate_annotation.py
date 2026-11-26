@@ -33,6 +33,7 @@ ADD_SEARCH_STATUSES = {"done", "unavailable", "not_needed", None}
 ALT_ORIGINS = {"stated_by_author", "annotator", "not_applicable", None}
 ALT_FATES = {"eliminated", "weakened", "unchanged", None}
 BEST_CLASSES = {"target_engagement", "exploratory_biomarker", "validated_surrogate", "direct_clinical", "unknown", None}
+PRECISION_STATUSES = {"stated_for_contrast", "general_principle_only", "missing", None}
 TESTED_SCOPES = {"direct", "prerequisite", "unclear", None}
 EXT_VALIDITY_FLAGS = {
     "single_sex",
@@ -65,6 +66,12 @@ CARD_FIELDS = ("claim", "rationale", "experiment")
 
 ELLIPSIS_RE = re.compile(r"\.\.\.|…")
 LINK_ID_RE = re.compile(r"^L[0-9]+$")
+PMID_IN_LOC_RE = re.compile(r"\bPMID[:\s]*(\d{6,9})\b", re.IGNORECASE)
+NEGATIVE_PRECISION_RE = re.compile(
+    r"(?:^\s*(?:не\s+указан|не\s+привед|отсутству|нет\s+(?:расч|планов|обоснован)|расч[её]т\s+мощности\s+не|указан\s+только\s+общий\s+принцип|"
+    r"not\s+(?:stated|reported|specified|provided)|no\s+(?:power|sample[- ]size|precision)|only\s+general\s+principle))",
+    re.IGNORECASE,
+)
 
 
 @dataclass
@@ -158,14 +165,29 @@ def _check_quote_shape(q: Any, case_id: str, path: str, issues: list[Issue]) -> 
     return q
 
 
-def _resolve_card_field(location: str) -> Optional[str]:
+def _resolve_card_field(location: str, case_id: str = "") -> Optional[str]:
     loc = location.strip().lower()
+    if case_id:
+        cid = case_id.strip().lower()
+        for sep in (".", ":", "/", " "):
+            if loc.startswith(cid + sep):
+                loc = loc[len(cid) + len(sep) :].strip()
+                break
+    # Also strip generic case-id prefix like d04.claim or c01.experiment
+    loc = re.sub(r"^[a-z]{1,4}\d{1,3}\s*[.:/]\s*", "", loc)
     if loc in CARD_FIELDS:
         return loc
     for f in CARD_FIELDS:
         if loc.startswith(f + " ") or loc.startswith(f + "(") or loc.startswith(f + ":") or loc.startswith(f + ","):
             return f
     return None
+
+
+def _extract_pmid_from_location(location: Optional[str]) -> Optional[str]:
+    if not location:
+        return None
+    m = PMID_IN_LOC_RE.search(location)
+    return m.group(1) if m else None
 
 
 def _verify_card_quote(
@@ -179,7 +201,7 @@ def _verify_card_quote(
         return
     text = q["text"]
     loc = q.get("location") or ""
-    field_name = _resolve_card_field(loc)
+    field_name = _resolve_card_field(loc, case_id)
     if field_name is None:
         # Location points to an external paper (e.g. PMID ...) rather than a card field.
         return
@@ -457,7 +479,13 @@ def validate_record(
         adeq = block_c.get("adequacy")
         feas = block_c.get("feasibility")
 
-        precision_present = isinstance(adeq, dict) and _nonempty_str(adeq.get("precision_basis"))
+        precision_str = adeq.get("precision_basis") if isinstance(adeq, dict) else None
+        precision_status = adeq.get("precision_status") if isinstance(adeq, dict) else None
+        precision_is_neg_prose = bool(_nonempty_str(precision_str) and NEGATIVE_PRECISION_RE.search(precision_str))
+        if precision_status is not None:
+            precision_present = precision_status == "stated_for_contrast"
+        else:
+            precision_present = bool(_nonempty_str(precision_str) and not precision_is_neg_prose)
         engagement_present = isinstance(adeq, dict) and _nonempty_str(adeq.get("engagement_check"))
 
         if not isinstance(alt, dict):
@@ -603,7 +631,7 @@ def validate_record(
                     "null_interpretation",
                     "missing",
                 },
-                {"endpoint_best_class", "tested_scope", "external_validity_flags"},
+                {"endpoint_best_class", "precision_status", "tested_scope", "external_validity_flags"},
                 case_id,
                 "$.C.adequacy",
                 issues,
@@ -612,6 +640,19 @@ def validate_record(
             eq = _check_quote_shape(adeq.get("engagement_quote"), case_id, "$.C.adequacy.engagement_quote", issues)
             _verify_card_quote(coq, case_obj, case_id, "$.C.adequacy.control_or_outcome_quote", report)
             _verify_card_quote(eq, case_obj, case_id, "$.C.adequacy.engagement_quote", report)
+
+            if adeq.get("precision_status") not in PRECISION_STATUSES:
+                issues.append(Issue(case_id, "$.C.adequacy.precision_status", "error", "invalid_enum", f"Invalid precision_status {adeq.get('precision_status')!r}"))
+            if precision_is_neg_prose and adeq.get("precision_status") != "general_principle_only":
+                issues.append(
+                    Issue(
+                        case_id,
+                        "$.C.adequacy.precision_basis",
+                        "warning",
+                        "negative_text_in_precision_basis",
+                        "precision_basis describes missing power/precision or general principle only; use null + C.adequacy.missing or set precision_status",
+                    )
+                )
 
             if adeq.get("endpoint_best_class") not in BEST_CLASSES:
                 issues.append(Issue(case_id, "$.C.adequacy.endpoint_best_class", "error", "invalid_enum", f"Invalid endpoint_best_class {adeq.get('endpoint_best_class')!r}"))
@@ -651,6 +692,14 @@ def validate_record(
                 issues.append(Issue(case_id, "$.C.feasibility.evidence_status", "error", "invalid_enum", f"Invalid evidence_status {ev_st!r}"))
             evq = _check_quote_shape(feas.get("evidence_quote"), case_id, "$.C.feasibility.evidence_quote", issues)
             _verify_card_quote(evq, case_obj, case_id, "$.C.feasibility.evidence_quote", report)
+            _verify_lit_quote(
+                evq,
+                _extract_pmid_from_location((evq or {}).get("location")),
+                abstracts,
+                case_id,
+                "$.C.feasibility.evidence_quote",
+                report,
+            )
             if ev_st in ("confirmed_in_context", "adjacent_only") and (not evq or not _nonempty_str(evq.get("text"))):
                 issues.append(
                     Issue(
@@ -685,7 +734,16 @@ def validate_record(
                         if cc.get("evidence_status") not in (EVIDENCE_STATUSES - {None}):
                             issues.append(Issue(case_id, f"{cp}.evidence_status", "error", "invalid_enum", f"Invalid component evidence_status {cc.get('evidence_status')!r}"))
                         if "evidence_quote" in cc and cc["evidence_quote"] is not None:
-                            _check_quote_shape(cc["evidence_quote"], case_id, f"{cp}.evidence_quote", issues)
+                            ccq = _check_quote_shape(cc["evidence_quote"], case_id, f"{cp}.evidence_quote", issues)
+                            _verify_card_quote(ccq, case_obj, case_id, f"{cp}.evidence_quote", report)
+                            _verify_lit_quote(
+                                ccq,
+                                _extract_pmid_from_location((ccq or {}).get("location")),
+                                abstracts,
+                                case_id,
+                                f"{cp}.evidence_quote",
+                                report,
+                            )
 
     return report
 

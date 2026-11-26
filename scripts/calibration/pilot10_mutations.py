@@ -203,7 +203,7 @@ def _make_synthetic_record(
     )
 
 
-def run_mutations_on_case(case_dict: dict[str, Any]) -> dict[str, Any]:
+def run_mutations_on_case(case_dict: dict[str, Any], *, strict_candidate: bool = False) -> dict[str, Any]:
     case_id = str(case_dict.get("id") or case_dict.get("card", {}).get("id") or "unknown")
     base_card, base_vers, base_alt_vers = _load_card_and_verifications(case_dict)
     baseline = _evaluate_snapshot(base_card, base_vers, base_alt_vers)
@@ -219,7 +219,7 @@ def run_mutations_on_case(case_dict: dict[str, Any]) -> dict[str, Any]:
             m1_changed_labels.append((iv.label, new_lbl))
             iv.label = new_lbl
     m1_snap = _evaluate_snapshot(m1_card, base_vers, base_alt_vers)
-    mutations["M1_brand_strip"] = {
+    m1_entry: dict[str, Any] = {
         "description": "Replace proprietary/brand intervention name with class-level description.",
         "changed_labels": m1_changed_labels,
         "baseline_P": baseline["P"],
@@ -229,6 +229,25 @@ def run_mutations_on_case(case_dict: dict[str, Any]) -> dict[str, Any]:
         "invariant": "Class-level paraphrase must preserve offline score on fixed verifications (search-layer recall checked separately).",
         "passed": m1_snap["P"] == baseline["P"],
     }
+    if strict_candidate:
+        from hyparena.search import search as search_mod
+
+        target_cl = base_card.outcome_claim or (base_card.claims[0] if base_card.claims else None)
+        if target_cl is not None and m1_changed_labels:
+            c_base = copy.deepcopy(base_card)
+            c_mut = copy.deepcopy(m1_card)
+            cls_label = m1_changed_labels[0][1]
+            for c_obj in (c_base, c_mut):
+                cl0 = next(x for x in c_obj.claims if x.id == target_cl.id)
+                cl0.mechanism_facets["class"] = cls_label
+            q_base = search_mod.two_stage_queries(next(x for x in c_base.claims if x.id == target_cl.id), c_base)["stage_1_mechanism"]
+            q_mut = search_mod.two_stage_queries(next(x for x in c_mut.claims if x.id == target_cl.id), c_mut)["stage_1_mechanism"]
+            stage1_preserved = bool(q_base and q_mut and q_base[0] == q_mut[0])
+        else:
+            stage1_preserved = True
+        m1_entry["stage1_canonical_query_preserved"] = stage1_preserved
+        m1_entry["passed"] = bool(m1_entry["passed"] and stage1_preserved)
+    mutations["M1_brand_strip"] = m1_entry
 
     # --- M2: Background chain inflation (+2 strongly supported background links) ---
     m2_card = copy.deepcopy(base_card)
@@ -269,7 +288,7 @@ def run_mutations_on_case(case_dict: dict[str, Any]) -> dict[str, Any]:
     cs_m2_req = m2_req_snap["chain_state"]
     cs_delta = None if (cs_base is None or cs_m2 is None) else round(cs_m2 - cs_base, 4)
     cs_req_delta = None if (cs_base is None or cs_m2_req is None) else round(cs_m2_req - cs_base, 4)
-    mutations["M2_background_inflation"] = {
+    m2_entry: dict[str, Any] = {
         "description": "Append 2 strongly supported background premise links to the chain (unmarked and marked required).",
         "baseline_chain_state": cs_base,
         "mutated_chain_state": cs_m2,
@@ -281,6 +300,23 @@ def run_mutations_on_case(case_dict: dict[str, Any]) -> dict[str, Any]:
         "invariant": "Adding known background links must NOT inflate chain_state (delta <= 0); required_leak tracks sensitivity if normalizer over-marks background links.",
         "passed": (cs_delta is not None and cs_delta <= 1e-6),
     }
+    if strict_candidate:
+        m2_guarded_card = copy.deepcopy(m2_req_card)
+        for cl in m2_guarded_card.claims:
+            if cl.id.startswith("bg_pad_"):
+                cl.chain_role = "background"
+        m2_guarded_snap = _evaluate_snapshot(m2_guarded_card, m2_vers, base_alt_vers)
+        cs_guarded = m2_guarded_snap["chain_state"]
+        guarded_delta = None if (cs_base is None or cs_guarded is None) else round(cs_guarded - cs_base, 4)
+        m2_entry["guarded_background_chain_state"] = cs_guarded
+        m2_entry["delta_guarded_background"] = guarded_delta
+        m2_entry["passed"] = bool(
+            cs_delta is not None
+            and cs_delta <= 1e-6
+            and guarded_delta is not None
+            and guarded_delta <= 1e-6
+        )
+    mutations["M2_background_inflation"] = m2_entry
 
     # --- M3: Remove decisive control span and re-ground alternatives ---
     m3_card = copy.deepcopy(base_card)
@@ -321,7 +357,7 @@ def run_mutations_on_case(case_dict: dict[str, Any]) -> dict[str, Any]:
     )
     m4_changes = _reground_alternatives(m4_card)
     m4_snap = _evaluate_snapshot(m4_card, base_vers, base_alt_vers)
-    mutations["M4_downgrade_comparator"] = {
+    m4_entry: dict[str, Any] = {
         "description": "Replace active/factorial comparator with generic 'usual care'.",
         "reground_changes": m4_changes,
         "baseline_I": baseline["I"],
@@ -330,6 +366,13 @@ def run_mutations_on_case(case_dict: dict[str, Any]) -> dict[str, Any]:
         "invariant": "Downgrading active/factorial contrast to usual care must not increase I.",
         "passed": m4_snap["I"] <= baseline["I"] + 1e-6,
     }
+    if strict_candidate:
+        # Strict drop required whenever a grounded alternative actually depended on a protocol control_span
+        had_grounded_discrim = bool(m4_changes)
+        m4_entry["had_grounded_discriminating_control"] = had_grounded_discrim
+        if had_grounded_discrim:
+            m4_entry["passed"] = m4_snap["I"] < baseline["I"] - 1e-6
+    mutations["M4_downgrade_comparator"] = m4_entry
 
     # --- M5: Short pilot vs confirmatory trial ---
     m5_pilot = copy.deepcopy(base_card)
@@ -429,11 +472,16 @@ def run_mutations_on_case(case_dict: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def run_suite(cases: list[dict[str, Any]], ids: Optional[list[str]] = None) -> dict[str, Any]:
+def run_suite(
+    cases: list[dict[str, Any]],
+    ids: Optional[list[str]] = None,
+    *,
+    strict_candidate: bool = False,
+) -> dict[str, Any]:
     if ids:
         wanted = set(ids)
         cases = [c for c in cases if str(c.get("id") or c.get("card", {}).get("id")) in wanted]
-    results = [run_mutations_on_case(c) for c in cases]
+    results = [run_mutations_on_case(c, strict_candidate=strict_candidate) for c in cases]
 
     mutation_names = [
         "M1_brand_strip",
@@ -499,13 +547,14 @@ def main(argv: Optional[list[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Run offline v3.13 baseline and 6 controlled mutations on saved cases.json.")
     parser.add_argument("cases_json", type=Path, help="Path to saved v3.13 cases.json (list of case dicts).")
     parser.add_argument("--ids", nargs="*", default=None, help="Optional subset of case IDs (e.g. H13 H06 H02).")
+    parser.add_argument("--strict-candidate", action="store_true", help="Enforce strict candidate invariants on M1, M2, and M4.")
     parser.add_argument("--json", action="store_true", help="Output full JSON report.")
     args = parser.parse_args(argv)
 
     cases = json.loads(args.cases_json.read_text(encoding="utf-8"))
     if isinstance(cases, dict) and "cases" in cases:
         cases = cases["cases"]
-    suite = run_suite(cases, ids=args.ids)
+    suite = run_suite(cases, ids=args.ids, strict_candidate=args.strict_candidate)
     if args.json:
         print(json.dumps(suite, ensure_ascii=False, indent=2))
     else:

@@ -552,3 +552,78 @@ def test_diagnostic_search_verifier_alternatives_threats_and_scoring():
     explant_card.decisive_experiment.span = "Randomize discarded older-donor skin explants ex vivo."
     assert v3_extra.resource_tier(explant_card) == "3_human_ex_vivo_or_pilot"
 
+
+def test_validator_prefixed_locations_component_quotes_and_precision_prose():
+    cases_by_id = {"SYN01": _synthetic_case()}
+    rec = _synthetic_annotation_v1()
+    rec["A"]["links"][0]["card_quote"]["location"] = "SYN01.rationale"
+    rec["C"]["adequacy"]["precision_basis"] = "Не указано (расчёт мощности и минимально значимый эффект отсутствуют)."
+    rec["C"]["feasibility"]["component_checks"] = [
+        {
+            "component": "evoked potential check",
+            "target_system": "older adults",
+            "evidence_status": "confirmed_in_context",
+            "evidence_quote": {
+                "text": "Verify target engagement via evoked potential shift at week 2",
+                "location": "SYN01.experiment",
+            },
+        }
+    ]
+    rep = val_mod.validate_record(rec, cases_by_id=cases_by_id)
+    assert rep.errors == []
+    assert rep.card_quotes_checked == 7
+    assert rep.card_quotes_matched == 7
+    wcodes = {i.code for i in rep.warnings}
+    assert "negative_text_in_precision_basis" in wcodes
+
+
+def test_strict_candidate_mutations_and_v19_contrast_extractor():
+    from hyparena.card import normalizer
+
+    p19 = REPO_ROOT / "hyparena" / "prompts" / "normalize_card" / "v19.j2"
+    assert p19.exists()
+
+    # 1. Strict candidate mode enforces M1 query invariance, M2 guarded background gate, and M4 strict drop
+    suite = mut_mod.run_suite([_synthetic_v313_case()], strict_candidate=True)
+    m = suite["cases"][0]["mutations"]
+    assert m["M1_brand_strip"]["stage1_canonical_query_preserved"] is True
+    assert m["M1_brand_strip"]["passed"] is True
+    assert m["M2_background_inflation"]["delta_guarded_background"] <= 0.0
+    assert m["M2_background_inflation"]["passed"] is True
+    assert m["M4_downgrade_comparator"]["had_grounded_discriminating_control"] is True
+    assert m["M4_downgrade_comparator"]["passed"] is True
+
+    # 2. Deterministic v19 contrast extractor handles bullet blocks, bare compare expansion, and Prediction: tail stripping
+    bullet_text = (
+        "Experiment: Apply equal stimulation across tissues:\n"
+        "- one contiguous patch;\n"
+        "- multiple dispersed patches.\n"
+        "Prediction: Only the contiguous patch will sustain hyperpolarization compared to dispersed patches."
+    )
+    extracted_bullets = normalizer.extract_decisive_contrast_v19(bullet_text)
+    assert "- one contiguous patch;" in extracted_bullets
+    assert "- multiple dispersed patches." in extracted_bullets
+    assert "Prediction:" not in extracted_bullets
+
+    step_text = (
+        "4. Wash out initial matrix.\n"
+        "5. In one branch suppress endogenous TGFB1 synthesis in intermediate cells. Compare new matrix deposition and viability.\n"
+        "Prediction: Suppressing TGFB1 will abolish propagation."
+    )
+    extracted_step = normalizer.extract_decisive_contrast_v19(step_text)
+    assert "In one branch suppress endogenous TGFB1" in extracted_step
+    assert "Compare new matrix deposition" in extracted_step
+
+    # 3. derive_chain_roles_v19 prevents background claims from keeping required_for_balance=True
+    from hyparena.card.models import HypothesisCard
+
+    card = HypothesisCard.model_validate(_synthetic_v313_case()["card"])
+    card.claims[0].part = "premise"
+    card.claims[0].stated_as = "known"
+    card.claims[0].required_for_balance = True
+    normalizer.derive_chain_roles_v19(card)
+    assert card.claims[0].chain_roles == ["background"]
+    assert card.claims[0].required_for_balance is False
+    assert "novel_contribution" in card.claims[1].chain_roles
+
+

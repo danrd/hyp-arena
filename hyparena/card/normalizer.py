@@ -88,7 +88,7 @@ def registry_defaults(card: HypothesisCard, raw_text: str) -> list[str]:
     return filled
 
 
-def _problems(value: dict, raw_text: str, card_id: str, core: bool = False, v15: bool = False) -> tuple[Optional[HypothesisCard], list[str]]:
+def _problems(value: dict, raw_text: str, card_id: str, core: bool = False, v15: bool = False, v19: bool = False) -> tuple[Optional[HypothesisCard], list[str]]:
     value = _closed_fields(value)
     try:
         card = HypothesisCard.model_validate({**value, "id": card_id, "raw_id": card_id})
@@ -100,6 +100,8 @@ def _problems(value: dict, raw_text: str, card_id: str, core: bool = False, v15:
         extra = primary_from_registry(card, raw_text)   # the main outcome is the registry's primary outcome (code)
         design_from_registry(card, raw_text)            # a randomized registry trial is an rct whatever the model wrote
     derive_roles(card)                                  # v13: `role` from `primary` and `stated_as` (no-op before v13)
+    if v19:
+        v19_code_fields(card, raw_text)
     set_sex_scope(card, raw_text)                       # `any` from the words "at least one sex" when the model left it out
     canonicalize(card)                                  # dose and age in one wording (L1.8)
     problems = validate_card(card, raw_text, max_claims=12 if v15 else 8) + (core_span_problems(card, raw_text) if core else [])
@@ -108,6 +110,8 @@ def _problems(value: dict, raw_text: str, card_id: str, core: bool = False, v15:
         sp = (card.decisive_experiment.prediction or {}).get("span") or ""
         if sp and _norm_text(sp) not in _norm_text(raw_text):
             problems.append(f"decisive_experiment.prediction.span is not a verbatim fragment of the text: {sp!r}")
+    if v19:
+        problems += v19_problems(card, raw_text)
     return mark_inherited(card), problems
 
 
@@ -120,12 +124,13 @@ def normalize(client, family: str, raw_text: str, card_id: str, log: Optional[li
     vnum = int((version or TEMPLATE[1]).lstrip("v") or 0)
     core = vnum >= 12                                   # normalize_card/v12: spans for the core fields, checked like claims
     v15 = vnum >= 15                                    # normalize_card/v15: chain and premises, main factor, code checks
+    v19 = vnum >= 19                                    # normalize_card/v19: explicit chain_roles and decisive_contrast_span
     run = lambda v: ask(client, role="normalize_card", family=family, template=TEMPLATE[0], version=version or TEMPLATE[1],
-                        variables=v, validate=lambda x: _problems(x, raw_text, card_id, core, v15)[1], rounds=rounds, log=log)[0]
+                        variables=v, validate=lambda x: _problems(x, raw_text, card_id, core, v15, v19)[1], rounds=rounds, log=log)[0]
     value = run(variables)
     if value is None:
         return None, ["no valid JSON from the normalizer"]
-    first, _ = _problems(value, raw_text, card_id, v15=v15)
+    first, _ = _problems(value, raw_text, card_id, v15=v15, v19=v19)
     out = first.outcome_claim if first is not None else None
     if out is not None and out.relation == "other":
         near = nearest_relations(f"{out.note} {out.source_span} {out.object.label}")
@@ -133,19 +138,21 @@ def normalize(client, family: str, raw_text: str, card_id: str, log: Optional[li
                 f'"{out.note or "none"}"). Check whether one of these relations fits it: {", ".join(near)}. '
                 f'Keep "other" only if none of them states what the text says.')
         again = run({**variables, "hint": hint})
-        if again is not None and _problems(again, raw_text, card_id, v15=v15)[0] is not None:
+        if again is not None and _problems(again, raw_text, card_id, v15=v15, v19=v19)[0] is not None:
             value = again
-    card, problems = _problems(value, raw_text, card_id, v15=v15)   # core spans are settled by anchor_core below, not by dropping
+    card, problems = _problems(value, raw_text, card_id, v15=v15, v19=v19)   # core spans are settled by anchor_core below, not by dropping
     if card is not None and problems:                  # drop claims whose span is not verbatim, keep the rest
         bad = {p.split(":")[0] for p in problems if "source_span" in p}
         if bad and len(bad) < len(card.claims):
             card.claims = [c for c in card.claims if c.id not in bad]
             card.edges = [e for e in card.edges if e.from_ not in bad and e.to not in bad]
-            problems = validate_card(card, raw_text, max_claims=12 if v15 else 8) + (v15_problems(card) if v15 else [])
+            problems = validate_card(card, raw_text, max_claims=12 if v15 else 8) + (v15_problems(card) if v15 else []) + (v19_problems(card, raw_text) if v19 else [])
     if card is not None and vnum >= 10:
         registry_defaults(card, raw_text)
     if card is not None and vnum >= 13:
         v13_code_fields(card, raw_text)
+    if card is not None and v19:
+        v19_code_fields(card, raw_text)
     if card is not None and core:
         anchor_core(card, raw_text)
     if card is not None and vnum >= 16:
@@ -579,3 +586,223 @@ def add_identifiers(card: HypothesisCard) -> None:
     if card.topic and card.topic.get("label"):
         t = mesh.topic(card.topic["label"])
         card.topic["mesh"] = {"ui": t["ui"], "name": t["name"]} if t else None
+
+
+# ---- normalize_card/v19 (2026-11-26: explicit chain_roles, background gating, and structured decisive_contrast_span) ---------
+
+_PREDICTION_SECTION_RE = re.compile(
+    r"(?:^|\n)\s*(?:prediction|falsification|expected\s+results?|ожидаемый\s+результат|фальсификац\w*)\s*:",
+    re.IGNORECASE,
+)
+_BULLET_LINE_RE = re.compile(r"^\s*(?:[-*•]|\d+[.)])\s+\S")
+_ARM_MANIP_RE = re.compile(
+    r"\b(?:в\s+одной\s+ветке|в\s+другой\s+ветке|ветк\w*|групп\w*|рандомиз\w*|назнач\w*|подавить|выключить|блокировать|"
+    r"randomi[sz]\w*|assign\w*|one\s+branch|one\s+arm|experimental\s+arm|knockout|inhibit|preload|factorial)\b",
+    re.IGNORECASE,
+)
+_BARE_COMPARE_START_RE = re.compile(
+    r"^\s*(?:сопоставить|сравнить|compare\b|contrast\b)",
+    re.IGNORECASE,
+)
+
+
+def _strip_prediction_tail(text: str) -> str:
+    """Keep only design/protocol text before explicit Prediction:/Falsification: blocks (fixes D47-type false hits)."""
+    m = _PREDICTION_SECTION_RE.search(text)
+    if m and m.start() > 40:
+        return text[: m.start()]
+    return text
+
+
+def _candidate_contrast_blocks(design_text: str) -> list[str]:
+    """Split protocol text into verbatim candidate spans while keeping:
+    1) colon-introduced multi-line bullet/numbered arm lists together as one block (fixes D13, D47),
+    2) adjacent manipulation + comparison sentences together when 'Compare/Сопоставить...' starts bare (fixes D41).
+    """
+    candidates: list[str] = []
+
+    # 0. Registry Arms line if present
+    m_arms = re.search(r"^Arms:\s*.+$", design_text, re.M)
+    if m_arms:
+        candidates.append(m_arms.group(0).strip())
+
+    # 1. Colon-introduced bullet/numbered/semicolon arm blocks (contiguous verbatim substring of design_text)
+    lines = design_text.splitlines(keepends=True)
+    offsets: list[int] = []
+    pos = 0
+    for ln in lines:
+        offsets.append(pos)
+        pos += len(ln)
+
+    i = 0
+    while i < len(lines):
+        stripped = lines[i].strip()
+        if stripped.endswith(":"):
+            j = i + 1
+            saw_bullet = False
+            while j < len(lines):
+                s_j = lines[j].strip()
+                if not s_j:
+                    if saw_bullet:
+                        break
+                    j += 1
+                    continue
+                if _BULLET_LINE_RE.match(lines[j]):
+                    saw_bullet = True
+                    j += 1
+                    continue
+                break
+            if saw_bullet:
+                start_idx = offsets[i]
+                end_idx = offsets[j - 1] + len(lines[j - 1])
+                block = design_text[start_idx:end_idx].strip()
+                block = re.sub(r"^\s*(?:decisive\s+experiment|experiment|design|протокол)\s*:\s*", "", block, flags=re.I)
+                if block and block in design_text:
+                    candidates.append(block)
+                i = j
+                continue
+        i += 1
+
+    # 2. Paragraph / step sentence candidates with backward/forward expansion
+    for para_m in re.finditer(r"[^\n]+(?:\n(?!\s*\n)[^\n]+)*", design_text):
+        para = para_m.group(0)
+        # Keep whole multi-clause colon+semicolon arm sentences intact (e.g. D22: 'разделить ... между четырьмя условиями: A; B; C; D.')
+        para_clean = re.sub(r"^\s*(?:decisive\s+experiment|experiment|протокол)\s*:\s*", "", para.strip(), flags=re.I)
+        if ":" in para_clean and ";" in para_clean and len(para_clean) <= 500 and para_clean in design_text:
+            candidates.append(para_clean)
+        sents = [s for s in re.finditer(r"[^.!?\n]+[.!?]?", para) if s.group(0).strip()]
+        for idx, sm in enumerate(sents):
+            sent = re.sub(r"^\s*(?:decisive\s+experiment|experiment|design)\s*:\s*", "", sm.group(0).strip(), flags=re.I)
+            if not sent:
+                continue
+            if idx > 0 and _BARE_COMPARE_START_RE.match(sent):
+                prev_raw = sents[idx - 1].group(0)
+                if _ARM_MANIP_RE.search(prev_raw):
+                    joined = para[sents[idx - 1].start() : sm.end()].strip()
+                    joined = re.sub(r"^\s*\d+[.)]\s*", "", joined)
+                    if joined in design_text:
+                        candidates.append(joined)
+            if idx + 1 < len(sents) and re.search(r"\b(?:сравнить|сопоставить|compare|factor|факторн)\b", sent, re.I):
+                nxt_raw = sents[idx + 1].group(0)
+                if re.search(r"\b(?:первичн\w+\s+(?:точка|исход)|primary\s+(?:endpoint|outcome)|сравнить|сопоставить)\b", nxt_raw, re.I):
+                    joined_fwd = para[sm.start() : sents[idx + 1].end()].strip()
+                    joined_fwd = re.sub(r"^\s*(?:decisive\s+experiment|experiment)\s*:\s*", "", joined_fwd, flags=re.I)
+                    if joined_fwd in design_text:
+                        candidates.append(joined_fwd)
+            if sent in design_text:
+                candidates.append(sent)
+
+    return list(dict.fromkeys(c for c in candidates if len(c.split()) >= 4))
+
+
+def _score_contrast_block(block: str) -> float:
+    low = block.lower()
+    score = 0.0
+    if re.search(r"\b(?:primary\s+contrast|decisive\s+contrast|решающ\w+\s+сравнен)\b", low):
+        score += 6.5
+    if low.startswith("arms:") or low.startswith("interventions:"):
+        score += 5.0
+    if re.search(r"\b(?:versus|vs\.?|compared\s+(?:with|to)|against|relative\s+to|против|по\s+сравнению\s+с)\b", low):
+        score += 4.0
+    if re.search(r"\b(?:сравнить|сопоставить|разделить\s+\w+\s+между|между\s+\w+\s+условиями|между\s+группами|факторн\w+\s+опыт)\b", low):
+        score += 4.5
+    if re.search(r"\b(?:four\s+parallel\s+arms|parallel\s+arms|crossover|factorial|параллельн\w+\s+групп)\b", low):
+        score += 3.5
+    if re.search(r"\b(?:randomi[sz]\w*|рандомиз\w*)\b", low):
+        score += 2.0
+    if re.search(r"\b(?:sham|placebo|vehicle|isotype|usual\s+care|standard\s+care|active\s+control|reverse\s+polarity|имитац\w*|плацебо|обычн\w+\s+уход|контроль\w*|необработанн\w+)\b", low):
+        score += 2.5
+    if re.search(r"\b(?:compare|contrast)\b", low):
+        score += 2.5
+    if "\n-" in block or "\n1." in block or "\n2." in block or (":" in block and ";" in block):
+        score += 2.5
+    # Penalize generic boilerplate design/blinding headers that name no concrete groups
+    if re.match(r"^\s*(?:дизайн\s*:?\s*)?(?:использовать\s+)?рандомизаци\w*[,и\s]+(?:ослепл|слепой)", low):
+        score -= 5.0
+    # Penalize sentences that are pure criteria/predictions rather than protocol comparisons
+    if re.search(r"(?:^\s*критерий\s+(?:против|за)|will\s+demonstrate|ruling\s+out|supports?\s+the\s+claim|опровергнет|подтвердит\s+гипотезу)", low):
+        score -= 5.0
+    return score
+
+
+def extract_decisive_contrast_v19(raw_text: str, fallback_span: str = "") -> str:
+    """Deterministic verbatim contrast extractor (evaluation-calibration-2026-11-26 Step 3)."""
+    if not (raw_text or "").strip():
+        return fallback_span or ""
+    exp_m = re.search(r"(?:^|\n)\s*(?:decisive\s+experiment|experiment)\s*:", raw_text, re.I)
+    search_zone = raw_text[exp_m.start() :] if exp_m else raw_text
+    clean_zone = _strip_prediction_tail(search_zone)
+    blocks = _candidate_contrast_blocks(clean_zone)
+    if clean_zone != raw_text:
+        blocks += [b for b in _candidate_contrast_blocks(_strip_prediction_tail(raw_text)) if b not in blocks]
+    scored = [(b, _score_contrast_block(b)) for b in blocks]
+    scored = [(b, s) for b, s in scored if s >= 2.0 and b in raw_text]
+    if not scored:
+        return fallback_span if (fallback_span and fallback_span in raw_text) else ""
+    best = max(scored, key=lambda x: (x[1], -len(x[0]) if len(x[0]) > 650 else 0))[0]
+    return best
+
+
+def derive_chain_roles_v19(card: HypothesisCard) -> None:
+    """Populate `chain_roles` and primary `chain_role` consistently on every claim, and prevent
+    background claims (`part == 'premise'` or `stated_as == 'known'`) from leaking into `required_for_balance`.
+    """
+    has_explicit_novel = any("novel_contribution" in (c.chain_roles or []) or c.chain_role == "novel_contribution" for c in card.claims)
+    for c in card.claims:
+        roles = list(dict.fromkeys(c.chain_roles or ([] if not c.chain_role else [c.chain_role])))
+        is_bg = c.part == "premise" or c.stated_as in ("known", "analogy")
+        if not roles:
+            if is_bg:
+                roles = ["background"]
+            elif c.link == "outcome" or c.role == "outcome":
+                roles = ["outcome"]
+            else:
+                roles = ["mechanism"]
+        if is_bg and "background" in roles and len(roles) == 1:
+            c.required_for_balance = False
+        c.chain_roles = roles
+        c.chain_role = (
+            "novel_contribution" if "novel_contribution" in roles
+            else "outcome" if "outcome" in roles
+            else "mechanism" if "mechanism" in roles
+            else roles[0]
+        )
+
+    # If the parse did not tag any claim as novel_contribution, tag the primary claimed mechanism step
+    # (or primary claimed outcome when no claimed mechanism step exists) so novel_contribution is never silently empty.
+    if not has_explicit_novel and card.claims:
+        claimed_mech = [c for c in card.claims if "mechanism" in c.chain_roles and c.stated_as != "known" and c.part != "premise"]
+        claimed_out = [c for c in card.claims if "outcome" in c.chain_roles and c.primary and c.stated_as != "known"]
+        target = claimed_mech[-1] if claimed_mech else (claimed_out[0] if claimed_out else None)
+        if target is not None and "novel_contribution" not in target.chain_roles:
+            target.chain_roles.append("novel_contribution")
+
+
+def v19_code_fields(card: HypothesisCard, raw_text: str) -> None:
+    """Deterministic v19 post-processing for roles, decisive_contrast_span, and precision_status."""
+    derive_chain_roles_v19(card)
+    e = card.decisive_experiment
+    if not (e.decisive_contrast_span or "").strip() or _norm_text(e.decisive_contrast_span) not in _norm_text(raw_text):
+        fallback = card.pico.comparator.span or e.span or ""
+        e.decisive_contrast_span = extract_decisive_contrast_v19(raw_text, fallback_span=fallback)
+    pb = (e.precision_basis or "").strip()
+    if e.precision_status is None:
+        if not pb:
+            e.precision_status = "missing"
+        elif re.search(r"\b(?:\d+\s*%|power|alpha|sd\b|mcid|effect\s+size|minimal\s+detectable)\b", pb, re.I):
+            e.precision_status = "stated_for_contrast"
+        else:
+            e.precision_status = "general_principle_only"
+
+
+def v19_problems(card: HypothesisCard, raw_text: str) -> list[str]:
+    out: list[str] = []
+    e = card.decisive_experiment
+    for fname in ("decisive_contrast_span", "target_engagement_span"):
+        sp = getattr(e, fname, "") or ""
+        if sp and _norm_text(sp) not in _norm_text(raw_text):
+            out.append(f"decisive_experiment.{fname} is not a verbatim fragment of the text: {sp!r}")
+    for c in card.claims:
+        if "background" in (c.chain_roles or []) and len(c.chain_roles) == 1 and c.required_for_balance:
+            out.append(f"{c.id}: a background claim cannot have required_for_balance=true")
+    return out

@@ -423,7 +423,8 @@ def _evaluate(card: HypothesisCard, ver_claims: list[ClaimVerification],
     res.P, res.P_lo, res.P_hi = (round(x, 5) for x in tri)
     res.weakest = min(links, key=lambda x: res.links[x.id][0]).id
     slots, run_ = [], []
-    required_ids = {cl.id for cl in links if cl.required_for_balance}
+    # Background claims explicitly tagged chain_role="background" never occupy their own required balance slot.
+    required_ids = {cl.id for cl in links if cl.required_for_balance and getattr(cl, "chain_role", None) != "background"}
     # Required links get their own slot. A required primary outcome already has one.
     separate = [cl for cl in links if cl.id in required_ids and (primary is None or cl.id != primary.id)]
     remaining = [cl for cl in links if cl not in separate]

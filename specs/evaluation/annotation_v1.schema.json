@@ -304,6 +304,15 @@
                   "type": ["string", "number", "null"]
                 },
                 "precision_basis": { "$ref": "#/$defs/nullable_string" },
+                "precision_status": {
+                  "type": ["string", "null"],
+                  "enum": [
+                    "stated_for_contrast",
+                    "general_principle_only",
+                    "missing",
+                    null
+                  ]
+                },
                 "engagement_check": { "$ref": "#/$defs/nullable_string" },
                 "engagement_quote": { "$ref": "#/$defs/quote_ref" },
                 "positive_interpretation": { "$ref": "#/$defs/nullable_string" },

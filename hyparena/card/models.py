@@ -43,6 +43,7 @@ ChainRole = Literal["background", "mechanism", "novel_contribution", "outcome"]
 RelationToClaim = Literal["direct_support", "direct_contradiction", "related", "irrelevant", "insufficient"]
 StudyMode = Literal["confirmatory", "exploratory", "unknown"]
 BestEndpointClass = Literal["target_engagement", "exploratory_biomarker", "validated_surrogate", "direct_clinical", "unknown"]
+PrecisionStatus = Literal["stated_for_contrast", "general_principle_only", "missing"]
 TestedScope = Literal["direct", "prerequisite", "unclear"]
 ResourceTier = Literal["1_in_vitro", "2_animal", "3_human_ex_vivo_or_pilot", "4_clinical_in_vivo"]
 WorstDomainRisk = Literal["low", "some_concerns", "high", "unknown", "not_applicable"]
@@ -206,9 +207,11 @@ class DecisiveExperiment(BaseModel):
     prediction: dict = Field(default_factory=dict)
     span: str = ""                               # normalize_card/v12: the exact phrase of the text that states this field ("" before v12)
     # Calibration diagnostic fields (evaluation-calibration-2026-11-25.md)
+    decisive_contrast_span: str = ""
     experimental_unit: str = ""
     n_per_contrast: Optional[str] = None
     precision_basis: str = ""
+    precision_status: Optional[PrecisionStatus] = None
     target_engagement_span: str = ""
     tested_scope: Optional[TestedScope] = None
     endpoint_best_class: Optional[BestEndpointClass] = None

@@ -15,6 +15,10 @@ import sys
 from pathlib import Path
 from unittest.mock import patch
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
 from pilot10_mutations import _load_card_and_verifications, run_mutations_on_case
 
 from hyparena.scoring import rules_v32, v3_extra
@@ -63,7 +67,7 @@ def comparison(saved, computed, *, conditional=False) -> dict:
     return {"saved": saved, "replay": computed, "status": status, "conditional": conditional}
 
 
-def replay_case(entry: dict, lookups: FrozenLookups) -> dict:
+def replay_case(entry: dict, lookups: FrozenLookups, *, strict_candidate: bool = False) -> dict:
     source = entry["case"]
     saved = entry["saved"]
     for field in ("case", "saved"):
@@ -90,7 +94,7 @@ def replay_case(entry: dict, lookups: FrozenLookups) -> dict:
         feasibility = None
     # The legacy mutation harness uses its own operational feasibility proxy.
     lookups.missing.clear()
-    mutations = run_mutations_on_case(source)
+    mutations = run_mutations_on_case(source, strict_candidate=strict_candidate)
     mutation_missing = sorted(lookups.missing)
     return {
         "id": entry["id"],
@@ -118,6 +122,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("manifest", type=Path)
     parser.add_argument("--ids", nargs="+", help="Pilot IDs, e.g. C03")
+    parser.add_argument("--strict-candidate", action="store_true", help="Run strict candidate checks on M1, M2, and M4.")
     args = parser.parse_args(argv)
     manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
     if manifest["version"] != 1:
@@ -146,7 +151,7 @@ def main(argv: list[str] | None = None) -> int:
                 if args.ids and entry["id"] not in args.ids:
                     continue
                 current = f"{entry['id']} ({entry['original_id']})"
-                out.append(replay_case(entry, lookups))
+                out.append(replay_case(entry, lookups, strict_candidate=args.strict_candidate))
     except NetworkAttempt as exc:
         parser.exit(2, f"{exc}\n")
     print(json.dumps({
