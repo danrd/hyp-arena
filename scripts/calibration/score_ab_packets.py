@@ -248,6 +248,7 @@ def score_block_c_replies(
     dev60_records: list[dict[str, Any]],
     cases_by_id: dict[str, dict[str, Any]],
     abstracts_by_pmid: Optional[dict[str, dict[str, Any]]] = None,
+    tasks_by_id: Optional[dict[str, dict[str, Any]]] = None,
 ) -> dict[str, Any]:
     """Score Method v4 Block-C (alternatives + null outcomes + 3-component readiness) replies on the 25 deep cards."""
     from hyparena.alternatives import alternatives_v3
@@ -255,13 +256,28 @@ def score_block_c_replies(
 
     ref_by_id = {str(r["case_id"]): r for r in dev60_records}
     abstracts_by_pmid = abstracts_by_pmid or {}
+    tasks_by_id = tasks_by_id or {}
+
+    def _case_has_supplied_abstracts(cid: str, ref: dict[str, Any]) -> bool:
+        if cid in tasks_by_id:
+            t = tasks_by_id[cid]
+            return bool(t.get("supplied_abstracts") or t.get("abstracts"))
+        if not abstracts_by_pmid:
+            return False
+        ref_blob = json.dumps({"B": ref.get("B"), "feasibility": ref.get("C", {}).get("feasibility")}, ensure_ascii=False)
+        cited_pmids = set(re.findall(r"\b\d{7,9}\b", ref_blob))
+        return bool(cited_pmids & set(abstracts_by_pmid.keys()))
 
     n_eval = 0
+    prec_agree = [0, 0]
     pos_agree = [0, 0]
     null_uncond_agree = [0, 0]
     null_effective_agree = [0, 0]  # compares conditional_on_negative when human annotated conditional null without precision
     tier_agree = [0, 0]
     ev_status_agree = [0, 0]
+    ev_with_abs_top = [0, 0]
+    ev_with_abs_weaklink = [0, 0]
+    ev_no_abs_closed_world = [0, 0]
     ctrl_quotes_ok = [0, 0]
     comp_quotes_ok = [0, 0]
     eliminated_with_loophole = 0
@@ -276,7 +292,14 @@ def score_block_c_replies(
         c_src = cases_by_id[cid]
         exp_text = "\n".join(x for x in (c_src.get("claim"), c_src.get("rationale"), c_src.get("experiment")) if x)
 
-        prec_status = str(item.get("precision_status") or ref["C"]["adequacy"].get("precision_status") or "missing")
+        ref_prec = ref["C"]["adequacy"].get("precision_status")
+        raw_prec = item.get("precision_status")
+        if ref_prec and raw_prec:
+            prec_agree[1] += 1
+            if str(raw_prec) == str(ref_prec):
+                prec_agree[0] += 1
+
+        prec_status = str(raw_prec or ref_prec or "missing")
         alts = item.get("alternatives") or []
         primary_alt = alts[0] if alts else (item.get("primary_alternative") or {})
         grounded_alt = alternatives_v3.ground_discrimination_v4(primary_alt, exp_text, precision_status=prec_status)
@@ -300,9 +323,7 @@ def score_block_c_replies(
                 null_uncond_agree[0] += 1
             # Human v1 pilot responses put conditional null in on_null when precision was missing;
             # v1.1 rechecks put primary contrast null in null_outcomes[0] or on_null.
-            ref_prec = ref["C"]["adequacy"].get("precision_status")
             eff_pred = grounded_alt["on_negative"] if ref_prec == "stated_for_contrast" else grounded_alt["conditional_on_negative"]
-            # Also match if primary contrast null_outcomes[0] matches ref on_null
             no_list = grounded_alt.get("null_outcomes") or []
             no0 = no_list[0].get("on_null") if no_list and isinstance(no_list[0], dict) else None
             null_effective_agree[1] += 1
@@ -322,18 +343,43 @@ def score_block_c_replies(
             tier_agree[1] += 1
             if val_r["resource_tier"] == ref_feas["resource_tier"]:
                 tier_agree[0] += 1
-        if ref_feas.get("evidence_status") and val_r["overall_evidence_status"]:
+
+        ref_ev = ref_feas.get("evidence_status")
+        pred_ev = val_r["overall_evidence_status"]
+        has_abs = _case_has_supplied_abstracts(cid, ref)
+        if ref_ev and pred_ev:
             ev_status_agree[1] += 1
-            if val_r["overall_evidence_status"] == ref_feas["evidence_status"]:
+            if pred_ev == ref_ev:
                 ev_status_agree[0] += 1
+            if has_abs:
+                ev_with_abs_top[1] += 1
+                if pred_ev == ref_ev:
+                    ev_with_abs_top[0] += 1
+                ref_ccs = ref_feas.get("component_checks") or []
+                ref_weaklink = ref_ev
+                if ref_ev == "confirmed_in_context" and ref_ccs:
+                    if any(
+                        cc.get("evidence_status") != "confirmed_in_context"
+                        for cc in ref_ccs
+                        if cc.get("evidence_status") != "not_applicable"
+                    ):
+                        ref_weaklink = "adjacent_only"
+                ev_with_abs_weaklink[1] += 1
+                if pred_ev == ref_weaklink:
+                    ev_with_abs_weaklink[0] += 1
+            else:
+                ev_no_abs_closed_world[1] += 1
+                if pred_ev == "insufficient":
+                    ev_no_abs_closed_world[0] += 1
 
         if cid in ("C01", "C02", "C04", "C06", "C07"):
             diagnostics[cid] = {
+                "has_supplied_abstracts": has_abs,
                 "on_positive": {"pred": grounded_alt["on_positive"], "ref": ref_alt.get("on_positive")},
                 "on_negative_unconditional": grounded_alt["on_negative"],
                 "conditional_on_negative": grounded_alt["conditional_on_negative"],
                 "null_outcomes_count": len(grounded_alt.get("null_outcomes") or []),
-                "overall_evidence_status": {"pred": val_r["overall_evidence_status"], "ref": ref_feas.get("evidence_status")},
+                "overall_evidence_status": {"pred": pred_ev, "ref": ref_ev},
                 "min_readiness_score": val_r["min_readiness_score"],
                 "components": [(c["component"], c["evidence_status"]) for c in val_r["component_checks"]],
             }
@@ -343,6 +389,7 @@ def score_block_c_replies(
 
     return {
         "n_evaluated": n_eval,
+        "precision_status_agreement": _rate(prec_agree),
         "control_span_verbatim": {"matched": ctrl_quotes_ok[0], "total": ctrl_quotes_ok[1]},
         "component_quotes_verified": {"matched": comp_quotes_ok[0], "total": comp_quotes_ok[1]},
         "eliminated_with_loophole_violations": eliminated_with_loophole,
@@ -351,6 +398,9 @@ def score_block_c_replies(
         "on_null_contrast_aligned_agreement": _rate(null_effective_agree),
         "resource_tier_agreement": _rate(tier_agree),
         "overall_evidence_status_agreement": _rate(ev_status_agree),
+        "overall_evidence_with_abstracts_top_level": _rate(ev_with_abs_top),
+        "overall_evidence_with_abstracts_weaklink_aligned": _rate(ev_with_abs_weaklink),
+        "closed_world_no_abstracts_compliance": _rate(ev_no_abs_closed_world),
         "diagnostic_cases": diagnostics,
     }
 
@@ -374,6 +424,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     p_bc.add_argument("--dev60", type=Path, required=True, help="Path to working-dev60.json.")
     p_bc.add_argument("--cases", type=Path, required=True, help="Path to working-dev60-cases.json.")
     p_bc.add_argument("--abstracts", type=Path, default=None, help="Optional JSON map of PMID -> {title, abstract}.")
+    p_bc.add_argument("--tasks", type=Path, default=None, help="Optional task JSON file or directory to inspect supplied_abstracts per case.")
 
     args = parser.parse_args(argv)
     if args.mode == "normalize":
@@ -396,7 +447,8 @@ def main(argv: Optional[list[str]] = None) -> int:
         clist = cdata["cases"] if isinstance(cdata, dict) and "cases" in cdata else cdata
         cases_by_id = {str(c["case_id"]): c for c in clist}
         abs_map = json.loads(args.abstracts.read_text(encoding="utf-8")) if args.abstracts else {}
-        res = score_block_c_replies(replies, dev60, cases_by_id, abs_map)
+        tasks_by_id = {str(t["case_id"]): t for t in _load_reply_items(args.tasks, "cases")} if args.tasks else {}
+        res = score_block_c_replies(replies, dev60, cases_by_id, abs_map, tasks_by_id)
 
     print(json.dumps(res, ensure_ascii=False, indent=2))
     return 0

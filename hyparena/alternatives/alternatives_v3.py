@@ -139,16 +139,16 @@ def ground_discrimination_v4(
     if not ctrl_grounded:
         pos = "unchanged"
         neg = "unchanged"
-        cond_neg = "unchanged"
     else:
         if pos == "eliminated":
             if loophole or not ruled_out_why or not distinct_preds:
                 pos = "weakened"
-        if cond_neg in ("eliminated", "weakened") and not eng_grounded:
-            cond_neg = "unchanged"
         if neg in ("eliminated", "weakened"):
             if not eng_grounded or precision_status != "stated_for_contrast":
                 neg = "unchanged"
+
+    if cond_neg in ("eliminated", "weakened") and not eng_grounded:
+        cond_neg = "unchanged"
 
     if pos == neg == "eliminated":
         neg = "unchanged"

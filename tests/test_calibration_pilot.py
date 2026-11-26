@@ -761,6 +761,27 @@ def test_method_v4_block_c_templates_grounding_and_scorer():
     assert g["on_negative"] == "unchanged"
     assert g["conditional_on_negative"] == "weakened"
 
+    # 1b. Unblinded passive-control case (no bias-eliminating control_span, so on_positive='unchanged',
+    #     but grounded engagement preserves conditional_on_negative while keeping unconditional on_negative='unchanged')
+    g_unblinded = alternatives_v3.ground_discrimination_v4(
+        {
+            "alt_kind": "positive_confounder",
+            "control_span": "",
+            "target_engagement_span": "Verify target engagement via evoked potential shift at week 2",
+            "prediction_hypothesis": "Active > usual care",
+            "prediction_alternative": "Unblinded attention also yields Active > usual care",
+            "loophole": "No sham or blinded assessor.",
+            "on_positive": "unchanged",
+            "on_negative": "unchanged",
+            "conditional_on_negative": "weakened",
+        },
+        exp_text,
+        precision_status="missing",
+    )
+    assert g_unblinded["on_positive"] == "unchanged"
+    assert g_unblinded["on_negative"] == "unchanged"
+    assert g_unblinded["conditional_on_negative"] == "weakened"
+
     # 2. Component readiness downgrades unverified quote and computes weak-link min_readiness_score
     abs_map = {"10000001": {"title": "Prior study", "abstract": "Baseline tone was compared between young and older adults."}}
     comp_val = impl_mod.validate_components_v4(
