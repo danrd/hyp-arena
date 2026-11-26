@@ -711,4 +711,128 @@ def test_verify_claim_v23_template_and_ab_packet_scorer():
     assert r_score["post_enforce_guard"]["overall_accuracy"] == 1.0
 
 
+def test_method_v4_block_c_templates_grounding_and_scorer():
+    import jinja2
+    from hyparena.alternatives import alternatives_v3
+    from hyparena.reading import implementation as impl_mod
+    from scripts.calibration import score_ab_packets as sab
+
+    env = jinja2.Environment(
+        loader=jinja2.FileSystemLoader(str(REPO_ROOT / "hyparena" / "prompts")),
+        undefined=jinja2.StrictUndefined,
+    )
+    alt_t = env.get_template("propose_alternatives/v4.j2")
+    impl_t = env.get_template("implementation_readiness/v2.j2")
+    assert "conditional_on_negative" in alt_t.render(
+        as_of="2026-11-25",
+        claim_plain="c",
+        chain=[],
+        experiment="e",
+        registry_text="r",
+        abstracts=[],
+        relations="other",
+        history_text="",
+    )
+    assert "component_checks" in impl_t.render(
+        claim="c", interventions="i", system="human", exp_summary="s", exp_text="t", abstracts_block="a"
+    )
+
+    exp_text = (
+        "Randomize 60 older adults to active directional modulation, reversed control modulation, or sham for 12 weeks. "
+        "Verify target engagement via evoked potential shift at week 2 before interpreting walking speed at week 12."
+    )
+    # 1. Loophole caps eliminated -> weakened; missing precision caps unconditional on_negative -> unchanged while preserving conditional
+    g = alternatives_v3.ground_discrimination_v4(
+        {
+            "alt_kind": "positive_confounder",
+            "control_span": "Randomize 60 older adults to active directional modulation, reversed control modulation, or sham",
+            "target_engagement_span": "Verify target engagement via evoked potential shift at week 2",
+            "prediction_hypothesis": "Active > reversed",
+            "prediction_alternative": "Active == reversed > sham",
+            "loophole": "Electrode asymmetry could still differ.",
+            "loophole_ruled_out_why": "",
+            "on_positive": "eliminated",
+            "on_negative": "weakened",
+        },
+        exp_text,
+        precision_status="missing",
+    )
+    assert g["on_positive"] == "weakened"
+    assert g["on_negative"] == "unchanged"
+    assert g["conditional_on_negative"] == "weakened"
+
+    # 2. Component readiness downgrades unverified quote and computes weak-link min_readiness_score
+    abs_map = {"10000001": {"title": "Prior study", "abstract": "Baseline tone was compared between young and older adults."}}
+    comp_val = impl_mod.validate_components_v4(
+        {
+            "resource_tier": "4_clinical_in_vivo",
+            "overall_evidence_status": "adjacent_only",
+            "evidence_pmid": "10000001",
+            "evidence_quote": "Baseline tone was compared between young and older adults.",
+            "component_checks": [
+                {
+                    "component": "intervention_delivery",
+                    "target_system": "older adults",
+                    "evidence_status": "adjacent_only",
+                    "evidence_pmid": "10000001",
+                    "evidence_quote": "Baseline tone was compared between young and older adults.",
+                },
+                {
+                    "component": "critical_measurement_or_engagement",
+                    "target_system": "older adults",
+                    "evidence_status": "confirmed_in_context",
+                    "evidence_pmid": "10000001",
+                    "evidence_quote": "Fabricated quote absent from abstract.",
+                },
+            ],
+        },
+        abs_map,
+        experiment_text=exp_text,
+    )
+    assert comp_val["component_checks"][0]["evidence_status"] == "adjacent_only"
+    assert comp_val["component_checks"][1]["evidence_status"] == "insufficient"
+    assert comp_val["min_readiness_score"] == 0.0
+
+    # 3. End-to-end Block-C scorer on synthetic case
+    syn_case = _synthetic_case()
+    syn_ref = _synthetic_annotation_v1()
+    syn_ref["C"]["alternative"]["on_positive"] = "weakened"
+    syn_ref["C"]["feasibility"]["resource_tier"] = "4_clinical_in_vivo"
+    bc_res = sab.score_block_c_replies(
+        [
+            {
+                "case_id": "SYN01",
+                "precision_status": "stated_for_contrast",
+                "alternatives": [
+                    {
+                        "alt_kind": "positive_confounder",
+                        "control_span": "Randomize 60 older adults to active directional modulation, reversed control modulation, or sham",
+                        "target_engagement_span": "Verify target engagement via evoked potential shift at week 2",
+                        "prediction_hypothesis": "Active > reversed",
+                        "prediction_alternative": "Active == reversed",
+                        "loophole": "Minor electrode asymmetry.",
+                        "on_positive": "weakened",
+                        "on_negative": "unchanged",
+                    }
+                ],
+                "readiness": {
+                    "resource_tier": "4_clinical_in_vivo",
+                    "overall_evidence_status": "adjacent_only",
+                    "evidence_pmid": "10000001",
+                    "evidence_quote": "Baseline tone was compared between young and older adults.",
+                    "component_checks": [],
+                },
+            }
+        ],
+        [syn_ref],
+        {"SYN01": syn_case},
+        abs_map,
+    )
+    assert bc_res["n_evaluated"] == 1
+    assert bc_res["on_positive_agreement"]["rate"] == 1.0
+    assert bc_res["resource_tier_agreement"]["rate"] == 1.0
+    assert bc_res["overall_evidence_status_agreement"]["rate"] == 1.0
+
+
+
 

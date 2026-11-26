@@ -243,6 +243,118 @@ def score_reader_replies(
     }
 
 
+def score_block_c_replies(
+    replies: list[dict[str, Any]],
+    dev60_records: list[dict[str, Any]],
+    cases_by_id: dict[str, dict[str, Any]],
+    abstracts_by_pmid: Optional[dict[str, dict[str, Any]]] = None,
+) -> dict[str, Any]:
+    """Score Method v4 Block-C (alternatives + null outcomes + 3-component readiness) replies on the 25 deep cards."""
+    from hyparena.alternatives import alternatives_v3
+    from hyparena.reading import implementation as impl_mod
+
+    ref_by_id = {str(r["case_id"]): r for r in dev60_records}
+    abstracts_by_pmid = abstracts_by_pmid or {}
+
+    n_eval = 0
+    pos_agree = [0, 0]
+    null_uncond_agree = [0, 0]
+    null_effective_agree = [0, 0]  # compares conditional_on_negative when human annotated conditional null without precision
+    tier_agree = [0, 0]
+    ev_status_agree = [0, 0]
+    ctrl_quotes_ok = [0, 0]
+    comp_quotes_ok = [0, 0]
+    eliminated_with_loophole = 0
+    diagnostics: dict[str, Any] = {}
+
+    for item in replies:
+        cid = str(item.get("case_id") or item.get("id") or "")
+        if not cid or cid not in ref_by_id or cid not in cases_by_id:
+            continue
+        n_eval += 1
+        ref = ref_by_id[cid]
+        c_src = cases_by_id[cid]
+        exp_text = "\n".join(x for x in (c_src.get("claim"), c_src.get("rationale"), c_src.get("experiment")) if x)
+
+        prec_status = str(item.get("precision_status") or ref["C"]["adequacy"].get("precision_status") or "missing")
+        alts = item.get("alternatives") or []
+        primary_alt = alts[0] if alts else (item.get("primary_alternative") or {})
+        grounded_alt = alternatives_v3.ground_discrimination_v4(primary_alt, exp_text, precision_status=prec_status)
+
+        if (primary_alt.get("control_span") or "").strip():
+            ctrl_quotes_ok[1] += 1
+            if grounded_alt["control_span"]:
+                ctrl_quotes_ok[0] += 1
+        if grounded_alt["on_positive"] == "eliminated" and grounded_alt["loophole"]:
+            eliminated_with_loophole += 1
+
+        ref_alt = ref["C"]["alternative"]
+        if ref_alt.get("on_positive"):
+            pos_agree[1] += 1
+            if grounded_alt["on_positive"] == ref_alt["on_positive"]:
+                pos_agree[0] += 1
+
+        if ref_alt.get("on_null"):
+            null_uncond_agree[1] += 1
+            if grounded_alt["on_negative"] == ref_alt["on_null"]:
+                null_uncond_agree[0] += 1
+            # Human v1 pilot responses put conditional null in on_null when precision was missing;
+            # v1.1 rechecks put primary contrast null in null_outcomes[0] or on_null.
+            ref_prec = ref["C"]["adequacy"].get("precision_status")
+            eff_pred = grounded_alt["on_negative"] if ref_prec == "stated_for_contrast" else grounded_alt["conditional_on_negative"]
+            # Also match if primary contrast null_outcomes[0] matches ref on_null
+            no_list = grounded_alt.get("null_outcomes") or []
+            no0 = no_list[0].get("on_null") if no_list and isinstance(no_list[0], dict) else None
+            null_effective_agree[1] += 1
+            if ref_alt["on_null"] in {grounded_alt["on_negative"], eff_pred, no0}:
+                null_effective_agree[0] += 1
+
+        readiness_raw = item.get("readiness") if isinstance(item.get("readiness"), dict) else item
+        val_r = impl_mod.validate_components_v4(readiness_raw, abstracts_by_pmid, experiment_text=exp_text)
+        for cc in val_r["component_checks"]:
+            if cc["evidence_status"] in ("confirmed_in_context", "adjacent_only") or not cc["quote_ok"]:
+                comp_quotes_ok[1] += 1
+                if cc["quote_ok"]:
+                    comp_quotes_ok[0] += 1
+
+        ref_feas = ref["C"]["feasibility"]
+        if ref_feas.get("resource_tier") and val_r["resource_tier"]:
+            tier_agree[1] += 1
+            if val_r["resource_tier"] == ref_feas["resource_tier"]:
+                tier_agree[0] += 1
+        if ref_feas.get("evidence_status") and val_r["overall_evidence_status"]:
+            ev_status_agree[1] += 1
+            if val_r["overall_evidence_status"] == ref_feas["evidence_status"]:
+                ev_status_agree[0] += 1
+
+        if cid in ("C01", "C02", "C04", "C06", "C07"):
+            diagnostics[cid] = {
+                "on_positive": {"pred": grounded_alt["on_positive"], "ref": ref_alt.get("on_positive")},
+                "on_negative_unconditional": grounded_alt["on_negative"],
+                "conditional_on_negative": grounded_alt["conditional_on_negative"],
+                "null_outcomes_count": len(grounded_alt.get("null_outcomes") or []),
+                "overall_evidence_status": {"pred": val_r["overall_evidence_status"], "ref": ref_feas.get("evidence_status")},
+                "min_readiness_score": val_r["min_readiness_score"],
+                "components": [(c["component"], c["evidence_status"]) for c in val_r["component_checks"]],
+            }
+
+    def _rate(pair: list[int]) -> dict[str, Any]:
+        return {"agree": pair[0], "total": pair[1], "rate": round(pair[0] / pair[1], 4) if pair[1] else None}
+
+    return {
+        "n_evaluated": n_eval,
+        "control_span_verbatim": {"matched": ctrl_quotes_ok[0], "total": ctrl_quotes_ok[1]},
+        "component_quotes_verified": {"matched": comp_quotes_ok[0], "total": comp_quotes_ok[1]},
+        "eliminated_with_loophole_violations": eliminated_with_loophole,
+        "on_positive_agreement": _rate(pos_agree),
+        "on_null_unconditional_agreement": _rate(null_uncond_agree),
+        "on_null_contrast_aligned_agreement": _rate(null_effective_agree),
+        "resource_tier_agreement": _rate(tier_agree),
+        "overall_evidence_status_agreement": _rate(ev_status_agree),
+        "diagnostic_cases": diagnostics,
+    }
+
+
 def main(argv: Optional[list[str]] = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="mode", required=True)
@@ -257,6 +369,12 @@ def main(argv: Optional[list[str]] = None) -> int:
     p_read.add_argument("--replies", type=Path, required=True, help="Reply JSON file or directory of JSON files.")
     p_read.add_argument("--key", type=Path, required=True, help="Path to coordination/reader_key.json.")
 
+    p_bc = sub.add_parser("block_c", help="Score Method v4 Block-C (alternatives + readiness) replies on 25 deep cards.")
+    p_bc.add_argument("--replies", type=Path, required=True, help="Reply JSON file or directory of JSON files.")
+    p_bc.add_argument("--dev60", type=Path, required=True, help="Path to working-dev60.json.")
+    p_bc.add_argument("--cases", type=Path, required=True, help="Path to working-dev60-cases.json.")
+    p_bc.add_argument("--abstracts", type=Path, default=None, help="Optional JSON map of PMID -> {title, abstract}.")
+
     args = parser.parse_args(argv)
     if args.mode == "normalize":
         replies = _load_reply_items(args.replies, "cards")
@@ -266,11 +384,19 @@ def main(argv: Optional[list[str]] = None) -> int:
         cases_by_id = {str(c["case_id"]): c for c in clist}
         bchk = json.loads(args.baseline_check.read_text(encoding="utf-8")) if args.baseline_check else None
         res = score_normalize_replies(replies, dev60, cases_by_id, bchk)
-    else:
+    elif args.mode == "reader":
         replies = _load_reply_items(args.replies, "items")
         kdata = json.loads(args.key.read_text(encoding="utf-8"))
         key_by_id = {str(k["item_id"]): k for k in (kdata["items"] if isinstance(kdata, dict) and "items" in kdata else kdata)}
         res = score_reader_replies(replies, key_by_id)
+    else:
+        replies = _load_reply_items(args.replies, "cases")
+        dev60 = json.loads(args.dev60.read_text(encoding="utf-8"))
+        cdata = json.loads(args.cases.read_text(encoding="utf-8"))
+        clist = cdata["cases"] if isinstance(cdata, dict) and "cases" in cdata else cdata
+        cases_by_id = {str(c["case_id"]): c for c in clist}
+        abs_map = json.loads(args.abstracts.read_text(encoding="utf-8")) if args.abstracts else {}
+        res = score_block_c_replies(replies, dev60, cases_by_id, abs_map)
 
     print(json.dumps(res, ensure_ascii=False, indent=2))
     return 0

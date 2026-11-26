@@ -1,0 +1,36 @@
+List up to three substantive competing scientific explanations (alternatives) that matter for interpreting the stated decisive experiment on ageing (Method v4). Do not judge whether the hypothesis is true.
+Literature date: use only findings on or before {{ as_of }}.
+Hypothesis: {{ claim_plain }}
+Claimed chain:
+{% for c in chain %}- {{ c.subject.label }} — {{ c.relation }} — {{ c.object.label }}
+{% endfor %}
+Experiment summary for orientation: {{ experiment }}
+Author's original text:
+"""
+{{ registry_text or "unavailable" }}
+"""
+Abstracts available for supporting the alternative:
+{% for a in abstracts %}
+[PMID {{ a.pmid }}] {{ a.year }}. {{ a.title }}
+{{ a.abstract }}
+{% endfor %}
+Use the following closed list of relations: {{ relations }}. Cite support_pmids only from the supplied abstracts ([] when none). Leave generic methodological bias (blinding, attrition, randomization) to the separate design checklist unless the alternative names a specific biological/physical mechanism or co-intervention.
+
+Method v4 contrast-bound rules (complete in order for each alternative):
+1. First check whether a supplied paper directly contradicts a core link of the hypothesis on the exact same question; if so, note it in `rationale` rather than treating direct refutation as a competing confounder.
+2. Specify:
+   - `alt_kind`: "positive_confounder" (explains an apparent positive result without the claimed mechanism) | "negative_barrier" (explains why the intervention fails to show benefit despite the hypothesis mechanism being valid in principle).
+   - `contrast_id`: short identifier of the exact decisive comparison (e.g. "active_polarity_vs_reverse_polarity", "personalized_vs_yoked", "exercise_vs_usual_care").
+   - `control_span`: ONE contiguous verbatim phrase copied from the experimental part of the author's original text that names the active control, sham, crossover/factorial arm, or specific discriminating measurement. "" if absent.
+   - `target_engagement_span`: ONE contiguous verbatim phrase copied from the author's original text showing how the experiment verifies that the intervention actually engaged its target/field/pathway in the tested system. "" if absent.
+   - `prediction_hypothesis` and `prediction_alternative`: concrete observable predictions of the hypothesis vs this alternative on `contrast_id`.
+   - `loophole`: state how this alternative (or a physical/biological co-effect of the manipulation, such as electrode pH/ROS asymmetry when reversing polarity, off-target effects of an inducible knockout/construct, or non-depleted co-factors in conditioned medium) could STILL produce the predicted positive contrast under the stated protocol. Leave `loophole` as "" ONLY if no plausible biological/physical loophole remains AND explain why in `loophole_ruled_out_why`.
+3. Assign verdicts (`eliminated` | `weakened` | `unchanged`):
+   - `on_positive`: "eliminated" ONLY when `control_span` is verbatim, `prediction_hypothesis` and `prediction_alternative` differ on `contrast_id`, AND `loophole` is genuinely "" (with `loophole_ruled_out_why` filled). Whenever a plausible `loophole` remains, `on_positive` is at most "weakened". Without a discriminating `control_span`, use "unchanged".
+   - `on_negative` (primary contrast null) and `null_outcomes`: separate distinct null contrasts in `null_outcomes` (for example: 1) equality of two active arms while beating sham — compatible with a nonspecific `positive_confounder`, hence "unchanged"; vs 2) null of active arms against sham/placebo). Unconditional "weakened" or "eliminated" on a null requires BOTH verified target engagement (`target_engagement_span`) AND concrete stated precision/power (`precision_status == "stated_for_contrast"`). If target engagement is verified and the null contradicts `prediction_alternative`, but precision/power is unstated, put the conditional judgment in `conditional_on_negative` and explain the precision caveat in `null_outcomes[].why`.
+
+Reply with one JSON object in this field order:
+{"alternatives": [{"id": "p1", "subject": {"label": ""}, "relation": "other", "object": {"label": ""}, "qualifiers": {}, "rationale": "", "support_pmids": [], "alt_kind": "positive_confounder", "contrast_id": "", "control_span": "", "target_engagement_span": "", "prediction_hypothesis": "", "prediction_alternative": "", "loophole": "", "loophole_ruled_out_why": "", "on_positive": "unchanged", "on_negative": "unchanged", "conditional_on_negative": "unchanged", "null_outcomes": [{"contrast_id": "", "null_definition": "", "prediction_alternative": "", "on_null": "unchanged", "why": ""}]}]}
+{% if history_text %}
+{{ history_text }}
+{% endif %}

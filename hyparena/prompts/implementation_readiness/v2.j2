@@ -1,0 +1,45 @@
+You are assessing Method v4 execution readiness, resource tier, and diagnostic participant/model risk flags for ONE proposed biomedical experiment using ONLY the author's protocol text and the supplied pre-cutoff PubMed abstracts.
+
+Proposed hypothesis & experiment:
+- Claim: {{ claim }}
+- Intervention(s): {{ interventions }}
+- Experiment system: {{ system }}
+- Experiment summary: {{ exp_summary }}
+- Full experiment text: {{ exp_text }}
+
+Supplied pre-cutoff abstracts:
+{{ abstracts_block }}
+
+Method v4 rules (strict):
+1. `resource_tier`: classify the inherent resource class of the proposed experiment (this is a cost tier, NOT a quality penalty):
+   - "1_in_vitro": cultured cells, cell lines, yeast, organoids/co-cultures without human donor surgery, or pure data analysis;
+   - "2_animal": C. elegans, Drosophila, mice, rats, or other non-human animal in vivo / ex vivo studies;
+   - "3_human_ex_vivo_or_pilot": discarded human surgical explants/biopsies ex vivo, or a small short-term human physiological pilot;
+   - "4_clinical_in_vivo": interventional human clinical trial in vivo.
+2. Evaluate THREE distinct execution components in `component_checks` (do NOT let proof of one component fill the others):
+   - `intervention_delivery`: has the specific drug/vector/device/exercise regimen been delivered by the stated route/protocol?
+   - `system_or_population_fit`: has it been applied in the exact target population/subgroup/tissue state (e.g. older women with preserved bladder emptying vs broader OAB; exact squat regimen in pre-sarcopenia vs general resistance exercise)?
+   - `critical_measurement_or_engagement`: is the decisive assay / target-engagement measurement demonstrated in that tissue/setting (e.g. patch-clamp BK currents on post-cystometry human detrusor biopsy myocytes; direct intraepidermal voltage micro-sensing in aged human skin explants)?
+   For each component set `evidence_status` from:
+   - "confirmed_in_context": demonstrated in a supplied abstract in the SAME system, subgroup, and operating condition (requires verbatim `evidence_quote` + `evidence_pmid`);
+   - "adjacent_only": demonstrated only for a broader class, adjacent population/species, or partial step (requires verbatim `evidence_quote` + `evidence_pmid`);
+   - "insufficient": named without supplied empirical demonstration in context (leave `evidence_quote` empty "");
+   - "not_applicable": genuinely not required by the protocol.
+3. `overall_evidence_status`: summarize the experiment's limiting readiness across the applicable components ("confirmed_in_context" only when ALL indispensable components are confirmed_in_context; "adjacent_only" when supported at least in adjacent context without an unbuilt/unverified bottleneck, or when the primary tool is demonstrated in an adjacent clinical/experimental context; "insufficient" when no supplied abstract demonstrates even adjacent use of the core tool/means).
+4. `external_validity_flags` (subset of ["single_sex", "young_healthy_for_ageing", "nam_systemic_extrapolation", "unvalidated_surrogate", "prognostic_vs_predictive_conflation"]) and `safety_flags` (subset of ["on_target_pleiotropy", "irreversible_no_ltfu", "unjustified_risk_in_healthy_older", "missing_diseased_organ_model"]): include ONLY flags substantiated by the protocol or supplied abstracts.
+
+Return ONLY one JSON object:
+{
+  "resource_tier": "1_in_vitro | 2_animal | 3_human_ex_vivo_or_pilot | 4_clinical_in_vivo",
+  "overall_evidence_status": "confirmed_in_context | adjacent_only | insufficient | not_applicable",
+  "evidence_pmid": "",
+  "evidence_quote": "",
+  "component_checks": [
+    {"component": "intervention_delivery", "target_system": "", "evidence_status": "insufficient", "evidence_pmid": "", "evidence_quote": "", "notes": ""},
+    {"component": "system_or_population_fit", "target_system": "", "evidence_status": "insufficient", "evidence_pmid": "", "evidence_quote": "", "notes": ""},
+    {"component": "critical_measurement_or_engagement", "target_system": "", "evidence_status": "insufficient", "evidence_pmid": "", "evidence_quote": "", "notes": ""}
+  ],
+  "external_validity_flags": [],
+  "safety_flags": [],
+  "tradeoff": ""
+}

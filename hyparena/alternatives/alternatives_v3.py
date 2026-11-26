@@ -97,6 +97,75 @@ def screen_contradicting_pmids(raw: dict, ver_claims: list) -> dict:
     }
 
 
+def ground_discrimination_v4(
+    raw: dict,
+    experiment_text: str,
+    *,
+    precision_status: str = "missing",
+) -> dict:
+    """Method v4 deterministic grounding for competing alternatives and multi-contrast nulls:
+    1. Requires verbatim `control_span` in `experiment_text` for any credit (`weakened`/`eliminated`).
+    2. `on_positive == 'eliminated'` requires distinct `prediction_hypothesis` vs `prediction_alternative`,
+       empty `loophole`, AND non-empty `loophole_ruled_out_why`; otherwise capped at `'weakened'`.
+    3. Unconditional `on_negative` credit (`weakened`/`eliminated`) requires BOTH a verbatim
+       `target_engagement_span` grounded in `experiment_text` AND `precision_status == 'stated_for_contrast'`;
+       when engagement is grounded and the null contradicts `prediction_alternative` (or `conditional_on_negative`
+       is set) while precision is missing/general, preserves the conditional verdict in `conditional_on_negative`
+       and sets unconditional `on_negative = 'unchanged'`.
+    """
+    norm_exp = _norm(experiment_text or "")
+    cspan = (raw.get("control_span") or "").strip() if isinstance(raw.get("control_span"), str) else ""
+    ctrl_grounded = bool(cspan) and _norm(cspan) in norm_exp
+
+    espan = (raw.get("target_engagement_span") or "").strip() if isinstance(raw.get("target_engagement_span"), str) else ""
+    eng_grounded = bool(espan) and _norm(espan) in norm_exp
+
+    loophole = (raw.get("loophole") or "").strip() if isinstance(raw.get("loophole"), str) else ""
+    ruled_out_why = (raw.get("loophole_ruled_out_why") or "").strip() if isinstance(raw.get("loophole_ruled_out_why"), str) else ""
+    pred_h = (raw.get("prediction_hypothesis") or "").strip() if isinstance(raw.get("prediction_hypothesis"), str) else ""
+    pred_a = (raw.get("prediction_alternative") or "").strip() if isinstance(raw.get("prediction_alternative"), str) else ""
+    distinct_preds = bool(pred_h and pred_a and _norm(pred_h) != _norm(pred_a))
+
+    pos = str(raw.get("on_positive") or "unchanged").strip()
+    neg = str(raw.get("on_negative") or "unchanged").strip()
+    cond_neg = str(raw.get("conditional_on_negative") or neg or "unchanged").strip()
+    if pos not in ("eliminated", "weakened", "unchanged"):
+        pos = "unchanged"
+    if neg not in ("eliminated", "weakened", "unchanged"):
+        neg = "unchanged"
+    if cond_neg not in ("eliminated", "weakened", "unchanged"):
+        cond_neg = "unchanged"
+
+    if not ctrl_grounded:
+        pos = "unchanged"
+        neg = "unchanged"
+        cond_neg = "unchanged"
+    else:
+        if pos == "eliminated":
+            if loophole or not ruled_out_why or not distinct_preds:
+                pos = "weakened"
+        if cond_neg in ("eliminated", "weakened") and not eng_grounded:
+            cond_neg = "unchanged"
+        if neg in ("eliminated", "weakened"):
+            if not eng_grounded or precision_status != "stated_for_contrast":
+                neg = "unchanged"
+
+    if pos == neg == "eliminated":
+        neg = "unchanged"
+
+    return {
+        **raw,
+        "control_span": cspan if ctrl_grounded else "",
+        "target_engagement_span": espan if eng_grounded else "",
+        "loophole": loophole,
+        "loophole_ruled_out_why": ruled_out_why,
+        "on_positive": pos,
+        "on_negative": neg,
+        "conditional_on_negative": cond_neg,
+        "precision_status_used": precision_status,
+    }
+
+
 def propose(client, family: str, card: HypothesisCard, abstracts: dict[str, dict], as_of: Optional[str],
             avoid=frozenset(), log: Optional[list] = None, version: str = "v1",
             registry_text: str = "") -> list[ProposedAlternative]:

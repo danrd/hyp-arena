@@ -218,3 +218,107 @@ def assess(
             "error": getattr(reply, "error", None),
         })
     return checked
+
+
+COMPONENT_SCORE_V4 = {
+    "confirmed_in_context": 1.0,
+    "adjacent_only": 0.5,
+    "insufficient": 0.0,
+}
+
+
+def validate_components_v4(
+    value: Optional[dict],
+    supplied: dict[str, dict],
+    experiment_text: str = "",
+) -> dict:
+    """Method v4 component-level readiness validator (`implementation_readiness/v2`).
+
+    Verifies verbatim quotes for each component (`confirmed_in_context` / `adjacent_only`),
+    downgrading unverified quotes to `insufficient`, and computes both `min_readiness_score`
+    (weak-link score across applicable components) and `primary_tool_status` (for comparison
+    against single-status human `C.feasibility.evidence_status`).
+    """
+    if not isinstance(value, dict):
+        return {
+            "resource_tier": None,
+            "overall_evidence_status": "insufficient",
+            "min_readiness_score": 0.0,
+            "mean_readiness_score": 0.0,
+            "component_checks": [],
+            "external_validity_flags": [],
+            "safety_flags": [],
+        }
+
+    norm_exp = _norm(experiment_text or "")
+
+    def _quote_verified(pmid: str, qt: str) -> bool:
+        q_norm = _norm(qt or "")
+        if not q_norm:
+            return False
+        pm = str(pmid or "").strip().removeprefix("PMID:").strip()
+        if pm and pm in supplied:
+            rec = supplied[pm]
+            if any(q_norm in _norm(rec.get(f) or "") for f in ("title", "abstract")):
+                return True
+        if norm_exp and q_norm in norm_exp:
+            return True
+        return False
+
+    checked_comps: list[dict] = []
+    comp_scores: list[float] = []
+    for cc in value.get("component_checks") or []:
+        if not isinstance(cc, dict):
+            continue
+        st = str(cc.get("evidence_status") or "insufficient").strip()
+        if st not in ("confirmed_in_context", "adjacent_only", "insufficient", "not_applicable"):
+            st = "insufficient"
+        pm = str(cc.get("evidence_pmid") or "").strip().removeprefix("PMID:").strip()
+        qt = str(cc.get("evidence_quote") or "").strip()
+        q_ok = True
+        if st in ("confirmed_in_context", "adjacent_only"):
+            q_ok = _quote_verified(pm, qt)
+            if not q_ok:
+                st = "insufficient"
+        if st in COMPONENT_SCORE_V4:
+            comp_scores.append(COMPONENT_SCORE_V4[st])
+        checked_comps.append(
+            {
+                "component": str(cc.get("component") or ""),
+                "target_system": str(cc.get("target_system") or ""),
+                "evidence_status": st,
+                "evidence_pmid": pm if q_ok else "",
+                "evidence_quote": qt if q_ok else "",
+                "quote_ok": q_ok,
+                "notes": str(cc.get("notes") or ""),
+            }
+        )
+
+    min_score = round(min(comp_scores), 3) if comp_scores else 0.0
+    mean_score = round(sum(comp_scores) / len(comp_scores), 3) if comp_scores else 0.0
+
+    raw_overall = str(value.get("overall_evidence_status") or "insufficient").strip()
+    if raw_overall not in ("confirmed_in_context", "adjacent_only", "insufficient", "not_applicable"):
+        raw_overall = "insufficient"
+    ov_pm = str(value.get("evidence_pmid") or "").strip().removeprefix("PMID:").strip()
+    ov_qt = str(value.get("evidence_quote") or "").strip()
+    if raw_overall in ("confirmed_in_context", "adjacent_only"):
+        if not (_quote_verified(ov_pm, ov_qt) or any(c["evidence_status"] in ("confirmed_in_context", "adjacent_only") for c in checked_comps)):
+            raw_overall = "insufficient"
+        elif raw_overall == "confirmed_in_context" and any(c["evidence_status"] != "confirmed_in_context" for c in checked_comps if c["evidence_status"] != "not_applicable"):
+            raw_overall = "adjacent_only"
+
+    tier = value.get("resource_tier")
+    if tier not in ("1_in_vitro", "2_animal", "3_human_ex_vivo_or_pilot", "4_clinical_in_vivo"):
+        tier = None
+
+    return {
+        "resource_tier": tier,
+        "overall_evidence_status": raw_overall,
+        "min_readiness_score": min_score,
+        "mean_readiness_score": mean_score,
+        "component_checks": checked_comps,
+        "external_validity_flags": [str(x) for x in (value.get("external_validity_flags") or []) if isinstance(x, str)],
+        "safety_flags": [str(x) for x in (value.get("safety_flags") or []) if isinstance(x, str)],
+        "tradeoff": str(value.get("tradeoff") or ""),
+    }
