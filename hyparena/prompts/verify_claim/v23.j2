@@ -1,0 +1,25 @@
+{% extends "verify_claim/v21.j2" %}
+{% block weight_quote_schema %}, "weight_quotes": {}, "actual_contrast": "", "actual_system": "", "actual_outcome": "", "relation_to_claim": "related", "study_mode": "unknown", "worst_domain_risk": "unknown"{% endblock %}
+{% block weight_quote_instructions %}
+For each record, add short verbatim fragments from the supplied abstract under "weight_quotes" when supported:
+- design: the actual study type, allocation, or experimental system;
+- precision: the sample for this result (reuse n_quote when present);
+- effect: the size or direction of the same result, including a null result when reported;
+- comparison: the actual comparison (for example the intervention and control groups);
+- context: the intervention, population, species, or other condition that explains the relevant match or mismatch.
+
+Calibration v23 two-step relation rules (mandatory for every record):
+1. First extract what the paper ACTUALLY tested before classifying its relation to the claim:
+   - actual_contrast: the exact groups, doses, or conditions compared in the quoted result;
+   - actual_system: the exact species, sex, disease/age state, and in_vivo/ex_vivo/in_vitro setting;
+   - actual_outcome: the exact endpoint/measure reported for that comparison.
+2. Then set relation_to_claim from ["direct_support", "direct_contradiction", "related", "irrelevant", "insufficient"]:
+   - "direct_support": the study tests the SAME causal question (matching intervention, species/sex/population context, comparison, and outcome or a narrower measure of it) and supports the claimed direction.
+   - "direct_contradiction": the study tests the SAME causal question (matching intervention, species/sex/population context, comparison, and outcome) in a controlled comparison and shows no effect (with stated sample/design) or the opposite direction. NEVER use "direct_contradiction" when the species, sex, disease population, endpoint metric (e.g. 90th-percentile mortality vs median survival when only one failed), or causal question differs (e.g. testing necessity via knockout/impairment does NOT directly contradict a claim about additive gain from restoration).
+   - "related": adjacent evidence — background mechanism, another species or sex, another disease population (e.g. myasthenia gravis for a sarcopenia-blocking interaction claim), general uncalibrated stimulation vs polarity/personalization contrast, or an observational post-randomization biomarker correlation when the randomized dose contrast itself was null.
+   - "irrelevant": does not bear on the claim's entities or mechanism.
+   - "insufficient": abstract lacks enough information on comparison or result to classify.
+3. Also record:
+   - study_mode: "confirmatory" (pre-specified multi-site trial, phase 2/3 RCT on primary outcome, or explicit replication) | "exploratory" (discovery/mechanistic experiment, post-hoc/secondary subgroup, observational association) | "unknown";
+   - worst_domain_risk: "low" | "some_concerns" | "high" | "unknown" | "not_applicable" (RoB 2 / ROBINS-I / SYRCLE style risk of bias for this specific result, judged separately from relation_to_claim).
+{% endblock %}

@@ -627,3 +627,88 @@ def test_strict_candidate_mutations_and_v19_contrast_extractor():
     assert "novel_contribution" in card.claims[1].chain_roles
 
 
+def test_verify_claim_v23_template_and_ab_packet_scorer():
+    import jinja2
+    from scripts.calibration import score_ab_packets as sab
+
+    env = jinja2.Environment(
+        loader=jinja2.FileSystemLoader(str(REPO_ROOT / "hyparena" / "prompts")),
+        undefined=jinja2.StrictUndefined,
+    )
+    tmpl = env.get_template("verify_claim/v23.j2")
+    from hyparena.card.models import Claim
+
+    rendered = tmpl.render(
+        claim_plain="Test claim.",
+        population="older adults",
+        intervention="compound X",
+        comparator="placebo",
+        claim=Claim(id="c1", subject="compound X", relation="improves_healthspan_in", object="human", role="outcome"),
+        qualifiers="species: human",
+        outcome_label="walking speed",
+        alternative=False,
+        competitor=False,
+        contrast="",
+        negated=False,
+        endpoint="healthspan",
+        human_healthspan=True,
+        abstracts=[{"pmid": "10000001", "year": "2024", "review": False, "title": "Trial", "abstract": "Randomized trial."}],
+        history_text="",
+    )
+    assert "relation_to_claim" in rendered
+    assert "actual_contrast" in rendered
+
+    # Test normalize scorer on synthetic reply + synthetic dev60 reference
+    syn_case = _synthetic_case()
+    syn_ref = _synthetic_annotation_v1()
+    reply_card = _synthetic_v313_case()["card"]
+    reply_card["claims"][0]["source_span"] = "direct causal specificity remains untested."
+    reply_card["claims"][0]["chain_roles"] = ["mechanism", "novel_contribution"]
+    reply_card["claims"][1]["source_span"] = "targeted pathway modulation improves walking speed relative to sham stimulation."
+    reply_card["claims"][1]["chain_roles"] = ["outcome"]
+    reply_card["decisive_experiment"]["decisive_contrast_span"] = (
+        "Randomize 60 older adults to active directional modulation, reversed control modulation, or sham for 12 weeks."
+    )
+    norm_score = sab.score_normalize_replies(
+        [{"case_id": "SYN01", "card": reply_card}],
+        [syn_ref],
+        {"SYN01": syn_case},
+        {"rows": [{"case_id": "SYN01", "contrast": {"reference_eligible": True, "reference": reply_card["decisive_experiment"]["decisive_contrast_span"]}}]},
+    )
+    assert norm_score["n_evaluated_cards"] == 1
+    assert norm_score["role_overlap"]["novel_claim"]["role_overlap"] == 1
+    assert norm_score["decisive_contrast"]["v19_overlap"] == 1
+
+    # Test reader scorer including enforce_relation_to_claim downgrade on mismatched species
+    key = {
+        "Q01": {"item_id": "Q01", "subset": "anchor_support", "pmid": "111", "expected_relation": "direct_support", "claim_role": "outcome"},
+        "Q02": {"item_id": "Q02", "subset": "anchor_trap", "pmid": "222", "expected_relation": "related", "claim_role": "outcome"},
+    }
+    reader_replies = [
+        {
+            "item_id": "Q01",
+            "actual_contrast": "X vs placebo",
+            "actual_system": "older adults",
+            "actual_outcome": "walking speed",
+            "species": "human",
+            "qualifiers_match": {"species_match": "yes", "intervention_match": "exact"},
+            "outcome_match": "same",
+            "relation_to_claim": "direct_support",
+        },
+        {
+            "item_id": "Q02",
+            "actual_contrast": "X vs vehicle in mice",
+            "actual_system": "aged mice",
+            "actual_outcome": "grip strength",
+            "species": "mouse",
+            "qualifiers_match": {"species_match": "no", "intervention_match": "exact"},
+            "outcome_match": "same",
+            "relation_to_claim": "direct_contradiction",  # model mistake caught by enforce_relation_to_claim!
+        },
+    ]
+    r_score = sab.score_reader_replies(reader_replies, key)
+    assert r_score["raw_model"]["overall_accuracy"] == 0.5
+    assert r_score["post_enforce_guard"]["overall_accuracy"] == 1.0
+
+
+
