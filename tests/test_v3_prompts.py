@@ -61,3 +61,50 @@ def test_numbers_written_in_words_are_accepted():
     v3_fields(rec, {"n_total": 163, "n_quote": "One hundred and sixty-three outpatients"},
               "METHODS: One hundred and sixty-three outpatients with stable chronic heart failure were enrolled.")
     assert rec.n_total == 163
+
+
+def test_generation_v4_extends_v3_cleanly():
+    from scripts.argon.generation_tasks import _pmids, build_v3, build_v4, format_problems
+
+    a3 = build_v3("a3", "2026-11-27", write=False)
+    bs3 = build_v3("bs3", "2026-11-27", write=False)
+    a4 = build_v4("a4", "2026-11-27", write=False)
+    bs4 = build_v4("bs4", "2026-11-27", write=False)
+
+    # v3 baseline remains free of v4 unresolved_problem field
+    assert "unresolved_problem" not in a3["answer_format"]["hypotheses"][0]
+    assert "unresolved_problem" not in bs3["answer_format"]["hypotheses"][0]
+
+    # v4 adds exactly the 2 shared requirements (pool diversity + unresolved problem) identically to A4 and BS4
+    a4_extra = [x for x in a4["instructions"] if x not in a3["instructions"]]
+    bs4_extra = [x for x in bs4["instructions"] if x not in bs3["instructions"]]
+    assert len(a4_extra) == 2 and a4_extra == bs4_extra
+    assert "fundamentally different" in a4_extra[0]
+    assert "unresolved_problem" in a4_extra[1]
+
+    # BS4 differs from A4 solely by the BS card+check block
+    assert "card" not in a4["answer_format"]["hypotheses"][0]
+    assert "card" in bs4["answer_format"]["hypotheses"][0] and "check" in bs4["answer_format"]["hypotheses"][0]
+
+    # Validator checks unresolved_problem fields and extracts PMIDs
+    sample = {
+        "hypotheses": [
+            {
+                "id": f"A4{i}",
+                "claim": "c",
+                "rationale": "r",
+                "experiment": "e",
+                "relies_on": [],
+                "unresolved_problem": {
+                    "problem": "p",
+                    "why_unsolved_before_T": "w",
+                    "how_this_helps": "h",
+                    "papers": [{"pmid": "24866862", "title": "LIFE study"}],
+                },
+            }
+            for i in range(1, 6)
+        ]
+    }
+    assert format_problems("a4", sample) == []
+    assert ("24866862", "LIFE study", "unresolved_problem") in _pmids(sample["hypotheses"][0])
+

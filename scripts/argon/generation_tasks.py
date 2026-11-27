@@ -268,6 +268,61 @@ def build_v3(participant: str, as_of: str, topic: str = TOPIC, n: int = N, write
     return task
 
 
+# Generation prompt v4 (2026-11-27):
+# v3 (A3 / BS3) is the baseline. v4 (A4 / BS4) adds two focused requirements on top of v3, identical in A4 and BS4:
+#   1) Fundamentally distinct hypotheses across the pool (no shared target/channel family, organ/syndrome, or core mechanism).
+#   2) Mandatory statement of the concrete unresolved pre-T problem each hypothesis helps solve (backed by pre-T PubMed paper(s),
+#      recorded in `unresolved_problem` and stated concisely in `rationale`).
+UNRESOLVED_PROBLEM_V4 = {
+    "problem": "",
+    "why_unsolved_before_T": "",
+    "how_this_helps": "",
+    "papers": [_REF],
+}
+
+
+def _v4_extra_block(n: int = N) -> list[str]:
+    return [
+        f"Make the {_words(n)} hypotheses in this pool fundamentally different from one another: no two hypotheses may share "
+        "the same molecular target or channel/junction family, the same organ or clinical syndrome, or the same core causal "
+        "mechanism. Across the pool, span genuinely distinct biological levers and intervention modalities within the topic.",
+        "For every hypothesis, explicitly state which concrete unresolved biomedical or clinical problem documented before T "
+        "it helps solve: what fails, stalls, or remains unanswered in existing evidence or prior interventions (citing at least "
+        "one real pre-T PubMed paper), and which exact part of that unresolved problem a positive result of the proposed "
+        "experiment would resolve (stating honestly if the experiment tests a prerequisite step rather than solving the clinical "
+        "problem directly). Record this in `unresolved_problem` and include it concisely in `rationale`.",
+    ]
+
+
+def build_v4(participant: str, as_of: str, topic: str = TOPIC, n: int = N, write: bool = True, guard: bool = True) -> dict:
+    """Build generation prompt v4 ('a4' or 'bs4'): v3 baseline + pool-level mechanistic diversity + mandatory unresolved problem."""
+    if participant not in ("a4", "bs4"):
+        raise ValueError(f"participant must be 'a4' or 'bs4', got {participant!r}")
+    extra_instr = _bs3_spec(n) if participant == "bs4" else []
+    fields = {"card": CARD_V3, "check": CHECK_V3} if participant == "bs4" else {}
+    task = {
+        "task": f"generation_{participant.upper()}",
+        "cover": COVER,
+        "topic": topic,
+        "T": as_of,
+        "n": n,
+        "instructions": [base(n, guard)] + V3_SHARED_BLOCK + _v4_extra_block(n) + extra_instr + COMMON,
+        "answer_format": {
+            "hypotheses": [
+                {
+                    **HYP,
+                    "id": f"{participant.upper()}1",
+                    "unresolved_problem": UNRESOLVED_PROBLEM_V4,
+                    **fields,
+                }
+            ]
+        },
+    }
+    if write:
+        _write(participant, task)
+    return task
+
+
 def build_b_generate(as_of: str) -> dict:
     """B = A + our card specification (pilot of 2026-11-16): the same request as A, plus the structured card. No manual and
     no hint of what the method values, so B differs from A only by the structure. The steps of the method (scoring) and the
@@ -367,6 +422,8 @@ def _pmids(h: dict) -> list[tuple[str, str, str]]:
             for side in ("for", "against") for p in st.get(side) or []]
     out += [(p.get("pmid", ""), p.get("title", ""), "check_against_whole") for p in chk.get("against_whole") or []]
     out += [(p.get("pmid", ""), p.get("title", ""), "check_tested") for p in (chk.get("tested_before_T") or {}).get("papers") or []]
+    prob = h.get("unresolved_problem") or {}
+    out += [(p.get("pmid", ""), p.get("title", ""), "unresolved_problem") for p in prob.get("papers") or []]
     return [(str(p).strip(), t, w) for p, t, w in out if str(p).strip().isdigit()]
 
 
@@ -415,12 +472,18 @@ def format_problems(kind: str, ans: dict) -> list[str]:
         return [f'"{key}" must be a non-empty list']
     out = []
     n = json.loads((DIR / f"task_{task_kind}.json").read_text()).get("n", N) if (DIR / f"task_{task_kind}.json").exists() else N
-    if kind in PARTICIPANTS and len(items) != n:
+    if kind in (*PARTICIPANTS, "a3", "bs3", "a4", "bs4") and len(items) != n:
         out.append(f"{len(items)} hypotheses, {n} asked")
     for h in items:
         if kind != "reports" and not all(h.get(k) for k in ("claim", "rationale", "experiment")):
             out.append(f"{h.get('id')}: claim, rationale and experiment must be filled")
-        if kind not in ("a", "s", "bs") and not (kind == "b" and _b_generate_only()) and not isinstance(h.get("report"), dict):
+        if kind in ("a4", "bs4"):
+            up = h.get("unresolved_problem") or {}
+            if not all((up.get(k) or "").strip() for k in ("problem", "why_unsolved_before_T", "how_this_helps")):
+                out.append(f"{h.get('id')}: unresolved_problem fields must be filled")
+            if not any(str(p.get("pmid", "")).strip().isdigit() for p in (up.get("papers") or [])):
+                out.append(f"{h.get('id')}: unresolved_problem must cite at least one pre-T PMID")
+        if kind not in ("a", "s", "bs", "a3", "bs3", "a4", "bs4") and not (kind == "b" and _b_generate_only()) and not isinstance(h.get("report"), dict):
             out.append(f"{h.get('id')}: no report")
         if kind in ("c", "d") and not h.get("parent"):
             out.append(f"{h.get('id')}: no parent")
@@ -458,9 +521,9 @@ def check(kind: str, as_of: str | None = None) -> dict:
                             "after_T": sum(r["exists"] and not r["before_T"] for r in refs),
                             "title_wrong": sum(r["title_matches"] is False for r in refs),
                             "quotes": {q: quotes.count(q) for q in set(quotes)},
-                            "card_problems": card_problems(h.get("card") or {}) if kind not in ("a", "s") else [],
-                            "check_problems": check_problems(h.get("check") or {}, h.get("card") or {} if kind == "bs" else None)
-                            if kind in ("s", "bs") else [], "refs": refs}
+                            "card_problems": card_problems(h.get("card") or {}) if kind not in ("a", "s", "a3", "a4") else [],
+                            "check_problems": check_problems(h.get("check") or {}, h.get("card") or {} if kind in ("bs", "bs3", "bs4") else None)
+                            if kind in ("s", "bs", "bs3", "bs4") else [], "refs": refs}
     total = sum(v["papers"] for v in per.values())
     over = [h.get("id") for h in items if len(_text(h)) > MAX_CHARS * 1.1] if "claim" in (items[0] if items else {}) else []
     res = {"kind": file_kind, "T": T, "format_problems": format_problems(file_kind, ans), "hypotheses": per, "over_length": over,
@@ -658,8 +721,8 @@ def main(argv=None) -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("cmd", choices=["build", "score", "analyze", "report", "compare-argon", "build-a", "build-b", "build-b-generate", "build-reports", "build-evolve", "check", "collect"])
     ap.add_argument("--arm", choices=["C", "D"])
-    ap.add_argument("--kind", choices=["a", "b", "s", "bs", "a_noguard", "bs_noguard", "reports", "c", "d"])
-    ap.add_argument("--participant", choices=[*PARTICIPANTS, "a3", "bs3"], help="build: a (base), b (+ card), s (+ steps), bs (+ card and steps), a3/bs3 (v3 prompts)")
+    ap.add_argument("--kind", choices=["a", "b", "s", "bs", "a3", "bs3", "a4", "bs4", "a_noguard", "bs_noguard", "reports", "c", "d"])
+    ap.add_argument("--participant", choices=[*PARTICIPANTS, "a3", "bs3", "a4", "bs4"], help="build: a/b/s/bs, a3/bs3 (v3 baseline), a4/bs4 (v4 prompts)")
     ap.add_argument("--topic", default=TOPIC)
     ap.add_argument("--n", type=int, default=N)
     ap.add_argument("--files", nargs="*", default=[], help="analyze: participant=score file, e.g. A=score_a_v2.json")
@@ -683,6 +746,8 @@ def main(argv=None) -> None:
     if a.cmd == "build":
         if a.participant in ("a3", "bs3"):
             t = build_v3(a.participant, a.as_of, a.topic, a.n, guard=not a.no_guard)
+        elif a.participant in ("a4", "bs4"):
+            t = build_v4(a.participant, a.as_of, a.topic, a.n, guard=not a.no_guard)
         else:
             t = build(a.participant, a.as_of, a.topic, a.n, guard=not a.no_guard)
     elif a.cmd == "build-a":
