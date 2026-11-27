@@ -152,6 +152,7 @@ def data(rep: dict) -> dict:
             "aspid": {p: {"score": x["aspid"].get(p), "place": x["rank"].get(p), "of": n_ranked[p], "p_top5": x["p_top5"].get(p)}
                       for p in profiles},
             "drift": drift_of.get(h),
+            "cluster_id": x.get("cluster_id"), "cluster_peers": x.get("cluster_peers") or [],
             "text": x.get("text", ""), "card_view": x.get("card_view"),
         })
         base["cover"] = x.get("coverage_counts") or slot_coverage(base["links"])
@@ -186,6 +187,7 @@ def data(rep: dict) -> dict:
                   "ind": {RESULT_KEY.get(k, k): _ind_name(k) for k in RESULT_KEY}},
         "tips": {k: rh.t_ru(v) for k, v in {**rh.TIPS, **rh.GLOSSARY_EXTRA}.items() if k not in hidden},
         "results": results, "pubmed": sorted(pubmed.values(), key=lambda e: e["pmid"]), "glossary": glossary,
+        "clusters": rep.get("clusters") or [], "top_distinct": rep.get("top_distinct") or {},
     }
 
 

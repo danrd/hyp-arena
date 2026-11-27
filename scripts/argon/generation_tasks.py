@@ -534,7 +534,9 @@ def check(kind: str, as_of: str | None = None) -> dict:
 
 
 def _text(h: dict) -> str:
-    return f"{h['claim']}\n{h['rationale']}\n{h['experiment']}"
+    from hyparena.card.normalizer import strip_inline_citations
+    parts = [strip_inline_citations(h.get(k, "") or "") for k in ("claim", "rationale", "experiment")]
+    return "\n".join(parts)
 
 
 def _terms(card: dict) -> list[str]:
@@ -546,12 +548,14 @@ def collect(writer_family: str) -> dict:
     a = json.loads((DIR / "answer_a.json").read_text())["hypotheses"]
     reps = {r["id"]: r for r in json.loads((DIR / "answer_reports.json").read_text())["reports"]} \
         if (DIR / "answer_reports.json").exists() else {}
+    from hyparena.card.normalizer import strip_inline_citations
     arms = {"A": [{"id": h["id"], "parent": None, "text": _text(h), "terms": _terms((reps.get(h["id"]) or {}).get("card") or {}),
-                   **{k: h.get(k, "") for k in ("claim", "rationale", "experiment")}} for h in a]}
-    for arm, f in (("B", "answer_b.json"), ("S", "answer_s.json"), ("BS", "answer_bs.json"), ("C", "answer_c.json"), ("D", "answer_d.json")):
+                   **{k: strip_inline_citations(h.get(k, "")) for k in ("claim", "rationale", "experiment")}} for h in a]}
+    for arm, f in (("B", "answer_b.json"), ("S", "answer_s.json"), ("BS", "answer_bs.json"), ("C", "answer_c.json"), ("D", "answer_d.json"),
+                   ("A3", "answer_a3.json"), ("BS3", "answer_bs3.json"), ("A4", "answer_a4.json"), ("BS4", "answer_bs4.json")):
         if (DIR / f).exists():
             arms[arm] = [{"id": h["id"], "parent": h.get("parent"), "text": _text(h), "terms": _terms(h.get("card") or {}),
-                          **{k: h.get(k, "") for k in ("claim", "rationale", "experiment")}}
+                          **{k: strip_inline_citations(h.get(k, "")) for k in ("claim", "rationale", "experiment")}}
                          for h in json.loads((DIR / f).read_text())["hypotheses"]]
     data = {"topic": TOPIC, "as_of": json.loads((DIR / "task_a.json").read_text())["T"], "writer_family": writer_family, "arms": arms}
     (DIR / "hypotheses.json").write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n")

@@ -151,6 +151,9 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
     v3_like = method in ("v3", "v4")
     if method == "v4":
         search_mode = cfg_extra.get("search", "two_stage") + ("+fulltext" if cfg_extra.get("full_text") == "pmc" else "")
+        if cards is None:
+            from hyparena.card.normalizer import strip_inline_citations
+            texts = [strip_inline_citations(t) for t in texts]
     norm_version = cfg_extra.get("normalize_version") or ("v19" if method == "v4" else ("v7" if method == "v3" else None))
     # method v2 layers that v3/v4 do not score (mouse probes, the checklist alternatives and their checks): off under v3/v4
     # unless the config asks (`legacy_v2_checks: true`); user decision 2026-11-11, H49 walkthrough

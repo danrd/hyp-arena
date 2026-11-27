@@ -158,6 +158,31 @@ def new_mechanism_links(card: HypothesisCard, cvs: list[ClaimVerification], abse
             if absence.get(c.id) is not None and absence[c.id] < ABSENCE_THRESHOLD]
 
 
+def _has_supported_background_v4(card: HypothesisCard, by: dict[str, ClaimVerification]) -> bool:
+    """In Method v4, pure `background` claims have `link=None` (`part='premise'`) so they do not inflate M2.
+    When all active chain links are `searched_empty` (`F=0, A=0`), a verified supporting record on a `background`
+    claim still anchors the hypothesis to literature so N becomes `new_link` rather than `None` ('unknown').
+    """
+    active_ids = {c.id for c in r3.chain(card)}
+    for cl in card.claims:
+        if cl.id in active_ids:
+            continue
+        roles = set(getattr(cl, "chain_roles", None) or [])
+        if getattr(cl, "chain_role", None):
+            roles.add(cl.chain_role)
+        if "background" not in roles:
+            continue
+        cv = by.get(cl.id)
+        if not cv:
+            continue
+        probe = cl.model_copy(update={"link": cl.link or "pathway", "role": "mechanism"})
+        f_w = sum(r32.record_weight(r, probe, False, True) for r in cv.evidence)
+        a_w = sum(r32.record_weight(r, probe, True, True) for r in cv.counterevidence)
+        if f_w > 0 and f_w > a_w:
+            return True
+    return False
+
+
 def novelty(card: HypothesisCard, cvs: list[ClaimVerification], e: Optional[r32.V32Result] = None,
             absence: Optional[dict] = None, paper_outcomes: Optional[list[dict]] = None) -> Optional[str]:
     """N. `absence` = {link id: PubMed count on its subject and object before T} (mechanism_absence); without it the level
@@ -180,13 +205,22 @@ def novelty(card: HypothesisCard, cvs: list[ClaimVerification], e: Optional[r32.
             return "new_mechanism"
         return min(lv, key=LINK_LEVELS.index)
     if not pre:
+        if _has_supported_background_v4(card, by) and out:
+            base_level = "new_link"
+            if paper_outcomes:
+                from hyparena.reading.paper_outcomes import novelty_from_outcomes
+                return novelty_from_outcomes(base_level, paper_outcomes)[0]
+            return base_level
         return None
     supported = [any(e.links[i][3] > 0 for i in sl) and _slot_S(e, sl, False) > 0.5 for sl in pre]
     empty = [all(e.links[i][3] + e.links[i][4] == 0 for i in sl) for sl in pre]
+    refuted_any = any(any(e.links[i][4] > e.links[i][3] for i in sl) for sl in pre)
     base_level: Optional[str] = None
     if all(supported):
         base_level = "new_combination"
     elif any(supported) and any(empty):
+        base_level = "new_link"
+    elif any(empty) and not refuted_any and _has_supported_background_v4(card, by):
         base_level = "new_link"
     if base_level and paper_outcomes:
         from hyparena.reading.paper_outcomes import novelty_from_outcomes

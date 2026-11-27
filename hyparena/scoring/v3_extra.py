@@ -33,10 +33,84 @@ def _n_score(n: Optional[int]) -> Optional[float]:
     return 1.0 if n < 50 else 2 / 3 if n < 200 else 1 / 3 if n < 1000 else 0.0
 
 
-def endpoint_for_experiment(endpoint: Optional[str], system: Optional[str]) -> Optional[str]:
-    """Clinical endpoint levels apply only when the stated experiment is in humans (v3.13)."""
-    if system and system != "human" and endpoint in ("patient_reported", "function", "clinical_event"):
-        return "biomarker"
+EX_VIVO_TOKENS = (
+    "explant",
+    "ex vivo",
+    "discarded",
+    "surgical donor",
+    "organ donor",
+    "donor-heart",
+    "donor heart",
+    "explanted heart",
+    "explanted diseased heart",
+    "perfused human",
+    "atrial preparation",
+    "trabecular core",
+    "perifus",
+    "intact islet",
+    "pseudoislet",
+    "bronchial brushing",
+    "air-liquid",
+    "air–liquid",
+    "ussing",
+    "vastus lateralis sample",
+    "low-passage",
+    "myoblast",
+    "stromal cell",
+    "osteoblast",
+    "neurosurgical",
+    "cortical tissue",
+    "capillary-arteriole",
+    "capillary–arteriole",
+    "eye-bank",
+    "eye bank",
+    "postmortem",
+    "organoid",
+    "biopsy culture",
+    "acutely isolated",
+    "sinoatrial myocyte",
+)
+
+
+def is_human_ex_vivo(card: HypothesisCard, implementation: Optional[dict] = None) -> bool:
+    """True when `system == 'human'` refers to ex vivo donor organs, explants, or primary tissue/cell preparations
+    rather than an in vivo clinical intervention in living participants.
+    """
+    e = card.decisive_experiment
+    if str(e.system or "").lower() != "human":
+        return False
+    hay = " ".join(
+        [
+            e.span or "",
+            e.primary_outcome or "",
+            " ".join(e.primary_outcomes or []),
+        ]
+    ).lower()
+    if any(tok in hay for tok in EX_VIVO_TOKENS):
+        return True
+    if isinstance(implementation, dict):
+        comp_text = " ".join(
+            str(cc.get("target_system") or "")
+            for cc in (implementation.get("component_checks") or [])
+            if isinstance(cc, dict)
+        ).lower()
+        if any(tok in comp_text for tok in EX_VIVO_TOKENS):
+            return True
+    return False
+
+
+def endpoint_for_experiment(
+    endpoint: Optional[str],
+    system: Optional[str],
+    card: Optional[HypothesisCard] = None,
+    implementation: Optional[dict] = None,
+) -> Optional[str]:
+    """Clinical endpoint levels apply only to in vivo studies in living humans (v3.13 / v4.0)."""
+    if endpoint in ("patient_reported", "function", "clinical_event"):
+        if system and system != "human":
+            return "biomarker"
+        if card is not None and is_human_ex_vivo(card, implementation):
+            return "biomarker"
     return endpoint
 
 
@@ -277,19 +351,22 @@ def extras(card: HypothesisCard, ver_claims: list[ClaimVerification], v3: dict, 
     }
 
 
-def resource_tier(card: HypothesisCard) -> Optional[str]:
+def resource_tier(card: HypothesisCard, implementation: Optional[dict] = None) -> Optional[str]:
     """Separate resource class (Tier 1..4) from within-tier execution readiness
     (evaluation-calibration-2026-11-25.md section 3).
     """
+    if isinstance(implementation, dict):
+        saved_tier = implementation.get("resource_tier")
+        if saved_tier in ("1_in_vitro", "2_animal", "3_human_ex_vivo_or_pilot", "4_clinical_in_vivo"):
+            return saved_tier
     e = card.decisive_experiment
     sys_name = str(e.system or "unknown").lower()
-    span = (e.span or "").lower()
     if sys_name in ("cells", "yeast", "data_analysis"):
         return "1_in_vitro"
     if sys_name in ("mouse", "rat", "worm", "fly"):
         return "2_animal"
     if sys_name == "human":
-        if e.design == "pilot" or any(tok in span for tok in ("explant", "ex vivo", "discarded", "surgical donor", "biopsy culture")):
+        if e.design == "pilot" or is_human_ex_vivo(card, implementation):
             return "3_human_ex_vivo_or_pilot"
         return "4_clinical_in_vivo"
     return None
@@ -307,7 +384,7 @@ def feasibility_diagnostic(
     Does not alter feasibility() or feasibility_breakdown().
     """
     e = card.decisive_experiment
-    tier = resource_tier(card)
+    tier = resource_tier(card, implementation)
     if offline_readiness is not None:
         r_score, r_reason = offline_readiness
     else:

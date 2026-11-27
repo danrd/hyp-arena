@@ -121,6 +121,7 @@ def revalidate_saved(
     implementation: Optional[dict],
     as_of: str,
     experiment_text: str = "",
+    n_planned: Optional[int] = None,
 ) -> Optional[dict]:
     """Validate hand-prepared readiness (`v1` or `v2` 3-component) against pre-cutoff PubMed / experiment text."""
     if not isinstance(implementation, dict):
@@ -129,7 +130,7 @@ def revalidate_saved(
         try:
             cutoff = date.fromisoformat(as_of) if as_of else None
         except (ValueError, TypeError):
-            return {**validate_components_v4(implementation, {}, experiment_text=experiment_text), "issue": "missing_or_invalid_cutoff"}
+            return {**validate_components_v4(implementation, {}, experiment_text=experiment_text, n_planned=n_planned), "issue": "missing_or_invalid_cutoff"}
         pmids: list[str] = []
         for cc in implementation.get("component_checks") or []:
             if isinstance(cc, dict):
@@ -142,13 +143,13 @@ def revalidate_saved(
         sources: dict[str, dict] = {}
         if pmids:
             if cutoff is None:
-                return {**validate_components_v4(implementation, {}, experiment_text=experiment_text), "issue": "missing_or_invalid_cutoff"}
+                return {**validate_components_v4(implementation, {}, experiment_text=experiment_text, n_planned=n_planned), "issue": "missing_or_invalid_cutoff"}
             try:
                 for pm in pmids:
                     sources.update(_pre_cutoff_source(pm, cutoff.isoformat()))
             except (httpx.HTTPError, RuntimeError, ValueError, OSError, ParseError):
-                return {**validate_components_v4(implementation, {}, experiment_text=experiment_text), "issue": "pubmed_unavailable"}
-        return validate_components_v4(implementation, sources, experiment_text=experiment_text)
+                return {**validate_components_v4(implementation, {}, experiment_text=experiment_text, n_planned=n_planned), "issue": "pubmed_unavailable"}
+        return validate_components_v4(implementation, sources, experiment_text=experiment_text, n_planned=n_planned)
 
     status = str(implementation.get("verified_status") or "missing").strip().lower()
     if status not in ("demonstrated", "conditional"):
@@ -246,7 +247,12 @@ def assess(
     )
     reply = client.call(role="verify_claim", family=chosen_family, prompt=prompt)
     if version == "v2":
-        checked_v4 = validate_components_v4(_parse_json(reply.text), supplied, experiment_text=experiment_text)
+        checked_v4 = validate_components_v4(
+            _parse_json(reply.text),
+            supplied,
+            experiment_text=experiment_text,
+            n_planned=de.n_planned,
+        )
         if log is not None:
             log.append({
                 "kind": "llm",
@@ -286,17 +292,65 @@ COMPONENT_SCORE_V4 = {
 }
 
 
+SCARCE_HUMAN_ORGAN_TOKENS = (
+    "donor heart",
+    "donor-heart",
+    "donor human heart",
+    "explanted heart",
+    "explanted diseased heart",
+    "perfused human atri",
+    "atrial preparation",
+    "sinoatrial",
+    "neurosurgical",
+    "cortical tissue",
+    "cortical capillary",
+    "postmortem brain",
+)
+
+_WORD_NUMS = {
+    "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
+    "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
+    "eleven": 11, "twelve": 12,
+}
+
+
+def _cited_scarce_organ_n(comp_name: str, target_sys: str, quote: str) -> Optional[int]:
+    """Extract demonstrated donor/organ sample size from `quote` when `target_sys` is a scarce human organ model."""
+    cname = (comp_name or "").lower()
+    if cname not in ("population_or_model", "system_or_population_fit"):
+        return None
+    ts = (target_sys or "").lower()
+    if not any(tok in ts for tok in SCARCE_HUMAN_ORGAN_TOKENS):
+        return None
+    q = quote or ""
+    if not q.strip():
+        return None
+    ns = [int(m) for m in re.findall(r"\bn\s*[=≈~]\s*(\d+)\b", q, re.I) if int(m) > 0]
+    for m in re.finditer(
+        r"\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|\d+)\s+"
+        r"(?:usable\s+|explanted\s+|diseased\s+|donor\s+|perfused\s+|human\s+|right\s+|left\s+){1,5}"
+        r"(?:hearts?|atria|preparations?|brains?|donors?)\b",
+        q,
+        re.I,
+    ):
+        tok = m.group(1).lower()
+        val = int(tok) if tok.isdigit() else _WORD_NUMS.get(tok, 0)
+        if val > 0:
+            ns.append(val)
+    return max(ns) if ns else None
+
+
 def validate_components_v4(
     value: Optional[dict],
     supplied: dict[str, dict],
     experiment_text: str = "",
+    n_planned: Optional[int] = None,
 ) -> dict:
     """Method v4 component-level readiness validator (`implementation_readiness/v2`).
 
     Verifies verbatim quotes for each component (`confirmed_in_context` / `adjacent_only`),
-    downgrading unverified quotes to `insufficient`, and computes both `min_readiness_score`
-    (weak-link score across applicable components) and `primary_tool_status` (for comparison
-    against single-status human `C.feasibility.evidence_status`).
+    downgrading unverified quotes to `insufficient`, enforces scarce human donor-organ sample-size
+    realism (`n_planned <= 3 * cited_n`), and computes `min_readiness_score` (weak-link score).
     """
     if not isinstance(value, dict):
         return {
@@ -329,27 +383,39 @@ def validate_components_v4(
     for cc in value.get("component_checks") or []:
         if not isinstance(cc, dict):
             continue
+        comp_name = str(cc.get("component") or "")
+        target_sys = str(cc.get("target_system") or "")
         st = str(cc.get("evidence_status") or "insufficient").strip()
         if st not in ("confirmed_in_context", "adjacent_only", "insufficient", "not_applicable"):
             st = "insufficient"
         pm = str(cc.get("evidence_pmid") or "").strip().removeprefix("PMID:").strip()
         qt = str(cc.get("evidence_quote") or "").strip()
+        notes = str(cc.get("notes") or "")
         q_ok = True
+        scale_exceeded = False
         if st in ("confirmed_in_context", "adjacent_only"):
             q_ok = _quote_verified(pm, qt)
             if not q_ok:
                 st = "insufficient"
+            elif n_planned is not None and n_planned > 0:
+                cited_n = _cited_scarce_organ_n(comp_name, target_sys, qt)
+                if cited_n is not None and n_planned > 3 * cited_n:
+                    st = "insufficient"
+                    scale_exceeded = True
+                    tag = f"[scale_exceeds_cited_3x: planned={n_planned} vs cited={cited_n}]"
+                    notes = f"{notes} {tag}".strip()
         if st in COMPONENT_SCORE_V4:
             comp_scores.append(COMPONENT_SCORE_V4[st])
         checked_comps.append(
             {
-                "component": str(cc.get("component") or ""),
-                "target_system": str(cc.get("target_system") or ""),
+                "component": comp_name,
+                "target_system": target_sys,
                 "evidence_status": st,
                 "evidence_pmid": pm if q_ok else "",
                 "evidence_quote": qt if q_ok else "",
                 "quote_ok": q_ok,
-                "notes": str(cc.get("notes") or ""),
+                "scale_exceeded": scale_exceeded,
+                "notes": notes,
             }
         )
 
@@ -361,7 +427,9 @@ def validate_components_v4(
         raw_overall = "insufficient"
     ov_pm = str(value.get("evidence_pmid") or "").strip().removeprefix("PMID:").strip()
     ov_qt = str(value.get("evidence_quote") or "").strip()
-    if raw_overall in ("confirmed_in_context", "adjacent_only"):
+    if any(c.get("scale_exceeded") for c in checked_comps):
+        raw_overall = "insufficient"
+    elif raw_overall in ("confirmed_in_context", "adjacent_only"):
         if not (_quote_verified(ov_pm, ov_qt) or any(c["evidence_status"] in ("confirmed_in_context", "adjacent_only") for c in checked_comps)):
             raw_overall = "insufficient"
         elif raw_overall == "confirmed_in_context" and any(c["evidence_status"] != "confirmed_in_context" for c in checked_comps if c["evidence_status"] != "not_applicable"):

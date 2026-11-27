@@ -33,7 +33,7 @@ PyYAML
 httpx
 """
 
-CALCULATE_PY = '''"""Structured evidence -> Method v4.0 calculations; revalidates readiness quotes against PubMed up to --as-of."""
+CALCULATE_PY = '''"""Structured evidence -> Method v4.0 calculations + ASPID profile rankings and cluster deduplication."""
 import argparse
 import json
 from pathlib import Path
@@ -42,9 +42,11 @@ from hyparena import METHOD_V4_VERSION
 from hyparena.card.models import ClaimVerification, HypothesisCard
 from hyparena.novelty.novelty_v34 import link_levels, novelty, novelty_source
 from hyparena.reading.implementation import is_non_drug, revalidate_saved
-from hyparena.scoring import rules_v32, rules_v4
+from hyparena.reports import diversity as div_mod
+from hyparena.scoring import aspid_v3, rules_v3, rules_v32, rules_v4
 from hyparena.scoring.v3_extra import (
     endpoint_for_experiment,
+    extras,
     feasibility,
     feasibility_breakdown,
     feasibility_diagnostic,
@@ -57,7 +59,11 @@ args = p.parse_args()
 
 cases = json.loads(Path(args.cases).read_text(encoding="utf-8"))
 results = {}
+cards_for_clusters = {}
+aspid_axes = {}
+
 for case in cases:
+    ident = case["id"]
     card_raw = HypothesisCard.model_validate(case["card"])
     cvs_raw = [ClaimVerification.model_validate(c) for c in case["verifications"]]
     alts = {k: ClaimVerification.model_validate(v) for k, v in (case.get("alternatives") or {}).items()}
@@ -66,7 +72,12 @@ for case in cases:
     raw_impl = case.get("implementation_readiness")
     impl = None
     if isinstance(raw_impl, dict) and ("component_checks" in raw_impl or is_non_drug(card_raw)):
-        impl = revalidate_saved(raw_impl, args.as_of, experiment_text=exp_text)
+        impl = revalidate_saved(
+            raw_impl,
+            args.as_of,
+            experiment_text=exp_text,
+            n_planned=card_raw.decisive_experiment.n_planned,
+        )
 
     r4 = rules_v4.evaluate(
         card_raw,
@@ -78,26 +89,92 @@ for case in cases:
     )
     card_v4, cvs_v4, alts_v4, _, _ = rules_v4.prepare_for_v4(card_raw, cvs_raw, alts, experiment_text=exp_text)
     base_v32 = rules_v32.evaluate(card_v4, cvs_v4, alts_v4, v36=True)
+    v31_dict = rules_v3.evaluate(card_v4, cvs_v4, alts_v4, variant="v3.1").as_dict()
+    ext = extras(card_v4, cvs_v4, v31_dict, args.as_of, implementation=impl)
     po = case.get("paper_outcomes")
-    ep = endpoint_for_experiment((case.get("indicators") or {}).get("endpoint_clinical"), card_v4.decisive_experiment.system)
+    ind_in = case.get("indicators") or {}
+    ep = endpoint_for_experiment(
+        ind_in.get("endpoint_clinical"),
+        card_v4.decisive_experiment.system,
+        card=card_v4,
+        implementation=impl,
+    )
+    nov = novelty(card_v4, cvs_v4, base_v32, absence=case.get("absence"), paper_outcomes=po)
+    feas = feasibility(card_v4, as_of=args.as_of, implementation=impl)
 
-    results[case["id"]] = {
+    results[ident] = {
         "method": METHOD_V4_VERSION,
-        "evaluation_v4": r4.as_dict(),
-        "evaluation": base_v32.as_dict(),
+        "aspid": {},
+        "cluster_id": None,
+        "cluster_peers": [],
         "gate": r4.gate,
         "gate_reason": r4.gate_reason,
         "resource_tier": r4.resource_tier,
         "worst_domain_risk": r4.worst_domain_risk,
-        "chain_summary": r4.chain_summary,
-        "feasibility": feasibility(card_v4, as_of=args.as_of, implementation=impl),
+        "chain_state": r4.chain_state,
+        "support_share": r4.support_share,
+        "coverage": r4.coverage,
+        "I": r4.I,
+        "headroom_I": r4.headroom_I,
+        "scope": r4.scope,
+        "novelty": nov,
+        "novelty_source": novelty_source(card_v4, cvs_v4, paper_outcomes=po),
+        "link_novelty": link_levels(card_v4, cvs_v4),
+        "feasibility": feas,
         "feasibility_breakdown": feasibility_breakdown(card_v4, as_of=args.as_of, implementation=impl),
         "feasibility_diagnostic": feasibility_diagnostic(card_v4, as_of=args.as_of, implementation=impl),
         "endpoint_clinical": ep,
-        "novelty": novelty(card_v4, cvs_v4, base_v32, absence=case.get("absence"), paper_outcomes=po),
-        "novelty_source": novelty_source(card_v4, cvs_v4, paper_outcomes=po),
-        "link_novelty": link_levels(card_v4, cvs_v4),
+        "chain_summary": r4.chain_summary,
+        "evaluation_v4": r4.as_dict(),
+        "legacy_non_refutation": {"P": r4.P, "V_legacy": r4.V, "note": "P and V are legacy non-refutation diagnostics; ranking uses ASPID profiles over chain_state, N, I, W, feasibility, endpoint_clinical."},
     }
+    if r4.gate == "pass":
+        cards_for_clusters[ident] = card_raw
+        aspid_axes[ident] = (
+            {"P": r4.P, "scope": r4.scope, "I": r4.I, "headroom_I": r4.headroom_I, "gate": "pass"},
+            {
+                "feasibility": feas,
+                "best_design_outcome": ext.get("best_design_outcome"),
+                "independent_outcome": ext.get("independent_outcome"),
+                "against_share": ext.get("against_share"),
+                "endpoint_clinical": ep,
+                "trend_pubmed": ind_in.get("trend_pubmed"),
+                "ai_role": ind_in.get("ai_role") or card_v4.ai_role,
+                "support_share": r4.support_share,
+                "chain_state": r4.chain_state,
+                "N": nov,
+            },
+        )
+
+profiles = aspid_v3.load()
+ranks_by_profile = {}
+if aspid_axes:
+    scored_ids = list(aspid_axes.keys())
+    for prof_name in profiles:
+        agg = aspid_v3.rank(aspid_axes, prof_name, K=10000)
+        order = sorted(scored_ids, key=lambda h: -round(agg.expected[h], 4))
+        ranks_by_profile[prof_name] = order
+        for place, h in enumerate(order, 1):
+            results[h]["aspid"][prof_name] = {
+                "score": round(agg.expected[h], 4),
+                "place": place,
+                "of": len(scored_ids),
+                "p_top5": round(agg.p_topk[h], 3),
+            }
+
+cinfo = div_mod.pool_clusters(cards_for_clusters, ranks_by_profile)
+for h in results:
+    results[h]["cluster_id"] = cinfo["cluster_of"].get(h)
+    results[h]["cluster_peers"] = cinfo["peers_of"].get(h, [])
+
+results["_pool_summary"] = {
+    "method": METHOD_V4_VERSION,
+    "n_cases": len(cases),
+    "n_ranked": len(aspid_axes),
+    "ranks": ranks_by_profile,
+    "clusters": cinfo["clusters"],
+    "top_distinct": cinfo["top_distinct"],
+}
 print(json.dumps(results, ensure_ascii=False, indent=2, allow_nan=False))
 '''
 
@@ -153,7 +230,12 @@ for case in cases:
     raw_impl = case.get("implementation_readiness")
     impl = None
     if isinstance(raw_impl, dict) and ("component_checks" in raw_impl or is_non_drug(card_raw)):
-        impl = revalidate_saved(raw_impl, a.as_of, experiment_text=exp_text)
+        impl = revalidate_saved(
+            raw_impl,
+            a.as_of,
+            experiment_text=exp_text,
+            n_planned=card_raw.decisive_experiment.n_planned,
+        )
 
     card_v4, cvs_v4, alts_v4, _, _ = rules_v4.prepare_for_v4(card_raw, cvs_raw, alts, experiment_text=exp_text)
     old = rules_v3.evaluate(card_v4, cvs_v4, alts_v4, variant="v3.1").as_dict()

@@ -14,11 +14,11 @@ Method v4 rules (strict):
 1. `resource_tier`: classify the inherent resource class of the proposed experiment (this is a cost tier, NOT a quality penalty):
    - "1_in_vitro": cultured cells, cell lines, yeast, organoids/co-cultures without human donor surgery, or pure data analysis;
    - "2_animal": C. elegans, Drosophila, mice, rats, or other non-human animal in vivo / ex vivo studies;
-   - "3_human_ex_vivo_or_pilot": discarded human surgical explants/biopsies ex vivo, or a small short-term human physiological pilot;
-   - "4_clinical_in_vivo": interventional human clinical trial in vivo.
+   - "3_human_ex_vivo_or_pilot": any ex vivo human donor organ/tissue/cell preparation (discarded surgical explants, donor hearts/atria, organ-donor islets/pseudoislets, bronchial brushings/ALI, biopsies, eye-bank lenses, neurosurgical slices), OR a small short-term human physiological pilot;
+   - "4_clinical_in_vivo": interventional human clinical trial in living participants (never ex vivo tissues).
 2. Evaluate THREE distinct execution components in `component_checks` (do NOT let proof of one component fill the others):
    - `intervention_delivery`: has the specific drug/vector/device/exercise regimen been delivered by the stated route/protocol?
-   - `system_or_population_fit`: has it been applied in the exact target population/subgroup/tissue state (e.g. older women with preserved bladder emptying vs broader OAB; exact squat regimen in pre-sarcopenia vs general resistance exercise)?
+   - `system_or_population_fit`: has it been applied in the exact target population/subgroup/tissue state (e.g. older women with preserved bladder emptying vs broader OAB; exact squat regimen in pre-sarcopenia vs general resistance exercise)? For scarce human donor organs or acute surgical tissue (e.g. viable donor hearts, perfused diseased human atria, fresh neurosurgical cortex), also check sample-size realism: if `n_planned` exceeds the largest donor/organ count demonstrated in the supplied abstracts by more than 3x, set `evidence_status` to `"insufficient"`.
    - `critical_measurement_or_engagement`: is the decisive assay / target-engagement measurement demonstrated in that tissue/setting (e.g. patch-clamp BK currents on post-cystometry human detrusor biopsy myocytes; direct intraepidermal voltage micro-sensing in aged human skin explants)?
    For each component set `evidence_status` from:
    - "confirmed_in_context": demonstrated in a supplied abstract in the SAME system, subgroup, and operating condition (requires verbatim `evidence_quote` + `evidence_pmid`);

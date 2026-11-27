@@ -363,7 +363,7 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
         as_of_h = run[h]["meta"].get("as_of") or ""
         ext = v3_extra.extras(card, cvs, it["v3"], as_of_h, implementation=impl)
         values[h].update({k: ext.get(k) for k in ("feasibility", "best_design_outcome", "independent_outcome", "against_share")})
-        ep = v3_extra.endpoint_for_experiment(values[h].get("endpoint_clinical"), card.decisive_experiment.system)
+        ep = v3_extra.endpoint_for_experiment(values[h].get("endpoint_clinical"), card.decisive_experiment.system, card=card, implementation=impl)
         values[h]["endpoint_clinical"] = hyps[h]["endpoint_clinical"] = ep
         hyps[h]["feasibility_breakdown"] = v3_extra.feasibility_breakdown(card, as_of_h, implementation=impl)
     inds = sorted({i for p, _ in profiles.values() for tier in p.tiers for i in tier})
@@ -406,9 +406,19 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
     for x in hyps.values():
         x.setdefault("rank", {})
         x.setdefault("p_top5", {})
+    from hyparena.reports import diversity as _div
+    cards_for_clusters = {
+        h: HypothesisCard.model_validate(run[h]["items"][0]["card"])
+        for h in scored
+        if run.get(h) and run[h]["items"][0].get("card")
+    }
+    cluster_info = _div.pool_clusters(cards_for_clusters, ranks)
+    for h, x in hyps.items():
+        x["cluster_id"] = cluster_info["cluster_of"].get(h)
+        x["cluster_peers"] = cluster_info["peers_of"].get(h, [])
     return {"meta": {**meta, "n": len(hyps), "n_scored": len(scored), "outcomes": dict(Counter(x["outcome"] for x in hyps.values())),
                      "profiles": {p: [list(t_) for t_ in prof.tiers] for p, (prof, _) in profiles.items()}},
-            "hyps": hyps, "ranks": ranks}
+            "hyps": hyps, "ranks": ranks, "clusters": cluster_info["clusters"], "top_distinct": cluster_info["top_distinct"]}
 
 
 def res_flags(it: dict) -> list[str]:

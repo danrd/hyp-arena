@@ -1009,6 +1009,114 @@ def test_rules_v4_end_to_end_and_config():
     assert r_routed.I < r_base.I
 
 
+def test_block_a_v40_fixes():
+    from hyparena.card.models import ClaimVerification, HypothesisCard
+    from hyparena.card.normalizer import strip_inline_citations
+    from hyparena.novelty.novelty_v34 import novelty
+    from hyparena.reading.implementation import validate_components_v4
+    from hyparena.reports.diversity import pool_clusters
+    from hyparena.scoring import rules_v32, rules_v4, v3_extra
+
+    # 1. strip_inline_citations removes PubMed/PMC markdown links, bare URLs, and (PMID: ...) tags cleanly
+    dirty = (
+        "Restoring field coherence rescues closure. ([pubmed.ncbi.nlm.nih.gov](https://pubmed.ncbi.nlm.nih.gov/22092802/)) "
+        "Prior work (PMID: 39641271, PMCID: PMC5299620) and https://europepmc.org/articles/PMC8092380/ concur."
+    )
+    cleaned = strip_inline_citations(dirty)
+    assert "http" not in cleaned and "pubmed" not in cleaned and "PMID" not in cleaned
+    assert "Restoring field coherence rescues closure." in cleaned
+
+    # 2. Ex vivo human donor organ is classified as 3_human_ex_vivo_or_pilot even when design=='rct',
+    #    and endpoint_for_experiment caps its clinical endpoint at 'biomarker'
+    case = _synthetic_v313_case()
+    case["card"]["decisive_experiment"]["system"] = "human"
+    case["card"]["decisive_experiment"]["design"] = "rct"
+    case["card"]["decisive_experiment"]["n_planned"] = 40
+    case["card"]["decisive_experiment"]["span"] = "Randomize 40 perfused human atrial preparations with reproducible re-entry."
+    ex_card = HypothesisCard.model_validate(case["card"])
+    assert v3_extra.is_human_ex_vivo(ex_card) is True
+    assert v3_extra.resource_tier(ex_card) == "3_human_ex_vivo_or_pilot"
+    assert v3_extra.endpoint_for_experiment("function", "human", card=ex_card) == "biomarker"
+
+    # 3. Scarce human donor organ sample-size check (>3x cited n -> insufficient, min_readiness_score=0.0)
+    abs_map = {
+        "26059724": {
+            "title": "Atrial optical mapping",
+            "abstract": "Coronary-perfused human right atria from explanted diseased hearts (n = 8, 43-72 years old) were optically mapped.",
+        }
+    }
+    raw_impl = {
+        "resource_tier": "3_human_ex_vivo_or_pilot",
+        "overall_evidence_status": "adjacent_only",
+        "component_checks": [
+            {
+                "component": "population_or_model",
+                "target_system": "40 perfused human atrial preparations with reproducible re-entry",
+                "evidence_status": "adjacent_only",
+                "evidence_pmid": "26059724",
+                "evidence_quote": "Coronary-perfused human right atria from explanted diseased hearts (n = 8, 43-72 years old) were optically mapped",
+            }
+        ],
+    }
+    checked_40 = validate_components_v4(raw_impl, abs_map, n_planned=40)
+    assert checked_40["min_readiness_score"] == 0.0
+    assert checked_40["overall_evidence_status"] == "insufficient"
+    assert checked_40["component_checks"][0]["scale_exceeded"] is True
+
+    checked_16 = validate_components_v4(raw_impl, abs_map, n_planned=16)
+    assert checked_16["min_readiness_score"] == 0.5
+    assert checked_16["component_checks"][0]["scale_exceeded"] is False
+
+    # 4. Supported background claim prevents false N=None collapse when novel links are searched_empty
+    bg_case = _synthetic_v313_case()
+    bg_case["card"]["claims"] = [
+        {
+            "id": "c0",
+            "subject": "aging",
+            "relation": "decreases_expression",
+            "object": "Kir6.2 activity",
+            "role": "premise",
+            "link": "pathway",
+            "chain_roles": ["background"],
+        },
+        {
+            "id": "c1",
+            "subject": "pulsatile diazoxide",
+            "relation": "activates",
+            "object": "granule pool recovery",
+            "role": "mechanism",
+            "link": "pathway",
+            "chain_roles": ["mechanism", "novel_contribution"],
+        },
+        {
+            "id": "c2",
+            "subject": "pulsatile diazoxide",
+            "relation": "improves_healthspan_in",
+            "object": "older diabetic islets",
+            "role": "outcome",
+            "link": "outcome",
+            "chain_roles": ["outcome"],
+        },
+    ]
+    bg_card = HypothesisCard.model_validate(bg_case["card"])
+    bg_cvs = [
+        ClaimVerification.model_validate({**bg_case["verifications"]["c1"], "id": "c0"}),
+        ClaimVerification(id="c1", evidence=[]),
+        ClaimVerification(id="c2", evidence=[]),
+    ]
+    c4, cvs4, alts4, _, _ = rules_v4.prepare_for_v4(bg_card, bg_cvs, {})
+    b32 = rules_v32.evaluate(c4, cvs4, alts4, v36=True)
+    assert novelty(c4, cvs4, b32) == "new_link"
+
+    # 5. Offline pool_clusters groups mechanistic siblings and produces top_distinct
+    c_skin1 = HypothesisCard.model_validate({**bg_case["card"], "id": "W1", "claim_plain": "Restoring wound electric field rescues keratinocyte closure in older skin."})
+    c_skin2 = HypothesisCard.model_validate({**bg_case["card"], "id": "W2", "claim_plain": "Reversing epidermal wound electric field tests keratinocyte direction in aged skin."})
+    cl_res = pool_clusters({"W1": c_skin1, "W2": c_skin2, "A1": ex_card}, {"evidence": ["W1", "W2", "A1"]})
+    assert len(cl_res["clusters"]) == 1 and set(cl_res["clusters"][0]["members"]) == {"W1", "W2"}
+    assert [r["id"] for r in cl_res["top_distinct"]["evidence"]] == ["W1", "A1"]
+
+
+
 
 
 

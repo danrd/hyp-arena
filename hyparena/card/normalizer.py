@@ -16,6 +16,41 @@ from hyparena.scoring.rules import anchor_core, core_span_problems, mark_inherit
 
 TEMPLATE = ("normalize_card", "v6")       # v6 adopted 2026-10-29 by the user's decision, see archive/docs/rules-method.md
 
+
+def strip_inline_citations(text: str) -> str:
+    """Remove inline PubMed/PMC/EuropePMC/DOI markdown links, bare URLs, and parenthetical PMID/PMCID tags
+    so embedded generator links do not leak into blind judging or give asymmetric search hints.
+    """
+    if not text:
+        return ""
+    s = text
+    # Parenthesized markdown links: ([pubmed.ncbi.nlm.nih.gov](https://...))
+    s = re.sub(r"\(\s*\[[^\]]*\]\(https?://[^)\s]+\)\s*\)", "", s)
+    # Standalone domain-label markdown links: [pubmed.ncbi.nlm.nih.gov](https://...)
+    s = re.sub(
+        r"\[((?:https?://)?(?:[\w-]+\.)+(?:gov|org|com|net|edu)[^\]]*)\]\(https?://[^)\s]+\)",
+        "",
+        s,
+        flags=re.I,
+    )
+    # Any remaining markdown link [label](url) -> keep plain label
+    s = re.sub(r"\[([^\]]+)\]\(https?://[^)\s]+\)", r"\1", s)
+    # Bare URLs (with or without surrounding parentheses)
+    s = re.sub(r"\(\s*https?://[^\s)]+\s*\)", "", s)
+    s = re.sub(r"https?://\S+", "", s)
+    # Parenthetical (PMID: 12345678) / (PMCID: PMC123456)
+    s = re.sub(
+        r"\(\s*(?:PMID|PMCID)\s*:?\s*(?:PMC)?\d+(?:\s*[,;/]\s*(?:PMID|PMCID)?\s*:?\s*(?:PMC)?\d+)*\s*\)",
+        "",
+        s,
+        flags=re.I,
+    )
+    # Clean spacing before punctuation and multiple horizontal spaces
+    s = re.sub(r"[ \t]+([.,;:!?])", r"\1", s)
+    s = re.sub(r"[ \t]{2,}", " ", s)
+    s = "\n".join(line.strip() for line in s.splitlines())
+    return s.strip()
+
 # relations an outcome claim can take, with the words that point to them (for the re-parse hint, spec 5)
 OUTCOME_RELATIONS = {
     "extends_lifespan_in": "extends increases lifespan longevity survival live longer",
