@@ -1,10 +1,10 @@
-# Method v4.0 manual
+# Method v4.1 manual
 
-This manual describes the current rules of the method (version **v4.0**, adopted 27 Nov 2026) as one self-contained text: a reader, a model or
+This manual describes the current rules of the method (version **v4.1**, adopted 27 Nov 2026) as one self-contained text: a reader, a model or
 an outside reviewer can score a hypothesis and read its report from it alone. Each stage has its own detailed manual in
 [`docs/method/`](./) ([the card](card.md), [the search](search.md), [the reading](reading.md), [from a record to the evidence balance](evidence.md), [novelty](novelty.md), [indicators and ranking](ranking.md), [experiment and alternatives](alternatives.md), [improvements and versions](versions.md)); this manual is their compressed aggregate. How the rules
 came to be what they are is in the [change log](changelog.md). The changes in this release are in the
-[v4.0 change log](changelog-v4.0.md) (previous release: [v3.13](changelog-v3.13.md)).
+[v4.1 change log](changelog-v4.1.md) (previous releases: [v4.0](changelog-v4.0.md), [v3.13](changelog-v3.13.md)).
 
 Where the code is: Method v4 scorer [`hyparena/scoring/rules_v4.py`](../../hyparena/scoring/rules_v4.py) on top of [`hyparena/scoring/rules_v32.py`](../../hyparena/scoring/rules_v32.py) (`configs/v4-flash.yaml`), novelty
 [`hyparena/novelty/novelty_v34.py`](../../hyparena/novelty/novelty_v34.py), ranking [`hyparena/scoring/aspid_v3.py`](../../hyparena/scoring/aspid_v3.py)
@@ -190,8 +190,8 @@ The detailed rules, every field with its origin and what reads it, and a worked 
 
 ## 4. Evidence records
 
-A reader model (template `verify_claim/v23` in Method v4.0, in batches of 10 abstracts; legacy v3 used `v22`) reads each abstract found for a claim and returns
-records. Before assigning `relation_to_claim` (`direct_support`, `direct_contradiction`, `related`, `irrelevant`, `insufficient`), `v23` extracts the study's factual `actual_contrast`, `actual_system`, `actual_outcome`, `study_mode` (`confirmatory | exploratory`) and `worst_domain_risk`; `verifier.enforce_relation_to_claim()` forbids `direct_contradiction` whenever species, intervention or outcome mismatches or `actual_contrast` is empty (`M6` guard), and `rules_v4` counts only `direct_support` on `evidence` and guarded `direct_contradiction` on `counterevidence`. In `configs/v4-flash.yaml`, `search: two_stage` (`retrieve_two_stage`, `CAP = 20`) issues 2 canonical mechanism/class queries (brand-stripped, `M1` invariant) + 2 novel-contribution queries with stage provenance; `search: filtered` ([`docs/method/search.md`](search.md)) remains supported: the queries a
+A reader model (template `verify_claim/v23` in Method v4, in batches of 10 abstracts; legacy v3 used `v22`) reads each abstract found for a claim and returns
+records. Before assigning `relation_to_claim` (`direct_support`, `direct_contradiction`, `related`, `irrelevant`, `insufficient`), `v23` extracts the study's factual `actual_contrast`, `actual_system`, `actual_outcome`, `study_mode` (`confirmatory | exploratory`) and `worst_domain_risk`; `verifier.enforce_relation_to_claim()` forbids `direct_contradiction` whenever species, intervention or outcome mismatches or `actual_contrast` is empty (`M6` guard). In Method v4.1 (`rules_v4`), `novel_contribution` and `outcome` claims count only `direct_support` on `evidence`, `counterevidence` counts only guarded `direct_contradiction` across all claims, and intermediate `mechanism` claims (neither `background`, nor `novel_contribution`, nor `outcome`) additionally admit verified `related` supporting records forced onto adjacent context (`0.5×`), while `novelty_v34` ignores `related` records so indirect support never demotes a novel link (`new_link`). In `configs/v4-flash.yaml`, `search: two_stage` (`retrieve_two_stage`, `CAP = 20`) issues 2 canonical mechanism/class queries (brand-stripped, `M1` invariant) + 2 novel-contribution queries with stage provenance; `search: filtered` ([`docs/method/search.md`](search.md)) remains supported: the queries a
 model writes and a query on the exact population, up to 200 PubMed papers each, date-cut at T; ordered by the match of the
 query words with title and abstract (BM25); the references and citing papers of the first 5 added (also before T) and the
 list ordered again; a cheap model rates the first 100 from 0 to 3 for the claim; every paper rated 3 is read, filled up to
@@ -336,12 +336,12 @@ S 0.5. Its effect on the evidence balance depends on whether it is required for 
 **Approved action.** A step (or an engagement link of an older card) whose subject is one approved drug (ChEMBL phase 4) with one of its ChEMBL targets
 named in the link is taken as at least 5/6 without search.
 
-**Gate (the only filter).** A key link is refuted when there is a record against of the top design (RCT or meta-analysis),
+  **Gate (the only filter).** A key link is refuted when there is a record against of the top design (RCT or meta-analysis),
 between groups, in the hypothesis's population (exact context), and no record for of that level, between groups, in the exact
 context or about the same class of intervention: an RCT or meta-analysis of the same kind of intervention is a
 counterweight too (one null trial against several trials of the same kind of intervention is a conflict, not a refutation).
 A trial in an adjacent population is not: a small trial elsewhere does not cancel a large null in the claim's own population.
-Then the hypothesis is filtered (not ranked). Nothing else filters: an undeveloped but promising hypothesis keeps its score and gets flags.
+In Method v4.1, two additional deterministic checks trigger the gate: a directly refuted pure `background` claim (`gate_reason = "refuted_background"`), and an in vivo living-human protocol carrying `safety_flags = ["irreversible_no_ltfu"]` (`gate_reason = "unsafe_protocol"`). Then the hypothesis is filtered (not ranked). Nothing else filters: an undeveloped but promising hypothesis keeps its score and gets flags.
 
 **Admission** is not a filter of ideas, only of texts that cannot be scored: a hypothesis about an intervention is scored
 when its card names the intervention, the population and an outcome (an outcome claim of the chain, or the measure); a
@@ -374,7 +374,7 @@ text without one of them is returned as "needs refinement" with the missing part
   Sum the positive and negative values of `2S − 1` separately. Divide the positive sum by the number of places with
   data plus the number of empty required places. Divide the negative sum by the number of places with data.
   Add the results for the single signed balance. With no data anywhere the balance is zero. Keep feasibility tied
-  to the proposed experiment. The calculator uses explicitly marked links.
+  to the proposed experiment. The calculator uses explicitly marked links; in Method v4.1, whenever the hypothesis claims a human population (`claim_is_human`) while proposing a non-human experiment (`mouse`, `rat`, `cells`, etc.), the code also enforces `required_for_balance: true` on all non-background `outcome` claims so splitting an animal modifier from the human clinical outcome never hides the untested animal-to-human gap.
 - **Coverage**: the share of the chain's places with at least one counting record. It says how much is known; the balance
   says how strong it is. The report shows it under the balance ("покрыто 3 из 4") and the chain with its empty links.
 - **Non-refutation P** and the **support share** are still computed by the code for older reports but are in no profile;
@@ -422,6 +422,7 @@ text without one of them is returned as "needs refinement" with the missing part
   A null leaves an alternative that explains success unchanged unless it contradicts a specific positive outcome
   that this alternative requires in the quoted comparison. The model judges that logical distinction and the code
   checks the quote. Older saved assessments may use `judge_alternatives/v2` from the calibration runs.
+  **Translational and execution-viability alignment of I (Method v4.1).** Raw `I` is aligned to what the experiment can actually teach about the stated claim and whether the biological system is obtainable (`rules_v4._align_informativeness_v41`): when the claim is human (`claim_is_human`) and the experiment uses a non-human system (`mouse`, `cells`, etc.), `I` is scaled by `0.5`; when the claim is human and the protocol is `human ex vivo` with `tested_scope = "prerequisite"`, `I` is scaled by `0.75` (`tested_scope = "unclear"` → `0.5`); when `implementation_readiness/v2` `component_checks` mark `population_or_model` (or `system_or_population_fit`) as `"insufficient"` (the donor organ, primary tissue model or cohort cannot be obtained at the planned scale), `I` becomes `0.0`; when `min_readiness_score = 0.0` due to an unvalidated delivery or assay component, `I` is scaled by `0.5`.
 - **Headroom I** = I if the experiment cut off every supported alternative and every threat of the checklist (d = 1, k = 1): what improving the experiment could add;
   an input of the room to improve (section 11).
 - **Novelty N** ([`novelty_v34.novelty`](../../hyparena/novelty/novelty_v34.py)): the distance of the hypothesis to what was already
@@ -465,7 +466,7 @@ not depend on the rest of the pool. An unknown value is drawn over its whole ran
 |---|---|---|
 | I | informativeness of the stated experiment (headroom I, of an improved one, feeds the room to improve, section 11) | linear, 0-1 |
 | W | scope of the mechanism | local < organ < hallmark |
-| feasibility | the mean of the included scores: system (data analysis and cells 1, yeast 0.9, worm and fly 0.85, mouse and rat 0.5, human 0), duration (weeks 1, months 2/3, years 1/3, decades 0), planned n (under 50: 1, under 200: 2/3, under 1000: 1/3, at least 1000: 0; in a stated human, animal or cell experiment, missing or nonpositive n contributes 0 and stays in the denominator), intervention readiness (in Method v4.0, `implementation_readiness/v2` separates `resource_tier` — `1_in_vitro | 2_animal | 3_human_ex_vivo_or_pilot | 4_clinical_in_vivo`, where all ex vivo human donor organs/explants/islets/ALI/lenses sit in `3_human_ex_vivo_or_pilot` regardless of `design = "rct"` — from 3-component weak-link `execution_readiness` across `intervention_delivery`, `system_or_population_fit` and `critical_measurement_or_engagement`, taking `min_readiness_score`: `confirmed_in_context = 1.0`, `adjacent_only = 0.5`, `insufficient = 0.0` with mandatory verbatim quote verification, plus a scarce-organ sample-size guard downgrading `population_or_model` to `insufficient` when `n_planned > 3×` the largest donor/organ count in the cited pre-T abstract; for compounds, verified ChEMBL phase or pre-T ClinicalTrials.gov phase — phase 4: 1, phase 1–3: 0.5, phase 0: 0, unverified combination ≤ 0.5 — is additionally capped by `min_readiness_score` when `component_checks` identify an unconfirmed target subgroup or measurement; legacy `implementation_readiness/v1` non-drug assessments remain supported. An unspecified agent, unclassified type, unconfirmed identity or phase, or lookup failure leaves readiness at 0 and keeps its place in the denominator); [`v3_extra.feasibility`](../../hyparena/scoring/v3_extra.py) | 0-1; reports `resource_tier` alongside `execution_readiness` |
+| feasibility | the mean of the included scores: system (data analysis and cells 1, yeast 0.9, worm and fly 0.85, mouse and rat 0.5, human 0; in Method v4.1 `claim_aligned=True`, a hypothesis claiming a human population receives system score `0` regardless of whether its proxy experiment uses animals or cells, closing the animal-for-human cost subsidy while preserving `SYSTEM_COST` for animal/cell claims), duration (weeks 1, months 2/3, years 1/3, decades 0), planned n (under 50: 1, under 200: 2/3, under 1000: 1/3, at least 1000: 0; in a stated human, animal or cell experiment, missing or nonpositive n contributes 0 and stays in the denominator), intervention readiness (in Method v4.1, `implementation_readiness/v2` separates `resource_tier` — `1_in_vitro | 2_animal | 3_human_ex_vivo_or_pilot | 4_clinical_in_vivo`, where all ex vivo human donor organs/explants/islets/ALI/lenses sit in `3_human_ex_vivo_or_pilot` regardless of `design = "rct"` — from 3-component weak-link `execution_readiness` across `intervention_delivery`, `system_or_population_fit` and `critical_measurement_or_engagement`, taking `min_readiness_score`: `confirmed_in_context = 1.0`, `adjacent_only = 0.5`, `insufficient = 0.0` with mandatory verbatim quote verification, plus a scarce-organ sample-size guard downgrading `population_or_model` to `insufficient` when `n_planned > 3×` the largest donor/organ count in the cited pre-T abstract; on in vivo living-human protocols, `safety_flags` cap readiness at `0.0` for `unjustified_risk_in_healthy_older` or unmonitored `on_target_pleiotropy`, and `≤ 0.5` for monitored `on_target_pleiotropy`; for compounds, verified ChEMBL phase or pre-T ClinicalTrials.gov phase — phase 4: 1, phase 1–3: 0.5, phase 0: 0, unverified combination ≤ 0.5 — is additionally capped by `min_readiness_score` when `component_checks` identify an unconfirmed target subgroup or measurement; legacy `implementation_readiness/v1` non-drug assessments remain supported. An unspecified agent, unclassified type, unconfirmed identity or phase, or lookup failure leaves readiness at 0 and keeps its place in the denominator); [`v3_extra.feasibility`](../../hyparena/scoring/v3_extra.py) | 0-1; reports `resource_tier` alongside `execution_readiness` |
 | best_design_outcome | best design among the records of the outcome link | cells … RCT |
 | independent_outcome | independent sources for the outcome link | 0-5 |
 | against_share | share of the chain's weight against (in no profile) | 0-1, lower better |
@@ -1004,12 +1005,18 @@ profiles:
   funding: [[chain_state], [feasibility], [trend_pubmed, ai_role, N], [I, W], [endpoint_clinical, best_design_outcome, independent_outcome]]
   frontier: [[N], [chain_state], [I], [feasibility], [W]]
 v40:
-  method_version: "v4.0"
+  method_version: "v4.1"
   normalize_version: "v19"
   verify_version: "v23"
   propose_alternatives_version: "v4"
   implementation_version: "v2"
   component_readiness_scores: {confirmed_in_context: 1.0, adjacent_only: 0.5, insufficient: 0.0}
+  v41_informativeness_alignment:
+    translational_prereq_i_factor: 0.5
+    ex_vivo_prereq_i_factor: 0.75
+    unclear_scope_i_factor: 0.5
+    unobtainable_model_i_factor: 0.0
+    unvalidated_component_i_factor: 0.5
 ```
 
 ## 15. Resources of a run (calls, tokens, cost)

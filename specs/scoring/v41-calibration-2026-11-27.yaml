@@ -1,0 +1,60 @@
+id: v41-calibration-2026-11-27
+status: adopted (v4.1)
+date: 2026-11-27
+baseline: method v4.0 (after Block A fixes)
+config: configs/v4-flash.yaml
+scorer: hyparena/scoring/rules_v4.py
+profiles_modified: false
+summary: >
+  Eliminates the preclinical/mouse-for-human proxy distortion across chain_state, I, and feasibility,
+  aligns informativeness I with biological preparation viability in implementation_readiness/v2,
+  restores 0.5x adjacent-context support for verified `related` records on intermediate mechanism links
+  (without demoting novelty N or violating M6), and wires in vivo living-human safety_flags into gate
+  and readiness — without modifying configs/profiles_v3.yaml.
+rules:
+  claim_aligned_system_cost:
+    applies_when: "claim_is_human(card) is True"
+    system_score: 0.0
+    note: "Removes +0.50 mouse and +1.00 cell cost subsidy on human claims while keeping SYSTEM_COST for animal/cell claims."
+  cross_species_outcome_bridge:
+    applies_when: "claim_is_human(card) and decisive_experiment.system not in ('human', 'unknown')"
+    effect: "All non-background outcome claims have required_for_balance = True"
+  informativeness_alignment:
+    translational_prereq_i_factor: 0.5
+    ex_vivo_prereq_i_factor: 0.75
+    unclear_scope_i_factor: 0.5
+    unobtainable_model_i_factor: 0.0
+    unvalidated_component_i_factor: 0.5
+  related_mechanism_support:
+    allowed_on: "intermediate mechanism claims only (excludes background, novel_contribution, outcome, and all counterevidence)"
+    context_weight: 0.5
+    novelty_interaction: "relation_to_claim == 'related' is excluded from novelty_v34 slot support and record_level"
+  living_human_safety:
+    irreversible_no_ltfu: "gate = 'filtered', gate_reason = 'unsafe_protocol' (in vivo human only)"
+    unjustified_risk_in_healthy_older: "readiness = 0.0 (in vivo human only)"
+    on_target_pleiotropy: "readiness <= 0.5 with explicit titration/monitoring in protocol, else 0.0 (in vivo human only)"
+registry_regression_checks:
+  pilot10_v313_replay_sha256: "8d179391491590b55268cf977defa1213fc266caa5166475c2402ad014978f59 (exact match)"
+  pilot10_strict_mutations: "9/9 cases (54/54 invariants passed)"
+  prospective_60_top10_overlap:
+    evidence: "10/10"
+    funding: "10/10"
+    frontier: "10/10"
+  calibration_73:
+    R3_auc: 0.607
+    top10_overlap_evidence: "10/10"
+    top10_overlap_funding: "10/10"
+    top10_overlap_frontier: "10/10"
+prospective_generation_validation:
+  pool: "Sol-20 (2026-11-27, 20 hypotheses across A3/BS3/A4/BS4, 190-pair blind judge consensus)"
+  mouse_proxy_in_top5:
+    evidence: "0/5 (ranks #12..#18)"
+    funding: "0/5 (ranks #6..#17, vs 3/5 in Top-5 under v4.0)"
+  unobtainable_donor_protocols_in_top5:
+    evidence: "0/3 (H13 #3 -> #17, H14 #4 -> #9, H03 #14 -> #19)"
+    funding: "0/3 (ranks #18..#20)"
+    frontier: "0/3 (ranks #17..#20)"
+  spearman_with_blind_judge_consensus:
+    evidence: "-0.155 -> +0.124 (+0.290 without H15/H18 text-level mouse-jump override, where blind judges did not penalize the human-to-mouse switch)"
+    funding: "+0.355 (+0.537 without H15/H18 text-level mouse-jump override)"
+    frontier: "+0.101 -> +0.340 (+0.483 without H15/H18 text-level mouse-jump override)"

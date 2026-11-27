@@ -76,6 +76,8 @@ def _same_species(rec: EvidenceRecord, claim: Claim) -> bool:
 
 def record_level(rec: EvidenceRecord, claim: Claim) -> Optional[str]:
     """The ladder level one usable record gives its claim, or None when it does not count."""
+    if getattr(rec, "relation_to_claim", None) == "related":
+        return None
     if r32.record_weight(rec, claim, False, True) <= 0 and r32.record_weight(rec, claim, True, True) <= 0:
         return None
     im = rec.qualifiers_match.get("intervention_match", "exact")
@@ -212,9 +214,27 @@ def novelty(card: HypothesisCard, cvs: list[ClaimVerification], e: Optional[r32.
                 return novelty_from_outcomes(base_level, paper_outcomes)[0]
             return base_level
         return None
-    supported = [any(e.links[i][3] > 0 for i in sl) and _slot_S(e, sl, False) > 0.5 for sl in pre]
-    empty = [all(e.links[i][3] + e.links[i][4] == 0 for i in sl) for sl in pre]
-    refuted_any = any(any(e.links[i][4] > e.links[i][3] for i in sl) for sl in pre)
+    has_related = any(
+        getattr(r, "relation_to_claim", None) == "related"
+        for cv in cvs
+        for r in (cv.evidence + cv.counterevidence)
+    )
+    if has_related:
+        direct_cvs = [
+            cv.model_copy(
+                update={
+                    "evidence": [r for r in cv.evidence if getattr(r, "relation_to_claim", None) != "related"],
+                    "counterevidence": [r for r in cv.counterevidence if getattr(r, "relation_to_claim", None) != "related"],
+                }
+            )
+            for cv in cvs
+        ]
+        e_pre = evaluate(card, direct_cvs)
+    else:
+        e_pre = e
+    supported = [any(e_pre.links[i][3] > 0 for i in sl) and _slot_S(e_pre, sl, False) > 0.5 for sl in pre]
+    empty = [all(e_pre.links[i][3] + e_pre.links[i][4] == 0 for i in sl) for sl in pre]
+    refuted_any = any(any(e_pre.links[i][4] > e_pre.links[i][3] for i in sl) for sl in pre)
     base_level: Optional[str] = None
     if all(supported):
         base_level = "new_combination"

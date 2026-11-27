@@ -1,11 +1,11 @@
-"""Build the standalone Method v4.0 evaluator code archive (.zip).
+"""Build the standalone Method v4.1 evaluator code archive (.zip).
 
-Packages `hyparena/`, `configs/`, `manual.md`, `changelog-v4.0.md`, `dossier-instructions-draft.md`,
+Packages `hyparena/`, `configs/`, `manual.md`, `changelog-v4.1.md`, `changelog-v4.0.md`, `dossier-instructions-draft.md`,
 `calculate.py`, `make_report.py`, `example_cases.json`, `requirements.txt`, and Russian `README.md`
 into a self-contained zip archive for external/blinded hypothesis evaluation.
 
 Usage:
-    python scripts/docs/build_evaluator_kit.py --out path/to/hyp-arena-v4.0-evaluation-kit.zip [--cutoff 2026-11-27]
+    python scripts/docs/build_evaluator_kit.py --out path/to/hyp-arena-v4.1-evaluation-kit.zip [--cutoff 2026-11-27]
 """
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ PyYAML
 httpx
 """
 
-CALCULATE_PY = '''"""Structured evidence -> Method v4.0 calculations + ASPID profile rankings and cluster deduplication."""
+CALCULATE_PY = '''"""Structured evidence -> Method v4.1 calculations + ASPID profile rankings and cluster deduplication."""
 import argparse
 import json
 from pathlib import Path
@@ -84,7 +84,8 @@ for case in cases:
     card_raw = HypothesisCard.model_validate(case["card"])
     cvs_raw = [ClaimVerification.model_validate(c) for c in case["verifications"]]
     alts = {k: ClaimVerification.model_validate(v) for k, v in (case.get("alternatives") or {}).items()}
-    exp_text = case.get("experiment_text") or case.get("hypothesis_text") or card_raw.decisive_experiment.span or ""
+    full_parts = [p for p in (case.get("hypothesis_text"), case.get("experiment_text")) if p]
+    exp_text = "\\n\\n".join(full_parts) if full_parts else (card_raw.decisive_experiment.span or "")
 
     raw_impl = case.get("implementation_readiness")
     impl = None
@@ -108,7 +109,7 @@ for case in cases:
     card_v4, cvs_v4, alts_v4, _, _ = rules_v4.prepare_for_v4(card_raw, cvs_raw, alts, experiment_text=exp_text)
     base_v32 = rules_v32.evaluate(card_v4, cvs_v4, alts_v4, v36=True)
     v31_dict = rules_v3.evaluate(card_v4, cvs_v4, alts_v4, variant="v3.1").as_dict()
-    ext = extras(card_v4, cvs_v4, v31_dict, args.as_of, implementation=impl)
+    ext = extras(card_v4, cvs_v4, v31_dict, args.as_of, implementation=impl, claim_aligned=True, experiment_text=exp_text)
     po = case.get("paper_outcomes")
     ind_in = case.get("indicators") or {}
     ep = endpoint_for_experiment(
@@ -118,7 +119,7 @@ for case in cases:
         implementation=impl,
     )
     nov = novelty(card_v4, cvs_v4, base_v32, absence=case.get("absence"), paper_outcomes=po)
-    feas = feasibility(card_v4, as_of=args.as_of, implementation=impl)
+    feas = r4.feasibility
 
     results[ident] = {
         "method": METHOD_V4_VERSION,
@@ -133,14 +134,15 @@ for case in cases:
         "support_share": r4.support_share,
         "coverage": r4.coverage,
         "I": r4.I,
+        "raw_I": r4.raw_I,
         "headroom_I": r4.headroom_I,
         "scope": r4.scope,
         "novelty": nov,
         "novelty_source": novelty_source(card_v4, cvs_v4, paper_outcomes=po),
         "link_novelty": link_levels(card_v4, cvs_v4),
         "feasibility": feas,
-        "feasibility_breakdown": feasibility_breakdown(card_v4, as_of=args.as_of, implementation=impl),
-        "feasibility_diagnostic": feasibility_diagnostic(card_v4, as_of=args.as_of, implementation=impl),
+        "feasibility_breakdown": feasibility_breakdown(card_v4, as_of=args.as_of, implementation=impl, claim_aligned=True, experiment_text=exp_text),
+        "feasibility_diagnostic": {"resource_tier": r4.resource_tier, "execution_readiness": r4.execution_readiness},
         "endpoint_clinical": ep,
         "chain_summary": r4.chain_summary,
         "evaluation_v4": r4.as_dict(),
@@ -196,7 +198,7 @@ results["_pool_summary"] = {
 print(json.dumps(results, ensure_ascii=False, indent=2, allow_nan=False))
 '''
 
-MAKE_REPORT_PY = '''"""Create a 5-tab Russian HTML report from manually prepared cases (Method v4.0)."""
+MAKE_REPORT_PY = '''"""Create a 5-tab Russian HTML report from manually prepared cases (Method v4.1)."""
 import argparse
 import hashlib
 import json
@@ -259,7 +261,8 @@ for case in cases:
         fields = (("Тезис", "claim"), ("Обоснование", "rationale"), ("Эксперимент", "experiment"))
         text_val = "\\n\\n".join(f"{label} — {original[key]}" for label, key in fields if original.get(key))
     texts[ident] = text_val
-    exp_text = case.get("experiment_text") or text_val or card_raw.decisive_experiment.span or ""
+    full_parts = [p for p in (text_val, case.get("experiment_text")) if p and p not in text_val]
+    exp_text = "\\n\\n".join([text_val, *full_parts]).strip() or card_raw.decisive_experiment.span or ""
 
     raw_impl = case.get("implementation_readiness")
     impl = None
@@ -307,10 +310,10 @@ for case in cases:
 meta = {
     "pool": "Подготовленные карточки",
     "date": a.as_of,
-    "title_ru": "Отчёт по подготовленным данным (метод v4.0)",
-    "title_en": "Report from prepared data (Method v4.0)",
-    "about_ru": "Ручная подготовка исходных данных по методу v4.0; полнота поиска и цитаты требуют отдельной проверки.",
-    "about_en": "Manually prepared input under Method v4.0; search coverage and quotations require independent checking.",
+    "title_ru": f"Отчёт по подготовленным данным (метод {METHOD_V4_VERSION})",
+    "title_en": f"Report from prepared data (Method {METHOD_V4_VERSION})",
+    "about_ru": f"Ручная подготовка исходных данных по методу {METHOD_V4_VERSION}; полнота поиска и цитаты требуют отдельной проверки.",
+    "about_en": f"Manually prepared input under Method {METHOD_V4_VERSION}; search coverage and quotations require independent checking.",
     "method": METHOD_V4_VERSION,
     "sha": hashlib.sha256(raw).hexdigest(),
 }
@@ -320,10 +323,10 @@ Path(a.out).write_text(render(report), encoding="utf-8")
 
 
 def _readme_md(cutoff: str) -> str:
-    return f"""# Пакет автономной оценки по мануалу HypArena v4.0 · {cutoff}
+    return f"""# Пакет автономной оценки по мануалу HypArena v4.1 · {cutoff}
 
-Пакет предназначен для независимой оценки гипотез на срез **`{cutoff}`** (или иной заданный `--as-of YYYY-MM-DD`) по **методу v4.0**.
-Полные правила изложены в `manual.md`, сводка всех изменений выпуска — в `changelog-v4.0.md`, требования к общему досье для слепых судей — в `dossier-instructions-draft.md`.
+Пакет предназначен для независимой оценки гипотез на срез **`{cutoff}`** (или иной заданный `--as-of YYYY-MM-DD`) по **методу v4.1**.
+Полные правила изложены в `manual.md`, сводка всех изменений выпуска — в `changelog-v4.1.md` и `changelog-v4.0.md`, требования к общему досье для слепых судей — в `dossier-instructions-draft.md`.
 
 Подготовьте `cases.json` по образцу `example_cases.json`, рассчитайте `results.json` через `calculate.py` и соберите пятистраничный русскоязычный отчёт `report.html` через `make_report.py`. Отдельно сформируйте единый `dossier.json` по `dossier-instructions-draft.md`.
 
@@ -763,6 +766,7 @@ def build_kit(out_zip: Path, cutoff: str) -> dict:
 
         _writestr("README.md", _readme_md(cutoff))
         _writefile(ROOT / "docs" / "method" / "manual.md", "manual.md")
+        _writefile(ROOT / "docs" / "method" / "changelog-v4.1.md", "changelog-v4.1.md")
         _writefile(ROOT / "docs" / "method" / "changelog-v4.0.md", "changelog-v4.0.md")
         _writefile(ROOT / "docs" / "method" / "dossier-instructions-draft.md", "dossier-instructions-draft.md")
         _writestr("requirements.txt", REQUIREMENTS_TXT)

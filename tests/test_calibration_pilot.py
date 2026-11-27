@@ -862,7 +862,7 @@ def test_rules_v4_end_to_end_and_config():
     from hyparena.scoring import rules_v4
 
     assert METHOD_VERSION == "v3.13"
-    assert METHOD_V4_VERSION == "v4.0"
+    assert METHOD_V4_VERSION == "v4.1"
     cfg_v4 = yaml.safe_load((REPO_ROOT / "configs" / "v4-flash.yaml").read_text(encoding="utf-8"))
     assert cfg_v4["method"] == "v4"
     assert cfg_v4["normalize_version"] == "v19"
@@ -895,7 +895,7 @@ def test_rules_v4_end_to_end_and_config():
         },
         experiment_text=card.decisive_experiment.span,
     )
-    assert r_base.method_version == "v4.0"
+    assert r_base.method_version == "v4.1"
     assert r_base.gate == "pass"
     assert r_base.resource_tier == "4_clinical_in_vivo"
     assert r_base.execution_readiness["readiness_score"] == 0.5
@@ -1114,6 +1114,200 @@ def test_block_a_v40_fixes():
     cl_res = pool_clusters({"W1": c_skin1, "W2": c_skin2, "A1": ex_card}, {"evidence": ["W1", "W2", "A1"]})
     assert len(cl_res["clusters"]) == 1 and set(cl_res["clusters"][0]["members"]) == {"W1", "W2"}
     assert [r["id"] for r in cl_res["top_distinct"]["evidence"]] == ["W1", "A1"]
+
+
+def test_method_v41_calibrated_rules(monkeypatch):
+    from hyparena.card.models import ClaimVerification, EvidenceRecord, HypothesisCard
+    from hyparena.novelty.novelty_v34 import novelty
+    from hyparena.scoring import rules_v32, rules_v4, v3_extra
+
+    monkeypatch.setattr(v3_extra, "readiness_assessment", lambda card, *a, **kw: (1.0, "approved"))
+
+    # 1. Cross-species "mouse jump" on a human clinical claim:
+    #    - removes the +0.50 mouse system subsidy in claim-aligned feasibility,
+    #    - scales I by 0.5,
+    #    - enforces human outcome link as required_for_balance even when upstream mouse link is novel_contribution.
+    mouse_jump = _synthetic_v313_case()
+    mouse_jump["card"]["pico"]["population"] = {"taxon": "Homo sapiens", "label": "older adults with Alzheimer disease"}
+    mouse_jump["card"]["claims"] = [
+        {
+            "id": "c1",
+            "subject": "NMD670",
+            "relation": "inhibits",
+            "object": "ClC-1 channel",
+            "role": "mechanism",
+            "link": "engagement",
+            "chain_roles": ["mechanism"],
+        },
+        {
+            "id": "c2",
+            "subject": "NMD670",
+            "relation": "activates",
+            "object": "hippocampal ripple coupling",
+            "role": "mechanism",
+            "link": "pathway",
+            "chain_roles": ["mechanism", "novel_contribution"],
+        },
+        {
+            "id": "c3",
+            "subject": "NMD670",
+            "relation": "improves_healthspan_in",
+            "object": "older adults",
+            "role": "outcome",
+            "link": "outcome",
+            "chain_roles": ["outcome"],
+            "primary": True,
+        },
+    ]
+    mouse_jump["card"]["decisive_experiment"]["system"] = "mouse"
+    mouse_jump["card"]["decisive_experiment"]["duration_class"] = "weeks"
+    mouse_jump["card"]["decisive_experiment"]["n_planned"] = 36
+    mj_card = HypothesisCard.model_validate(mouse_jump["card"])
+    mj_cvs = [
+        ClaimVerification.model_validate(mouse_jump["verifications"]["c1"]),
+        ClaimVerification(id="c2", evidence=[]),
+        ClaimVerification(id="c3", evidence=[]),
+    ]
+    mj_alts = {k: ClaimVerification.model_validate(v) for k, v in mouse_jump["alternatives"].items()}
+
+    # Legacy v3 feasibility still gives mouse 0.5 -> (0.5 + 1.0 + 1.0 + 1.0) / 4 = 0.875
+    assert v3_extra.feasibility(mj_card) == 0.875
+    # Claim-aligned v4.1 feasibility gives system 0.0 -> (0.0 + 1.0 + 1.0 + 1.0) / 4 = 0.75
+    r_mj = rules_v4.evaluate(mj_card, mj_cvs, mj_alts, experiment_text=mj_card.decisive_experiment.span)
+    assert r_mj.feasibility == 0.75
+    bd_mj = v3_extra.feasibility_breakdown(mj_card, claim_aligned=True)
+    assert bd_mj["parts"][0]["score"] == 0.0 and bd_mj["parts"][0]["reason"] == "human_claim_aligned"
+    assert r_mj.I == round(r_mj.raw_I * 0.5, 4)
+    # 1 observed slot (c1) + 2 required missing slots (c2 novel_contribution + c3 cross-species human outcome) => denominator 3
+    assert r_mj.coverage_counts == (1, 3)
+
+    # Genuine animal-claim card retains full mouse system score (0.875) and full I
+    animal_dict = copy.deepcopy(mouse_jump["card"])
+    animal_dict["claim_plain"] = "NMD670 improves rotarod retention in aged C57BL/6 mice."
+    animal_dict["pico"]["population"] = {"taxon": "Mus musculus", "label": "aged C57BL/6 mice"}
+    animal_dict["claims"][2]["object"] = "aged mice"
+    animal_dict["decisive_experiment"]["span"] = (
+        "Randomize 36 aged C57BL/6 mice to NMD670 or vehicle. "
+        "Include direct muscle stimulation as an active control to isolate neuromuscular transmission."
+    )
+    animal_card = HypothesisCard.model_validate(animal_dict)
+    r_anim = rules_v4.evaluate(animal_card, mj_cvs, mj_alts, experiment_text=animal_card.decisive_experiment.span)
+    assert r_anim.feasibility == 0.875
+    assert r_anim.I == r_anim.raw_I
+    # Even if normalizer sets taxon='Mus musculus', an opening human clinical thesis in source_text still triggers mouse-jump alignment
+    r_disguised = rules_v4.evaluate(
+        animal_card,
+        mj_cvs,
+        mj_alts,
+        experiment_text="In older adults with cerebral small-vessel disease, NMD670 improves perfusion.\n\n" + animal_card.decisive_experiment.span,
+    )
+    assert r_disguised.feasibility == 0.75
+    assert r_disguised.I == round(r_disguised.raw_I * 0.5, 4)
+
+    # 2. Execution viability alignment on I: unobtainable population_or_model -> I = 0.0; unvalidated assay -> I * 0.5
+    human_case = _synthetic_v313_case()
+    h_card = HypothesisCard.model_validate(human_case["card"])
+    h_cvs = [ClaimVerification.model_validate(v) for v in human_case["verifications"].values()]
+    h_alts = {k: ClaimVerification.model_validate(v) for k, v in human_case["alternatives"].items()}
+    r_unobt = rules_v4.evaluate(
+        h_card,
+        h_cvs,
+        h_alts,
+        implementation={
+            "resource_tier": "3_human_ex_vivo_or_pilot",
+            "overall_evidence_status": "insufficient",
+            "min_readiness_score": 0.0,
+            "component_checks": [{"component": "population_or_model", "evidence_status": "insufficient"}],
+        },
+        experiment_text=h_card.decisive_experiment.span,
+    )
+    assert r_unobt.raw_I > 0.0 and r_unobt.I == 0.0
+
+    r_unval_assay = rules_v4.evaluate(
+        h_card,
+        h_cvs,
+        h_alts,
+        implementation={
+            "resource_tier": "4_clinical_in_vivo",
+            "overall_evidence_status": "insufficient",
+            "min_readiness_score": 0.0,
+            "component_checks": [
+                {"component": "population_or_model", "evidence_status": "confirmed_in_context"},
+                {"component": "measurement_or_assay", "evidence_status": "insufficient"},
+            ],
+        },
+        experiment_text=h_card.decisive_experiment.span,
+    )
+    assert r_unval_assay.I == round(r_unval_assay.raw_I * 0.5, 4)
+
+    # 3. Verified `related` support counts at 0.5x on intermediate mechanism, never on outcome/novel_contribution,
+    #    and never demotes novelty from `new_link` to `new_combination`
+    rel_case = _synthetic_v313_case()
+    rel_case["card"]["claims"] = [
+        {
+            "id": "c0",
+            "subject": "aging",
+            "relation": "decreases_expression",
+            "object": "islet pulsatility",
+            "role": "premise",
+            "link": "pathway",
+            "chain_roles": ["background"],
+        },
+        {
+            "id": "c1",
+            "subject": "NMD670",
+            "relation": "activates",
+            "object": "granule recovery",
+            "role": "mechanism",
+            "link": "pathway",
+            "chain_roles": ["mechanism"],
+        },
+        {
+            "id": "c2",
+            "subject": "NMD670",
+            "relation": "improves_healthspan_in",
+            "object": "aged adults",
+            "role": "outcome",
+            "link": "outcome",
+            "chain_roles": ["novel_contribution", "outcome"],
+            "primary": True,
+        },
+    ]
+    rel_card = HypothesisCard.model_validate(rel_case["card"])
+    rel_rec = EvidenceRecord.model_validate(
+        {**rel_case["verifications"]["c1"]["evidence"][0], "species": "rat", "design": "animal", "relation_to_claim": "related"}
+    )
+    rel_cvs = [
+        ClaimVerification.model_validate({**rel_case["verifications"]["c1"], "id": "c0"}),
+        ClaimVerification(id="c1", evidence=[rel_rec]),
+        ClaimVerification(id="c2", evidence=[rel_rec]),
+    ]
+    c4_rel, cvs4_rel, _, _, _ = rules_v4.prepare_for_v4(rel_card, rel_cvs, {})
+    r_rel = rules_v4.evaluate(rel_card, rel_cvs, {})
+    assert len(cvs4_rel[1].evidence) == 1  # kept on intermediate mechanism c1 as adjacent 0.5x
+    assert len(cvs4_rel[2].evidence) == 0  # blocked on novel_contribution/outcome c2
+    assert r_rel.chain_state > 0.0
+    b32_rel = rules_v32.evaluate(c4_rel, cvs4_rel, {}, v36=True)
+    assert novelty(c4_rel, cvs4_rel, b32_rel) == "new_link"
+
+    # 4. In vivo human safety_flags: irreversible_no_ltfu filters living humans, pleiotropy caps readiness
+    unsafe_dict = copy.deepcopy(human_case["card"])
+    unsafe_dict["decisive_experiment"]["safety_flags"] = ["irreversible_no_ltfu"]
+    r_unsafe = rules_v4.evaluate(HypothesisCard.model_validate(unsafe_dict), h_cvs, h_alts)
+    assert r_unsafe.gate == "filtered" and r_unsafe.gate_reason == "unsafe_protocol"
+
+    pleio_dict = copy.deepcopy(human_case["card"])
+    pleio_dict["decisive_experiment"]["safety_flags"] = ["on_target_pleiotropy"]
+    r_pleio_unmon = rules_v4.evaluate(HypothesisCard.model_validate(pleio_dict), h_cvs, h_alts, experiment_text="Give drug for 12 weeks.")
+    assert r_pleio_unmon.execution_readiness["readiness_score"] == 0.0
+    r_pleio_mon = rules_v4.evaluate(
+        HypothesisCard.model_validate(pleio_dict),
+        h_cvs,
+        h_alts,
+        experiment_text="Include week-1 dose titration and continuous ECG safety monitoring.",
+    )
+    assert r_pleio_mon.execution_readiness["readiness_score"] == 0.5
+
 
 
 

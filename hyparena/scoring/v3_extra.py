@@ -228,6 +228,56 @@ def _call_readiness(card: HypothesisCard, as_of: str = "", implementation: Optio
             return readiness(card)
 
 
+def claim_is_human(card: HypothesisCard, source_text: str = "") -> bool:
+    """True when the card's claimed target population, outcome claim, or opening thesis in `source_text` is human."""
+    pop = card.pico.population
+    tax = (pop.taxon or "").lower()
+    lab = f"{pop.label or ''} {pop.condition or ''} {card.claim_plain or ''}".lower()
+    if "9606" in tax or "homo sapiens" in tax:
+        return True
+    human_phrases = ("older adult", "older people", "older women", "older men", "adults aged", "patients", "human")
+    if any(w in lab for w in human_phrases):
+        return True
+    head = (source_text or "")[:400].lower()
+    if any(w in head for w in ("older adult", "older people", "older women", "older men", "adults aged", "in patients with")):
+        return True
+    return any(r3.human_claim(c) for c in card.claims if c.role == "outcome" or c.link == "outcome")
+
+
+SAFETY_MONITOR_TOKENS = ("titrat", "run-in", "tolerab", "monitor", "ecg", "safety")
+
+
+def collect_safety_flags(card: HypothesisCard, implementation: Optional[dict] = None) -> set[str]:
+    flags = set(getattr(card.decisive_experiment, "safety_flags", None) or [])
+    if isinstance(implementation, dict):
+        flags |= {str(x) for x in (implementation.get("safety_flags") or []) if str(x).strip()}
+    return flags
+
+
+def safety_readiness_cap(
+    card: HypothesisCard,
+    readiness_score: Optional[float],
+    readiness_reason: str,
+    implementation: Optional[dict] = None,
+    experiment_text: str = "",
+) -> tuple[Optional[float], str]:
+    """In vivo living-human safety caps on readiness (`Method v4.1`)."""
+    e = card.decisive_experiment
+    if str(e.system or "").lower() != "human" or is_human_ex_vivo(card, implementation):
+        return readiness_score, readiness_reason
+    s_flags = collect_safety_flags(card, implementation)
+    if "unjustified_risk_in_healthy_older" in s_flags:
+        return 0.0, "safety_unjustified_risk"
+    if "on_target_pleiotropy" in s_flags:
+        span_l = (experiment_text or e.span or "").lower()
+        if not any(tok in span_l for tok in SAFETY_MONITOR_TOKENS):
+            return 0.0, "safety_unmonitored_pleiotropy"
+        cur = readiness_score if readiness_score is not None else 0.0
+        if cur > 0.5:
+            return 0.5, "safety_pleiotropy_capped"
+    return readiness_score, readiness_reason
+
+
 def sample_size_score(experiment: DecisiveExperiment) -> Optional[float]:
     """Reserve the sample-size component for a stated empirical system."""
     n = experiment.n_planned
@@ -236,18 +286,42 @@ def sample_size_score(experiment: DecisiveExperiment) -> Optional[float]:
     return _n_score(n)
 
 
-def feasibility(card: HypothesisCard, as_of: str = "", implementation: Optional[dict] = None) -> float:
+def feasibility(
+    card: HypothesisCard,
+    as_of: str = "",
+    implementation: Optional[dict] = None,
+    *,
+    claim_aligned: bool = False,
+    experiment_text: str = "",
+) -> float:
     e = card.decisive_experiment
-    parts = [SYSTEM_COST.get(e.system), DURATION_COST.get(e.duration_class), sample_size_score(e)]
+    sys_score = (
+        0.0
+        if (claim_aligned and claim_is_human(card, experiment_text) and e.system in SYSTEM_COST)
+        else SYSTEM_COST.get(e.system)
+    )
+    parts = [sys_score, DURATION_COST.get(e.duration_class), sample_size_score(e)]
     known = [p for p in parts if p is not None]
+    r_score = _call_readiness(card, as_of, implementation)
+    if claim_aligned:
+        r_score, _ = safety_readiness_cap(card, r_score, "", implementation, experiment_text)
     # Missing readiness retains its place so withholding it cannot raise feasibility.
-    return round((sum(known) + (_call_readiness(card, as_of, implementation) or 0.0)) / (len(known) + 1), 3)
+    return round((sum(known) + (r_score or 0.0)) / (len(known) + 1), 3)
 
 
-def feasibility_breakdown(card: HypothesisCard, as_of: str = "", implementation: Optional[dict] = None) -> dict:
+def feasibility_breakdown(
+    card: HypothesisCard,
+    as_of: str = "",
+    implementation: Optional[dict] = None,
+    *,
+    claim_aligned: bool = False,
+    experiment_text: str = "",
+) -> dict:
     """Component-level breakdown of feasibility(card) for display in the evaluation tab."""
     e = card.decisive_experiment
-    sys_score = SYSTEM_COST.get(e.system)
+    is_hum = claim_is_human(card, experiment_text)
+    human_claim_override = bool(claim_aligned and is_hum and e.system in SYSTEM_COST and e.system != "human")
+    sys_score = 0.0 if (claim_aligned and is_hum and e.system in SYSTEM_COST) else SYSTEM_COST.get(e.system)
     dur_score = DURATION_COST.get(e.duration_class)
     n_score = sample_size_score(e)
     n_missing_reserved = (
@@ -261,6 +335,10 @@ def feasibility_breakdown(card: HypothesisCard, as_of: str = "", implementation:
             readiness_score, readiness_reason = readiness_assessment(card)
     except TypeError:
         readiness_score, readiness_reason = readiness_assessment(card)
+    if claim_aligned:
+        readiness_score, readiness_reason = safety_readiness_cap(
+            card, readiness_score, readiness_reason, implementation, experiment_text
+        )
     known = [p for p in (sys_score, dur_score, n_score) if p is not None]
     denom = len(known) + 1
     total = round((sum(known) + (readiness_score or 0.0)) / denom, 3)
@@ -290,13 +368,16 @@ def feasibility_breakdown(card: HypothesisCard, as_of: str = "", implementation:
                 readiness_part["evidence_pmid"] = ", ".join(dict.fromkeys(pmids))
         if implementation.get("issue"):
             readiness_part["issue"] = implementation["issue"]
+    sys_part = {
+        "key": "system",
+        "value": e.system,
+        "score": round(sys_score, 3) if sys_score is not None else None,
+        "in_denominator": sys_score is not None,
+    }
+    if human_claim_override:
+        sys_part["reason"] = "human_claim_aligned"
     parts = [
-        {
-            "key": "system",
-            "value": e.system,
-            "score": round(sys_score, 3) if sys_score is not None else None,
-            "in_denominator": sys_score is not None,
-        },
+        sys_part,
         {
             "key": "duration",
             "value": e.duration_class,
@@ -316,7 +397,8 @@ def feasibility_breakdown(card: HypothesisCard, as_of: str = "", implementation:
 
 
 def extras(card: HypothesisCard, ver_claims: list[ClaimVerification], v3: dict, as_of: str = "",
-           variant: str = "v3", implementation: Optional[dict] = None) -> dict:
+           variant: str = "v3", implementation: Optional[dict] = None,
+           *, claim_aligned: bool = False, experiment_text: str = "") -> dict:
     """All candidate indicators of one hypothesis; `v3` is its V3Result.as_dict()."""
     by_id = {cv.id: cv for cv in ver_claims}
     links = r3.chain(card)
@@ -341,7 +423,7 @@ def extras(card: HypothesisCard, ver_claims: list[ClaimVerification], v3: dict, 
         "best_design_outcome": best_design,
         "independent_outcome": r3._independent([r for r, _ in out_recs]),
         "against_share": round(A / (F + A), 3) if F + A > 0 else 0.0,
-        "feasibility": feasibility(card, as_of, implementation),
+        "feasibility": feasibility(card, as_of, implementation, claim_aligned=claim_aligned, experiment_text=experiment_text),
         "weakest_level": min(levels, key=lw) if levels else "unverified",
         "human_outcome": any(r3.species_key(r.species) == "human" or r3.human_claim(c) and r3.context_level(r) == "exact"
                              for r, c in out_recs),

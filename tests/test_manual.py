@@ -231,10 +231,19 @@ def test_manual_worked_example_threat_checklist_line():
 def test_manual_v40_constants_equal_the_code():
     from hyparena import METHOD_V4_VERSION
     from hyparena.reading import implementation as impl_mod
+    from hyparena.scoring import rules_v4
 
     v40 = _constants()["v40"]
-    assert v40["method_version"] == METHOD_V4_VERSION == "v4.0"
+    assert v40["method_version"] == METHOD_V4_VERSION == "v4.1"
     assert v40["component_readiness_scores"] == impl_mod.COMPONENT_SCORE_V4
+    ia = v40["v41_informativeness_alignment"]
+    assert ia == {
+        "translational_prereq_i_factor": rules_v4.TRANSLATIONAL_PREREQ_I_FACTOR,
+        "ex_vivo_prereq_i_factor": rules_v4.EX_VIVO_PREREQ_I_FACTOR,
+        "unclear_scope_i_factor": rules_v4.UNCLEAR_SCOPE_I_FACTOR,
+        "unobtainable_model_i_factor": rules_v4.UNOBTAINABLE_MODEL_I_FACTOR,
+        "unvalidated_component_i_factor": rules_v4.UNVALIDATED_COMPONENT_I_FACTOR,
+    }
     cfg_v4 = yaml.safe_load((Path(__file__).resolve().parents[1] / "configs" / "v4-flash.yaml").read_text(encoding="utf-8"))
     for key in ("normalize_version", "verify_version", "propose_alternatives_version", "implementation_version"):
         assert v40[key] == cfg_v4[key]

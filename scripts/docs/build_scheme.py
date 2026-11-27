@@ -1,4 +1,4 @@
-"""Builds scripts/docs/scheme.drawio: the whole system on one page (method v4.0). Each step: the step with what is done, what a
+"""Builds scripts/docs/scheme.drawio: the whole system on one page (method v4.1). Each step: the step with what is done, what a
 language model does (task, input -> output; for code-only steps one merged cell with the code), what code does, why it is so,
 how we check it ourselves, and how it can be checked against a plain-LLM baseline; at the bottom benchmarking in two parts
 (our own checks; the baseline). Column widths follow the amount of text, so rows are even (user note 2026-11-11).
@@ -221,7 +221,7 @@ def build() -> str:
     out, X0, y = [], 20, 20
     W = _widths()
     total = sum(W)
-    out.append(cell("title", "<b>Как работает система оценки гипотез (метод v4.0)</b><br/><span style='font-size:12px'>Каждый шаг: что делается, где и с какой задачей работает языковая модель (LLM), что делает код, почему так, как проверяем сами и как сравниваем с LLM напрямую</span>",
+    out.append(cell("title", "<b>Как работает система оценки гипотез (метод v4.1)</b><br/><span style='font-size:12px'>Каждый шаг: что делается, где и с какой задачей работает языковая модель (LLM), что делает код, почему так, как проверяем сами и как сравниваем с LLM напрямую</span>",
                     X0, y, total, 54, "text;html=1;fontSize=20;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#1E4D40;"))
     y += 66
     x = X0

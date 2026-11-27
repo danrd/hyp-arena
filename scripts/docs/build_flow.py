@@ -1,4 +1,4 @@
-"""Builds the flow scheme of the system (method v4.0): a base for a paper or a slide, and optional layers.
+"""Builds the flow scheme of the system (method v4.1): a base for a paper or a slide, and optional layers.
 
 User decisions 2026-11-11: left to right, Russian for now; the base is simple, as in the report (stage name + what comes out);
 the rest is optional by purpose: the implementation layer (LLM and code), the check layer (one block, two parts: our own
@@ -238,7 +238,7 @@ def build(layers: list[str]) -> str:
     sub = {(): "Этапы оценки гипотезы", ("impl",): "Этапы и их реализация: что делает языковая модель, что делает код",
            ("check",): "Этапы и их проверка: сами и против языковой модели, спрошенной напрямую",
            ("impl", "check", "why"): "Этапы: реализация, проверка, обоснование"}[tuple(layers)]
-    out.append(cell("title", f"<b>Как система оценивает гипотезу (метод v4.0)</b><br/><span style='font-size:13px;color:#555'>{sub}</span>",
+    out.append(cell("title", f"<b>Как система оценивает гипотезу (метод v4.1)</b><br/><span style='font-size:13px;color:#555'>{sub}</span>",
                     X0, 20, total_w, 56, "text;html=1;fontSize=22;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#1E4D40;"))
     y, ids, row_y = Y0, [], []
     for r, row in enumerate(rows):

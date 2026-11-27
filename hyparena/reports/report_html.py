@@ -325,7 +325,9 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
         lev, _, bott = nv.leverage(card, cvs, res)
         raise_to, raise_link = None, (bott.split(",")[0] if lev > 0 else None)        # v3.4: support, not P, rises with data
         de = card.decisive_experiment
-        hyps[h] = {**base, "plain": card.claim_plain, "P": res.P, "P_lo": res.P_lo, "P_hi": res.P_hi, "I": res.I, "V": res.V,
+        i_val = v4_res.I if v4_res is not None else res.I
+        v_val = v4_res.V if v4_res is not None else res.V
+        hyps[h] = {**base, "plain": card.claim_plain, "P": res.P, "P_lo": res.P_lo, "P_hi": res.P_hi, "I": i_val, "V": v_val,
                    "scope": res.scope, "gate": gate_val, "chain": chain, "alternatives": alt_rows, "checklist": res.checklist,
                    **({"resource_tier": v4_res.resource_tier, "worst_domain_risk": v4_res.worst_domain_risk, "chain_summary": v4_res.chain_summary} if v4_res is not None else {}),
                    "weakest": weakest["id"] if weakest else None, "strongest": strongest["id"] if strongest else None,
@@ -350,22 +352,27 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
                                  "alternatives": [{"subject": a.subject.label, "relation": a.relation, "object": a.object.label,
                                                    "measure": a.qualifiers.get("measure")}
                                                   for a in card.proposed_alternatives]}}
-        values[h] = {"P": res.P, "chain_state": res.chain_state, "I": res.I, "I_headroom": res.headroom_I if res.headroom_I is not None else it["v3"].get("headroom_I"), "W": res.scope, "support_share": res.support_share, "coverage": res.coverage, "N": N,
+        values[h] = {"P": res.P, "chain_state": res.chain_state, "I": i_val, "I_headroom": res.headroom_I if res.headroom_I is not None else it["v3"].get("headroom_I"), "W": res.scope, "support_share": res.support_share, "coverage": res.coverage, "N": N,
                      "endpoint_clinical": sc.get("endpoint_clinical"), "trend_pubmed": sc.get("trend_pubmed"), "ai_role": sc.get("ai_role"),
                      **{k: (it.get("extra") or {}).get(k) for k in ()}}
     # extras needed for profile contributions
     from hyparena.scoring import v3_extra
+    is_v4_pool = str(meta.get("method") or "").startswith("v4")
     for h in values:
         it = run[h]["items"][0]
         card = HypothesisCard.model_validate(it["card"])
         cvs = [ClaimVerification.model_validate(c) for c in it["verification"]["claims"]]
         impl = it.get("implementation_readiness")
         as_of_h = run[h]["meta"].get("as_of") or ""
-        ext = v3_extra.extras(card, cvs, it["v3"], as_of_h, implementation=impl)
+        exp_txt_h = texts.get(h, "")
+        if is_v4_pool:
+            from hyparena.scoring import rules_v4
+            card, cvs, _, _, _ = rules_v4.prepare_for_v4(card, cvs, {}, experiment_text=exp_txt_h)
+        ext = v3_extra.extras(card, cvs, it["v3"], as_of_h, implementation=impl, claim_aligned=is_v4_pool, experiment_text=exp_txt_h)
         values[h].update({k: ext.get(k) for k in ("feasibility", "best_design_outcome", "independent_outcome", "against_share")})
         ep = v3_extra.endpoint_for_experiment(values[h].get("endpoint_clinical"), card.decisive_experiment.system, card=card, implementation=impl)
         values[h]["endpoint_clinical"] = hyps[h]["endpoint_clinical"] = ep
-        hyps[h]["feasibility_breakdown"] = v3_extra.feasibility_breakdown(card, as_of_h, implementation=impl)
+        hyps[h]["feasibility_breakdown"] = v3_extra.feasibility_breakdown(card, as_of_h, implementation=impl, claim_aligned=is_v4_pool, experiment_text=exp_txt_h)
     inds = sorted({i for p, _ in profiles.values() for tier in p.tiers for i in tier})
     pct = {ind: percentiles({h: _num(ind, values[h].get(ind)) for h in values}) for ind in inds}
     for h in values:
