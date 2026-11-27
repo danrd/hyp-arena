@@ -205,6 +205,17 @@ def feasibility_breakdown(card: HypothesisCard, as_of: str = "", implementation:
             readiness_part["issue"] = implementation["issue"]
         if implementation.get("gap"):
             readiness_part["gap"] = implementation["gap"]
+    elif isinstance(implementation, dict) and readiness_reason.startswith("v4_"):
+        readiness_part["resource_tier"] = implementation.get("resource_tier") or resource_tier(card)
+        readiness_part["overall_evidence_status"] = implementation.get("overall_evidence_status")
+        comps = implementation.get("component_checks") or []
+        if comps:
+            readiness_part["component_checks"] = comps
+            pmids = [str(c.get("evidence_pmid") or "") for c in comps if isinstance(c, dict) and c.get("evidence_pmid")]
+            if pmids:
+                readiness_part["evidence_pmid"] = ", ".join(dict.fromkeys(pmids))
+        if implementation.get("issue"):
+            readiness_part["issue"] = implementation["issue"]
     parts = [
         {
             "key": "system",

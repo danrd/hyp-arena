@@ -117,10 +117,39 @@ def _pre_cutoff_source(pmid: str, as_of: str) -> dict[str, dict]:
     return pubmed.fetch([pmid])
 
 
-def revalidate_saved(implementation: Optional[dict], as_of: str) -> Optional[dict]:
-    """Validate hand-prepared readiness against the source rather than its saved flag alone."""
+def revalidate_saved(
+    implementation: Optional[dict],
+    as_of: str,
+    experiment_text: str = "",
+) -> Optional[dict]:
+    """Validate hand-prepared readiness (`v1` or `v2` 3-component) against pre-cutoff PubMed / experiment text."""
     if not isinstance(implementation, dict):
         return None
+    if "component_checks" in implementation:
+        try:
+            cutoff = date.fromisoformat(as_of) if as_of else None
+        except (ValueError, TypeError):
+            return {**validate_components_v4(implementation, {}, experiment_text=experiment_text), "issue": "missing_or_invalid_cutoff"}
+        pmids: list[str] = []
+        for cc in implementation.get("component_checks") or []:
+            if isinstance(cc, dict):
+                pm = str(cc.get("evidence_pmid") or "").strip().removeprefix("PMID:").strip()
+                if pm.isascii() and pm.isdecimal() and pm not in pmids:
+                    pmids.append(pm)
+        ov_pm = str(implementation.get("evidence_pmid") or "").strip().removeprefix("PMID:").strip()
+        if ov_pm.isascii() and ov_pm.isdecimal() and ov_pm not in pmids:
+            pmids.append(ov_pm)
+        sources: dict[str, dict] = {}
+        if pmids:
+            if cutoff is None:
+                return {**validate_components_v4(implementation, {}, experiment_text=experiment_text), "issue": "missing_or_invalid_cutoff"}
+            try:
+                for pm in pmids:
+                    sources.update(_pre_cutoff_source(pm, cutoff.isoformat()))
+            except (httpx.HTTPError, RuntimeError, ValueError, OSError, ParseError):
+                return {**validate_components_v4(implementation, {}, experiment_text=experiment_text), "issue": "pubmed_unavailable"}
+        return validate_components_v4(implementation, sources, experiment_text=experiment_text)
+
     status = str(implementation.get("verified_status") or "missing").strip().lower()
     if status not in ("demonstrated", "conditional"):
         return implementation

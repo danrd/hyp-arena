@@ -6,10 +6,12 @@
 карточек поле за полем: [страница](https://claude.ai/artifact/8UbgShne44dwkBXMe5gB4K), её файл —
 [`card_walkthrough.html`](../walkthrough/card_walkthrough.html).
 
-Шаблон нормализатора: `normalize_card/v17` ([`hyparena/prompts/normalize_card/v17.j2`](../../hyparena/prompts/normalize_card/v17.j2)).
-Модель данных — [`hyparena/card/models.py`](../../hyparena/card/models.py), правила кода —
+Шаблон нормализатора в **Method v4.0**: `normalize_card/v19` ([`hyparena/prompts/normalize_card/v19.j2`](../../hyparena/prompts/normalize_card/v19.j2); в прежних прогонах `v3` — [`v17.j2`](../../hyparena/prompts/normalize_card/v17.j2)).
+Модель данных — [`hyparena/card/models.py`](../../hyparena/card/models.py), правила кода (`v19_code_fields`, `extract_decisive_contrast_v19`, `derive_chain_roles_v19`) —
 [`hyparena/card/normalizer.py`](../../hyparena/card/normalizer.py). На какие принятые схемы опирается этап —
 [`foundations.md`](foundations.md#этап-2-карточка).
+
+> **Обновление Method v4.0 (2026-11-27):** каждое утверждение получает явные роли `chain_roles` из `{background, mechanism, novel_contribution, outcome}` (с признаком `is_implicit` и фасетами `mechanism_facets`), чисто фоновые звенья никогда не помечаются `required_for_balance`, а в `decisive_experiment` отдельно выделяются дословный решающий контраст `decisive_contrast_span`, проверка действия на мишень `target_engagement_span`, единица анализа `experimental_unit`, `n_per_contrast`, `precision_status` (`stated_for_contrast | general_principle_only | missing`) и охват вывода `tested_scope` (`direct | prerequisite | unclear`). На отложенной выборке `holdout-30` переход `v17 -> v19` поднял покрытие в роли: механизм `30,0% -> 60,0%`, исход `41,4% -> 58,6%`, заявленный новый вклад `0,0% -> 69,2%`, решающее сравнение `27,3% -> 90,9%` при `100%` дословности цитат (`152/152`).
 
 ## Пример, на котором объясняется мануал
 

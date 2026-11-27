@@ -6,10 +6,12 @@
 [журнале изменений](changelog.md#этап-7-эксперимент-и-альтернативы). Соседние этапы — [баланс доказательств](evidence.md)
 (по тем же правилам взвешивается опора альтернатив) и [показатели и ранжирование](ranking.md).
 
-Код: предложение альтернатив и проверка вердикта — [`propose_alternatives/v3`](../../hyparena/prompts/propose_alternatives/v3.j2)
-и [`alternatives_v3.py`](../../hyparena/alternatives/alternatives_v3.py),
-список методологических угроз и их вердикт — [`hyparena/alternatives/threats.py`](../../hyparena/alternatives/threats.py),
-информативность — [`hyparena/scoring/rules_v32.py`](../../hyparena/scoring/rules_v32.py).
+Код: предложение альтернатив и проверка вердикта в **Method v4.0** — [`propose_alternatives/v4`](../../hyparena/prompts/propose_alternatives/v4.j2) (в прогонах v3 — [`v3`](../../hyparena/prompts/propose_alternatives/v3.j2))
+и [`alternatives_v3.py`](../../hyparena/alternatives/alternatives_v3.py) (`ground_discrimination_v4`, `screen_contradicting_pmids`),
+список методологических угроз и их вердикт — [`hyparena/alternatives/threats.py`](../../hyparena/alternatives/threats.py) (включая `checklist_diagnostic` и `worst_domain_risk`),
+информативность — [`hyparena/scoring/rules_v4.py`](../../hyparena/scoring/rules_v4.py) и [`hyparena/scoring/rules_v32.py`](../../hyparena/scoring/rules_v32.py).
+
+> **Обновление Method v4.0 (2026-11-27):** (1) `screen_contradicting_pmids()` проверяет `support_pmids` альтернативы и не позволяет прямому опровержению обязательного звена поднимать `I`; (2) `ground_discrimination_v4()` требует дословного `control_span` (инварианты `M3`, `M4`) и ограничивает `on_positive` уровнем `weakened` при любой ненулевой лазейке `loophole` (`0` завышений `eliminated` на `dev25` и `holdout15`); (3) безусловный кредит `on_negative` даётся только при одновременном наличии дословного `target_engagement_span` и `precision_status = stated_for_contrast`, тогда как условное ослабление при достаточной мощности фиксируется в `conditional_on_negative` и по-контрастных `null_outcomes[]`. На `holdout-15` согласие по `on_positive` составило `86,7%` (`93,3%` хотя бы с одним разметчиком при человеческом IAA `80,0%`), по `on_null` — `86,7%` (`100%` против второго разметчика).
 
 ## Пример, на котором объясняется мануал
 

@@ -24,6 +24,6 @@
 | улучшения и версии гипотез | [`versions.md`](versions.md) |
 
 4. [`foundations.md`](foundations.md) — принятые схемы и стандарты, на которые опирается метод.
-5. [`changelog-v3.13.md`](changelog-v3.13.md) — изменения текущего выпуска. [`changelog.md`](changelog.md) — полный журнал метода.
+5. [`changelog-v4.0.md`](changelog-v4.0.md) — изменения текущего выпуска (**Method v4.0**). [`changelog.md`](changelog.md) — полный журнал метода (предыдущий выпуск: [`changelog-v3.13.md`](changelog-v3.13.md)).
 
 Всё, что меняет метод, сначала записывается в мануал этапа, затем в сводный мануал и в журнал изменений.

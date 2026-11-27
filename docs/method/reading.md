@@ -12,9 +12,10 @@
 [`hyparena/reading/cross_link.py`](../../hyparena/reading/cross_link.py) (перекрёстное чтение),
 [`hyparena/reading/effect_class.py`](../../hyparena/reading/effect_class.py) (класс эффекта по фразе),
 [`hyparena/reading/review_kind.py`](../../hyparena/reading/review_kind.py) (вид обзора и уверенность метаанализа),
-[`hyparena/reading/sources.py`](../../hyparena/reading/sources.py) (курируемые записи DrugAge). Промпт: `verify_claim/v21`.
-Рабочий конфиг [`configs/v3-flash-n10.yaml`](../../configs/v3-flash-n10.yaml): `verify_version: v21`, `read_batch: 10`,
-`cross_link: true`.
+[`hyparena/reading/sources.py`](../../hyparena/reading/sources.py) (курируемые записи DrugAge). Промпт в **Method v4.0**: `verify_claim/v23` (в прежних прогонах v3 — `v21` / `v22`).
+Рабочий конфиг Method v4.0 [`configs/v4-flash.yaml`](../../configs/v4-flash.yaml): `verify_version: v23`, `read_batch: 10` (конфиг v3: [`configs/v3-flash-n10.yaml`](../../configs/v3-flash-n10.yaml)).
+
+> **Обновление Method v4.0 (2026-11-27):** ридер `verify_claim/v23` работает в два обязательных шага: сначала извлекает фактическое сравнение статьи (`actual_contrast`), систему (`actual_system`), измеряемый исход (`actual_outcome`), режим (`study_mode`: `confirmatory | exploratory`) и `worst_domain_risk`, и только затем присваивает `relation_to_claim` (`direct_support`, `direct_contradiction`, `related`, `irrelevant`, `insufficient`). Кодовый барьер `enforce_relation_to_claim()` запрещает `direct_contradiction` при несовпадении вида, вмешательства, исхода или при пустом `actual_contrast` (инвариант `M6`), а `rules_v4` учитывает в балансе только `direct_support` и подтверждённые `direct_contradiction`. Точность: `41/42` (`97,6%`, содержательно `42/42`) на `dev` и `15/15` (`100%`) на слепом `holdout-30` при `100%` дословности цитат.
 
 ## Пример, на котором объясняется мануал
 

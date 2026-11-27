@@ -260,12 +260,29 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
             hyps[h] = base
             continue
         from hyparena.alternatives import alternatives_d
-        card = alternatives_d.apply(h, HypothesisCard.model_validate(it["card"]))
-        cvs = [ClaimVerification.model_validate(c) for c in it["verification"]["claims"]]
+        card_raw = alternatives_d.apply(h, HypothesisCard.model_validate(it["card"]))
+        cvs_raw = [ClaimVerification.model_validate(c) for c in it["verification"]["claims"]]
         alts = {a: ClaimVerification.model_validate(v) for a, v in (it.get("v3_alternatives") or {}).items()}
         from hyparena.evolution import improvements as imp
         from hyparena.novelty import novelty_v34 as nv
-        res = imp.evaluate(card, cvs, alts)                                           # current rules (v3.6)
+        is_v4 = str(meta.get("method") or "").startswith("v4")
+        v4_res = None
+        if is_v4:
+            from hyparena.scoring import rules_v4
+            exp_txt = texts.get(h, "")
+            card, cvs, alts, _, _ = rules_v4.prepare_for_v4(card_raw, cvs_raw, alts, experiment_text=exp_txt)
+            v4_res = rules_v4.evaluate(
+                card_raw,
+                cvs_raw,
+                alts,
+                implementation=it.get("implementation_readiness"),
+                as_of=r.get("meta", {}).get("as_of") or "",
+                experiment_text=exp_txt,
+            )
+        else:
+            card, cvs = card_raw, cvs_raw
+        res = imp.evaluate(card, cvs, alts)                                           # current rules (v3.6 / v4 prepared)
+        gate_val = v4_res.gate if v4_res is not None else res.gate
         labels = r3.evaluate(card, cvs, alts, variant="v3.1").links
         by = {c.id: c for c in cvs}
         chain = []
@@ -309,7 +326,8 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
         raise_to, raise_link = None, (bott.split(",")[0] if lev > 0 else None)        # v3.4: support, not P, rises with data
         de = card.decisive_experiment
         hyps[h] = {**base, "plain": card.claim_plain, "P": res.P, "P_lo": res.P_lo, "P_hi": res.P_hi, "I": res.I, "V": res.V,
-                   "scope": res.scope, "gate": res.gate, "chain": chain, "alternatives": alt_rows, "checklist": res.checklist,
+                   "scope": res.scope, "gate": gate_val, "chain": chain, "alternatives": alt_rows, "checklist": res.checklist,
+                   **({"resource_tier": v4_res.resource_tier, "worst_domain_risk": v4_res.worst_domain_risk, "chain_summary": v4_res.chain_summary} if v4_res is not None else {}),
                    "weakest": weakest["id"] if weakest else None, "strongest": strongest["id"] if strongest else None,
                    "P_if_weakest_moderate": raise_to, "raise_link": raise_link, "support_share": res.support_share, "coverage": res.coverage,
                    "coverage_counts": res.coverage_counts,

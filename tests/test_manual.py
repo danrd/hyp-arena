@@ -226,3 +226,15 @@ def test_manual_worked_example_threat_checklist_line():
     k = threats.checklist(_card(registry=BLIND_RCT))["share"]
     add = threats.A_CHECKLIST * k / 1.5
     assert f"(share {k:.2f}) and add 0.5 · {k:.2f} / 1.5 = {add:.2f} to I." in MANUAL.read_text().replace("\n", " ")
+
+
+def test_manual_v40_constants_equal_the_code():
+    from hyparena import METHOD_V4_VERSION
+    from hyparena.reading import implementation as impl_mod
+
+    v40 = _constants()["v40"]
+    assert v40["method_version"] == METHOD_V4_VERSION == "v4.0"
+    assert v40["component_readiness_scores"] == impl_mod.COMPONENT_SCORE_V4
+    cfg_v4 = yaml.safe_load((Path(__file__).resolve().parents[1] / "configs" / "v4-flash.yaml").read_text(encoding="utf-8"))
+    for key in ("normalize_version", "verify_version", "propose_alternatives_version", "implementation_version"):
+        assert v40[key] == cfg_v4[key]

@@ -6,11 +6,13 @@
 поиск и чтение — [`foundations.md`](foundations.md#этапы-34-поиск-и-чтение). Подробный план работы над этапом и все опыты —
 [`docs/plans/search-2026-11-14.md`](../plans/search-2026-11-14.md).
 
-Код: [`hyparena/search/search.py`](../../hyparena/search/search.py) (`retrieve_filtered`),
+Код: [`hyparena/search/search.py`](../../hyparena/search/search.py) (`retrieve_two_stage` в Method v4.0 и `retrieve_filtered` в прежних прогонах v3),
 [`hyparena/search/search_rank.py`](../../hyparena/search/search_rank.py) (упорядочение и отбор),
 [`hyparena/search/search_vocab.py`](../../hyparena/search/search_vocab.py) (словарь запросов). Промпты:
-`search_queries/v1` и `v2` (запросы), `search_relevance/v1` (оценка кандидатов). Режим в рабочем конфиге
-[`configs/v3-flash-n10.yaml`](../../configs/v3-flash-n10.yaml): `search: filtered`.
+`search_queries/v1` и `v2` (запросы), `search_relevance/v1` (оценка кандидатов). Режим в рабочем конфиге Method v4.0
+[`configs/v4-flash.yaml`](../../configs/v4-flash.yaml): `search: two_stage` (в конфигах v3 [`configs/v3-flash-n10.yaml`](../../configs/v3-flash-n10.yaml): `search: filtered`).
+
+> **Обновление Method v4.0 (2026-11-27):** режим `two_stage` (`retrieve_two_stage`, лимит `CAP = 20`) строит по фасетам механизма 2 канонических запроса на уровне класса вмешательства, мишени и фенотипа (со снятием торговых названий и фамилий — инвариант `M1`) и 2 запроса по точному заявленному вкладу и решающему сравнению, сохраняя этап происхождения каждого PMID (`pmid_provenance`: `stage_1_mechanism | stage_2_contribution`).
 
 ## Пример, на котором объясняется мануал
 

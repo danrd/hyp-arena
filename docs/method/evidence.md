@@ -7,11 +7,13 @@
 [`foundations.md`](foundations.md). Предыдущий этап — [чтение](reading.md): оно даёт записи; следующие — новизна,
 эксперимент и альтернативы, ранжирование.
 
-Код: [`hyparena/scoring/rules_v32.py`](../../hyparena/scoring/rules_v32.py) (вес записи, свёртка, сила звена, баланс,
+Код: [`hyparena/scoring/rules_v4.py`](../../hyparena/scoring/rules_v4.py) (свёртка фонового шлюза `background_gate`, обязательные слоты `novel_contribution`, фильтрация `relation_to_claim` в **Method v4.0**) поверх [`hyparena/scoring/rules_v32.py`](../../hyparena/scoring/rules_v32.py) (вес записи, свёртка, сила звена, баланс,
 ворота), [`hyparena/reading/effect_class.py`](../../hyparena/reading/effect_class.py) (величина эффекта),
 [`hyparena/reading/review_kind.py`](../../hyparena/reading/review_kind.py) (уверенность метаанализа). Моделей на этом этапе
 нет: всё считает код, и каждое число можно пересчитать вручную по этому мануалу. Константы сверяет с кодом
 [`tests/test_manual.py`](../../tests/test_manual.py).
+
+> **Обновление Method v4.0 (2026-11-27):** чисто фоновые утверждения (`chain_roles == ["background"]`) сворачиваются в единый блок-шлюз `background_gate` — опровержение фундамента отсеивает гипотезу (`gate = filtered`, `refuted_background`), но добавление или дробление фоновых звеньев никогда не создаёт положительных слотов и не завышает `chain_state` (инвариант `M2`). Заявленный новый вклад (`novel_contribution`) всегда входит как обязательный слот, а пустой слот явно помечается `searched_empty` или `unchecked` без бесплатной единицы.
 
 ## Пример, на котором объясняется мануал
 

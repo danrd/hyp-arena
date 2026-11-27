@@ -8,9 +8,11 @@
 
 Код: [`hyparena/scoring/aspid_v3.py`](../../hyparena/scoring/aspid_v3.py) (показатели и их шкалы, ранжирование),
 [`hyparena/scoring/aspid.py`](../../hyparena/scoring/aspid.py) (розыгрыш весов),
-[`hyparena/scoring/v3_extra.py`](../../hyparena/scoring/v3_extra.py) (реализуемость, лучший дизайн, независимые источники),
-профили — [`configs/profiles_v3.yaml`](../../configs/profiles_v3.yaml). Модели здесь участвуют только в одном показателе —
-клиничности конечной точки.
+[`hyparena/scoring/v3_extra.py`](../../hyparena/scoring/v3_extra.py) (реализуемость, `resource_tier`, лучший дизайн, независимые источники),
+[`hyparena/reading/implementation.py`](../../hyparena/reading/implementation.py) (`implementation_readiness/v2`, покомпонентная проверка `validate_components_v4`),
+профили — [`configs/profiles_v3.yaml`](../../configs/profiles_v3.yaml). Модели здесь участвуют в клиничности конечной точки и в покомпонентной проверке готовности средств.
+
+> **Обновление Method v4.0 (2026-11-27):** ресурсный эшелон опыта (`resource_tier`: `1_in_vitro | 2_animal | 3_human_ex_vivo_or_pilot | 4_clinical_in_vivo`, согласие `93,3%` на `dev` и `holdout`) отделён от готовности внутри класса (`execution_readiness`). Протокол `implementation_readiness/v2` оценивает три компонента (`intervention_delivery`, `system_or_population_fit`, `critical_measurement_or_engagement`) с кодовой проверкой дословных цитат и берёт минимум по слабому звену (`min_readiness_score`: `confirmed_in_context = 1,0`, `adjacent_only = 0,5`, `insufficient = 0,0`), устраняя завышение готовности по одному компоненту (`17/17 = 100%` на `dev`, `7/7 = 100%` на `holdout` по `min_readiness_score`, закрытый мир `8/8 = 100%`).
 
 ## Пример, на котором объясняется мануал
 

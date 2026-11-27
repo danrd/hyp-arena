@@ -1,12 +1,12 @@
-# Method v3.13 manual
+# Method v4.0 manual
 
-This manual describes the current rules of the method (version **v3.13**) as one self-contained text: a reader, a model or
+This manual describes the current rules of the method (version **v4.0**, adopted 27 Nov 2026) as one self-contained text: a reader, a model or
 an outside reviewer can score a hypothesis and read its report from it alone. Each stage has its own detailed manual in
 [`docs/method/`](./) ([the card](card.md), [the search](search.md), [the reading](reading.md), [from a record to the evidence balance](evidence.md), [novelty](novelty.md), [indicators and ranking](ranking.md), [experiment and alternatives](alternatives.md), [improvements and versions](versions.md)); this manual is their compressed aggregate. How the rules
 came to be what they are is in the [change log](changelog.md). The changes in this release are in the
-[v3.13 change log](changelog-v3.13.md).
+[v4.0 change log](changelog-v4.0.md) (previous release: [v3.13](changelog-v3.13.md)).
 
-Where the code is: rules [`hyparena/scoring/rules_v32.py`](../../hyparena/scoring/rules_v32.py), novelty
+Where the code is: Method v4 scorer [`hyparena/scoring/rules_v4.py`](../../hyparena/scoring/rules_v4.py) on top of [`hyparena/scoring/rules_v32.py`](../../hyparena/scoring/rules_v32.py) (`configs/v4-flash.yaml`), novelty
 [`hyparena/novelty/novelty_v34.py`](../../hyparena/novelty/novelty_v34.py), ranking [`hyparena/scoring/aspid_v3.py`](../../hyparena/scoring/aspid_v3.py)
 with the profiles in [`configs/profiles_v3.yaml`](../../configs/profiles_v3.yaml). The constants (section 14), the worked example
 (section 13) and the names table (section 10a) are checked against the code by [`tests/test_manual.py`](../../tests/test_manual.py):
@@ -74,8 +74,8 @@ section 10. Rules for a model writing such a report:
 
 ### Recording the publications used in an evaluation
 
-For each claim or alternative, record the finding and the supporting passage used in the evaluation. The standard v3.12
-reader scores the abstracts supplied for the run, subject to cutoff T. Label any separate full-text analysis and identify
+For each claim or alternative, record the finding and the supporting passage used in the evaluation. The standard v4.0
+reader (`verify_claim/v23`) scores the abstracts supplied for the run, subject to cutoff T, extracting the paper's actual comparison, system and outcome before classifying `relation_to_claim`. Label any separate full-text analysis and identify
 the material actually read.
 
 Deliver the report with one `dossier.json` for the run. In its `sources` array, include the publications used for evidence,
@@ -128,7 +128,10 @@ asked. Validation status is in section 12.
 A model (the normaliser) turns the text into a **card**: the hypothesis split into parts that can be checked one by one.
 The card holds only what the text says; everything found later (papers, weights, alternatives, scores) is kept apart.
 The detailed rules, every field with its origin and what reads it, and a worked example are in the
-[card manual](card.md). Template `normalize_card/v17` (config `normalize_version`). In short:
+[card manual](card.md). Template `normalize_card/v19` (config `normalize_version: v19`; legacy v3 runs used `v17`). In short:
+
+- **Explicit chain roles (`v4.0`):** every claim carries `chain_roles` from `{background, mechanism, novel_contribution, outcome}` (plus `is_implicit` when an essential bridge is left unstated and optional `mechanism_facets` naming canonical class, target, physical action or load). Pure `background` claims are folded into one `background_gate`: a strongly refuted foundation filters the hypothesis (`refuted_background`), while adding or splitting background claims never adds positive balance slots (`M2` invariance). Non-background `novel_contribution` claims automatically occupy required balance slots (`required_for_balance = true`), with empty slots labelled `searched_empty` or `unchecked` (never a free `1.0`).
+- **Decisive contrast and adequacy fields (`v4.0`):** `decisive_experiment` extracts a verbatim `decisive_contrast_span` (never from `Prediction:` prose; deterministically backed up by `extract_decisive_contrast_v19`), `experimental_unit`, `n_per_contrast`, `precision_basis`, `precision_status` (`stated_for_contrast | general_principle_only | missing`), `target_engagement_span`, and `tested_scope` (`direct | prerequisite | unclear`).
 
 - **Core (the hypothesis itself):** population; interventions; background (what every group receives alike, which is not
   the intervention); the hypothesis's outcome and direction; the expected effect when the text names one; and the
@@ -176,21 +179,19 @@ The detailed rules, every field with its origin and what reads it, and a worked 
   the stated experiment, judged from the design without a literature search, as risk-of-bias tools do (section 7).
   **Substantive alternatives** (another cause in the world: another part of the intervention, a shared route, natural
   course, another biological route) are proposed by a second model call from up to 25 abstracts found for the hypothesis
-  (prompt `propose_alternatives/v3` in the working configuration: up to 5); a proposed alternative whose words name a methodological threat is dropped by
-  code, since the checklist covers it. Substantive alternatives are then searched and read like claims: their support comes from the records found (the model's PMIDs only seed the search), and a finding counts for an
+  (prompt `propose_alternatives/v4` in Method v4.0, up to 5; legacy v3 used `v3`); a proposed alternative whose words name a methodological threat is dropped by
+  code, since the checklist covers it. In Method v4.0, `screen_contradicting_pmids` also checks `support_pmids`: a paper that already directly refutes a required chain link is routed to counterevidence and never boosts `I`. Substantive alternatives are then searched and read like claims: their support comes from the records found (the model's PMIDs only seed the search), and a finding counts for an
   alternative only when it shows the part that differs from the hypothesis (for "attention and supervision", an effect of
   attention itself, not that the exercise works). The proposal call judges what the experiment does to each alternative
-  from the author's text. The code checks that a verdict of "cuts off" quotes an actual control or measurement.
-  A remaining explanation caps the positive verdict at "weakens". A null result leaves an explanation of a positive
-  effect unchanged unless that explanation requires a positive result for the verified comparison.
+  from the author's text (`ground_discrimination_v4`). The code checks that any positive credit quotes a verbatim `control_span`.
+  Any non-empty `loophole` (or missing `loophole_ruled_out_why`) caps `on_positive` at `weakened` (`eliminated` requires distinct predictions, verbatim `control_span`, empty `loophole` and explicit `loophole_ruled_out_why`). Unconditional `on_negative` credit requires **both** a verbatim `target_engagement_span` and `precision_status = "stated_for_contrast"`; when precision is missing or general only, conditional weakening is stored diagnostically in `conditional_on_negative` and per-contrast `null_outcomes[]` while unconditional `on_negative` stays `unchanged`.
   The mechanism is taken strictly from the text, while competitors are looked for more widely than the author
   named them; their weight still comes only from literature found before T.
 
 ## 4. Evidence records
 
-A reader model (template `verify_claim/v22`, in batches of 10 abstracts) reads each abstract found for a claim and returns
-records; an outcome or a step also reads, by the cross-link reading, the papers the hypothesis's other searches found
-(mostly its alternatives'), those the cheap relevance model rates 3 for it, filled up to 10 with those rated 2. The search (`search: filtered`; stage manual [`docs/method/search.md`](search.md)): the queries a
+A reader model (template `verify_claim/v23` in Method v4.0, in batches of 10 abstracts; legacy v3 used `v22`) reads each abstract found for a claim and returns
+records. Before assigning `relation_to_claim` (`direct_support`, `direct_contradiction`, `related`, `irrelevant`, `insufficient`), `v23` extracts the study's factual `actual_contrast`, `actual_system`, `actual_outcome`, `study_mode` (`confirmatory | exploratory`) and `worst_domain_risk`; `verifier.enforce_relation_to_claim()` forbids `direct_contradiction` whenever species, intervention or outcome mismatches or `actual_contrast` is empty (`M6` guard), and `rules_v4` counts only `direct_support` on `evidence` and guarded `direct_contradiction` on `counterevidence`. In `configs/v4-flash.yaml`, `search: two_stage` (`retrieve_two_stage`, `CAP = 20`) issues 2 canonical mechanism/class queries (brand-stripped, `M1` invariant) + 2 novel-contribution queries with stage provenance; `search: filtered` ([`docs/method/search.md`](search.md)) remains supported: the queries a
 model writes and a query on the exact population, up to 200 PubMed papers each, date-cut at T; ordered by the match of the
 query words with title and abstract (BM25); the references and citing papers of the first 5 added (also before T) and the
 list ordered again; a cheap model rates the first 100 from 0 to 3 for the claim; every paper rated 3 is read, filled up to
@@ -464,7 +465,7 @@ not depend on the rest of the pool. An unknown value is drawn over its whole ran
 |---|---|---|
 | I | informativeness of the stated experiment (headroom I, of an improved one, feeds the room to improve, section 11) | linear, 0-1 |
 | W | scope of the mechanism | local < organ < hallmark |
-| feasibility | the mean of the included scores: system (data analysis and cells 1, yeast 0.9, worm and fly 0.85, mouse and rat 0.5, human 0), duration (weeks 1, months 2/3, years 1/3, decades 0), planned n (under 50: 1, under 200: 2/3, under 1000: 1/3, at least 1000: 0; in a stated human, animal or cell experiment, missing or nonpositive n contributes 0 and stays in the denominator), intervention readiness (for compounds: one compound with a verified identity and ChEMBL phase 4 — or, when ChEMBL has no verified phase, a ClinicalTrials.gov trial submitted on or before T in phase 4: 1, phase 1–3: 0.5, confirmed phase 0: 0; multiple compounds take the lowest confirmed phase score, capped at 0.5 for a combination whose approval is unverified. For non-compound interventions — devices, procedures, exercise, diet, gene or cell perturbations: one `implementation_readiness/v1` check over already-retrieved pre-T abstracts with a code-verified verbatim quote demonstrating the limiting operation — demonstrated in the stated system: 1, conditional in a closely related system or unintegrated: 0.5, missing or unverified quote: 0. An unspecified agent, unclassified type, unconfirmed identity or phase, or lookup failure leaves readiness at 0 and keeps its place in the denominator); [`v3_extra.feasibility`](../../hyparena/scoring/v3_extra.py) | 0-1; does not yet count arms or invasive measures (section 11, rule 7) |
+| feasibility | the mean of the included scores: system (data analysis and cells 1, yeast 0.9, worm and fly 0.85, mouse and rat 0.5, human 0), duration (weeks 1, months 2/3, years 1/3, decades 0), planned n (under 50: 1, under 200: 2/3, under 1000: 1/3, at least 1000: 0; in a stated human, animal or cell experiment, missing or nonpositive n contributes 0 and stays in the denominator), intervention readiness (in Method v4.0, `implementation_readiness/v2` separates `resource_tier` — `1_in_vitro | 2_animal | 3_human_ex_vivo_or_pilot | 4_clinical_in_vivo` — from 3-component weak-link `execution_readiness` across `intervention_delivery`, `system_or_population_fit` and `critical_measurement_or_engagement`, taking `min_readiness_score`: `confirmed_in_context = 1.0`, `adjacent_only = 0.5`, `insufficient = 0.0` with mandatory verbatim quote verification; for compounds, verified ChEMBL phase or pre-T ClinicalTrials.gov phase — phase 4: 1, phase 1–3: 0.5, phase 0: 0, unverified combination ≤ 0.5 — is additionally capped by `min_readiness_score` when `component_checks` identify an unconfirmed target subgroup or measurement; legacy `implementation_readiness/v1` non-drug assessments remain supported. An unspecified agent, unclassified type, unconfirmed identity or phase, or lookup failure leaves readiness at 0 and keeps its place in the denominator); [`v3_extra.feasibility`](../../hyparena/scoring/v3_extra.py) | 0-1; reports `resource_tier` alongside `execution_readiness` |
 | best_design_outcome | best design among the records of the outcome link | cells … RCT |
 | independent_outcome | independent sources for the outcome link | 0-5 |
 | against_share | share of the chain's weight against (in no profile) | 0-1, lower better |
@@ -915,6 +916,7 @@ known result (calibration pool); **R4** — the order of pairs of records given 
 | missing competitors | an outside reader | in 78% of trials the reader adds a supported competitor |
 | novelty N | an outside reader (30 and 37 trials; 30 written hypotheses) | written hypotheses with mechanisms (pack 26): weighted κ 0.36, novelty by absence on the same side of the threshold in 0.85 of the new links; pack 18 (30 trials), N against the outside reader's level: weighted κ 0.45 with reader v17 and the cross-link reading (0.41 with v9, 0.20 with v16; ours farther from the known in 0.24 of the trials); pack 7: κ 0.14-0.26 (the numbers before 2026-11-15 compared the v2 indicator, not N) |
 | prospective pool, 60 ongoing trials | outcomes 2026-11 … 2028-12 | scores frozen with a SHA-256 ([`../../specs/whole-system/prospective-2026-11-06.yaml`](../../specs/whole-system/prospective-2026-11-06.yaml)): the clean test |
+| Method v4.0 calibration & single-shot holdout-30 | `dev60` (50 `normalize`, 42 `reader`, 25 `Block C`) + untouched `holdout-30` (`H01–H30`, frozen commit `d1dd286`) | `normalize_card/v19` holdout: 100% verbatim spans (`152/152`), 0 background leaks, in-role overlap vs `v17` mechanism `30.0% -> 60.0%`, outcome `41.4% -> 58.6%`, novel contribution `0.0% -> 69.2%`, decisive contrast `27.3% -> 90.9%`; `verify_claim/v23` holdout: `15/15` (100%) relation accuracy & verbatim quotes; `Block C v4` holdout: `on_positive` `86.7%` (`93.3%` vs either annotator, IAA `80.0%`), `on_null` `86.7%` (`100%` vs annotator 2, IAA `80.0%`), `resource_tier` `93.3%`, weak-link `min_readiness_score` `7/7` (100%), closed-world `8/8` (100%); registry pools Top-10 `10/10` on all 3 profiles, `R3 = 0.578` ([`../../specs/scoring/v40-calibration-2026-11-27.yaml`](../../specs/scoring/v40-calibration-2026-11-27.yaml)) |
 
 Against trial outcomes the record weights add nothing over counting records; they are kept for what they are for: ordering
 later trials of the same link (R2) and telling a large RCT from a cell study in the report.
@@ -1001,6 +1003,13 @@ profiles:
   evidence: [[chain_state], [I], [W], [best_design_outcome, independent_outcome, endpoint_clinical]]
   funding: [[chain_state], [feasibility], [trend_pubmed, ai_role, N], [I, W], [endpoint_clinical, best_design_outcome, independent_outcome]]
   frontier: [[N], [chain_state], [I], [feasibility], [W]]
+v40:
+  method_version: "v4.0"
+  normalize_version: "v19"
+  verify_version: "v23"
+  propose_alternatives_version: "v4"
+  implementation_version: "v2"
+  component_readiness_scores: {confirmed_in_context: 1.0, adjacent_only: 0.5, insufficient: 0.0}
 ```
 
 ## 15. Resources of a run (calls, tokens, cost)

@@ -8,7 +8,7 @@ templates in [`templates/`](templates/). Run modules from the repository root, e
 
 | Module | What it does |
 |---|---|
-| [`pipeline`](pipeline.py) | The method end to end: texts → card → search and reading → records → the rules of the config's method (`method: v3` in the working configs; v2 kept for old runs) → indicators → aggregation under each preference profilerchive/docs/rules-method.md). |
+| [`pipeline`](pipeline.py) | The method end to end: texts → card → search and reading → records → the rules of the config's method (`method: v4` in [`configs/v4-flash.yaml`](../configs/v4-flash.yaml); `method: v3` and `v2` kept for earlier runs) → indicators → aggregation under each preference profile ([`docs/method/manual.md`](../docs/method/manual.md)). |
 | [`prespec`](prespec.py) | Specifications fixed before the data are read (test plan A4). |
 | [`rank`](rank.py) | Ranking of verified cards (our method): admission → gate → known-result check → rule-based indicators → aggregation under each preference profile → candidates robust across profiles. No LLM here: ... |
 | [`short_ids`](short_ids.py) | Short ids of hypotheses (H01, H02, ...; versions H49д, H49д2), kept in the hypothesis database. |
@@ -39,22 +39,24 @@ templates in [`templates/`](templates/). Run modules from the repository root, e
 |---|---|
 | [`cross_link`](reading/cross_link.py) | Cross-link reading: every claim of the hypothesis (outcome or step) also reads the papers the other searches of the hypothesis found, those the cheap relevance model rates 3, filled to 10 with 2s (docs/method/reading.md, section 3). |
 | [`effect_class`](reading/effect_class.py) | Effect class by code from the verbatim effect phrase (user decision 2026-11-04, option A; archive/docs/spec/method-v3.md, section 2). |
+| [`implementation`](reading/implementation.py) | Implementation readiness check for non-drug interventions (`v1`) and three-component weak-link readiness (`delivery_or_intervention`, `population_or_model`, `measurement_or_assay`) with `resource_tier` (`v2`, Method v4.0; [`docs/method/ranking.md`](../docs/method/ranking.md)). |
 | [`review_kind`](reading/review_kind.py) | Review kind and meta-analysis certainty by code (user decision 2026-11-11, H49 walkthrough stage 5). |
 | [`sources`](reading/sources.py) | Curated evidence for lifespan claims from DrugAge (HAGR, CC BY 3.0): deterministic, no LLM. One record per publication and species for the claim's compound: supporting if any row of that paper ... |
 | [`verifier`](reading/verifier.py) | Verifier: claim → evidence records (card spec section 7). Sources: DrugAge (curated, deterministic, lifespan claims) and PubMed abstracts (an LLM extracts records). Code then checks that every ... |
 
-## `scoring/` — Stage: record weights, link strength, rules of v3, indicators, ASPID
+## `scoring/` — Stage: record weights, link strength, rules of v3 / v4, indicators, ASPID
 
 | Module | What it does |
 |---|---|
 | [`aggregate`](scoring/aggregate.py) | Aggregation of per-criterion ratings without explicit weights. Based on the method of randomized aggregated indicators (МРСП, part of Hovanov's АСПИД methodology; international analogue: SMAA) and ... |
 | [`aspid`](scoring/aspid.py) | Aggregation of rule-based indicators under an ordinal importance order: МРСП / АСПИД (Hovanov) in its SMAA-2 form (Lahdelma, Salminen; implementation after Tervonen, Lahdelma 2007). Implements ... |
-| [`aspid_v3`](scoring/aspid_v3.py) | ASPID over the axes of method v3 (configs/profiles_v3.yaml; method-v3.md section 13). |
+| [`aspid_v3`](scoring/aspid_v3.py) | ASPID over the axes of method v3 / v4 (`configs/profiles_v3.yaml`). |
 | [`expert`](scoring/expert.py) | Expert layer (card spec 7a; Aggregation_Spec 6a): expert decisions kept apart from the declared and verified layers. What each decision does: - with a `source` on a claim (or a rejected ... |
 | [`indicators`](scoring/indicators.py) | Rule-based indicators for the aggregation (card spec, section 8a), computed from the declared card and its verified layer. Every value is a fact derived from the card or `None` (unknown); unknowns ... |
 | [`rules`](scoring/rules.py) | Deterministic rules over the card (no LLM): validation, admission, claim statuses, the evidence profile and the known-result check (card spec sections 4a, 7, 8, 10). |
 | [`rules_v3`](scoring/rules_v3.py) | Method v3 rules (archive/docs/spec/method-v3.md, sections 3-6 and 9): record weight on ordinal scales, link strength, the gate, plausibility P, scope W, informativeness I, promise V = P x W x I, ... |
-| [`rules_v32`](scoring/rules_v32.py) | Method v3.2 (method-v3.md section 13, user decision 2026-11-06): continuous scores, so that hypotheses whose links are all "weak" are still told apart. Applied offline to saved records; runs ... |
+| [`rules_v32`](scoring/rules_v32.py) | Method v3.2–v3.13 (method-v3.md section 13, user decision 2026-11-06): continuous scores, so that hypotheses whose links are all "weak" are still told apart. Applied offline to saved records; runs ... |
+| [`rules_v4`](scoring/rules_v4.py) | Method v4.0 rules ([`docs/method/changelog-v4.0.md`](../docs/method/changelog-v4.0.md), [`specs/scoring/v40-calibration-2026-11-27.yaml`](../specs/scoring/v40-calibration-2026-11-27.yaml)): role-aware chain (`background` excluded from M2 with separate `refuted_background` gate), `enforce_relation_to_claim`, `ground_discrimination_v4` loophole cap, and weak-link `min_readiness_score` + `resource_tier`. |
 | [`trend_genetics`](scoring/trend_genetics.py) | Two indicators from public data, no model calls (specs/scoring/trend-genetics-2026-11-06.yaml): |
 | [`v3_extra`](scoring/v3_extra.py) | Additional indicators of a v3 result, computed by code from the card and the saved records (no model calls), for the lower tiers of the ASPID profiles over the v3 axes ... |
 | [`v3_levels`](scoring/v3_levels.py) | Ordinal scales of method v3 and their weights (archive/docs/spec/method-v3.md, section 3). |
