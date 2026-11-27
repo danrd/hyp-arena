@@ -242,13 +242,19 @@ class ProposedAlternative(BaseModel):
     support_pmids: list[str] = Field(default_factory=list)
     alt_kind: Literal["positive_confounder", "negative_barrier"] | None = None
     control_span: str = ""
+    target_engagement_span: str = ""
+    prediction_hypothesis: str = ""
+    prediction_alternative: str = ""
     loophole: str = ""
+    loophole_ruled_out_why: str = ""
     required_positive_result: str = ""
-    discrimination_version: Literal["v3"] | None = None
+    discrimination_version: Literal["v3", "v4"] | None = None
     contrast_id: str = ""                        # diagnostic: which contrast on_positive / on_negative applies to
     target_engagement_required: bool = False     # diagnostic: whether null inference requires verified target engagement
     on_positive: AlternativeFate = "unchanged"
     on_negative: AlternativeFate = "unchanged"
+    conditional_on_negative: AlternativeFate | None = None
+    null_outcomes: list[dict] = Field(default_factory=list)
     role: Literal["alternative"] = "alternative"
 
     @model_validator(mode="after")

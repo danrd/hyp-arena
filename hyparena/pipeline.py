@@ -16,7 +16,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Optional
 
-from hyparena import METHOD_VERSION
+from hyparena import METHOD_V4_VERSION, METHOD_VERSION
 from hyparena.scoring.aspid import InfeasiblePreferences, load_profiles
 from hyparena.reports import diagnostics, diversity
 from hyparena.alternatives import alternatives
@@ -147,14 +147,18 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
     search_mode = cfg_extra.get("search", "keywords")                  # `search: model` in the config
     if cfg_extra.get("full_text") == "pmc":                            # sources experiment arm B: read PMC full texts where allowed
         search_mode += "+fulltext"
-    method = cfg_extra.get("method", "v2")                              # `method: v3` (archive/docs/spec/method-v3.md)
-    norm_version = cfg_extra.get("normalize_version") or ("v7" if method == "v3" else None)   # v3: v7 or later (`normalize_version`)
-    # method v2 layers that v3 does not score (mouse probes, the checklist alternatives and their checks): off under v3
+    method = cfg_extra.get("method", "v2")                              # `method: v3` or `method: v4`
+    v3_like = method in ("v3", "v4")
+    if method == "v4":
+        search_mode = cfg_extra.get("search", "two_stage") + ("+fulltext" if cfg_extra.get("full_text") == "pmc" else "")
+    norm_version = cfg_extra.get("normalize_version") or ("v19" if method == "v4" else ("v7" if method == "v3" else None))
+    # method v2 layers that v3/v4 do not score (mouse probes, the checklist alternatives and their checks): off under v3/v4
     # unless the config asks (`legacy_v2_checks: true`); user decision 2026-11-11, H49 walkthrough
-    legacy = bool(cfg_extra.get("legacy_v2_checks", method != "v3"))
+    legacy = bool(cfg_extra.get("legacy_v2_checks", not v3_like))
     norm_runs = int(cfg_extra.get("normalize_runs", 1))               # v3.9: 2 = union of two parses (user decision 2026-11-11)
-    verify_version = cfg_extra.get("verify_version") or ("v6" if method == "v3" else "")   # v3: v6 or later (`verify_version`)
-    proposal_version = cfg_extra.get("propose_alternatives_version", "v1")
+    verify_version = cfg_extra.get("verify_version") or ("v23" if method == "v4" else ("v6" if method == "v3" else ""))
+    proposal_version = cfg_extra.get("propose_alternatives_version", "v4" if method == "v4" else "v1")
+    impl_version = cfg_extra.get("implementation_version", "v2" if method == "v4" else "v1")
     from hyparena.reading import verifier as _verifier
     _verifier.READ_BATCH = int(cfg_extra.get("read_batch") or 0)          # papers per reader call (`read_batch`; 0 = all at once)
     cross_link = bool(cfg_extra.get("cross_link"))                      # claims also read the other searches' papers (hyparena/reading/cross_link.py)
@@ -222,16 +226,16 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
                      disease_restore=ex.restored_records(layer, card.id), probes=legacy)
         ver.alternatives += alternatives.competitor_rows(
             [by_card[h] for h in rivals.get(card.id, []) if h not in dup_of])
-        if method == "v3":                                  # alternatives proposed over the abstracts read for this card
+        if v3_like:                                         # alternatives proposed over the abstracts read for this card
             from hyparena.alternatives.alternatives_v3 import GROUNDED_VERSION, propose
             from hyparena.tools import pubmed as _pm
             read = list(dict.fromkeys(ver.searched_pmids))
             card.proposed_alternatives = propose(
                 client, checker, card, _pm.fetch(read), as_of, avoid=frozenset({writer}), log=log,
-                version=proposal_version, registry_text=x["text"] if proposal_version == GROUNDED_VERSION else "",
+                version=proposal_version, registry_text=x["text"] if proposal_version in (GROUNDED_VERSION, "v4") else "",
             )
         x["verification"] = finalize(card, ver)
-        if method == "v3":                                  # v3 rules: alternatives with support are checked like claims
+        if v3_like:                                         # v3/v4 rules: alternatives with support are checked like claims
             from hyparena.scoring import rules_v3
             from hyparena.card.models import Claim as _Claim
             from hyparena.reading.verifier import verify_claim as _vc
@@ -255,12 +259,12 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
                 x["verification"] = xl.refinalize(card, x["verification"], cvs)
             x["v3"] = rules_v3.evaluate(card, x["verification"].claims, alt_ver).as_dict()
             x["v3_alternatives"] = {k: v.model_dump(by_alias=True) for k, v in alt_ver.items()}
-            if not fake:                                    # v3.13: earlier-link paper_outcomes + non-drug Channel B readiness
+            if not fake:                                    # v3.13 / v4: earlier-link paper_outcomes + readiness check
                 from hyparena.novelty import novelty_v34 as _nv
                 from hyparena.reading import implementation as _impl, paper_outcomes as _po
                 from hyparena.tools import pubmed as _pm
                 need_po = _nv.novelty(card, x["verification"].claims) in ("new_link", "new_combination")
-                need_impl = _impl.is_non_drug(card)
+                need_impl = (method == "v4") or _impl.is_non_drug(card)
                 if need_po or need_impl:
                     pmids = list(dict.fromkeys(
                         rec.record_id.removeprefix("PMID:")
@@ -278,8 +282,15 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
                     if need_impl:
                         x["implementation_readiness"] = _impl.assess(
                             client, card, x["verification"].claims, fetched, x["text"],
-                            avoid=frozenset({writer}), family=vfam, log=log,
+                            avoid=frozenset({writer}), family=vfam, log=log, version=impl_version,
                         )
+            if method == "v4":
+                from hyparena.scoring import rules_v4
+                x["v4"] = rules_v4.evaluate(
+                    card, x["verification"].claims, alt_ver,
+                    implementation=x.get("implementation_readiness"),
+                    as_of=as_of or "", experiment_text=x["text"],
+                ).as_dict()
         if check_alternatives and legacy and x["verification"].evidence_profile.gate == "pass":
             alternatives.check(client, checker, card, x["verification"], avoid=frozenset({writer}), log=log)
         x["extra"] = _extra(card, as_of)
@@ -321,7 +332,8 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
                      "calls": client.calls, "failures": client.failures, "families": families, "writer": writer,
                      "verifiers": verifiers or families, "config": config, "cards_reused": cards is not None, "search": search_mode,
                      "admission": "graded" if _rules.GRADED_CONTEXT else "strict", "method": method,
-                     **({"method_version": METHOD_VERSION, "propose_alternatives_version": proposal_version} if method == "v3" else {}),
+                     **({"method_version": METHOD_V4_VERSION if method == "v4" else METHOD_VERSION,
+                         "propose_alternatives_version": proposal_version} if v3_like else {}),
                      "as_of": as_of, "fake": fake, "k_top": k_top, **({"spec": spec_entry} if spec_entry else {}),
                      "indicator_set": {"sha256": iset, "ids": [s.id for s in ind.INDICATORS]},
                      "profiles": {n: {"tiers": p.tiers, "version": p.version, "description": p.description}
@@ -337,6 +349,7 @@ def run(texts: list[str], writer: str = "unknown", config: str = "configs/v2.yam
                        "indicators": x.get("indicators"), "extra": x.get("extra"),
                        "unresolved_compounds": x.get("unresolved_compounds", []),
                        **({"v3": x["v3"], "v3_alternatives": x.get("v3_alternatives", {})} if "v3" in x else {}),
+                       **({"v4": x["v4"]} if "v4" in x else {}),
                        **({"paper_outcomes": x["paper_outcomes"]} if "paper_outcomes" in x else {}),
                        **({"implementation_readiness": x["implementation_readiness"]} if "implementation_readiness" in x else {}),
                        **({"cross_link": x["cross_link"]} if "cross_link" in x else {})} for x in items],

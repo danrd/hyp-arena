@@ -488,10 +488,14 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
     cv.evidence += support
     cv.counterevidence += against
     pmids = []
+    stage_provenance: dict[str, str] = {}
     full_text = search.endswith("+fulltext")              # sources experiment arm B (specs/search/sources-experiment-2026-11-07.yaml)
     search = search.replace("+fulltext", "")
     if search == "fixed":                                 # read again the papers given in expert_pmids only (no search)
         pass
+    elif search == "two_stage":                            # Method v4: 2 canonical mechanism queries + 2 novel contribution queries within CAP
+        from hyparena.search.search import retrieve_two_stage
+        pmids, stage_provenance = retrieve_two_stage(claim, card, as_of=as_of, retmax=retmax, log=log)
     elif search == "filtered":                             # 2026-11-14: wider candidates, BM25, citations, cheap relevance filter
         from hyparena.search.search import retrieve_filtered
         pmids = retrieve_filtered(client, family, avoid, claim, card, as_of, log=log)
@@ -547,6 +551,7 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
     version = template_version or TEMPLATE[1]
     keep_no_stance = int(version.lstrip("v") or 0) >= 6     # v3 templates
     v18 = int(version.lstrip("v") or 0) >= 18               # the record fields: outcome match, measure, effect numbers
+    v23 = int(version.lstrip("v") or 0) >= 23               # Method v4: two-step factual comparison + relation_to_claim
     own_part = claim.role == "alternative" or claim.note == ALTERNATIVE_NOTE
     # only v18 asks the three answers per abstract and sends a reply back when they disagree with the finding (it lost
     # precision on pack 16); v19 is v17 with the record fields
@@ -634,6 +639,28 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
             if stance in ("supports", "refutes") and rec.outcome_match in ("broader", "other"):
                 rec.notes += f"; the result is on a {rec.outcome_match} outcome than the claim's: not counted (the reader said {stance})"
                 stance = "neither"
+        if pmid in stage_provenance:
+            rec.pmid_provenance = stage_provenance[pmid]
+        if v23:
+            rec.actual_contrast = _text(r.get("actual_contrast"))
+            rec.actual_system = _text(r.get("actual_system"))
+            rec.actual_outcome = _text(r.get("actual_outcome"))
+            rel_tc = str(r.get("relation_to_claim") or "").strip()
+            if rel_tc in ("direct_support", "direct_contradiction", "related", "irrelevant", "insufficient"):
+                rec.relation_to_claim = rel_tc
+            sm = str(r.get("study_mode") or "").strip()
+            if sm in ("confirmatory", "exploratory", "unknown"):
+                rec.study_mode = sm
+            wdr = str(r.get("worst_domain_risk") or "").strip()
+            if wdr in ("low", "some_concerns", "high", "unknown", "not_applicable"):
+                rec.worst_domain_risk = wdr
+            rec = enforce_relation_to_claim(rec, claim)
+            if rec.relation_to_claim == "direct_support":
+                stance = "supports"
+            elif rec.relation_to_claim == "direct_contradiction":
+                stance = "refutes"
+            elif rec.relation_to_claim in ("related", "irrelevant", "insufficient"):
+                stance = "neither"
         need = claim_endpoint(claim)
         effect = r.get("effect") if r.get("effect") in ("increase", "decrease", "no_effect") else "unknown"
         rec.effect = effect
@@ -664,6 +691,8 @@ def verify_claim(client, family: str, avoid: frozenset, claim, card: HypothesisC
         cv.notes = (cv.notes + "; " if cv.notes else "") + f"quotes not found verbatim, dropped: {', '.join(rejected)}"
     if (value or {}).get("truncated"):
         cv.notes = (cv.notes + "; " if cv.notes else "") + "reply cut off: only its complete records were kept"
+    if v23:
+        cv.search_state = classify_search_state(cv, list(abstracts))
     return cv
 
 

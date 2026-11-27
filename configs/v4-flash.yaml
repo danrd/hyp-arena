@@ -1,0 +1,27 @@
+# Method v4.0 working config (2026-11-27):
+# Consolidates normalize_card/v19, two-stage canonical+contribution retrieval (CAP=20),
+# verify_claim/v23 two-step factual relation reader, propose_alternatives/v4 contrast-bound
+# alternatives + conditional/unconditional nulls, and implementation_readiness/v2 3-component
+# weak-link readiness (`hyparena/scoring/rules_v4.py`).
+rpm: 30
+concurrency: 4
+generation:
+  temperature: 0.0
+  max_tokens: 4000
+timeout: 150
+max_retries: 0
+deadline: 180
+models:
+  - {family: google, provider: gemini_native, model: "gemini-3.5-flash", tier: paid, api_key_env: COMET_API_KEY, generation: {thinking_level: minimal}}
+  - {family: deepseek, provider: cometapi, model: "deepseek-v4.1-flash-1017", tier: paid, api_key_env: COMET_API_KEY,
+     generation: {max_tokens: 4000, extra_body: {thinking: {type: disabled}}}}
+
+search: two_stage
+admission: graded
+method: v4
+normalize_version: v19
+normalize_runs: 1
+verify_version: v23
+read_batch: 10
+propose_alternatives_version: v4
+implementation_version: v2

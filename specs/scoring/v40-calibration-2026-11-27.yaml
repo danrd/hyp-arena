@@ -1,0 +1,59 @@
+id: v40-calibration-2026-11-27
+status: frozen_for_holdout (v4.0)
+date: 2026-11-27
+baseline: method v3.13
+config: configs/v4-flash.yaml
+scorer: hyparena/scoring/rules_v4.py
+components:
+  normalize: normalize_card/v19 + normalizer.v19_code_fields + extract_decisive_contrast_v19
+  search: search.retrieve_two_stage (2 canonical mechanism queries + 2 novel contribution queries, CAP=20)
+  reader: verify_claim/v23 + verifier.enforce_relation_to_claim
+  alternatives: propose_alternatives/v4 + alternatives_v3.ground_discrimination_v4 + screen_contradicting_pmids
+  readiness: implementation_readiness/v2 + implementation.validate_components_v4 (weak-link min_readiness_score)
+dev_validation:
+  pool_dev60: longevity-kg/reviews/evaluation-annotation-100-2026-11-26/working/working-dev60.json
+  normalize_v19_50_cards:
+    valid_cards: "50/50 (100%)"
+    verbatim_claim_spans: "260/260 (100%)"
+    background_leak_violations: 0
+    in_role_overlap_vs_v17:
+      mechanism: "20/58 (34.5%) -> 42/58 (72.4%)"
+      outcome: "28/53 (52.8%) -> 33/53 (62.3%)"
+      novel_claim: "0/58 (0.0%) -> 39/58 (67.2%)"
+      decisive_contrast: "8/31 (25.8%) -> 27/31 (87.1% LLM) / 29/31 (93.5% deterministic code)"
+  reader_v23_42_blinded_pairs:
+    overall_accuracy_key: "41/42 (97.62%); substantive 42/42 (100.0%)"
+    dev_specificity: "26/26 (100%)"
+    anchor_support: "6/6 (100%)"
+    anchor_contradiction: "6/6 (100%)"
+    verbatim_quotes: "42/42 (100%)"
+  block_c_v4_25_deep_cards:
+    control_span_verbatim: "23/23 (100%)"
+    component_quotes_verified: "47/47 (100%)"
+    eliminated_with_loophole_violations: 0
+    on_positive_agreement: "25/25 (100%)"
+    on_null_contrast_aligned_agreement: "24/25 (96.0%); unconditional 20/25 (80.0%)"
+    precision_status_agreement: "24/25 (96.0%)"
+    resource_tier_agreement: "14/15 (93.3%)"
+    weaklink_readiness_with_abstracts: "17/17 (100.0%); legacy top-level 14/17 (82.4%)"
+    closed_world_no_abstracts_compliance: "8/8 (100.0%)"
+registry_regression_checks:
+  pilot10_v313_replay_sha256: "8d179391491590b55268cf977defa1213fc266caa5166475c2402ad014978f59 (exact match)"
+  pilot10_strict_mutations: "9/9 cases (54/54 invariants passed)"
+  prospective_60_top10_overlap:
+    evidence: "10/10"
+    funding: "10/10"
+    frontier: "10/10"
+  calibration_73:
+    R3_auc: 0.578
+    top10_overlap_evidence: "10/10"
+    top10_overlap_funding: "10/10"
+    top10_overlap_frontier: "10/10"
+holdout_evaluation_plan:
+  pool: longevity-kg/reviews/evaluation-annotation-100-2026-11-26 (holdout-01..03, 30 untouched cards)
+  mode: single_shot_frozen_evaluation
+  preregistered_metrics:
+    - normalize_v19 role_overlap (mechanism, outcome, novel_claim) and decisive_contrast overlap vs v17 archive
+    - normalize_v19 verbatim quote rate and 0 background_required_leak_violations
+    - verify_claim_v23 specificity/agreement on holdout literature observations and 100% verbatim quotes
+    - block_c_v4 on_positive, on_null (unconditional & contrast-aligned), resource_tier, weak-link readiness, and 0 loophole violations on holdout deep cards

@@ -154,6 +154,7 @@ def assess(
     family: Optional[str] = None,
     log: Optional[list] = None,
     max_papers: int = 8,
+    version: str = TEMPLATE_VERSION,
 ) -> dict:
     """Run one Channel B readiness check over up to `max_papers` already-retrieved abstracts."""
     pmids: list[str] = []
@@ -163,12 +164,25 @@ def assess(
             if pm.isdigit() and pm in abstracts and pm not in pmids:
                 pmids.append(pm)
     supplied = {pm: abstracts[pm] for pm in pmids[:max_papers]}
-    if not supplied:
+    if not supplied and version != "v2":
         return {
             "limiting_means": "; ".join(i.label for i in card.pico.intervention),
             "limiting_operation": "", "raw_status": "missing", "verified_status": "missing",
             "evidence_pmid": "", "evidence_quote": "", "quote_ok": False,
             "issue": "no_abstracts", "gap": "No pre-cutoff abstracts available.",
+        }
+    if not supplied and version == "v2":
+        from hyparena.scoring.v3_extra import resource_tier
+        return {
+            "resource_tier": resource_tier(card),
+            "overall_evidence_status": "insufficient",
+            "min_readiness_score": 0.0,
+            "mean_readiness_score": 0.0,
+            "component_checks": [],
+            "external_validity_flags": list(getattr(card.decisive_experiment, "external_validity_flags", None) or []),
+            "safety_flags": list(getattr(card.decisive_experiment, "safety_flags", None) or []),
+            "tradeoff": "",
+            "issue": "no_abstracts",
         }
 
     chosen_family = family
@@ -193,7 +207,7 @@ def assess(
     )
     prompt = render(
         "implementation_readiness",
-        TEMPLATE_VERSION,
+        version,
         claim=card.claim_plain,
         interventions="; ".join(f"{i.label} (type={i.type})" for i in card.pico.intervention),
         system=de.system,
@@ -202,6 +216,22 @@ def assess(
         abstracts_block=abs_block,
     )
     reply = client.call(role="verify_claim", family=chosen_family, prompt=prompt)
+    if version == "v2":
+        checked_v4 = validate_components_v4(_parse_json(reply.text), supplied, experiment_text=experiment_text)
+        if log is not None:
+            log.append({
+                "kind": "llm",
+                "template": f"implementation_readiness/{version}",
+                "role": "verify_claim",
+                "family": chosen_family,
+                "overall_evidence_status": checked_v4["overall_evidence_status"],
+                "min_readiness_score": checked_v4["min_readiness_score"],
+                "tokens_in": getattr(reply, "tokens_in", 0),
+                "tokens_out": getattr(reply, "tokens_out", 0),
+                "seconds": getattr(reply, "seconds", 0.0),
+                "error": getattr(reply, "error", None),
+            })
+        return checked_v4
     checked = validate(_parse_json(reply.text), supplied)
     if log is not None:
         log.append({

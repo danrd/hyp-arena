@@ -77,6 +77,10 @@ def readiness_assessment(card: HypothesisCard, as_of: str = "",
         return None, "unclassified"
     if len(drugs) != len(interventions):
         if isinstance(implementation, dict):
+            if "min_readiness_score" in implementation and "overall_evidence_status" in implementation:
+                ov = str(implementation.get("overall_evidence_status") or "insufficient")
+                sc = float(implementation.get("min_readiness_score") or 0.0)
+                return max(0.0, min(1.0, sc)), f"v4_{ov}"
             st = str(implementation.get("verified_status") or "").strip().lower()
             if st in ("demonstrated", "conditional") and not impl_mod.has_checked_quote(implementation):
                 st = "missing"
@@ -106,9 +110,16 @@ def readiness_assessment(card: HypothesisCard, as_of: str = "",
                 entity_ids.add(f"CT:{clinicaltrials._norm_key(label)}")
                 used_ct = True
                 continue
+        if isinstance(implementation, dict) and "min_readiness_score" in implementation and implementation.get("component_checks"):
+            comp_min = max(0.0, min(1.0, float(implementation["min_readiness_score"] or 0.0)))
+            return comp_min, f"v4_{implementation.get('overall_evidence_status') or 'literature_components'}"
         return None, reason
 
     min_score = min(scores)
+    if isinstance(implementation, dict) and "min_readiness_score" in implementation and implementation.get("component_checks"):
+        comp_min = max(0.0, min(1.0, float(implementation["min_readiness_score"] or 0.0)))
+        if comp_min < min_score:
+            return comp_min, f"v4_{implementation.get('overall_evidence_status') or 'component_capped'}"
     if min_score >= 1.0 and len(entity_ids) > 1:
         return 0.5, ("ct_combination_unverified" if used_ct else "combination_unverified")
     prefix = "ct_" if used_ct else ""

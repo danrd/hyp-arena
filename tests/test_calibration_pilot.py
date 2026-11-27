@@ -855,5 +855,160 @@ def test_method_v4_block_c_templates_grounding_and_scorer():
     assert bc_res["overall_evidence_status_agreement"]["rate"] == 1.0
 
 
+def test_rules_v4_end_to_end_and_config():
+    import yaml
+    from hyparena import METHOD_V4_VERSION, METHOD_VERSION
+    from hyparena.card.models import ClaimVerification, EvidenceRecord, HypothesisCard
+    from hyparena.scoring import rules_v4
+
+    assert METHOD_VERSION == "v3.13"
+    assert METHOD_V4_VERSION == "v4.0"
+    cfg_v4 = yaml.safe_load((REPO_ROOT / "configs" / "v4-flash.yaml").read_text(encoding="utf-8"))
+    assert cfg_v4["method"] == "v4"
+    assert cfg_v4["normalize_version"] == "v19"
+    assert cfg_v4["verify_version"] == "v23"
+    assert cfg_v4["propose_alternatives_version"] == "v4"
+    assert cfg_v4["implementation_version"] == "v2"
+
+    case = _synthetic_v313_case()
+    case["card"]["claims"][0]["chain_roles"] = ["mechanism", "novel_contribution"]
+    case["card"]["claims"][1]["chain_roles"] = ["outcome"]
+    case["card"]["decisive_experiment"]["precision_status"] = "missing"
+    case["card"]["proposed_alternatives"][0]["discrimination_version"] = "v4"
+    case["card"]["proposed_alternatives"][0]["loophole"] = "Residual fiber excitability shift."
+    case["card"]["proposed_alternatives"][0]["support_pmids"] = ["33333333"]
+
+    card = HypothesisCard.model_validate(case["card"])
+    cvs = [ClaimVerification.model_validate(v) for v in case["verifications"].values()]
+    alt_vers = {k: ClaimVerification.model_validate(v) for k, v in case["alternatives"].items()}
+
+    # 1. Baseline v4 evaluation: loophole caps on_positive eliminated -> weakened, missing precision keeps on_negative unchanged
+    r_base = rules_v4.evaluate(
+        card,
+        cvs,
+        alt_vers,
+        implementation={
+            "resource_tier": "4_clinical_in_vivo",
+            "overall_evidence_status": "adjacent_only",
+            "min_readiness_score": 0.5,
+            "component_checks": [{"component": "system_or_population_fit", "evidence_status": "adjacent_only"}],
+        },
+        experiment_text=card.decisive_experiment.span,
+    )
+    assert r_base.method_version == "v4.0"
+    assert r_base.gate == "pass"
+    assert r_base.resource_tier == "4_clinical_in_vivo"
+    assert r_base.execution_readiness["readiness_score"] == 0.5
+
+    # 2. M2 invariance: adding supported background claims never raises chain_state
+    card_bg = HypothesisCard.model_validate(
+        {
+            **card.model_dump(),
+            "claims": [
+                *card.model_dump()["claims"],
+                {
+                    "id": "c_bg1",
+                    "subject": "aging",
+                    "relation": "promotes",
+                    "object": "transmission blocking",
+                    "role": "premise",
+                    "link": "pathway",
+                    "chain_roles": ["background"],
+                },
+            ],
+        }
+    )
+    cv_bg = ClaimVerification.model_validate({**case["verifications"]["c1"], "id": "c_bg1"})
+    r_bg = rules_v4.evaluate(card_bg, [*cvs, cv_bg], alt_vers, experiment_text=card.decisive_experiment.span)
+    assert r_bg.chain_state <= r_base.chain_state
+
+    # 3. Refuted background filters gate ('refuted_background')
+    cv_bg_refuted = ClaimVerification(
+        id="c_bg1",
+        evidence=[],
+        counterevidence=[
+            EvidenceRecord(
+                source="PubMed",
+                record_id="PMID:99999999",
+                epistemic_type="A_text",
+                lab_or_cohort="PMID:99999999",
+                species="human",
+                quote="Refuted background claim.",
+                quote_role="finding",
+                endpoint="mechanism",
+                effect="no_effect",
+                qualifiers_match={"intervention_match": "exact", "species_match": "yes", "population_match": "yes"},
+                design="rct",
+                n_total=300,
+                comparison="between_groups",
+                effect_class="none",
+                outcome_match="same",
+                actual_contrast="active vs placebo",
+                relation_to_claim="direct_contradiction",
+                retrieved_at="2024",
+            )
+        ],
+    )
+    r_refuted = rules_v4.evaluate(card_bg, [*cvs, cv_bg_refuted], alt_vers, experiment_text=card.decisive_experiment.span)
+    assert r_refuted.gate == "filtered"
+    assert r_refuted.gate_reason == "refuted_background"
+
+    # 4. M6 guard: mismatched species direct_contradiction is downgraded to 'related' and ignored in counterevidence
+    cv_mismatched_contra = copy.deepcopy(cvs[1])
+    cv_mismatched_contra.counterevidence.append(
+        EvidenceRecord(
+            source="PubMed",
+            record_id="PMID:88888888",
+            epistemic_type="A_text",
+            lab_or_cohort="PMID:88888888",
+            species="mouse",
+            quote="Mouse study had no effect.",
+            quote_role="finding",
+            endpoint="healthspan",
+            effect="no_effect",
+            qualifiers_match={"intervention_match": "exact", "species_match": "no"},
+            design="animal",
+            n_total=100,
+            comparison="between_groups",
+            effect_class="none",
+            outcome_match="same",
+            actual_contrast="mouse active vs vehicle",
+            relation_to_claim="direct_contradiction",
+            retrieved_at="2024",
+        )
+    )
+    r_m6 = rules_v4.evaluate(card, [cvs[0], cv_mismatched_contra], alt_vers, experiment_text=card.decisive_experiment.span)
+    assert r_m6.chain_state == r_base.chain_state
+
+    # 5. Contradicting alternative PMID is routed out of I when it directly contradicts a required link
+    cv_c1_contra = copy.deepcopy(cvs[0])
+    cv_c1_contra.counterevidence.append(
+        EvidenceRecord(
+            source="PubMed",
+            record_id="PMID:33333333",
+            epistemic_type="A_text",
+            lab_or_cohort="PMID:33333333",
+            species="human",
+            quote="No ClC-1 target engagement.",
+            quote_role="finding",
+            endpoint="mechanism",
+            effect="no_effect",
+            qualifiers_match={"intervention_match": "exact", "species_match": "yes"},
+            design="rct",
+            n_total=80,
+            comparison="between_groups",
+            effect_class="none",
+            outcome_match="same",
+            actual_contrast="NMD670 vs placebo",
+            relation_to_claim="direct_contradiction",
+            retrieved_at="2024",
+        )
+    )
+    r_routed = rules_v4.evaluate(card, [cv_c1_contra, cvs[1]], alt_vers, experiment_text=card.decisive_experiment.span)
+    assert r_routed.routed_contradicting_alt_pmids == {"p1": ["33333333"]}
+    assert r_routed.I < r_base.I
+
+
+
 
 

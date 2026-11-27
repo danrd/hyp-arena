@@ -175,9 +175,11 @@ def propose(client, family: str, card: HypothesisCard, abstracts: dict[str, dict
              for p, a in list(abstracts.items())[:MAX_ABSTRACTS]]
     chain = [c for c in card.claims if c.link or c.role in ("outcome", "mechanism", "premise")]
     experiment_text = registry_text or card.decisive_experiment.span
+    precision_status = getattr(card.decisive_experiment, "precision_status", None) or "missing"
     variables = {"as_of": as_of or "today", "claim_plain": card.claim_plain, "chain": chain, "experiment": _experiment(card) or "not stated",
                  "abstracts": items, "relations": ", ".join(typing.get_args(Relation)),
-                 "registry_text": experiment_text if version == GROUNDED_VERSION else registry_text}
+                 "registry_text": experiment_text if version in (GROUNDED_VERSION, "v4") else registry_text,
+                 "precision_status": precision_status}
 
     def validate(v):
         alts = v.get("alternatives")
@@ -192,7 +194,10 @@ def propose(client, family: str, card: HypothesisCard, abstracts: dict[str, dict
                                                      if str(p).replace("PMID:", "").strip() in allowed]}
         if raw.get("relation") not in typing.get_args(Relation):
             raw["relation"] = "other"
-        if version == GROUNDED_VERSION:
+        if version == "v4":
+            raw = ground_discrimination_v4(raw, experiment_text, precision_status=precision_status)
+            raw["discrimination_version"] = "v4"
+        elif version == GROUNDED_VERSION:
             raw = ground_discrimination(raw, experiment_text)
         try:
             alt = ProposedAlternative.model_validate(raw)
