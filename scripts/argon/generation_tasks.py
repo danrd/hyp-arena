@@ -323,6 +323,66 @@ def build_v4(participant: str, as_of: str, topic: str = TOPIC, n: int = N, write
     return task
 
 
+# Generation prompt v5 (2026-11-28, tested against v3 baseline A3 / BS3):
+# Keeps v4's pool diversity + mandatory pre-T unresolved_problem (dropping the prerequisite-disclaimer loophole),
+# and adds three targeted fixes for the main failure modes observed in Sol-20:
+#   1) Direct claim <-> experiment system match (no human clinical claim tested in mice or ex vivo prerequisite).
+#   2) Realistic recruitment/organ scale + contrast-level sample-size justification (MDE and n_per_contrast).
+#   3) Direct main-effect formulation (no unfloored narrow subgroup hedging) and clean prose (no inline URLs/PMIDs).
+def _v5_extra_block(n: int = N) -> list[str]:
+    return [
+        f"Make the {_words(n)} hypotheses in this pool fundamentally different from one another: no two hypotheses may share "
+        "the same molecular target or channel/junction family, the same organ or clinical syndrome, or the same core causal "
+        "mechanism. Across the pool, span genuinely distinct biological levers and intervention modalities within the topic.",
+        "For every hypothesis, explicitly state which concrete unresolved biomedical or clinical problem documented before T "
+        "it helps solve: what fails, stalls, or remains unanswered in existing evidence or prior interventions (citing at least "
+        "one real pre-T PubMed paper), and how a positive result of the proposed experiment directly resolves that problem. "
+        "Record this in `unresolved_problem` and include it concisely in `rationale`.",
+        "The proposed experiment must directly test the stated claim in the same species and biological system: if the claim "
+        "is about older adults or a clinical condition in humans, propose a realistic, ethical in vivo human clinical trial "
+        "(do not pair a human clinical claim with a mouse, slice, or ex vivo prerequisite experiment with a disclaimer). "
+        "If a hypothesis is genuinely preclinical, state the claim honestly about that model.",
+        "Justify the planned sample size and per-contrast group size (n_per_contrast) from a concrete minimum clinically or "
+        "biologically important effect (MDE) and verify that the required sample size, donor-tissue count, or patient cohort "
+        "is logistically achievable relative to published pre-T precedents (do not propose unobtainable scales of rare donor "
+        "organs or neurosurgical tissues).",
+        "Formulate a clear primary effect on a well-defined target population rather than hedging into an unspecified narrow "
+        "conditional subgroup ('only in a subset when...') without a stated prevalence basis. Keep `claim`, `rationale`, and "
+        "`experiment` as clean scientific prose free of inline URLs, PMIDs, or PMCIDs (put all references only in the "
+        "structured fields `relies_on`, `unresolved_problem.papers`, and `check`).",
+    ]
+
+
+def build_v5(participant: str, as_of: str, topic: str = TOPIC, n: int = N, write: bool = True, guard: bool = True) -> dict:
+    """Build generation prompt v5 ('a5' or 'bs5'): v3 baseline + diversity + unresolved problem + direct system match +
+    realistic MDE/scale + clean non-hedged prose."""
+    if participant not in ("a5", "bs5"):
+        raise ValueError(f"participant must be 'a5' or 'bs5', got {participant!r}")
+    extra_instr = _bs3_spec(n) if participant == "bs5" else []
+    fields = {"card": CARD_V3, "check": CHECK_V3} if participant == "bs5" else {}
+    task = {
+        "task": f"generation_{participant.upper()}",
+        "cover": COVER,
+        "topic": topic,
+        "T": as_of,
+        "n": n,
+        "instructions": [base(n, guard)] + V3_SHARED_BLOCK + _v5_extra_block(n) + extra_instr + COMMON,
+        "answer_format": {
+            "hypotheses": [
+                {
+                    **HYP,
+                    "id": f"{participant.upper()}1",
+                    "unresolved_problem": UNRESOLVED_PROBLEM_V4,
+                    **fields,
+                }
+            ]
+        },
+    }
+    if write:
+        _write(participant, task)
+    return task
+
+
 def build_b_generate(as_of: str) -> dict:
     """B = A + our card specification (pilot of 2026-11-16): the same request as A, plus the structured card. No manual and
     no hint of what the method values, so B differs from A only by the structure. The steps of the method (scoring) and the
@@ -472,18 +532,22 @@ def format_problems(kind: str, ans: dict) -> list[str]:
         return [f'"{key}" must be a non-empty list']
     out = []
     n = json.loads((DIR / f"task_{task_kind}.json").read_text()).get("n", N) if (DIR / f"task_{task_kind}.json").exists() else N
-    if kind in (*PARTICIPANTS, "a3", "bs3", "a4", "bs4") and len(items) != n:
+    if kind in (*PARTICIPANTS, "a3", "bs3", "a4", "bs4", "a5", "bs5") and len(items) != n:
         out.append(f"{len(items)} hypotheses, {n} asked")
     for h in items:
         if kind != "reports" and not all(h.get(k) for k in ("claim", "rationale", "experiment")):
             out.append(f"{h.get('id')}: claim, rationale and experiment must be filled")
-        if kind in ("a4", "bs4"):
+        if kind in ("a4", "bs4", "a5", "bs5"):
             up = h.get("unresolved_problem") or {}
             if not all((up.get(k) or "").strip() for k in ("problem", "why_unsolved_before_T", "how_this_helps")):
                 out.append(f"{h.get('id')}: unresolved_problem fields must be filled")
             if not any(str(p.get("pmid", "")).strip().isdigit() for p in (up.get("papers") or [])):
                 out.append(f"{h.get('id')}: unresolved_problem must cite at least one pre-T PMID")
-        if kind not in ("a", "s", "bs", "a3", "bs3", "a4", "bs4") and not (kind == "b" and _b_generate_only()) and not isinstance(h.get("report"), dict):
+        if kind in ("a5", "bs5"):
+            prose = " ".join(str(h.get(k) or "") for k in ("claim", "rationale", "experiment"))
+            if re.search(r"https?://|\bPMID\s*[:#]?\s*\d+|\bPMC\d+", prose, re.I):
+                out.append(f"{h.get('id')}: inline URL/PMID/PMCID found in hypothesis prose")
+        if kind not in ("a", "s", "bs", "a3", "bs3", "a4", "bs4", "a5", "bs5") and not (kind == "b" and _b_generate_only()) and not isinstance(h.get("report"), dict):
             out.append(f"{h.get('id')}: no report")
         if kind in ("c", "d") and not h.get("parent"):
             out.append(f"{h.get('id')}: no parent")
@@ -725,8 +789,8 @@ def main(argv=None) -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("cmd", choices=["build", "score", "analyze", "report", "compare-argon", "build-a", "build-b", "build-b-generate", "build-reports", "build-evolve", "check", "collect"])
     ap.add_argument("--arm", choices=["C", "D"])
-    ap.add_argument("--kind", choices=["a", "b", "s", "bs", "a3", "bs3", "a4", "bs4", "a_noguard", "bs_noguard", "reports", "c", "d"])
-    ap.add_argument("--participant", choices=[*PARTICIPANTS, "a3", "bs3", "a4", "bs4"], help="build: a/b/s/bs, a3/bs3 (v3 baseline), a4/bs4 (v4 prompts)")
+    ap.add_argument("--kind", choices=["a", "b", "s", "bs", "a3", "bs3", "a4", "bs4", "a5", "bs5", "a_noguard", "bs_noguard", "reports", "c", "d"])
+    ap.add_argument("--participant", choices=[*PARTICIPANTS, "a3", "bs3", "a4", "bs4", "a5", "bs5"], help="build: a/b/s/bs, a3/bs3 (v3 baseline), a4/bs4 (v4), a5/bs5 (v5)")
     ap.add_argument("--topic", default=TOPIC)
     ap.add_argument("--n", type=int, default=N)
     ap.add_argument("--files", nargs="*", default=[], help="analyze: participant=score file, e.g. A=score_a_v2.json")
@@ -752,6 +816,8 @@ def main(argv=None) -> None:
             t = build_v3(a.participant, a.as_of, a.topic, a.n, guard=not a.no_guard)
         elif a.participant in ("a4", "bs4"):
             t = build_v4(a.participant, a.as_of, a.topic, a.n, guard=not a.no_guard)
+        elif a.participant in ("a5", "bs5"):
+            t = build_v5(a.participant, a.as_of, a.topic, a.n, guard=not a.no_guard)
         else:
             t = build(a.participant, a.as_of, a.topic, a.n, guard=not a.no_guard)
     elif a.cmd == "build-a":

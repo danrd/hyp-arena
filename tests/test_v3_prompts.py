@@ -108,3 +108,45 @@ def test_generation_v4_extends_v3_cleanly():
     assert format_problems("a4", sample) == []
     assert ("24866862", "LIFE study", "unresolved_problem") in _pmids(sample["hypotheses"][0])
 
+
+def test_generation_v5_extends_v3_cleanly():
+    from scripts.argon.generation_tasks import build_v3, build_v5, format_problems
+
+    a3 = build_v3("a3", "2026-11-27", write=False)
+    bs3 = build_v3("bs3", "2026-11-27", write=False)
+    a5 = build_v5("a5", "2026-11-27", write=False)
+    bs5 = build_v5("bs5", "2026-11-27", write=False)
+
+    a5_extra = [x for x in a5["instructions"] if x not in a3["instructions"]]
+    bs5_extra = [x for x in bs5["instructions"] if x not in bs3["instructions"]]
+    assert len(a5_extra) == 5 and a5_extra == bs5_extra
+    assert "same species and biological system" in a5_extra[2]
+    assert "n_per_contrast" in a5_extra[3]
+    assert "free of inline URLs, PMIDs, or PMCIDs" in a5_extra[4]
+    assert "card" not in a5["answer_format"]["hypotheses"][0]
+    assert "card" in bs5["answer_format"]["hypotheses"][0] and "check" in bs5["answer_format"]["hypotheses"][0]
+
+    clean_sample = {
+        "hypotheses": [
+            {
+                "id": f"A5{i}",
+                "claim": "c",
+                "rationale": "r",
+                "experiment": "e",
+                "relies_on": [],
+                "unresolved_problem": {
+                    "problem": "p",
+                    "why_unsolved_before_T": "w",
+                    "how_this_helps": "h",
+                    "papers": [{"pmid": "24866862", "title": "LIFE study"}],
+                },
+            }
+            for i in range(1, 6)
+        ]
+    }
+    assert format_problems("a5", clean_sample) == []
+    dirty = json.loads(json.dumps(clean_sample))
+    dirty["hypotheses"][0]["rationale"] = "Prior work (PMID: 24866862) showed..."
+    assert any("inline URL/PMID/PMCID" in msg for msg in format_problems("a5", dirty))
+
+
