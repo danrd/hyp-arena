@@ -117,11 +117,25 @@ def _pre_cutoff_source(pmid: str, as_of: str) -> dict[str, dict]:
     return pubmed.fetch([pmid])
 
 
+def pre_cutoff_sources_batch(pmids: list[str], as_of: str) -> dict[str, dict]:
+    """Batch-fetch pre-cutoff PubMed titles/abstracts for a list of PMIDs in 2 E-utility calls (esummary + efetch)."""
+    clean = list(dict.fromkeys(str(p).strip().removeprefix("PMID:").strip() for p in pmids if str(p).strip().removeprefix("PMID:").strip().isdigit()))
+    if not clean or not as_of:
+        return {}
+    cutoff = date.fromisoformat(as_of).isoformat()
+    from hyparena.tools import pubdates, pubmed
+
+    dates = pubdates.pubdates(clean)
+    allowed = [p for p in clean if p in dates and dates[p] <= cutoff]
+    return pubmed.fetch(allowed) if allowed else {}
+
+
 def revalidate_saved(
     implementation: Optional[dict],
     as_of: str,
     experiment_text: str = "",
     n_planned: Optional[int] = None,
+    prefetched_sources: Optional[dict[str, dict]] = None,
 ) -> Optional[dict]:
     """Validate hand-prepared readiness (`v1` or `v2` 3-component) against pre-cutoff PubMed / experiment text."""
     if not isinstance(implementation, dict):
@@ -144,11 +158,13 @@ def revalidate_saved(
         if pmids:
             if cutoff is None:
                 return {**validate_components_v4(implementation, {}, experiment_text=experiment_text, n_planned=n_planned), "issue": "missing_or_invalid_cutoff"}
-            try:
-                for pm in pmids:
-                    sources.update(_pre_cutoff_source(pm, cutoff.isoformat()))
-            except (httpx.HTTPError, RuntimeError, ValueError, OSError, ParseError):
-                return {**validate_components_v4(implementation, {}, experiment_text=experiment_text, n_planned=n_planned), "issue": "pubmed_unavailable"}
+            if prefetched_sources is not None:
+                sources = {pm: prefetched_sources[pm] for pm in pmids if pm in prefetched_sources}
+            else:
+                try:
+                    sources = pre_cutoff_sources_batch(pmids, cutoff.isoformat())
+                except (httpx.HTTPError, RuntimeError, ValueError, OSError, ParseError):
+                    return {**validate_components_v4(implementation, {}, experiment_text=experiment_text, n_planned=n_planned), "issue": "pubmed_unavailable"}
         return validate_components_v4(implementation, sources, experiment_text=experiment_text, n_planned=n_planned)
 
     status = str(implementation.get("verified_status") or "missing").strip().lower()

@@ -41,7 +41,7 @@ from pathlib import Path
 from hyparena import METHOD_V4_VERSION
 from hyparena.card.models import ClaimVerification, HypothesisCard
 from hyparena.novelty.novelty_v34 import link_levels, novelty, novelty_source
-from hyparena.reading.implementation import is_non_drug, revalidate_saved
+from hyparena.reading.implementation import is_non_drug, pre_cutoff_sources_batch, revalidate_saved
 from hyparena.reports import diversity as div_mod
 from hyparena.scoring import aspid_v3, rules_v3, rules_v32, rules_v4
 from hyparena.scoring.v3_extra import (
@@ -58,6 +58,23 @@ p.add_argument("--as-of", default="", help="Literature cutoff YYYY-MM-DD for Pub
 args = p.parse_args()
 
 cases = json.loads(Path(args.cases).read_text(encoding="utf-8"))
+all_impl_pmids = [
+    cc.get("evidence_pmid")
+    for c in cases
+    for cc in ((c.get("implementation_readiness") or {}).get("component_checks") or [])
+    if isinstance(cc, dict) and cc.get("evidence_pmid")
+] + [
+    (c.get("implementation_readiness") or {}).get("evidence_pmid")
+    for c in cases
+    if isinstance(c.get("implementation_readiness"), dict) and (c.get("implementation_readiness") or {}).get("evidence_pmid")
+]
+prefetched = None
+if args.as_of and all_impl_pmids:
+    try:
+        prefetched = pre_cutoff_sources_batch(all_impl_pmids, args.as_of)
+    except Exception:
+        prefetched = None
+
 results = {}
 cards_for_clusters = {}
 aspid_axes = {}
@@ -77,6 +94,7 @@ for case in cases:
             args.as_of,
             experiment_text=exp_text,
             n_planned=card_raw.decisive_experiment.n_planned,
+            prefetched_sources=prefetched,
         )
 
     r4 = rules_v4.evaluate(
@@ -186,7 +204,7 @@ from pathlib import Path
 
 from hyparena import METHOD_V4_VERSION
 from hyparena.card.models import ClaimVerification, HypothesisCard
-from hyparena.reading.implementation import is_non_drug, revalidate_saved
+from hyparena.reading.implementation import is_non_drug, pre_cutoff_sources_batch, revalidate_saved
 from hyparena.reports.report_html import build
 from hyparena.reports.report_v2 import render
 from hyparena.scoring import rules_v3, rules_v4
@@ -200,6 +218,22 @@ a = p.parse_args()
 
 raw = Path(a.cases).read_bytes()
 cases = json.loads(raw)
+all_impl_pmids = [
+    cc.get("evidence_pmid")
+    for c in cases
+    for cc in ((c.get("implementation_readiness") or {}).get("component_checks") or [])
+    if isinstance(cc, dict) and cc.get("evidence_pmid")
+] + [
+    (c.get("implementation_readiness") or {}).get("evidence_pmid")
+    for c in cases
+    if isinstance(c.get("implementation_readiness"), dict) and (c.get("implementation_readiness") or {}).get("evidence_pmid")
+]
+prefetched = None
+if a.as_of and all_impl_pmids:
+    try:
+        prefetched = pre_cutoff_sources_batch(all_impl_pmids, a.as_of)
+    except Exception:
+        prefetched = None
 originals = {}
 if a.hypotheses:
     source = json.loads(a.hypotheses.read_text(encoding="utf-8"))
@@ -235,6 +269,7 @@ for case in cases:
             a.as_of,
             experiment_text=exp_text,
             n_planned=card_raw.decisive_experiment.n_planned,
+            prefetched_sources=prefetched,
         )
 
     card_v4, cvs_v4, alts_v4, _, _ = rules_v4.prepare_for_v4(card_raw, cvs_raw, alts, experiment_text=exp_text)
