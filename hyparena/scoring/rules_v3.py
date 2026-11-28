@@ -43,7 +43,7 @@ def context_level(rec: EvidenceRecord) -> Optional[str]:
         # 2026-11-11 (user decision, specs/scoring/intervention-class-2026-11-11.yaml): another intervention of the same broad
         # category only (a single nutrient for a multi-component formula) counts as adjacent, 1/2 under v3.6
         return "adjacent"
-    if im in ("class", "related_compound"):
+    if im in ("class", "same_class", "related_compound"):
         return "class"
     return "adjacent" if no else "exact"
 

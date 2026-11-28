@@ -76,12 +76,15 @@ def _same_species(rec: EvidenceRecord, claim: Claim) -> bool:
 
 def record_level(rec: EvidenceRecord, claim: Claim) -> Optional[str]:
     """The ladder level one usable record gives its claim, or None when it does not count."""
-    if getattr(rec, "relation_to_claim", None) == "related":
+    rel = getattr(rec, "relation_to_claim", None)
+    if rel in ("irrelevant", "insufficient"):
+        return None
+    if rel == "related" and claim.link != "outcome" and claim.role != "outcome":
         return None
     if r32.record_weight(rec, claim, False, True) <= 0 and r32.record_weight(rec, claim, True, True) <= 0:
         return None
     im = rec.qualifiers_match.get("intervention_match", "exact")
-    if im in ("class", "related_compound"):
+    if im in ("class", "same_class", "related_compound"):
         return "analog"
     return "new_context" if _same_species(rec, claim) else "translation"
 

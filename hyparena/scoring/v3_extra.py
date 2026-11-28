@@ -286,6 +286,25 @@ def sample_size_score(experiment: DecisiveExperiment) -> Optional[float]:
     return _n_score(n)
 
 
+PRECLINICAL_SCALE_FEE = 0.5
+READINESS_FLOOR_MULT = 0.5
+
+
+def _is_human_prerequisite(card: HypothesisCard, implementation: Optional[dict] = None, source_text: str = "") -> bool:
+    """True when the card claims a human population while the proposed experiment only tests a prerequisite
+    (non-human species, ex vivo human tissue, or explicit `tested_scope == 'prerequisite'`).
+    """
+    if not claim_is_human(card, source_text):
+        return False
+    e = card.decisive_experiment
+    sys_name = str(e.system or "unknown").lower()
+    if sys_name not in ("human", "unknown"):
+        return True
+    if is_human_ex_vivo(card, implementation):
+        return True
+    return getattr(e, "tested_scope", None) == "prerequisite"
+
+
 def feasibility(
     card: HypothesisCard,
     as_of: str = "",
@@ -295,18 +314,23 @@ def feasibility(
     experiment_text: str = "",
 ) -> float:
     e = card.decisive_experiment
-    sys_score = (
-        0.0
-        if (claim_aligned and claim_is_human(card, experiment_text) and e.system in SYSTEM_COST)
-        else SYSTEM_COST.get(e.system)
-    )
-    parts = [sys_score, DURATION_COST.get(e.duration_class), sample_size_score(e)]
+    is_hum = claim_is_human(card, experiment_text) if claim_aligned else False
+    is_prereq = _is_human_prerequisite(card, implementation, experiment_text) if claim_aligned else False
+    sys_score = 0.0 if (claim_aligned and is_hum and e.system in SYSTEM_COST) else SYSTEM_COST.get(e.system)
+    dur_raw = DURATION_COST.get(e.duration_class)
+    n_raw = sample_size_score(e)
+    dur_score = (dur_raw * PRECLINICAL_SCALE_FEE) if (is_prereq and dur_raw is not None) else dur_raw
+    n_score = (n_raw * PRECLINICAL_SCALE_FEE) if (is_prereq and n_raw is not None) else n_raw
+    parts = [sys_score, dur_score, n_score]
     known = [p for p in parts if p is not None]
     r_score = _call_readiness(card, as_of, implementation)
     if claim_aligned:
         r_score, _ = safety_readiness_cap(card, r_score, "", implementation, experiment_text)
-    # Missing readiness retains its place so withholding it cannot raise feasibility.
-    return round((sum(known) + (r_score or 0.0)) / (len(known) + 1), 3)
+    r_val = r_score or 0.0
+    base = (sum(known) + r_val) / (len(known) + 1)
+    if claim_aligned and (r_score is not None or isinstance(implementation, dict)):
+        base *= READINESS_FLOOR_MULT + (1.0 - READINESS_FLOOR_MULT) * r_val
+    return round(base, 3)
 
 
 def feasibility_breakdown(
@@ -320,10 +344,13 @@ def feasibility_breakdown(
     """Component-level breakdown of feasibility(card) for display in the evaluation tab."""
     e = card.decisive_experiment
     is_hum = claim_is_human(card, experiment_text)
+    is_prereq = _is_human_prerequisite(card, implementation, experiment_text) if claim_aligned else False
     human_claim_override = bool(claim_aligned and is_hum and e.system in SYSTEM_COST and e.system != "human")
     sys_score = 0.0 if (claim_aligned and is_hum and e.system in SYSTEM_COST) else SYSTEM_COST.get(e.system)
-    dur_score = DURATION_COST.get(e.duration_class)
-    n_score = sample_size_score(e)
+    dur_raw = DURATION_COST.get(e.duration_class)
+    n_raw = sample_size_score(e)
+    dur_score = (dur_raw * PRECLINICAL_SCALE_FEE) if (is_prereq and dur_raw is not None) else dur_raw
+    n_score = (n_raw * PRECLINICAL_SCALE_FEE) if (is_prereq and n_raw is not None) else n_raw
     n_missing_reserved = (
         e.system in SYSTEM_COST and e.system != "data_analysis"
         and (e.n_planned is None or e.n_planned <= 0)
@@ -341,7 +368,13 @@ def feasibility_breakdown(
         )
     known = [p for p in (sys_score, dur_score, n_score) if p is not None]
     denom = len(known) + 1
-    total = round((sum(known) + (readiness_score or 0.0)) / denom, 3)
+    r_val = readiness_score or 0.0
+    base = (sum(known) + r_val) / denom
+    r_mult = 1.0
+    if claim_aligned and (readiness_score is not None or isinstance(implementation, dict)):
+        r_mult = round(READINESS_FLOOR_MULT + (1.0 - READINESS_FLOOR_MULT) * r_val, 3)
+        base *= r_mult
+    total = round(base, 3)
     readiness_part = {
         "key": "readiness",
         "value": readiness_reason,
@@ -350,6 +383,8 @@ def feasibility_breakdown(
         "in_denominator": True,
         "reason": readiness_reason,
     }
+    if claim_aligned and r_mult < 1.0:
+        readiness_part["uncertainty_multiplier"] = r_mult
     if isinstance(implementation, dict) and readiness_reason.startswith("impl_"):
         if readiness_reason in ("impl_demonstrated", "impl_conditional"):
             readiness_part["evidence_pmid"] = implementation["evidence_pmid"]
@@ -376,24 +411,31 @@ def feasibility_breakdown(
     }
     if human_claim_override:
         sys_part["reason"] = "human_claim_aligned"
+    dur_part = {
+        "key": "duration",
+        "value": e.duration_class,
+        "score": round(dur_score, 3) if dur_score is not None else None,
+        "in_denominator": dur_score is not None,
+    }
+    if is_prereq and dur_raw is not None:
+        dur_part["reason"] = "prerequisite_scale_fee"
     parts = [
         sys_part,
-        {
-            "key": "duration",
-            "value": e.duration_class,
-            "score": round(dur_score, 3) if dur_score is not None else None,
-            "in_denominator": dur_score is not None,
-        },
+        dur_part,
         {
             "key": "sample_size",
             "value": e.n_planned,
             "score": round(n_score, 3) if n_score is not None else None,
             "in_denominator": n_score is not None,
-            "reason": "missing_reserved" if n_missing_reserved else ("not_applicable" if n_score is None else "stated"),
+            "reason": (
+                "missing_reserved"
+                if n_missing_reserved
+                else ("not_applicable" if n_score is None else ("prerequisite_scale_fee" if is_prereq else "stated"))
+            ),
         },
         readiness_part,
     ]
-    return {"score": total, "denominator": denom, "parts": parts}
+    return {"score": total, "denominator": denom, "readiness_multiplier": r_mult, "parts": parts}
 
 
 def extras(card: HypothesisCard, ver_claims: list[ClaimVerification], v3: dict, as_of: str = "",

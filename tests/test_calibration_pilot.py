@@ -862,7 +862,7 @@ def test_rules_v4_end_to_end_and_config():
     from hyparena.scoring import rules_v4
 
     assert METHOD_VERSION == "v3.13"
-    assert METHOD_V4_VERSION == "v4.1"
+    assert METHOD_V4_VERSION == "v4.2"
     cfg_v4 = yaml.safe_load((REPO_ROOT / "configs" / "v4-flash.yaml").read_text(encoding="utf-8"))
     assert cfg_v4["method"] == "v4"
     assert cfg_v4["normalize_version"] == "v19"
@@ -895,7 +895,7 @@ def test_rules_v4_end_to_end_and_config():
         },
         experiment_text=card.decisive_experiment.span,
     )
-    assert r_base.method_version == "v4.1"
+    assert r_base.method_version == "v4.2"
     assert r_base.gate == "pass"
     assert r_base.resource_tier == "4_clinical_in_vivo"
     assert r_base.execution_readiness["readiness_score"] == 0.5
@@ -1172,11 +1172,12 @@ def test_method_v41_calibrated_rules(monkeypatch):
 
     # Legacy v3 feasibility still gives mouse 0.5 -> (0.5 + 1.0 + 1.0 + 1.0) / 4 = 0.875
     assert v3_extra.feasibility(mj_card) == 0.875
-    # Claim-aligned v4.1 feasibility gives system 0.0 -> (0.0 + 1.0 + 1.0 + 1.0) / 4 = 0.75
+    # Claim-aligned v4.2 feasibility gives system 0.0 and applies PRECLINICAL_SCALE_FEE=0.5 to proxy duration & n -> (0.0 + 0.5 + 0.5 + 1.0) / 4 = 0.50
     r_mj = rules_v4.evaluate(mj_card, mj_cvs, mj_alts, experiment_text=mj_card.decisive_experiment.span)
-    assert r_mj.feasibility == 0.75
+    assert r_mj.feasibility == 0.5
     bd_mj = v3_extra.feasibility_breakdown(mj_card, claim_aligned=True)
     assert bd_mj["parts"][0]["score"] == 0.0 and bd_mj["parts"][0]["reason"] == "human_claim_aligned"
+    assert bd_mj["parts"][1]["score"] == 0.5 and bd_mj["parts"][1]["reason"] == "prerequisite_scale_fee"
     assert r_mj.I == round(r_mj.raw_I * 0.5, 4)
     # 1 observed slot (c1) + 2 required missing slots (c2 novel_contribution + c3 cross-species human outcome) => denominator 3
     assert r_mj.coverage_counts == (1, 3)
@@ -1201,27 +1202,29 @@ def test_method_v41_calibrated_rules(monkeypatch):
         mj_alts,
         experiment_text="In older adults with cerebral small-vessel disease, NMD670 improves perfusion.\n\n" + animal_card.decisive_experiment.span,
     )
-    assert r_disguised.feasibility == 0.75
+    assert r_disguised.feasibility == 0.5
     assert r_disguised.I == round(r_disguised.raw_I * 0.5, 4)
 
-    # 2. Execution viability alignment on I: unobtainable population_or_model -> I = 0.0; unvalidated assay -> I * 0.5
+    # 2. Uncertainty fee on I (Method v4.2): unverified population_or_model scales I by 0.25 without filtering gate; unvalidated assay -> I * 0.5
     human_case = _synthetic_v313_case()
     h_card = HypothesisCard.model_validate(human_case["card"])
     h_cvs = [ClaimVerification.model_validate(v) for v in human_case["verifications"].values()]
     h_alts = {k: ClaimVerification.model_validate(v) for k, v in human_case["alternatives"].items()}
+    unobt_impl = {
+        "resource_tier": "3_human_ex_vivo_or_pilot",
+        "overall_evidence_status": "insufficient",
+        "min_readiness_score": 0.0,
+        "component_checks": [{"component": "population_or_model", "evidence_status": "insufficient"}],
+    }
     r_unobt = rules_v4.evaluate(
         h_card,
         h_cvs,
         h_alts,
-        implementation={
-            "resource_tier": "3_human_ex_vivo_or_pilot",
-            "overall_evidence_status": "insufficient",
-            "min_readiness_score": 0.0,
-            "component_checks": [{"component": "population_or_model", "evidence_status": "insufficient"}],
-        },
+        implementation=unobt_impl,
         experiment_text=h_card.decisive_experiment.span,
     )
-    assert r_unobt.raw_I > 0.0 and r_unobt.I == 0.0
+    assert r_unobt.gate == "pass"
+    assert r_unobt.raw_I > 0.0 and r_unobt.I == round(r_unobt.raw_I * 0.25, 4)
 
     r_unval_assay = rules_v4.evaluate(
         h_card,
@@ -1307,6 +1310,201 @@ def test_method_v41_calibrated_rules(monkeypatch):
         experiment_text="Include week-1 dose titration and continuous ECG safety monitoring.",
     )
     assert r_pleio_mon.execution_readiness["readiness_score"] == 0.5
+
+
+def test_method_v42_contradictions_outcome_priors_attention_ai_and_judge(monkeypatch):
+    from hyparena.card.models import ClaimVerification, EvidenceRecord, HypothesisCard
+    from hyparena.reading import ai_leverage, verifier
+    from hyparena.scoring import rules_v32, rules_v4, trend_genetics
+    from scripts.calibration import judge_components
+
+    base_case = _synthetic_v313_case()
+    base_case["card"]["claims"][0]["chain_roles"] = ["mechanism"]
+    base_case["card"]["claims"][1]["chain_roles"] = ["outcome"]
+    card = HypothesisCard.model_validate(base_case["card"])
+
+    # 1. Prepared between_groups direct_contradiction without actual_contrast is preserved (while v23 output with actual_system still requires actual_contrast)
+    prep_contra = EvidenceRecord(
+        source="PubMed",
+        record_id="PMID:32690619",
+        lab_or_cohort="PMID:32690619",
+        species="human",
+        quote="In older adults, active treatment did not improve walking speed compared with sham (p = 0.81).",
+        quote_role="finding",
+        qualifiers_match={"intervention_match": "exact", "species_match": "yes"},
+        design="rct",
+        n_total=120,
+        comparison="between_groups",
+        effect_class="none",
+        outcome_match="same",
+        relation_to_claim="direct_contradiction",
+    )
+    assert verifier.enforce_relation_to_claim(prep_contra, card.claims[1]).relation_to_claim == "direct_contradiction"
+
+    v23_missing_contrast = prep_contra.model_copy(update={"actual_system": "older adults", "actual_contrast": ""})
+    assert verifier.enforce_relation_to_claim(v23_missing_contrast, card.claims[1]).relation_to_claim == "related"
+
+    # 2. Distinct intact-organism `related` outcome trial (`same_class` / `exact`) counts at 0.5x and updates N (`analog` / `new_context`),
+    #    and `cap_novelty_v4` caps `new_link -> new_combination` when `population_or_model == 'insufficient'`
+    same_class_out = EvidenceRecord(
+        source="PubMed",
+        record_id="PMID:77777777",
+        lab_or_cohort="PMID:77777777",
+        species="human",
+        quote="In a randomized trial of a same-class ClC-1 inhibitor, 6-minute walk distance improved.",
+        quote_role="finding",
+        qualifiers_match={"intervention_match": "same_class", "species_match": "yes"},
+        design="rct",
+        n_total=90,
+        comparison="between_groups",
+        effect_class="medium",
+        outcome_match="same",
+        relation_to_claim="related",
+    )
+    cvs_prior = [
+        ClaimVerification.model_validate(base_case["verifications"]["c1"]),
+        ClaimVerification(id="c2", evidence=[same_class_out]),
+    ]
+    c4_p, cvs4_p, _, _, _ = rules_v4.prepare_for_v4(card, cvs_prior, {})
+    b32_p = rules_v32.evaluate(c4_p, cvs4_p, {}, v36=True)
+    assert len(cvs4_p[1].evidence) == 1
+    assert rules_v4.cap_novelty_v4(c4_p, cvs4_p, b32_p) == "analog"
+
+    # Empty active link with unobtainable model is capped at new_combination rather than new_link
+    empty_case = _synthetic_v313_case()
+    empty_case["card"]["claims"] = [
+        {"id": "c0", "subject": "aging", "relation": "promotes", "object": "neuromuscular block", "role": "premise", "link": "pathway", "chain_roles": ["background"]},
+        {"id": "c1", "subject": "NMD670", "relation": "inhibits", "object": "ClC-1", "role": "mechanism", "link": "engagement", "chain_roles": ["mechanism", "novel_contribution"]},
+        {"id": "c2", "subject": "NMD670", "relation": "improves_healthspan_in", "object": "older adults", "role": "outcome", "link": "outcome", "chain_roles": ["outcome"]},
+    ]
+    e_card = HypothesisCard.model_validate(empty_case["card"])
+    e_cvs = [
+        ClaimVerification.model_validate({**base_case["verifications"]["c1"], "id": "c0"}),
+        ClaimVerification(id="c1", evidence=[]),
+        ClaimVerification(id="c2", evidence=[]),
+    ]
+    ec4, ecvs4, _, _, _ = rules_v4.prepare_for_v4(e_card, e_cvs, {})
+    eb32 = rules_v32.evaluate(ec4, ecvs4, {}, v36=True)
+    assert rules_v4.cap_novelty_v4(ec4, ecvs4, eb32) == "new_link"
+    assert rules_v4.cap_novelty_v4(
+        ec4,
+        ecvs4,
+        eb32,
+        implementation={"component_checks": [{"component": "population_or_model", "evidence_status": "insufficient"}]},
+    ) == "new_combination"
+
+    # 3. `attention_momentum`: blocks bare umbrella queries, enforces MIN_PUBMED_BASE=15, and discounts review-heavy hype
+    umb_dict = copy.deepcopy(base_case["card"])
+    umb_dict["pico"]["intervention"] = [{"label": "pulsating electric field patch", "type": "device"}]
+    umb_dict["pico"]["population"]["condition"] = "chronic epidermal wound"
+    umb_card = HypothesisCard.model_validate(umb_dict)
+    qs = trend_genetics.attention_queries(umb_card)
+    assert qs and all('"electric field"[tiab]' != q[0] for q in qs)
+    assert any("epidermal wound" in q[0].lower() for q in qs)
+
+    fake_pm = {
+        ("all[sb]", "2023-11-28", "2026-11-27"): 3_000_000,
+        ("all[sb]", "2020-11-28", "2023-11-27"): 3_000_000,
+    }
+    q0 = qs[0][0]
+    # Below MIN_PUBMED_BASE (10 < 15) -> returns None
+    monkeypatch.setattr(trend_genetics, "pubmed_count", lambda t, lo, hi: fake_pm.get((t, lo, hi), 5))
+    monkeypatch.setattr(trend_genetics, "epmc_preprint_count", lambda *a, **kw: -1)
+    monkeypatch.setattr(trend_genetics, "trials_count", lambda *a, **kw: 0)
+    sc_low, diag_low = trend_genetics.attention_momentum(umb_card, "2026-11-28")
+    assert sc_low is None and diag_low["reason"] == "below_min_base"
+
+    # Above base (a=40, b=10) with 80% reviews -> discounted vs 10% reviews
+    monkeypatch.setattr(
+        trend_genetics,
+        "pubmed_count",
+        lambda t, lo, hi: 3_000_000 if t == "all[sb]" else (32 if "Review[pt]" in t else (40 if lo == "2023-11-28" else 10)),
+    )
+    sc_rev, diag_rev = trend_genetics.attention_momentum(umb_card, "2026-11-28", include_preprints=False)
+    monkeypatch.setattr(
+        trend_genetics,
+        "pubmed_count",
+        lambda t, lo, hi: 3_000_000 if t == "all[sb]" else (4 if "Review[pt]" in t else (40 if lo == "2023-11-28" else 10)),
+    )
+    sc_prim, _ = trend_genetics.attention_momentum(umb_card, "2026-11-28", include_preprints=False)
+    assert sc_rev is not None and sc_prim is not None and sc_rev < sc_prim
+    assert diag_rev["review_discount"] < 1.0
+
+    # 4. `ai_leverage`: deterministic code guard blocks decorative AI on standard oral pill + scalar walk test,
+    #    while admitting construct-design / high-dim signal cards with verbatim bottleneck_span + validation_metric
+    pill_dict = copy.deepcopy(base_case["card"])
+    pill_dict["pico"]["intervention"] = [{"label": "oral taurine", "type": "compound", "route": "oral", "regimen": "2 g daily"}]
+    pill_dict["decisive_experiment"]["primary_outcome"] = "6-minute walk distance"
+    pill_dict["decisive_experiment"]["span"] = "Randomize 120 older adults to oral taurine 2 g daily vs placebo for 24 weeks; analyze with an AI classifier."
+    pill_card = HypothesisCard.model_validate(pill_dict)
+    assert ai_leverage.eligible_bottleneck_modes(pill_card, experiment_text=pill_card.decisive_experiment.span) == set()
+    dec_check = ai_leverage.validate_ai_leverage(
+        {
+            "ai_leverage": "analysis",
+            "bottleneck_mode": "signal_or_stratification",
+            "bottleneck_span": "analyze with an AI classifier",
+            "why_non_decorative": "Claimed ML classifier.",
+            "validation_metric": "AUROC",
+        },
+        pill_card,
+        experiment_text=pill_card.decisive_experiment.span,
+    )
+    assert dec_check["ai_role"] == "none" and dec_check["issue"] == "ineligible_by_code_guard"
+
+    plasmid_dict = copy.deepcopy(pill_dict)
+    plasmid_dict["pico"]["intervention"] = [{"label": "engineered hMaxi-K plasmid vector", "type": "gene", "span": "engineered hMaxi-K plasmid vector"}]
+    plasmid_exp = "Intradetrusor injection of engineered hMaxi-K plasmid vector with continuous ambulatory urodynamic waveform monitoring."
+    plasmid_card = HypothesisCard.model_validate(plasmid_dict)
+    elig = ai_leverage.eligible_bottleneck_modes(plasmid_card, experiment_text=plasmid_exp)
+    assert {"intervention", "analysis"} <= elig
+    ok_ai = ai_leverage.validate_ai_leverage(
+        {
+            "ai_leverage": "intervention",
+            "bottleneck_mode": "agent_or_construct_design",
+            "bottleneck_span": "engineered hMaxi-K plasmid vector",
+            "why_non_decorative": "Promoter/plasmid sequence optimization governs smooth-muscle selectivity and expression durability.",
+            "validation_metric": "Detrusor-to-off-target expression ratio across promoter variants.",
+        },
+        plasmid_card,
+        experiment_text=plasmid_exp,
+    )
+    assert ok_ai["ai_role"] == "intervention" and ok_ai["verified"] is True
+
+    # 5. Judge v4 equal-sum aggregation and tiebreak-only-on-sum-tie
+    j_agg = judge_components.aggregate_judge(
+        {
+            "judgements": [
+                {
+                    "pair_id": "P1",
+                    "a": "H1",
+                    "b": "H2",
+                    "criteria": {
+                        "grounding": {"preferred": "H1"},
+                        "novelty": {"preferred": "H1"},
+                        "benefit": {"preferred": "H1"},
+                        "testability": {"preferred": "H2"},
+                    },
+                    "tiebreak": {"preferred": "H2", "reason": "Should be ignored because sum is 3:1"},
+                },
+                {
+                    "pair_id": "P2",
+                    "a": "H1",
+                    "b": "H3",
+                    "criteria": {
+                        "grounding": {"preferred": "H1"},
+                        "novelty": {"preferred": "H3"},
+                        "benefit": {"preferred": "H1"},
+                        "testability": {"preferred": "H3"},
+                    },
+                    "tiebreak": {"preferred": "H1", "reason": "Stronger causal anchor under 2:2 sum tie"},
+                },
+            ]
+        }
+    )
+    assert j_agg["pairs"][0]["sum_winner"] == "H1" and j_agg["pairs"][0]["tiebreak_preferred"] is None
+    assert j_agg["pairs"][1]["sum_winner"] == "tie" and j_agg["pairs"][1]["tiebreak_preferred"] == "H1"
+    assert j_agg["n_sum_ties"] == 1
+
 
 
 

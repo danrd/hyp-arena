@@ -1,4 +1,4 @@
-"""Builds scripts/docs/scheme.drawio: the whole system on one page (method v4.1). Each step: the step with what is done, what a
+"""Builds scripts/docs/scheme.drawio: the whole system on one page (method v4.2). Each step: the step with what is done, what a
 language model does (task, input -> output; for code-only steps one merged cell with the code), what code does, why it is so,
 how we check it ourselves, and how it can be checked against a plain-LLM baseline; at the bottom benchmarking in two parts
 (our own checks; the baseline). Column widths follow the amount of text, so rows are even (user note 2026-11-11).
@@ -113,7 +113,7 @@ STEPS = [
      ["Конечная точка: две модели разных семей независимо относят главный исход к уровню клиничности; засчитывается только совпадение.",
       "Готовность и ресурсы (v2): оценка класса ресурсов (resource_tier) и трёх компонентов готовности эксперимента с дословными цитатами."],
      ["Реализуемость — из системы, длительности, выборки и слабого звена готовности min_readiness_score трёх компонентов (доставка вмешательства, доступ к популяции/модели, метод измерения/биопсии; только с цитатами до T) плюс диагностика resource_tier.",
-      "Рост внимания — статьи о вмешательстве за 3 года против 3 предыдущих, за вычетом роста PubMed."],
+      "Импульс внимания (attention_momentum) — контекстно-привязанный рост в PubMed (база ≥ 15, скидка на обзоры > 50%), препринтах EuropePMC и ClinicalTrials.gov; рычаг ИИ (ai_leverage) — кодовый префильтр + одномодельная проверка узкого места с дословным bottleneck_span."],
      ["Узкое место протокола (например, инвазивная биопсия или недоступный ассей) не маскируется одобренным веществом.",
       "Две семьи моделей — чтобы ответ не был особенностью одной модели."],
      ["Слепой holdout-30: точность resource_tier 14/15 (93.3%), слабое звено готовности 7/7 (100%), закрытый мир 8/8 (100%).",
@@ -221,7 +221,7 @@ def build() -> str:
     out, X0, y = [], 20, 20
     W = _widths()
     total = sum(W)
-    out.append(cell("title", "<b>Как работает система оценки гипотез (метод v4.1)</b><br/><span style='font-size:12px'>Каждый шаг: что делается, где и с какой задачей работает языковая модель (LLM), что делает код, почему так, как проверяем сами и как сравниваем с LLM напрямую</span>",
+    out.append(cell("title", "<b>Как работает система оценки гипотез (метод v4.2)</b><br/><span style='font-size:12px'>Каждый шаг: что делается, где и с какой задачей работает языковая модель (LLM), что делает код, почему так, как проверяем сами и как сравниваем с LLM напрямую</span>",
                     X0, y, total, 54, "text;html=1;fontSize=20;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#1E4D40;"))
     y += 66
     x = X0

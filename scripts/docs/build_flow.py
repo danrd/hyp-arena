@@ -1,4 +1,4 @@
-"""Builds the flow scheme of the system (method v4.1): a base for a paper or a slide, and optional layers.
+"""Builds the flow scheme of the system (method v4.2): a base for a paper or a slide, and optional layers.
 
 User decisions 2026-11-11: left to right, Russian for now; the base is simple, as in the report (stage name + what comes out);
 the rest is optional by purpose: the implementation layer (LLM and code), the check layer (one block, two parts: our own
@@ -105,8 +105,8 @@ STAGES = [
                "  · реализуемость — среднее известных частей: система, длительность, плановая выборка и готовность по слабому звену min_readiness_score трёх компонентов (доставка вмешательства, доступ к популяции/модели, метод измерения/биопсии; только с дословными цитатами до T) плюс диагностика класса ресурсов (базовый / специализированный / инфраструктурный);",
                "  · клиничность конечной точки — биомаркер < самоотчёт < функция (SPPB, скорость ходьбы, сила хвата) < клиническое событие; засчитывается при совпадении двух семей моделей;",
                "  · размах механизма — по подтверждённым звеньям до исхода: признак старения > орган или система > локальный;",
-               "  · рост внимания — статьи PubMed о вмешательстве за 3 года до T против 3 лет перед ними, за вычетом роста всего PubMed: ln((a + 1) / (b + 1)) − ln(Na / Nb);",
-               "  · роль ИИ — из карточки (этап 2) только с дословной фразой текста; входит только в профиль «Финансирование»."],
+               "  · импульс внимания (attention_momentum) — контекстно-привязанный рост первичных работ PubMed (база ≥ 15, скидка на обзоры > 50%), препринтов EuropePMC и испытаний ClinicalTrials.gov с долей индустрии;",
+               "  · рычаг ИИ (ai_leverage) — кодовый анти-декоративный префильтр + одномодельная проверка узкого места с дословным bottleneck_span и метрикой валидации."],
          own=["Слепой holdout-30: точность resource_tier 14/15 (93.3%), слабое звено готовности 7/7 (100%), закрытый мир 8/8 (100%)."],
          base_llm=["Конечная точка: LLM против согласия двух семей."],
          why=["Профилю «Финансирование» нужны цена и готовность."]),
@@ -238,7 +238,7 @@ def build(layers: list[str]) -> str:
     sub = {(): "Этапы оценки гипотезы", ("impl",): "Этапы и их реализация: что делает языковая модель, что делает код",
            ("check",): "Этапы и их проверка: сами и против языковой модели, спрошенной напрямую",
            ("impl", "check", "why"): "Этапы: реализация, проверка, обоснование"}[tuple(layers)]
-    out.append(cell("title", f"<b>Как система оценивает гипотезу (метод v4.1)</b><br/><span style='font-size:13px;color:#555'>{sub}</span>",
+    out.append(cell("title", f"<b>Как система оценивает гипотезу (метод v4.2)</b><br/><span style='font-size:13px;color:#555'>{sub}</span>",
                     X0, 20, total_w, 56, "text;html=1;fontSize=22;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#1E4D40;"))
     y, ids, row_y = Y0, [], []
     for r, row in enumerate(rows):

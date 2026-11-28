@@ -155,6 +155,8 @@ def only_claim_qualifiers(rec: EvidenceRecord, claim: Claim) -> EvidenceRecord:
 def context_v34(rec: EvidenceRecord, claim: Claim) -> Optional[str]:
     """v3.4: on the outcome link of a claim about humans, another species is charged by the design scale only. Since
     2026-11-08 only the qualifiers the claim fixes count (only_claim_qualifiers); context_v34_verifier is the earlier rule."""
+    if getattr(rec, "relation_to_claim", None) == "related":
+        return None if (rec.qualifiers_match or {}).get("intervention_match") in ("no", "different", "none") else "adjacent"
     return context_v34_verifier(only_claim_qualifiers(rec, claim), claim)
 
 

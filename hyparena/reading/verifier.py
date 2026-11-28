@@ -857,7 +857,9 @@ def enforce_relation_to_claim(record: EvidenceRecord, claim: Claim) -> EvidenceR
         reasons.append("intervention_mismatch")
     if out.outcome_match == "other":
         reasons.append("outcome_mismatch")
-    if not (out.actual_contrast or "").strip():
+    has_v23_meta = bool((out.actual_system or "").strip() or (out.actual_outcome or "").strip())
+    prepared_bg_quote = (not has_v23_meta) and out.comparison == "between_groups" and bool((out.quote or "").strip())
+    if not (out.actual_contrast or "").strip() and not prepared_bg_quote:
         reasons.append("missing_actual_contrast")
     if claim.role == "outcome" and out.endpoint not in ("unknown", "lifespan", "healthspan", "disease") and out.outcome_match not in ("same", ""):
         reasons.append("non_matching_endpoint")

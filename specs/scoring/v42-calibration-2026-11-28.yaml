@@ -1,0 +1,62 @@
+id: v42-calibration-2026-11-28
+date: "2026-11-28"
+stage: scoring
+method_version: v4.2
+summary: >
+  Component-aligned calibration of Method v4.2, composite pre-cutoff attention momentum,
+  single-model bottleneck-bound AI leverage, funding tier order trial-8, and Judge v4
+  equal-sum component protocol, audited against blind v3-vs-v5 generation (190 two-pass pairs)
+  and frozen registry anchors.
+principles:
+  hard_gate: "Triggered strictly by proven top-design refutations (refuted_chain, refuted_background) or proven irreversible living-human safety hazards (unsafe_protocol); never by missing or unverified evidence."
+  uncertainty_fees:
+    unobtainable_model_i_factor: 0.25
+    unvalidated_component_i_factor: 0.50
+    translational_prereq_i_factor: 0.50
+    ex_vivo_prereq_i_factor: 0.75
+    preclinical_scale_fee: 0.50
+    readiness_floor_mult: 0.50
+    novelty_cap_on_unobtainable_model: "new_link -> new_combination"
+  funding_profile:
+    version: trial-8
+    tiers:
+      - [chain_state]
+      - [feasibility]
+      - [I, W]
+      - [trend_pubmed, ai_role, N]
+      - [endpoint_clinical, best_design_outcome, independent_outcome]
+  attention_momentum:
+    min_pubmed_base: 15
+    min_preprint_base: 10
+    min_trials_base: 6
+    review_hype_discount_above_share: 0.50
+  ai_leverage:
+    architecture: "deterministic code eligibility pre-filter + single-model bottleneck check (prompts/ai_leverage/v1.j2) + verbatim bottleneck_span & validation_metric verification"
+    levels: [none, analysis, in_the_loop, intervention]
+  judge_v4:
+    spec: docs/method/judge-instructions-v4.md
+    aggregation: "independent per-criterion verdicts (grounding, novelty, benefit, testability) + deterministic equal sum; tiebreak inspected only on sum-tied pairs for diagnostics"
+results:
+  v3_vs_v5_generation:
+    cross_version_pairs: 100
+    v5_wins: 84
+    v3_wins: 9
+    ties: 7
+    v5_decisive_win_rate: 0.9032
+  component_alignment_spearman_n20:
+    testability_composite_vs_judge_testability: 0.777
+    N_vs_judge_novelty_v41: -0.324
+    N_vs_judge_novelty_v42: 0.262
+    chain_state_vs_judge_grounding_v41: -0.002
+    chain_state_vs_judge_grounding_v42: 0.149
+    evidence_vs_judge_sum4: 0.540
+    funding_vs_judge_sum4_v41: 0.186
+    funding_vs_judge_sum4_v42: 0.585
+    frontier_vs_judge_sum4_v41: 0.283
+    frontier_vs_judge_sum4_v42: 0.614
+  registry_non_degradation:
+    prospective_60_top10_overlap:
+      evidence: "10/10"
+      frontier: "10/10"
+      funding_trial8: "9/10 (Spearman 0.977)"
+    pilot10_replay_strict_mutations: "54/54"

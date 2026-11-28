@@ -24,6 +24,7 @@
 | улучшения и версии гипотез | [`versions.md`](versions.md) |
 
 4. [`foundations.md`](foundations.md) — принятые схемы и стандарты, на которые опирается метод.
-5. [`changelog-v4.1.md`](changelog-v4.1.md) — изменения текущего выпуска (**Method v4.1**). [`changelog.md`](changelog.md) — полный журнал метода (предыдущие выпуски: [`changelog-v4.0.md`](changelog-v4.0.md), [`changelog-v3.13.md`](changelog-v3.13.md)).
+5. [`judge-instructions-v4.md`](judge-instructions-v4.md) — инструкция парного судьи гипотез (`v4`: независимая оценка по 4 компонентам, простая сумма компонент и `tiebreak` только при равенстве суммы).
+6. [`changelog-v4.2.md`](changelog-v4.2.md) — изменения текущего выпуска (**Method v4.2**). [`changelog.md`](changelog.md) — полный журнал метода (предыдущие выпуски: [`changelog-v4.1.md`](changelog-v4.1.md), [`changelog-v4.0.md`](changelog-v4.0.md), [`changelog-v3.13.md`](changelog-v3.13.md)).
 
 Всё, что меняет метод, сначала записывается в мануал этапа, затем в сводный мануал и в журнал изменений.

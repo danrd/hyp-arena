@@ -1,40 +1,32 @@
-"""Method v4.1 scorer and evaluator (`v4.1`, adopted 2026-11-27).
+"""Method v4.2 scorer and evaluator (`v4.2`, adopted 2026-11-28).
 
-Consolidates the Method v4.0 architecture (`normalize_card/v19`, `verify_claim/v23`,
-`propose_alternatives/v4`, `implementation_readiness/v2`) with the calibrated `v4.1`
-translational, execution-viability, adjacent-context, and protocol-safety rules:
-  1. Explicit chain roles, guarded background gate, and cross-species outcome bridge:
-     - Pure background claims (`chain_roles == ['background']`) fold into `background_gate`
-       (`refuted_background` filters; adding background claims never inflates `chain_state`, `M2`).
-     - `novel_contribution` claims occupy required balance slots.
-     - Cross-species bridge: when a card claims a human population (`v3_extra.claim_is_human`) while
-       proposing a non-human experiment (`mouse`, `rat`, `cells`, etc.), the human `outcome` claim is
-       always marked `required_for_balance = True` so splitting a preclinical modifier from the human
-       outcome never hides the untested animal-to-human gap.
-  2. Relation-to-claim enforcement (`verify_claim/v23` + adjacent mechanistic support):
-     - Applies `verifier.enforce_relation_to_claim(rec, claim)` before weighing any record (`M6`).
-     - On `novel_contribution` and `outcome` claims, only `direct_support` counts on `evidence`;
-       on `counterevidence`, only guarded `direct_contradiction` counts across all claims.
-     - On intermediate `mechanism` claims (neither `background`, nor `novel_contribution`, nor `outcome`),
-       verified `relation_to_claim == 'related'` supporting records count with forced adjacent context
-       (`0.5x`), while `novelty_v34` ignores indirect `related` records so novel links are not demoted.
-  3. Translational & execution-viability alignment on informativeness `I` and `feasibility`:
-     - Claim-aligned `feasibility`: a human-claim card receives `sys_score = 0.0` even when its
-       proposed experiment uses animals or cells (`claim_aligned=True`), removing the animal/cell
-       cost subsidy for human clinical claims while leaving animal-claim cards unchanged.
-     - Translational `I` alignment: for a human claim, a non-human experiment scales `I` by
-       `TRANSLATIONAL_PREREQ_I_FACTOR = 0.5`; a `human ex vivo` experiment with
-       `tested_scope == 'prerequisite'` scales `I` by `EX_VIVO_PREREQ_I_FACTOR = 0.75`
-       (`tested_scope == 'unclear'` -> `UNCLEAR_SCOPE_I_FACTOR = 0.5`).
-     - Execution-viability `I` alignment: when `implementation_readiness/v2` `component_checks`
-       mark `population_or_model` / `system_or_population_fit` as `'insufficient'` (the biological
-       preparation or cohort cannot be obtained at the planned scale), `I` is scaled by
-       `UNOBTAINABLE_MODEL_I_FACTOR = 0.0`; when `min_readiness_score == 0.0` due to an unvalidated
-       delivery or measurement component, `I` is scaled by `UNVALIDATED_COMPONENT_I_FACTOR = 0.5`.
-  4. In vivo human protocol safety (`safety_flags`):
-     - On living humans (`system == 'human'` and not `is_human_ex_vivo`), `'irreversible_no_ltfu'`
-       filters the protocol (`gate = 'filtered'`, `gate_reason = 'unsafe_protocol'`), while
-       `'unjustified_risk_in_healthy_older'` and unmonitored `'on_target_pleiotropy'` cap readiness.
+Core architectural principles (`Method v4.2`):
+  1. Hard gate ONLY from proven findings:
+     - `gate = 'filtered'` triggers strictly on proven top-design refutations (`refuted_chain`,
+       `refuted_background`) or proven irreversible safety risk in living humans (`unsafe_protocol`).
+     - Unverified / missing components (`insufficient` readiness, `searched_empty` links) NEVER
+       filter a hypothesis out of rankings; instead they incur localized uncertainty fees so
+       stronger aspects of a hypothesis still differentiate it.
+  2. Relation-to-claim enforcement (`verify_claim/v23` + adjacent mechanism & organismal outcome priors):
+     - Applies `verifier.enforce_relation_to_claim(rec, claim)` (preserving `direct_contradiction`
+       on prepared between-group records with verbatim quotes, `M6`).
+     - Intermediate `mechanism` claims admit verified `relation_to_claim == 'related'` supporting
+       records at `0.5x` adjacent context without demoting novelty `N`.
+     - `outcome` claims additionally admit verified intact-organism `related` prior trials
+       (excluding cell/slice/review records, upstream-duplicated papers, and AE-only safety quotes)
+       at `0.5x` adjacent context (`context_v34`) AND pass them to `novelty_v34` so prior trials in
+       adjacent cohorts/species/classes map accurately to `new_context` / `translation` / `analog`.
+  3. Localized uncertainty fees on `I`, `feasibility`, and `novelty`:
+     - Translational `I` fee: `0.5x` for non-human experiments on human claims, `0.75x` for
+       `human ex vivo` `prerequisite` (`0.5x` for `unclear`).
+     - Model/assay readiness uncertainty fee on `I`: `UNOBTAINABLE_MODEL_I_FACTOR = 0.25` when
+       `population_or_model` is `'insufficient'` (retaining discrimination differences across designs
+       rather than collapsing `I` to `0.0`), and `0.5x` when delivery/assay is `'insufficient'`.
+     - Novelty uncertainty cap (`cap_novelty_v4`): when `population_or_model == 'insufficient'`,
+       `new_link` is capped at `new_combination` so unverified models cannot top `Frontier` by emptiness.
+     - Feasibility uncertainty fee (`v3_extra.feasibility(..., claim_aligned=True)`): human-claim
+       prerequisites pay `PRECLINICAL_SCALE_FEE = 0.5` on proxy `duration` and `sample_size`
+       (alongside `sys_score = 0.0`), and unverified readiness applies `0.5 + 0.5 * readiness`.
 """
 from __future__ import annotations
 
@@ -45,14 +37,20 @@ from typing import Optional
 from hyparena import METHOD_V4_VERSION
 from hyparena.alternatives import alternatives_v3, threats
 from hyparena.card.models import Claim, ClaimVerification, EvidenceRecord, HypothesisCard, ProposedAlternative
+from hyparena.novelty.novelty_v34 import novelty as _novelty_v34
 from hyparena.reading import verifier
 from hyparena.scoring import rules_v3 as r3, rules_v32 as r32, v3_extra
 
 TRANSLATIONAL_PREREQ_I_FACTOR = 0.5
 EX_VIVO_PREREQ_I_FACTOR = 0.75
 UNCLEAR_SCOPE_I_FACTOR = 0.5
-UNOBTAINABLE_MODEL_I_FACTOR = 0.0
+UNOBTAINABLE_MODEL_I_FACTOR = 0.25
 UNVALIDATED_COMPONENT_I_FACTOR = 0.5
+
+_EFFICACY_CUES = (
+    "improv", "reduc", "increas", "decreas", "enhanc", "restor", "lower", "rais",
+    "change", "score", "threshold", "visual", "walk", "memory", "pain", "urgency", "fatigue",
+)
 
 
 @dataclass
@@ -107,15 +105,24 @@ def _is_intermediate_mechanism(cl: Claim) -> bool:
     return ("mechanism" in roles) or (cl.role == "mechanism")
 
 
-def _as_adjacent_support(rec: EvidenceRecord) -> EvidenceRecord:
-    """Force a verified `related` supporting record onto adjacent context (`0.5x`) without mutating the claim."""
-    qm = {
-        k: v
-        for k, v in (rec.qualifiers_match or {}).items()
-        if k == "intervention_match" or k in r3.ADJACENT_KEYS
-    }
-    qm["intervention_match"] = "category"
-    return rec.model_copy(update={"qualifiers_match": qm})
+def _is_organismal_outcome_prior(rec: EvidenceRecord, upstream_pmids: set[str]) -> bool:
+    """True when a `related` supporting record on an `outcome` claim represents an intact-organism
+    clinical or animal outcome trial (e.g. same drug in a broader cohort or same-class trial) rather
+    than an upstream cell/slice assay, review, or adverse-event-only safety note.
+    """
+    if rec.record_id in upstream_pmids:
+        return False
+    if r3.record_design(rec) in ("cells", "review", "other"):
+        return False
+    if rec.outcome_match == "other":
+        return False
+    im = (rec.qualifiers_match or {}).get("intervention_match")
+    if im in ("no", "different", "none"):
+        return False
+    ql = (rec.quote or "").lower()
+    if "adverse event" in ql and not any(w in ql for w in _EFFICACY_CUES):
+        return False
+    return True
 
 
 def _filter_records_v4(
@@ -123,9 +130,12 @@ def _filter_records_v4(
     claim: Claim,
     *,
     against: bool,
+    upstream_pmids: Optional[set[str]] = None,
 ) -> list[EvidenceRecord]:
     out: list[EvidenceRecord] = []
-    allow_related = (not against) and _is_intermediate_mechanism(claim)
+    is_mech = (not against) and _is_intermediate_mechanism(claim)
+    is_out = (not against) and (claim.role == "outcome" or claim.link == "outcome")
+    up_set = upstream_pmids or set()
     for rec in recs:
         guarded = verifier.enforce_relation_to_claim(rec, claim)
         rel = guarded.relation_to_claim
@@ -133,23 +143,55 @@ def _filter_records_v4(
             out.append(guarded)
         elif not against and rel == "direct_support":
             out.append(guarded)
-        elif allow_related and rel == "related":
+        elif is_mech and rel == "related":
             im = (guarded.qualifiers_match or {}).get("intervention_match")
             if im not in ("no", "different", "none") and guarded.outcome_match != "other":
-                out.append(_as_adjacent_support(guarded))
+                out.append(guarded)
+        elif is_out and rel == "related":
+            if _is_organismal_outcome_prior(guarded, up_set):
+                out.append(guarded)
         elif against and rel == "direct_contradiction":
             out.append(guarded)
     return out
 
 
-def _align_informativeness_v41(
+def has_unobtainable_model(implementation: Optional[dict]) -> bool:
+    if not isinstance(implementation, dict) or not implementation.get("component_checks"):
+        return False
+    return any(
+        isinstance(cc, dict)
+        and str(cc.get("component") or "").lower() in ("population_or_model", "system_or_population_fit")
+        and str(cc.get("evidence_status") or "").lower() == "insufficient"
+        for cc in implementation["component_checks"]
+    )
+
+
+def cap_novelty_v4(
+    card_v4: HypothesisCard,
+    cvs_v4: list[ClaimVerification],
+    base_v32: Optional[r32.V32Result] = None,
+    *,
+    implementation: Optional[dict] = None,
+    absence: Optional[dict] = None,
+    paper_outcomes: Optional[list[dict]] = None,
+) -> Optional[str]:
+    """Compute Method v4.2 novelty `N`, capping `new_link -> new_combination` when the experimental
+    model/population itself is unverified (`population_or_model == 'insufficient'`).
+    """
+    nov = _novelty_v34(card_v4, cvs_v4, base_v32, absence=absence, paper_outcomes=paper_outcomes)
+    if nov == "new_link" and has_unobtainable_model(implementation):
+        return "new_combination"
+    return nov
+
+
+def _align_informativeness_v42(
     raw_i: float,
     card_raw: HypothesisCard,
     card_v4: HypothesisCard,
     implementation: Optional[dict] = None,
     source_text: str = "",
 ) -> float:
-    """Apply translational scope and execution-viability alignment to `I` (`Method v4.1`)."""
+    """Apply translational scope and readiness uncertainty fees to `I` (`Method v4.2`)."""
     i_val = raw_i
     human_cl = v3_extra.claim_is_human(card_raw, source_text)
     ex_vivo = v3_extra.is_human_ex_vivo(card_v4, implementation)
@@ -164,18 +206,12 @@ def _align_informativeness_v41(
         i_val = round(i_val * UNCLEAR_SCOPE_I_FACTOR, 4)
 
     if isinstance(implementation, dict) and implementation.get("component_checks"):
-        comps = [cc for cc in implementation["component_checks"] if isinstance(cc, dict)]
-        unobtainable_model = any(
-            str(cc.get("component") or "").lower() in ("population_or_model", "system_or_population_fit")
-            and str(cc.get("evidence_status") or "").lower() == "insufficient"
-            for cc in comps
-        )
         min_r = float(
             implementation.get("min_readiness_score")
             if implementation.get("min_readiness_score") is not None
             else 1.0
         )
-        if unobtainable_model:
+        if has_unobtainable_model(implementation):
             i_val = round(i_val * UNOBTAINABLE_MODEL_I_FACTOR, 4)
         elif min_r <= 0.0:
             i_val = round(i_val * UNVALIDATED_COMPONENT_I_FACTOR, 4)
@@ -195,6 +231,14 @@ def prepare_for_v4(
     c4 = copy.deepcopy(card)
     by_claim_id = {c.id: c for c in c4.claims}
 
+    upstream_pmids = {
+        r.record_id
+        for cv in ver_claims
+        for cl in [by_claim_id.get(cv.id)]
+        if cl is not None and not _is_pure_background(cl) and cl.role != "outcome" and cl.link != "outcome"
+        for r in (cv.evidence + cv.counterevidence)
+    }
+
     # 1. Enforce v23 relation_to_claim guard on every claim verification
     cvs4: list[ClaimVerification] = []
     for cv in ver_claims:
@@ -202,8 +246,8 @@ def prepare_for_v4(
         cl = by_claim_id.get(cv_copy.id) or cv_copy.claim or Claim(
             id=cv_copy.id, subject="intervention", relation="other", object="outcome"
         )
-        cv_copy.evidence = _filter_records_v4(cv_copy.evidence, cl, against=False)
-        cv_copy.counterevidence = _filter_records_v4(cv_copy.counterevidence, cl, against=True)
+        cv_copy.evidence = _filter_records_v4(cv_copy.evidence, cl, against=False, upstream_pmids=upstream_pmids)
+        cv_copy.counterevidence = _filter_records_v4(cv_copy.counterevidence, cl, against=True, upstream_pmids=upstream_pmids)
         cvs4.append(cv_copy)
 
     # 2. Fold pure background claims into a single gate check, ensure novel_contribution claims are required,
@@ -226,7 +270,6 @@ def prepare_for_v4(
                     s_pt = r32.link_point(f_w, a_w)
                     if a_w > f_w and s_pt <= 0.25:
                         bg_refuted = True
-                # Keep pure background off the scored positive chain so M2 background inflation is strictly <= 0
                 cl.part = "premise"
                 cl.link = None
             else:
@@ -274,7 +317,7 @@ def evaluate(
     as_of: str = "",
     experiment_text: str = "",
 ) -> V4Result:
-    """Evaluate one hypothesis under Method v4.1 (`V4Result`)."""
+    """Evaluate one hypothesis under Method v4.2 (`V4Result`)."""
     c4, cvs4, alt_ver4, routed_pmids, bg_refuted = prepare_for_v4(
         card, ver_claims, alt_verifications, experiment_text=experiment_text
     )
@@ -292,11 +335,10 @@ def evaluate(
         gate = "filtered"
         gate_reason = "unsafe_protocol"
 
-    aligned_i = _align_informativeness_v41(
+    aligned_i = _align_informativeness_v42(
         base.I, card, c4, implementation=implementation, source_text=experiment_text
     )
 
-    # Build chain summary over the original role labels using filtered cvs4
     orig_card_copy = copy.deepcopy(card)
     cross_species_human = v3_extra.claim_is_human(card, experiment_text) and sys_name not in ("human", "unknown")
     for cl in orig_card_copy.claims:

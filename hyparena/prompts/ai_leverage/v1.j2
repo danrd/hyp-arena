@@ -1,0 +1,32 @@
+You are assessing Method v4.2 AI leverage (`ai_leverage`) for ONE biomedical hypothesis and its proposed decisive experiment.
+
+Hypothesis & experiment:
+- Claim: {{ claim }}
+- Population / condition: {{ population }}
+- Intervention(s): {{ interventions }}
+- Primary outcome: {{ primary_outcome }}
+- Experiment summary: {{ exp_summary }}
+- Eligible bottleneck modes (pre-filtered by code): {{ eligible_modes }}
+- Full text:
+{{ exp_text }}
+
+Method v4.2 AI leverage rules (strict, anti-decorative):
+1. Do NOT reward decorative buzzwords ("we will use ML/AI to analyze the results") on standard clinical or laboratory protocols where classical statistics (ANCOVA, mixed models, survival regression) or fixed dosing/stimulation already suffice.
+2. Conversely, DO identify genuine AI leverage when a concrete scientific or engineering bottleneck in the card's text is materially unlocked by AI, ONLY within `eligible_modes`:
+   - `analysis` (`bottleneck_mode = "signal_or_stratification"`): high-dimensional biosignal/waveform/imaging/spatial/multi-omic phenotyping or latent responder stratification where scalar summary thresholds lose the decisive physiological signal;
+   - `in_the_loop` (`bottleneck_mode = "closed_loop_control"`): closed-loop / state-adaptive modulation of time-varying stimulation, pacing, bioelectronic field, or dosing parameters driven by real-time physiological feedback;
+   - `intervention` (`bottleneck_mode = "agent_or_construct_design"`): sequence/structure/promoter/capsid/binder/combinatorial construct design, or an AI system acting directly as the patient-facing therapeutic intervention.
+3. If no genuine bottleneck in `eligible_modes` requires AI beyond standard biostatistics or fixed engineering, output `"ai_leverage": "none"`.
+4. For any non-`"none"` level you MUST provide:
+   - `bottleneck_span`: an EXACT verbatim contiguous substring copied from `Full text` (15–220 characters, character-for-character) that names the specific high-dimensional signal, time-varying control parameter, or sequence/construct element creating the bottleneck;
+   - `why_non_decorative`: 1–2 sentences explaining why classical non-AI methods are insufficient for that bottleneck;
+   - `validation_metric`: a concrete falsifiable metric to benchmark the AI component (e.g., out-of-sample AUROC, closed-loop time-in-target vs open-loop control, on-target vs off-target selectivity).
+
+Return ONLY one JSON object:
+{
+  "ai_leverage": "none | analysis | in_the_loop | intervention",
+  "bottleneck_mode": "none | signal_or_stratification | closed_loop_control | agent_or_construct_design",
+  "bottleneck_span": "",
+  "why_non_decorative": "",
+  "validation_metric": ""
+}

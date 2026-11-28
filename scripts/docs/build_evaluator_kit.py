@@ -1,11 +1,12 @@
-"""Build the standalone Method v4.1 evaluator code archive (.zip).
+"""Build the standalone Method v4.2 evaluator code archive (.zip).
 
-Packages `hyparena/`, `configs/`, `manual.md`, `changelog-v4.1.md`, `changelog-v4.0.md`, `dossier-instructions-draft.md`,
-`calculate.py`, `make_report.py`, `example_cases.json`, `requirements.txt`, and Russian `README.md`
-into a self-contained zip archive for external/blinded hypothesis evaluation.
+Packages `hyparena/`, `configs/`, `manual.md`, `changelog-v4.2.md`, `changelog-v4.1.md`, `changelog-v4.0.md`,
+`judge-instructions-v4.md`, `dossier-instructions-draft.md`, `calculate.py`, `make_report.py`,
+`example_cases.json`, `requirements.txt`, and Russian `README.md` into a self-contained zip archive
+for external/blinded hypothesis evaluation.
 
 Usage:
-    python scripts/docs/build_evaluator_kit.py --out path/to/hyp-arena-v4.1-evaluation-kit.zip [--cutoff 2026-11-27]
+    python scripts/docs/build_evaluator_kit.py --out path/to/hyp-arena-v4.2-evaluation-kit.zip [--cutoff 2026-11-28]
 """
 from __future__ import annotations
 
@@ -33,17 +34,18 @@ PyYAML
 httpx
 """
 
-CALCULATE_PY = '''"""Structured evidence -> Method v4.1 calculations + ASPID profile rankings and cluster deduplication."""
+CALCULATE_PY = '''"""Structured evidence -> Method v4.2 calculations + ASPID profile rankings and cluster deduplication."""
 import argparse
 import json
 from pathlib import Path
 
 from hyparena import METHOD_V4_VERSION
 from hyparena.card.models import ClaimVerification, HypothesisCard
-from hyparena.novelty.novelty_v34 import link_levels, novelty, novelty_source
+from hyparena.novelty.novelty_v34 import link_levels, novelty_source
+from hyparena.reading import ai_leverage as ai_lev_mod
 from hyparena.reading.implementation import is_non_drug, pre_cutoff_sources_batch, revalidate_saved
 from hyparena.reports import diversity as div_mod
-from hyparena.scoring import aspid_v3, rules_v3, rules_v32, rules_v4
+from hyparena.scoring import aspid_v3, rules_v3, rules_v32, rules_v4, trend_genetics
 from hyparena.scoring.v3_extra import (
     endpoint_for_experiment,
     extras,
@@ -54,7 +56,9 @@ from hyparena.scoring.v3_extra import (
 
 p = argparse.ArgumentParser(description=__doc__)
 p.add_argument("cases", help="JSON array of structured cases (see example_cases.json)")
-p.add_argument("--as-of", default="", help="Literature cutoff YYYY-MM-DD for PubMed / ClinicalTrials.gov readiness checks")
+p.add_argument("--as-of", default="", help="Literature cutoff YYYY-MM-DD for PubMed / ClinicalTrials.gov readiness & attention checks")
+p.add_argument("--recompute-attention", action="store_true", help="Recompute composite attention_momentum from pre-cutoff PubMed/EuropePMC/CT.gov")
+p.add_argument("--infer-ai-leverage", action="store_true", help="Evaluate bottleneck-bound ai_leverage from protocol spans when ai_leverage is absent")
 args = p.parse_args()
 
 cases = json.loads(Path(args.cases).read_text(encoding="utf-8"))
@@ -118,8 +122,34 @@ for case in cases:
         card=card_v4,
         implementation=impl,
     )
-    nov = novelty(card_v4, cvs_v4, base_v32, absence=case.get("absence"), paper_outcomes=po)
+    nov = rules_v4.cap_novelty_v4(
+        card_v4,
+        cvs_v4,
+        base_v32,
+        implementation=impl,
+        absence=case.get("absence"),
+        paper_outcomes=po,
+    )
     feas = r4.feasibility
+
+    att_diag = case.get("attention_momentum")
+    trend_val = ind_in.get("trend_pubmed")
+    if args.recompute_attention and args.as_of:
+        try:
+            trend_val, att_diag = trend_genetics.attention_momentum(card_v4, args.as_of)
+        except Exception as exc:
+            att_diag = {"reason": f"error:{exc}"}
+
+    raw_ai_lev = case.get("ai_leverage")
+    if isinstance(raw_ai_lev, dict):
+        ai_lev_checked = ai_lev_mod.validate_ai_leverage(raw_ai_lev, card_v4, experiment_text=exp_text, implementation=impl)
+        ai_role_val = ai_lev_checked["ai_role"]
+    elif args.infer_ai_leverage:
+        ai_lev_checked = ai_lev_mod.heuristic_ai_leverage(card_v4, experiment_text=exp_text, implementation=impl)
+        ai_role_val = ai_lev_checked["ai_role"]
+    else:
+        ai_lev_checked = None
+        ai_role_val = ind_in.get("ai_role") or card_v4.ai_role
 
     results[ident] = {
         "method": METHOD_V4_VERSION,
@@ -144,6 +174,10 @@ for case in cases:
         "feasibility_breakdown": feasibility_breakdown(card_v4, as_of=args.as_of, implementation=impl, claim_aligned=True, experiment_text=exp_text),
         "feasibility_diagnostic": {"resource_tier": r4.resource_tier, "execution_readiness": r4.execution_readiness},
         "endpoint_clinical": ep,
+        "trend_pubmed": trend_val,
+        "attention_momentum": att_diag,
+        "ai_role": ai_role_val,
+        "ai_leverage": ai_lev_checked,
         "chain_summary": r4.chain_summary,
         "evaluation_v4": r4.as_dict(),
         "legacy_non_refutation": {"P": r4.P, "V_legacy": r4.V, "note": "P and V are legacy non-refutation diagnostics; ranking uses ASPID profiles over chain_state, N, I, W, feasibility, endpoint_clinical."},
@@ -158,8 +192,8 @@ for case in cases:
                 "independent_outcome": ext.get("independent_outcome"),
                 "against_share": ext.get("against_share"),
                 "endpoint_clinical": ep,
-                "trend_pubmed": ind_in.get("trend_pubmed"),
-                "ai_role": ind_in.get("ai_role") or card_v4.ai_role,
+                "trend_pubmed": trend_val,
+                "ai_role": ai_role_val,
                 "support_share": r4.support_share,
                 "chain_state": r4.chain_state,
                 "N": nov,
@@ -198,7 +232,7 @@ results["_pool_summary"] = {
 print(json.dumps(results, ensure_ascii=False, indent=2, allow_nan=False))
 '''
 
-MAKE_REPORT_PY = '''"""Create a 5-tab Russian HTML report from manually prepared cases (Method v4.1)."""
+MAKE_REPORT_PY = '''"""Create a 5-tab Russian HTML report from manually prepared cases (Method v4.2)."""
 import argparse
 import hashlib
 import json
@@ -206,16 +240,19 @@ from pathlib import Path
 
 from hyparena import METHOD_V4_VERSION
 from hyparena.card.models import ClaimVerification, HypothesisCard
+from hyparena.reading import ai_leverage as ai_lev_mod
 from hyparena.reading.implementation import is_non_drug, pre_cutoff_sources_batch, revalidate_saved
 from hyparena.reports.report_html import build
 from hyparena.reports.report_v2 import render
-from hyparena.scoring import rules_v3, rules_v4
+from hyparena.scoring import rules_v3, rules_v4, trend_genetics
 
 p = argparse.ArgumentParser(description=__doc__)
 p.add_argument("cases", help="JSON array as in example_cases.json")
 p.add_argument("--as-of", required=True, help="Literature cutoff YYYY-MM-DD")
 p.add_argument("--out", required=True, help="HTML output path in private storage")
 p.add_argument("--hypotheses", type=Path, help="Optional original judge_hypotheses_blind.json for the card text")
+p.add_argument("--recompute-attention", action="store_true", help="Recompute composite attention_momentum up to --as-of")
+p.add_argument("--infer-ai-leverage", action="store_true", help="Evaluate bottleneck-bound ai_leverage from protocol spans when ai_leverage is absent")
 a = p.parse_args()
 
 raw = Path(a.cases).read_bytes()
@@ -300,11 +337,33 @@ for case in cases:
     if case.get("absence"):
         item["absence"] = case["absence"]
 
+    ind_in = case.get("indicators") or {}
+    trend_val = ind_in.get("trend_pubmed")
+    if a.recompute_attention and a.as_of:
+        try:
+            trend_val, _ = trend_genetics.attention_momentum(card_v4, a.as_of)
+        except Exception:
+            pass
+
+    raw_ai_lev = case.get("ai_leverage")
+    if isinstance(raw_ai_lev, dict):
+        ai_checked = ai_lev_mod.validate_ai_leverage(raw_ai_lev, card_v4, experiment_text=exp_text, implementation=impl)
+        item["ai_leverage"] = ai_checked
+        ai_role_val = ai_checked["ai_role"]
+    elif a.infer_ai_leverage:
+        ai_checked = ai_lev_mod.heuristic_ai_leverage(card_v4, experiment_text=exp_text, implementation=impl)
+        item["ai_leverage"] = ai_checked
+        ai_role_val = ai_checked["ai_role"]
+    else:
+        ai_role_val = ind_in.get("ai_role") or card_v4.ai_role
+
     run[ident] = {"items": [item], "meta": {"as_of": a.as_of}}
-    scores[ident] = {"P": r4.P}
-    for key in ("endpoint_clinical", "trend_pubmed", "ai_role"):
-        if key in (case.get("indicators") or {}):
-            scores[ident][key] = case["indicators"][key]
+    scores[ident] = {
+        "P": r4.P,
+        "endpoint_clinical": ind_in.get("endpoint_clinical"),
+        "trend_pubmed": trend_val,
+        "ai_role": ai_role_val,
+    }
     units.append({"id": ident})
 
 meta = {
@@ -323,44 +382,39 @@ Path(a.out).write_text(render(report), encoding="utf-8")
 
 
 def _readme_md(cutoff: str) -> str:
-    return f"""# Пакет автономной оценки по мануалу HypArena v4.1 · {cutoff}
+    return f"""# Пакет автономной оценки по мануалу HypArena v4.2 · {cutoff}
 
-Пакет предназначен для независимой оценки гипотез на срез **`{cutoff}`** (или иной заданный `--as-of YYYY-MM-DD`) по **методу v4.1**.
-Полные правила изложены в `manual.md`, сводка всех изменений выпуска — в `changelog-v4.1.md` и `changelog-v4.0.md`, требования к общему досье для слепых судей — в `dossier-instructions-draft.md`.
+Пакет предназначен для независимой оценки гипотез на срез **`{cutoff}`** (или иной заданный `--as-of YYYY-MM-DD`) по **методу v4.2**.
+Полные правила изложены в `manual.md`, сводка всех изменений выпусков — в `changelog-v4.2.md`, `changelog-v4.1.md` и `changelog-v4.0.md`, инструкция покомпонентного парного судьи v4 — в `judge-instructions-v4.md`, требования к общему досье — в `dossier-instructions-draft.md`.
 
 Подготовьте `cases.json` по образцу `example_cases.json`, рассчитайте `results.json` через `calculate.py` и соберите пятистраничный русскоязычный отчёт `report.html` через `make_report.py`. Отдельно сформируйте единый `dossier.json` по `dossier-instructions-draft.md`.
 
 ---
 
-## Что нового в `cases.json` для метода v4.0
+## Ключевые правила `cases.json` в методе v4.2
 
 1. **Явные роли звеньев (`card.claims[].chain_roles` / `chain_role`) и отделение предпосылок от M2:**
-   - Каждому утверждению задаётся `chain_roles` (и/или `chain_role`) из закрытого списка `{{background, mechanism, novel_contribution, outcome}}`: `background` — известная биологическая/клиническая предпосылка, `mechanism` — промежуточный причинный шаг, `novel_contribution` — заявляемый новый вклад гипотезы, `outcome` — основной проверяемый исход.
-   - Утверждения с ролью `"background"` **не входят в среднее баланса доказательств `chain_state` (M2)**, чтобы хрестоматийные факты не раздували оценку спекулятивной догадки, но проходят отдельный порог опровержения (`gate = "refuted_background"` при опровержении предпосылки РКИ/метаанализом в релевантном контексте).
+   - Каждому утверждению задаётся `chain_roles` (и/или `chain_role`) из закрытого списка `{{background, mechanism, novel_contribution, outcome}}`.
+   - Утверждения с ролью `"background"` **не входят в среднее баланса доказательств `chain_state` (M2)**, но проходят отдельный порог опровержения (`gate = "refuted_background"` при опровержении предпосылки РКИ/метаанализом в релевантном контексте).
 
-2. **Точность спецификации и решающий контраст (`card.decisive_experiment`):**
-   - `decisive_contrast_span` — дословный фрагмент текста протокола с решающим межгрупповым сравнением (не путать с ожидаемым направлением результата).
-   - `target_engagement_span` — дословный фрагмент о прямом замере связывания/активности мишени (если есть в протоколе).
-   - `precision_status` — `"stated_for_contrast"`, `"general_principle_only"` или `"missing"`; `tested_scope` — область действия эксперимента (`"direct"`, `"prerequisite"`, `"unclear"`).
+2. **Жёсткий фильтр только от доказанного и локальная плата за неопределённость:**
+   - В `gate = "filtered"` уходят **только** гипотезы с найденным прямым научным опровержением старшего дизайна (`refuted_chain`, `refuted_background`) или доказанным необратимым риском на живых людях (`unsafe_protocol`).
+   - Отсутствие данных или статус `"insufficient"` никогда не исключают гипотезу, а облагаются локальной платой (`UNOBTAINABLE_MODEL_I_FACTOR = 0.25`, потолок `new_link → new_combination` в `cap_novelty_v4`, `PRECLINICAL_SCALE_FEE = 0.5` на длительность и выборку доклинических/эксплантных прокси-опытов под человеческий тезис и множитель `0.5 + 0.5 · readiness` на реализуемость).
 
 3. **Отношение статьи к утверждению (`relation_to_claim` в записях `verifications`):**
-   - В `evidence` / `counterevidence` каждой записи можно явно задать `relation_to_claim`: `"direct_support"`, `"direct_contradiction"`, `"related"`, `"irrelevant"` или `"insufficient"`.
-   - Фильтр кода `enforce_relation_to_claim` отбрасывает `"irrelevant"` и `"insufficient"`, а записи `"related"` ограничивает сверху смежным контекстом.
+   - В `evidence` / `counterevidence` каждой записи задаётся `relation_to_claim`: `"direct_support"`, `"direct_contradiction"`, `"related"`, `"irrelevant"` или `"insufficient"`.
+   - Для записей `"direct_contradiction"` обязательно указывайте `comparison: "between_groups"` и дословную цитату `quote` (либо служебное поле `actual_contrast` из `verify_claim/v23`).
+   - На звене `outcome` проверенные организменные испытания `"related"` и `"same_class"` учитываются со смежным контекстом `0.5×` и передаются в расчёт новизны `N`.
 
 4. **Альтернативы, методологические лазейки и нулевой исход (`card.proposed_alternatives`):**
-   - Для каждой альтернативы указываются `control_span` (дословный фрагмент протокола о контроле/группе), `loophole` (непустая строка с описанием открытой лазейки, либо `""` / `"none"` при её отсутствии), `loophole_ruled_out_why` и при необходимости `conditional_on_negative` (`"eliminated"` / `"weakened"` / `"unchanged"`).
-   - Код (`ground_discrimination_v4`) понижает `eliminated` до `weakened` (`d <= 0.5`), если `control_span` отсутствует дословно или указана не закрытая дизайном `loophole` (например, пассивный контроль не закрывает системный плейотропный эффект). Условное отсечение на нулевом исходе сохраняется как диагностика только при дословном `target_engagement_span`.
+   - Для каждой альтернативы указываются `control_span` (дословный фрагмент протокола о контроле/группе), `loophole` (непустая строка с описанием открытой лазейки, либо `""` при её отсутствии), `loophole_ruled_out_why` и при необходимости `conditional_on_negative`.
 
-5. **Трёхкомпонентная готовность по слабому звену (`implementation_readiness` v2 и `resource_tier`):**
-   - Вместо одного флага готовности `implementation_readiness` в v4.0 содержит `resource_tier` (`"1_in_vitro"`, `"2_animal"`, `"3_human_ex_vivo_or_pilot"`, `"4_clinical_in_vivo"`), `overall_evidence_status` и массив `component_checks` по трём компонентам:
-     - `delivery_or_intervention` (доставка/режим вмешательства в целевую ткань/систему),
-     - `population_or_model` (доступ к популяции, линии или первичной модели),
-     - `measurement_or_assay` (валидированный метод измерения / биопсия / ассей).
-   - Каждый компонент со статусом `"confirmed_in_context"` (`1.0`) или `"adjacent_only"` (`0.5`) обязан иметь дословную цитату `evidence_quote` из заголовка/аннотации `evidence_pmid` не позже `--as-of` (либо из текста протокола для стандартных рутинных процедур). Неподтверждённая цитата автоматически переводится в `"insufficient"` (`0.0`).
-   - В расчёт реализуемости идёт **слабое звено** `min_readiness_score` по применимым компонентам (и ограничивает сверху регуляторный статус соединения, если узким местом протокола является инвазивный замер или доставка). Прежний формат `v1` (`verified_status`) также поддерживается для обратной совместимости.
+5. **Трёхкомпонентная готовность по слабому звену (`implementation_readiness` v2), импульс внимания и рычаг ИИ:**
+   - `implementation_readiness` содержит `resource_tier`, `overall_evidence_status` и `component_checks` по трём компонентам (`delivery_or_intervention`, `population_or_model`, `measurement_or_assay`) с обязательной сверкой дословных цитат до `--as-of`.
+   - Опциональный объект `ai_leverage` (`{{"ai_leverage": "none|analysis|in_the_loop|intervention", "bottleneck_mode": "...", "bottleneck_span": "...", "why_non_decorative": "...", "validation_metric": "..."}}`) проходит анти-декоративную проверку кода `validate_ai_leverage`; также поддерживаются флаги `--recompute-attention` и `--infer-ai-leverage`.
 
 6. **`paper_outcomes` и `absence`:**
-   - Работают так же, как в `v3.13`: `paper_outcomes` фиксирует дословные функциональные/клинические исходы того же вмешательства из ранних звеньев при пустом слоте исхода, а `absence` задаёт проверенные кодом подсчёты пар терминов в PubMed до `--as-of` для уровня `new_mechanism`.
+   - `paper_outcomes` фиксирует дословные функциональные/клинические исходы того же вмешательства из ранних звеньев при пустом слоте исхода, а `absence` задаёт проверенные кодом подсчёты пар терминов в PubMed до `--as-of` для уровня `new_mechanism`.
 
 ---
 
@@ -766,8 +820,10 @@ def build_kit(out_zip: Path, cutoff: str) -> dict:
 
         _writestr("README.md", _readme_md(cutoff))
         _writefile(ROOT / "docs" / "method" / "manual.md", "manual.md")
+        _writefile(ROOT / "docs" / "method" / "changelog-v4.2.md", "changelog-v4.2.md")
         _writefile(ROOT / "docs" / "method" / "changelog-v4.1.md", "changelog-v4.1.md")
         _writefile(ROOT / "docs" / "method" / "changelog-v4.0.md", "changelog-v4.0.md")
+        _writefile(ROOT / "docs" / "method" / "judge-instructions-v4.md", "judge-instructions-v4.md")
         _writefile(ROOT / "docs" / "method" / "dossier-instructions-draft.md", "dossier-instructions-draft.md")
         _writestr("requirements.txt", REQUIREMENTS_TXT)
         _writestr("calculate.py", CALCULATE_PY)
@@ -799,7 +855,7 @@ def build_kit(out_zip: Path, cutoff: str) -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--out", required=True, type=Path, help="Output .zip path")
-    ap.add_argument("--cutoff", default="2026-11-27", help="Default YYYY-MM-DD cutoff shown in README and examples")
+    ap.add_argument("--cutoff", default="2026-11-28", help="Default YYYY-MM-DD cutoff shown in README and examples")
     args = ap.parse_args()
     info = build_kit(args.out, args.cutoff)
     print(json.dumps(info, ensure_ascii=False, indent=2))

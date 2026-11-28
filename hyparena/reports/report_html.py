@@ -321,12 +321,24 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
         relevant = [c for c in chain if c["in_P"] and c["checked"]]
         weakest = min(relevant, key=lambda c: c["S"]) if relevant else None
         strongest = max(relevant, key=lambda c: c["S"]) if relevant else None
-        N = nv.novelty(card, cvs, res, absence=it.get("absence"), paper_outcomes=it.get("paper_outcomes"))
+        N = (
+            rules_v4.cap_novelty_v4(
+                card,
+                cvs,
+                res,
+                implementation=it.get("implementation_readiness"),
+                absence=it.get("absence"),
+                paper_outcomes=it.get("paper_outcomes"),
+            )
+            if is_v4
+            else nv.novelty(card, cvs, res, absence=it.get("absence"), paper_outcomes=it.get("paper_outcomes"))
+        )
         lev, _, bott = nv.leverage(card, cvs, res)
         raise_to, raise_link = None, (bott.split(",")[0] if lev > 0 else None)        # v3.4: support, not P, rises with data
         de = card.decisive_experiment
         i_val = v4_res.I if v4_res is not None else res.I
         v_val = v4_res.V if v4_res is not None else res.V
+        ai_lev_span = (it.get("ai_leverage") or {}).get("bottleneck_span") if isinstance(it.get("ai_leverage"), dict) else ""
         hyps[h] = {**base, "plain": card.claim_plain, "P": res.P, "P_lo": res.P_lo, "P_hi": res.P_hi, "I": i_val, "V": v_val,
                    "scope": res.scope, "gate": gate_val, "chain": chain, "alternatives": alt_rows, "checklist": res.checklist,
                    **({"resource_tier": v4_res.resource_tier, "worst_domain_risk": v4_res.worst_domain_risk, "chain_summary": v4_res.chain_summary} if v4_res is not None else {}),
@@ -335,7 +347,7 @@ def build(run: dict, scores: dict, units: list[dict], texts: dict[str, str], met
                    "coverage_counts": res.coverage_counts,
                    "unchecked": [c["id"] for c in chain if not c["checked"]], "experiment": {"design": de.design, "endpoint": de.endpoint, "n": de.n_planned},
                    "endpoint_clinical": sc.get("endpoint_clinical"), "trend_pubmed": sc.get("trend_pubmed"), "ai_role": sc.get("ai_role"),
-                   "ai_span": card.ai_role_span, "aspid": {p: sc.get(f"aspid_{p}") for p in profiles}, "N": N,
+                   "ai_span": ai_lev_span or card.ai_role_span, "aspid": {p: sc.get(f"aspid_{p}") for p in profiles}, "N": N,
                    "N_pmid": nv.novelty_source(card, cvs, paper_outcomes=it.get("paper_outcomes")),
                    "link_levels": {c["id"]: c["novelty_level"] for c in chain},
                    "flags": res_flags(it),
@@ -846,7 +858,9 @@ def render(rep: dict) -> str:
     VIEWS = [("rank", t("Рейтинг", "Ranking")), ("hyp", t("Гипотезы", "Hypotheses"))] + \
         ([("evo", t("Эволюция", "Evolution"))] if rep.get("evolution") else []) + \
         [("src", t("Источники", "Sources")), ("help", t("Справка", "Help"))]
-    out.append('<header class="band"><div class="wrap"><div class="bar1"><span class="badge">' + t("Метод v3.4 · АСПИД", "Method v3.4 · ASPID") +
+    meth_label = str(m.get("method") or "")
+    badge_txt = t(f"Метод {e(meth_label)} · АСПИД", f"Method {e(meth_label)} · ASPID") if meth_label.startswith("v4") else t("Метод v3.4 · АСПИД", "Method v3.4 · ASPID")
+    out.append('<header class="band"><div class="wrap"><div class="bar1"><span class="badge">' + badge_txt +
                f'</span><span class="meta">{t("Дата среза","Cut-off date")} T = {e(m["date"])} · {t("оценено","scored")} {m["n_scored"]} / {m["n"]}</span>'
                '<span class="sp"></span><button class="sw" onclick="setLang(\'ru\')">RU</button><button class="sw" onclick="setLang(\'en\')">EN</button>'
                '<button class="sw" onclick="setTheme()">◐</button></div>'
